@@ -1,4 +1,4 @@
-/*	$Id: t.30.h,v 1.28 1996/06/24 03:06:25 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -100,6 +100,7 @@
  * as many as 6 additional bytes that may follow the required 3-byte
  * minimum DIS frame;  we only process the first 4.
  */
+#define DIS_V8		0x040000	// supports V.8 training
 #define	DIS_T4XMTR	0x008000	// T.4 sender & has docs to poll
 #define	DIS_T4RCVR	0x004000	// T.4 receiver
 #define	DIS_SIGRATE	0x003C00	// data signalling rate
