@@ -1,4 +1,4 @@
-/*	$Id: Str.c++,v 1.32 1996/10/04 02:05:37 sam Rel $ */
+/*	$Id: Str.c++,v 1.33 1997/02/11 20:28:50 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -189,7 +189,7 @@ void fxStr::lowercase(u_int posn, u_int chars)
 #undef tolower
 #endif
 	data[posn] = tolower(data[posn]);
-#elif _tolower
+#elif defined(_tolower)
 	char c = data[posn];
 	if (isupper(c))
 	    data[posn] = _tolower(c);
@@ -210,7 +210,7 @@ void fxStr::raisecase(u_int posn, u_int chars)
 #undef toupper
 #endif
 	data[posn] = toupper(data[posn]);
-#elif _toupper
+#elif defined(_toupper)
 	char c = data[posn];
 	if (islower(c))
 	    data[posn] = _toupper(c);

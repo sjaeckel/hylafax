@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m,v 1.15 1996/07/13 00:17:23 sam Rel $
+.\"	$Id: hfaxd.1m,v 1.17 1998/02/07 12:31:43 guru Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -66,7 +66,7 @@ the old client-server protocol previously implemented by the
 program, and
 .IP \(bu 3
 the Simple Network Paging Protocol (\s-1SNPP\s+1) used to submit
-message pager jobs to the IXO/TAP support.
+message pager jobs to the IXO/TAP and UCP support.
 .PP
 Additional client-server protocols are planned and 
 .I hfaxd
@@ -346,8 +346,8 @@ that is publicly accessible.
 There are also administrative privileges that clients may acquire
 and which permit them wide access to objects that reside on the
 server.
-For a full discussion consult the client-server protocol specification
-(\fIreference to be added\fP).
+.PP
+A complete client-server protocol specification is still outstanding.
 .PP
 .I hfaxd
 operates with its root directory set to the top of the
@@ -638,7 +638,7 @@ The default format string is ``Modem %m (%n): %s''.
 .TP 10
 .B PagerIDMapFile
 The absolute pathname of the file that contains directions for
-mapping pager identifiers to \s-1IXO/TAP\s+1 service providers
+mapping pager identifiers to \s-1IXO/TAP\s+1 or \s-1UCP\s+1 service providers
 (and optionally a pager identification number).
 Consult
 .IR pagermap (4F)

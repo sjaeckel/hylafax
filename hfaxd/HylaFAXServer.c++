@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++,v 1.35 1996/11/21 23:58:25 sam Rel $ */
+/*	$Id: HylaFAXServer.c++,v 1.36 1997/10/12 11:09:33 guru Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -532,7 +532,8 @@ HylaFAXServer::getSequenceNumber(const char* filename, u_int count, fxStr& emsg)
     }
     sprintf(line, "%u", NEXTSEQNUM(seqnum+count));
     lseek(fd, 0, SEEK_SET);
-    if (Sys::write(fd, line, strlen(line)) != strlen(line)) {
+    if (Sys::write(fd, line, strlen(line)) != strlen(line) ||
+		ftruncate(fd,strlen(line))) {
 	emsg = fxStr::format(
 	    "Unable update sequence number file %s; write failed.", filename);
 	logError("%s: Problem updating sequence number file", filename);

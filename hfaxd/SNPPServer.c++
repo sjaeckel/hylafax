@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++,v 1.25 1996/10/29 21:30:42 sam Rel $ */
+/*	$Id: SNPPServer.c++,v 1.26 1998/02/07 12:31:43 guru Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -877,7 +877,10 @@ SNPPServer::dataCmd(void)
 			Sys::unlink(msgFile);
 			return;
 		    }
-		    (void) fwrite((const char*) buf, blen, 1, fout);
+		    // if buf only contains .., we skipped the first .
+		    // hence we must write bp, not buf. also blen is
+		    // the length of bp, not buf.
+		    (void) fwrite((const char*) bp, blen, 1, fout);
 		}
 	    }
 	    if (fclose(fout)) {

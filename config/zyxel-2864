@@ -1,4 +1,4 @@
-# $Id: zyxel-2864,v 1.4 1996/07/28 16:41:11 sam Rel $
+# $Id: zyxel-2864,v 1.5 1997/09/27 16:03:39 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -64,11 +64,12 @@ ModemSetupAACmd:	AT+FAA=1	# enable in current class
 # &N0	  Auto-negotiate highest possible DCE-DCE link rate
 # &S0	  DSR always on
 # *F0	  Deny remote configuration
+#         (actually *F0 doesn't work in the firmware -- sigh)
 # S18=4	  Receive at 38400
 # S38.3=1 DCD on/off sequence follows UNIX standard; also
 #	  fix receiving baud rate at S18 value
 # 
-ModemResetCmds:		AT&B1&N0&S0*F0S18=4S38.3=1
+ModemResetCmds:		AT&B1&N0&S0S18=4S38.3=1
 #
 ModemDialCmd:		ATDT%s		# no '@' 'cuz then busy not recognized
 NoCarrierRetrys:	3		# retry 3 times on no carrier

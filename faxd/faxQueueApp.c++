@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++,v 1.134 1996/11/22 00:00:49 sam Rel $ */
+/*	$Id: faxQueueApp.c++,v 1.135 1996/12/12 19:04:13 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2785,20 +2785,23 @@ faxQueueApp::setConfigItem(const char* tag, const char* value)
 	const char* cp;
 	for (cp = value; *cp && *cp != ':'; cp++)
 	    ;
-	fxStr name(value, cp-value);
-	for (cp++; *cp && isspace(*cp); cp++)
-	    ;
-	if (*cp != '\0') {
-	    RegEx* re = new RegEx(cp);
-	    if (re->getErrorCode() > REG_NOMATCH) {
-		fxStr emsg;
-		re->getError(emsg);
-		configError("Bad pattern for modem class \"%s\": %s: " | emsg,
-		    (const char*) name, re->pattern());
+	if (*cp == ':') {
+	    fxStr name(value, cp-value);
+	    for (cp++; *cp && isspace(*cp); cp++)
+		;
+	    if (*cp != '\0') {
+		RegEx* re = new RegEx(cp);
+		if (re->getErrorCode() > REG_NOMATCH) {
+		    fxStr emsg;
+		    re->getError(emsg);
+		    configError("Bad pattern for modem class \"%s\": %s: " | emsg,
+			(const char*) name, re->pattern());
+		} else
+		    ModemClass::set(name, re);
 	    } else
-		ModemClass::set(name, re);
+		configError("No regular expression for modem class");
 	} else
-	    configError("No regular expression for modem class");
+	    configError("Missing ':' separator in modem class specification");
     } else if (streq(tag, "pagechop")) {
 	if (streq(value, "all"))
 	    pageChop = FaxRequest::chop_all;

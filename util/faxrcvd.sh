@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh,v 1.32 1996/11/15 20:45:07 sam Rel $
+#	$Id: faxrcvd.sh,v 1.33 1998/02/12 10:04:57 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -118,6 +118,10 @@ if [ -f $FILE ]; then
 	 echo "To: $SENDTO"
 	 echo "From: The HylaFAX Receive Agent <fax>"
 	 echo "Subject: facsimile received from $SENDER";
+	 echo ""
+	 echo "--$MIMEBOUNDARY"
+	 echo "Content-Type: text/plain; charset=us-ascii"
+	 echo "Content-Transfer-Encoding: 7bit"
 	 echo ""
 	 echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):"; $INFO -n $FILE
 	 echo "ReceivedOn: $DEVICE"

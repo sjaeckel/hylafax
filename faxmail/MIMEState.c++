@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.c++,v 1.8 1996/08/21 01:35:24 sam Rel $ */
+/*	$Id: MIMEState.c++,v 1.9 1997/09/25 11:42:02 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -308,7 +308,7 @@ MIMEState::getLine(FILE* fd, fxStackBuffer& buf)
 	    int c = getc(fd);
 	    if (c == EOF)
 		return (buf.getLength() > 0);
-	    c &= 0x7f;
+	    c &= 0xff;
 	    if (c == '\n') {			// check for boundary marker
 		lineno++;
 		u_int cc = buf.getLength();
@@ -398,7 +398,7 @@ MIMEState::getQuotedPrintableLine(FILE* fd, fxStackBuffer& buf)
 	if (c == '\n') {			// check for boundary marker
 	    lineno++;
 	    if (cc > 0 && line[cc-1] == '=') {	// soft line break
-		buf.put(line, cc-1);		// everything up to ``="''
+		copyQP (buf, line, cc-1);       // everything up to ``="''
 		cc = 0;
 		continue;
 	    }

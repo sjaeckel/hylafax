@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.h,v 1.4 1996/07/03 00:17:09 sam Rel $ */
+/*	$Id: MsgFmt.h,v 1.5 1997/11/25 07:50:24 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -45,7 +45,7 @@ struct MsgFmt {
 
     MsgFmt();
     MsgFmt(const MsgFmt& other);
-    ~MsgFmt();
+    virtual ~MsgFmt();
 
     void setupConfig();
     virtual fxBool setConfigItem(const char* tag, const char* value);

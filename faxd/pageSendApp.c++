@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.c++,v 1.43 1996/08/21 21:02:47 sam Rel $ */
+/*	$Id: pageSendApp.c++,v 1.45 1998/02/07 12:50:28 guru Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -182,7 +182,6 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info)
 	// NB: may need to set tty baud rate here XXX
 	if (setupModem()) {
 	    changeState(SENDING);
-	    fxStr emsg;
 	    setServerStatus("Sending page " | req.jobid);
 	    /*
 	     * Construct the phone number to dial by applying the
@@ -262,6 +261,8 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number
     req.notice = "";
     fxStr notice;
     time_t pageStart = Sys::now();
+    if (info.getPagerSetupCmds() != "")		// use values from info file
+	pagerSetupCmds = info.getPagerSetupCmds();
     if (pagerSetupCmds != "")			// configure line speed, etc.
 	(void) getModem()->atCmd(pagerSetupCmds);
     CallStatus callstat = getModem()->dial(number, notice);
@@ -276,31 +277,19 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number
 	info.setDialFailures(0);
 
 	req.status = send_ok;			// be optimistic
-	if (pagePrologue(req, info, notice)) {
-	    while (req.requests.length() > 0) {	// messages
-		u_int i = req.findRequest(FaxRequest::send_page);
-		if (i == fx_invalidArrayIndex)
-		    break;
-		if (req.requests[i].item.length() == 0) {
-		    sendFailed(req, send_failed, "No PIN specified");
-		    break;
-		}
-		if (!sendPagerMsg(req, req.requests[i], msg, req.notice)) {
-		    /*
-		     * On protocol errors retry more quickly
-		     * (there's no reason to wait is there?).
-		     */
-		    if (req.status == send_retry) {
-			req.tts = time(0) + requeueProto;
-			break;
-		    }
-		}
-		req.requests.remove(i);
-	    }
-	    if (req.status == send_ok)
-		(void) pageEpilogue(req, info, notice);
-	} else
-	    sendFailed(req, req.status, notice, requeueProto);
+
+	// from this point on, the treatment of the two protocols differs
+	if (streq(info.getPagingProtocol(), "ixo")) {
+	    sendIxoPage(req, info, msg, notice);
+	} else if (streq(info.getPagingProtocol(), "ucp")) {
+	    sendUcpPage(req, info, msg, notice);
+	} else {
+	    notice = req.notice | "; paging protocol unknown ";
+	    sendFailed(req, send_failed, notice);
+	    req.status = send_failed;
+	}
+
+	// here again, we have identical code
 	if (req.status == send_ok) {
 	    time_t now = Sys::now();
 	    traceServer("SEND PAGE: FROM " | req.mailaddr
@@ -382,6 +371,40 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number
 	if (connTime == 0)
 	    connTime++;
     }
+}
+/*
+ * here comes the IXO specific code for sendPage, search for the
+ * string 'BEGIN UCP Support' for UCP specific code
+ */
+void
+pageSendApp::sendIxoPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& msg,
+    fxStr& notice)
+{
+    if (pagePrologue(req, info, notice)) {
+	while (req.requests.length() > 0) {	// messages
+	    u_int i = req.findRequest(FaxRequest::send_page);
+	    if (i == fx_invalidArrayIndex)
+		break;
+	    if (req.requests[i].item.length() == 0) {
+		sendFailed(req, send_failed, "No PIN specified");
+		break;
+	    }
+	    if (!sendPagerMsg(req, req.requests[i], msg, req.notice)) {
+		/*
+		 * On protocol errors retry more quickly
+		 * (there's no reason to wait is there?).
+		 */
+		if (req.status == send_retry) {
+		    req.tts = time(0) + requeueProto;
+		    break;
+		}
+	    }
+	    req.requests.remove(i);
+	}
+	if (req.status == send_ok)
+	    (void) pageEpilogue(req, info, notice);
+    } else
+	sendFailed(req, req.status, notice, requeueProto);
 }
 
 u_int
@@ -786,6 +809,333 @@ pageSendApp::traceIXO(const char* fmt ...)
     vtraceStatus(FAXTRACE_PROTOCOL, fmt, ap);
     va_end(ap);
 }
+
+/*
+ * BEGIN UCP Support
+ */
+void
+pageSendApp::sendUcpPage(FaxRequest& req, FaxMachineInfo& info,
+    const fxStr& msg, fxStr& notice)
+{
+
+    while (req.requests.length() > 0) {	// messages
+        u_int i = req.findRequest(FaxRequest::send_page);
+	if (i == fx_invalidArrayIndex)
+	    break;
+	if (req.requests[i].item.length() == 0) {
+	    sendFailed(req, send_failed, "No PIN specified");
+	    break;
+	}
+	if (!sendUcpMsg(req, req.requests[i], msg, req.notice, info)) {
+	    /*
+	     * On protocol errors retry more quickly
+	     * (there's no reason to wait is there?).
+	     */
+	    if (req.status == send_retry) {
+	        req.tts = time(0) + requeueProto;
+		break;
+	    }
+	}
+	req.requests.remove(i);
+    }
+//    if (req.status == send_ok) 
+//        (void) pageEpilogue(req, info, notice);
+}
+// the (simplistic) UCP checksum algorithm
+static void
+addUcpChecksum(fxStackBuffer& buf)
+{
+    int sum = 0;
+    for (u_int i = 1; i < buf.getLength(); i++)
+	sum += buf[i];
+    sum&=0xff;
+
+    buf.put(fxStr::format("%2.2X",sum&0xff));
+}
+
+// Encode the message text in HEX, and perform the character set
+// translation while doing so.
+// Note that SMS uses a very strange character encoding. The switch
+// statement below translates the ISO 8859-1 characters that can
+// be mapped to there SMS counterpart, the others to something
+// recognizable. The characterset RFC was used as a guideline.
+static void
+addUcpCodedMsg(fxStackBuffer& buf, const fxStr& msg)
+{
+    u_int	c;
+    for (u_int i = 0; i < msg.length(); i++) {
+	c = msg[i];
+	switch (c) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 8:
+		case 9:
+		case 11:
+		case 13:
+		case 14:
+		case 15:
+		case 16:
+		case 17:
+		case 18:
+		case 19:
+		case 20:
+		case 21:
+		case 22:
+		case 23:
+		case 24:
+		case 25:
+		case 26:
+		case 27:
+		case 28:
+		case 29:
+		case 30:
+		case 31:	break;
+
+		case 10:	buf.put("0A"); break;
+		case 12:	buf.put("0D"); break;
+		case 36:	buf.put("02"); break;
+		case 64:	buf.put("00"); break;
+		case 91:	buf.put("3C28"); break;
+		case 92:	buf.put("2F2F"); break;
+		case 93:	buf.put("293E"); break;
+		case 94:	buf.put("3E"); break;
+		case 95:	buf.put("11"); break;
+		case 96:	buf.put("2C21"); break;
+		case 123:	buf.put("2821"); break;
+		case 124:	buf.put("2121"); break;
+		case 125:	buf.put("2129"); break;
+		case 126:	buf.put("213F"); break;
+		case 160:	buf.put("20"); break;
+		case 161:	buf.put("40"); break;
+		case 162:	buf.put("4374"); break;
+		case 163:	buf.put("01"); break;
+		case 164:	buf.put("24"); break;
+		case 165:	buf.put("03"); break;
+		case 166:	buf.put("4242"); break;
+		case 167:	buf.put("5F"); break;
+		case 168:	buf.put("22"); break;
+		case 169:	buf.put("436F"); break;
+		case 170:	buf.put("61"); break;
+		case 171:	buf.put("3C"); break;
+		case 172:	buf.put("2D"); break;
+		case 173:	buf.put("2D"); break;
+		case 174:	buf.put("52"); break;
+		case 175:	buf.put("2D"); break;
+
+		case 176:	buf.put("4447"); break;
+		case 177:	buf.put("2B2D"); break;
+		case 178:	buf.put("2A2A32"); break;
+		case 179:	buf.put("2A2A33"); break;
+		case 180:	buf.put("2C"); break;
+		case 181:	buf.put("6D75"); break;
+		case 182:	buf.put("5049"); break;
+		case 183:	buf.put("2E"); break;
+		case 184:	buf.put("2C"); break;
+		case 185:	buf.put("2A2A31"); break;
+		case 186:	buf.put("6F"); break;
+		case 187:	buf.put("3E"); break;
+		case 188:	buf.put("312F34"); break;
+		case 189:	buf.put("312F32"); break;
+		case 190:	buf.put("332F34"); break;
+		case 191:	buf.put("60"); break;
+
+		case 192:	buf.put("41"); break;
+		case 193:	buf.put("41"); break;
+		case 194:	buf.put("41"); break;
+		case 195:	buf.put("41"); break;
+		case 196:	buf.put("5B"); break;
+		case 197:	buf.put("0E"); break;
+		case 198:	buf.put("1C"); break;
+		case 199:	buf.put("09"); break;
+		case 200:	buf.put("45"); break;
+		case 201:	buf.put("1F"); break;
+		case 202:	buf.put("45"); break;
+		case 203:	buf.put("45"); break;
+		case 204:	buf.put("49"); break;
+		case 205:	buf.put("49"); break;
+		case 206:	buf.put("49"); break;
+		case 207:	buf.put("49"); break;
+
+		case 208:	buf.put("442D"); break;
+		case 209:	buf.put("5D"); break;
+		case 210:	buf.put("4F"); break;
+		case 211:	buf.put("4F"); break;
+		case 212:	buf.put("4F"); break;
+		case 213:	buf.put("4F"); break;
+		case 214:	buf.put("4F"); break;
+		case 215:	buf.put("78"); break;
+		case 216:	buf.put("0B"); break;
+		case 217:	buf.put("55"); break;
+		case 218:	buf.put("55"); break;
+		case 219:	buf.put("55"); break;
+		case 220:	buf.put("55"); break;
+		case 221:	buf.put("59"); break;
+		case 222:	buf.put("5448"); break;
+		case 223:	buf.put("1E"); break;
+
+		case 224:	buf.put("7F"); break;
+		case 225:	buf.put("61"); break;
+		case 226:	buf.put("61"); break;
+		case 227:	buf.put("61"); break;
+		case 228:	buf.put("7B"); break;
+		case 229:	buf.put("0F"); break;
+		case 230:	buf.put("6165"); break;
+		case 231:	buf.put("09"); break;
+		case 232:	buf.put("04"); break;
+		case 233:	buf.put("05"); break;
+		case 234:	buf.put("65"); break;
+		case 235:	buf.put("65"); break;
+		case 236:	buf.put("07"); break;
+		case 237:	buf.put("69"); break;
+		case 238:	buf.put("69"); break;
+		case 239:	buf.put("69"); break;
+
+		case 240:	buf.put("642D"); break;
+		case 241:	buf.put("7D"); break;
+		case 242:	buf.put("08"); break;
+		case 243:	buf.put("6F"); break;
+		case 244:	buf.put("6F"); break;
+		case 245:	buf.put("6F"); break;
+		case 246:	buf.put("7C"); break;
+		case 247:	buf.put("2F"); break;
+		case 248:	buf.put("0C"); break;
+		case 249:	buf.put("06"); break;
+		case 250:	buf.put("75"); break;
+		case 251:	buf.put("75"); break;
+		case 252:	buf.put("7E"); break;
+		case 253:	buf.put("79"); break;
+		case 254:	buf.put("7468"); break;
+		case 255:	buf.put("79"); break;
+		default:
+			buf.put(fxStr::format("%2.2X",msg[i]&0xff));
+			break;
+	}
+    }
+    if (msg.length() > 160) {
+	msg[320] = '\0';
+    }
+}
+
+fxBool
+pageSendApp::sendUcpMsg(FaxRequest& req, faxRequest& preq, const fxStr& msg, fxStr& emsg, FaxMachineInfo& info)
+{
+    /*
+     * Build page packet:
+     *
+     *    STX trn '/' len '/O/30/' recipient '/' originator '/' password \
+     *		'///////' message '/' checksum ETX
+     *
+     *	trn		a transaction number
+     *	len		computed at the end, when the character set
+     *			translation is complete
+     *	recipient	who is to receive the message
+     *	originator	who sent the message, may be different from the
+     *			the number of the modem sending the message
+     *	password	a number, untested
+     *	message		the hex encoded message (see addUcpCodedMsg)
+     *	checksum	the UCP checksum
+     *
+     */
+    fxStackBuffer tmp;
+
+    // first compose the things we know before hand
+    fxStackBuffer buf;
+
+    buf.put("/O/30/");
+    buf.put(preq.item);		// recipient
+    buf.put("/");
+    buf.put(info.getPageSource()); // originator
+    buf.put("/");
+    buf.put(info.getPagerPassword()); // authenticator
+    buf.put("///////");
+    addUcpCodedMsg(buf,msg);
+    buf.put("/");
+
+    // now we know the length, and we can compute the first field
+    int len = buf.getLength() + 2 /* trn */ + 1 /* slash */ + 5 /* length */
+	+ 2 /* check sum */;
+    tmp.put(STX);
+    tmp.put("01/");
+    tmp.put(fxStr::format("%5.5d", len));
+    tmp.put(buf, buf.getLength());
+
+    // know we still have to add the check sum and the trailer
+    addUcpChecksum(tmp);    	// append packet checksum
+    tmp.put("\x03");
+
+    buf = tmp;
+
+    /*
+     * Send the packet to paging central.
+     */
+    traceIXO("SEND message block: [%.*s]", buf.getLength(), (const char*) buf);
+    putModem((const char*) buf, buf.getLength());
+
+    /*
+     * Process replies, possibly retransmitting the packet.
+     */
+    fxStackBuffer resp;				// paging central response
+    u_int ntries = ixoXmitRetries;		// up to 3 xmits of message
+    u_int unknown = 0;				// count of unknown responses
+    time_t start = Sys::now();
+    do {
+	u_int len = getResponse(resp, ixoXmitTimeout);
+	const fxStr str = (const char*)resp;
+	//readUcpResponse(str);
+	fxStr tmp;
+	u_int pos=1,pos2;
+	while(pos<str.length()) {
+	    tmp=str.token(pos,"\003");
+
+	    // Verify checksum
+	    int sum = 0;
+	    for (u_int i = 0; i < tmp.length()-2; i++)
+ 	        sum += tmp[i];
+	    sum&=0xff;
+	    pos2=tmp.length();
+	    fxStr CS=tmp.tokenR(pos2,"/");
+
+	    pos2=0;
+	    fxStr TRN=tmp.token(pos2,"/");
+	    fxStr LEN=tmp.token(pos2,"/");
+	    fxStr OR=tmp.token(pos2,"/");
+	    fxStr OT=tmp.token(pos2,"/");
+	    if(OR=="R") {  // Response
+	        if(OT=="30") { 
+		    fxStr  N_ACK=tmp.token(pos2,"/");
+		    switch( N_ACK[0]) { 
+		    case 'A':  // positive result (ACK)
+		        traceIXO("RECV ACK (message block accepted)");
+			return(TRUE);
+		    case 'N': // Negative result (NACK)
+		        traceIXO("RECV NACK (message block rejected)");
+		        if(--ntries==0) {
+			    req.status = send_retry;
+			    emsg="Message block not acknowledged by paging central"
+			      "after multiple tries";
+			    return(FALSE);
+			}
+			traceIXO("SEND message block (retransmit)");
+			putModem((const char*) buf, buf.getLength());
+			start = Sys::now();		// restart timer
+			unknown = 0;			// reset unknown response count
+		    }
+		}
+	    }
+	}
+    } while (Sys::now()-start < ixoXmitTimeout && unknown < ixoMaxUnknown);
+    return FALSE;
+}
+
+/*
+ * END UCP Support
+ */
 
 fxBool
 pageSendApp::putModem(const void* data, int n, long ms)

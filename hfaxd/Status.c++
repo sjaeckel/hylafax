@@ -1,4 +1,4 @@
-/*	$Id: Status.c++,v 1.9 1996/08/21 21:03:44 sam Rel $ */
+/*	$Id: Status.c++,v 1.10 1996/12/11 16:02:21 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -278,7 +278,7 @@ HylaFAXServer::Mprintf(FILE* fd, const char* fmt, const ModemConfig& config)
 		fprintf(fd, fspec, " QLMH"[config.speakerVolume]);
 		break;
 	    case 'z':
-		fprintf(fd, fspec, config.isGettyRunning ? "*" : " ");
+		fprintf(fd, fspec, config.isGettyRunning ? '*' : ' ');
 		break;
 	    }
 	} else

@@ -1,4 +1,4 @@
-.\"	$Id: info.4f,v 1.26 1996/06/24 03:04:16 sam Rel $
+.\"	$Id: info.4f,v 1.27 1998/02/07 12:31:43 guru Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -74,7 +74,10 @@ maxSignallingRate	string	maximum signalling rate (bits/sec) to use
 minScanlineTime	string	minimum scanline time
 pagerMaxMsgLength	number	length of longest allowed text message
 pagerPassword	string	password string send to service provider
+pagerSetupCmds	string	commands for setting up modem for a specific service provider
 pagerTTYParity	string	parity & # bits configuration for IXO/TAP communication
+pageSource	string	parameter to tell the paging central who we are
+pagingProtocol	string	protocol (IXO or UCP) for this provider
 remoteCSI	string	remote device Called Subscriber Identification
 sendFailures	number	count of consecutive failed send attempts
 supportsHighRes	boolean	accepts 196 line/inch images
@@ -149,6 +152,29 @@ and
 items can be setup according to the requirements of a pager
 service provider; they typically are locked down so that their
 values are not lost during updates.
+.PP
+The
+.IR pagerSetupCmds
+can be used to define AT commands for setting up the modem
+for a specific service provider.
+This value overwrites the settings defined in
+.IR config (4F).
+.PP
+The
+.IR pageSource
+parameter can be used to tell the paging central who we are.
+It usually contains a SMS answerable mobile number. It is only
+used for the \s-1UCP\s+1 part of
+.IR sendpage (1M).
+\fBNote: \fR This parameter should be used from user-land
+.IR sendpage (1)
+and will be removed later.
+.PP
+The
+.IR pagingProtocol
+defines which protocol, \s-1UCP\s+1 or \s-1IXO\s+1, should
+be used to send the message to the service provider. It
+defaults to ``ixo''; for \s-1UCP\s+1 set ``ucp''.
 .SH NOTES
 .IR faxsend ,
 .IR pagesend ,
@@ -171,4 +197,5 @@ directory that have not been accessed in 30 days.
 .IR faxq (1M),
 .IR faxsend (1M),
 .IR pagesend (1M),
-.IR cinfo (4F)
+.IR cinfo (4F),
+.IR config (4F)

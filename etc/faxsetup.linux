@@ -1,4 +1,4 @@
-#	$Id: faxsetup.linux,v 1.2 1996/06/24 02:59:34 sam Rel $
+#	$Id: faxsetup.linux,v 1.3 1997/12/07 13:02:28 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -41,4 +41,11 @@ deletePasswd()
 lockPasswd()
 {
     return 0
+}
+modifyPasswd()
+{
+    usermod -d $4 -m -u $2 -o -g $3 $1
+# NB: we must do it twice to keep Linux happy if the
+#     home directory allready exists
+    usermod -d $4 -m -u $2 -o -g $3 $1
 }

@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure,v 1.401 1996/11/23 17:28:45 sam Rel $
+#	$Id: configure,v 1.407 1998/02/07 14:35:55 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -80,6 +80,12 @@ REGEXINC='${DEPTH}/${TOPSRCDIR}/regex'
 DBLIB=no
 LIBDB="-L/usr/local/lib -ldb"
 DBLIBINC=/usr/local/include
+CONFIG_OSFCNH=auto
+
+# SVR4 packaging stuff
+PKG_ARCH=				# ARCH variable in pkginfo file
+PKG_EMAIL=someone@somehost.somedomain	# EMAIL variable in pkginfo file
+PKG_VENDOR="Your Name Here"		# VENDOR variable in pkginfo file
 
 : ${MAKE=make}				# make to use
 # screws up the test of `-f -'
@@ -185,6 +191,9 @@ PAGESIZE
 PATHGETTY	PATH_GETTY
 PATHVGETTY	PATH_VGETTY
 PATHEGETTY	PATH_EGETTY
+PKG_ARCH
+PKG_EMAIL
+PKG_VENDOR
 PORT
 PORTFUNCS
 PSPACKAGE	PS
@@ -332,7 +341,7 @@ do
     -target|--target)		ac_prev=TARGET;;
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 1.401 $"
+	echo "This is HylaFAX configure $Revision: 1.407 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -744,7 +753,7 @@ checkCompiler()
     if [ -z "${ENVOPTS:-}" ]; then
 	case $ISGCC-$TARGET in
 	no-*-hp*)	C_ANSI="-Aa -D_HPUX_SOURCE -Dhpux";;
-	*-sco3.2v5.0*)	C_ANSI="-Dsco -D_SVID3";;
+	*-sco3.2v5.*)	C_ANSI="-Dsco -D_SVID3 -b elf";;
 	*-sco*)		C_ANSI="-Dsco";;
 	*-isc*)		C_ANSI="-posix -D_SYSV3 -DISC";;
 	esac
@@ -984,6 +993,9 @@ if [ -z "$GCXXOPTS" ]; then
     xlC-*-aix*)
 	GCXXOPTS='-qlanglvl=compat -I/usr/lpp/xlC/include -I/usr/include'
 	;;
+    CC-*-sco3.2v5.*)		# cfront-based or cfront-compatible
+	GCXXOPTS='+a1 +p'
+	;;
     *)
 	GCXXOPTS=
 	;;
@@ -1178,8 +1190,9 @@ if [ -z "$MAKECXXOVERRIDE" ]; then
 fi
 if [ -z "$CXXFILE" ]; then
     case $CXX-$TARGET in
-    xlC-*-aix*)	CXXFILE="-+";;
-    gcc-*)	CXXFILE="-x c++";;
+    xlC-*-aix*)		CXXFILE="-+";;
+    gcc-*)		CXXFILE="-x c++";;
+    CC-*-sco3.2v5.*)	CXXFILE="+.c++";;
     esac
 fi
 
@@ -1662,6 +1675,12 @@ EmitConfigurationDefinitions()
 			    CONFIG_OPENFIFO=O_RDONLY;
 			fi
 			;;
+	*-freebsd*)	if releaseAtLeast 3.0; then
+			    CONFIG_OPENFIFO=O_RDWR;
+			else
+			    CONFIG_OPENFIFO=O_RDONLY;
+			fi
+			;;
 	*)		CONFIG_OPENFIFO=O_RDONLY;;
 	esac
     }
@@ -1802,6 +1821,7 @@ EmitConfigurationDefinitions()
     #
     test "$CONFIG_BADEXECVPROTO" || {		# char* const* vs. const char**
 	case $TARGET in
+	*-sco3.2v5.*)	CONFIG_BADEXECVPROTO=no;;
 	*-sco*)		CONFIG_BADEXECVPROTO=yes;;
 	*)		CONFIG_BADEXECVPROTO=no;;
 	esac
@@ -1812,6 +1832,7 @@ EmitConfigurationDefinitions()
     fi
     test "$CONFIG_BADEXECVEPROTO" || {		# char* const* vs. const char**
 	case $TARGET in
+	*-sco3.2v5.*)	CONFIG_BADEXECVEPROTO=no;;
 	*-sco*)		CONFIG_BADEXECVEPROTO=yes;;
 	*)		CONFIG_BADEXECVEPROTO=no;;
 	esac
@@ -2262,7 +2283,14 @@ BuildPortDotH()
     CheckVarDecl size_t 'typedef unsigned size_t;' $TYPES_H stdlib.h
     CheckVarDecl dev_t 'typedef int dev_t;' $TYPES_H stdlib.h
 
-    if CheckForIncludeFile osfcn.h; then
+    if [ $CONFIG_OSFCNH = auto ]; then
+	if CheckForIncludeFile osfcn.h; then
+	    CONFIG_OSFCNH=yes
+	else
+	    CONFIG_OSFCNH=no
+	fi
+    fi
+    if [ $CONFIG_OSFCNH = yes ]; then
 	Note "... configure use of <osfcn.h>"
 	echo '#define HAS_OSFCN_H 1'
 	OSFCNH='osfcn.h'
@@ -2673,6 +2701,10 @@ BuildPortDotH()
     CheckForDefine TS_NOCHANGE sys/priocntl.h sys/tspriocntl.h && {
 	Note "... configure use of SVR4 realtime process control interface"
 	echo '#define HAS_PRIOCNTL 1'
+    }
+    CheckForDefine FP_NOCHANGE sys/priocntl.h sys/fppriocntl.h && {
+	Note "... called FP instead of RT"
+	echo '#define HAS_FPPRIOCNTL 1'
     }
     CheckForDefine NDPRI sys/schedctl.h && {
 	Note "... configure use of IRIX realtime process control interface"
@@ -3280,6 +3312,11 @@ fi
 CPU=`echo $TARGET | sed 's/-.*//'`
 Note "Using $FILLORDER bit order for your $CPU cpu."
 
+# SVR4 packaging stuff
+if [ -z "$PKG_ARCH" ]; then
+	PKG_ARCH=$CPU
+fi
+
 #
 # Style of getty support.
 #
@@ -3400,6 +3437,7 @@ if [ -z "$DIR_AFM" ]; then
     DIR_AFMS="
 	/usr/lib/afm
 	/usr/local/lib/afm
+	/usr/local/share/ghostscript/fonts
 	/usr/local/lib/ghostscript/fonts
 	/usr/gnu/lib/ghostscript/fonts
 	/opt/gnu/lib/ghostscript/fonts
@@ -4126,6 +4164,15 @@ EOF
 # util/recvstats.sh	script for receive statistics accounting
 # util/faxcron.sh	script for cleaning up the spooling area (run from cron)
 # util/pagesizes	client page dimensions database (has default page size)
+# pkg/cpkginfo		SVR4 package stuff (client package info)
+# pkg/cproto.stub	SVR4 package stuff (client prototype stub)
+# pkg/crequest		SVR4 package stuff
+# pkg/make_proto.sh	SVR4 package stuff (script for making prototype files)
+# pkg/postinstall	SVR4 package stuff
+# pkg/postremove	SVR4 package stuff
+# pkg/spkginfo		SVR4 package stuff (server package info)
+# pkg/sproto.stub	SVR4 package stuff (server prototype stub)
+# pkg/srequest		SVR4 package stuff
 #
 CONF_FILES="
     defs
@@ -4159,6 +4206,17 @@ CONF_FILES="
     util/faxcron.sh
 
     util/pagesizes
+
+    pkg/Makefile
+    pkg/cpkginfo
+    pkg/cproto.stub
+    pkg/crequest
+    pkg/make_proto.sh
+    pkg/postinstall
+    pkg/postremove
+    pkg/spkginfo
+    pkg/sproto.stub
+    pkg/srequest
 "
 SedConfigFiles $CONF_FILES
 test $DPS = yes &&		   SedConfigFiles dps/Makefile

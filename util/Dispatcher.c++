@@ -31,7 +31,9 @@
 #if HAS_SELECT_H
 #include <sys/select.h>
 #endif
+extern "C" {
 #include <sys/time.h>
+}
 #include <limits.h>
 
 #include "Dispatcher.h"

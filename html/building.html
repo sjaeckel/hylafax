@@ -9,7 +9,7 @@ Building HylaFAX From Source Code
 <BODY>
 
 <BASEFONT SIZE=4>
-<B><FONT SIZE=+3>B</FONT>UILDING <FONT SIZE=+2>H</FONT>YLA<FONT SIZE=+1>FAX</FONT> FROM <FONT SIZE=+2>S</FONT>OURCE <FONT SIZE=+2>C</FONT>CODE</B>
+<B><FONT SIZE=+3>B</FONT>UILDING <FONT SIZE=+2>H</FONT>YLA<FONT SIZE=+1>FAX</FONT> FROM <FONT SIZE=+2>S</FONT>OURCE <FONT SIZE=+2>C</FONT>ODE</B>
 <BASEFONT SIZE=3>
 
 <HR SIZE=4>
@@ -108,7 +108,7 @@ Ghostscript comes in three flavors, two of which are
 important to us: GNU PostScript,
 a version governed by the GNU Public License (GPL),
 and
-<A HREF=http://www.cs.wisc.edu/~ghost/ghostscript/>Aladdin Ghostscript</A>,
+<A HREF=http://www.cs.wisc.edu/~ghost/>Aladdin Ghostscript</A>,
 a version covered by the Aladdin Free Public License.
 Both versions are copyrighted work and are not shareware or
 in the public domain.
@@ -742,8 +742,8 @@ conventions:
 <P>
 Finally, to complete the installation the HTML documents must be
 edited to <I>fix pathnames</I> that are found in the HTML files.
-All instances of <TT>@HTMLPATH@</TT> and <TT>@CGIBIN@</TT> must
-be replaced with the values of <TT>DIR_HTML</TT> and <TT>DIR_CGI</TT>,
+All instances of <TT>@</TT><TT>HTMLPATH@</TT> and <TT>@</TT><TT>CGIPATH@</TT>
+must be replaced with the values of <TT>DIR_HTML</TT> and <TT>DIR_CGI</TT>,
 respectively.
 (This was done automatically
 in previous versions of HylaFAX but must now
@@ -760,8 +760,8 @@ patch()
 {
    chmod +w $1
    ed - $1&lt;&lt;EOF
-g;@HTMLPATH@;s;;$ROOT;g
-g;@CGIBIN@;s;;$CGI;g
+g;@<B>HTMLPATH</B>@;s;;$ROOT;g
+g;@<B>CGIPATH@</B>;s;;$CGI;g
 w
 q
 EOF
@@ -2216,6 +2216,36 @@ or one may create patched copies of these files in a private
   #ifdef _NO_PROTOTYPE
 </LISTING>
 
+These notes pertain to SCO 3.2 v5.0
+<P>
+One of SCO's system include files has incorrect function prototypes
+that cause compilation to fail;
+The following diff may be applied to the problematic system include file
+or one may create a patched copy of the file in a private
+<B>sys</B> directory under the top level of the HylaFAX build tree.
+
+<LISTING>
+*** /usr/include/sys/syslog.h Thu Dec 26 04:42:27 1996
+--- sys/syslog.h Fri Dec 27 17:05:11 1996
+***************
+*** 198,204 ****
+  void closelog __P((void));
+  void openlog __P((const char *, int, int));
+  int setlogmask __P((int));
+! int vsyslog __P((int, char *, va_list ));
+  __END_DECLS
+  
+  #endif /* !INKERNEL */
+--- 198,204 ----
+  void closelog __P((void));
+  void openlog __P((const char *, int, int));
+  int setlogmask __P((int));
+! int vsyslog __P((int, const char *, va_list ));
+  __END_DECLS
+  
+  #endif /* !INKERNEL */
+</LISTING>
+
 <A NAME="Solaris"><H3>Solaris Guidance</H3></A>
 
 Under (at least) Solaris 2.3
@@ -2448,7 +2478,7 @@ HylaFAX table of contents</A>.</TD>
 
 <ADDRESS>
 <A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
-Last updated $Date: 1996/11/15 16:08:13 $.
+Last updated $Date: 1998/02/08 12:49:43 $.
 </ADDRESS>
 
 </BODY>

@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in,v 1.72 1996/08/16 20:58:36 sam Rel $
+#	$Id: Makefile.in,v 1.73 1997/09/26 15:52:40 guru Rel $
 #
 # @WARNING@
 #
@@ -98,6 +98,13 @@ installSysVInit: hylafax
 	if test -d /etc/config; then \
 	    ${PUTSERVER} -F /etc/config -m 644 -src config.fax -O fax; \
 	fi
+
+installClient: default
+	${PUTSERVER} -F ${SBIN} -m 755 -src faxsetup.sh -O faxsetup
+	for i in bsdi irix linux; do \
+	    ${PUTSERVER} -F ${SBIN} -m 755 \
+		-src ${SRCDIR}/faxsetup.$$i -O faxsetup.$$i; \
+	done
 
 #
 # These targets are created during the configuration procedure.

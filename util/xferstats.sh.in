@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: xferstats.sh.in,v 1.32 1996/07/23 00:47:34 sam Rel $
+#	$Id: xferstats.sh.in,v 1.33 1997/09/25 15:12:53 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -209,10 +209,8 @@ function fmtTime(t)
     v = int(t/3600);
     result = "";
     if (v > 0) {
-	if (v >= 10)
-	    result = digits[int(v/10)];
-	result = result digits[int(v%10)] ":";
 	t -= v*3600;
+        result = v ":"
     }
     v = int(t/60);
     if (v >= 10 || result != "")
@@ -485,7 +483,7 @@ END		{ OFS="\t"; setupDigits();
 		  }
 		  qsort(sorted, 0, nsorted-1);
 		  fmt = "%-" maxlen "." maxlen "s";	# e.g. %-24.24s
-		  printf fmt " %5s %8s %6s %4s %7s %7s\n",
+                  printf fmt " %6s %9s %6s %5s %7s %7s\n",
 		      KeyTitle, "Pages", "Time", "Pg/min",
 		      "Errs", "TypRate", "TypData";
 		  tpages = 0;
@@ -496,7 +494,7 @@ END		{ OFS="\t"; setupDigits();
 		      t = sendtime[i]/60; if (t == 0) t = 1;
 		      n = sendpages[i]; if (n == 0) n = 1;
 		      brate = best
-		      printf fmt " %5d %8s %6.1f %4d %7d %7.7s\n",
+		      printf fmt " %6d %9s %6.1f %5d %7d %7.7s\n",
 			  i, sendpages[i], fmtTime(sendtime[i]),
 			  sendpages[i] / t, senderrs[i],
 			  bestInMap(sendrate[i], rates),
@@ -505,9 +503,9 @@ END		{ OFS="\t"; setupDigits();
 			ttime += sendtime[i];
 			terrs += senderrs[i];
 		  }
-		  printRule(maxlen+1+5+1+8+6+1+4+1+7+1+7, "-");
+		  printRule(maxlen+1+6+1+9+6+1+5+1+7+1+7, "-");
 		  t = ttime/60; if (t == 0) t = 1;
-		  printf fmt " %5d %8s %6.1f %4d\n",
+		  printf fmt " %6d %9s %6.1f %5d\n",
 		      "Total", tpages, fmtTime(ttime), tpages/t, terrs;
 		}
 EOF

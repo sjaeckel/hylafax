@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.h,v 1.14 1996/06/24 03:00:53 sam Rel $ */
+/*	$Id: pageSendApp.h,v 1.15 1998/02/07 12:31:43 guru Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -26,7 +26,7 @@
 #ifndef _pageSendApp_
 #define	_pageSendApp_
 /*
- * IXO Send Page App.
+ * IXO/UCP Send Page App.
  */
 #include "faxApp.h"
 #include "ModemServer.h"
@@ -80,10 +80,12 @@ private:
     void	resetConfig();
     fxBool	setConfigItem(const char* tag, const char* value);
     u_int	getConfigParity(const char* value) const;
-// IXO transmission support
+// page transmission support (independent of paging protocol)
     void	sendPage(FaxRequest&, FaxMachineInfo&);
     void	sendPage(FaxRequest&, FaxMachineInfo&, const fxStr&,
 		    const fxStr&);
+// IXO transmission support
+    void	sendIxoPage(FaxRequest&, FaxMachineInfo&, const fxStr&, fxStr&);
     fxBool	sendPagerMsg(FaxRequest&, faxRequest&, const fxStr&, fxStr&);
     u_int	getResponse(fxStackBuffer& buf, long secs);
     fxBool	prepareMsg(FaxRequest&, FaxMachineInfo&, fxStr&);
@@ -93,6 +95,9 @@ private:
     void	sendFailed(FaxRequest&, FaxSendStatus, const char*, u_int = 0);
     void	notifyPageSent(FaxRequest& req, u_int fi);
     time_t	getConnectTime() const;
+// UCP transmission support
+    void	sendUcpPage(FaxRequest&, FaxMachineInfo&, const fxStr&, fxStr&);    fxBool	sendUcpMsg(FaxRequest&, faxRequest&, const fxStr&, fxStr&,
+		    FaxMachineInfo&);
 // modem handling
     fxBool	lockModem();
     void	unlockModem();

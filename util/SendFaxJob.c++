@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++,v 1.21 1996/09/30 20:50:30 sam Rel $ */
+/*	$Id: SendFaxJob.c++,v 1.22 1997/11/25 08:02:18 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -190,21 +190,24 @@ SendFaxJob::setConfigItem(const char* tag, const char* value)
 }
 #undef N
 
+#define	valeq(a,b)	(strcasecmp(a,b)==0)
+#define	valneq(a,b,n)	(strncasecmp(a,b,n)==0)
+
 fxBool
 SendFaxJob::setNotification(const char* v0)
 {
     const char* v = v0;
-    if (strneq(v, "when", 4)) {
+    if (valneq(v, "when", 4)) {
 	for (v += 4; isspace(*v); v++)
 	    ;
     }
-    if (streq(v, "done"))
+    if (valeq(v, "done"))
 	notify = when_done;
-    else if (strneq(v, "req", 3))
+    else if (valneq(v, "req", 3))
 	notify = when_requeued;
-    else if (streq(v, "none") || streq(v, "off"))
+    else if (valeq(v, "none") || valeq(v, "off"))
 	notify = no_notice;
-    else if (streq(v, "default"))
+    else if (valeq(v, "default"))
 	notify = FAX_DEFNOTIFY;
     else
 	return (FALSE);
@@ -264,11 +267,11 @@ void SendFaxJob::setMaxDials(u_int n)			{ maxDials = n; }
 void
 SendFaxJob::setPriority(const char* pri)
 {
-    if (streq(pri, "default") || streq(pri, "normal"))
+    if (valeq(pri, "default") || valeq(pri, "normal"))
 	priority = FAX_DEFPRIORITY;
-    else if (streq(pri, "bulk") || streq(pri, "junk"))
+    else if (valeq(pri, "bulk") || valeq(pri, "junk"))
 	priority = FAX_DEFPRIORITY + 4*16;
-    else if (streq(pri, "high"))
+    else if (valeq(pri, "high"))
 	priority = FAX_DEFPRIORITY - 4*16;
     else
 	priority = atoi(pri);
@@ -333,21 +336,21 @@ void SendFaxJob::setDesiredSpeed(const char* v)		{ desiredbr = getSpeed(v); }
 void
 SendFaxJob::setDesiredMST(const char* v)
 {
-    if (streq(v, "0ms"))
+    if (valeq(v, "0ms"))
 	desiredst = 0;
-    else if (streq(v, "5ms"))
+    else if (valeq(v, "5ms"))
 	desiredst = 1;
-    else if (streq(v, "10ms2"))
+    else if (valeq(v, "10ms2"))
 	desiredst = 2;
-    else if (streq(v, "10ms"))
+    else if (valeq(v, "10ms"))
 	desiredst = 3;
-    else if (streq(v, "20ms2"))
+    else if (valeq(v, "20ms2"))
 	desiredst = 4;
-    else if (streq(v, "20ms"))
+    else if (valeq(v, "20ms"))
 	desiredst = 5;
-    else if (streq(v, "40ms2"))
+    else if (valeq(v, "40ms2"))
 	desiredst = 6;
-    else if (streq(v, "40ms"))
+    else if (valeq(v, "40ms"))
 	desiredst = 7;
     else
 	desiredst = atoi(v);

@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++,v 1.27 1996/10/31 21:47:31 sam Rel $ */
+/*	$Id: InetFaxServer.c++,v 1.28 1997/09/26 07:07:58 guru Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -89,11 +89,14 @@ InetFaxServer::InetFaxServer()
     data_dest.sin_family = AF_INET;
 
     hostent* hp = Socket::gethostbyname(hostname);
+
     if (hp != NULL)
+    {
 	hostname = hp->h_name;
-    struct in_addr in;
-    memcpy(&in, hp->h_addr, sizeof (in));
-    hostaddr = inet_ntoa(in);
+        struct in_addr in;
+        memcpy(&in, hp->h_addr, sizeof (in));
+        hostaddr = inet_ntoa(in);
+    }
 
     fxAssert(_instance == NULL,
 	"Cannot create multiple InetFaxServer instances");

@@ -1,0 +1,10 @@
+#
+# $Id: preremove,v 1.1 1997/12/07 07:54:46 guru Rel $
+#	Tim Rice	Tue Feb 25 11:21:51 PST 1997
+#
+#	preremove
+#
+#cd /usr/local/HylaFAX-v4.0
+#sh remove.links
+
+exit 0
