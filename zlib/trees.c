@@ -29,7 +29,7 @@
  *          Addison-Wesley, 1983. ISBN 0-201-06672-6.
  */
 
-/* $Id: trees.c,v 1.3 1996/06/20 19:00:35 sam Rel $ */
+/* $Id: trees.c,v 1.4 1996/09/30 19:10:25 sam Rel $ */
 
 #include "deflate.h"
 
@@ -154,7 +154,7 @@ local void copy_block     OF((deflate_state *s, charf *buf, unsigned len,
 
 #else /* DEBUG */
 #  define send_code(s, c, tree) \
-     { if (verbose>1) fprintf(stderr,"\ncd %3d ",(c)); \
+     { if (verbose>2) fprintf(stderr,"\ncd %3d ",(c)); \
        send_bits(s, tree[c].Code, tree[c].Len); }
 #endif
 

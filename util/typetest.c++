@@ -1,4 +1,4 @@
-/*	$Id: typetest.c++,v 1.8 1996/07/31 17:37:40 sam Rel $ */
+/*	$Id: typetest.c++,v 1.9 1996/09/30 21:03:43 sam Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -47,24 +47,24 @@ const TypeRule*
 fileType(const char* filename)
 {
     struct stat sb;
-    int fd = ::open(filename, O_RDONLY);
+    int fd = open(filename, O_RDONLY);
     if (fd < 0) {
 	fprintf(stderr, "%s: Can not open file\n", filename);
 	return (NULL);
     }
     if (fstat(fd, &sb) < 0) {
 	fprintf(stderr, "%s: Can not stat file\n", filename);
-	::close(fd);
+	close(fd);
 	return (NULL);
     }
     if ((sb.st_mode & S_IFMT) != S_IFREG) {
 	fprintf(stderr, "%s: Not a regular file\n", filename);
-	::close(fd);
+	close(fd);
 	return (NULL);
     }
     char buf[512];
     int cc = read(fd, buf, sizeof (buf));
-    ::close(fd);
+    close(fd);
     if (cc == 0) {
 	fprintf(stderr, "%s: Empty file\n", filename);
 	return (NULL);

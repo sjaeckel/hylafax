@@ -1,4 +1,4 @@
-# $Id: config.site,v 1.37 1996/08/19 18:00:44 sam Rel $
+# $Id: config.site,v 1.40 1996/11/23 17:28:45 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -54,6 +54,7 @@
 #REGEX="yes"			# use distributed regular expression package
 #ZLIB="yes"			# use distributed zlib distribution
 #UTMP="utmpx"			# type of utmp+wtmp handling (auto|utmp|utmpx)
+#DBLIB="no"			# use distributed libdb distribution
 
 #
 # Directory parameters.
@@ -163,6 +164,23 @@
 #REGEXINC="/usr/include"		# place to find regex.h
 
 #
+# The LIBDB hashed database package is (currently) used
+# only by the MLA tools that are not publicly available
+# but which are built from within this source tree.  In
+# the future the fax software may use the libdb software
+# for the remote client capabilities database (so these
+# hooks are included now).
+#
+# The source for the LIBDB hashed database package
+# is not required to build this software, but the package
+# is required to link against.  If the copy of the software
+# that is included in this distribution is not to be used
+# then set DBLIB=no and supply the following definitions.
+#
+#LIBDB=" "				# linkage convention for libdb package
+#DBLIBINC="/usr/include"		# place to find db.h
+
+#
 # Parameters to control various workarounds for system bugs.
 #
 # These parameters are normally set in configure based on
@@ -182,6 +200,7 @@
 #CONFIG_BADGETOPTPROTO="no"		# system has incorrect getopt func decl
 #CONFIG_SOCKARGLENTYPE="unsigned long"	# call-by-ref arg type for socket funcs
 #CONFIG_BADSELECTPROTO="no"		# system has way old select func decl
+#CONFIG_MAXGID="5999"			# maximum permissable GID
 
 #
 # Dynamic Shared Object (DSO) support.
@@ -206,6 +225,8 @@
 #MAKELQUOTE="<"				# make include syntax
 #MAKERQUOTE=">"				# make include syntax
 #SETMAKE='MAKE	= ${MAKE}'		# define if make does not setup $MAKE
+#MKDEPCOPTS=""				# C compiler opts to supply w/ -M
+#MKDEPCXXOPTS=""			# C++ compiler opts to supply w/ -M
 
 #
 # General system stuff used by the distribution.

@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxcron.sh.in,v 1.37 1996/06/24 03:06:17 sam Rel $
+#	$Id: faxcron.sh.in,v 1.38 1996/10/22 18:48:29 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -429,8 +429,10 @@ find tmp -mtime +$AGETMP -print >$JUNK
 if [ -s $JUNK ]; then
     echo "Purge tmp files older than $AGETMP days:"
     for i in `$CAT $JUNK`; do
+      if [ -f $i ]; then
 	echo "    Remove $i"
 	$RM $i
+      fi
     done
 else
     echo "Nothing to purge in the tmp directory."

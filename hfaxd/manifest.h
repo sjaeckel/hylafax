@@ -1,4 +1,4 @@
-/*	$Id: manifest.h,v 1.5 1996/06/24 03:01:51 sam Rel $ */
+/*	$Id: manifest.h,v 1.7 1996/11/23 17:28:21 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -38,7 +38,11 @@
  * of files and use the group protection bits for
  * access control.
  */
+#if defined(CONFIG_MAXGID) && CONFIG_MAXGID < 60002
+#define	FAXUID_MAX	CONFIG_MAXGID	// constrain to system limit
+#else
 #define	FAXUID_MAX	60002		// fits in unsigned 16-bit value
+#endif
 #define	FAXUID_ANON	FAXUID_MAX	// UID of anonymous user
 
 /*

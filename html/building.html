@@ -754,6 +754,7 @@ A shell script to do this is:
 #! /bin/sh
 ROOT=${1-/hylafax}
 CGI=${2-/cgi-bin}
+PATTERN="@[a-zA-Z][a-zA-Z]*@"
 
 patch()
 {
@@ -2111,6 +2112,110 @@ script to run correctly but terminate with an error.
 It may be preferrable to set <TT>SCRIPT_SH=/bin/ksh</TT>
 though it is not necessary.
 
+<A NAME="SCO"><H3>SCO Guidance</H3></A>
+
+These notes pertain to SCO 3.2 v4.2; they may also be relevant to other
+versions.
+
+<P>
+With gcc 2.7.2.1 one gcc include file needs to be patched to
+include missing function prototypes:
+
+<LISTING>
+*** /usr/local/lib/gcc-lib/i486-unknown-sco3.2v4.2/2.7.2.1/include/sys/signal.h	Thu Sep  5 18:26:45 1996
+--- /usr/local/lib/gcc-lib/i486-unknown-sco3.2v4.2/2.7.2.1/include/sys/signal.h.old	Thu Sep  5 18:28:56 1996
+***************
+*** 214,221 ****
+  #else
+  	int kill(short, int);
+  #endif
+! 	int (*ssignal(int, int(*)(int)))(int);
+! 	void (*sigset(int, SIG_TYP))(int);
+  
+  	int sigpause(int);	/* These 4 are SVID functions as well */
+  	int sighold(int);
+--- 214,221 ----
+  #else
+  	int kill(short, int);
+  #endif
+! 	int (*ssignal(int, int(*)(int)))();
+! 	void (*sigset(int, SIG_TYP))();
+  
+  	int sigpause(int);	/* These 4 are SVID functions as well */
+  	int sighold(int);
+</LISTING>
+
+<P>
+When running configure disable the use of ranlib by specifying
+<TT>-with-RANLIB=true</TT> on the command line or in a <B>config.local</B>
+file.
+
+<P>
+Some of SCO's system include files have incorrect function prototypes
+that cause compilation to fail; other include files are not properly
+setup to deal with their being included multiple times.
+The following diffs may be applied to the problematic system include files
+or one may create patched copies of these files in a private
+<B>sys</B> directory under the top level of the HylaFAX build tree.
+
+<LISTING>
+*** /usr/include/sys/stat.h	Wed Mar  9 00:00:00 1994
+--- sys/stat.h	Thu Sep  5 18:45:25 1996
+***************
+*** 147,153 ****
+  extern int  lstat(const char *, struct stat *);
+  extern int  fstat(int, struct stat *);
+  extern int  mkdir(const char *, mode_t);
+! extern int  mkfifo(char *, mode_t);
+  extern mode_t  umask(mode_t);
+  #ifdef __cplusplus
+  };
+--- 147,153 ----
+  extern int  lstat(const char *, struct stat *);
+  extern int  fstat(int, struct stat *);
+  extern int  mkdir(const char *, mode_t);
+! extern int  mkfifo(const char *, mode_t);
+  extern mode_t  umask(mode_t);
+  #ifdef __cplusplus
+  };
+*** /usr/include/sys/time.h	Fri Mar 27 05:05:45 1992
+--- sys/time.h	Thu Sep  5 19:42:08 1996
+***************
+*** 32,41 ****
+--- 32,44 ----
+  #ifndef __sys_time_h__
+  #define __sys_time_h__
+  
++ #ifndef _STRUCT_TIMEVAL_
++ #define _STRUCT_TIMEVAL_
+  struct timeval {
+  	long            tv_sec;	/* seconds */
+  	long            tv_usec;/* and microseconds */
+  };
++ #endif /* _STRUCT_TIMEVAL_ */
+  
+  struct timezone {
+  	int             tz_minuteswest;	/* minutes west of Greenwich */
+*** /usr/include/sys/select.h	Wed Mar  9 00:00:00 1994
+--- sys/select.h	Thu Sep  5 19:41:13 1996
+***************
+*** 38,47 ****
+--- 38,50 ----
+  /*
+   * Structure used to specify timeout in select(2) system call.
+   */
++ #ifndef _STRUCT_TIMEVAL_
++ #define _STRUCT_TIMEVAL_
+  struct timeval {
+  	long	tv_sec;		/* seconds */
+  	long	tv_usec;	/* and microseconds */
+  };
++ #endif /* _STRUCT_TIMEVAL_ */
+  
+  #ifndef _INKERNEL
+  #ifdef _NO_PROTOTYPE
+</LISTING>
+
 <A NAME="Solaris"><H3>Solaris Guidance</H3></A>
 
 Under (at least) Solaris 2.3
@@ -2275,6 +2380,58 @@ putting new syslog functions in my libc.a. This means that I
 have not tried to build with the <B>port/syslog.c</B> support
 included with HylaFAX; though it should be equivalent).
 
+<A NAME="UnixWare"><H3>UnixWare Guidance</H3></A>
+
+One system include file needs to be patched to correct
+function prototypes:
+
+<LISTING>
+*** /usr/include/netdb.h	Mon Dec 11 05:25:35 1995
+--- netdb.h	Wed Oct 30 14:05:35 1996
+***************
+*** 90,105 ****
+  
+  #ifdef __STDC__
+  
+! extern struct hostent	*gethostbyname(char *);
+  extern struct hostent	*gethostbyaddr(char *, int, int);
+  extern struct hostent	*gethostent(void);
+  extern struct netent	*getnetbyname(char *);
+  extern struct netent	*getnetbyaddr(long, int);
+  extern struct netent	*getnetent(void);
+! extern struct servent	*getservbyname(char *, char *);
+  extern struct servent	*getservbyport(int, char *);
+  extern struct servent	*getservent(void);
+! extern struct protoent	*getprotobyname(char *);
+  extern struct protoent	*getprotobynumber(int);
+  extern struct protoent	*getprotoent(void);
+  extern int		endhostent(void);
+--- 90,105 ----
+  
+  #ifdef __STDC__
+  
+! extern struct hostent	*gethostbyname(const char *);
+  extern struct hostent	*gethostbyaddr(char *, int, int);
+  extern struct hostent	*gethostent(void);
+  extern struct netent	*getnetbyname(char *);
+  extern struct netent	*getnetbyaddr(long, int);
+  extern struct netent	*getnetent(void);
+! extern struct servent	*getservbyname(const char *, const char *);
+  extern struct servent	*getservbyport(int, char *);
+  extern struct servent	*getservent(void);
+! extern struct protoent	*getprotobyname(const char *);
+  extern struct protoent	*getprotobynumber(int);
+  extern struct protoent	*getprotoent(void);
+  extern int		endhostent(void);
+</LISTING>
+
+<P>
+On some versions the configuration parameter
+<TT>CONFIG_SOCKARGLENTYPE</TT> needs to be set to <TT>size_t</TT>
+to force the argument type for call-by-reference parameters
+to the socket-related system calls; this should automatically be
+done by <B>configure</B>.
+
 <!--FOOTER-->
 
 <P>
@@ -2291,7 +2448,7 @@ HylaFAX table of contents</A>.</TD>
 
 <ADDRESS>
 <A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
-Last updated $Date: 1996/08/26 19:40:31 $.
+Last updated $Date: 1996/11/15 16:08:13 $.
 </ADDRESS>
 
 </BODY>

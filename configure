@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure,v 1.390 1996/08/30 02:56:20 sam Rel $
+#	$Id: configure,v 1.401 1996/11/23 17:28:45 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -77,6 +77,9 @@ ZLIBINC='${DEPTH}/${TOPSRCDIR}/zlib'
 REGEX=yes
 LIBREGEX='-L${DEPTH}/regex -lregex'
 REGEXINC='${DEPTH}/${TOPSRCDIR}/regex'
+DBLIB=no
+LIBDB="-L/usr/local/lib -ldb"
+DBLIBINC=/usr/local/include
 
 : ${MAKE=make}				# make to use
 # screws up the test of `-f -'
@@ -91,6 +94,7 @@ CC
 CXX
 CXXFILE
 DATE
+DBLIBINC
 ENVOPTS
 GCOPTS
 GCXXOPTS
@@ -99,6 +103,8 @@ MAKEDEPINCLUDE
 MAKEINCLUDE
 MAKELQUOTE
 MAKERQUOTE
+MKDEPCOPTS
+MKDEPCXXOPTS
 PROTOTYPES
 RANLIB
 REGEXINC
@@ -124,6 +130,7 @@ CHOWN
 CP
 CMP
 COL
+DBLIB
 DEFVRES
 DPSRIP 		PATH_DPSRIP
 DSO
@@ -152,6 +159,7 @@ LIBPORT
 LIBREGEX
 LIBTIFF
 LIBZ
+LIBDB
 LLDOPTS
 LN
 LN_S
@@ -324,7 +332,7 @@ do
     -target|--target)		ac_prev=TARGET;;
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 1.390 $"
+	echo "This is HylaFAX configure $Revision: 1.401 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -485,6 +493,7 @@ if [ -f config.cache ]; then
     OTIFFINC="$TIFFINC"; OLIBTIFF="$LIBTIFF"
     OZLIBINC="$ZLIBINC"; OLIBZ="$LIBZ"
     OREGEXINC="$REGEXINC"; OLIBREGEX="$LIBREGEX"
+    ODBLIBINC="$DBLIBINC"; OLIBDB="$LIBDB"
     . ./config.cache
     capture . ./config.cache
     # NB: these are calculated each time from scratch
@@ -493,6 +502,7 @@ if [ -f config.cache ]; then
     TIFFINC="$OTIFFINC"; LIBTIFF="$OLIBTIFF"
     ZLIBINC="$OZLIBINC"; LIBZ="$OLIBZ"
     REGEXINC="$OREGEXINC"; LIBREGEX="$OLIBREGEX"
+    DBLIBINC="$ODBLIBINC"; LIBDB="$OLIBDB"
 fi
 
 identifyTarget()
@@ -609,7 +619,8 @@ relativize()
 	-I*)		echo "$i" | sed 's;^-I;-I../;' ;;
 	*)		echo "../$i" ;;
 	esac
-    done) | tr '\012' ' '` | sed -e 's;[ ][ ]*$;;' -e 's;/[.]$;;'
+    done) | tr '\012' ' '` | \
+	sed -e 's;/[.]/;/;g' -e 's;[ ][ ]*$;;' -e 's;/[.]$;;'
 }
 
 #
@@ -624,6 +635,7 @@ JUNK="
     conftestmmap
     confx confy
     confMakefile
+    conf.db
     core
     dummy
     dummy.C
@@ -862,7 +874,7 @@ cat>dummy.c<<EOF
 main(int argc, char* argv) { exit(0); }
 EOF
 capture cat dummy.c
-if capture "$CCOMPILER -c -M dummy.c | grep '^dummy.o[ 	]*:[ 	]*dummy.c'"; then
+if capture "$CCOMPILER -c -M $MKDEPCOPTS dummy.c | grep '^dummy.o[ 	]*:[ 	]*dummy.c'"; then
     Note "Looks like $CCOMPILER supports the -M option for generating make dependencies."
     MKDEPEND='\${SHELL} \${PORT}/mkdepend'
 else
@@ -1260,6 +1272,7 @@ makeDefs()
 OTIFFINC="${TIFFINC}"; x="`relativize ${TIFFINC}`"; TIFFINC="$x"
 OZLIBINC="${ZLIBINC}"; x="`relativize ${ZLIBINC}`"; ZLIBINC="$x"
 OREGEXINC="${REGEXINC}"; x="`relativize ${REGEXINC}`"; REGEXINC="$x"
+ODBLIBINC="${DBLIBINC}"; x="`relativize ${DBLIBINC}`"; DBLIBINC="$x"
 makeDefs xdefs
 
 #
@@ -1444,12 +1457,17 @@ if [ "$LIBSUN" = auto ]; then
 fi
 CheckForLibrary crypt -lc || {
     #
-    # FreeBSD-2.1 in particular needs this.
+    # FreeBSD-2.1 in particular needs -lcrypt.
+    # SCO sometime has -lcrypt_d (domestic) and
+    #    sometimes -lcrypt_i (import?)
     #
-    if CheckForLibrary crypt -lcrypt; then
-	Note "Looks like -lcrypt is needed for crypt."
-	MACHDEPLIBS="$MACHDEPLIBS -lcrypt"
-    fi
+    for i in -lcrypt -lcrypt_d -lcrypt_i; do
+	if CheckForLibrary crypt $i; then
+	    Note "Looks like $i is needed for crypt."
+	    MACHDEPLIBS="$MACHDEPLIBS $i"
+	    break;
+	fi
+    done
 }
 CheckForLibrary strftime -lc || {
     #
@@ -1834,12 +1852,35 @@ EmitConfigurationDefinitions()
     test "$CONFIG_SOCKARGLENTYPE" || {		# int vs unsigned long vs ...
 	case $TARGET in
 	# XXX fill in for busted systems
+	*-univel-*)	CONFIG_SOCKARGLENTYPE=size_t;;
 	*)		CONFIG_SOCKARGLENTYPE=int;;
 	esac
     }
     if [ "$CONFIG_SOCKARGLENTYPE" != int ]; then
 	Note "... using $CONFIG_SOCKARGLENTYPE for call-by-reference socket length params"
 	echo "#define CONFIG_SOCKARGLENTYPE $CONFIG_SOCKARGLENTYPE"
+    fi
+    #
+    # Select the maximum fax UID.  This value is stored
+    # in the GID of files so must be constrained by any
+    # system limitations.  The maximum value is used for
+    # anonymous logins.  The default value of 60002 comes
+    # from NFS/nobody usage on various systems.
+    #
+    test "$CONFIG_MAXGID" || {
+	case $TARGET in
+	*-sco*)		CONFIG_MAXGID=60000;;
+	*-hpux*)	CONFIG_MAXGID=60000;;
+	*)		CONFIG_MAXGID=60002;;	# default
+	esac
+    }
+    if [ "$CONFIG_MAXGID" ]; then
+	if [ "$CONFIG_MAXGID" -le 60002 ]; then
+	    Note "... constrain client IDs to be <= $CONFIG_MAXGID"
+	    echo "#define CONFIG_MAXGID $CONFIG_MAXGID"
+	else
+	    Note "... max client ID too large ($CONFIG_MAXGID); using default"
+	fi
     fi
 }
 
@@ -2854,6 +2895,97 @@ EOF
     Note "Done checking ZLIB support."
 fi
 
+# NB: only check if we have the MLA tools
+if [ -f $SRCDIR/MLA/VERSION -a $DBLIB = no ]; then
+    Note ""
+    Note "Checking LIBDB support."
+    #
+    # Verify library is compatible.
+    #
+    cat>t.c<<EOF
+#include <sys/types.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include "db.h"
+main()
+{
+    DBT key, data;
+    const char d[] = "some random string";
+    const char k[] = "mykey";
+    DB* db = dbopen("conf.db", O_RDWR|O_CREAT, 0644, DB_HASH, NULL);
+    if (db == NULL) {
+	printf("Cannot create hashed database file conf.db\n");
+	exit(-1);
+    }
+    key.data = (void*) k;
+    key.size = sizeof (k);
+    data.data = (void*) d;
+    data.size = sizeof (d);
+    if ((*db->put)(db, &key, &data, 0) != 0) {
+	printf("Error writing hashed db record\n");
+	exit(-1);
+    }
+    (void) (*db->close)(db);
+    db = dbopen("conf.db", O_RDONLY, 0644, DB_HASH, NULL);
+    if (db == NULL) {
+	printf("Cannot reopen hashed database file conf.db\n");
+	exit(-1);
+    }
+    data.data = (void*) NULL;
+    data.size = 0;
+    if ((*db->get)(db, &key, &data, 0) != 0) {
+	printf("Error reading hashed db record\n");
+	exit(-1);
+    }
+    if (data.size != sizeof (d) || memcmp(data.data, d, data.size) != 0) {
+	printf("Hashed db record mismatch: size %u data \"%s\"\n",
+	    data.size, data.data ? data.data : "(null)");
+	exit(-1);
+    }
+    (*db->close)(db);
+    exit(0);
+}
+EOF
+    capture cat t.c
+    if runMake t "t:; \${CC} \${CVERSION} -I${ODBLIBINC} t.c ${LIBDB} ${MACHDEPLIBS}" && capture ./a.out; then
+	Note "Using LIBDB include files from $ODBLIBINC"
+	Note "Using pre-built LIBDB library $LIBDB"
+    else
+	cat 1>&2 <<EOF
+
+Incompatible/missing LIBDB Library.
+
+Compilation or execution of the following test program failed:
+
+----------------------------------------------------------
+EOF
+	cat t.c 1>&2
+	cat 1>&2 <<EOF
+----------------------------------------------------------
+
+With:
+
+DBLIBINC=${ODBLIBINC}
+LIBDB=${LIBDB}
+
+The above program checks the operation of the LIBDB hashed database
+package to ensure it is suitable for use with HylaFAX.  HylaFAX ${VERSION}
+requires version 1.85 or newer of this package.  If you do not have
+up to date LIBDB software on your system then you can use the version
+that is included with HylaFAX.  Otherwise, if you have the right
+software, verify that you have the DBLIBINC and LIBDB configuration
+parameters set correctly for your system (see above) and that any
+environment variables are setup that are needed to locate a libz DSO at
+runtime (e.g.  LD_LIBRARY_PATH).  Also be sure that any relative
+pathnames are made relative to the top of the build area.
+
+EOF
+	boom
+    fi
+    Note "Done checking LIBDB support."
+fi
+
 if [ "$DSO" = auto ]; then
     Note ""
     Note "Checking for Dynamic Shared Object (DSO) support."
@@ -3141,7 +3273,7 @@ if [ -z "$FILLORDER" ]; then
     #
     case $TARGET in
     mips-dec-*)	FILLORDER=LSB2MSB;;
-    i[345]86-*)	FILLORDER=LSB2MSB;;
+    i[3-6]86-*)	FILLORDER=LSB2MSB;;
     *)		FILLORDER=MSB2LSB;;
     esac
 fi
@@ -3164,7 +3296,13 @@ if [ -z "$PATH_GETTY" ]; then
     if CheckForDefine _PATH_GETTY paths.h; then
 	Note "Using _PATH_GETTY from <paths.h> as the program to exec for a data call."
     else
-	PATH_GETTY=`findApp ttymon /usr/lib/saf:/usr/libexec:/sbin:$PATH`
+	#
+	# NB: use findFile instead of findApp because on some
+	#     systems this file is mode 544; so if configure
+	#     is run by an unprivileged user the file will not
+	#     be located.
+	#
+	PATH_GETTY=`findFile ttymon /usr/lib/saf:/usr/libexec:/sbin:$PATH`
 	test -z "$PATH_GETTY" && \
 	    PATH_GETTY=`findApp getty /usr/libexec:/sbin:$PATH`
 	test -z "$PATH_GETTY" && \
@@ -3240,6 +3378,7 @@ if [ -z "$DIR_LOCKS" ]; then
     "
     case $TARGET in
     *-aix*)		LOCKDIRS="/etc/locks $LOCKDIRS";;
+    *-sco*)		LOCKDIRS="/usr/spool/uucp $LOCKDIRS";;
     esac
     DIR_LOCKS=
     for i in $LOCKDIRS; do
@@ -3349,6 +3488,7 @@ on building Ghostscript with the necessary TIFF driver.
 
 EOF
 	PATH_PSRIP=/usr/local/bin/gs
+	PATH_GSRIP=$PATH_PSRIP
     fi
 }
 
@@ -3785,9 +3925,10 @@ if [ $QUIET = no ]; then
 		promptForParameter $i;
 	    done
 	fi
+	printConfig
 	checkForExecutable $PATH_SENDMAIL
 	checkForExecutable $PATH_GETTY
-	printConfig; prompt "Are these ok [yes]?"; read ok
+	prompt "Are these ok [yes]?"; read ok
 	test -z "$ok" && ok=yes
 	case "$ok" in
 	[1-9]|1[0-9])	promptForParameter $ok;;
@@ -3910,6 +4051,7 @@ DEFPAGESIZE=`grep "$PAGESIZE" $F.in | $SED -e 's/[^	]*/default/;q'`
 x="`relativize ${LIBTIFF}`"; LIBTIFF="$x"
 x="`relativize ${LIBZ}`"; LIBZ="$x"
 x="`relativize ${LIBREGEX}`"; LIBREGEX="$x"
+x="`relativize ${LIBDB}`"; LIBDB="$x"
 
 # NB: these should be sorted alphabetically
 $RM confsed2; dumpvars "$VAR2" DEFPAGESIZE | sort > confsed2
@@ -4027,6 +4169,7 @@ test $SGI2FAX = yes &&	   	   SedConfigFiles sgi2fax/Makefile
 test $PORT = yes &&		   SedConfigFiles port/Makefile
 test $ZLIB = yes &&		   SedConfigFiles zlib/Makefile
 test $REGEX = yes &&		   SedConfigFiles regex/Makefile
+test $DBLIB = yes &&		   SedConfigFiles dblib/Makefile
 test $AFM = yes &&		   SedConfigFiles afm/Makefile
 if [ $HTML = yes ]; then
     HTMLDIRS="
@@ -4044,8 +4187,8 @@ if [ $HTML = yes ]; then
 	    -e "s;[^ ]*\.html;$i/&;g" \
 	    -e "s;[^ ]*\.sh;$i/&;g"`
     done
-    test -d $SRCDIR/html/tools/MLA && SedConfigFiles html/tools/MLA/Makefile
 fi
+test -f $SRCDIR/MLA/VERSION &&	   SedConfigFiles MLA/Makefile
 
 if [ "$MAKEDEPINCLUDE" != "sinclude" ]; then
     Note "Setting up make dependency files."
@@ -4075,11 +4218,12 @@ if [ "$MAKEDEPINCLUDE" != "sinclude" ]; then
     test $PORT = yes	&& DEPEND="$DEPEND port"
     test $ZLIB = yes	&& DEPEND="$DEPEND zlib"
     test $REGEX = yes	&& DEPEND="$DEPEND regex"
+    test $DBLIB = yes	&& DEPEND="$DEPEND dblib"
     test $AFM = yes	&& DEPEND="$DEPEND afm"
     if [ $HTML = yes ]; then
 	DEPEND="$DEPEND html html/tools"
-	test -d $SRCDIR/html/tools/MLA && DEPEND="$DEPEND html/tools/MLA"
     fi
+    test -f $SRCDIR/MLA/VERSION && DEPEND="$DEPEND MLA"
     test -d $SRCDIR/faxview -a -d faxview && DEPEND="$DEPEND faxview"
     for i in $DEPEND; do
 	test -f $i/Makedepend || cp /dev/null $i/Makedepend

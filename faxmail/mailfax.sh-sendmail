@@ -9,7 +9,7 @@
 # mailer definition (or similar):
 # 
 # Mfax,	P=/usr/local/lib/fax/mailfax, F=DFMShu, M=100000,
-# 	A=mailfax $h $f
+# 	A=mailfax $u $h $f
 # 
 # and add the following address rewriting rule to rule set 0:
 # 

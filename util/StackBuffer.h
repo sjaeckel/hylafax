@@ -1,4 +1,4 @@
-/*	$Id: StackBuffer.h,v 1.14 1996/06/24 03:06:04 sam Rel $ */
+/*	$Id: StackBuffer.h,v 1.15 1996/09/25 17:22:27 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -59,6 +59,7 @@ public:
     operator const char*() const;	// Return base of buffer
     operator const unsigned char*() const;// Return base of buffer
     char& operator[](u_int i) const;	// Return character in buffer
+    char& operator[](int i) const;	// Return character in buffer
 protected:
     char	buf[1000];
     char*	next;
@@ -83,4 +84,5 @@ inline fxStackBuffer::operator const unsigned char*() const
     { return (unsigned char*)base; }
 inline u_int fxStackBuffer::getLength() const	{ return next - base; }
 inline char& fxStackBuffer::operator[](u_int ix) const { return base[ix]; }
+inline char& fxStackBuffer::operator[](int ix) const   { return base[ix]; }
 #endif /* _StackBuffer_ */

@@ -1,4 +1,4 @@
-/*	$Id: Array.c++,v 1.16 1996/06/24 03:05:37 sam Rel $ */
+/*	$Id: Array.c++,v 1.18 1996/10/04 00:09:16 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -59,7 +59,8 @@ fxArray::fxArray(u_int esize, u_int n, void * d)
 
 fxArray::~fxArray()
 {
-    delete (void*)data;
+    if (data)
+	free((void*) data);
 }
 
 void
@@ -169,7 +170,8 @@ void
 fxArray::getmem()
 {
     if (maxi == 0) {
-	delete (void*)data;
+	if (data)
+	    free((void*) data);
 	data = 0;
     } else {
 	if (data)
@@ -295,7 +297,7 @@ fxArray::qsort(u_int posn, u_int len)
 	? malloc(elementsize)
 	: smallbuffer;
     qsortInternal(posn,posn+len-1,tmp);
-    if (tmp != smallbuffer) delete tmp;
+    if (tmp != smallbuffer) free(tmp);
 }
 
 void

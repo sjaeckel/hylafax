@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++,v 1.61 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: SendFaxClient.c++,v 1.62 1996/11/14 19:56:33 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -203,6 +203,7 @@ SendFaxClient::makeCoverPage(const SendFaxJob& job, fxStr& file, fxStr& emsg)
 	else
 	    av[ac++] = coverCmd;
 	addarg(av, ac, "-C", job.getCoverTemplate());
+	addarg(av, ac, "-D", dateFormat);
 	addarg(av, ac, "-c", job.getCoverComments());
 	addarg(av, ac, "-f", senderName);
 	addarg(av, ac, "-l", job.getCoverLocation());
@@ -501,6 +502,7 @@ const SendFaxClient::SF_stringtag SendFaxClient::strings[] = {
 { "covercmd",		&SendFaxClient::coverCmd,
   FAX_CLIENTBIN "/" "faxcover" },
 { "from",		&SendFaxClient::from,			NULL },
+{ "dateformat",		&SendFaxClient::dateFormat,		NULL },
 };
 
 void

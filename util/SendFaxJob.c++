@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++,v 1.19 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: SendFaxJob.c++,v 1.21 1996/09/30 20:50:30 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -159,9 +159,9 @@ SendFaxJob::setConfigItem(const char* tag, const char* value)
 	case 0:	sendTagLine = TRUE; break;
 	}
     } else if (FaxConfig::findTag(tag, (const FaxConfig::tags*) numbers, N(numbers), ix)) {
-	(*this).*numbers[ix].p = ::atoi(value);
+	(*this).*numbers[ix].p = atoi(value);
     } else if (FaxConfig::findTag(tag, (const FaxConfig::tags*) floats, N(floats), ix)) {
-	(*this).*floats[ix].p = ::atof(value);
+	(*this).*floats[ix].p = atof(value);
     } else if (streq(tag, "autocoverpage"))
 	setAutoCoverPage(FaxConfig::getBoolean(value));
     else if (streq(tag, "notify") || streq(tag, "notification"))
@@ -458,7 +458,8 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     IFPARM("MINBR", minsp, (u_int) -1)
     IFPARM("BEGBR", desiredbr, (u_int) -1)
     IFPARM("BEGST", desiredst, (u_int) -1)
-    IFPARM("USEECM", desiredec, (u_int) -1)
+    if (desiredec != (u_int) -1)
+	CHECKPARM("USEECM", (fxBool) desiredec)
     if (desireddf != (u_int) -1) {
 	CHECKPARM("DATAFORMAT",
 	    desireddf == 0	? "g31d" :

@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h,v 1.50 1996/07/16 01:36:17 sam Rel $ */
+/*	$Id: faxQueueApp.h,v 1.51 1996/11/22 00:00:49 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -197,7 +197,6 @@ private:
     void	blockJob(Job&, FaxRequest&, const char*);
     void	delayJob(Job&, FaxRequest&, const char*, time_t);
     void	rejectJob(Job& job, FaxRequest& req, const fxStr& reason);
-    fxBool	alterJob(const char*);
     fxBool	submitJob(const fxStr& jobid, fxBool checkState = FALSE);
     fxBool	suspendJob(const fxStr& jobid, fxBool abortActive);
     void	rejectSubmission(Job&, FaxRequest&, const fxStr& reason);

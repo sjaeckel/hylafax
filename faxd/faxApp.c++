@@ -1,4 +1,4 @@
-/*	$Id: faxApp.c++,v 1.29 1996/07/24 21:17:02 sam Rel $ */
+/*	$Id: faxApp.c++,v 1.32 1996/11/22 01:33:16 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -470,4 +470,37 @@ faxApp::detachFromTTY(void)
     }
     (void) setsid();
 #endif
+}
+
+/*
+ * Private version of fxassert for server processes.
+ * The default library routine sends the message to
+ * stderr and then calls abort().  This typically
+ * does not work for a server because stderr is not
+ * attached to anything (so the message is lost) and
+ * abort will not generate a core dump because the
+ * process has an effective uid and/or gid different
+ * from the real uid/gid.
+ *
+ * If (the undocumented configuration parameter)
+ * CONFIG_WAITONASSERT is set to a non-zero value
+ * then instead of dumping core the process will
+ * pause indefinitely so that a debugger can be
+ * attached.
+ */
+extern "C" void
+_fxassert(const char* msg, const char* file, int line)
+{
+    fprintf(stderr, "Assertion failed \"%s\", file \"%s\" line %d.\n", 
+	msg, file, line);
+    logError("Assertion failed \"%s\", file \"%s\" line %d.\n", 
+	msg, file, line);
+#if CONFIG_WAITONASSERT
+    for (;;)				// wait for a debugger to attach
+	pause();
+#else
+    faxApp::setRealIDs();		// reset so we get a core dump
+    abort();
+#endif
+    /*NOTREACHED*/
 }

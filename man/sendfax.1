@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1,v 1.50 1996/07/26 21:03:49 sam Rel $
+.\"	$Id: sendfax.1,v 1.51 1996/11/14 19:38:40 sam Rel $
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -565,6 +565,7 @@ Cover-Location	string	\-	cover page company location string
 Cover-Regarding	string	\-	cover page regarding string
 Cover-Template	string	\-	cover page template filename
 Cover-Voice	string	\-	cover page voice number string
+DateFormat	string	\-	cover page date format string
 DesiredEC	boolean	\-	desired use of \s-1ECM\s+1
 DesiredMST	string	\-	desired minimum scanling time to use
 DesiredSpeed	integer	\-	desired signalling rate to use
@@ -639,6 +640,12 @@ in auto-generating cover pages.
 .B Cover-Voice
 The voice number string to pass to the cover sheet program when
 auto-generating cover pages.
+.TP 16
+.B DateFormat
+The 
+.IR strftime (3)
+format string to pass to the cover page command when auto-generating
+cover pages.
 .TP 16
 .B DesiredEC
 Whether or not to request the use of the optional

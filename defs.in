@@ -1,4 +1,4 @@
-# $Id: defs.in,v 1.19 1996/06/24 02:57:39 sam Rel $
+# $Id: defs.in,v 1.22 1996/10/13 17:26:38 sam Rel $
 #
 # @WARNING@
 #
@@ -164,6 +164,16 @@ TIFFBIN		= @TIFFBIN@
 ZLIBINC		= @ZLIBINC@
 LIBZ		= @LIBZ@
 #
+# libdb-related definitions.  The source for the libdb library
+# is not required to build this software, but you must have
+# the libdb library installed somewhere on your system to link
+# against.  If the default "-L /usr/local/lib -ldb" is
+# insufficient to locate the library you can setup a config.local
+# file that defines LIBDB and/or DBINC (used to find db.h)
+#
+DBLIBINC	= @DBLIBINC@
+LIBDB		= @LIBDB@
+#
 # regex-related definitions.  The source for the POSIX regular
 # expression package is not required to build this software,
 # but you must have the resulting library installed somewhere
@@ -261,8 +271,9 @@ CCF		= ${CC} ${CFLAGS}
 # lot of makefiles already use the nondescript LMKDEPFLAGS for C language
 # mkdepend options, so we initialize LMKDEPCFLAGS with ${LMKDEPFLAGS}.
 #
-MKDEPENDC++	= ${MKDEPEND} ${MKDEPC++FLAGS} -c "${C++F} ${C++FILE} -M"
-MKDEPENDC	= ${MKDEPEND} ${MKDEPCFLAGS} -c "${CCF} -M"
+MKDEPENDC++	= ${MKDEPEND} ${MKDEPC++FLAGS} -c \
+		    "${C++F} ${C++FILE} -c -M @MKDEPCXXOPTS@"
+MKDEPENDC	= ${MKDEPEND} ${MKDEPCFLAGS} -c "${CCF} -c -M @MKDEPCOPTS@"
 
 MKDEPC++FLAGS	= ${VMKDEPC++FLAGS} ${LMKDEPC++FLAGS} ${GMKDEPC++FLAGS}
 MKDEPCFLAGS	= ${VMKDEPCFLAGS} ${LMKDEPCFLAGS} ${GMKDEPCFLAGS}

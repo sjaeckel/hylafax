@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++,v 1.54 1996/08/03 00:43:08 sam Rel $ */
+/*	$Id: faxGettyApp.c++,v 1.55 1996/11/22 00:05:04 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -48,6 +48,10 @@
 /*
  * HylaFAX Spooling and Command Agent.
  */
+AnswerTimeoutHandler::AnswerTimeoutHandler() {}
+AnswerTimeoutHandler::~AnswerTimeoutHandler() {}
+void AnswerTimeoutHandler::timerExpired(long, long)
+    { faxGettyApp::instance().answerCleanup(); }
 
 const fxStr faxGettyApp::recvDir	= FAX_RECVDIR;
 
@@ -166,142 +170,221 @@ faxGettyApp::discardModem(fxBool dropDTR)
 }
 
 /*
+ * Begin listening for ring status messages from the modem.
+ * The modem is locked and we mark it as busy to the queuer
+ * (just as if we were answering a call).  We listen for one
+ * ring status message and, if successful, keep the modem
+ * locked and change state so that further input will be
+ * consumed.
+ */
+void
+faxGettyApp::listenBegin()
+{
+    if (lockModem()) {
+	changeState(LISTENING);
+	sendModemStatus("B");
+	ringsHeard = 0;
+	listenForRing();
+    } else if (state != SENDING && state != ANSWERING && state != RECEIVING) {
+	/*
+	 * The modem is in use to call out, or some other process
+	 * has grabbed the lock to handle the incoming call. 
+	 * Discard our handle on the modem and change to LOCKWAIT
+	 * state where we wait for the modem to come available again.
+	 */
+	traceServer("ANSWER: Can not lock modem device");
+	discardModem(FALSE);
+	changeState(LOCKWAIT, pollLockWait);
+	sendModemStatus("U");
+    }
+}
+
+/*
+ * Consume a ring status message from the modem.  We assume
+ * the modem is locked and that input is present.  If we don't
+ * see a ring then we exit LISTENING state and reset our
+ * handle on the modem.  If the number of rings received
+ * matches ringsBeforeAnswer then we answer the phone.
+ */
+void
+faxGettyApp::listenForRing()
+{
+    Dispatcher::instance().stopTimer(&answerHandler);
+
+    CallerID cid;
+    CallType ctype = ClassModem::CALLTYPE_UNKNOWN;
+    if (modemWaitForRings(1, ctype, cid)) {
+	if (cid.number != "" || cid.name != "") {
+	    traceServer("ANSWER: CID NUMBER \"%s\" NAME \"%s\"",
+		(const char*) cid.number, (const char*) cid.name);
+	    faxApp::sendModemStatus(getModemDeviceID(), "C\"%s\"%s\"",
+		(const char*) cid.number, (const char*) cid.name);
+	}
+	++ringsHeard;
+	if (ringsBeforeAnswer && ringsHeard >= ringsBeforeAnswer)
+	    answerPhone(ClassModem::ANSTYPE_ANY, ctype, cid);
+	else
+	    // NB: 10 second timeout should be plenty
+	    Dispatcher::instance().startTimer(10, 0, &answerHandler);
+    } else
+	answerCleanup();
+}
+
+/*
+ * Handle a user request to answer the phone.
+ * Note that this can come in when we are in
+ * many different states.
+ */
+void
+faxGettyApp::answerPhoneCmd(AnswerType atype)
+{
+    CallerID cid;
+    CallType ctype = ClassModem::CALLTYPE_UNKNOWN;
+    if (state == LISTENING) {
+	/*
+	 * We were listening to rings when an answer command
+	 * was received.  The modem is already locked so just
+	 * cancel any timeout and answer the call.
+	 */
+	Dispatcher::instance().stopTimer(&answerHandler);
+	answerPhone(atype, ctype, cid);
+    } else if (lockModem()) {
+	/*
+	 * The modem is ours, notifier the queuer and answer.
+	 */
+	sendModemStatus("B");
+	answerPhone(atype, ctype, cid);
+    } else if (state != ANSWERING && state != RECEIVING) {
+	/*
+	 * The modem is in use to call out, or some other process
+	 * has grabbed the lock to handle the incoming call. 
+	 * Discard our handle on the modem and change to LOCKWAIT
+	 * state where we wait for the modem to come available again.
+	 */
+	discardModem(FALSE);
+	changeState(LOCKWAIT, pollLockWait);
+	sendModemStatus("U");
+    }
+}
+
+/*
  * Answer the telephone in response to data from the modem
  * (e.g. a "RING" message) or an explicit command from the
  * user (sending an "ANSWER" command through the FIFO).
  */
 void
-faxGettyApp::answerPhone(AnswerType atype, fxBool force)
+faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallerID& cid)
 {
-    if (lockModem()) {
-	sendModemStatus("B");
-	changeState(ANSWERING);
-	CallerID cid;
-	CallType ctype = ClassModem::CALLTYPE_UNKNOWN;
-	if (force || modemWaitForRings(ringsBeforeAnswer, ctype, cid)) {
-	    beginSession(FAXNumber);
-	    sendModemStatus("I" | getCommID());
-	    if (cid.number != "" || cid.name != "") {
-		traceServer("ANSWER: CID NUMBER \"%s\" NAME \"%s\"",
-		    (const char*) cid.number, (const char*) cid.name);
-		faxApp::sendModemStatus(getModemDeviceID(), "C\"%s\"%s\"",
-		    (const char*) cid.number, (const char*) cid.name);
-	    }
-	    /*
-	     * Answer the phone according to atype.  If this is
-	     * ``any'', then pick a more specific type.  If
-	     * adaptive-answer is enabled and ``any'' is requested,
-	     * then rotate through the set of possibilities.
-	     */
-	    fxBool callResolved;
-	    fxBool advanceRotary = TRUE;
-	    fxStr emsg;
-	    if (!isCIDOk(cid.number)) {		// check Caller ID if present
-		/*
-		 * Call was rejected based on Caller ID information.
-		 */
-		traceServer("ANSWER: CID REJECTED");
-		callResolved = FALSE;
-		advanceRotary = FALSE;
-	    } else if (ctype != ClassModem::CALLTYPE_UNKNOWN) {
-		/*
-		 * Distinctive ring or other means has already identified
-		 * the type of call.  If we're to answer the call in a
-		 * different way, then treat this as an error and don't
-		 * answer the phone.  Otherwise answer according to the
-		 * deduced call type.
-		 */
-		if (atype != ClassModem::ANSTYPE_ANY && ctype != atype) {
-		    traceServer("ANSWER: Call deduced as %s,"
-			 "but told to answer as %s; call ignored",
-			 ClassModem::callTypes[ctype],
-			 ClassModem::answerTypes[atype]);
-		    callResolved = FALSE;
-		    advanceRotary = FALSE;
-		} else {
-		    // NB: answer based on ctype, not atype
-		    ctype = modemAnswerCall(ctype, emsg);
-		    callResolved = processCall(ctype, emsg);
-		}
-	    } else if (atype == ClassModem::ANSTYPE_ANY) {
-		/*
-		 * Normal operation; answer according to the settings
-		 * for the rotary and adaptive answer capabilities.
-		 */
-		int r = answerRotor;
-		do {
-		    callResolved = answerCall(answerRotary[r], ctype, emsg);
-		    r = (r+1) % answerRotorSize;
-		} while (!callResolved && adaptiveAnswer && r != answerRotor);
-	    } else {
-		/*
-		 * Answer for a specific type of call but w/o
-		 * any existing call type information such as
-		 * distinctive ring.
-		 */
-		callResolved = answerCall(atype, ctype, emsg);
-	    }
-	    /*
-	     * Call resolved.  If we were able to recognize the call
-	     * type and setup a session, then reset the answer rotary
-	     * state if there is a bias toward a specific answer type.
-	     * Otherwise, if the call failed, advance the rotor to
-	     * the next answer type in preparation for the next call.
-	     */
-	    if (callResolved) {
-		if (answerBias != (u_int) -1)
-		    answerRotor = answerBias;
-	    } else if (advanceRotary) {
-		if (adaptiveAnswer)
-		    answerRotor = 0;
-		else
-		    answerRotor = (answerRotor+1) % answerRotorSize;
-	    }
-	    sendModemStatus("I");
-	    endSession();
-	} else
-	    modemFlushInput();
+    changeState(ANSWERING);
+    beginSession(FAXNumber);
+    sendModemStatus("I" | getCommID());
+    /*
+     * Answer the phone according to atype.  If this is
+     * ``any'', then pick a more specific type.  If
+     * adaptive-answer is enabled and ``any'' is requested,
+     * then rotate through the set of possibilities.
+     */
+    fxBool callResolved;
+    fxBool advanceRotary = TRUE;
+    fxStr emsg;
+    if (!isCIDOk(cid.number)) {		// check Caller ID if present
 	/*
-	 * If we still have a handle on the modem, then force a
-	 * hangup and discard the handle.  We do this explicitly
-	 * because some modems are impossible to safely hangup in the
-	 * event of a problem.  Forcing a close on the device so that
-	 * the modem will see DTR drop (hopefully) should clean up any
-	 * bad state its in.  We then immediately try to setup the modem
-	 * again so that we can be ready to answer incoming calls again.
-	 *
-	 * NB: the modem may have been discarded if a child process
-	 *     was invoked to handle the inbound call.
+	 * Call was rejected based on Caller ID information.
 	 */
-	if (modemReady()) {
-	    modemHangup();
-	    discardModem(TRUE);
+	traceServer("ANSWER: CID REJECTED");
+	callResolved = FALSE;
+	advanceRotary = FALSE;
+    } else if (ctype != ClassModem::CALLTYPE_UNKNOWN) {
+	/*
+	 * Distinctive ring or other means has already identified
+	 * the type of call.  If we're to answer the call in a
+	 * different way, then treat this as an error and don't
+	 * answer the phone.  Otherwise answer according to the
+	 * deduced call type.
+	 */
+	if (atype != ClassModem::ANSTYPE_ANY && ctype != atype) {
+	    traceServer("ANSWER: Call deduced as %s,"
+		 "but told to answer as %s; call ignored",
+		 ClassModem::callTypes[ctype],
+		 ClassModem::answerTypes[atype]);
+	    callResolved = FALSE;
+	    advanceRotary = FALSE;
+	} else {
+	    // NB: answer based on ctype, not atype
+	    ctype = modemAnswerCall(ctype, emsg);
+	    callResolved = processCall(ctype, emsg);
 	}
-	fxBool isSetup;
-	if (isModemLocked() || lockModem()) {
-	    isSetup = setupModem();
-	    unlockModem();
-	} else
-	    isSetup = FALSE;
-	if (isSetup)
-	    changeState(RUNNING);
-	else
-	    changeState(MODEMWAIT, pollModemWait);
+    } else if (atype == ClassModem::ANSTYPE_ANY) {
+	/*
+	 * Normal operation; answer according to the settings
+	 * for the rotary and adaptive answer capabilities.
+	 */
+	int r = answerRotor;
+	do {
+	    callResolved = answerCall(answerRotary[r], ctype, emsg);
+	    r = (r+1) % answerRotorSize;
+	} while (!callResolved && adaptiveAnswer && r != answerRotor);
     } else {
 	/*
-	 * The modem is in use to call out, or by way of an incoming
-	 * call.  If we're not sending or receiving, discard our handle
-	 * on the modem and change to MODEMWAIT state where we wait
-	 * for the modem to come available again.
+	 * Answer for a specific type of call but w/o
+	 * any existing call type information such as
+	 * distinctive ring.
 	 */
-	if (force)				// eliminate noise messages
-	    traceServer("ANSWER: Can not lock modem device");
-	if (state != SENDING && state != ANSWERING && state != RECEIVING) {
-	    discardModem(FALSE);
-	    changeState(LOCKWAIT, pollLockWait);
-	    sendModemStatus("U");
-	}
+	callResolved = answerCall(atype, ctype, emsg);
     }
+    /*
+     * Call resolved.  If we were able to recognize the call
+     * type and setup a session, then reset the answer rotary
+     * state if there is a bias toward a specific answer type.
+     * Otherwise, if the call failed, advance the rotor to
+     * the next answer type in preparation for the next call.
+     */
+    if (callResolved) {
+	if (answerBias != (u_int) -1)
+	    answerRotor = answerBias;
+    } else if (advanceRotary) {
+	if (adaptiveAnswer)
+	    answerRotor = 0;
+	else
+	    answerRotor = (answerRotor+1) % answerRotorSize;
+    }
+    sendModemStatus("I");
+    endSession();
+    answerCleanup();
+}
+
+/*
+ * Cleanup after answering a call or listening for ring status
+ * messages from the modem (when ringsBeforeAnswer is zero).
+ *
+ * If we still have a handle on the modem, then force a hangup
+ * and discard the handle.  We do this explicitly because some
+ * modems are impossible to safely hangup in the event of a
+ * problem.  Forcing a close on the device so that the modem
+ * will see DTR drop (hopefully) should clean up any bad state
+ * its in.  We then immediately try to setup the modem again
+ * so that we can be ready to answer incoming calls again.
+ *
+ * NB: the modem may have been discarded if a child process
+ *     was invoked to handle the inbound call.
+ */
+void
+faxGettyApp::answerCleanup()
+{
+    if (modemReady()) {
+	modemHangup();
+	discardModem(TRUE);
+    }
+    fxBool isSetup;
+    if (isModemLocked() || lockModem()) {
+	isSetup = setupModem();
+	unlockModem();
+    } else
+	isSetup = FALSE;
+    if (isSetup)
+	changeState(RUNNING);
+    else
+	changeState(MODEMWAIT, pollModemWait);
 }
 
 /*
@@ -506,23 +589,18 @@ faxGettyApp::setRingsBeforeAnswer(int rings)
     ringsBeforeAnswer = rings;
     if (modemReady()) {
 	int fd = getModemFd();
-	IOHandler* h =
-	    Dispatcher::instance().handler(fd, Dispatcher::ReadMask);
-	if (rings > 0 && h == NULL) {
-	    Dispatcher::instance().link(fd, Dispatcher::ReadMask, this);
-	    /*
-	     * Systems that have a tty driver based on SVR4 streams
-	     * frequently don't implement select properly in that if
-	     * output is collected by another process (e.g. cu, tip,
-	     * kermit) quickly we do not reliably get woken up.  On
-	     * these systems however the close on the tty usually
-	     * causes us to wakeup from select for an exceptional
-	     * condition on the descriptor--and this is good enough
-	     * for us to do the work we need.
-	     */
-	    Dispatcher::instance().link(fd, Dispatcher::ExceptMask, this);
-	} else if (rings == 0 && h != NULL)
-	    Dispatcher::instance().unlink(fd);
+	Dispatcher::instance().link(fd, Dispatcher::ReadMask, this);
+	/*
+	 * Systems that have a tty driver based on SVR4 streams
+	 * frequently don't implement select properly in that if
+	 * output is collected by another process (e.g. cu, tip,
+	 * kermit) quickly we do not reliably get woken up.  On
+	 * these systems however the close on the tty usually
+	 * causes us to wakeup from select for an exceptional
+	 * condition on the descriptor--and this is good enough
+	 * for us to do the work we need.
+	 */
+	Dispatcher::instance().link(fd, Dispatcher::ExceptMask, this);
     }
 }
 
@@ -670,7 +748,10 @@ faxGettyApp::inputReady(int fd)
     if (fd == devfifo)
 	return FIFOInput(fd);
     else {
-	answerPhone(ClassModem::ANSTYPE_ANY, FALSE);
+	if (state == LISTENING)
+	    listenForRing();
+	else
+	    listenBegin();
 	return (0);
     }
 }
@@ -686,15 +767,15 @@ faxGettyApp::FIFOMessage(const char* cp)
 	traceServer("ANSWER %s", cp[1] != '\0' ? cp+1 : "any");
 	if (cp[1] != '\0') {
 	    if (streq(cp+1, "fax"))
-		answerPhone(ClassModem::ANSTYPE_FAX, TRUE);
+		answerPhoneCmd(ClassModem::ANSTYPE_FAX);
 	    else if (streq(cp+1, "data"))
-		answerPhone(ClassModem::ANSTYPE_DATA, TRUE);
+		answerPhoneCmd(ClassModem::ANSTYPE_DATA);
 	    else if (streq(cp+1, "voice"))
-		answerPhone(ClassModem::ANSTYPE_VOICE, TRUE);
+		answerPhoneCmd(ClassModem::ANSTYPE_VOICE);
 	    else if (streq(cp+1, "extern"))
-		answerPhone(ClassModem::ANSTYPE_EXTERN, TRUE);
+		answerPhoneCmd(ClassModem::ANSTYPE_EXTERN);
 	} else
-	    answerPhone(answerRotary[0], TRUE);
+	    answerPhoneCmd(answerRotary[0]);
 	break;
     case 'C':				// configuration control
 	traceServer("CONFIG \"%s\"", cp+1);

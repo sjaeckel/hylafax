@@ -1,4 +1,4 @@
-.\"	$Id: faxcover.1,v 1.30 1996/06/24 03:04:08 sam Rel $
+.\"	$Id: faxcover.1,v 1.31 1996/11/14 19:38:40 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH FAXCOVER 1 "June 25, 1993"
+.TH FAXCOVER 1 "November 14, 1996"
 .SH NAME
 faxcover \- generate a \*(Ps cover page for an outgoing facsimile
 .SH SYNOPSIS
@@ -168,6 +168,13 @@ client application data are installed.
 If no template file is located,
 .I faxcover
 will terminate without generating a cover page.
+.TP 12
+.BI \-D " format"
+Use
+.I format
+as the formatting specification passed to
+.IR strftime (3)
+when generating the time and date placed on the cover page.
 .TP 12
 .BI \-f " name"
 Use

@@ -1,4 +1,4 @@
-/*	$Id: UnixFaxServer.c++,v 1.13 1996/06/24 03:01:49 sam Rel $ */
+/*	$Id: UnixFaxServer.c++,v 1.14 1996/09/30 21:05:19 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -154,7 +154,7 @@ UnixFaxServer::openDataConn(const char* mode, int& code)
         int s = accept(pdata, (struct sockaddr*) &from, &fromlen);
         if (s < 0) {
             reply(425, "Cannot open data connection.");
-            (void) ::close(pdata);
+            (void) Sys::close(pdata);
             pdata = -1;
             return (NULL);
         }

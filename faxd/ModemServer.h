@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.h,v 1.23 1996/07/10 22:18:02 sam Rel $ */
+/*	$Id: ModemServer.h,v 1.25 1996/11/22 00:05:04 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -40,6 +40,9 @@
 
 #ifdef tcsetattr
 #undef tcsetattr			// workaround for SCO
+#endif
+#ifdef tcgetattr
+#undef tcgetattr			// workaround for SCO
 #endif
 
 class FaxMachineInfo;
@@ -88,8 +91,8 @@ private:
     void	setDialRules(const char* name);
     void	setModemSpeakerVolume(SpeakerVolume);
 // state-related stuff
-    static const char* stateNames[8];
-    static const char* stateStatus[8];
+    static const char* stateNames[9];
+    static const char* stateStatus[9];
 
     fxBool	openDevice(const char* dev);
     fxBool	reopenDevice();
@@ -109,7 +112,8 @@ protected:
 	GETTYWAIT	= 4,
 	SENDING		= 5,
 	ANSWERING	= 6,
-	RECEIVING	= 7
+	RECEIVING	= 7,
+	LISTENING	= 8
     };
     ModemServerState state;
     fxBool	abortCall;		// abort current send/receive

@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++,v 1.25 1996/07/29 21:36:15 sam Rel $ */
+/*	$Id: InetFaxServer.c++,v 1.27 1996/10/31 21:47:31 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -33,10 +33,12 @@
 #include <netdb.h>
 #include <ctype.h>
 
+extern "C" {
 #include <arpa/inet.h>
 
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
+}
 
 InetSuperServer::InetSuperServer(const char* p, int bl)
     : SuperServer("INET", bl)
@@ -300,7 +302,7 @@ void InetFaxServer::sigPIPE(int) { InetFaxServer::instance().lostConnection(); }
 static fxBool
 setupPassiveDataSocket(int pdata, struct sockaddr_in& pasv_addr)
 {
-    int len = sizeof (pasv_addr);
+    Socket::socklen_t len = sizeof (pasv_addr);
     return (
 	Socket::bind(pdata, &pasv_addr, sizeof (pasv_addr)) >= 0 &&
         Socket::getsockname(pdata, &pasv_addr, &len) >= 0 &&

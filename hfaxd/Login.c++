@@ -1,4 +1,4 @@
-/*	$Id: Login.c++,v 1.10 1996/06/24 03:01:43 sam Rel $ */
+/*	$Id: Login.c++,v 1.11 1996/11/11 02:14:56 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -114,10 +114,10 @@ HylaFAXServer::passCmd(const char* pass)
      * is a ``-''.
      */
     if (pass[0] == '-') {
-	state |= S_LREPLIES;
+	state &= ~S_LREPLIES;
 	pass++;
     } else
-	state &= ~S_LREPLIES;
+	state |= S_LREPLIES;
     if (pass[0] == '\0' || strcmp(crypt(pass, passwd), passwd) != 0) {
 	if (++loginAttempts >= maxLoginAttempts) {
 	    reply(530, "Login incorrect (closing connection).");

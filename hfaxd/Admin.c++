@@ -1,4 +1,4 @@
-/*	$Id: Admin.c++,v 1.4 1996/06/24 03:01:38 sam Rel $ */
+/*	$Id: Admin.c++,v 1.5 1996/11/15 01:29:27 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -143,7 +143,7 @@ HylaFAXServer::shutCmd(const struct tm& when, const char* reason)
     FILE* fp = fdopen(fd, "w");
     if (fp) {
 	fprintf(fp, "%d %d %d %d %d 5 1\n"
-	    , when.tm_year
+	    , when.tm_year+1900
 	    , when.tm_mon
 	    , when.tm_mday
 	    , when.tm_hour
@@ -156,7 +156,7 @@ HylaFAXServer::shutCmd(const struct tm& when, const char* reason)
 	} else if (Sys::rename(templ, fixPathname(shutdownFile)) < 0) {
 	    reply(550, "%srename %s.", msg, strerror(errno));
 	} else {
-	    reply(200, "System shutdown scheduled for %.24s.\n",
+	    reply(200, "System shutdown scheduled for %.24s.",
 		asctime(&when));
 	    return;
 	}

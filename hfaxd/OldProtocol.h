@@ -1,4 +1,4 @@
-/*	$Id: OldProtocol.h,v 1.10 1996/06/24 03:01:44 sam Rel $ */
+/*	$Id: OldProtocol.h,v 1.11 1996/11/21 23:59:41 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -69,6 +69,8 @@ private:
 	void (OldProtocolServer::*f)(Job&, const char*));
     void applyToJobGroup(const char* tag, const char* op,
 	void (OldProtocolServer::*f)(Job&, const char*));
+    fxBool alterSuspend(Job&);
+    void alterResubmit(Job&);
     void alterJobTTS(const char*);
     void alterJobGroupTTS(const char*);
     void reallyAlterJobTTS(Job& job, const char* spec);

@@ -1,4 +1,4 @@
-/*	$Id: Str.h,v 1.19 1996/06/24 03:06:04 sam Rel $ */
+/*	$Id: Str.h,v 1.20 1996/09/25 17:22:27 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -114,6 +114,9 @@ public:
 
     char& operator[](u_int i) const
     {   fxAssert(i<slength-1,"Invalid Str[] index");
+	return data[i]; }
+    char& operator[](int i) const
+    {   fxAssert((u_int)(i)<slength-1,"Invalid Str[] index");
 	return data[i]; }
 
     void operator=(const fxTempStr& s);

@@ -1,4 +1,4 @@
-/*	$Id: StackBuffer.c++,v 1.15 1996/06/24 03:06:03 sam Rel $ */
+/*	$Id: StackBuffer.c++,v 1.16 1996/10/03 23:40:40 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -36,7 +36,7 @@ fxStackBuffer::fxStackBuffer(u_int grow)
 
 fxStackBuffer::~fxStackBuffer()
 {
-    if (base != buf) delete base;
+    if (base != buf) free(base);
 }
 
 fxStackBuffer::fxStackBuffer(const fxStackBuffer& other)

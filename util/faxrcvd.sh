@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh,v 1.30 1996/06/24 03:06:19 sam Rel $
+#	$Id: faxrcvd.sh,v 1.32 1996/11/15 20:45:07 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -54,6 +54,15 @@ EOF
 INFO=$SBIN/faxinfo
 FAX2PS=$TIFFBIN/fax2ps
 TOADDR=FaxMaster
+#
+# There is no good portable way to find out the fully qualified
+# domain name (FQDN) of the host or the TCP port for the hylafax
+# service so we fudge here.  Folks may want to tailor this to
+# their needs; e.g. add a domain or use localhost so the loopback
+# interface is used.
+#
+HOSTNAME=`hostname`			# XXX no good way to find FQDN
+PORT=4559				# XXX no good way to lookup service
 
 FILE="$1"
 DEVICE="$2"
@@ -74,7 +83,7 @@ if [ -f $FILE ]; then
      echo "From: The HylaFAX Receive Agent <fax>"
      echo "Subject: facsimile received from $SENDER";
      echo ""
-     $INFO $FILE
+     echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):"; $INFO -n $FILE
      echo "ReceivedOn: $DEVICE"
      if [ "$MSG" ]; then
 	echo ""
@@ -94,7 +103,7 @@ if [ -f $FILE ]; then
 	    echo "    No transcript available."
 	fi
      else
-	echo "CommID:     c$COMMID"
+	echo "CommID:     c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)"
      fi
      if [ -n "$SENDTO" ]; then
 	echo ""
@@ -110,7 +119,7 @@ if [ -f $FILE ]; then
 	 echo "From: The HylaFAX Receive Agent <fax>"
 	 echo "Subject: facsimile received from $SENDER";
 	 echo ""
-	 $INFO $FILE
+	 echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):"; $INFO -n $FILE
 	 echo "ReceivedOn: $DEVICE"
 	 if [ "$MSG" ]; then
 	    echo ""
@@ -130,7 +139,7 @@ if [ -f $FILE ]; then
 		echo "    No transcript available."
 	    fi
 	 else
-	    echo "CommID:     c$COMMID"
+	    echo "CommID:     c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)"
 	 fi
 	 echo ""
 	 echo "--$MIMEBOUNDARY"

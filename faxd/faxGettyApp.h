@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.h,v 1.28 1996/06/24 03:00:48 sam Rel $ */
+/*	$Id: faxGettyApp.h,v 1.29 1996/11/22 00:05:04 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -34,6 +34,13 @@
 class UUCPLock;
 class Getty;
 
+class AnswerTimeoutHandler : public IOHandler {
+public:
+    AnswerTimeoutHandler();
+    ~AnswerTimeoutHandler();
+    void timerExpired(long, long);
+};
+
 class faxGettyApp : public FaxServer, public faxApp {
 public:
     struct stringtag {
@@ -56,8 +63,10 @@ private:
     fxStr	readyState;		// modem ready state to send queuer
     int		devfifo;		// fifo device interface
     UUCPLock*	modemLock;		// UUCP interlock
+    AnswerTimeoutHandler answerHandler;	// for timing out inbound calls
 
     u_short	ringsBeforeAnswer;	// # rings to wait
+    u_short	ringsHeard;		// # rings received
     fxStr	qualifyCID;		// if set, no answer w/o acceptable cid
     time_t	lastCIDModTime;		// last mod time of CID patterns file
     RegExArray*	cidPats;		// recv cid patterns
@@ -103,8 +112,14 @@ private:
 		    const char* args, fxStr &emsg,
 		    fxBool keepLock, fxBool keepModem = FALSE);
     void	setRingsBeforeAnswer(int rings);
-    void	answerPhone(AnswerType, fxBool force);
+    void	listenBegin();
+    void	listenForRing();
+    void	answerPhoneCmd(AnswerType);
+    void	answerPhone(AnswerType, CallType, const CallerID&);
+    void	answerCleanup();
     fxBool	answerCall(AnswerType atype, CallType& ctype, fxStr& emsg);
+
+    friend void AnswerTimeoutHandler::timerExpired(long, long);
 // miscellaneous stuff
     fxBool	sendModemStatus(const char* msg);
 // FIFO-related stuff
