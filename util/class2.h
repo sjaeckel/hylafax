@@ -1,4 +1,4 @@
-/*	$Id: class2.h,v 1.21 1996/06/24 03:06:14 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -47,6 +47,8 @@ const int SERVICE_DATA	 = BIT(0);	// data service
 const int SERVICE_CLASS1 = BIT(1);	// class 1 interface
 const int SERVICE_CLASS2 = BIT(2);	// class 2 interface
 const int SERVICE_CLASS20 = BIT(3);	// class 2.0 interface
+const int SERVICE_CLASS10 = BIT(4);	// class 1.0 interface
+const int SERVICE_CLASS21 = BIT(5);	// class 2.1 interface
 const int SERVICE_VOICE	 = BIT(8);	// voice service (ZyXEL extension)
 const int SERVICE_ALL	 = BIT(9)-1;
 
