@@ -4,7 +4,7 @@
 %%CreationDate: 11:05 AM January  4, 1993
 %%Pages: 1 +1
 %%EndComments
-%	$Id: faxcover.ps,v 1.20 1996/06/24 03:00:09 sam Rel $
+%	$Id$
 %
 % HylaFAX Facsimile Software
 %
@@ -267,7 +267,7 @@ drawtext
 /rule (_______________________________) def
 /y 189 def /x 141.336 def
 y -29 73 { x exch M rule S } for
-comments rule stringwidth pop { x y M S /y y 29 sub def } BreakIntoLines
+rule stringwidth pop 29 x y comments BreakIntoLines
 grestore
 grestore
 showpage
