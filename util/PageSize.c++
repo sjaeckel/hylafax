@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/PageSize.c++,v 1.18 1995/04/08 21:44:13 sam Rel $ */
+/*	$Id: PageSize.c++,v 1.22 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -35,8 +35,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-fxDECLARE_StructArray(PageInfoArray, PageInfo);
-fxIMPLEMENT_StructArray(PageInfoArray, PageInfo);
+fxDECLARE_StructArray(PageInfoArray, PageInfo)
+fxIMPLEMENT_StructArray(PageInfoArray, PageInfo)
 
 PageInfoArray* PageSizeInfo::pageInfo = NULL;
 
@@ -121,6 +121,7 @@ PageSizeInfo::readPageInfoFile()
 	    pi.abbr = strdup(pi.abbr);
 	    info->append(pi);
 	}
+	fclose(fp);
     } else {
 	fprintf(stderr,
     "Warning, no page size database file \"%s\", using builtin default.\n",
@@ -137,7 +138,6 @@ PageSizeInfo::readPageInfoFile()
 	pi.left = 345;
 	info->append(pi);
     }
-    fclose(fp);
     return info;
 }
 

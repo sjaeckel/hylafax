@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/faxalter.1,v 1.22 1995/04/08 21:35:38 sam Rel $
+.\"	$Id: faxalter.1,v 1.30 1996/07/10 19:09:56 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990-1995 Sam Leffler
-.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1996 Sam Leffler
+.\" Copyright (c) 1991-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,7 +27,7 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH FAXALTER 1 "April 3, 1995"
+.TH FAXALTER 1 "July 11, 1996"
 .SH NAME
 faxalter \- alter parameters of a \*(Fx job queued for transmission
 .SH SYNOPSIS
@@ -38,45 +38,27 @@ faxalter \- alter parameters of a \*(Fx job queued for transmission
 .IR id ...
 .SH DESCRIPTION
 .I faxalter
-changes parameters of one or more \*(Fx jobs that
+changes the state of one or more \*(Fx jobs that
 are queued for transmission.
-Numerous parameters can be altered:
-.sp .5
-.RS
-.nf
-\(bu the time to send a job,
-\(bu the time to kill a job,
-\(bu the modem to use,
-\(bu the notification scheme,
-\(bu the scheduling priority for the job, and
-\(bu the maximum number of times to try sending the job.
-.fi
-.RE
-.sp .5
+Numerous parameters can be altered; see the options below.
+.PP
 An 
 .I id
 is a number that identifies a
-.I job
-(default) or
-.I "job group"
-submitted to \*(Fx; these numbers are printed by
+.IR job
+that has been submitted to \*(Fx; these numbers are printed by
 .IR sendfax (1)
-when jobs are queued for transmission.
-Job and job group identifiers can also be obtained from
+when jobs are queued for transmission and can also be displayed with
 .IR faxstat (1).
-Users can only alter jobs that they
-have queued; except the
-.I fax
-user and the super-user who can alter any job.
+Unprivileged users can alter the parameters of jobs that they own; clients
+with administrative privileges on a server can manipulate any job.
 By default,
 .I faxalter
-contacts the facsimile server on the host specified
-in the
+contacts the facsimile server on the host specified in the
 .B FAXSERVER
-environment variable.
-This can be overridden with the
+environment variable; but consult the
 .B \-h
-option.
+option for more information.
 .SH OPTIONS
 .TP 10
 .BI \-a " time"
@@ -86,17 +68,6 @@ by
 .IR sendfax (1)
 (and
 .IR at (1)).
-.TP 10
-.B \-g
-Interpret each
-.I id
-as a
-.IR "job group identifier" .
-A job group identifier is the number assigned by \*(Fx
-to each group of jobs submitted together.
-This number is printed by
-.I sendfax
-when jobs are submitted.
 .TP 10
 .BI \-h " host"
 Force the server to be contacted on a specific
@@ -109,12 +80,15 @@ If no
 option is supplied,
 .I faxalter
 uses the
-.B FAXSERVER
-environment variable to identify the \*(Fx server to
-which the jobs should be directed.
-If no server is specified then
+.SM FAXSERVER
+environment variable to identify the \*(Fx server to contact.
+If this variable is not set, then
 .I faxalter
-attempts to contact a server on the local host.
+checks for a setting in the configuration files (first in the
+per-user file and then in the system-wide file).
+If all of the above fails, then
+.I faxalter
+attempts to contact a server on the machine where it is run.
 .TP 10
 .BI \-k " time"
 Specify a new time to kill a job;
@@ -123,15 +97,17 @@ the syntax is the same as used for the
 option.
 .TP 10
 .BI \-m " modem"
-Assign/reassign the jobs to the specified.
-Specifying ``any'' for the modem causes the jobs to be
-scheduled for any available modem.
+Assign/reassign the jobs to the specified
+.IR modem .
+Specifying ``any'' for
+.I modem
+causes the jobs to be scheduled for any available modem.
 .TP 10
 .B \-p
 The jobs should be
 .IR pushed ;
 that is, they should be sent immediately
-(NB: this is equivalent to ``\-a now''.)
+(this is equivalent to ``\-a now''.)
 .TP 10
 .BI \-P " pri"
 Set the scheduling priority for the specified jobs.
@@ -162,47 +138,90 @@ respectively.
 One can also leave off ``\fIwhen\fP'' when using the
 .B \-n
 option; e.g., ``\fIdone\fP'' instead of ``\fIwhen done\fP''.
-.SH DIAGNOSTICS
-.B "Job %s not altered: it was not queued."
-The specified job was not found in the server's queue.
-.PP
-.B "Job %s not altered: open failed; check SYSLOG."
-The server was unable to do some necessary operation on the 
-remote host and so could not alter the job.
-More information about what went wrong can be found in the
-.IR syslogd (1M)
-log file on the server's machine.
-.PP
-.B "Job %s not altered: could not establish server process owner."
-A request was made by the ``fax'' user to alter
-a job that it did submit.
-This request was not accepted because
-the server was unable to deduce the identity under which
-it was executing.  That is, there was no password file
-entry for the server's effective user id.
-This (usually) indicates that the entry in the file
-.I /usr/etc/inetd.conf
-on the remove machine is setup wrong; see
-.IR faxd.recv (1M)
-for more information.
-.PP
-.B "Job %s not altered: you neither own it nor are the fax user."
-A request was made to alter a job that the user does not own
-(and the user is not the ``fax'' user).
-.PP
-.B "Service refused; you do not have permission to use the fax server from %s."
-The client is not permitted to manipulate
-jobs on this server from the indicated host.
-Only those hosts and users listed in the file
-.B etc/hosts
-on the server machine are permitted to manipulate jobs.
-.SH BUGS
+.TP 10
+.B \-v
+Trace the protocol exchanges between
 .I faxalter
-must be run on the same host on which the job was
-submitted.
+and the remote
+.I hfaxd
+process.
+Tracing information is written to the standard output.
+.SH "CONFIGURATION PARAMETERS"
+.I faxalter
+reads configuration information from the file
+.B ${LIBDATA}/hyla.conf
+and then from the file
+.BR ~/.hylarc .
+Configuration files follow the conventions described in
+.IR hylafax (1).
+The following configuration parameters are recognized:
+.sp .5
+.nf
+.ta \w'AutoCoverPage    'u +\w'boolean    'u +\w'\s-1\fIsee below\fP\s+1    'u
+\fBTag	Type	Default	Description\fP
+Host	string	\s-1localhost\s+1	host to contact for service
+Port	integer	\s-14559\s+1	port to use in contacting server
+Protocol	string	\s-1tcp\s+1	protocol to use in contacting server
+Verbose	boolean	\s-1No\s+1	whether or not to enable protocol tracing
+.fi
+.PP
+The configuration parameters are explained below:
+.TP 10
+.B Host
+The host to contact for service.
+(Equivalent to the
+.B \-h
+option.)
+.TP 10
+.B Port
+The network port to contact for service.
+(Eqvuialent to the
+.B \-h
+option.)
+.TP 10
+.B Protocol
+The name of the communication protocol to use when contacting a server.
+(Equivalent to the
+.B FAXSERVICE
+environment variable.)
+.TP 10
+.B Verbose
+Control protocol tracing.
+(Equivalent to the
+.B \-v
+option.)
+.SH BUGS
+Setting a job's killtime without also setting the time to send
+may cause the wrong value for the killtime to be sent.
+This is because the killtime is calculated as the difference in
+time between the killtime and time to send: and if the time
+to send is not specified, then
+.I faxalter
+uses the current time instead of querying the server for the
+job's time to send.
+.PP
+.I faxalter
+suspends a job before attempting to alter its state.
+If a job is active when a suspend request is made there may
+be a delay while waiting for the job to enter a consistent
+state where it can be suspended.
+If
+.I faxalter
+is interrupted during this time then jobs may be left suspended.
+.PP
+.I faxalter
+only understands how to alter a subset of the available job
+parameters; there are many more client-controllable parameters
+that can only be modified by communicating directly with the server
+using the underlying protocol.
+.PP
+The continued use of the
+.IR at (1)-style
+notation for specifying times is questionable (it was done for
+backwards compatibility).
 .SH "SEE ALSO"
 .IR hylafax (1),
 .IR sendfax (1),
 .IR faxrm (1),
 .IR faxstat (1),
-.IR faxd.recv (1M)
+.IR hfaxd (1M)

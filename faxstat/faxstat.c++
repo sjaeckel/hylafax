@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxstat/RCS/faxstat.c++,v 1.35 1995/04/08 21:34:49 sam Rel $ */
+/*	$Id: faxstat.c++,v 1.52 1996/08/21 22:33:57 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -23,294 +23,143 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-
-#include <stdlib.h>
-#include <ctype.h>
-#include <osfcn.h>
-#include <pwd.h>
-#include <termios.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-
-#include "FaxStatClient.h"
-#include "SendStatus.h"
-#include "RecvStatus.h"
-#include "ServerStatus.h"
+#include "FaxClient.h"
 #include "StrArray.h"
+#include "Sys.h"
 #include "config.h"
 
-#if defined(TIOCGWINSZ) && defined(CONFIG_WINSZHACK)
-#include <sys/stream.h>
-#include <sys/ptem.h>
-#endif
+#include <errno.h>
 
-class faxStatApp {
+class faxStatApp : public FaxClient {
 private:
-    fxStr		appName;	// for error messages
-    fxStrArray		senderNames;	// sender's full name (if available)
-    fxStrArray		jobs;		// jobs to ask status for
-    fxBool		allJobs;	// if true, ask for all send jobs
-    fxBool		recvJobs;	// if true, ask for received status
-    fxBool		debug;
-    fxBool		verbose;	// if true, enable protocol tracing
-    fxBool		multipleClients;// more than 1 client thread
-    fxBool		showInfo;	// display server info
-    int			ncols;		// number of columns for output
-    FaxStatClientArray	clients;	// client ``threads''
-    FaxSendStatusArray	sendStatus;	// collected send job status
-    FaxRecvStatusArray	recvStatus;	// collected recv status
-    FaxServerStatusArray serverStatus;	// collected server status
+    fxStr	header;
 
-    FaxStatClient* newClient(const char* host);
-    void setupUserIdentity();
+    fxBool listWithHeader(const fxStr& dir, fxStr& emsg);
 public:
     faxStatApp();
     ~faxStatApp();
 
-    void initialize(int argc, char** argv);
-    void open();
-
-    void printServerStatus(FILE*);
-    fxBool hasServerStatus()		{ return clients.length() > 0; }
-    void printSendStatus(FILE*);
-    fxBool hasSendStatus()		{ return sendStatus.length() > 0; }
-    void printRecvStatus(FILE*);
-    fxBool hasRecvStatus()		{ return recvStatus.length() > 0; }
-
-    fxBool isRunning()
-	{ return FaxStatClient::getClientsDone() < clients.length(); }
+    void run(int argc, char** argv);
 };
+faxStatApp::faxStatApp() {}
+faxStatApp::~faxStatApp() {}
 
-faxStatApp::faxStatApp()
+static fxBool
+writeStdout(void*, const char* buf, int cc, fxStr&)
 {
-    allJobs = FALSE;
-    recvJobs = FALSE;
-    debug = FALSE;
-    verbose = FALSE;
-    showInfo = FALSE;			// for backward compatibility
-    ncols = -1;
-}
-
-faxStatApp::~faxStatApp()
-{
-    for (int i = 0, n = clients.length(); i < n; i++) {
-	FaxStatClient* c = clients[i];
-	delete c;
-    }
-}
-
-FaxStatClient*
-faxStatApp::newClient(const char* host)
-{
-    return new FaxStatClient(host, sendStatus, recvStatus, serverStatus);
+    (void) Sys::write(STDOUT_FILENO, buf, cc);
+    return (TRUE);
 }
 
 void
-faxStatApp::initialize(int argc, char** argv)
+faxStatApp::run(int argc, char** argv)
 {
-    extern int optind;
-    extern char* optarg;
-    int c;
+    resetConfig();
+    readConfig(FAX_SYSCONF);
+    readConfig(FAX_USERCONF);
 
-    appName = argv[0];
-    u_int l = appName.length();
-    appName = appName.tokenR(l, '/');
-    fxBool noSendJobs = FALSE;
-    while ((c = getopt(argc, argv, "h:u:airswvD")) != -1)
+    fxStrArray dirs;
+    dirs.append(FAX_STATUSDIR);		// server status
+    fxBool checkInfo = FALSE;
+    int c;
+    while ((c = getopt(argc, argv, "h:adgfilrsv")) != -1)
 	switch (c) {
-	case 'a':			// display all send jobs
-	    allJobs = TRUE;
+	case 'a':			// display archived jobs
+	    dirs.append(FAX_ARCHDIR);
 	    break;
-	case 'D':			// debug
-	    if (clients.length() > 0)
-		fxFatal("Debug incompatible with host specification.");
-	    debug = TRUE;
-	    setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+	case 'd':			// display jobs in done queue
+	    dirs.append(FAX_DONEDIR);
+	    break;
+	case 'f':			// display queued documents
+	    dirs.append(FAX_DOCDIR);
+	    break;
+	case 'g':			// use GMT for dates & times
+	    setTimeZone(TZ_GMT);
 	    break;
 	case 'h':			// server's host
-	    if (debug)
-		fxFatal("Debug incompatible with host specification.");
-	    clients.append(newClient(optarg));
+	    setHost(optarg);
 	    break;
-	case 'i':			// fetch server info
-	    showInfo = TRUE;
+	case 'i':			// display any.info file
+	    checkInfo = TRUE;
+	    break;
+	case 'l':			// use local timezone for dates & times
+	    setTimeZone(TZ_LOCAL);
 	    break;
 	case 'r':			// display receive queue
-	    recvJobs = TRUE;
+	    dirs.append(FAX_RECVDIR);
 	    break;
-	case 's':			// do not show jobs in send queue
-	    noSendJobs = TRUE;
-	    break;
-	case 'u':			// show send jobs for specific user
-	    senderNames.append(optarg);
+	case 's':			// display jobs in send queue
+	    dirs.append(FAX_SENDDIR);
 	    break;
 	case 'v':			// enable protocol tracing
-	    verbose = TRUE;
-	    break;
-	case 'w':			// widen output line
-	    if (ncols == -1)
-		ncols = 132;
-	    else if (ncols == 132)
-		ncols = 1000;		// something big
+	    setVerbose(TRUE);
 	    break;
 	case '?':
-	    fxFatal("usage: %s"
-		" [-h server-host]"
-		" [-u user-name]"
-		" [-arsvw]"
-		" [jobs]",
-		(char*) appName);
+	    fxFatal("usage: faxstat [-h server-host] [-adfglrsv]");
 	}
-
-    if (clients.length() == 0)
-	clients.append(newClient(""));
-    if (senderNames.length() == 0 && !noSendJobs)
-	setupUserIdentity();
-    if (optind < argc) {
-	// list of jobs to check on
-	jobs.resize(argc-optind);
-	for (u_int i = 0; optind < argc; i++, optind++)
-	    jobs[i] = argv[optind];
-    }
-    multipleClients = (clients.length() > 1);
-#ifdef TIOCGWINSZ
-    winsize ws;
-    if (ncols == -1 && ioctl(fileno(stdout), TIOCGWINSZ, &ws) == 0)
-	ncols = ws.ws_col;
-#endif
-    if (ncols == -1)
-	ncols = 80;
-}
-
-void
-faxStatApp::open()
-{
-    int i = 0;
-    while (i < clients.length()) {
-	FaxStatClient* c = clients[i];
-	c->setVerbose(verbose);
-	if (c->start(debug)) {
-	    c->sendLine("serverStatus:\n");
-	    if (showInfo)
-		c->sendLine("serverInfo:\n");
-	    if (jobs.length() > 0) {
-		for (int j = 0; j < jobs.length(); j++)
-		    c->sendLine("jobStatus", jobs[j]);
-	    } else if (allJobs) {
-		c->sendLine("allStatus:\n");
-	    } else {
-		for (int j = 0; j < senderNames.length(); j++)
-		    c->sendLine("userStatus", senderNames[j]);
+    fxStr emsg;
+    if (callServer(emsg)) {
+	if (login(NULL, emsg)) {
+	    if (checkInfo)
+		(void) recvData(writeStdout, NULL, emsg, 0,
+		    "RETR " FAX_STATUSDIR "/any." FAX_INFOSUF);
+	    for (u_int i = 0, n = dirs.length(); i < n; i++) {
+		header = (i > 0 ? "\n" : "");
+		if (dirs[i] == FAX_SENDDIR || dirs[i] == FAX_DONEDIR) {
+		    getJobStatusHeader(header);
+		    header.append('\n');
+		} else if (dirs[i] == FAX_RECVDIR) {
+		    getRecvStatusHeader(header);
+		    header.append('\n');
+		}
+		if (!listWithHeader(dirs[i], emsg))
+		    break;
 	    }
-	    if (recvJobs)
-		c->sendLine("recvStatus:\n");
-	    c->sendLine(".\n");
-	    i++;
-	} else {
-	    clients.remove(i);
 	}
+	hangupServer();
     }
+    if (emsg != "")
+	printError(emsg);
 }
 
-void
-faxStatApp::setupUserIdentity()
+fxBool
+faxStatApp::listWithHeader(const fxStr& dir, fxStr& emsg)
 {
-    struct passwd* pwd = NULL;
-    char* name = cuserid(NULL);
-    if (!name) {
-	name = getlogin();
-	if (name)
-	    pwd = getpwnam(name);
-    }
-    if (!pwd)
-	pwd = getpwuid(getuid());
-    if (!pwd)
-	fxFatal("Can not determine your user name.");
-
-    fxStr namestr;
-    fxStr username = pwd->pw_name;
-    if (pwd->pw_gecos && pwd->pw_gecos[0] != '\0') {
-	namestr = pwd->pw_gecos;
-	namestr.resize(namestr.next(0, '('));	// strip SysV junk
-	u_int l = namestr.next(0, '&');
-	if (l < namestr.length()) {
-	    /*
-	     * Do the '&' substitution and raise the
-	     * case of the first letter of the inserted
-	     * string (the usual convention...)
-	     */
-	    namestr.remove(l);
-	    namestr.insert(username, l);
-	    if (islower(namestr[l]))
-		namestr[l] = toupper(namestr[l]);
+    if (!setMode(MODE_S))
+	goto bad;
+    if (!initDataConn(emsg))
+	goto bad;
+    if (command("LIST " | dir) != PRELIM)
+	goto bad;
+    if (!openDataConn(emsg))
+	goto bad;
+    u_long byte_count; byte_count = 0;			// XXX for __GNUC__
+    for (;;) {
+	char buf[16*1024];
+	int cc = read(getDataFd(), buf, sizeof (buf));
+	if (cc == 0) {
+	    closeDataConn();
+	    return (getReply(FALSE) == COMPLETE);
 	}
-	namestr.resize(namestr.next(0,','));
-    } else
-	namestr = username;
-    if (namestr.length() == 0)
-	fxFatal("Bad (null) user name.");
-    senderNames.append(namestr);
-}
-
-void
-faxStatApp::printServerStatus(FILE* fp)
-{
-    if (serverStatus.length() == 0) {
-	if (!multipleClients) {
-	    const fxStr& modem = clients[0]->getModem();
-	    if (modem == "")
-		fprintf(fp, "No servers active on \"%s\".\n",
-		    (char*) clients[0]->getHost());
-	    else
-		fprintf(fp, "No server active on \"%s:%s\".\n",
-		    (char*) clients[0]->getHost(), (char*) modem);
-	} else
-	    fprintf(fp, "No servers active on hosts.\n");
-    } else {
-	for (u_int i = 0; i < serverStatus.length(); i++)
-	    serverStatus[i].print(fp);
+	if (cc < 0) {
+	    emsg = fxStr::format("Data Connection: %s", strerror(errno));
+	    (void) getReply(FALSE);
+	    break;
+	}
+	if (byte_count == 0 && header.length() > 0)
+	    (void) Sys::write(STDOUT_FILENO, header, header.length());
+	byte_count += cc;
+	(void) Sys::write(STDOUT_FILENO, buf, cc);
     }
+bad:
+    closeDataConn();
+    return (FALSE);
 }
-
-void
-faxStatApp::printSendStatus(FILE* fp)
-{
-    // sort and print send job status
-    sendStatus.qsort(0, sendStatus.length());
-    FaxSendStatus::printHeader(fp, ncols, multipleClients);
-    for (u_int i = 0; i < sendStatus.length(); i++)
-	sendStatus[i].print(fp, ncols, multipleClients);
-}
-
-void
-faxStatApp::printRecvStatus(FILE* fp)
-{
-    // sort and print receive status
-    recvStatus.qsort(0, recvStatus.length());
-    FaxRecvStatus::printHeader(fp, multipleClients);
-    for (u_int i = 0; i < recvStatus.length(); i++)
-	recvStatus[i].print(fp, multipleClients);
-}
-
-#include "Dispatcher.h"
 
 int
 main(int argc, char** argv)
 {
     faxStatApp app;
-    app.initialize(argc, argv);
-    app.open();
-    while (app.isRunning())
-	Dispatcher::instance().dispatch();
-    if (app.hasServerStatus())
-	app.printServerStatus(stdout);
-    if (app.hasSendStatus()) {
-	printf("\n");
-	app.printSendStatus(stdout);
-    }
-    if (app.hasRecvStatus()) {
-	printf("\n");
-	app.printRecvStatus(stdout);
-    }
+    app.run(argc, argv);
     return 0;
 }

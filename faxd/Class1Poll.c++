@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1Poll.c++,v 1.12 1995/04/08 21:29:34 sam Rel $ */
+/*	$Id: Class1Poll.c++,v 1.16 1996/06/24 03:00:14 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -29,17 +29,30 @@
 #include "t.30.h"
 
 fxBool
-Class1Modem::requestToPoll()
+Class1Modem::requestToPoll(fxStr&)
 {
     return TRUE;
 }
 
 fxBool
-Class1Modem::pollBegin(const fxStr& pollID, fxStr& emsg)
+Class1Modem::pollBegin(const fxStr& cig0,
+    const fxStr& sep0, const fxStr& pwd0, fxStr& emsg)
 {
+    u_int dtc = (modemDIS() &~ DIS_XTNDFIELD);
+    u_int dtc_xinfo = 0;
+    u_int send = 0;
     fxStr cig;
-    u_int dtc = modemDIS();
-    encodeTSI(cig, pollID);
+    encodeTSI(cig, cig0);
+    fxStr sep;
+    if (sep0 != fxStr::null && (xinfo&DIS_SEP)) {
+	encodePWD(sep, sep0);
+	send |= DIS_SEP;
+    }
+    fxStr pwd;
+    if (pwd0 != fxStr::null && (xinfo&DIS_PWD)) {
+	encodePWD(pwd, pwd0);
+	send |= DIS_PWD;
+    }
 
     setInputBuffering(FALSE);
     prevPage = FALSE;				// no previous page received
@@ -47,5 +60,10 @@ Class1Modem::pollBegin(const fxStr& pollID, fxStr& emsg)
 
     return atCmd(thCmd, AT_NOTHING) &&
 	atResponse(rbuf, 2550) == AT_CONNECT &&
-	recvIdentification(FCF_CIG, cig, FCF_DTC, dtc, conf.t1Timer, emsg);
+	recvIdentification(
+	    (send&DIS_PWD ? FCF_PPW : 0), pwd,
+	    (send&DIS_SEP ? FCF_SEP : 0), sep,
+	    FCF_CIG, cig,
+	    FCF_DTC, dtc, dtc_xinfo,
+	    conf.t1Timer, emsg);
 }

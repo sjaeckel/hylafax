@@ -1,12 +1,10 @@
-#! @SCRIPT_SH@
-#	$Header: /usr/people/sam/fax/./util/RCS/recvstats.sh.in,v 1.17 1995/04/08 21:45:03 sam Rel $
-#
-# @WARNING@
+#! /bin/sh
+#	$Id: recvstats.sh.in,v 1.25 1996/06/24 03:06:25 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -30,25 +28,27 @@
 #
 
 #
-# VERSION:	@VERSION@
-# DATE:		@DATE@
-# TARGET:	@TARGET@
-#
-
-#
 # Print Statistics about Received Facsimile.
 #
 SPOOL=@SPOOL@
-AWK=@AWK@
 
-PATH=/bin:/usr/bin:/etc
-test -d /usr/ucb  && PATH=$PATH:/usr/ucb		# Sun and others
-test -d /usr/bsd  && PATH=$PATH:/usr/bsd		# Silicon Graphics
-test -d /usr/5bin && PATH=/usr/5bin:$PATH:/usr/etc	# Sun and others
-test -d /usr/sbin && PATH=/usr/sbin:$PATH		# 4.4BSD-derived
+test -f $SPOOL/etc/setup.cache || {
+    cat<<EOF
+
+FATAL ERROR: $SPOOL/etc/setup.cache is missing!
+
+The file $SPOOL/etc/setup.cache is not present.  This
+probably means the machine has not been setup using the faxsetup(1M)
+command.  Read the documentation on setting up HylaFAX before you
+startup a server system.
+
+EOF
+    exit 1
+}
+. $SPOOL/etc/setup.cache
 
 FILES=
-SORTKEY=-sender
+SORTKEY=-sender				# default is to sort by sender
 TODAY="`date +'%D %H:%M'`"
 AGE="360"				# report statistics for last year
 SINCE=
@@ -59,7 +59,9 @@ while [ x"$1" != x"" ] ; do
 	    SORTKEY=$1;;
     -age)   shift; AGE=$1;;
     -since) shift; SINCE=$1;;
-    -*)	    echo "Usage: $0 [-sortkey] [-age days] [-since date] [files]"; exit 1;;
+    -*)	    echo "Usage: $0 [-sortkey] [-age days] [-since date] [files]"
+	    exit 1
+	    ;;
     *)	    FILES="$FILES $1";;
     esac
     shift
@@ -70,30 +72,45 @@ fi
 
 #
 # Construct awk rules to collect information according
-# to the desired sort key.  There are two rules for
-# each; to deal with the two different formats that
-# have existed over time.
+# to the desired sort key.  There are multiple rules for
+# dealing with the different formats that have existed
+# over time.
 #
 case $SORTKEY in
 -send*|-csi)
-    AWKRULES='$2 == "RECV" && NF == 9  { acct($3, $7, $8, $5, $6, $9); }
-     	      $2 == "RECV" && NF == 11 { acct($6, $9, $10, $7, $8, $11); }
-     	      $2 == "RECV" && NF == 12 { acct($7, $10, $11, $8, $9, $12); }'
+    AWKRULES='
+	$2 == "RECV" && NF == 9  { acct($3, $7, $8, $5, $6, $9); }
+	$2 == "RECV" && NF == 11 { acct($6, $9, $10, $7, $8, $11); }
+	$2 == "RECV" && NF == 12 { acct($7, $10, $11, $8, $9, $12); }
+	$2 == "RECV" && NF == 13 { acct($9, $11, $12, getBR($10), getDF($10), $13); }
+	$2 == "RECV" && NF == 14 { acct($9, $11, $13, getBR($10), getDF($10), $14); }
+	'
     ;;
 -dest*)
-    AWKRULES='$2 == "RECV" && NF == 9  { acct($4, $7, $8, $5, $6, $9); }
-    	      $2 == "RECV" && NF == 11 { acct($5, $9, $10, $7, $8, $11); }
-    	      $2 == "RECV" && NF == 12 { acct($6, $10, $11, $8, $9, $12); }'
+    AWKRULES='
+	$2 == "RECV" && NF == 9  { acct($4, $7, $8, $5, $6, $9); }
+	$2 == "RECV" && NF == 11 { acct($5, $9, $10, $7, $8, $11); }
+	$2 == "RECV" && NF == 12 { acct($6, $10, $11, $8, $9, $12); }
+	$2 == "RECV" && NF == 14 { acct($8, $11, $13, getBR($10), getDF($10), $14); }
+	'
     ;;
 -speed|-rate)
-    AWKRULES='$2 == "RECV" && NF == 9  { acct($5, $7, $8, $5, $6, $9); }
-    	      $2 == "RECV" && NF == 11 { acct($7, $9, $10, $7, $8, $11); }
-    	      $2 == "RECV" && NF == 12 { acct($8, $10, $11, $8, $9, $12); }'
+    AWKRULES='
+	$2 == "RECV" && NF == 9  { acct($5, $7, $8, $5, $6, $9); }
+	$2 == "RECV" && NF == 11 { acct($7, $9, $10, $7, $8, $11); }
+	$2 == "RECV" && NF == 12 { acct($8, $10, $11, $8, $9, $12); }
+	$2 == "RECV" && NF == 13 { acct(getBR($10), $11, $12, getBR($10), getDF($10), $13); }
+	$2 == "RECV" && NF == 14 { acct(getBR($10), $11, $13, getBR($10), getDF($10), $14); }
+	'
     ;;
 -format)
-    AWKRULES='$2 == "RECV" && NF == 9  { acct($6, $7, $8, $5, $6, $9); }
-    	      $2 == "RECV" && NF == 11 { acct($8, $9, $10, $7, $8, $11); }
-    	      $2 == "RECV" && NF == 12 { acct($9, $10, $11, $8, $9, $12); }'
+    AWKRULES='
+	$2 == "RECV" && NF == 9  { acct($6, $7, $8, $5, $6, $9); }
+	$2 == "RECV" && NF == 11 { acct($8, $9, $10, $7, $8, $11); }
+	$2 == "RECV" && NF == 12 { acct($9, $10, $11, $8, $9, $12); }
+	$2 == "RECV" && NF == 13 { acct(getDF($10), $11, $12, getBR($10), getDF($10), $13); }
+	$2 == "RECV" && NF == 14 { acct(getDF($10), $11, $13, getBR($10), getDF($10), $14); }
+	'
     ;;
 esac
 
@@ -103,11 +120,11 @@ esac
 tmpAwk=/tmp/xfer$$
 trap "rm -f $tmpAwk; exit 1" 0 1 2 15
 
-(cat<<'EOF'
+($CAT<<'EOF'
 #
 # Setup date conversion data structures.
 #
-func setupDateTimeStuff()
+function setupDateTimeStuff()
 {
     daysInMonth[ 0] = 31; daysInMonth[ 1] = 28; daysInMonth[ 2] = 31;
     daysInMonth[ 3] = 30; daysInMonth[ 4] = 31; daysInMonth[ 5] = 30;
@@ -120,7 +137,7 @@ func setupDateTimeStuff()
 #
 # Convert hh:mm:ss to seconds.
 #
-func cvtTime(s)
+function cvtTime(s)
 {
     t = i = 0;
     for (n = split(s, a, ":"); i++ < n; )
@@ -132,7 +149,7 @@ func cvtTime(s)
 # Convert MM/DD/YY hh:mm to seconds.
 # NB: this does not deal with leap years.
 #
-func cvtDateTime(s)
+function cvtDateTime(s)
 {
     yday = substr(s,7,2)*365 + substr(s,4,2) - 1;
     mon = substr(s,0,2) + 0;
@@ -141,7 +158,7 @@ func cvtDateTime(s)
     return yday*FULLDAY + cvtTime(substr(s,10) ":00");
 }
 
-func setupDigits()
+function setupDigits()
 {
   digits[0] = "0"; digits[1] = "1"; digits[2] = "2";
   digits[3] = "3"; digits[4] = "4"; digits[5] = "5";
@@ -152,7 +169,7 @@ func setupDigits()
 #
 # Format seconds as hh:mm:ss.
 #
-func fmtTime(t)
+function fmtTime(t)
 {
     v = int(t/3600);
     result = "";
@@ -171,19 +188,22 @@ func fmtTime(t)
 }
 
 #
-# Setup a map for histogram calculations.
+# Setup map for histogram calculations
+# and indexed table for decoding params.
 #
-func setupMap(s, map)
+function setupMaps(s, map, names)
 {
     n = split(s, a, ":");
-    for (i = 1; i <= n; i++)
+    for (i = 1; i <= n; i++) {
 	map[a[i]] = i;
+	names[i-1] = a[i];
+    }
 }
 
 #
 # Add pages to a histogram.
 #
-func addToMap(key, ix, pages, map)
+function addToMap(key, ix, pages, map)
 {
     if (key == "") {
 	for (i in map)
@@ -201,7 +221,7 @@ func addToMap(key, ix, pages, map)
 # Return the name of the item with the
 # largest number of accumulated pages.
 #
-func bestInMap(totals, map)
+function bestInMap(totals, map)
 {
    n = split(totals, a, ":");
    imax = 1; max = -1;
@@ -243,10 +263,20 @@ function qsort(a, l, r) {
 	qsort(a, k+1, r);
 }
 
+function getBR(params)
+{
+    return brNames[int(int(params) / 2) % 8];
+}
+
+function getDF(params)
+{
+    return dfNames[int(int(params) / 512) % 4];
+}
+
 #
 # Accumulate a statistics record.
 #
-func acct(key, pages, time, br, df, status)
+function acct(key, pages, time, br, df, status)
 {
     if (cvtDateTime($1) < KEEP)
 	return;
@@ -269,7 +299,7 @@ func acct(key, pages, time, br, df, status)
 #
 # Print a rule between the stats and the totals line.
 #
-func printRule(n, s)
+function printRule(n, s)
 {
     r = "";
     while (n-- >= 0)
@@ -279,9 +309,9 @@ func printRule(n, s)
 
 BEGIN		{ FS="\t";
 		  rates = "2400:4800:7200:9600:12000:14400";
-		  setupMap(rates, rateMap);
+		  setupMaps(rates, rateMap, brNames);
 		  datas = "1-D MR:2-D MR:2-D Uncompressed Mode:2-D MMR";
-		  setupMap(datas, dataMap);
+		  setupMaps(datas, dataMap, dfNames);
 		  setupDateTimeStuff();
 		  if (SINCE == "")
 		      KEEP = cvtDateTime(TODAY) - AGE*FULLDAY;

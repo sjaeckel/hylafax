@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/GettyBSD.c++,v 1.33 1995/04/08 21:30:41 sam Rel $ */
+/*	$Id: GettyBSD.c++,v 1.39 1996/07/31 17:38:39 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -31,7 +31,6 @@
 
 #include <stddef.h>
 #include <termios.h>
-#include <osfcn.h>
 #include <sys/ioctl.h>
 #include <utmp.h>
 
@@ -66,9 +65,9 @@ BSDSubProc::setupSession(int modemFd)
      * Close everything down except the modem so
      * that the remote side doesn't get hung up on.
      */
-    for (fd = ::getdtablesize()-1; fd >= 0; fd--)
+    for (fd = Sys::getOpenMax()-1; fd >= 0; fd--)
 	if (fd != modemFd)
-	    (void) ::close(fd);
+	    (void) Sys::close(fd);
     /*
      * Now make the line be the controlling tty
      * and create a new process group/session for
@@ -76,19 +75,19 @@ BSDSubProc::setupSession(int modemFd)
      */
     fd = Sys::open("tty", 0);		// NB: assumes we're in /dev
     if (fd >= 0) {
-	::ioctl(fd, TIOCNOTTY, 0);
-	::close(fd);
+	ioctl(fd, TIOCNOTTY, 0);
+	Sys::close(fd);
     }
-    ::setsid();
+    setsid();
     fd = Sys::open(getLine(), O_RDWR|O_NONBLOCK);
     if (fd != STDIN_FILENO)
 	fatal("Can not setup \"%s\" as stdin", getLine());
     if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) &~ O_NONBLOCK))
 	fatal("Can not reset O_NONBLOCK: %m");
-    ::close(modemFd);			// done with this, pitch it
+    Sys::close(modemFd);		// done with this, pitch it
 
 #ifdef TIOCSCTTY
-    if (::ioctl(fd, TIOCSCTTY, 0))
+    if (ioctl(fd, TIOCSCTTY, 0))
 	fatal("Cannot set controlling tty: %m");
 #endif
 #ifdef TIOCGETDFLT
@@ -100,19 +99,19 @@ BSDSubProc::setupSession(int modemFd)
      * set the CLOCAL state from it; otherwise, we leave CLOCAL on.
      */
     struct termios term, dflt;
-    if (::ioctl(fd, TIOCGETDFLT, &dflt) == 0 && (dflt.c_cflag & CLOCAL) == 0) {
-	::tcgetattr(fd, &term);
+    if (ioctl(fd, TIOCGETDFLT, &dflt) == 0 && (dflt.c_cflag & CLOCAL) == 0) {
+	tcgetattr(fd, &term);
 	term.c_cflag &= ~CLOCAL;
-	::tcsetattr(fd, TCSAFLUSH, &term);
+	tcsetattr(fd, TCSAFLUSH, &term);
     }
 #else
     /*
      * Turn off CLOCAL so that SIGHUP is sent on modem disconnect.
      */
     struct termios term;
-    if (::tcgetattr(fd, &term) == 0) {
+    if (tcgetattr(fd, &term) == 0) {
 	term.c_cflag &= ~CLOCAL;
-	::tcsetattr(fd, TCSAFLUSH, &term);
+	tcsetattr(fd, TCSAFLUSH, &term);
     }
 #endif
     /*
@@ -141,19 +140,19 @@ void
 BSDGetty::writeWtmp(utmp* ut)
 {
 #if HAS_LOGWTMP
-    ::logwtmp(ut->ut_line, "", "");
+    logwtmp(ut->ut_line, "", "");
 #else
     int wfd = Sys::open(_PATH_WTMP, O_WRONLY|O_APPEND);
     if (wfd >= 0) {
 	struct stat buf;
 	if (Sys::fstat(wfd, buf) == 0) {
-	    ::memset(ut->ut_name, 0, sizeof (ut->ut_name));
-	    ::memset(ut->ut_host, 0, sizeof (ut->ut_host));
+	    memset(ut->ut_name, 0, sizeof (ut->ut_name));
+	    memset(ut->ut_host, 0, sizeof (ut->ut_host));
 	    ut->ut_time = Sys::now();
 	    if (Sys::write(wfd, (char *)ut, sizeof (*ut)) != sizeof (*ut))
-		::ftruncate(wfd, buf.st_size);
+		ftruncate(wfd, buf.st_size);
 	}
-	::close(wfd);
+	Sys::close(wfd);
     }
 #endif
 }
@@ -169,13 +168,13 @@ BSDGetty::logout(const char* line)
 	struct utmp ut;
 	while (Sys::read(ufd, (char *)&ut, sizeof (ut)) == sizeof (ut))
 	    if (ut.ut_name[0] && lineEQ(ut.ut_line, line)) {
-		::memset(ut.ut_name, 0, sizeof (ut.ut_name));
-		::memset(ut.ut_host, 0, sizeof (ut.ut_host));
+		memset(ut.ut_name, 0, sizeof (ut.ut_name));
+		memset(ut.ut_host, 0, sizeof (ut.ut_host));
 		ut.ut_time = time(0);
-		::lseek(ufd, -(long) sizeof (ut), SEEK_CUR);
+		lseek(ufd, -(long) sizeof (ut), SEEK_CUR);
 		Sys::write(ufd, (char *)&ut, sizeof (ut));
 	    }
-	::close(ufd);
+	Sys::close(ufd);
     }
 #endif
 }
@@ -192,7 +191,7 @@ BSDGetty::hangup()
 		writeWtmp(&ut);
 		break;
 	    }
-	::close(ufd);
+	Sys::close(ufd);
     }
     logout(getLine());
     Getty::hangup();
@@ -210,5 +209,11 @@ OSnewGetty(const fxStr& dev, const fxStr& speed)
 Getty*
 OSnewVGetty(const fxStr& dev, const fxStr& speed)
 {
-    return (new BSDSubProc("bin/vgetty", dev, speed));
+    return (new BSDSubProc(_PATH_VGETTY, dev, speed));
+}
+
+Getty*
+OSnewEGetty(const fxStr& dev, const fxStr& speed)
+{
+    return (new BSDSubProc(_PATH_EGETTY, dev, speed));
 }

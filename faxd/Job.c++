@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Job.c++,v 1.18 1995/04/08 21:30:48 sam Rel $ */
+/*	$Id: Job.c++,v 1.30 1996/08/21 21:53:43 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE.
  */
 #include "faxQueueApp.h"
+#include "FaxRequest.h"
 #include "Dispatcher.h"
+#include "TriggerRef.h"
 #include "Sys.h"
 #include "config.h"
 
@@ -48,27 +50,65 @@ JobSendHandler::~JobSendHandler() {}
 void JobSendHandler::childStatus(pid_t, int status)
     { faxQueueApp::instance().sendJobDone(job, status); }
 
-Job::Job(const fxStr& s, const fxStr& id, const fxStr& m, int p, time_t t)
+fxIMPLEMENT_StrKeyPtrValueDictionary(JobDict, Job*)
+JobDict Job::registry;
+
+Job::Job(const FaxRequest& req)
     : killHandler(*this)
     , ttsHandler(*this)
     , prepareHandler(*this)
     , sendHandler(*this)
-    , file(s)
-    , jobid(id)
-    , device(m)
+    , file(req.qfile)
+    , jobid(req.jobid)
 {
-    tts = t;
-    pri = p;
-    killtime = 0;
+    update(req);
+
+    start = 0;
+    pid = 0;
+    state = req.state;
+
     dnext = NULL;
     modem = NULL;
-    abortPending = FALSE;
+    suspendPending = FALSE;
+    registry[jobid] = this;
 }
 
 Job::~Job()
 {
+    registry.remove(jobid);
     stopKillTimer();
     stopTTSTimer();
+    if (!triggers.isEmpty())		// purge trigger references
+	TriggerRef::purge(triggers);
+}
+
+/*
+ * Update volatile job state from the job description
+ * file.  This propagates client-alterable state from
+ * on-disk to in-memory.  Note that we do not touch the
+ * job state since there are cases where the scheduler
+ * updates the in-memory state but does not save it to
+ * the description file (maybe this will change?).
+ */
+void
+Job::update(const FaxRequest& req)
+{
+    tts = (req.tts == 0 ? Sys::now() : req.tts);
+    killtime = req.killtime;
+    pri = req.pri;
+    // NB: state is not overwritten
+    pagewidth = req.pagewidth;
+    pagelength = req.pagelength;
+    resolution = req.resolution;
+    willpoll = (req.findRequest(FaxRequest::send_poll) != fx_invalidArrayIndex);
+    device = req.modem;
+}
+
+Job*
+Job::getJobByID(const fxStr& id)
+{
+    Job** jpp = (Job**) registry.find(id);
+    return (jpp ? *jpp : (Job*) NULL);
 }
 
 void
@@ -131,9 +171,23 @@ Job::jobStatusName(const JobStatus status)
 #define	N(a)	(sizeof (a) / sizeof (a[0]))
     if ((u_int) status >= N(names)) {
 	static char s[30];
-	::sprintf(s, "status_%u", (u_int) status);
+	sprintf(s, "status_%u", (u_int) status);
 	return (s);
     } else
 	return (names[status]);
 }
 #undef N
+
+#include "JobExt.h"
+#include "StackBuffer.h"
+
+void
+Job::encode(fxStackBuffer& buf) const
+{
+    buf.put((const char*) &tts, sizeof (JobExtFixed));
+
+    buf.put(jobid,  jobid.length()+1);
+    buf.put(dest,   dest.length()+1);
+    buf.put(device, device.length()+1);
+    buf.put(commid, commid.length()+1);
+}

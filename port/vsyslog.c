@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./port/RCS/vsyslog.c,v 1.2 1995/04/08 21:42:40 sam Rel $
+/*	$Id: vsyslog.c,v 1.5 1996/06/24 03:04:37 sam Rel $
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,11 +28,27 @@
 #include <sys/types.h>
 #include <stdarg.h>
 #include <syslog.h>
+#include <string.h>
+#include <errno.h>
 
 void
 vsyslog(int pri, const char* fmt, va_list ap)
 {
-	char tbuf[2048];
-	(void) vsprintf(tbuf, fmt, ap);
-	(void) syslog(pri, tbuf);
+	char tbuf[2048], fmt_cpy[1024];
+	char* cp;
+	char c;
+
+	/* substitute error message for %m */
+	for (cp = fmt_cpy; c = *fmt; ++fmt) {
+	    if (c == '%' && fmt[1] == 'm') {
+		const char* dp;
+		++fmt;
+		for (dp = strerror(errno); *cp = *dp++; ++cp)
+		    ;
+	    } else
+		*cp++ = c;
+	    *cp = '\0';
+	}
+	(void) vsprintf(tbuf, fmt_cpy, ap);
+	(void) syslog(pri, "%s", tbuf);
 }

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Modem.c++,v 1.16 1995/04/08 21:30:53 sam Rel $ */
+/*	$Id: Modem.c++,v 1.35 1996/08/21 21:02:47 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,41 +28,77 @@
 #include <errno.h>
 
 #include "Modem.h"
-#include "Job.h"
-#include "faxQueueApp.h"
 #include "UUCPLock.h"
+#include "RegExDict.h"
+#include "TriggerRef.h"
+#include "Dispatcher.h"
 #include "config.h"
 
-QLink Modem::list;
+RegExDict* ModemClass::classes =  NULL;	// modem classes
+
+RegEx*
+ModemClass::find(const char* name)
+{
+    if (classes == NULL)
+	return (NULL);
+    const RegExPtr* re = classes->find(name);
+    return (re ? (RegEx*) *(RegExPtr*) re : (RegEx*) NULL);
+}
+
+void
+ModemClass::reset()
+{
+    delete classes, classes = NULL;
+}
+
+void
+ModemClass::set(const fxStr& name, RegEx* re)
+{
+    if (classes == NULL)
+	classes = new RegExDict;
+    (*classes)[name] = re;
+}
+
+ModemLockWaitHandler::ModemLockWaitHandler(Modem& m) : modem(m) {}
+ModemLockWaitHandler::~ModemLockWaitHandler() {}
+void ModemLockWaitHandler::timerExpired(long, long)
+    { faxQueueApp::instance().pollForModemLock(modem); }
+
+QLink Modem::list;			// master list of known modems
 
 Modem::Modem(const fxStr& id)
     : devID(id)
     , fifoName(FAX_FIFO "." | id)
+    , lockHandler(*this)
 {
     state = DOWN;			// modem down until notified otherwise
     canpoll = TRUE;			// be optimistic
     fd = -1;				// force open on first use
-    insert(list);			// place on free list
-    /*
-     * Convert an identifier to the pathname for the
-     * device (required by the UUCP lock code).  This
-     * is done converting '_'s to '/'s and then prepending
-     * DEV_PREFIX.  This is required for SVR4 systems
-     * which have their devices in subdirectories!
-     */
-    fxStr dev = id;
-    u_int l;
-    while ((l = dev.next(0, '_')) < dev.length())
-	dev[l] = '/';
-    lock = faxQueueApp::instance().getUUCPLock(DEV_PREFIX | dev);
+    priority = 255;			// lowest priority
+    insert(list);			// place at end of master list
+    lock = faxQueueApp::instance().getUUCPLock(faxApp::idToDev(id));
 }
 
 Modem::~Modem()
 {
+    stopLockPolling();
     delete lock;
-    if (fd > 0)
-	::close(fd);
+    if (fd >= 0)
+	Sys::close(fd);
     remove();
+    if (!triggers.isEmpty())		// purge trigger references
+	TriggerRef::purge(triggers);
+}
+
+Modem*
+Modem::modemExists(const fxStr& id)
+{
+    for (ModemIter iter(list); iter.notDone(); iter++) {
+	Modem& modem = iter;
+	if (modem.devID == id)
+	    return (&modem);
+    }
+    return (NULL);
 }
 
 /*
@@ -74,29 +110,16 @@ Modem::~Modem()
 Modem&
 Modem::getModemByID(const fxStr& id)
 {
-    for (ModemIter iter(list); iter.notDone(); iter++) {
-	Modem& modem = iter;
-	if (modem.devID == id)
-	    return (modem);
-    }
-    return (*new Modem(id));
+    Modem* modem = modemExists(id);
+    return *(modem ? modem : new Modem(id));
 }
 
+/*
+ * Is the modem capable of handling the job.
+ */ 
 fxBool
-Modem::modemExists(const fxStr& id)
+Modem::isCapable(const Job& job) const
 {
-    for (ModemIter iter(list); iter.notDone(); iter++)
-	if (iter.modem().devID == id)
-	    return (TRUE);
-    return (FALSE);
-}
-
-fxBool
-Modem::assign(Job& job)
-{
-    if (job.device != MODEM_ANY && job.device != devID)
-	return (FALSE);
-    // XXX per-modem tod usage for fax, data, voice
     if (job.willpoll && !canpoll)
 	return (FALSE);
     if (job.pagewidth && !supportsPageWidthInMM(job.pagewidth))
@@ -105,12 +128,72 @@ Modem::assign(Job& job)
 	return (FALSE);
     if (job.resolution && !supportsVRes(job.resolution))
 	return (FALSE);
+    return (TRUE);
+}
+
+/*
+ * Find a modem that is capable of handling
+ * work associated with the specified job.
+ */
+Modem*
+Modem::findModem(const Job& job)
+{
+    RegEx* c = ModemClass::find(job.device);
+    if (c) {
+	/*
+	 * Job is assigned to a class of modems; search
+	 * the set of modems in the class according to
+	 * the order specified (if any order is specified).
+	 */
+	for (ModemIter iter(list); iter.notDone(); iter++) {
+	    Modem& modem = iter;
+	    if (modem.getState() != Modem::READY)
+		continue;
+	    if (c->Find(modem.devID) && modem.isCapable(job))
+		return (&modem);
+	}
+    } else {
+	/*
+	 * Job is assigned to an explicit modem or to an
+	 * invalid class or modem.  Look for the modem
+	 * in the list of known modems. 
+	 */
+	for (ModemIter iter(list); iter.notDone(); iter++) {
+	    Modem& modem = iter;
+	    if (modem.getState() != Modem::READY)
+		continue;
+	    if (job.device != modem.devID)
+		continue;
+	    return (modem.isCapable(job) ? &modem : (Modem*) NULL);
+	}
+    }
+    return (NULL);
+}
+
+/*
+ * Assign a modem for use by a job.
+ */
+fxBool
+Modem::assign(Job& job)
+{
     if (lock->lock()) {		// lock modem for use
 	state = BUSY;		// mark in use
 	job.modem = this;	// assign modem to job
 	return (TRUE);
-    } else
+    } else {
+	/*
+	 * Modem is locked for use by an outbound task.
+	 * This should only happen when operating in a
+	 * send-only environment--a modem is presumed
+	 * ready for use, only to discover when it's
+	 * actually assigned that it's really busy.
+	 * We mark the modem BUSY here so that if the
+	 * caller requests another modem we won't try
+	 * to re-assign it in findModem.
+	 */
+	state = BUSY;		// mark in use
 	return (FALSE);
+    }
 }
 
 /*
@@ -125,47 +208,67 @@ Modem::release()
      * because we cannot depend on the faxgetty process 
      * notifying us if/when the modem status changes.  This
      * may result in overzealous scheduling of the modem, but
-     * sender apps are expected to stablize the modem before
-     * starting work it shouldn't be too bad.
+     * since sender apps are expected to stablize the modem
+     * before starting work it shouldn't be too bad.
      */
     state = READY;
+}
+
+/*
+ * UUCP lock file polling support.  When a modem is not
+ * monitored by a faxgetty process outbound modem usage
+ * is ``discovered'' when we attempt to assign a modem
+ * to a job.  At that time we mark the modem BUSY and
+ * kick off a polling procedure to watch for when the
+ * lock file is removed; at which time we mark the modem
+ * READY again and poke the scheduler in case jobs are
+ * waiting for a modem to come ready again.
+ */
+void
+Modem::startLockPolling(long sec)
+{
+    Dispatcher::instance().startTimer(sec, 0, &lockHandler);
+}
+
+void
+Modem::stopLockPolling()
+{
+    Dispatcher::instance().stopTimer(&lockHandler);
 }
 
 void
 Modem::setCapabilities(const char* s)
 {
-    canpoll = (s[0] == 'P');	// P for polling, other for no support
-    caps.decodeCaps(s+1);	//...parse capabilities string...
-    state = READY;		// XXX needed for static configuration
-}
-
-void
-Modem::traceState(const char* state)
-{
-    faxQueueApp::instance().traceServer("MODEM " | devID | " %s", state);
-}
-
-void
-Modem::FIFOMessage(const char* cp)
-{
-    switch (cp[0]) {
-    case 'R':			// modem ready, parse capabilities
-	traceState("READY");
-	setCapabilities(&cp[1]);
-	break;
-    case 'B':			// modem busy doing something
-	traceState("BUSY");
-	state = BUSY;
-	break;
-    case 'D':			// modem to be marked down
-	traceState("DOWN");
-	state = DOWN;
-	break;
-    default:
-	logError("Unknown Modem FIFO message \"%s\"", cp);
-	break;
+    canpoll = (s[0] == 'P');			// P/p for polling/no polling
+    char* tp;
+    caps.decodeCaps((u_int) strtoul(s+1, &tp, 16));// fax capabilities
+    if (tp && *tp == ':') {			// modem priority
+	u_int pri = (u_int) strtoul(tp+1, NULL, 16);
+	if (pri != priority) {
+	    /*
+	     * Priority changed, move modem so that the list remains
+	     * sorted by priority (highest priority to lowest priority).
+	     */
+	    remove();
+	    priority = pri;
+	    if (!isEmpty()) {
+		ModemIter iter(list);
+		do {
+		    if (iter.modem().priority > pri)
+			break;
+		    iter++;
+		} while (iter.notDone());
+		insert(*iter.modem().prev);
+	    } else
+		insert(list);
+	}
     }
+    setState(READY);		// XXX needed for static configuration
 }
+
+void Modem::setNumber(const char* cp)		{ number = cp; }
+void Modem::setCommID(const char* cp)		{ commid = cp; }
+void Modem::setState(ModemState s)		{ state = s; }
 
 /*
  * Return whether or not the modem supports the
@@ -252,26 +355,72 @@ Modem::supportsPageLengthInMM(u_int l) const
 	return caps.ln & BIT(LN_INF);
 }
 
+/*
+ * Broadcast a message to all known modems.
+ */
 void
 Modem::broadcast(const fxStr& msg)
 {
-    for (ModemIter iter(list); iter.notDone(); iter++)
-	iter.modem().send(msg);
+    for (ModemIter iter(list); iter.notDone(); iter++) {
+	/*
+	 * NB: We rarely send msgs, so for now close after each use.
+	 *     +1 here is so the \0 is included in the message.
+	 */
+	iter.modem().send(msg, msg.length()+1, FALSE);
+    }
 }
 
+/*
+ * Send a message to the process managing a modem.
+ */
 fxBool
-Modem::send(const fxStr& msg)
+Modem::send(const char* msg, u_int msgLen, fxBool cacheFd)
 {
+    fxBool retry = TRUE;
 again:
-    if (fd < 0)
+    if (fd < 0) {
 	fd = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-    if (fd >= 0) {
-	int n = Sys::write(fd, msg, msg.length());
-	if (n == -1 && errno == EBADF) {
-	    ::close(fd), fd = -1;
+	if (fd < 0) {
+#ifdef notdef
+	    /*
+	     * NB: We don't generate a message here because this
+	     *     is expected when faxgetty is not running.
+	     */
+	    logError("MODEM " | devID | ": Cannot open FIFO: %m");
+#endif
+	    return (FALSE);
+	}
+    }
+    int n = Sys::write(fd, msg, msgLen);
+    if (n == -1) {
+	if (errno == EBADF && retry) {		// cached descriptor bad, retry
+	    retry = FALSE;
+	    Sys::close(fd), fd = -1;
 	    goto again;
 	}
-	return (n == msg.length());
-    } else
-	return (FALSE);
+	logError("MODEM " | devID | ": Cannot send msg \"%.*s\"", msgLen, msg);
+    }
+    if (!cacheFd)
+	Sys::close(fd), fd = -1;
+    return (n == msgLen);
+}
+
+#include "StackBuffer.h"
+
+void
+Modem::encode(fxStackBuffer& buf) const
+{
+    buf.put(devID,  devID.length()+1);
+    buf.put(number, number.length()+1);
+    buf.put(commid, commid.length()+1);
+
+    switch (state) {
+    case DOWN:	buf.put('D'); break;
+    case BUSY:	buf.put('B'); break;
+    case READY:	buf.put('R'); break;
+    }
+    buf.put(canpoll ? 'P' : 'p');
+    u_int ec = caps.encodeCaps();
+    buf.put((const char*) &ec, sizeof (u_int));
+    buf.put((const char*) &priority, sizeof (u_short));
 }

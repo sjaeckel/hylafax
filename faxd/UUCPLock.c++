@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/UUCPLock.c++,v 1.43 1995/04/08 21:31:08 sam Rel $ */
+/*	$Id: UUCPLock.c++,v 1.47 1996/07/19 23:05:08 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -96,7 +96,7 @@ UUCPLock::newLock(const char* type,
 	    major(sb.st_dev), major(sb.st_rdev), minor(sb.st_rdev)));
 	type++;
 #else
-	fxFatal("No support for SVR4-style UUCP lockfiles");
+	faxApp::fatal("No support for SVR4-style UUCP lockfiles");
 #endif
     } else {				// everybody else's lockfile names
 	u_int l = device.nextR(device.length(), '/');
@@ -118,7 +118,7 @@ UUCPLock::newLock(const char* type,
     else if (streq(type, "binary"))
 	return new BinaryUUCPLock(pathname, mode);
     else
-	fxFatal("Unknown UUCP lock file type \"%s\"", type);
+	faxApp::fatal("Unknown UUCP lock file type \"%s\"", type);
     return (NULL);
 }
 
@@ -142,12 +142,12 @@ void
 UUCPLock::setupIDs()
 {
     if (UUCPuid == (uid_t) -1) {
-	const passwd *pwd = ::getpwnam("uucp");
+	const passwd *pwd = getpwnam("uucp");
 	if (!pwd)
-	    fxFatal("Can not deduce identity of UUCP");
+	    faxApp::fatal("Can not deduce identity of UUCP");
 	UUCPuid = pwd->pw_uid;
 	UUCPgid = pwd->pw_gid;
-	::endpwent();			// paranoia
+	endpwent();			// paranoia
     }
 }
 uid_t UUCPLock::getUUCPUid() { setupIDs(); return UUCPuid; }
@@ -171,16 +171,16 @@ UUCPLock::create()
     if (fd >= 0) {
 	writeData(fd);
 #if HAS_FCHMOD
-	::fchmod(fd, mode);
+	fchmod(fd, mode);
 #else
 	Sys::chmod(tmp, mode);
 #endif
 #if HAS_FCHOWN
-	::fchown(fd, UUCPuid, UUCPgid);
+	fchown(fd, UUCPuid, UUCPgid);
 #else
 	Sys::chown(tmp, UUCPuid, UUCPgid);
 #endif
-	::close(fd);
+	Sys::close(fd);
 
 	locked = (Sys::link(tmp, file) == 0);
 	Sys::unlink(tmp);
@@ -210,12 +210,12 @@ UUCPLock::lock()
 {
     if (locked)
 	return (FALSE);
-    uid_t ouid = ::geteuid();
-    ::seteuid(0);			// need to be root
+    uid_t ouid = geteuid();
+    seteuid(0);				// need to be root
     fxBool ok = create();
     if (!ok)
 	ok = check() && create();
-    ::seteuid(ouid);
+    seteuid(ouid);
     return (ok);
 }
 
@@ -226,10 +226,10 @@ void
 UUCPLock::unlock()
 {
     if (locked) {
-	uid_t ouid = ::geteuid();
-	::seteuid(0);			// need to be root
+	uid_t ouid = geteuid();
+	seteuid(0);			// need to be root
 	Sys::unlink(file);
-	::seteuid(ouid);
+	seteuid(ouid);
 	locked = FALSE;
     }
 }
@@ -243,16 +243,16 @@ UUCPLock::setOwner(pid_t pid)
 {
     fxBool ok = FALSE;
     if (locked) {
-	uid_t ouid = ::geteuid();
-	::seteuid(0);			// need to be root
+	uid_t ouid = geteuid();
+	seteuid(0);			// need to be root
 	int fd = Sys::open(file, O_WRONLY);
 	if (fd != -1) {
 	    if (pid)
 		setPID(pid);
 	    ok = writeData(fd);
-	    ::close(fd);
+	    Sys::close(fd);
 	}
-	::seteuid(ouid);
+	seteuid(ouid);
     }
     return (ok);
 }
@@ -264,7 +264,7 @@ fxBool
 UUCPLock::ownerExists(int fd)
 {
     pid_t pid;
-    return (readData(fd, pid) && (::kill(pid, 0) == 0 || errno != ESRCH));
+    return (readData(fd, pid) && (kill(pid, 0) == 0 || errno != ESRCH));
 }
 
 /*
@@ -280,14 +280,14 @@ UUCPLock::check()
     if (fd != -1) {
 	if (lockTimeout > 0) {
 	    if (isNewer(lockTimeout) || ownerExists(fd)) {
-		::close(fd);
+		Sys::close(fd);
 		return (FALSE);
 	    }
-	    ::close(fd);
+	    Sys::close(fd);
 	    logInfo("Purge stale UUCP lock %s", (const char*) file);
 	    return (Sys::unlink(file) == 0);
 	} else {
-	    ::close(fd);
+	    Sys::close(fd);
 	    return (FALSE);
 	}
     }
@@ -300,14 +300,14 @@ UUCPLock::check()
 AsciiUUCPLock::AsciiUUCPLock(const fxStr& path, mode_t m)
     : UUCPLock(path, m)
     , data(UUCP_PIDDIGITS+2)
-{ setPID(::getpid()); }
+{ setPID(getpid()); }
 AsciiUUCPLock::~AsciiUUCPLock() {}
 
 void
 AsciiUUCPLock::setPID(pid_t pid)
 {
     // XXX should this be %d or %ld? depends on pid_t
-    ::sprintf((char*) data, "%*d\n", UUCP_PIDDIGITS, pid);
+    sprintf((char*) data, "%*d\n", UUCP_PIDDIGITS, pid);
 }
 
 fxBool
@@ -322,7 +322,7 @@ AsciiUUCPLock::readData(int fd, pid_t& pid)
     char buf[UUCP_PIDDIGITS+1];
     if (Sys::read(fd, buf, UUCP_PIDDIGITS) == UUCP_PIDDIGITS) {
 	buf[UUCP_PIDDIGITS] = '\0';
-	pid = ::atol(buf);	// NB: assumes pid_t is <= 32-bits
+	pid = atol(buf);	// NB: assumes pid_t is <= 32-bits
 	return (TRUE);
     } else
 	return (FALSE);
@@ -333,7 +333,7 @@ AsciiUUCPLock::readData(int fd, pid_t& pid)
  */
 BinaryUUCPLock::BinaryUUCPLock(const fxStr& path, mode_t m)
     : UUCPLock(path, m)
-{ setPID(::getpid()); }
+{ setPID(getpid()); }
 BinaryUUCPLock::~BinaryUUCPLock() {}
 
 void

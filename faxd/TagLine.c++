@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/TagLine.c++,v 1.16 1995/04/08 21:31:07 sam Rel $ */
+/*	$Id: TagLine.c++,v 1.26 1996/08/24 00:31:04 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -44,7 +44,7 @@ insert(fxStr& tag, u_int l, const fxStr& s)
  * preformat as much of the tag line as possible.
  */
 void
-FaxModem::setupTagLine(const FaxRequest& req)
+FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt)
 {
     if (tagLineFont == NULL)
 	tagLineFont = new PCFFont;
@@ -52,9 +52,9 @@ FaxModem::setupTagLine(const FaxRequest& req)
 	(void) tagLineFont->read(conf.tagLineFontFile);
 
     time_t t = Sys::now();
-    tm* tm = ::localtime(&t);
+    tm* tm = localtime(&t);
     char line[1024];
-    ::strftime(line, sizeof (line), conf.tagLineFmt, tm);
+    strftime(line, sizeof (line)-1, tagLineFmt, tm);
     tagLine = line;
     u_int l = 0;
     while (l < tagLine.length()) {
@@ -69,7 +69,8 @@ FaxModem::setupTagLine(const FaxRequest& req)
 	case 'm': insert(tagLine, l, req.mailaddr); break;
 	case 'n': insert(tagLine, l, server.getModemNumber()); break;
 	case 's': insert(tagLine, l, req.sender); break;
-	case 't': insert(tagLine, l, fxStr((int) req.totpages, "%u")); break;
+	case 't': insert(tagLine, l,
+			fxStr((int)(req.totpages-req.npages), "%u")); break;
 	case '%': tagLine.remove(l); break;
 	default:  l += 2; break;
 	}
@@ -114,18 +115,23 @@ FaxModem::setupTagLineSlop(const Class2Params& params)
  * A memory-based G3 decoder--does no checking for end-of-data; it
  * assumes there'll be enough to satisfy the decoding requests.
  */
-class MemoryDecoder : public G3Decoder {
+class TagLineMemoryDecoder : public G3Decoder {
 private:
     const u_char* bp;
     int decodeNextByte();
 public:
-    MemoryDecoder(const u_char* data);
-    ~MemoryDecoder();
+    TagLineMemoryDecoder(const u_char* data);
+    ~TagLineMemoryDecoder();
     const u_char* current()		{ return bp; }
 };
-MemoryDecoder::MemoryDecoder(const u_char* data)	{ bp = data; }
-MemoryDecoder::~MemoryDecoder()				{}
-int MemoryDecoder::decodeNextByte()			{ return *bp++; }
+TagLineMemoryDecoder::TagLineMemoryDecoder(const u_char* data) : bp(data) {}
+TagLineMemoryDecoder::~TagLineMemoryDecoder()	{}
+int TagLineMemoryDecoder::decodeNextByte()	{ return *bp++; }
+
+#ifdef roundup
+#undef roundup
+#endif
+#define	roundup(a,b)	((((a)+((b)-1))/(b))*(b))
 
 /*
  * Image the tag line in place of the top few lines of the page
@@ -173,7 +179,7 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
      */
     u_int lpr = howmany(w,32);			// longs/raster row
     u_long* raster = new u_long[(h+3)*lpr];	// decoded raster
-    ::memset(raster, 0, (h+3)*lpr*sizeof (u_long));// clear raster to white
+    memset(raster, 0, (h+3)*lpr*sizeof (u_long));// clear raster to white
     /*
      * Break the tag into fields and render each piece of
      * text centered in its field.  Experiments indicate
@@ -200,9 +206,38 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
      * the strip of raw data has enough scanlines in it
      * to satisfy our needs (caller is responsible).
      */
-    MemoryDecoder dec(buf+tagLineSlop);
+    TagLineMemoryDecoder dec(buf);
     dec.setupDecoder(fillorder,  params.is2D());
-    dec.skip(th);
+    uint16 runs[2*2432];		// run arrays for cur+ref rows
+    dec.setRuns(runs, runs+2432, w);
+
+    dec.decode(NULL, w, th);		// discard decoded data
+    /*
+     * If the source is 2D-encoded and the decoding done
+     * above leaves us at a row that is 2D-encoded, then
+     * our re-encoding below will generate a decoding
+     * error if we don't fix things up.  Thus we discard
+     * up to the next 1D-encoded scanline.  (We could
+     * instead decode the rows and re-encoded them below
+     * but to do that would require decoding above instead
+     * of skipping so that the reference line for the
+     * 2D-encoded rows is available.)
+     */
+    u_int n;
+    for (n = 0; n < 4 && !dec.isNextRow1D(); n++)
+	dec.decodeRow(NULL, w);
+    th += n;				// compensate for discarded rows
+    /*
+     * Things get tricky trying to identify the last byte in
+     * the decoded data that we want to replace.  The decoder
+     * must potentially look ahead to see the zeros that
+     * makeup the EOL that marks the end of the data we want
+     * to skip over.  Consequently dec.current() must be
+     * adjusted by the look ahead, a factor of the number of
+     * bits pending in the G3 decoder's bit accumulator.
+     */
+    u_int decoded = dec.current() - roundup(dec.getPendingBits(),8) - buf;
+
     if (params.vr == VR_NORMAL) {
 	/*
 	 * Scale text vertically before encoding.  Note the
@@ -217,23 +252,8 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
 	    l1 += lpr;
 	    l2 += lpr;
 	}
-	::memset(l3, 0, MARGIN_BOT*lpr*sizeof (u_long));
+	memset(l3, 0, MARGIN_BOT*lpr*sizeof (u_long));
     }
-    /*
-     * If the source is 2D-encoded and the decoding done
-     * above leaves us at a row that is 2D-encoded, then
-     * our re-encoding below will generate a decoding
-     * error if we don't fix things up.  Thus we discard
-     * up to the next 1D-encoded scanline.  (We could
-     * instead decode the rows and re-encoded them below
-     * but to do that would require decoding above instead
-     * of skipping so that the reference line for the
-     * 2D-encoded rows is available.)
-     */
-    for (u_int n = 0; n < 4 && !dec.isNextRow1D(); n++)
-	dec.skipRow();
-    th += n;				// compensate for discarded rows
-    u_int decoded = dec.current() - (buf+tagLineSlop);
     /*
      * Encode the result according to the parameters of
      * the outgoing page.  Note that the encoded data is
@@ -246,18 +266,18 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
     enc.encode(raster, w, th);
     delete raster;
     /*
-     * The decoder terminates after an EOL code.  The
-     * encoder generates rows with a leading EOL code.
-     * Thus, in order to paste encoded data in front of
-     * decoded data we need to insert an EOL code.  We
-     * backup the decoded data by one byte to insure that
-     * the non-zero bit of the EOL code is included (as
-     * well as anything else in the byte that's part of
-     * the next row) and then force sufficient zero-fill
-     * to insure an EOL will be decoded.
+     * To properly join the newly encoded data and the previous
+     * data we need to insert two bytes of zero-fill prior to
+     * the start of the old data to ensure 11 bits of zero exist
+     * prior to the EOL code in the first line of data that
+     * follows what we skipped over above.  Note that this
+     * assumes the G3 decoder always stops decoding prior to
+     * an EOL code and that we've adjusted the byte count to the
+     * start of the old data so that the leading bitstring is
+     * some number of zeros followed by a 1.
      */
-    decoded--;
-    result.put('\0'); result.put('\0');
+    result.put((char) 0);
+    result.put((char) 0);
     /*
      * Copy the encoded raster with the tag line back to
      * the front of the buffer that was passed in.  The
@@ -272,8 +292,8 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
     u_int encoded = result.getLength();
     if (encoded > tagLineSlop + decoded)
 	encoded = tagLineSlop + decoded;
-    u_char* dst = buf + tagLineSlop + (int)(decoded-encoded);
+    u_char* dst = buf + (int)(decoded-encoded);
     u_char* src = result;
-    ::memcpy(dst, src, encoded);
+    memcpy(dst, src, encoded);
     return (dst);
 }

@@ -1,9 +1,9 @@
-# $Header: /usr/people/sam/fax/./config/RCS/usr-2.0,v 1.3 1995/04/08 21:25:03 sam Rel $
+# $Id: usr-2.0,v 1.7 1996/06/24 02:58:42 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -32,7 +32,7 @@
 #
 # RTS/CTS flow control is used default.
 #
-# CONFIG: CLASS2.0: USRobotics*-RTSCTS
+# CONFIG: CLASS2.0: USRobotics*-*
 #
 # BEGIN-SERVER
 # END-SERVER
@@ -68,7 +68,7 @@ ModemSetVolumeCmd:	"ATM0 ATM1 ATM1 ATM1 ATM1"
 Class2BUGCmd:		AT+FBU=0
 #
 # The modem doesn't support copy quality checking, even though it
-# returns (0-2,0-2) for AT+FCQ=?; therefore we disable it to keep the
-# fax software from complaining.
+# returns (0-2,0-2) for AT+FCQ=?; therefore we override the query
+# response so that the server will do copy quality checking.
 #
-Class2CQCmd:		AT+FCQ=0,0	# disable copy quality checking
+Class2CQQueryCmd:	!(0),(0)	# override modem response

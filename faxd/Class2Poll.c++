@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Poll.c++,v 1.17 1995/04/08 21:29:48 sam Rel $ */
+/*	$Id: Class2Poll.c++,v 1.21 1996/06/24 03:00:18 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -30,19 +30,35 @@
  * Request to poll remote documents.
  */
 fxBool
-Class2Modem::requestToPoll()
+Class2Modem::requestToPoll(fxStr& emsg)
 {
-    return (class2Cmd(splCmd, 1));
+    if (!class2Cmd(splCmd, 1)) {
+	emsg = "Unable to request polling operation"
+	    " (modem may not support polling)";
+	return (FALSE);
+    } else
+	return (TRUE);
 }
 
 /*
  * Startup a polled receive operation.
  */
 fxBool
-Class2Modem::pollBegin(const fxStr& pollID, fxStr& emsg)
+Class2Modem::pollBegin(const fxStr& cig, const fxStr& sep, const fxStr& pwd, fxStr& emsg)
 {
-    if (class2Cmd(cigCmd, pollID))		// set polling ID
-	return (TRUE);
-    emsg = "Unspecified Receive Phase B error";
-    return (FALSE);
+    const char* cmdFailed = "Unable to setup %s (modem command failed)";
+
+    if (!class2Cmd(cigCmd, cig)) {		// set polling ID
+	emsg = fxStr::format(cmdFailed, "polling identifer");
+	return (FALSE);
+    }
+    if (sep != "" && paCmd != "" && !class2Cmd(paCmd, sep)) {
+	emsg = fxStr::format(cmdFailed, "selective polling address");
+	return (FALSE);
+    }
+    if (pwd != "" && pwCmd != "" && !class2Cmd(pwCmd, pwd)) {
+	emsg = fxStr::format(cmdFailed, "polling password");
+	return (FALSE);
+    }
+    return (TRUE);
 }

@@ -1,4 +1,4 @@
-! $Header: /usr/people/sam/fax/./etc/RCS/dialrules.europe,v 1.3 1995/01/23 20:37:42 sam Rel $
+! $Id: dialrules.europe,v 1.6 1996/06/24 02:59:32 sam Rel $
 !
 ! HylaFAX (tm) Dialing String Processing Rules
 !   for much of Europe.
@@ -32,6 +32,14 @@ WS=" 	"			! our notion of white space
 !
 CanonicalNumber := [
 #.*                     =                       ! strip calling card stuff
+[abcABC]		= 2			! these convert alpha to numbers
+[defDEF]		= 3
+[ghiGHI]		= 4
+[jklJKL]		= 5
+[mnoMNO]		= 6
+[prsPRS]		= 7
+[tuvTUV]		= 8
+[wxyWXY]		= 9
 [^+0-9]+                =                       ! strip white space etc.
 ^${IDPrefix}            = +                     ! replace int. dialing code
 ^${LDPrefix}            = +${Country}           ! STD call (long distance)
@@ -44,6 +52,14 @@ CanonicalNumber := [
 !
 DialString := [
 [-${WS}.]+              =                       ! strip syntactic sugar
+[abcABC]		= 2			! these convert alpha to numbers
+[defDEF]		= 3
+[ghiGHI]		= 4
+[jklJKL]		= 5
+[mnoMNO]		= 6
+[prsPRS]		= 7
+[tuvTUV]		= 8
+[wxyWXY]		= 9
 ^${IDPrefix}${Country}${Area}   =               ! local phone call
 ^${LDPrefix}${Area}     =                       ! local phone call
 ^${IDPrefix}${Country}  = ${LDPrefix}           ! STD call (long distance)

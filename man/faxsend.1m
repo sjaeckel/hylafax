@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/faxsend.1m,v 1.9 1995/04/08 21:35:50 sam Rel $
+.\"	$Id: faxsend.1m,v 1.14 1996/06/24 03:04:12 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990-1995 Sam Leffler
-.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1996 Sam Leffler
+.\" Copyright (c) 1991-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,7 +27,7 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH FAXSEND 1M "April 3, 1995"
+.TH FAXSEND 1M "October 3, 1995"
 .SH NAME
 faxsend \- \*(Fx facsimile transmit program
 .SH SYNOPSIS
@@ -37,8 +37,8 @@ faxsend \- \*(Fx facsimile transmit program
 ] [
 .B \-p
 ] [
-.B \-t
-.I level
+.B \-c
+.I config
 ]
 .B \-m
 .I device-ID
@@ -89,7 +89,30 @@ and cleans up any resources it controls; this is the mechanism
 used by
 .I faxq
 to abort a job while it is in progress.
+.PP
+Many aspects of
+.I faxsend
+operation are controlled through a configuration file.
+The configuration file is located in the spooler hierarchy
+in the
+.B etc
+subdirectory and is named
+.BI config. device-ID ;
+consult
+.IR config (4F)
+for detailed information on the contents of configuration files.
 .SH OPTIONS
+The following options are recognized:
+.TP 10
+.BI \-c " config"
+Treat
+.I config
+as a configuration parameter specification that is interpreted
+after reading the per-device configuration file.
+For example, ``-c sessiontracing:0x4f'' would set the
+.B SessionTracing
+configuration parameter to ``0x4f'', overriding any setting in
+the configuration file.
 .TP 10
 .BI \-m " devID"
 The device to use in processing the job.
@@ -115,13 +138,6 @@ Normally
 .I faxsend
 will raise its priority to reduce i/o latency.
 This option is useful for debugging.
-.TP 10
-.BI \-t " level"
-Set the
-.B SessionTracing
-configuration parameter to
-.IR level ;
-overriding any value specified in the configuration file.
 .SH NOTES
 .I faxsend
 returns the new job status to
@@ -135,7 +151,7 @@ return value of the process:
 (1), job finished without success,
 .I send_done
 (2), job completed successfully,
-.I send_reform
+.I send_reformat
 (3), job should be retried after documents are reformatted.
 .SH FILES
 ${SPOOL}/etc/config.devID	device-specific configuration file

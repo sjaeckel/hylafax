@@ -1,9 +1,9 @@
-#	$Header: /usr/people/sam/fax/./RCS/TODO,v 1.113 1995/04/08 21:12:08 sam Rel $
+#	$Id: TODO,v 1.159 1996/08/01 03:31:51 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -26,63 +26,49 @@
 # OF THIS SOFTWARE.
 #
 
-B  job queue tracing in faxq gets disabled after a while
-B  replace DEV_PREFIX usage with _PATH_DEV
+BH job group support is broken
+B  file write errors during receive are not processed correctly
 B  polling bug in Class 1 driver (reset FCF sndr/rcvr bit at start of Phase B)
-?  should max send pages truncate job or terminate w/o sending?
-B  ps2fax should limit the #pages generated according to maxsendpages;
-   otherwise a large file can be created only to be rejected by the queuer
-   (hard, requires mod to ghostscript et. al.)
 B  no timeout in Class 1 receive if data is received when waiting for OK
    after transmit of TSI (happens easily if wrong receive baud rate setup)
-B  not processing +FHNG: response to AT+FDT properly (extra read+timeout)
-B? verify send_reformat processing done correctly
-B? wtmp not updated on AIX after termination of data connection
-   Steve Williams <steve@geniers.cuug.ab.ca>
-B? bad UUCP lockfile permissions on AIX
-   Steve Williams <steve@geniers.cuug.ab.ca>
-B? DataPort<->MicroPorte wedges when retraining after EOM
-H  faxq should automatically reread the config file
-H  send notification when fax receive fails due to a protocol error
-   with 0 pages received
-H  accept parameters for programs specified in the config file so, for
-   example, you can pass a -p option to faxsend
-H  per-destination modem parameters such as ModemWaitForCarrier (pass from
-   DestControls file down to send apps?)
-H  per-destination capabilities restrictions made easier (restrict signalling
-   rate to 9600 for overseas calls)
-H  add jobid to xferlog file for charge back use
-H  why does 2D decoder leave a0 set past EOL?
-H  recv protocol additions from ctb; redo client-server protocol
-   along the lines of ftp et. al.; complete api for integration
-   with applications
-H  replace IXO/TAP client-server protocol with SNPP per RFC1645
+B  sloppy processing of +FHNG: response to AT+FDT (extra read+timeout)
+H  faxadduser program equivalent of SITE ADDUSER command
+H  job archival support in faxqclean
+H  revamp modem status to have a fixed format and include useful info
+   like type, manufacturer, etc.
+H  fill-in VRFY op to support least-cost routing over a WAN
+H  use T.30 subaddress routing for received facsimile (needs database)
+H  polled transmission of documents (use SEP and PWD; add registration
+   tools and query status support)
+H  use PWD in TSI qualification
+H  select modems based on criteria such as destination phone number
+   (for locations where some lines are capable of long distance calls
+   while others are not)
 H  voice support integration
 H  VOICE/ANSWER button support for ZyXEL
-BM aborted receives get an extra page written to the
-   file (use TIFFUnlinkDirectory)
-BM race in queuer/Dispatcher collecting child process status (hack sleep
-   in child for now)
-BM fix line regeneration for modems that return EOLs not byte-aligned
-BM fix tag line imaging for 2D-encoded source with EOLs not byte-aligned
-M  batch multiple jobs to the same destination
-M  redo accounting to be page-based so we can see per-page transfer
-   characteristics and track errors better
+H  silent answer support?
+M  optionally replace info directory with a hashed database file to
+   reduce overhead on busy systems
+M  batch multiple jobs to the same destination (important for pages)
 M  bound transmit page count on a per-user basis
-M  polled transmission of documents (can already poll to receive)
-M  add TOD control to TSI+CID access control lists?
 M  add type of call control for CID access control list?
-M  calculate filled region of each page and transmit only the imaged
-   area if the receiver is capable
 M  restructure modem classes to support multi-class modems (e.g. class 1+2)
-L  changing max send pages dynamically has no effect if job is already prepared
+M  add faxq lock to avoid naive users starting multiple queuers
+BL race in queuer/Dispatcher collecting child process status (hack sleep
+   in child to give parent time to install SIGCLD handler for now)
+BL aborted receives get an extra page written (use TIFFUnlinkDirectory)
+L  change receive timeout to be based on seeing EOL code
 L  faxmove program, analogous to lpmove
-L  support for new T.30 routing stuff
 L  permit call type deduction logic used when answering an inbound call to
    be user-configurable (useful for distinctive ring)--not so important now
    with configurable distinctive ring support builtin
+O  DataPort<->MicroPorte wedges when retraining after EOM
+X  add TOD control to TSI+CID access control lists? (no, can do this with
+   cron job that sends FIFO messages to change control list files)
 
 B = outright bug
+O = observe (seen at least once but cannot reproduce)
 H = high priority
 M = medium priority
 L = low priority
+X = resolved

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/AtSyntax.c++,v 1.10 1995/04/08 21:43:50 sam Rel $ */
+/*	$Id: AtSyntax.c++,v 1.15 1996/07/31 17:37:04 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -23,7 +23,7 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include "Types.h"
+#include "Str.h"
 
 #include <stdlib.h>
 #include <time.h>
@@ -34,7 +34,7 @@
 #define	EPOCH_WDAY	4		// January 1, 1970 was a Thursday
 #define	DAYSPERWEEK	7
 
-#define HOUR		100		// 1 hour (using military time)
+#define HOUR		60		// minutes per hour
 #define HALFDAY		(12 * HOUR)	// half a day (12 hours)
 #define FULLDAY		(24 * HOUR)	// a full day (24 hours)
 
@@ -49,13 +49,13 @@ static	fxBool checkDay(const char*& cp, int& day);
 static	void adjustDay(struct tm& at, int day, const struct tm&);
 static	fxBool checkMonth(const char*& cp, int& month);
 static	fxBool parseMonthAndYear(const char*&, const struct tm& ref,
-	    struct tm& at, char* emsg);
-static	fxBool parseMultiplier(const char* cp, struct tm& at, char* emsg);
+	    struct tm& at, fxStr& emsg);
+static	fxBool parseMultiplier(const char* cp, struct tm& at, fxStr& emsg);
 static	const char* whitespace(const char* cp);
 static	void fixup(struct tm& at);
 
-static	void _atSyntax(char* emsg, const char* fmt, ...);
-static	void _atError(char* emsg, const char* fmt, ...);
+static	void _atSyntax(fxStr& emsg, const char* fmt, ...);
+static	void _atError(fxStr& emsg, const char* fmt, ...);
 
 static int
 operator<(const struct tm& a, const struct tm& b)
@@ -75,8 +75,8 @@ operator<(const struct tm& a, const struct tm& b)
  * and return the resultant time, relative to the
  * specified reference time.
  */
-extern "C" int
-parseAtSyntax(const char* s, const struct tm& ref, struct tm& at0, char* emsg)
+int
+parseAtSyntax(const char* s, const struct tm& ref, struct tm& at0, fxStr& emsg)
 {
     struct tm at = ref;
 
@@ -91,6 +91,8 @@ parseAtSyntax(const char* s, const struct tm& ref, struct tm& at0, char* emsg)
 	while (isdigit(*++cp));
 	if (cp-s < 3)			// only hours specified
 	    v *= HOUR;
+	else
+	    v = (v/100)*HOUR + v%100;
 	if (cp[0] == ':') {		// HH::MM notation
 	    if (isdigit(cp[1]) && isdigit(cp[2])) {
 		int min = 10*(cp[1]-'0') + (cp[2]-'0');
@@ -303,7 +305,7 @@ adjustYDay(struct tm& t)
  * Parse an expected day [, year] expression.
  */
 static fxBool
-parseMonthAndYear(const char*& cp, const struct tm& ref, struct tm& at, char* emsg)
+parseMonthAndYear(const char*& cp, const struct tm& ref, struct tm& at, fxStr& emsg)
 {
     char* tp;
     at.tm_mday = (u_int) strtoul(cp, &tp, 10);
@@ -356,7 +358,7 @@ parseMonthAndYear(const char*& cp, const struct tm& ref, struct tm& at, char* em
  * Parse an expected multiplier expression.
  */
 static fxBool
-parseMultiplier(const char* cp, struct tm& at, char* emsg)
+parseMultiplier(const char* cp, struct tm& at, fxStr& emsg)
 {
     cp = whitespace(cp);
     if (!isdigit(cp[0])) {
@@ -432,27 +434,20 @@ fixup(struct tm& at)
     at.tm_wday = (EPOCH_WDAY + eday) % DAYSPERWEEK;
 }
 
-#include <stdarg.h>
-
 static void
-_atSyntax(char* emsg, const char* fmt, ...)
+_atSyntax(fxStr& emsg, const char* fmt, ...)
 {
-    if (emsg != NULL) {
-	strcpy(emsg, "Syntax error, ");
-	va_list ap;
-	va_start(ap, fmt);
-	vsprintf(strchr(emsg, '\0'), fmt, ap);
-	va_end(ap);
-    }
+    va_list ap;
+    va_start(ap, fmt);
+    emsg = "Syntax error, " | fxStr::vformat(fmt, ap);
+    va_end(ap);
 }
 
 static void
-_atError(char* emsg, const char* fmt, ...)
+_atError(fxStr& emsg, const char* fmt, ...)
 {
-    if (emsg != NULL) {
-	va_list ap;
-	va_start(ap, fmt);
-	vsprintf(emsg, fmt, ap);
-	va_end(ap);
-    }
+    va_list ap;
+    va_start(ap, fmt);
+    emsg = fxStr::vformat(fmt, ap);
+    va_end(ap);
 }

@@ -1,10 +1,10 @@
-$Header: /usr/people/sam/fax/./RCS/README,v 1.132 1995/04/09 00:27:30 sam Rel $
+$Id: README,v 1.140 1996/08/27 23:21:50 sam Rel $
 
-HylaFAX, Version 3.0 (release)
+HylaFAX, Version 4.0 (release)
 ------------------------------
 
-Copyright (c) 1988-1995 Sam Leffler
-Copyright (c) 1991-1995 Silicon Graphics, Inc.
+Copyright (c) 1988-1996 Sam Leffler
+Copyright (c) 1991-1996 Silicon Graphics, Inc.
 HylaFAX is a trademark of Silicon Graphics
 
     Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,33 +28,33 @@ HylaFAX is a trademark of Silicon Graphics
 
 
 This note is basically just a placeholder.  The real documentation is
-online on the World Wide Web (WWW) at:
+located online at the HylaFAX home page:
 
     http://www.vix.com/hylafax/
 
 The online documentation includes the full contents of the
 documentation as well as an FAQ, archives of the HylaFAX/flexfax
-mailing list, and associated modem-related documentation.
+mailing list, and associated modem-related documentation.  Preformatted
+copies of this documentation and the reference manual pages is also
+available by public FTP at ftp://ftp.sgi.com/sgi/fax/doc.
 
 You will find a subset of the online documentation in the html
 subdirectory.  Beware however that timely information is usually more
-up to date at www.vix.com than the materials in the html directory.
+up to date online than in the materials in the html directory.
 You can view the HTML documentation in place and/or configure it for
 local installation through the configure script.
 
 
 This note has the following sections:
 
-    Installation
-    Known Problems
-    Upgrading from FlexFAX
+    Installation Synopsis
     Use and Copyright
     Acknowledgements
     HylaFAX Mailing List and Other Final Words (where to send bugs)
 
 
-Installation
-------------
+Installation Synopsis
+---------------------
 Follow the directions in the online documentation.  The main material
 on configuring, building, and installing the software is given in:
 
@@ -64,162 +64,77 @@ Server setup information is found at:
 
     http://www.vix.com/hylafax/setup.html
 
-There is also an FAQ that covers (or should cover) common problems.
+The documentation is extensive and designed to be used when installing
+the software.  There is also an FAQ that covers (or should cover)
+common problems.
 
 The basic procedure is:
 
     <unpack source code>
     % ./configure
     % make
-    % su			# NB: must be root to install software
+    % su			# NB: must be root to setup software
     # make install
+    # faxsetup
 
 If this does not work and the problem is not clear, then you will
 need to look at the documentation and/or the code.
 
 
-Known Problems in Setting up the Software
------------------------------------------
-The following setup problems are currently known; bugs or planned work
-is documented in the TODO file or in the online (HTML) materials.
-
-[This list should be sorted alphabetically.]
-
-AIX with the IBM xlC C++ compiler:
-   You need a version that supports the -+ option so that the .c++
-   filenames are processed by the compiler.
-
-Dell SVR4:
-   On some releases <sys/mkdev.h> includes static functions with
-   non-ANSI C definitions; these must be manually corrected before
-   building the software.  (The GNU gcc installation procedure attempts
-   to correct this file but does not.)
-
-Dell and AT&T SVR4:
-   The ttymon program is executable only by root; this causes the
-   configure script to not select it as the getty program that is
-   started up for inbound data calls.  Work around this problem by
-   Overriding the default selection through the interactive prompts
-   or through a config.local file.
-
-FreeBSD 2.0:
-   <osfcn.h> was omitted from the FreeBSD 2.0 distribution; it is needed
-   to build the software.  A correct copy can be obtained from the GNU
-   libg++ distribution: ftp://prep.ai.mit.edu/pub/gnu/libg++*.tar.gz,
-   libg++-2.6.2/libg++/src/osfcn.h.
-
-HPUX 9.05:
-   The standard make incorrectly processes VPATH; either use gmake
-   or configure builds in the source tree.
-
-IRIX 5.3 with the SGI NCC C++ compiler:
-   You need patch170 to correctly handle nested types (configure will
-   ignore the compiler as unsuitable otherwise).
-
-Linux (various versions):
-   When linking with the -g option; if the linker complains about needing
-   libc.so.4, then it is necessary to setup symbolic links in /usr/lib
-   so that: libg.a -> libc.a and libg.sa -> libc.sa.
-
-Solaris 2.3:
-   The standard make does VPATH processing incorrectly for files
-   passed to mkdepend (the last file in the list is not converted to
-   a pathname relative to the source directory); this causes lots of
-   msgs that can be safely ignored.
-
-Ultrix 4.4:
-   Extensive work is required to get the software built and working;
-   consult the file README.ultrix for details.
-
-Other stuff:
-
-1. configure can get the signal handler type wrong on some systems;
-   this should just cause warnings that can be ignored (or you can
-   setup a SIGHANDLERTYPE definition in config.local)
-2. configure can get confused by symbolic links when checking for
-   existing programs and directories 'cuz test -d and test -x don't
-   follow symbolic links; use config.local to force correct parameters
-   if you encounter problems.
-3. Many of the HTML files are not viewable directly from the html source
-   directory because they include configuration-specific pathnames.
-   Either view the materials from www.vix.com or use explicit pathnames
-   to access particular files: e.g. xmosaic html/building.html.in
-4. When building with DSOs disable the use of -lmalloc to avoid problems
-   with symbol conflicts; use -with-LIBMALLOC=no or put appropriate info
-   in a config.local file.
-5. If you configure software installation in non-standard locations
-   you may need to manually create some directories before doing make
-   install (the default installation procedure does not create all
-   the directories leading up to a target directory).
-
-
-Upgrading from FlexFAX
-----------------------
-Note that if have been using a previous version FlexFAX that many
-things have changed in incompatible ways.  Peruse the documentation.
-The following is a list of potential things you should be aware of:
-
-1. The old faxd server program is no longer present.  To get fax
-   receive capability you must startup a faxgetty on each tty port that
-   has a fax modem; typically this requires manual editing of the
-   /etc/ttys or /etc/inittab file.  To get fax transmit capability you
-   must startup the faxq scheduler process.
-2. The modem command parameters in the server configuration files must
-   have any "AT" and "AT+F" prefixes included in them (they were
-   automatically prepended in older software).
-3. The default server operation parameters set in config.h have changed;
-   for example the default kill time for a fax job is now 3 hours
-   instead of 24 hours.  Verify the parameters in config.h are what
-   you want.
-4. The client-server protocol has changed.  New client applications
-   cannot communicate with older servers but older clients *can*
-   communicate with the newer servers.  In particular this means that
-   you can still use the existing Mac and Windows clients.
-5. Numerous pathnames may have changed.  The source-based installation
-   procedure does not remove previously installed files unless they
-   are to be overwritten; this can result in multiple versions
-   of applications such as faxaddmodem being installed.  Verify the
-   parameters used for installation; you may want to tailor them to
-   your environment by creating a config.local file with local
-   configuration parameters.
-6. HylaFAX includes an improved install.sh script that is used to
-   install files on non-IRIX systems.  Certain files in the distribution
-   are treated as configuration-specific files and are not overwritten
-   if they appear to have local modifications.  Instead the install.sh
-   script will install the new file with a ".N" suffix and print a
-   warning message.  Be sure to reconcile these conflicts by comparing
-   the old and new file contents with a program like diff(1); in most
-   cases you should incorporate any local modifications into the new
-   file and install it for use.
-
-
 Use and Copyright
 -----------------
+There is documentation!  There is GOBS of documentation.  The HTML
+materials present information needed to build+setup the software; the
+manual pages act as a reference guide.  There are manual pages for all
+the programs and for all the files and directories that you may be
+curious about.  Of course there is also source code for everything, but
+this should (hopefully) not be needed.  A useful introduction to the
+client applications is given in hylafax(1).  If you want to learn how
+the server and spooling system work, look first at hylafax(4F).
+Remember however that the manual pages are for reference; the HTML
+documentation is designed to be more introductory in nature and should
+usually be consulted first when you're looking for general guidance.
+
+Please note that unless you are sending me a bug *fix* to this software
+sending mail directly to me is a waste of your time.  The flexfax
+mailing list (described below) is the place to send your comments and
+problems.  The -request administrative alias (again, see below) is the
+place to send administrative requests.
+
+    I IGNORE ALL DIRECT MAIL REGARDING FAX SOFTWARE, FAX MODEMS, FAX
+    PROTOCOLS, FAX ANYTHING, EXCEPTING MAIL THAT CONTAINS BUG FIXES.
+
 Silicon Graphics has seen fit to allow me to give this work away.  It
 is free.  There is no support or guarantee of any sort as to its
 operations, correctness, or whatever.  If you do anything useful with
 all or parts of it you need to honor the copyright notices.   I would
 also be interested in knowing about it and, hopefully, be acknowledged.
 
-	Sam Leffler	(sam@sgi.com)
+Finally, note that this software is called ``HylaFAX'', not ``Hylafax'',
+``hylafax'', and certainly not ``FlexFAX'' (the old name which someone
+else has a copyright on).  If you want to refer to this software use
+``HylaFAX (tm)'' and be sure to honor the Silicon Graphics trademark.
+
+	Sam Leffler	(sam@engr.sgi.com)
 
 
 Acknowledgements
 ----------------
-This software is more than 5 years old and is the product of many
+This software is more than 6 years old and is the product of many
 folks' work.  Robin Schaufler did the original scheme for delayed
 submission and worked on the client-server protocol.  More recently,
 the following people have helped either by testing or by contributing
 fixes and/or improvements:
 
   Matthias Apitz     Chris Beekhuis	  Peter Bentley	
-  Marc Boucher       Bill Campbell	  Brent Chapman
-  Tom Corson         Alan Crosswell       Mark Diekhans
-  Greg Ferguson	     Steve Fine	          Andrew Ford
-  Nico Garcia	     Wolfgang Henke       Viet Hoang
-  Bert Hooyman	     Ken Hornstein	  Dirk Husemann
-  Brian Katzung	     Masao Kitano	  Carsten Koch
-  John T Kohl	     Rickard Linck	  Rick Lyons
+  Marc Boucher       Piete Brooks         Bill Campbell
+  Brent Chapman      Camden Clarke        Tom Corson
+  Alan Crosswell     Mark Diekhans        Greg Ferguson
+  Steve Fine	     Andrew Ford          Nico Garcia
+  Wolfgang Henke     Viet Hoang           Bert Hooyman
+  Ken Hornstein	     Dirk Husemann        Brian Katzung
+  Masao Kitano	     Carsten Koch         John T Kohl
+  Scott Kramer       Rickard Linck        Rick Lyons
   Tom Lislegaard     Rob MacKinnon	  Kevin McManamon
   Les Mikesell	     Bill Morrow	  Andy Moskoff
   Chris Munonye	     Rob Newberry	  Dag Nygren
@@ -227,8 +142,9 @@ fixes and/or improvements:
   David Pike         Amir Plivatsky       Andy Rabagliati
   Eric Rescorla      Marshall Rose        Daniel Rosenblatt
   Joel Rosi-Schwartz Tim Rylance	  Joseph E. Sacco
-  Brent Townshend    Peter White	  David Vrona
-  Paul Vixie	     Christian Zahl
+  Thomas A. Szybist  Brent Townshend      Peter White
+  Steve Williams     Scott Woodard        David Vrona
+  Paul Vixie         Christian Zahl
 
 (and surely others).  Also, a special thanks to Ed McCreight for
 helping me understand the stuff "between the lines" that's necessary to
@@ -236,8 +152,12 @@ make a working Class 1 driver.
 
 The regular expression support is based on Henry Spencer's POSIX 1003.2
 compliant regex package that has ``Copyright 1992, 1993, 1994 Henry
-Spencer.  All rights reserved.'' Consult util/regex/COPYRIGHT for the
-full copyright notice associated with this software.
+Spencer.  All rights reserved.'' Consult regex/COPYRIGHT for the full
+copyright notice associated with this software.
+
+The zlib package used in the client-server protocol is copyright
+1995-1996 Jean-loup Gailly and Mark Adler.  Consult the file
+zlib/README for more information on the package.
 
 The code to read PCF fonts is distantly related to the X11R5 code
 that is ``Copyright 1990 Massachusetts Institute of Technology''; consult
@@ -319,15 +239,7 @@ this copyright notice:
 
 HylaFAX Mailing List and Other Final Words (where to send bugs)
 ---------------------------------------------------------------
-There is documentation!  There is GOBS of documentation.  When in doubt
-read the manual pages.  There are manual pages for all the programs and
-manual pages for all the files and directories that you may be curious
-about.  Of course there is also source code for everything, but this
-should (hopefully) not be needed.  A useful introduction to the client
-applications is given in hylafax(1).  If you want to learn how the
-server and spooling system work, look first at hylafax(4F).
-
-A mailing list for users of this software is located on sgi.com.
+A mailing list for users of this software is accessible through sgi.com.
 If you want to join this mailing list or have a list-related request
 such as getting your name removed from it, send your request to
 
@@ -336,11 +248,10 @@ such as getting your name removed from it, send your request to
 (FYI, "flexfax" is the old name for this software).  For example, to
 subscribe, send the line "subscribe" in the body of your message.  The
 line "help" will return a list of the commands understood by the
-mailing list management software.  You can also use the online format at
+mailing list management software.  You can also find information on
+subscribing to the mailing list at:
 
     http://www.vix.com/hylafax/mailing-lists.html
-
-to subscribe.
 
 Submissions to the mailing list (including bug reports) should be
 directed to:

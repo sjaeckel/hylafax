@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Recv.c++,v 1.77 1995/04/08 21:29:50 sam Rel $ */
+/*	$Id: Class2Recv.c++,v 1.86 1996/08/08 21:32:12 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -26,9 +26,9 @@
 #include <stdio.h>
 #include "Class2.h"
 #include "ModemConfig.h"
+#include "Sys.h"
 
 #include "t.30.h"
-#include <osfcn.h>
 
 /*
  * Recv Protocol for Class-2-style modems.
@@ -77,8 +77,19 @@ Class2Modem::recvBegin(fxStr& emsg)
 	case AT_FNSS:
 	    // XXX parse and pass on to server
 	    break;
+	case AT_FSA:
+	    recvSUB(stripQuotes(skipStatus(rbuf)));
+	    break;
+#ifdef notdef
+	case AT_FPA:
+	    recvSEP(stripQuotes(skipStatus(rbuf)));
+	    break;
+#endif
+	case AT_FPW:
+	    recvPWD(stripQuotes(skipStatus(rbuf)));
+	    break;
 	case AT_FTSI:
-	    recvCheckTSI(stripQuotes(skipStatus(rbuf)));
+	    recvTSI(stripQuotes(skipStatus(rbuf)));
 	    break;
 	case AT_FDCS:
 	    status = recvDCS(rbuf);
@@ -101,7 +112,7 @@ Class2Modem::recvDCS(const char* cp)
 {
     if (parseClass2Capabilities(skipStatus(cp), params)) {
 	setDataTimeout(60, params.br);
-	FaxModem::recvDCS(params);
+	FaxModem::recvDCS(params);	// announce session params
 	return (TRUE);
     } else {				// protocol botch
 	processHangup("72");		// XXX "COMREC error"
@@ -136,6 +147,20 @@ Class2Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	    case AT_FDCS:			// inter-page DCS
 		(void) recvDCS(rbuf);
 		break;
+	    case AT_FTSI:
+		recvTSI(stripQuotes(skipStatus(rbuf)));
+		break;
+	case AT_FSA:
+		recvSUB(stripQuotes(skipStatus(rbuf)));
+		break;
+#ifdef notdef
+	case AT_FPA:
+		recvSEP(stripQuotes(skipStatus(rbuf)));
+		break;
+#endif
+	case AT_FPW:
+		recvPWD(stripQuotes(skipStatus(rbuf)));
+		break;
 	    case AT_TIMEOUT:
 	    case AT_EMPTYLINE:
 	    case AT_ERROR:
@@ -151,14 +176,20 @@ Class2Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	 * NB: always write data in LSB->MSB for folks that
 	 *     don't understand the FillOrder tag!
 	 */
-	recvSetupPage(tif, group3opts, FILLORDER_LSB2MSB);
+	recvSetupTIFF(tif, group3opts, FILLORDER_LSB2MSB);
 	if (!recvPageData(tif, emsg) || !recvPPM(tif, ppr))
 	    goto bad;
 	if (!waitFor(AT_FET))		// post-page message status
 	    goto bad;
 	ppm = atoi(skipStatus(rbuf));
 	tracePPM("RECV recv", ppm);
-	if (!waitFor(AT_OK))		// synchronization from modem
+	// synchronization from modem
+	/*
+	 * Class 2 modems should always respond with OK.
+	 * Class 2.0 modems may respond with ERROR if copy
+	 * quality checking indicates the page is bad.
+	 */
+	if (!(waitFor(AT_OK) || lastResponse == AT_ERROR))
 	    goto bad;
 	/*
 	 * T.30 says to process operator intervention requests
@@ -181,12 +212,10 @@ Class2Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	 */
 	if (hostDidCQ)
 	    ppr = isQualityOK(params) ? PPR_MCF : PPR_RTN;
-	if (ppr & 1) {
+	if (ppr & 1)
 	    TIFFWriteDirectory(tif);	// complete page write
-	    countPage();
-	} else {
+	else
 	    recvResetPage(tif);		// reset to overwrite data
-	}
 	tracePPR("RECV send", ppr);
 	if (ppr & 1)			// page good, work complete
 	    return (TRUE);
@@ -269,7 +298,7 @@ Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
     int blc = 0;
     int cblc = 0;
     ppr = 0;
-    if (::sscanf(cp, "%d,%d,%d,%d", &ppr, &lc, &blc, &cblc) > 0) {
+    if (sscanf(cp, "%d,%d,%d,%d", &ppr, &lc, &blc, &cblc) > 0) {
 	// NB: ignore modem line count, always use our own
 	TIFFSetField(tif, TIFFTAG_IMAGELENGTH, getRecvEOLCount());
 	TIFFSetField(tif, TIFFTAG_CLEANFAXDATA, blc ?
@@ -309,5 +338,5 @@ Class2Modem::recvEnd(fxStr&)
 void
 Class2Modem::recvAbort()
 {
-    ::strcpy(hangupCode, "50");		// force abort in recvEnd
+    strcpy(hangupCode, "50");			// force abort in recvEnd
 }

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/DSmacros.h,v 1.9 1995/04/08 21:43:53 sam Rel $ */
+/*	$Id: DSmacros.h,v 1.12 1996/06/24 23:23:15 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -25,8 +25,6 @@
  */
 #ifndef _DSmacros_
 #define	_DSmacros_
-// $Revision: 1.9 $
-// $Date: 1995/04/08 21:43:53 $
 #include "Types.h"
 
 // ----------------- copy macros ---------------------------------------------

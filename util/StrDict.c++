@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/StrDict.c++,v 1.4 1995/04/08 21:44:30 sam Rel $ */
+/*	$Id: StrDict.c++,v 1.7 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -25,4 +25,4 @@
  */
 #include "StrDict.h"
 
-fxIMPLEMENT_StrKeyObjValueDictionary(fxStrDict, fxStr);
+fxIMPLEMENT_StrKeyObjValueDictionary(fxStrDict, fxStr)

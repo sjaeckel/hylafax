@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ClassModem.h,v 1.8 1995/04/08 21:29:55 sam Rel $ */
+/*	$Id: ClassModem.h,v 1.12 1996/06/24 03:00:19 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -66,20 +66,11 @@ typedef struct {
  */ 
 #define	ord(e)	((int)(e))
 
-#define	ESC_BR300	(0x80|ord(ClassModem::BR300))	// 300 bps
-#define	ESC_BR1200	(0x80|ord(ClassModem::BR1200))	// 1200 bps
-#define	ESC_BR2400	(0x80|ord(ClassModem::BR2400))	// 2400 bps
-#define	ESC_BR4800	(0x80|ord(ClassModem::BR4800))	// 4800 bps
-#define	ESC_BR9600	(0x80|ord(ClassModem::BR9600))	// 9600 bps
-#define	ESC_BR19200	(0x80|ord(ClassModem::BR19200))	// 19200 bps
-#define	ESC_BR38400	(0x80|ord(ClassModem::BR38400))	// 38400 bps
-#define	ESC_BR57600	(0x80|ord(ClassModem::BR57600))	// 57600 bps
-#define	ESC_BR76800	(0x80|ord(ClassModem::BR76800))	// 76800 bps
-#define	ESC_BR115200	(0x80|ord(ClassModem::BR115200))	// 115200 bps
-#define	ESC_DELAY	(0x80|0x10)			// delay period of time
-#define	ESC_NOFLOW	(0x80|0x20)			// no flow control
-#define	ESC_RTSFLOW	(0x80|0x30)			// RTS/CTS flow control
-#define	ESC_XONFLOW	(0x80|0x40)			// XON/XOFF flow control
+#define	ESC_SETBR	(0x80|0x01)	// set baud rate
+#define	ESC_SETFLOW	(0x80|0x02)	// set flow control
+#define	ESC_DELAY	(0x80|0x04)	// delay period of time
+#define	ESC_WAITFOR	(0x80|0x08)	// wait for modem response
+#define	ESC_FLUSH	(0x80|0x10)	// flush input queue
 
 /*
  * This is an abstract class that defines the interface to
@@ -109,7 +100,8 @@ public:
 	CALLTYPE_DATA	= 1,	// data connection
 	CALLTYPE_FAX	= 2,	// fax connection
 	CALLTYPE_VOICE	= 3,	// voice connection
-	CALLTYPE_ERROR	= 4	// error deducing type of incoming call
+	CALLTYPE_ERROR	= 4,	// error deducing type of incoming call
+	CALLTYPE_DONE	= 5	// subprocess completed call handling
     };
     static const char* callTypes[5];
 
@@ -151,7 +143,8 @@ public:
 	ANSTYPE_ANY	= 0,	// any kind of call
 	ANSTYPE_DATA	= 1,	// data call
 	ANSTYPE_FAX	= 2,	// fax call
-	ANSTYPE_VOICE	= 3	// voice call
+	ANSTYPE_VOICE	= 3,	// voice call
+	ANSTYPE_EXTERN	= 3	// any kind of call, but answered externally
     };
     static const char* answerTypes[4];
 
@@ -310,6 +303,7 @@ public:
      */
     virtual fxBool waitForRings(u_int rings, CallType&, CallerID&);
     virtual CallType answerCall(AnswerType, fxStr& emsg);
+    virtual void answerCallCmd(CallType);
 };
 inline long ClassModem::getDataTimeout() const		{ return dataTimeout; }
 inline const fxStr& ClassModem::getModel() const	{ return modemModel; }

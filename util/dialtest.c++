@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/dialtest.c++,v 1.14 1995/04/08 21:44:45 sam Rel $ */
+/*	$Id: dialtest.c++,v 1.17 1996/06/24 03:06:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -100,29 +100,29 @@ main(int argc, char* argv[])
     rules.def("CountryCode", countryCode);
     rules.def("InternationalPrefix", internationalPrefix);
     rules.def("LongDistancePrefix", longDistancePrefix);
-    if (rules.parse()) {
-	char line[1024];
-	while (prompt() && fgets(line, sizeof (line), stdin)) {
-	    char* cp = strchr(line, '\n');
-	    if (cp)
-		*cp = '\0';
-	    if (verbose)
-		printf("input = \"%s\"\n", line);
-	    if (cp = strchr(line, '(')) {
-		char* ep = strchr(cp, ')');
-		if (ep)
-		    *ep = '\0';
-		fxStr set(line, cp-line);
-		fxStr result = rules.applyRules(set, cp+1);
-		printf("%s(%s) = \"%s\"\n", (char*) set, cp+1, (char*) result);
-	    } else {
-		fxStr c = rules.canonicalNumber(line);
-		fxStr d = rules.dialString(line);
-		fxStr n = rules.displayNumber(line);
-		printf("canonical = \"%s\"\n", (char*) c);
-		printf("dial-string = \"%s\"\n", (char*) d);
-		printf("display = \"%s\"\n", (char *) n);
-	    }
+    if (!rules.parse())
+	fxFatal("%s: Problem parsing rules in %s", appName, argv[optind]);
+    char line[1024];
+    while (prompt() && fgets(line, sizeof (line), stdin)) {
+	char* cp = strchr(line, '\n');
+	if (cp)
+	    *cp = '\0';
+	if (verbose)
+	    printf("input = \"%s\"\n", line);
+	if (cp = strchr(line, '(')) {
+	    char* ep = strchr(cp, ')');
+	    if (ep)
+		*ep = '\0';
+	    fxStr set(line, cp-line);
+	    fxStr result = rules.applyRules(set, cp+1);
+	    printf("%s(%s) = \"%s\"\n", (char*) set, cp+1, (char*) result);
+	} else {
+	    fxStr c = rules.canonicalNumber(line);
+	    fxStr d = rules.dialString(line);
+	    fxStr n = rules.displayNumber(line);
+	    printf("canonical = \"%s\"\n", (char*) c);
+	    printf("dial-string = \"%s\"\n", (char*) d);
+	    printf("display = \"%s\"\n", (char *) n);
 	}
     }
     return (0);

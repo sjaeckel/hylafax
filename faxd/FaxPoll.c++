@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxPoll.c++,v 1.17 1995/04/08 21:30:16 sam Rel $ */
+/*	$Id: FaxPoll.c++,v 1.25 1996/06/24 03:00:26 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE.
  */
 #include <stdio.h>
+#include "Sys.h"
+#include "faxApp.h"			// XXX
 #include "FaxServer.h"
 #include "FaxRecvInfo.h"
 
@@ -35,29 +37,56 @@
  * Initiate a polling receive and invoke the receiving protocol.
  */
 fxBool
-FaxServer::pollFaxPhaseB(const char* cig, FaxRecvInfoArray& docs, fxStr& emsg)
+FaxServer::pollFaxPhaseB(const fxStr& sep, const fxStr& pwd, FaxRecvInfoArray& docs, fxStr& emsg)
 {
     fxBool pollOK = FALSE;
     changeState(RECEIVING);
-    traceProtocol("POLL FAX: begin");
-    okToRecv = TRUE;			// we request receive, so it's ok
-    recvTSI = cig;			// for writing polled file
-    FaxRecvInfo info;
+    traceProtocol("POLL FAX: begin (SEP \"%s\", PWD \"%s\")",
+	(const char*) sep, (const char*) pwd);
     /*
      * Create the first file ahead of time to avoid timing
      * problems with Class 1 modems.  (Creating the file
      * after recvBegin can cause part of the first page to
      * be lost.)
      */
-    TIFF* tif = setupForRecv("POLL FAX", info, docs);
+    FaxRecvInfo info;
+    TIFF* tif = setupForRecv(info, docs, emsg);
     if (tif) {
-	if (modem->pollBegin(cig, emsg)) {
-	    pollOK = recvDocuments("POLL FAX", tif, info, docs, emsg);
+	recvPages = 0;			// count of received pages
+	fileStart = Sys::now();		// count initial negotiation on failure
+	if (modem->pollBegin(canonicalizePhoneNumber(FAXNumber), sep, pwd, emsg)) {
+	    pollOK = recvDocuments(tif, info, docs, emsg);
+	    if (!pollOK)
+		traceProtocol("POLL FAX: %s", (const char*) emsg);
 	    if (!modem->recvEnd(emsg))
-		traceProtocol("POLL FAX: %s (end)", (char*) emsg);
+		traceProtocol("POLL FAX: %s", (const char*) emsg);
 	} else
-	    traceProtocol("POLL FAX: %s (begin)", (char*) emsg);
-    }
+	    traceProtocol("POLL FAX: %s", (const char*) emsg);
+    } else
+	traceProtocol("POLL FAX: %s", (const char*) emsg);
     traceProtocol("POLL FAX: end");
     return (pollOK);
+}
+
+/*
+ * Handle notification of a document received as a
+ * result of a poll request.
+ */
+void
+FaxServer::notifyPollRecvd(FaxRequest&, const FaxRecvInfo&)
+{
+}
+
+/*
+ * Handle notification that a poll operation has been
+ * successfully completed. 
+ */
+void
+FaxServer::notifyPollDone(FaxRequest& req, u_int pi)
+{
+    if (req.requests[pi].op == FaxRequest::send_poll) {
+	req.requests.remove(pi);
+	req.writeQFile();
+    } else
+	logError("notifyPollDone called for non-poll request");
 }

@@ -1,5 +1,6 @@
 <HTML>
 <HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
 <TITLE>
 Acknowledgements
 </TITLE>
@@ -13,72 +14,127 @@ Acknowledgements
 
 <HR SIZE=4>
 
-This software is more than 5 years old and is the product of many
+This software is more than 6 years old and is the product of many
 folks' work.  Robin Schaufler did the original scheme for delayed
-submission and worked on the client-server protocol.  More recently,
+submission and worked on the original client-server protocol.
+More recently,
 the following people have helped either by testing or by contributing
 fixes and/or improvements:
 
 <PRE>
   Matthias Apitz     Chris Beekhuis	  Peter Bentley	
-  Marc Boucher       Bill Campbell	  Brent Chapman
-  Tom Corson         Alan Crosswell       Mark Diekhans
-  Greg Ferguson	     Steve Fine	          Andrew Ford
-  Nico Garcia	     Wolfgang Henke       Viet Hoang
-  Bert Hooyman	     Ken Hornstein	  Dirk Husemann
-  Brian Katzung	     Masao Kitano	  Carsten Koch
-  John T Kohl	     Rickard Linck	  Rick Lyons
+  Marc Boucher       Piete Brooks         Bill Campbell
+  Brent Chapman      Camden Clarke        Tom Corson
+  Alan Crosswell     Mark Diekhans        Greg Ferguson
+  Steve Fine	     Andrew Ford          Nico Garcia
+  Wolfgang Henke     Viet Hoang           Bert Hooyman
+  Ken Hornstein	     Dirk Husemann        Brian Katzung
+  Masao Kitano	     Carsten Koch         John T Kohl
+  Scott Kramer       Rickard Linck        Rick Lyons
   Tom Lislegaard     Rob MacKinnon	  Kevin McManamon
   Les Mikesell	     Bill Morrow	  Andy Moskoff
-  Chris Munonye	     Rob Newberry	  Jonas Olsson
-  Dave Packer	     Damon Permezel       David Pike
-  Amir Plivatsky     Andy Rabagliati      Eric Rescorla
-  Marshall Rose      Daniel Rosenblatt    Joel Rosi-Schwartz
-  Tim Rylance	     Joseph E. Sacco      Brent Townshend
-  Peter White	     David Vrona	  Paul Vixie
-  Christian Zahl
+  Chris Munonye	     Rob Newberry	  Dag Nygren
+  Jonas Olsson       Dave Packer	  Damon Permezel
+  David Pike         Amir Plivatsky       Andy Rabagliati
+  Eric Rescorla      Marshall Rose        Daniel Rosenblatt
+  Joel Rosi-Schwartz Tim Rylance	  Joseph E. Sacco
+  Thomas A. Szybist  Brent Townshend      Peter White
+  Steve Williams     Scott Woodard        David Vrona
+  Paul Vixie         Christian Zahl
 </PRE>
 
 (and surely others).  Also, a special thanks to Ed McCreight for
 helping me understand the stuff <I>between the lines</I>
 that's necessary to make a working Class 1 driver.
-<P>
+
+<A NAME=Logo><P><HR>
+<IMG SRC="icons/frog.gif" BORDER=1 ALIGN=left HSPACE=10 VSPACE=8>
+<EM>The home page artwork was sketched by Rob Myers.
+I then butchered it with my handy use of the freely available
+<A HREF=http://www.xcf.berkeley.edu/~gimp>gimp program</A>. 
+If you like the art <A HREF=mailto:rob@engr.sgi.com>send Rob a compliment</A>. 
+If you don't like it blame me, or better yet,
+<A HREF=mailto:sam@engr.sgi.com>send me</A>
+a better version to replace it (please).
+Please note that the artwork is copyright Silicon Graphics Inc. and
+is not to be used without written permission.
+</EM>
+<BR CLEAR=left>
+<HR>
+
+<A NAME="regex"><H4>Regular Expression Support</H4></A>
 
 The regular expression support is based on Henry Spencer's POSIX 1003.2
 compliant regex package that has
 
-<PRE>
+<LISTING>
     Copyright 1992, 1993, 1994 Henry Spencer.
     All rights reserved.
-</PRE>
+</LISTING>
 
-Consult <B>util/regex/COPYRIGHT</B>
+Consult <B>regex/COPYRIGHT</B>
 for the full copyright notice associated with this software.
-The code to read PCF fonts is distantly related to the X11R5 code
-that is
 
-<PRE>
+<P><A NAME=zlib><HR WIDTH=65% ALIGN=right><H4>Compression Support</H4></A>
+
+The zlib package used in the client-server protocol has the following
+copyright notice:
+
+<LISTING>
+ (C) 1995-1996 Jean-loup Gailly and Mark Adler
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+
+  Jean-loup Gailly        Mark Adler
+  gzip@prep.ai.mit.edu    madler@alumni.caltech.edu
+</LISTING>
+
+Consult the file <B>zlib/README</B> for more information on the package.
+
+<P><A NAME=pcf><HR WIDTH=65% ALIGN=right><H4>PCF Font Support</H4>
+
+The code to read PCF fonts is distantly related to the X11R5 code that is
+
+<LISTING>
     Copyright 1990 Massachusetts Institute of Technology
-</PRE>
+</LISTING>
 
 Consult <B>faxd/PCFFont.c++</B>
 for the full copyright notice.
-The
-<KBD>textfmt</KBD>
-program is distantly related to the
-<KBD>lptops</KBD>
-program written
-by Nelson Beebe; there was no copyright notice on the version of the code
-that textfmt grew out of.
 
-<P> 
+<P><A NAME=textfmt><HR WIDTH=65% ALIGN=right><H4>Text to PostScript Conversion</TT></H4></A>
+
+The
+<TT>textfmt</TT>
+program is <EM>very distantly</EM>
+related to the <TT>lptops</TT> program written
+by Nelson Beebe; there was no copyright notice on the version of the code
+that <TT>textfmt</TT> grew out of.
+
+<P><A NAME=config><HR WIDTH=65% ALIGN=right><H4>Configuration Support</H4>
+
 The <B>config.guess</B> and <B>config.sub</B>
 scripts are part of the GNU autoconf
 package and covered by the GNU Public License (GPL).  Several ideas
 in the configure script are directly "borrowed" from autoconf (and I
 have tried to maintain as much compatibility as possible).
 
-<P>
+<P><A NAME=lutRS18.pcf><HR WIDTH=65% ALIGN=right><H4>Sample PCF Font</H4></A>
+
 The PCF font <B>etc/lutRS18.pcf</B> included for use with tag lines is a
 compiled version of a LucidaTypewriter font that was contributed to X11
 by Bigelow & Holmes.  Redistribution of this font requires inclusion of
@@ -143,6 +199,8 @@ this copyright notice:
     WITH THE USE OR PERFORMANCE OF THIS SOURCE CODE.
 </LISTING>
 
+<!--FOOTER-->
+
 <P>
 <A HREF="toc.html"><IMG SRC="icons/back.gif"> HylaFAX table of contents</A>.<BR>
 
@@ -150,7 +208,7 @@ this copyright notice:
 
 <ADDRESS>
 <A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
-Last updated $Date: 1995/04/04 16:33:44 $.
+Last updated $Date: 1996/08/16 21:03:37 $.
 </ADDRESS>
 
 </BODY>

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1Recv.c++,v 1.60 1995/04/08 21:29:35 sam Rel $ */
+/*	$Id: Class1Recv.c++,v 1.65 1996/06/24 03:00:14 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -87,8 +87,11 @@ Class1Modem::recvBegin(fxStr& emsg)
     recvdDCN = FALSE;				// haven't seen DCN
     lastPPM = FCF_DCN;				// anything will do
 
-    return recvIdentification(
-	FCF_CSI|FCF_RCVR, lid, FCF_DIS|FCF_RCVR, modemDIS(),
+    return FaxModem::recvBegin(emsg) && recvIdentification(
+	0, fxStr::null,
+	0, fxStr::null,
+	FCF_CSI|FCF_RCVR, lid,
+	FCF_DIS|FCF_RCVR, modemDIS(), modemXINFO(),
 	conf.class1RecvIdentTimer, emsg);
 }
 
@@ -97,27 +100,54 @@ Class1Modem::recvBegin(fxStr& emsg)
  * remote side to respond with their identification.
  */
 fxBool
-Class1Modem::recvIdentification(u_int f1, const fxStr& id, u_int f2, u_int dics,
+Class1Modem::recvIdentification(
+    u_int f1, const fxStr& pwd,
+    u_int f2, const fxStr& addr,
+    u_int f3, const fxStr& id,
+    u_int f4, u_int dics, u_int xinfo,
     u_int timer, fxStr& emsg)
 {
     u_int t1 = howmany(timer, 1000);		// in seconds
     u_int trecovery = howmany(conf.class1TrainingRecovery, 1000);
     time_t start = Sys::now();
     HDLCFrame frame(conf.class1FrameOverhead);
+    fxBool framesSent;
 
     emsg = "No answer (T.30 T1 timeout)";
     /*
-     * Transmit (NSF) (CSI) DIS frames when the receiving
-     * station or (NSC) (CIG) DTC when initiating a poll.
+     * Transmit (PWD) (SUB) (CSI) DIS frames when the receiving
+     * station or (PWD) (SEP) (CIG) DTC when initiating a poll.
      */
-    startTimeout(3000);
-    fxBool framesSent = sendFrame(f1, id, FALSE);
-    stopTimeout("sending id frame");
+    if (f1) {
+	startTimeout(3000);
+	framesSent = sendFrame(f1, pwd, FALSE);
+	stopTimeout("sending PWD frame");
+    } else if (f2) {
+	startTimeout(3000);
+	framesSent = sendFrame(f2, addr, FALSE);
+	stopTimeout("sending SUB/SEP frame");
+    } else {
+	startTimeout(3000);
+	framesSent = sendFrame(f3, id, FALSE);
+	stopTimeout("sending CSI/CIG frame");
+    }
     for (;;) {
 	if (framesSent) {
-	    startTimeout(2550);
-	    framesSent = sendFrame(f2, dics);
-	    stopTimeout("sending DIS/DCS frame");
+	    if (f1) {
+		startTimeout(2550);
+		framesSent = sendFrame(f2, addr, FALSE);
+		stopTimeout("sending SUB/SEP frame");
+	    }
+	    if (framesSent && f2) {
+		startTimeout(2550);
+		framesSent = sendFrame(f3, id, FALSE);
+		stopTimeout("sending CSI/CIG frame");
+	    }
+	    if (framesSent) {
+		startTimeout(2550);
+		framesSent = sendFrame(f4, dics, xinfo);
+		stopTimeout("sending DIS/DCS frame");
+	    }
 	}
 	if (framesSent) {
 	    /*
@@ -172,7 +202,12 @@ Class1Modem::recvIdentification(u_int f1, const fxStr& id, u_int f2, u_int dics,
 	/*
 	 * Retransmit ident frames.
 	 */
-        framesSent = transmitFrame(f1, id, FALSE);
+	if (f1)
+	    framesSent = transmitFrame(f1, pwd, FALSE);
+	else if (f2)
+	    framesSent = transmitFrame(f2, addr, FALSE);
+	else
+	    framesSent = transmitFrame(f3, id, FALSE);
     }
     return (FALSE);
 }
@@ -183,15 +218,17 @@ Class1Modem::recvIdentification(u_int f1, const fxStr& id, u_int f2, u_int dics,
 fxBool
 Class1Modem::recvDCSFrames(HDLCFrame& frame)
 {
-    fxStr tsi;
+    fxStr s;
     do {
 	switch (frame.getFCF()) {
-	case FCF_NSS:
-	    protoTrace("REMOTE NSS %#x", frame.getDataWord());
+	case FCF_PWD:
+	    recvPWD(decodePWD(s, frame));
+	    break;
+	case FCF_SUB:
+	    recvSUB(decodePWD(s, frame));
 	    break;
 	case FCF_TSI:
-	    decodeTSI(tsi, frame);
-	    recvCheckTSI(tsi);
+	    recvTSI(decodeTSI(s, frame));
 	    break;
 	case FCF_DCS:
 	    processDCSFrame(frame);
@@ -289,7 +326,7 @@ Class1Modem::processDCSFrame(const HDLCFrame& frame)
     params.setFromDCS(dcs, frame.getXINFO());
     setDataTimeout(60, params.br);
     curcap = findSRCapability(dcs&DCS_SIGRATE, recvCaps);
-    recvDCS(params);				// pass to server
+    recvDCS(params);				// announce session params
 }
 
 const u_int Class1Modem::modemPPMCodes[8] = {
@@ -337,7 +374,7 @@ top:
 		 * receive the Phase C data.
 		 */
 		protoTrace("RECV: begin page");
-		recvSetupPage(tif, 0, FILLORDER_LSB2MSB);
+		recvSetupTIFF(tif, group3opts, FILLORDER_LSB2MSB);
 		pageGood = recvPageData(tif, emsg);
 		protoTrace("RECV: end page");
 		if (!wasTimeout()) {
@@ -394,11 +431,17 @@ top:
 		protoTrace("RECV DIS/DTC");
 		emsg = "Can not continue after DIS/DTC";
 		return (FALSE);
+	    case FCF_PWD:
+	    case FCF_SUB:
 	    case FCF_NSS:
 	    case FCF_TSI:
 	    case FCF_DCS:
 		// look for high speed carrier only if training successful
-		messageReceived = !(recvDCSFrames(frame) && recvTraining());
+		messageReceived = !(
+		       FaxModem::recvBegin(emsg)
+		    && recvDCSFrames(frame)
+		    && recvTraining()
+		);
 		break;
 	    case FCF_MPS:			// MPS
 	    case FCF_EOM:			// EOM
@@ -427,7 +470,6 @@ top:
 		     */
 		    if (messageReceived) {
 			TIFFWriteDirectory(tif);
-			countPage();
 			/*
 			 * Reset state so that the next call looks
 			 * first for page carrier or frame according

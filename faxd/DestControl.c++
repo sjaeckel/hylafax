@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/DestControl.c++,v 1.14 1995/04/08 21:29:57 sam Rel $ */
+/*	$Id: DestControl.c++,v 1.20 1996/08/21 21:53:43 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -23,7 +23,6 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include <osfcn.h>
 #include <ctype.h>
 
 #include "Sys.h"
@@ -32,12 +31,11 @@
 #include "faxQueueApp.h"
 #include "FaxTrace.h"
 
-#define	DCI_TRACINGLEVEL	0x0001
-#define	DCI_MAXCONCURRENTJOBS	0x0002
-#define	DCI_TIMEOFDAY		0x0004
-#define	DCI_MAXSENDPAGES	0x0008
-#define	DCI_MAXDIALS		0x0010
-#define	DCI_MAXTRIES		0x0020
+#define	DCI_MAXCONCURRENTJOBS	0x0001
+#define	DCI_TIMEOFDAY		0x0002
+#define	DCI_MAXSENDPAGES	0x0004
+#define	DCI_MAXDIALS		0x0008
+#define	DCI_MAXTRIES		0x0010
 
 #define	isDefined(b)		(defined & b)
 #define	setDefined(b)		(defined |= b)
@@ -50,9 +48,9 @@ DestControlInfo::DestControlInfo(const DestControlInfo& other)
     : pattern(other.pattern)
     , rejectNotice(other.rejectNotice)
     , tod(other.tod)
+    , args(other.args)
 {
     defined = other.defined;
-    tracingLevel = other.tracingLevel;
     maxConcurrentJobs = other.maxConcurrentJobs;
     maxSendPages = other.maxSendPages;
     maxDials = other.maxDials;
@@ -63,16 +61,13 @@ DestControlInfo::~DestControlInfo() {}
 // XXX can't sort
 int DestControlInfo::compare(const DestControlInfo*) const { return (0); }
 
-static int getNumber(const char* s) { return ((int) ::strtol(s, NULL, 0)); }
+static int getNumber(const char* s) { return ((int) strtol(s, NULL, 0)); }
 
-fxBool
+void
 DestControlInfo::parseEntry(const char* tag, const char* value)
 {
     if (streq(tag, "rejectnotice")) {
 	rejectNotice = value;
-    } else if (streq(tag, "tracinglevel")) {
-	tracingLevel = getNumber(value) & FAXTRACE_MASK;
-	setDefined(DCI_TRACINGLEVEL);
     } else if (streq(tag, "maxconcurrentjobs")) {
 	maxConcurrentJobs = getNumber(value);
 	setDefined(DCI_MAXCONCURRENTJOBS);
@@ -89,17 +84,8 @@ DestControlInfo::parseEntry(const char* tag, const char* value)
 	tod.parse(value);
 	setDefined(DCI_TIMEOFDAY);
     } else
-	return (FALSE);
-    return (TRUE);
-}
-
-u_int
-DestControlInfo::getTracingLevel() const
-{
-    if (isDefined(DCI_TRACINGLEVEL))
-	return tracingLevel;
-    else
-	return faxQueueApp::instance().getTracingLevel();
+	args.append(fxStr::format("%s-c %s:%s",
+	    args == "" ? "" : " ", tag, value));
 }
 
 u_int
@@ -197,20 +183,20 @@ DestControl::readContents()
 	lineno = 0;
 	while (parseEntry(fp))
 	    ;
-	::fclose(fp);
+	fclose(fp);
     }
 }
 
 fxBool
 DestControl::readLine(FILE* fp, char line[], u_int cc)
 {
-    if (::fgets(line, cc, fp) == NULL)
+    if (fgets(line, cc, fp) == NULL)
 	return (FALSE);
     lineno++;
     char* cp;
-    if (cp = ::strchr(line, '#'))
+    if (cp = strchr(line, '#'))
 	*cp = '\0';
-    if (cp = ::strchr(line, '\n'))
+    if (cp = strchr(line, '\n'))
 	*cp = '\0';
     return (TRUE);
 }
@@ -230,6 +216,26 @@ DestControl::skipEntry(FILE* fp, char line[], u_int cc)
 {
     while (isContinued(fp) && readLine(fp, line, cc))
 	;
+}
+
+static void
+crackArgv(fxStr& s)
+{
+    char* cp = s;
+    u_int l = s.length()+1;		// +1 for \0
+    do {
+	while (*cp && !isspace(*cp))
+	    cp++;
+	if (*cp == '\0')
+	    break;
+	*cp++ = '\0';
+	char* tp = cp;
+	while (isspace(*tp))
+	    tp++;
+	if (tp > cp)
+	    memcpy(cp, tp, l-(tp - (char*) s));
+    } while (*cp != '\0');
+    s.resize(cp - (char*) s);
 }
 
 fxBool
@@ -263,6 +269,7 @@ DestControl::parseEntry(FILE* fp)
 	    while (isspace(*cp))
 		cp++;
 	    if (*cp == '\0') {			// EOL, look for continuation
+		crackArgv(dci.args);
 		if (!isContinued(fp)) {
 		    info.append(dci);
 		    return (TRUE);
@@ -309,8 +316,8 @@ DestControl::parseEntry(FILE* fp)
 	    }
 	    if (*cp != '\0')			// terminate value
 		*cp++ = '\0';
-	    if (!dci.parseEntry(tag, value) && tag[0] != '\0')
-		parseError("Unknown parameter \"%s\" ignored.", tag);
+	    if (tag[0] != '\0')
+		dci.parseEntry(tag, value);
 	}
     }
 }
@@ -327,4 +334,4 @@ DestControl::parseError(const char* fmt0 ...)
     va_end(ap);
 }
 
-fxIMPLEMENT_ObjArray(DestControlInfoArray, DestControlInfo);
+fxIMPLEMENT_ObjArray(DestControlInfoArray, DestControlInfo)

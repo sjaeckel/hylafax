@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/RegEx.c++,v 1.8 1995/04/08 21:44:17 sam Rel $ */
+/*	$Id: RegEx.c++,v 1.12 1996/06/24 03:05:57 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -38,22 +38,22 @@ RegEx::RegEx(const fxStr& pat, int flags) : _pattern(pat)
 {
     init(flags);
 }
-RegEx::RegEx(const RegEx& other, int flags) : _pattern(other._pattern)
+RegEx::RegEx(const RegEx& other, int flags)
+    : fxObj(other)
+    , _pattern(other._pattern)
 {
     init(flags);
-    referenceCount = other.referenceCount;
 }
 RegEx::~RegEx()
 {
-    ::regfree(&c_pattern);
+    regfree(&c_pattern);
     delete matches;
 }
 
 void
 RegEx::init(int flags)
 {
-    referenceCount = 0;
-    compResult = ::regcomp(&c_pattern, _pattern, flags);
+    compResult = regcomp(&c_pattern, _pattern, flags);
     if (compResult == 0) {
 	matches = new regmatch_t[c_pattern.re_nsub+1];
 	execResult = REG_NOMATCH;
@@ -76,7 +76,7 @@ RegEx::Find(const char* text, u_int length, u_int off)
 	else {
 	    matches[0].rm_so = off;
 	    matches[0].rm_eo = length;
-	    execResult = ::regexec(&c_pattern, text, c_pattern.re_nsub+1,
+	    execResult = regexec(&c_pattern, text, c_pattern.re_nsub+1,
 			    matches, REG_STARTEND);
 	}
     }
@@ -87,12 +87,12 @@ void
 RegEx::getError(fxStr& emsg) const
 {
     char buf[1024];
-    (void) ::regerror(execResult, &c_pattern, buf, sizeof (buf));
+    (void) regerror(execResult, &c_pattern, buf, sizeof (buf));
     emsg = buf;
 }
 
 int
-RegEx::StartOfMatch(u_int ix)
+RegEx::StartOfMatch(u_int ix) const
 {
     if (execResult != 0)
 	return (execResult);
@@ -100,9 +100,32 @@ RegEx::StartOfMatch(u_int ix)
 }
 
 int
-RegEx::EndOfMatch(u_int ix)
+RegEx::EndOfMatch(u_int ix) const
 {
     if (execResult != 0)
 	return (execResult);
     return (ix <= c_pattern.re_nsub ? matches[ix].rm_eo : -1);
+}
+
+RegExPtr::~RegExPtr() { destroy(); }
+void RegExPtr::destroy() { if (p) p->dec(); }
+
+RegExPtr&
+RegExPtr::operator=(const RegExPtr& other)
+{
+    if (p != other.p) {
+	destroy();
+	p = other.p ? (other.p->inc(),other.p) : 0;
+    }
+    return *this;
+}
+
+RegExPtr&
+RegExPtr::operator=(RegEx* tp)
+{
+    if (p != tp) {
+	destroy();
+	p = tp ? (tp->inc(),tp) : 0;
+    }
+    return *this;
 }

@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/notify.1m,v 1.18 1995/04/08 21:36:00 sam Rel $
+.\"	$Id: notify.1m,v 1.26 1996/06/24 03:04:17 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993-1995 Sam Leffler
-.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1996 Sam Leffler
+.\" Copyright (c) 1993-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,16 +28,15 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH NOTIFY 1M "June 14, 1994"
+.TH NOTIFY 1M "May 8, 1996"
 .SH NAME
 notify \- \*(Fx user notification script
 .SH SYNOPSIS
-.B bin/notify
+.B ${SPOOL}/bin/notify
 .I qfile
 .I why
 .I jobtime
-.I pid
-.I number
+.I commid
 [
 .I nextTry
 ]
@@ -45,7 +44,7 @@ notify \- \*(Fx user notification script
 .B bin/notify
 is the command script invoked by the facsimile server to notify a
 user about the status of an outbound job.
-The default notification script sends the appropriate user
+The default notification script sends the user
 electronic mail describing the event or action.
 The arguments are:
 .TP 10
@@ -59,38 +58,31 @@ a string that specifies why the user is being notified; one of:
 .ta  +\w'poll_no_document    'u +\w'Notes    'u
 \fBWhy\fP	\fBNotes\fP	\fBMeaning\fP
 \fIdone\fP		job was completed successfully
-\fIfailed\fP	\(dg \(dd	job was not completed
-\fIrejected\fP	\(dg	job was rejected for specified reasons
+\fIfailed\fP	 \(dg	job was not completed
+\fIrejected\fP		job was rejected for specified reasons
 \fIblocked\fP		job is blocked by concurrent jobs
-\fIrequeued\fP	\(dd	job was not completed, but was requeued for retry
+\fIrequeued\fP	\(dg	job was not completed, but was requeued for retry
 \fIremoved\fP		job was deleted from the queue
-\fIkilled\fP	\(dg	job was deleted from the queue
-\fItimedout\fP	\(dg	job could not be sent after repeated attempts
-\fIformat_failed\fP	\(dg	conversion of \*(Ps failed
-\fIno_formatter\fP	\(dg	the \*(Ps to facsimile conversion program was not found
-\fIpoll_rejected\fP		a polling request was rejected by the remote side
-\fIpoll_no_document\fP		a polling request failed because nothing was available
-\fIpoll_failed\fP		a polling request failed for an unknown reason
+\fIkilled\fP		job was deleted from the queue
+\fItimedout\fP		job could not be sent before kill time expired
+\fIformat_failed\fP		document conversion failed
+\fIno_formatter\fP		the document conversion program was not found
+\fIpoll_rejected\fP	\(dg	a polling request was rejected by the remote side
+\fIpoll_no_document\fP	\(dg	a polling request failed because nothing was available
+\fIpoll_failed\fP	\(dg	a polling request failed for an unknown reason
 .sp .5
 .fi
-\(dg Any pages that were not sucessfully transmitted should be
-returned to the sender.
 .br
-\(dd A transcript of the failed communication is returned
-to the sender with the
-.IR transcript (1M)
-command.
+\(dg A transcript of the failed communication is returned
+to the sender.
 .TP
 .B jobtime
 the total transmission time of a successful job or the connect
 time of a failed request (passed as a string).
 .TP
-.B pid
-the process identifier of the \*(Fx process that processed the
+.B commid
+the communication identifier of the \*(Fx process that processed the
 job (used for locating communication transcripts).
-.TP 
-.B number
-the canonical phone number of the destination.
 .TP
 .B nextTry
 the time (passed as a string) at which the next attempt will be
@@ -98,23 +90,13 @@ made to complete the job.
 This parameter is passed only if
 .B why
 is ``requeued''.
-.SH NOTES
-The following programs may be invoked to return unsent documents
-to the sender:
-.IR tar (1),
-.IR uuencode (1),
-and
-.IR compress (1).
-Which programs and the exact format is site dependent.
 .SH FILES
 .nf
-.ta \w'${SPOOL}    'u
+.ta \w'/usr/lib/sendmail    'u
 ${SPOOL}	spooling area
-bin/transcript	for returning communication transcript
 /usr/lib/sendmail	for delivering mail
 .fi
 .SH "SEE ALSO"
 .IR faxq (1M),
-.IR transcript (1M),
 .IR hylafax (4F),
 .IR sendq (4F)

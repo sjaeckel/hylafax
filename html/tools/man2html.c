@@ -1,4 +1,4 @@
-/*	$Header: /usr/people/sam/fax/./html/tools/RCS/man2html.c,v 1.7 1995/04/08 21:48:31 sam Rel $ */
+/*	$Id: man2html.c,v 1.9 1996/06/24 03:03:40 sam Rel $ */
 /*
  * Copyright (c) 1994-1995 Sam Leffler
  * Copyright (c) 1994-1995 Silicon Graphics, Inc.
@@ -25,6 +25,7 @@
 /*
  * Convert the output of man to HTML.
  */
+#include "port.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

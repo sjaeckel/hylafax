@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/FaxDB.c++,v 1.20 1995/04/08 21:44:04 sam Rel $ */
+/*	$Id: FaxDB.c++,v 1.23 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -60,7 +60,7 @@ FaxDBRecord::find(const fxStr& key)
 void FaxDBRecord::set(const fxStr& key, const fxStr& value)
     { dict[key] = value; }
 
-fxIMPLEMENT_StrKeyObjValueDictionary(FaxValueDict, fxStr);
+fxIMPLEMENT_StrKeyObjValueDictionary(FaxValueDict, fxStr)
 
 FaxDB::FaxDB(const fxStr& file) : filename(file)
 {
@@ -231,4 +231,4 @@ FaxDB::write(FILE* fp)
 }
 #endif
 
-fxIMPLEMENT_StrKeyPtrValueDictionary(FaxInfoDict, FaxDBRecord*);
+fxIMPLEMENT_StrKeyPtrValueDictionary(FaxInfoDict, FaxDBRecord*)

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/Dictionary.h,v 1.12 1995/04/08 21:43:58 sam Rel $ */
+/*	$Id: Dictionary.h,v 1.17 1996/08/21 22:26:37 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -26,8 +26,6 @@
 #ifndef _Dictionary_
 #define	_Dictionary_
 
-// $Revision: 1.12 $
-// $Date: 1995/04/08 21:43:58 $
 #include "Types.h"
 #include "Array.h"
 #include "Str.h"
@@ -92,8 +90,8 @@ public:
     fxDictBucket* next;
 };
 
-fxDECLARE_PtrArray(fxDictBuckets, fxDictBucket*);
-fxDECLARE_PtrArray(fxDictIters, fxDictIter*);
+fxDECLARE_PtrArray(fxDictBuckets, fxDictBucket*)
+fxDECLARE_PtrArray(fxDictIters, fxDictIter*)
 
 //----------------------------------------------------------------------
 
@@ -227,7 +225,7 @@ protected:								\
     fxDictVirtuals(fxNOTHING)						\
 };									\
 fxDECLARE_Ptr(DICT);							\
-fxDECLARE_DictIter(DICT,KEY,VALUE);					\
+fxDECLARE_DictIter(DICT,KEY,VALUE)					\
 __enddef__
 
 // StrDictionary: the key is a fxStr object. The
@@ -277,15 +275,15 @@ __enddef__
 __enddef__
 
 #define fxIMPLEMENT_ObjValueDictionaryMethods(DICT,VALUE)		\
-    fxIMPLEMENT_copyObj(DICT,Value,VALUE);				\
-    fxIMPLEMENT_destroyObj(DICT,Value,VALUE);				\
-    fxIMPLEMENT_createObj(DICT,Value,VALUE);				\
+    fxIMPLEMENT_copyObj(DICT,Value,VALUE)				\
+    fxIMPLEMENT_destroyObj(DICT,Value,VALUE)				\
+    fxIMPLEMENT_createObj(DICT,Value,VALUE)				\
 __enddef__
 
 #define fxIMPLEMENT_PtrValueDictionaryMethods(DICT,VALUE)		\
-    fxIMPLEMENT_copyPtr(DICT,Value,VALUE);				\
-    fxIMPLEMENT_destroyPtr(DICT,Value,VALUE);				\
-    fxIMPLEMENT_createPtr(DICT,Value,VALUE);				\
+    fxIMPLEMENT_copyPtr(DICT,Value,VALUE)				\
+    fxIMPLEMENT_destroyPtr(DICT,Value,VALUE)				\
+    fxIMPLEMENT_createPtr(DICT,Value,VALUE)				\
 __enddef__
 
 //----------------------------------------------------------------------

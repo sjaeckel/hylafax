@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ModemConfig.c++,v 1.74 1995/04/08 21:30:55 sam Rel $ */
+/*	$Id: ModemConfig.c++,v 1.86 1996/08/02 18:02:32 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,6 +27,8 @@
 
 #include "t.30.h"
 #include "config.h"
+
+#include <ctype.h>
 
 #define	N(a)	(sizeof (a) / sizeof (a[0]))
 
@@ -128,6 +130,12 @@ static const struct {
 { "class2nflocmd",		&ModemConfig::class2NFLOCmd },
 { "class2sflocmd",		&ModemConfig::class2SFLOCmd },
 { "class2hflocmd",		&ModemConfig::class2HFLOCmd },
+{ "class2minspcmd",		&ModemConfig::class2MINSPCmd },
+{ "class2apquerycmd",		&ModemConfig::class2APQueryCmd,	"AT+FAP=?" },
+{ "class2apcmd",		&ModemConfig::class2APCmd,	"AT+FAP" },
+{ "class2sacmd",		&ModemConfig::class2SACmd,	"AT+FSA" },
+{ "class2pacmd",		&ModemConfig::class2PACmd,	"AT+FPA" },
+{ "class2pwcmd",		&ModemConfig::class2PWCmd,	"AT+FPW" },
 };
 static const struct {
     const char*		 name;
@@ -163,8 +171,7 @@ static const struct {
 { "maxconsecutivebadlines",	&ModemConfig::maxConsecutiveBadLines,5 },
 { "modemresetdelay",		&ModemConfig::resetDelay,	     2600 },
 { "modembaudratedelay",		&ModemConfig::baudRateDelay,	     0 },
-{ "modemmaxpacketsize",		&ModemConfig::maxPacketSize,	     16*1024 },
-{ "modeminterpacketdelay",	&ModemConfig::interPacketDelay,	     0 },
+{ "modematcmddelay",		&ModemConfig::atCmdDelay,	     0 },
 { "faxt1timer",			&ModemConfig::t1Timer,		     TIMER_T1 },
 { "faxt2timer",			&ModemConfig::t2Timer,		     TIMER_T2 },
 { "faxt4timer",			&ModemConfig::t4Timer,		     TIMER_T4 },
@@ -179,7 +186,7 @@ static const struct {
 { "class1trainingrecovery",	&ModemConfig::class1TrainingRecovery,1500 },
 { "class1recvabortok",		&ModemConfig::class1RecvAbortOK,     200 },
 { "class1frameoverhead",	&ModemConfig::class1FrameOverhead,   4 },
-{ "class1recvIdentTimer",	&ModemConfig::class1RecvIdentTimer,  TIMER_T1 },
+{ "class1recvidenttimer",	&ModemConfig::class1RecvIdentTimer,  TIMER_T1 },
 { "class1tcfmaxnonzero",	&ModemConfig::class1TCFMaxNonZero,   10 },
 { "class1tcfminrun",		&ModemConfig::class1TCFMinRun,
   (2*TCF_DURATION)/3 },
@@ -201,10 +208,12 @@ ModemConfig::setupConfig()
 
     flowControl		= ClassModem::FLOW_NONE;// no flow control
     maxRate		= ClassModem::BR19200;	// reasonable for most modems
+    minSpeed		= BR_2400;		// minimum transmit speed
     waitForConnect	= FALSE;		// unique modem answer response
     class2XmitWaitForXON = TRUE;		// default per Class 2 spec
     class2SendRTC	= FALSE;		// default per Class 2 spec
     setVolumeCmds("ATM0 ATL0M1 ATL1M1 ATL2M1 ATL3M1");
+    recvDataFormat	= DF_ALL;		// default to no transcoding
 }
 
 void
@@ -214,14 +223,14 @@ ModemConfig::resetConfig()
     setupConfig();
 }
 
-#define	valeq(a,b)	(::strcasecmp(a,b)==0)
+#define	valeq(a,b)	(strcasecmp(a,b)==0)
 
-BaudRate
-ModemConfig::findRate(const char* cp)
+fxBool
+ModemConfig::findRate(const char* cp, BaudRate& br)
 {
     static const struct {
 	const char* name;
-	BaudRate    br;
+	BaudRate    b;
     } rates[] = {
 	{    "300", ClassModem::BR300 },
 	{   "1200", ClassModem::BR1200 },
@@ -235,20 +244,49 @@ ModemConfig::findRate(const char* cp)
 	{ "115200", ClassModem::BR115200 },
     };
     for (int i = N(rates)-1; i >= 0; i--)
-	if (streq(cp, rates[i].name))
-	    return (rates[i].br);
-    return (ClassModem::BR0);
+	if (streq(cp, rates[i].name)) {
+	    br = rates[i].b;
+	    return (TRUE);
+	}
+    return (FALSE);
 }
 
 BaudRate
 ModemConfig::getRate(const char* cp)
 {
-    BaudRate br = findRate(cp);
-    if (br == ClassModem::BR0) {
+    BaudRate br;
+    if (!findRate(cp, br)) {
 	configError("Unknown baud rate \"%s\", using 19200", cp);
 	br = ClassModem::BR19200;		// default
     }
     return (br);
+}
+
+fxBool
+ModemConfig::findATResponse(const char* cp, ATResponse& resp)
+{
+    static const struct {
+	const char* name;
+	ATResponse  r;
+    } responses[] = {
+	{    "NOTHING", ClassModem::AT_NOTHING },
+	{         "OK",	ClassModem::AT_OK },
+	{    "CONNECT", ClassModem::AT_CONNECT },
+	{   "NOANSWER", ClassModem::AT_NOANSWER },
+	{  "NOCARRIER", ClassModem::AT_NOCARRIER },
+	{ "NODIALTONE", ClassModem::AT_NODIALTONE },
+	{       "BUSY", ClassModem::AT_BUSY },
+	{    "OFFHOOK", ClassModem::AT_OFFHOOK },
+	{       "RING", ClassModem::AT_RING },
+	{      "ERROR", ClassModem::AT_ERROR },
+	{      "OTHER", ClassModem::AT_OTHER },
+    };
+    for (u_int i = 0; i < N(responses); i++)
+	if (valeq(cp, responses[i].name)) {
+	    resp = responses[i].r;
+	    return (TRUE);
+	}
+    return (FALSE);
 }
 
 u_int
@@ -264,19 +302,36 @@ ModemConfig::getFill(const char* cp)
     }
 }
 
+fxBool
+ModemConfig::findFlow(const char* cp, FlowControl& fc)
+{
+    static const struct {
+	const char* name;
+	FlowControl f;
+    } fcnames[] = {
+	{ "XONXOFF", ClassModem::FLOW_XONXOFF },
+	{  "RTSCTS", ClassModem::FLOW_RTSCTS },
+	{    "NONE", ClassModem::FLOW_NONE },
+	{     "XON", ClassModem::FLOW_XONXOFF },
+	{     "RTS", ClassModem::FLOW_RTSCTS },
+    };
+    for (u_int i = 0; i < N(fcnames); i++)
+	if (valeq(cp, fcnames[i].name)) {
+	    fc = fcnames[i].f;
+	    return (TRUE);
+	}
+    return (FALSE);
+}
+
 FlowControl
 ModemConfig::getFlow(const char* cp)
 {
-    if (valeq(cp, "xonxoff"))
-	return (ClassModem::FLOW_XONXOFF);
-    else if (valeq(cp, "rtscts"))
-	return (ClassModem::FLOW_RTSCTS);
-    else if (valeq(cp, "none"))
-	return (ClassModem::FLOW_NONE);
-    else {
+    FlowControl fc;
+    if (!findFlow(cp, fc)) {
 	configError("Unknown flow control \"%s\", using xonxoff", cp);
-	return (ClassModem::FLOW_XONXOFF);	// default
+	fc = ClassModem::FLOW_XONXOFF;		// default
     }
+    return (fc);
 }
 
 void
@@ -305,39 +360,107 @@ ModemConfig::parseATCmd(const char* cp)
 	fxStr esc = cmd.token(epos, '>');
 	esc.lowercase();
 
-	u_char ecode;
-	u_int delay;
-	if (esc == "xon")
-	    ecode = ESC_XONFLOW;
-	else if (esc == "rts")
-	    ecode = ESC_RTSFLOW;
-	else if (esc == "none")
-	    ecode = ESC_NOFLOW;
-	else if (esc.length() > 5 && esc.head(5) == "delay") {
-	    delay = (u_int) ::atoi(&esc[5]);
+	FlowControl fc;
+	BaudRate br;
+	u_char ecode[2];
+	if (findFlow(esc, fc)) {
+	    ecode[0] = ESC_SETFLOW;
+	    ecode[1] = (u_char) fc;
+	} else if (findRate(esc, br)) {
+	    ecode[0] = ESC_SETBR;
+	    ecode[1] = (u_char) br;
+	} else if (esc == "flush") {
+	    cmd.remove(pos, epos-pos);
+	    cmd.insert(ESC_FLUSH, pos);
+	    continue;
+	} else if (esc == "") {		// NB: "<>" => <
+	    cmd.remove(pos, epos-pos);
+	    cmd.insert('<', pos);
+	    continue;
+	} else if (esc.length() > 6 && strneq(esc, "delay:", 6)) {
+	    u_int delay = (u_int) atoi(&esc[6]);
 	    if (delay > 255) {
-		configError("Bad AT delay value \"%s\"", (char*) esc);
+		configError("Bad AT delay value \"%s\", must be <256", &esc[6]);
 		pos = epos;
 		continue;
 	    }
-	    ecode = ESC_DELAY;
-	} else if (esc == "")		// NB: "<>" => <
-	    ecode = '<';
-	else {
-	    BaudRate br = findRate(esc);
-	    if (br == ClassModem::BR0) {
-		configError("Unknown AT escape code \"%s\"", (char*) esc);
+	    ecode[0] = ESC_DELAY;
+	    ecode[1] = (u_char) delay;
+	} else if (esc.length() > 8 && strneq(esc, "waitfor:", 8)) {
+	    ATResponse resp;
+	    if (!findATResponse(&esc[8], resp)) {
+		configError("Unknown AT response code \"%s\"", &esc[8]);
 		pos = epos;
 		continue;
 	    }
-	    ecode = 0x80|ord(br);
+	    ecode[0] = ESC_WAITFOR;
+	    ecode[1] = (u_char) resp;
+	} else {
+	    configError("Unknown AT escape code \"%s\"", (char*) esc);
+	    pos = epos;
+	    continue;
 	}
 	cmd.remove(pos, epos-pos);
-	cmd.insert(ecode, pos);
-	if (ecode == ESC_DELAY)
-	    cmd.insert(delay, pos+1);
+	cmd.insert((char*) ecode, pos, 2);
     }
     return (cmd);
+}
+
+u_int
+ModemConfig::getSpeed(const char* value)
+{
+    switch (atoi(value)) {
+    case 2400:	return (BR_2400);
+    case 4800:	return (BR_4800);
+    case 7200:	return (BR_7200);
+    case 9600:	return (BR_9600);
+    case 12000:	return (BR_12000);
+    case 14400:	return (BR_14400);
+    }
+    configError("Invalid minimum transmit speed \"%s\"", value);
+    return (BR_2400);
+}
+
+fxBool
+ModemConfig::findDataFormat(const char* cp, u_int& df)
+{
+    static const struct {
+	const char* name;
+	u_int d;
+    } dfnames[] = {
+	{       "1DMR", DF_1DMR },
+	{       "2DMR", DF_2DMR },
+	{ "2DMRUNCOMP", DF_2DMRUNCOMP },
+	{      "2DMMR", DF_2DMMR },
+	{   "adaptive", DF_ALL },
+    };
+    char v[30];
+    u_int i = 0;
+    for (; *cp; cp++) {
+	if (*cp == '-' || isspace(*cp))		// strip ``-'' and white space
+	    continue;
+	if (i >= sizeof (v))
+	    break;
+	v[i++] = *cp;
+    }
+    v[i] = '\0';
+    for (i = 0; i < N(dfnames); i++)
+	if (valeq(v, dfnames[i].name)) {
+	    df = dfnames[i].d;
+	    return (TRUE);
+	}
+    return (FALSE);
+}
+
+u_int
+ModemConfig::getDataFormat(const char* cp)
+{
+    u_int df;
+    if (!findDataFormat(cp, df)) {
+	configError("Unknown data format \"%s\", disabling transcoding", cp);
+	df = DF_ALL;				// default
+    }
+    return (df);
 }
 
 void
@@ -345,7 +468,7 @@ ModemConfig::parseCID(const char* rbuf, CallerID& cid) const
 {
     if (strneq(rbuf, cidName, cidName.length()))
 	cid.name = rbuf+cidName.length();
-    else if (strneq(rbuf, cidNumber, cidNumber.length()))
+    if (strneq(rbuf, cidNumber, cidNumber.length()))
 	cid.number = rbuf+cidNumber.length();
 }
 
@@ -360,7 +483,7 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
     else if (findTag(tag, (const tags*)fillorders, N(fillorders), ix))
 	(*this).*fillorders[ix].p = getFill(value);
     else if (findTag(tag, (const tags*)numbers, N(numbers), ix))
-	(*this).*numbers[ix].p = ::atoi(value);
+	(*this).*numbers[ix].p = atoi(value);
 
     else if (streq(tag, "modemsetvolumecmd"))
 	setVolumeCmds(value);
@@ -374,6 +497,10 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	class2XmitWaitForXON = getBoolean(value);
     else if (streq(tag, "class2sendrtc"))
 	class2SendRTC = getBoolean(value);
+    else if (streq(tag, "modemminspeed"))
+	minSpeed = getSpeed(value);
+    else if (streq(tag, "recvdataformat"))
+	recvDataFormat = getDataFormat(value);
     else
 	return (FALSE);
     return (TRUE);

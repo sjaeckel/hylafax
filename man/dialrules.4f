@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/dialrules.4f,v 1.15 1995/04/08 21:35:33 sam Rel $
+.\"	$Id: dialrules.4f,v 1.19 1996/06/24 03:04:05 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993-1995 Sam Leffler
-.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1996 Sam Leffler
+.\" Copyright (c) 1993-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH DIALRULES 4F "December 5, 1994"
+.TH DIALRULES 4F "May 8, 1996"
 .SH NAME
 dialrules \- \*(Fx dial string processing rules
 .SH DESCRIPTION
@@ -116,7 +116,7 @@ in it, then the white space needs to be escaped with a ``\e'' character
 or the entire string should be enclosed in quote (``"'') marks.
 Replacement strings may reference the entire string matched by the
 regular expression with the ``&'' character.
-Substrings matched with the ``\e(...\e)'' constructs may be referenced
+Substrings matched with the ``(...)'' constructs may be referenced
 by using ``\e\fIn\fP'' where
 .I n
 is a single numeric digit between 1 and 9 that refers to the
@@ -195,6 +195,14 @@ LDPrefix=${LongDistancePrefix}	! prefix for placing a long distance call
 CanonicalNumber := [
 .ta \w'^${LDPrefix}      'u +\w'= 'u +\w'+${Country}${Area}&      'u
 #.*	=		! strip calling card stuff
+[abcABC]	= 2	! these convert alpha to numbers
+[defDEF]	= 3
+[ghiGHI]	= 4
+[jklJKL]	= 5
+[mnoMNO]	= 6
+[prsPRS]	= 7
+[tuvTUV]	= 8
+[wxyWXY]	= 9
 [^+0-9]+	=		! strip white space etc.
 ^${IDPrefix}	= +		! replace int. dialing code
 ^${LDPrefix}	= +${Country}	! replace l.d. dialing code
@@ -205,10 +213,13 @@ CanonicalNumber := [
 .sp .5
 The first rule simply strips anything following a ``#''; this
 will remove any calling card-related information.
-The second rule removes everything but numbers and plus signs.
-The third rule translates any explicit international dialing prefix
+The next eight rules convert upper and lower case alphabetics to the
+equivalent key numbers (this is convenient for users that use
+mnemonic phone numbers).
+The tenth rule removes everything but numbers and plus signs.
+The eleventh rule translates any explicit international dialing prefix
 into the ``+'' symbol used to identify country codes.
-The fourth rule replaces a leading long distance dialing prefix
+The twelfth rule replaces a leading long distance dialing prefix
 with the local country code string.
 The last rule matches local phone numbers and inserts the local
 country code and area code.
@@ -225,20 +236,21 @@ LongDistancePrefix=1
 .fi
 .sp .5
 then if the above set of rules is applied
-to ``01123965-7824#2345'', the transformations would be:
+to ``01123965-Tube#2345'', the transformations would be:
 .sp .5
 .nf
-.ta \w'01123965-7824@2345    'u +\w'01123965-7824    'u
+.ta \w'01123965-Tube#2345    'u +\w'01123965-7824    'u
 .RS
-01123965-7824@2345	01123965-7824	! strip calling card stuff
-01123965-7824	011239657824		! strip white space etc.
-011239657824	+239657824	! replace int. dialing code
-+239657824	+239657824	! replace l.d. dialing code
-+239657824	+239657824	! otherwise, insert canon form
+01123965-Tube#2345	01123965-Tube	! strip calling card stuff
+01123965-Tube	01123965-8823	! convert alphabetics
+01123965-8823	011239658823		! strip white space etc.
+011239658823	+239658823	! replace int. dialing code
++239658823	+239658823	! replace l.d. dialing code
++239658823	+239658823	! otherwise, insert canon form
 .RE
 .fi
 .sp .5
-for a final result of ``+239657824''.
+for a final result of ``+239658823''.
 .SH "SEE ALSO"
 .IR sendfax (1),
 .IR dialtest (1M),

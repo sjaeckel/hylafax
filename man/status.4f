@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/status.4f,v 1.13 1995/04/08 21:36:39 sam Rel $
+.\"	$Id: status.4f,v 1.17 1996/06/24 03:04:23 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990-1995 Sam Leffler
-.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1996 Sam Leffler
+.\" Copyright (c) 1991-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,12 +27,12 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH STATUS 4F "June 6, 1994"
+.TH STATUS 4F "January 18, 1996"
 .SH NAME
 status \- server status database
 .SH DESCRIPTION
 Files in the
-.B etc/status
+.B status
 directory in the \*(Fx
 spooling area contain status information about each running server.
 Files are named according to the modem being serviced.
@@ -40,18 +40,18 @@ Files without a suffix contain a single line of
 .SM ASCII
 text that indicates what the server is currently doing:
 ``Running and idle'', ``Sending to ...'', ``Answering the phone'', etc.
-Files with a ``.info'' suffix contain static server information such
-as the identity of the administrator and are returned to
-users through the
+The contents of the file
+.B any.info
+is returned by the
 .IR faxstat (1)
-program.
-Files with a ``.shut'' suffix indicate servers that are currently
-.IR shutdown ,
-i.e. not accepting outbound facsimile jobs\-such files contain a single
-line of text that indicates the reason why the server is shutdown.
+program when given the 
+.B \-i
+option; it should contain information about the server system
+including an administrative contact, its location, usage conventions, etc.
 .SH "SEE ALSO"
 .IR faxq (1M),
 .IR faxsend (1M),
+.IR pagesend (1M),
 .IR faxgetty (1M),
-.IR faxd.recv (1M),
+.IR hfaxd (1M),
 .IR faxstat (1)

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/Array.h,v 1.14 1995/04/08 21:43:49 sam Rel $ */
+/*	$Id: Array.h,v 1.18 1996/08/21 22:26:37 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -25,8 +25,6 @@
  */
 #ifndef _Array_
 #define _Array_
-// $Revision: 1.14 $
-// $Date: 1995/04/08 21:43:49 $
 #include "Obj.h"
 #include "Ptr.h"
 
@@ -282,6 +280,7 @@ __enddef__
 	    numbytes -= elementsize;					\
 	    ITEM * obj = new(ptr) ITEM;					\
 	    ptr++; 							\
+	    (void) obj;							\
 	}								\
     }									\
     void ARRAY::destroyElements(void * start, u_int numbytes) {		\
@@ -303,6 +302,7 @@ __enddef__
 		ITEM * obj = new(q) ITEM(*p);				\
 		q--; p--;						\
 		numbytes -= elementsize;				\
+		(void) obj;						\
 	    }								\
 	} else {							\
 	    const ITEM * p = (const ITEM *)src;				\
@@ -311,6 +311,7 @@ __enddef__
 		ITEM * obj = new(q) ITEM(*p);				\
 		q++; p++;						\
 		numbytes -= elementsize;				\
+		(void) obj;						\
 	    }								\
 	}								\
     }									\

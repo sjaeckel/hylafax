@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2.h,v 1.79 1995/04/08 21:29:40 sam Rel $ */
+/*	$Id: Class2.h,v 1.87 1996/07/31 00:14:00 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -50,20 +50,23 @@ protected:
     fxStr	borCmd;			// set bit order command
     fxStr	abortCmd;		// abort session command
     fxStr	ptsCmd;			// set page status command
+    fxStr	minspCmd;		// set minimum transmit speed command
+    fxStr	apCmd;			// set address&polling caps. command
+    fxStr	saCmd;			// set subaddress command
+    fxStr	paCmd;			// set selective polling address command
+    fxStr	pwCmd;			// set password command
     fxStr	noFlowCmd;		// no flow control command
     fxStr	softFlowCmd;		// software flow control command
     fxStr	hardFlowCmd;		// hardware flow control command
     u_int	serviceType;		// modem service required
     u_int	modemCQ;		// copy quality capabilities mask
 
-    Class2Params params;		// current params during send
     fxBool	xmitWaitForXON;		// if true, wait for XON when sending
     fxBool	hostDidCQ;		// if true, copy quality done on host
     fxBool	hasPolling;		// if true, modem does polled recv
     char	recvDataTrigger;	// char to send to start recv'ing data
     char	hangupCode[4];		// hangup reason (from modem)
     fxBool	hadHangup;		// true if +FHNG:/+FHS: received
-    long	group3opts;		// for writing received TIFF
     const u_char* rtcRev;		// bit reversal table for RTC
     fxStr	lid;			// prepared local identifier string
 
@@ -78,8 +81,9 @@ protected:
 // transmission support
     fxBool	dataTransfer();
     fxBool	sendRTC(fxBool is2D);
+    fxBool	sendPageData(TIFF* tif, u_int pageChop);
 
-    virtual fxBool sendPage(TIFF* tif) = 0;
+    virtual fxBool sendPage(TIFF* tif, u_int pageChop) = 0;
     virtual fxBool pageDone(u_int ppm, u_int& ppr) = 0;
 // reception support
     const AnswerMsg* findAnswer(const char*);
@@ -101,7 +105,10 @@ protected:
 	AT_FNSS		= 108,	// NSS received status
 	AT_FTSI		= 109,	// TSI received status
 	AT_FET		= 110,	// post-page-response status
-	AT_FVO		= 111	// voice transition status
+	AT_FVO		= 111,	// voice transition status
+	AT_FSA		= 112,	// subaddress status
+	AT_FPA		= 113,  // polling address status
+	AT_FPW		= 114	// password status
     };
     virtual ATResponse atResponse(char* buf, long ms = 30*1000) = 0;
     fxBool	waitFor(ATResponse wanted, long ms = 30*1000);
@@ -129,9 +136,9 @@ public:
     virtual ~Class2Modem();
 
 // send support
-    CallStatus	dialFax(const char* number, const Class2Params& dis, fxStr& emsg);
+    fxBool	sendSetup(FaxRequest&, const Class2Params&, fxStr& emsg);
     CallStatus	dialResponse(fxStr& emsg);
-    FaxSendStatus getPrologue(Class2Params&, u_int&, fxStr&, fxBool&, fxStr&);
+    FaxSendStatus getPrologue(Class2Params&, fxBool&, fxStr&);
     FaxSendStatus sendPhaseB(TIFF* tif, Class2Params&, FaxMachineInfo&,
 		    fxStr& pph, fxStr& emsg);
     void	sendAbort();
@@ -144,8 +151,9 @@ public:
     void	recvAbort();
 
 // polling support
-    fxBool	requestToPoll();
-    fxBool	pollBegin(const fxStr& pollID, fxStr& emsg);
+    fxBool	requestToPoll(fxStr& emsg);
+    fxBool	pollBegin(const fxStr& cig, const fxStr& sep, const fxStr& pwd,
+		    fxStr& emsg);
 
 // miscellaneous
     fxBool	faxService();			// switch to fax mode

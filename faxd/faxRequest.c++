@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/faxRequest.c++,v 1.5 1995/04/08 21:31:20 sam Rel $ */
+/*	$Id: faxRequest.c++,v 1.10 1996/08/21 21:53:43 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -25,27 +25,32 @@
  */
 #include "FaxRequest.h"
 
-faxRequest::faxRequest(FaxSendOp o, u_short d, const fxStr& s) : item(s)
+faxRequest::faxRequest(FaxSendOp o, u_short d, const fxStr& a, const fxStr& s)
+    : item(s)
+    , addr(a)
 {
-   op = o;
-   dirnum = d;
+    op = o;
+    dirnum = d;
 }
 faxRequest::faxRequest() {}
-faxRequest::faxRequest(const faxRequest& other) : item(other.item)
+faxRequest::faxRequest(const faxRequest& other)
+    : item(other.item)
+    , addr(other.addr)
 {
     op = other.op;
     dirnum = other.dirnum;
 }
 faxRequest::~faxRequest() {}
 
-int faxRequest::compare(faxRequest const *a) const
-    { return item.compare(&a->item); }
+int faxRequest::compare(faxRequest const*) const { return 0; }
 
 fxBool
 faxRequest::isSavedOp() const
 {
     return (op == FaxRequest::send_tiff_saved ||
 	    op == FaxRequest::send_postscript_saved ||
+	    op == FaxRequest::send_pcl_saved ||
+	    op == FaxRequest::send_page_saved ||
 	    op == FaxRequest::send_data_saved);
 }
-fxIMPLEMENT_ObjArray(faxRequestArray, faxRequest);
+fxIMPLEMENT_ObjArray(faxRequestArray, faxRequest)

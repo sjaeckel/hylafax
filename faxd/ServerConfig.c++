@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ServerConfig.c++,v 1.19 1995/04/08 21:31:05 sam Rel $ */
+/*	$Id: ServerConfig.c++,v 1.26 1996/08/24 00:31:04 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -52,6 +52,24 @@ ServerConfig::~ServerConfig()
     delete tsiPats;
 }
 
+void
+ServerConfig::configError(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vconfigError(fmt, ap);
+    va_end(ap);
+}
+
+void
+ServerConfig::configTrace(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vconfigTrace(fmt, ap);
+    va_end(ap);
+}
+
 #define	N(a)	(sizeof (a) / sizeof (a[0]))
 
 const ServerConfig::S_stringtag ServerConfig::strings[] = {
@@ -78,6 +96,7 @@ const ServerConfig::S_numbertag ServerConfig::numbers[] = {
 { "polllockwait",	&ServerConfig::pollLockWait,	30 },
 { "maxrecvpages",	&ServerConfig::maxRecvPages,	(u_int) -1 },
 { "maxbadcalls",	&ServerConfig::maxConsecutiveBadCalls, 25 },
+{ "maxsetupattempts",	&ServerConfig::maxSetupAttempts, 2 },
 };
 const ServerConfig::S_filemodetag ServerConfig::filemodes[] = {
 { "recvfilemode",	&ServerConfig::recvFileMode,	0600 },
@@ -94,7 +113,7 @@ ServerConfig::setupConfig()
     for (i = N(strings)-1; i >= 0; i--)
 	(*this).*strings[i].p = (strings[i].def ? strings[i].def : "");
     for (i = N(filemodes)-1; i >= 0; i--)
-	(*this).*filemodes[i].p = filemodes[i].def;
+	(*this).*filemodes[i].p = (mode_t) filemodes[i].def;
     for (i = N(numbers)-1; i >= 0; i--)
 	(*this).*numbers[i].p = numbers[i].def;
 
@@ -125,7 +144,7 @@ ServerConfig::resetConfig()
     setupConfig();
 }
 
-#define	valeq(a,b)	(::strcasecmp(a,b)==0)
+#define	valeq(a,b)	(strcasecmp(a,b)==0)
 
 SpeakerVolume
 ServerConfig::getVolume(const char* cp)
@@ -158,11 +177,58 @@ ServerConfig::setModemSpeakerVolume(SpeakerVolume level)
     speakerVolume = level;
 }
 
+/*
+ * Subclass DialStringRules so that we can redirect the
+ * diagnostic and tracing interfaces through the server.
+ */
+class ServerConfigDialStringRules : public DialStringRules {
+private:
+    ServerConfig& config;	// XXX should be const, but requires other mods
+
+    virtual void parseError(const char* fmt ...);
+    virtual void traceParse(const char* fmt ...);
+    virtual void traceRules(const char* fmt ...);
+public:
+    ServerConfigDialStringRules(ServerConfig& config, const char* filename);
+    ~ServerConfigDialStringRules();
+};
+ServerConfigDialStringRules::ServerConfigDialStringRules(ServerConfig& c, const char* f)
+    : config(c), DialStringRules(f)
+{}
+ServerConfigDialStringRules::~ServerConfigDialStringRules() {}
+
+void
+ServerConfigDialStringRules::parseError(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    config.vconfigError(fmt, ap);
+    va_end(ap);
+}
+void
+ServerConfigDialStringRules::traceParse(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    config.vdialrulesTrace(fmt, ap);
+    va_end(ap);
+}
+void
+ServerConfigDialStringRules::traceRules(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    config.vdialrulesTrace(fmt, ap);
+    va_end(ap);
+}
+
 void
 ServerConfig::setDialRules(const char* name)
 {
     delete dialRules;
-    dialRules = new DialStringRules(name);
+    dialRules = new ServerConfigDialStringRules(*this, name);
+    dialRules->setVerbose(
+	((tracingLevel|logTracingLevel) & FAXTRACE_DIALRULES) != 0);
     /*
      * Setup configuration environment.
      */
@@ -243,7 +309,7 @@ ServerConfig::updatePatterns(const fxStr& file,
 	if (fp != NULL) {
 	    readPatterns(fp, pats, accept);
 	    lastModTime = sb.st_mtime;
-	    ::fclose(fp);
+	    fclose(fp);
 	}
     } else if (pats) {
 	// file's been removed, delete any existing info
@@ -275,12 +341,12 @@ ServerConfig::readPatterns(FILE* fp, RegExArray*& pats, fxBoolArray*& accept)
 	accept = new fxBoolArray;
 
     char line[256];
-    while (::fgets(line, sizeof (line)-1, fp)) {
-	char* cp = ::strchr(line, '#');
-	if (cp || (cp = ::strchr(line, '\n')))
+    while (fgets(line, sizeof (line)-1, fp)) {
+	char* cp = strchr(line, '#');
+	if (cp || (cp = strchr(line, '\n')))
 	    *cp = '\0';
 	/* trim off trailing white space */
-	for (cp = ::strchr(line, '\0'); cp > line; cp--)
+	for (cp = strchr(line, '\0'); cp > line; cp--)
 	    if (!isspace(cp[-1]))
 		break;
 	*cp = '\0';
@@ -302,6 +368,28 @@ ServerConfig::readPatterns(FILE* fp, RegExArray*& pats, fxBoolArray*& accept)
     }
 }
 
+static void
+tiffErrorHandler(const char* module, const char* fmt0, va_list ap)
+{
+    char fmt[128];
+    if (module != NULL)
+	sprintf(fmt, "%s: Warning, %s.", module, fmt0);
+    else
+	sprintf(fmt, "Warning, %s.", fmt0);
+    vlogError(fmt, ap);
+}
+
+static void
+tiffWarningHandler(const char* module, const char* fmt0, va_list ap)
+{
+    char fmt[128];
+    if (module != NULL)
+	sprintf(fmt, "%s: Warning, %s.", module, fmt0);
+    else
+	sprintf(fmt, "Warning, %s.", fmt0);
+    vlogWarning(fmt, ap);
+}
+
 fxBool
 ServerConfig::setConfigItem(const char* tag, const char* value)
 {
@@ -314,12 +402,23 @@ ServerConfig::setConfigItem(const char* tag, const char* value)
     } else if (findTag(tag, (const tags*)numbers, N(numbers), ix)) {
 	(*this).*numbers[ix].p = getNumber(value);
 	switch (ix) {
-	case 1: tracingLevel &= ~tracingMask; break;
-	case 2: logTracingLevel &= ~tracingMask; break;
+	case 1: tracingLevel &= ~tracingMask;
+	case 2: logTracingLevel &= ~tracingMask;
+	    if (dialRules)
+		dialRules->setVerbose(
+		    (tracingLevel|logTracingLevel) & FAXTRACE_DIALRULES);
+	    if ((tracingLevel|logTracingLevel) & FAXTRACE_TIFF) {
+		TIFFSetErrorHandler(tiffErrorHandler);
+		TIFFSetWarningHandler(tiffWarningHandler);
+	    } else {
+		TIFFSetErrorHandler(NULL);
+		TIFFSetWarningHandler(NULL);
+	    }
+	    break;
 	case 3: UUCPLock::setLockTimeout(uucpLockTimeout); break;
 	}
     } else if (findTag(tag, (const tags*)filemodes, N(filemodes), ix))
-	(*this).*filemodes[ix].p = ::strtol(value, 0, 8);
+	(*this).*filemodes[ix].p = strtol(value, 0, 8);
 
     else if (streq(tag, "speakervolume"))
 	setModemSpeakerVolume(getVolume(value));

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/faxSendApp.c++,v 1.21 1995/04/08 21:31:23 sam Rel $ */
+/*	$Id: faxSendApp.c++,v 1.42 1996/08/03 00:43:08 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -26,7 +26,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
-#include <osfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -39,6 +38,7 @@
 
 #include "FaxMachineInfo.h"
 #include "FaxRecvInfo.h"
+#include "FaxSendInfo.h"
 #include "FaxAcctInfo.h"
 #include "UUCPLock.h"
 #include "faxSendApp.h"
@@ -47,8 +47,6 @@
 /*
  * HylaFAX Send Job Agent.
  */
-
-extern	const char* fmtTime(time_t);
 
 faxSendApp* faxSendApp::_instance = NULL;
 
@@ -85,9 +83,6 @@ faxSendApp::initialize(int argc, char** argv)
 	case 'c':			// set configuration parameter
 	    readConfigItem(iter.optArg());
 	    break;
-	case 't':			// session tracing level
-	    setConfigItem("sessiontracing", iter.optArg());
-	    break;
 	}
 }
 
@@ -122,38 +117,57 @@ faxSendApp::send(const char* filename)
 {
     int fd = Sys::open(filename, O_RDWR);
     if (fd >= 0) {
-	if (::flock(fd, LOCK_EX) >= 0) {
-	    FaxRequest* req = new FaxRequest(filename);
+	if (flock(fd, LOCK_EX) >= 0) {
+	    FaxRequest* req = new FaxRequest(filename, fd);
+	    /*
+	     * Handle any session parameters that might be passed
+	     * down from faxq (or possibly stuck in the modem config
+	     * file).  These are applied before reading the queue
+	     * file so that any user-specified values override.
+	     */
+	    if (desiredBR != (u_int) -1)
+		req->desiredbr = desiredBR;
+	    if (desiredEC != (u_int) -1)
+		req->desiredec = desiredEC;
+	    if (desiredST != (u_int) -1)
+		req->desiredst = desiredST;
 	    fxBool reject;
-	    if (req->readQFile(fd, reject) && !reject) {
+	    if (req->readQFile(reject) && !reject) {
 		FaxMachineInfo info;
 		info.updateConfig(canonicalizePhoneNumber(req->number));
 		FaxAcctInfo ai;
 
-		ai.start = fileStart = Sys::now();
+		ai.start = Sys::now();
 
 		FaxServer::sendFax(*req, info, ai);
 
 		ai.duration = Sys::now() - ai.start;
+		ai.conntime = getConnectTime();
+		ai.commid = req->commid;
 		ai.device = getModemDeviceID();
 		ai.dest = req->external;
 		ai.jobid = req->jobid;
+		ai.jobtag = req->jobtag;
 		ai.user = req->mailaddr;
 		ai.csi = info.getCSI();
 		if (req->status == send_done)
 		    ai.status = "";
 		else
 		    ai.status = req->notice;
-		account("SEND", ai);
+		if (!ai.record("SEND"))
+		    logError("Error writing SEND accounting record, dest=%s",
+			(const char*) ai.dest);
 
 		req->writeQFile();		// update on-disk copy
-		return (req->status);		// return status for exit
+		FaxSendStatus status = req->status;
+		delete req;
+		return (status);		// return status for exit
 	    } else
 		delete req;
 	    logError("Could not read request file");
 	} else
 	    logError("Could not lock request file: %m");
-	::close(fd);
+	Sys::close(fd);
     } else
 	logError("Could not open request file: %m");
     return (send_failed);
@@ -180,6 +194,10 @@ faxSendApp::unlockModem()
  * Notification handlers.
  */
 
+/*
+ * Handle notification that the modem device has become
+ * available again after a period of being unavailable.
+ */
 void
 faxSendApp::notifyModemReady()
 {
@@ -187,42 +205,40 @@ faxSendApp::notifyModemReady()
 }
 
 /*
- * Handle notification of a document received as a
- * result of a poll request.
+ * Handle notification that the modem device looks to
+ * be in a state that requires operator intervention.
  */
 void
-faxSendApp::notifyPollRecvd(FaxRequest& req, const FaxRecvInfo& ri)
+faxSendApp::notifyModemWedged()
 {
-    recordRecv(ri);
-    // hand to delivery/notification command
-    runCmd(pollRcvdCmd
-	 | " " | req.mailaddr
-	 | " " | ri.qfile
-	 | " " | fxStr(ri.time / 60.,"%.2f")
-	 | " " | fxStr((int) ri.sigrate, "%u")
-	 | " \"" | ri.protocol | "\""
-	 | " \"" | ri.reason | "\""
-	 | " " | getModemDeviceID()
-	 , TRUE);
+    if (!sendModemStatus(getModemDeviceID(), "W"))
+	logError("MODEM %s appears to be wedged",
+	    (const char*) getModemDevice());
+    close();
 }
 
-/*
- * Handle notification that a poll operation has been
- * successfully completed.  Note that any received
- * documents have already been passed to notifyPollRecvd.
- */
 void
-faxSendApp::notifyPollDone(FaxRequest& req, u_int pi)
+faxSendApp::notifyCallPlaced(const FaxRequest& req)
 {
-    time_t now = Sys::now();
-    traceServer("POLL FAX: BY %s TO %s completed in %s",
-	(char*) req.mailaddr, (char*) req.external, fmtTime(now - fileStart));
-    fileStart = now;
-    if (req.requests[pi].op == FaxRequest::send_poll) {
-	req.removeItems(pi);
-	req.writeQFile();
-    } else
-	logError("notifyPollDone called for non-poll request");
+    sendJobStatus(req.jobid, "c");
+    FaxServer::notifyCallPlaced(req);
+}
+
+void
+faxSendApp::notifyConnected(const FaxRequest& req)
+{
+    sendJobStatus(req.jobid, "C");
+    FaxServer::notifyConnected(req);
+}
+
+void
+faxSendApp::notifyPageSent(FaxRequest& req, const char* filename)
+{
+    FaxSendInfo si(filename, req.commid, req.npages+1,
+	getPageTransferTime(), getClientParams());
+    sendJobStatus(req.jobid, "d%s", (const char*) si.encode());
+
+    FaxServer::notifyPageSent(req, filename);
 }
 
 /*
@@ -233,68 +249,68 @@ faxSendApp::notifyPollDone(FaxRequest& req, u_int pi)
 void
 faxSendApp::notifyDocumentSent(FaxRequest& req, u_int fi)
 {
-    time_t now = Sys::now();
-    traceServer("SEND FAX: FROM " | req.mailaddr
-	| " TO " | req.external | " (%s sent in %s)",
-	(char*) req.requests[fi].item, fmtTime(now - fileStart));
-    fileStart = now;			// for next file
-    if (req.requests[fi].op == FaxRequest::send_fax) {
-	u_int n = 1;
-	if (fi > 0 && req.requests[fi-1].isSavedOp()) {
-	    /*
-	     * Document sent was converted from another; delete
-	     * the original as well.  (Or perhaps we should hold
-	     * onto it to return to sender in case of a problem?)
-	     */
-	    fi--, n++;
-	}
-	req.removeItems(fi, n);
-	req.writeQFile();
-    } else
-	logError("notifyDocumentSent called for non-TIFF file");
-}
+    FaxSendInfo si(req.requests[fi].item, req.commid, req.npages,
+	getFileTransferTime(), getClientParams());
+    sendJobStatus(req.jobid, "D%s", (const char*) si.encode());
 
-void faxSendApp::notifyRecvDone(const FaxRecvInfo&)	{}
-
-void
-faxSendApp::recordRecv(const FaxRecvInfo& ri)
-{
-    char type[80];
-    if (ri.pagelength == 297 || ri.pagelength == (u_int) -1)
-	::strcpy(type, "A4");
-    else if (ri.pagelength == 364)
-	::strcpy(type, "B4");
-    else
-	::sprintf(type, "(%u x %.2f)", ri.pagewidth, ri.pagelength);
-    traceServer("RECV: %s from %s, %d %s pages, %u dpi, %s, %s at %u bps",
-	(char*) ri.qfile, (char*) ri.sender,
-	ri.npages, type, ri.resolution,
-	(char*) ri.protocol, fmtTime((time_t) ri.time), ri.sigrate);
-
-    FaxAcctInfo ai;
-    ai.user = "fax";
-    ai.duration = (time_t) ri.time;
-    ai.start = time(0) - ai.duration;
-    ai.device = getModemDeviceID();
-    ai.dest = getModemNumber();
-    ai.csi = ri.sender;
-    ai.npages = ri.npages;
-    ai.sigrate = ri.sigrate;
-    ai.df = ri.protocol;
-    ai.status = ri.reason;
-    ai.jobid = "";
-    account("RECV", ai);
+    FaxServer::notifyDocumentSent(req, fi);
 }
 
 /*
- * Record a transfer in the transfer log file.
+ * Handle notification of a document received as a
+ * result of a poll request.
  */
 void
-faxSendApp::account(const char* cmd, const FaxAcctInfo& ai)
+faxSendApp::notifyPollRecvd(FaxRequest& req, const FaxRecvInfo& ri)
 {
-    if (!ai.record(cmd))
-	logError("Problem writing %s accounting record, dest=%s",
-	    cmd, (const char*) ai.dest);
+    (void) sendJobStatus(req.jobid, "p%s", (const char*) ri.encode());
+
+    FaxServer::notifyPollRecvd(req, ri);
+
+    FaxAcctInfo ai;
+    ai.user = req.mailaddr;
+    ai.commid = getCommID();
+    ai.duration = (time_t) ri.time;
+    ai.start = Sys::now() - ai.duration;
+    ai.conntime = ai.duration;
+    ai.device = getModemDeviceID();
+    ai.dest = req.external;
+    ai.csi = ri.sender;
+    ai.npages = ri.npages;
+    ai.params = ri.params.encode();
+    ai.status = ri.reason;
+    ai.jobid = req.jobid;
+    ai.jobtag = req.jobtag;
+    if (!ai.record("POLL"))
+	logError("Error writing POLL accounting record, dest=%s",
+	    (const char*) ai.dest);
+
+    // hand to delivery/notification command
+    fxStr cmd(pollRcvdCmd
+	 | quote |       req.mailaddr | enquote
+	 | quote |           ri.qfile | enquote
+	 | quote | getModemDeviceID() | enquote
+	 | quote |          ai.commid | enquote
+	 | quote |          ri.reason | enquote
+     );
+    traceServer("RECV POLL: %s", (const char*) cmd);
+    setProcessPriority(BASE);			// lower priority
+    runCmd(cmd, TRUE);
+    setProcessPriority(state);			// restore previous priority
+}
+
+/*
+ * Handle notification that a poll operation has been
+ * successfully completed.  Note that any received
+ * documents have already been passed to notifyPollRecvd.
+ */
+void
+faxSendApp::notifyPollDone(FaxRequest& req, u_int pi)
+{
+    FaxSendInfo si(req.requests[pi].item, req.commid, req.npages,
+	getFileTransferTime(), getClientParams());
+    sendJobStatus(req.jobid, "P%s", (const char*) si.encode());
+    FaxServer::notifyPollDone(req, pi);
 }
 
 /*
@@ -313,12 +329,20 @@ faxSendApp::resetConfig()
 const faxSendApp::stringtag faxSendApp::strings[] = {
 { "pollrcvdcmd",	&faxSendApp::pollRcvdCmd,	FAX_POLLRCVDCMD },
 };
+const faxSendApp::numbertag faxSendApp::numbers[] = {
+{ "desiredbr",		&faxSendApp::desiredBR,		(u_int) -1 },
+{ "desiredst",		&faxSendApp::desiredST,		(u_int) -1 },
+{ "desiredec",		&faxSendApp::desiredEC,		(u_int) -1 },
+};
 
 void
 faxSendApp::setupConfig()
 {
-    for (int i = N(strings)-1; i >= 0; i--)
+    int i;
+    for (i = N(strings)-1; i >= 0; i--)
 	(*this).*strings[i].p = (strings[i].def ? strings[i].def : "");
+    for (i = N(numbers)-1; i >= 0; i--)
+	(*this).*numbers[i].p = numbers[i].def;
 }
 
 fxBool
@@ -327,6 +351,8 @@ faxSendApp::setConfigItem(const char* tag, const char* value)
     u_int ix;
     if (findTag(tag, (const tags*) strings, N(strings), ix)) {
 	(*this).*strings[ix].p = value;
+    } else if (findTag(tag, (const tags*) numbers, N(numbers), ix)) {
+	(*this).*numbers[ix].p = getNumber(value);
     } else
 	return (FaxServer::setConfigItem(tag, value));
     return (TRUE);
@@ -340,16 +366,17 @@ faxSendApp::setConfigItem(const char* tag, const char* value)
 static void
 usage(const char* appName)
 {
-    fxFatal("usage: %s -m deviceID [-t tracelevel] [-l] qfile ...", appName);
+    faxApp::fatal("usage: %s -m deviceID [-t tracelevel] [-l] qfile", appName);
 }
 
 static void
 sigCleanup(int s)
 {
+    signal(s, fxSIGHANDLER(sigCleanup));
     logError("CAUGHT SIGNAL %d", s);
     faxSendApp::instance().close();
     if (!faxSendApp::instance().isRunning())
-	::_exit(send_failed);
+	_exit(send_failed);
 }
 
 int
@@ -361,7 +388,7 @@ main(int argc, char** argv)
     u_int l = appName.length();
     appName = appName.tokenR(l, '/');
 
-    faxApp::setOpts("c:m:t:lpx");		// p+x are for FaxServer
+    faxApp::setOpts("c:m:lpx");			// p+x are for FaxServer
 
     fxStr devID;
     for (GetoptIter iter(argc, argv, faxApp::getOpts()); iter.notDone(); iter++)
@@ -372,22 +399,10 @@ main(int argc, char** argv)
     if (devID == "")
 	usage(appName);
 
-    /*
-     * Construct the device special file from the device
-     * id by converting all '_'s to '/'s and inserting a
-     * leading DEV_PREFIX.  The _ to / conversion is done
-     * for SVR4 systems which have their devices in
-     * subdirectories!
-     */
-    fxStr device = devID;
-    while ((l = device.next(0, '_')) < device.length())
-	device[l] = '/';
-    device.insert(DEV_PREFIX);
+    faxSendApp* app = new faxSendApp(faxApp::idToDev(devID), devID);
 
-    faxSendApp* app = new faxSendApp(device, devID);
-
-    ::signal(SIGTERM, fxSIGHANDLER(sigCleanup));
-    ::signal(SIGINT, fxSIGHANDLER(sigCleanup));
+    signal(SIGTERM, fxSIGHANDLER(sigCleanup));
+    signal(SIGINT, fxSIGHANDLER(sigCleanup));
 
     app->initialize(argc, argv);
     app->open();
@@ -397,7 +412,7 @@ main(int argc, char** argv)
     if (app->isReady())
 	status = app->send(argv[optind]);
     else
-	status = send_failed;
+	status = send_retry;
     app->close();
     return (status);
 }

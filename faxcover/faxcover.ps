@@ -4,12 +4,12 @@
 %%CreationDate: 11:05 AM January  4, 1993
 %%Pages: 1 +1
 %%EndComments
-%	$Header: /usr/people/sam/fax/./faxcover/RCS/faxcover.ps,v 1.17 1995/04/08 21:29:18 sam Rel $
+%	$Id: faxcover.ps,v 1.20 1996/06/24 03:00:09 sam Rel $
 %
 % HylaFAX Facsimile Software
 %
-% Copyright (c) 1990-1995 Sam Leffler
-% Copyright (c) 1991-1995 Silicon Graphics, Inc.
+% Copyright (c) 1990-1996 Sam Leffler
+% Copyright (c) 1991-1996 Silicon Graphics, Inc.
 % HylaFAX is a trademark of Silicon Graphics
 % 
 % Permission to use, copy, modify, distribute, and sell this software and 
@@ -234,53 +234,6 @@ gsave
  (Computer Systems) show
 
 grestore
-} def
-
-/BreakIntoLines {
-30 dict begin
-  /proc exch def
-  /linewidth exch def
-  /text exch def
-  /wordbreak ( ) def
-  /breakwidth wordbreak stringwidth pop def
-
-  /breakLines {
-    /textstring exch def
-    /curwidth 0 def
-    /lastwordbreak 0 def
-    /startchar 0 def
-    /restoftext textstring def
-    { restoftext wordbreak search		% post match pre bool
-      exch /nextword exch def			% post match bool
-      /wordwidth nextword stringwidth pop def	% post match bool
-      { pop					% post
-	/restoftext exch def			% -
-	curwidth wordwidth add linewidth gt {
-	  textstring startchar lastwordbreak startchar sub getinterval proc
-	  /startchar lastwordbreak def
-	  /curwidth wordwidth breakwidth add def
-	} {
-	  /curwidth curwidth wordwidth add breakwidth add def
-	} ifelse
-	/lastwordbreak lastwordbreak nextword length add 1 add def
-      } { exit } ifelse
-    } loop
-    curwidth wordwidth add linewidth gt {
-      textstring startchar lastwordbreak startchar sub getinterval proc
-      /startchar lastwordbreak def
-    } if
-    /lastchar textstring length def
-    textstring startchar lastchar startchar sub getinterval proc
-  } def
-
-  { text (\n) search				% post match pre bool
-    { breakLines				% post match
-      pop					% post
-      /text exch def				% -
-    } { exit } ifelse				% string
-  } loop
-  breakLines
-end
 } def
 
 drawlogo

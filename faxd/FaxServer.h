@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxServer.h,v 1.135 1995/04/08 21:30:30 sam Rel $ */
+/*	$Id: FaxServer.h,v 1.149 1996/08/21 22:31:43 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -29,10 +29,12 @@
  * Fax Modem and Protocol Server.
  */
 #include "ModemServer.h"
+#include "FaxRecvInfo.h"
+#include "Array.h"
 
-class FaxRecvInfo;
-class FaxRecvInfoArray;
 class FaxAcctInfo;
+
+fxDECLARE_ObjArray(FaxRecvInfoArray, FaxRecvInfo)
 
 /*
  * This class defines the ``server process'' that manages the fax
@@ -47,19 +49,20 @@ private:
     Class2Params clientCapabilities;	// received client capabilities
     Class2Params clientParams;		// current session parameters
 // for fax reception ...
-    fxBool	okToRecv;		// ok to accept stuff for this session
     fxStr	recvTSI;		// sender's TSI
     fxStr	hostname;		// host on which fax is received
     u_int	recvPages;		// count of received pages
-    time_t	recvStart;		// starting time for document receive
 // send+receive stats
+    time_t	connTime;		// time connected to peer
+    time_t	fileStart;		// starting time for file transmit
+    time_t	pageStart;		// starting time for page transmit
     u_int	npages;			// # pages sent/received
 
     friend class FaxModem;
 
 // FAX transmission protocol support
     void	sendFax(FaxRequest& fax, FaxMachineInfo&, const fxStr& number);
-    fxBool	sendClientCapabilitiesOK(FaxMachineInfo&, u_int nsf, fxStr&);
+    fxBool	sendClientCapabilitiesOK(FaxRequest&, FaxMachineInfo&, fxStr&);
     fxBool	sendFaxPhaseB(FaxRequest&, faxRequest&, FaxMachineInfo&);
     void	sendPoll(FaxRequest& fax, fxBool remoteHasDoc);
     FaxSendStatus sendSetupParams(TIFF*,
@@ -69,18 +72,13 @@ private:
     void	sendFailed(FaxRequest& fax,
 		    FaxSendStatus, const char* notice, u_int tts = 0);
 // FAX reception support
-    TIFF*	setupForRecv(const char* op, FaxRecvInfo&, FaxRecvInfoArray&);
-    fxBool	recvDocuments(const char* op, TIFF*,
-		    FaxRecvInfo&, FaxRecvInfoArray&, fxStr& emsg);
-    fxBool	recvFaxPhaseD(TIFF* tif, int& ppm, fxStr& emsg);
-    void	recvComplete(FaxRecvInfo&, time_t, const fxStr& emsg);
-    fxBool	pollFaxPhaseB(const char* cig, FaxRecvInfoArray&, fxStr& emsg);
-
-// FAX receiving protocol support (used by modem classes)
-    void	recvDCS(const Class2Params&);
-    void	recvNSF(u_int);
-    fxBool	recvCheckTSI(const fxStr& tsi);
-    void	recvSetupPage(TIFF* tif, long group3opts, int fillOrder);
+    int		getRecvFile(fxStr& qfile, fxStr& emsg);
+    TIFF*	setupForRecv(FaxRecvInfo&, FaxRecvInfoArray&, fxStr& emsg);
+    fxBool	recvDocuments(TIFF*, FaxRecvInfo&, FaxRecvInfoArray&,
+		    fxStr& emsg);
+    fxBool	recvFaxPhaseD(TIFF* tif, FaxRecvInfo&, int& ppm, fxStr& emsg);
+    fxBool	pollFaxPhaseB(const fxStr& sep, const fxStr& pwd,
+		    FaxRecvInfoArray&, fxStr& emsg);
 protected:
     FaxServer(const fxStr& deviceName, const fxStr& devID);
 
@@ -95,11 +93,22 @@ protected:
     void	sendFax(FaxRequest&, FaxMachineInfo&, FaxAcctInfo&);
     fxBool	recvFax();
 
-// notification interfaces implemented in derived class
-    virtual void notifyDocumentSent(FaxRequest&, u_int fileIndex) = 0;
-    virtual void notifyPollRecvd(FaxRequest&, const FaxRecvInfo&) = 0;
-    virtual void notifyPollDone(FaxRequest&, u_int pollIndex) = 0;
-    virtual void notifyRecvDone(const FaxRecvInfo& req) = 0;
+    time_t	getFileTransferTime() const;
+    time_t	getPageTransferTime() const;
+    time_t	getConnectTime() const;
+    const Class2Params& getClientParams() const;
+
+// notification interfaces overridden in derived class
+    virtual void notifyCallPlaced(const FaxRequest&);
+    virtual void notifyConnected(const FaxRequest&);
+    virtual void notifyPageSent(FaxRequest&, const char*);
+    virtual void notifyDocumentSent(FaxRequest&, u_int index);
+    virtual void notifyPollRecvd(FaxRequest&, const FaxRecvInfo&);
+    virtual void notifyPollDone(FaxRequest&, u_int index);
+    virtual void notifyRecvBegun(const FaxRecvInfo&);
+    virtual void notifyPageRecvd(TIFF* tif, const FaxRecvInfo&, int ppm);
+    virtual void notifyDocumentRecvd(const FaxRecvInfo& req);
+    virtual void notifyRecvDone(const FaxRecvInfo& req);
 public:
     virtual ~FaxServer();
 

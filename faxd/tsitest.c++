@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/tsitest.c++,v 1.7 1995/04/08 21:31:33 sam Rel $ */
+/*	$Id: tsitest.c++,v 1.10 1996/06/24 03:00:56 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -166,7 +166,8 @@ main(int argc, char* argv[])
 	    printf("input = \"%s\"\n", line);
 	updateTSIPatterns();
 	if (tsiPats != NULL) {
-	    for (u_int i = 0; i < tsiPats->length(); i++) {
+	    u_int i;
+	    for (i = 0; i < tsiPats->length(); i++) {
 		RegEx* pat = (*tsiPats)[i];
 		if (verbose)
 		    printf("[check %s]\n", pat->pattern());

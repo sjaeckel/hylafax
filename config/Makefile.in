@@ -1,12 +1,12 @@
 #!smake
-#	$Header: /usr/people/sam/fax/./config/RCS/Makefile.in,v 1.26 1995/04/08 21:14:21 sam Rel $
+#	$Id: Makefile.in,v 1.31 1996/06/24 02:58:30 sam Rel $
 #
 # @WARNING@
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -42,8 +42,7 @@ DEPTH=..
 SRCDIR	= ${DEPTH}/${TOPSRCDIR}/config
 VPATH	= ../@SRCDIR@/config
 
-CONFIGFILES=\
-	class1 \
+CONFIGFILES=class1 \
 	class2 \
 	class2.0 \
 	skel \
@@ -70,6 +69,7 @@ CONFIGFILES=\
 	rc288dpi-1 \
 	rc32acl \
 	rc32acl-1 \
+	rockwell \
 	telebit-t3000 \
 	telebit-qblazer \
 	telebit-wb \
@@ -80,7 +80,8 @@ CONFIGFILES=\
 	usr-xon \
 	zyxel-1496e \
 	zyxel-1496e-1 \
-	zyxel-1496e-2.0
+	zyxel-1496e-2.0 \
+	zyxel-2864
 TARGETS=
 
 default all::

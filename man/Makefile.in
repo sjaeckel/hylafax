@@ -1,12 +1,12 @@
 #!smake
-#	$Header: /usr/people/sam/fax/./man/RCS/Makefile.in,v 1.55 1995/04/08 21:35:27 sam Rel $
+#	$Id: Makefile.in,v 1.65 1996/06/24 03:04:03 sam Rel $
 #
 # @WARNING@
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1988-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1988-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -48,9 +48,7 @@ SRCDIR	= ${DEPTH}/${TOPSRCDIR}/man
 # above.  The transformation is controlled by definitions in the
 # system-specific defs files.
 #
-MANCAPP=\
-	cman.apps/hylafax.1	\
-	cman.apps/fax2ps.1	\
+MANCAPP=cman.apps/hylafax.1	\
 	cman.apps/faxalter.1	\
 	cman.apps/faxcover.1	\
 	cman.apps/faxmail.1	\
@@ -60,21 +58,29 @@ MANCAPP=\
 	cman.apps/sendpage.1	\
 	cman.apps/sgi2fax.1	\
 	cman.apps/textfmt.1
-MANCFILE=\
-	cman.files/pagesizes.4f	\
+MANCFILE=cman.files/pagesizes.4f\
 	cman.files/typerules.4f
-MANSAPP=\
+MANSAPP=sman.apps/cqtest.1m	\
+	sman.apps/choptest.1m	\
 	sman.apps/dialtest.1m	\
 	sman.apps/faxabort.1m	\
 	sman.apps/faxaddmodem.1m\
 	sman.apps/faxanswer.1m	\
+	sman.apps/faxconfig.1m	\
+	sman.apps/faxmodem.1m	\
+	sman.apps/faxstate.1m	\
 	sman.apps/faxcron.1m	\
-	sman.apps/faxd.recv.1m	\
 	sman.apps/faxgetty.1m	\
+	sman.apps/faxinfo.1m	\
 	sman.apps/faxq.1m	\
+	sman.apps/faxqclean.1m	\
 	sman.apps/faxquit.1m	\
 	sman.apps/faxrcvd.1m	\
 	sman.apps/faxsend.1m	\
+	sman.apps/faxsetup.1m	\
+	sman.apps/faxstate.1m	\
+	sman.apps/faxwatch.1m	\
+	sman.apps/hfaxd.1m	\
 	sman.apps/mkcover.1m	\
 	sman.apps/notify.1m	\
 	sman.apps/pagesend.1m	\
@@ -82,11 +88,12 @@ MANSAPP=\
 	sman.apps/ps2fax.1m	\
 	sman.apps/recvstats.1m	\
 	sman.apps/tagtest.1m	\
-	sman.apps/transcript.1m	\
+	sman.apps/tiff2fax.1m	\
+	sman.apps/tiffcheck.1m	\
 	sman.apps/tsitest.1m	\
+	sman.apps/wedged.1m	\
 	sman.apps/xferstats.1m
-MANSFILE=\
-	sman.files/hylafax.4f	\
+MANSFILE=sman.files/hylafax.4f	\
 	sman.files/cid.4f	\
 	sman.files/config.4f	\
 	sman.files/destctrls.4f	\
@@ -94,8 +101,10 @@ MANSFILE=\
 	sman.files/hosts.4f	\
 	sman.files/info.4f	\
 	sman.files/log.4f	\
+	sman.files/pagermap.4f	\
 	sman.files/recvq.4f	\
 	sman.files/sendq.4f	\
+	sman.files/shutdown.4f	\
 	sman.files/status.4f	\
 	sman.files/tsi.4f	\
 	sman.files/xferlog.4f
@@ -126,7 +135,6 @@ sman.apps: ${_FORCE}; test -d $@ || ${MKDIR} $@
 sman.files: ${_FORCE}; test -d $@ || ${MKDIR} $@
 
 cman.apps/hylafax.1::	${SRCDIR}/hylafax.1;	${MANCVT}
-cman.apps/fax2ps.1::	${SRCDIR}/fax2ps.1;	${MANCVT}
 cman.apps/faxalter.1::	${SRCDIR}/faxalter.1;	${MANCVT}
 cman.apps/faxcover.1::	${SRCDIR}/faxcover.1;	${MANCVT}
 cman.apps/faxmail.1::	${SRCDIR}/faxmail.1;	${MANCVT}
@@ -138,17 +146,26 @@ cman.apps/sgi2fax.1::	${SRCDIR}/sgi2fax.1;	${MANCVT}
 cman.apps/textfmt.1::	${SRCDIR}/textfmt.1;	${MANCVT}
 cman.files/pagesizes.4f:: ${SRCDIR}/pagesizes.4f; ${MANCVT}
 cman.files/typerules.4f:: ${SRCDIR}/typerules.4f; ${MANCVT}
+sman.apps/cqtest.1m::	${SRCDIR}/cqtest.1m;	${MANCVT}
+sman.apps/choptest.1m::	${SRCDIR}/choptest.1m;	${MANCVT}
 sman.apps/dialtest.1m::	${SRCDIR}/dialtest.1m;	${MANCVT}
 sman.apps/faxabort.1m::	${SRCDIR}/faxabort.1m;	${MANCVT}
 sman.apps/faxaddmodem.1m:: ${SRCDIR}/faxaddmodem.1m; ${MANCVT}
 sman.apps/faxanswer.1m::${SRCDIR}/faxanswer.1m;	${MANCVT}
+sman.apps/faxconfig.1m::${SRCDIR}/faxconfig.1m;	${MANCVT}
 sman.apps/faxcron.1m::	${SRCDIR}/faxcron.1m;	${MANCVT}
-sman.apps/faxd.recv.1m:: ${SRCDIR}/faxd.recv.1m; ${MANCVT}
+sman.apps/hfaxd.1m:: ${SRCDIR}/hfaxd.1m;	${MANCVT}
 sman.apps/faxgetty.1m::	${SRCDIR}/faxgetty.1m;	${MANCVT}
+sman.apps/faxinfo.1m::	${SRCDIR}/faxinfo.1m;	${MANCVT}
+sman.apps/faxmodem.1m::	${SRCDIR}/faxmodem.1m;	${MANCVT}
 sman.apps/faxq.1m::	${SRCDIR}/faxq.1m;	${MANCVT}
+sman.apps/faxqclean.1m::${SRCDIR}/faxqclean.1m;	${MANCVT}
 sman.apps/faxquit.1m::	${SRCDIR}/faxquit.1m;	${MANCVT}
 sman.apps/faxrcvd.1m::	${SRCDIR}/faxrcvd.1m;	${MANCVT}
 sman.apps/faxsend.1m::	${SRCDIR}/faxsend.1m;	${MANCVT}
+sman.apps/faxsetup.1m::	${SRCDIR}/faxsetup.1m;	${MANCVT}
+sman.apps/faxstate.1m::${SRCDIR}/faxstate.1m;	${MANCVT}
+sman.apps/faxwatch.1m::${SRCDIR}/faxwatch.1m;	${MANCVT}
 sman.apps/mkcover.1m::	${SRCDIR}/mkcover.1m;	${MANCVT}
 sman.apps/notify.1m::	${SRCDIR}/notify.1m;	${MANCVT}
 sman.apps/pagesend.1m::	${SRCDIR}/pagesend.1m;	${MANCVT}
@@ -156,8 +173,10 @@ sman.apps/pollrcvd.1m::	${SRCDIR}/pollrcvd.1m;	${MANCVT}
 sman.apps/ps2fax.1m::	${SRCDIR}/ps2fax.1m;	${MANCVT}
 sman.apps/recvstats.1m:: ${SRCDIR}/recvstats.1m; ${MANCVT}
 sman.apps/tagtest.1m::	${SRCDIR}/tagtest.1m;	${MANCVT}
-sman.apps/transcript.1m:: ${SRCDIR}/transcript.1m; ${MANCVT}
+sman.apps/tiff2fax.1m::	${SRCDIR}/tiff2fax.1m;	${MANCVT}
+sman.apps/tiffcheck.1m::${SRCDIR}/tiffcheck.1m;	${MANCVT}
 sman.apps/tsitest.1m::	${SRCDIR}/tsitest.1m;	${MANCVT}
+sman.apps/wedged.1m::	${SRCDIR}/wedged.1m;	${MANCVT}
 sman.apps/xferstats.1m:: ${SRCDIR}/xferstats.1m; ${MANCVT}
 sman.files/hylafax.4f::	${SRCDIR}/hylafax.4f;	${MANCVT}
 sman.files/cid.4f::	${SRCDIR}/cid.4f;	${MANCVT}
@@ -167,8 +186,10 @@ sman.files/dialrules.4f:: ${SRCDIR}/dialrules.4f; ${MANCVT}
 sman.files/hosts.4f::	${SRCDIR}/hosts.4f;	${MANCVT}
 sman.files/info.4f::	${SRCDIR}/info.4f;	${MANCVT}
 sman.files/log.4f::	${SRCDIR}/log.4f;	${MANCVT}
+sman.files/pagermap.4f::${SRCDIR}/pagermap.4f;	${MANCVT}
 sman.files/recvq.4f::	${SRCDIR}/recvq.4f;	${MANCVT}
 sman.files/sendq.4f::	${SRCDIR}/sendq.4f;	${MANCVT}
+sman.files/shutdown.4f::${SRCDIR}/shutdown.4f;	${MANCVT}
 sman.files/status.4f::	${SRCDIR}/status.4f;	${MANCVT}
 sman.files/tsi.4f::	${SRCDIR}/tsi.4f;	${MANCVT}
 sman.files/xferlog.4f::	${SRCDIR}/xferlog.4f;	${MANCVT}

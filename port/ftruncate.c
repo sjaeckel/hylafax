@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./port/RCS/ftruncate.c,v 1.3 1995/04/08 21:42:40 sam Rel $
+/*	$Id: ftruncate.c,v 1.5 1996/06/24 03:04:32 sam Rel $
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/faxSendApp.h,v 1.9 1995/04/08 21:31:24 sam Rel $ */
+/*	$Id: faxSendApp.h,v 1.17 1996/06/24 03:00:52 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -40,16 +40,24 @@ public:
 	fxStr faxSendApp::* p;
 	const char*	 def;		// NULL is shorthand for ""
     };
+    struct numbertag {
+	const char*	 name;
+	u_int faxSendApp::* p;
+	u_int		 def;
+    };
 private:
 // runtime state
     fxBool	ready;			// modem ready for use
-    time_t	fileStart;		// starting time for file/poll
     UUCPLock*	modemLock;		// uucp lockfile handle
-    fxStr	pollRcvdCmd;
+    fxStr	pollRcvdCmd;		// command for docs received by polling
+    u_int	desiredBR;		// desired signalling rate
+    u_int	desiredST;		// desired min-scanline-time
+    u_int	desiredEC;		// enable use of ECM if available
 
     static faxSendApp* _instance;
 
     static const stringtag strings[];
+    static const numbertag numbers[];
 
 // configuration support
     void	setupConfig();
@@ -58,15 +66,15 @@ private:
 // modem handling
     fxBool	lockModem();
     void	unlockModem();
-// miscellaneous stuff
-    void	recordRecv(const FaxRecvInfo& ri);
-    void	account(const char* cmd, const struct FaxAcctInfo&);
 // notification interfaces used by FaxServer
     void	notifyModemReady();
+    void	notifyModemWedged();
+    void	notifyCallPlaced(const FaxRequest&);
+    void	notifyConnected(const FaxRequest&);
+    void	notifyPageSent(FaxRequest& req, const char* filename);
     void	notifyDocumentSent(FaxRequest&, u_int fileIndex);
     void	notifyPollRecvd(FaxRequest&, const FaxRecvInfo&);
     void	notifyPollDone(FaxRequest&, u_int pollIndex);
-    void	notifyRecvDone(const FaxRecvInfo& req);
 public:
     faxSendApp(const fxStr& device, const fxStr& devID);
     ~faxSendApp();

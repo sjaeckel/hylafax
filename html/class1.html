@@ -1,5 +1,6 @@
 <HTML>
 <HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
 <TITLE>
 Class 1 Modem Support
 </TITLE>
@@ -16,7 +17,7 @@ Class 1 Modem Support
 HylaFAX includes a driver for modems that support the
 <A HREF="Modems/Supra/class1.html">EIA-578 "Class 1" programming interface</A>.
 These modems export a very low level interface
-that requires that the CCITT Recommendation T.30 facsimile communication
+that requires that the CCITT/ITU Recommendation T.30 facsimile communication
 protocol be implemented almost entirely in the host.  Robust support for
 this protocol places two requirements on the host system:
 
@@ -58,7 +59,8 @@ processes.  On SVR4-derived systems the ``high priority'' is a real-time
 scheduling priority.
 On other systems the server currently always runs at the
 same (normal) scheduling priority.  For more details consult the
-<TT>setProcessPriority</TT> routine in <B>faxd/ModemServer.c++</B>.
+<TT>setProcessPriority</TT> routine in
+<A HREF=../faxd/ModemServer.c++><B>faxd/ModemServer.c++</B></A>.
 
 <P>
 In summary,
@@ -72,6 +74,8 @@ when the server is under load.
 Exactly how much load will cause trouble
 is dependent on the system configuration and processing power.
 
+<!--FOOTER-->
+
 <P>
 <A HREF="toc.html"><IMG SRC="icons/back.gif"> HylaFAX table
 of contents</A>.<BR>
@@ -80,7 +84,7 @@ of contents</A>.<BR>
 
 <ADDRESS>
 <A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
-Last updated $Date: 1995/02/20 23:22:22 $.
+Last updated $Date: 1996/08/16 21:03:37 $.
 </ADDRESS>
 
 </BODY>

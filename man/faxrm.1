@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/faxrm.1,v 1.21 1995/04/08 21:35:49 sam Rel $
+.\"	$Id: faxrm.1,v 1.27 1996/06/24 03:04:12 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990-1995 Sam Leffler
-.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1996 Sam Leffler
+.\" Copyright (c) 1991-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,13 +27,15 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH FAXRM 1 "December 22, 1994"
+.TH FAXRM 1 "May 12, 1996"
 .SH NAME
-faxrm \- remove a \*(Fx job queued for transmission
+faxrm \- remove a \*(Fx job or document from a server
 .SH SYNOPSIS
 .B faxrm
 [
-.B \-k
+.B \-d
+] [
+.B \-v
 ] [
 .B \-h
 .I hostname
@@ -41,115 +43,127 @@ faxrm \- remove a \*(Fx job queued for transmission
 .IR id ...
 .SH DESCRIPTION
 .I faxrm
-removes one or more \*(Fx jobs that
-are queued for transmission.
+removes one or more jobs or documents from a \*(Fx server.
 If a job that is to be removed is being processed by a server,
 it is first aborted.
 .PP
 An 
 .I id
-is a number that identifies a
+is either a number that identifies a
 .I job
-(default) or
-.I "job group"
-submitted to \*(Fx; these numbers are printed by
+(default) or, if the
+.B \-d
+option is specified, a document pathname.
+Job identifiers are printed by
 .IR sendfax (1)
-when jobs are queued for transmission.
-Job and job group identifiers can also be obtained from
+when jobs are queued for transmission; they can also be displayed with
 .IR faxstat (1).
+The names of documents associated with outbound jobs
+can be seen by supplying the
+.B \-f
+option to
+.IR faxstat .
+Documents in the receive queue can be viewed with the 
+.B \-r
+option to
+.IR faxstat .
 .PP
-Users can only remove jobs that they
-have queued;
-except the
-.I fax
-user and the super-user who can remove any job.
+Unprivileged users can only remove jobs or documents that they own.
+Clients with administrative privileges can remove any job or document.
 .SH OPTIONS
 .TP 10
-.B \-g
+.B \-d
 Interpret each
 .I id
-as a
-.IR "job group identifier" .
-A job group identifier is the number assigned by \*(Fx
-to each group of jobs submitted together.
-This number is printed by
-.I sendfax
-when jobs are submitted.
+as a document pathname.
+If a pathname does not begin with ``/'' then
+.I faxrm
+automatically prepends ``/docq/''.
 .TP 10
 .BI \-h " host"
-Force the server to be contacted on a specific
+Contact the server at the specified 
 .IR host .
 The
 .I host
 may be either a symbolic name or a network address.
+If no server is specified then
 If no
 .B \-h
 option is supplied,
 .I faxrm
 uses the
 .SM FAXSERVER
-environment variable to identify the \*(Fx server to
-which the jobs should be directed.
-If no server is specified then
+environment variable to identify the \*(Fx server to contact.
+If this variable is not set, then
 .I faxrm
-attempts to contact a server on the local host.
+checks for a setting in the configuration files (first in the
+per-user file and then in the system-wide file).
+If all of the above fails, then
+.I faxrm
+attempts to contact a server on the machine where it is run.
 .TP
-.B \-k
-Force any untransmitted portions of the jobs
-to be returned to the sender by electronic mail.
-By default,
-jobs that are removed have their contents discarded.
+.B \-v
+Trace the protocol messages to and from the server.
+.SH "CONFIGURATION PARAMETERS"
+.I faxrm
+reads configuration information from the file
+.B ${LIBDATA}/hyla.conf
+and then from the file
+.BR ~/.hylarc .
+Configuration files follow the conventions described in
+.IR hylafax (1).
+The following configuration parameters are recognized:
+.sp .5
+.nf
+.ta \w'AutoConverPage    'u +\w'boolean    'u +\w'\s-1\fIsee below\fP\s+1    'u
+\fBTag	Type	Default	Description\fP
+Host	string	\s-1localhost\s+1	host to contact for service
+Port	integer	\s-14559\s+1	port to use in contacting server
+Protocol	string	\s-1tcp\s+1	protocol to use in contacting server
+Verbose	boolean	\s-1No\s+1	whether or not to enable protocol tracing
+.fi
+.PP
+The configuration parameters are explained below:
+.TP 10
+.B Host
+The host to contact for service.
+(Equivalent to the
+.B \-h
+option.)
+.TP 10
+.B Port
+The network port to contact for service.
+(Eqvuialent to the
+.B \-h
+option.)
+.TP 10
+.B Protocol
+The name of the communication protocol to use when contacting a server.
+(Equivalent to the
+.B FAXSERVICE
+environment variable.)
+.TP 10
+.B Verbose
+Control protocol tracing.
+(Equivalent to the
+.B \-v
+option.)
 .SH DIAGNOSTICS
 .B "Job %s removed." 
-A confirmation that the operation was completed successfully.
+A confirmation that the job was successfully removed from the 
+.B sendq
+directory.
 .PP
-.B "Job %s not removed: it was not queued."
-The specified job was not found in the server's queue.
+.B "Job %s removed (from doneq)." 
+A confirmation that the job was successfully removed from the 
+.B done
+directory; the directory where jobs are placed once they are finished.
 .PP
-.B "Job %s not removed: open failed; check SYSLOG."
-.I or
-.B "Job %s not removed: unlink failed; check SYSLOG."
-The server was unable to do some necessary operation on the 
-remote host and so could not remove the job.
-More information about what went wrong can be found in the
-.IR syslogd (1M)
-log file on the server's machine.
-.PP
-.B "Document for job %s not removed: unlink failed; check SYSLOG."
-The job description file was removed, but one or
-more of the associated document files was not.
-More information can be found in the log file on the server's machine.
-.PP
-.B "Job %s not removed: could not establish server process owner."
-A request was made by the ``fax'' user to remove
-a job that it did submit.
-This request was not accepted because
-the server was unable to deduce the identity under which
-it was executing.  That is, there was no password file
-entry for the server's effective user id.
-This (usually) indicates that the entry in the file
-.I /usr/etc/inetd.conf
-on the remove machine is setup wrong; see
-.IR faxd.recv (1M)
-for more information.
-.PP
-.B "Job %s not removed: you neither own it nor are the fax user."
-A request was made to remove a job that the user does not own
-(and the user is not the ``fax'' user or the super-user).
-.PP
-.B "Service refused; you do not have permission to use the fax server from %s."
-The client is not permitted to remove
-jobs on this server from the indicated host.
-Only those hosts and users listed in the file
-.B etc/hosts
-on the server machine are permitted to remove jobs.
-.SH BUGS
-.I faxrm
-must be run on the same host on which the job was
-submitted.
+.B "%s removed." 
+A confirmation that the document was successfully deleted from the server.
 .SH "SEE ALSO"
 .IR hylafax (1),
 .IR sendfax (1),
 .IR faxalter (1),
 .IR faxstat (1),
-.IR faxd.recv (1M)
+.IR hfaxd (1M)

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxRecv.c++,v 1.87 1995/04/08 21:30:17 sam Rel $ */
+/*	$Id: FaxRecv.c++,v 1.100 1996/08/21 21:02:47 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -23,16 +23,17 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include <osfcn.h>
+#include "Sys.h"
+
 #include <sys/file.h>
 #include <ctype.h>
-
-#include "Sys.h"
+#include <errno.h>
 
 #include "Dispatcher.h"
 #include "tiffio.h"
 #include "FaxServer.h"
 #include "FaxRecvInfo.h"
+#include "faxApp.h"			// XXX
 #include "t.30.h"
 #include "config.h"
 
@@ -46,8 +47,6 @@ FaxServer::recvFax()
     traceProtocol("RECV FAX: begin");
 
     fxStr emsg;
-    okToRecv = (qualifyTSI == "");	// anything ok if not qualifying
-    recvTSI = "";			// sender's identity initially unknown
     FaxRecvInfoArray docs;
     FaxRecvInfo info;
     fxBool faxRecognized = FALSE;
@@ -59,20 +58,27 @@ FaxServer::recvFax()
      * after recvBegin can cause part of the first page to
      * be lost.)
      */
-    TIFF* tif = setupForRecv("RECV FAX", info, docs);
+    TIFF* tif = setupForRecv(info, docs, emsg);
     if (tif) {
-	recvPages = 0;			// count of received pages
-	recvStart = Sys::now();		// count initial negotiation
+	recvPages = 0;			// total count of received pages
+	fileStart = Sys::now();		// count initial negotiation on failure
 	if (faxRecognized = modem->recvBegin(emsg)) {
-	    if (!recvDocuments("RECV FAX", tif, info, docs, emsg))
+	    // NB: partially fill in info for notification call
+	    if (!modem->getRecvTSI(info.sender))
+		info.sender = "<UNSPECIFIED>";
+	    notifyRecvBegun(info);
+	    if (!recvDocuments(tif, info, docs, emsg)) {
+		traceProtocol("RECV FAX: %s", (const char*) emsg);
 		modem->recvAbort();
+	    }
 	    if (!modem->recvEnd(emsg))
-		traceProtocol("RECV FAX: %s (end)", (char*) emsg);
+		traceProtocol("RECV FAX: %s", (const char*) emsg);
 	} else {
-	    traceProtocol("RECV FAX: %s (begin)", (char*) emsg);
+	    traceProtocol("RECV FAX: %s", (const char*) emsg);
 	    TIFFClose(tif);
 	}
-    }
+    } else
+	traceServer("RECV FAX: %s", (const char*) emsg);
     /*
      * Now that the session is completed, do local processing
      * that might otherwise slow down the protocol (and potentially
@@ -80,39 +86,93 @@ FaxServer::recvFax()
      */
     for (u_int i = 0, n = docs.length(); i < n; i++) {
 	const FaxRecvInfo& ri = docs[i];
-	if (ri.npages > 0) {
-	    Sys::chmod(ri.qfile, recvFileMode);
-	    notifyRecvDone(ri);
-	} else {
-	    traceServer("RECV: No pages received");
+	if (ri.npages == 0)
 	    Sys::unlink(ri.qfile);
-	}
+	else
+	    Sys::chmod(ri.qfile, recvFileMode);
+	if (faxRecognized)
+	    notifyRecvDone(ri);
     }
     traceProtocol("RECV FAX: end");
     return (faxRecognized);
+}
+
+#define	MAXSEQNUM	99999		// should be good enough, can be larger
+#define	NEXTSEQNUM(x)	((x)+1 >= MAXSEQNUM ? 1 : (x)+1)
+#define	FAX_RECVSEQF	FAX_RECVDIR "/" FAX_SEQF
+
+int
+FaxServer::getRecvFile(fxStr& qfile, fxStr& emsg)
+{
+    int fseqf = Sys::open(FAX_RECVSEQF, O_CREAT|O_RDWR, 0644);
+    if (fseqf < 0) {
+	emsg = fxStr::format("cannot open %s: %s",
+	    FAX_RECVSEQF, strerror(errno));
+	return (-1);
+    }
+    flock(fseqf, LOCK_EX);
+    u_int seqnum = 1;			// avoid 0 'cuz atoi returns it on error
+    char line[16];
+    int n = read(fseqf, line, sizeof (line));
+    line[n < 0 ? 0 : n] = '\0';
+    if (n > 0)
+	seqnum = atoi(line);
+    if (seqnum < 1 || seqnum >= MAXSEQNUM) {
+	traceServer("RECV: Bad sequence number \"%s\", reset to 1", line);
+	seqnum = 1;
+    }
+    /*
+     * Probe to find a valid filename.
+     */
+    int ftmp;
+    int ntry = 1000;			// that should be a lot!
+    do {
+	seqnum = NEXTSEQNUM(seqnum);
+	qfile = fxStr::format(FAX_RECVDIR "/fax%05u.tif", seqnum);
+	ftmp = Sys::open(qfile, O_RDWR|O_CREAT|O_EXCL, recvFileMode);
+    } while (ftmp < 0 && errno == EEXIST && --ntry >= 0);
+    if (ftmp >= 0) {
+	/*
+	 * Got a file to store received data in,
+	 * lock it so clients can see the receive
+	 * is active; then update the sequence
+	 * number file to reflect the allocation.
+	 */
+	(void) flock(ftmp, LOCK_EX|LOCK_NB);
+	sprintf(line, "%u", seqnum);
+	(void) lseek(fseqf, 0, SEEK_SET);
+	if (Sys::write(fseqf, line, strlen(line)) != strlen(line)) {
+	    emsg = fxStr::format("error updating %s: %s",
+		FAX_RECVSEQF, strerror(errno));
+	    Sys::unlink(qfile);
+	    Sys::close(ftmp), ftmp = -1;
+	}
+    } else
+	emsg = "failed to find unused filename";
+    Sys::close(fseqf);			// NB: implicit unlock
+    return (ftmp);
 }
 
 /*
  * Create and lock a temp file for receiving data.
  */
 TIFF*
-FaxServer::setupForRecv(const char* op, FaxRecvInfo& ri, FaxRecvInfoArray& docs)
+FaxServer::setupForRecv(FaxRecvInfo& ri, FaxRecvInfoArray& docs, fxStr& emsg)
 {
-    char* cp = Sys::tempnam(FAX_RECVDIR, "fax");
-    if (cp) {
-	ri.qfile = cp;
-	::free(cp);
+    int ftmp = getRecvFile(ri.qfile, emsg);
+    if (ftmp >= 0) {
+	ri.commid = getCommID();	// should be set at this point
 	ri.npages = 0;			// mark it to be deleted...
 	docs.append(ri);		// ...add it in to the set
-	TIFF* tif = TIFFOpen(ri.qfile, "w");
-	if (tif != NULL) {
-	    (void) flock(TIFFFileno(tif), LOCK_EX|LOCK_NB);
+	TIFF* tif = TIFFFdOpen(ftmp, ri.qfile, "w");
+	if (tif != NULL)
 	    return (tif);
-	}
-	traceServer("%s: Unable to create file %s for received data", op,
-	    (char*) ri.qfile);
+	Sys::close(ftmp);
+	emsg = fxStr::format("Unable to open TIFF file %s for writing",
+	    (const char*) ri.qfile);
+	ri.reason = emsg;		// for notifyRecvDone
     } else
-	traceServer("%s: Unable to create temp file for received data", op);
+	emsg.insert("Unable to create temp file for received data: ");
     return (NULL);
 }
 
@@ -120,33 +180,54 @@ FaxServer::setupForRecv(const char* op, FaxRecvInfo& ri, FaxRecvInfoArray& docs)
  * Receive one or more documents.
  */
 fxBool
-FaxServer::recvDocuments(const char* op, TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, fxStr& emsg)
+FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, fxStr& emsg)
 {
     fxBool recvOK;
     int ppm;
+    pageStart = Sys::now();
     for (;;) {
-	 if (!okToRecv) {
-	    traceServer("%s: Permission denied (unacceptable client TSI)", op);
-	    TIFFClose(tif);
-	    return (FALSE);
+	modem->getRecvSUB(info.subaddr);		// optional subaddress
+	if (!modem->getRecvTSI(info.sender))		// optional TSI
+	    info.sender = "<UNSPECIFIED>";
+	if (qualifyTSI != "") {
+	    /*
+	     * Check a received TSI against the list of acceptable
+	     * TSI patterns defined for the server.  This form of
+	     * access control depends on the sender passing a valid
+	     * TSI.  Note that to accept/reject an unspecified TSI
+	     * one should match "<UNSPECIFIED>".
+	     *
+	     * NB: Caller-ID access control is done elsewhere; prior
+	     *     to answering a call.
+	     */
+	    fxBool okToRecv = isTSIOk(info.sender);
+	    traceServer("%s TSI \"%s\"", okToRecv ? "ACCEPT" : "REJECT",
+		(const char*) info.sender);
+	    if (!okToRecv) {
+		emsg = "Permission denied (unacceptable client TSI)";
+		info.time = (u_int) getFileTransferTime();
+		info.reason = emsg;
+		notifyDocumentRecvd(info);
+		TIFFClose(tif);
+		return (FALSE);
+	    }
 	}
-	npages = 0;
-	time_t recvStart = Sys::now();
-	recvOK = recvFaxPhaseD(tif, ppm, emsg);
-	if (!recvOK)
-	    traceProtocol("%s: %s (Phase D)", op, (char*)emsg);
+	setServerStatus("Receiving from \"%s\"", (const char*) info.sender);
+	recvOK = recvFaxPhaseD(tif, info, ppm, emsg);
 	TIFFClose(tif);
-	recvComplete(info, Sys::now() - recvStart, emsg);
+	info.time = (u_int) getFileTransferTime();
+	info.reason = emsg;
 	docs[docs.length()-1] = info;
+	notifyDocumentRecvd(info);
 	if (!recvOK || ppm == PPM_EOP)
 	    return (recvOK);
 	/*
 	 * Setup state for another file.
 	 */
-	tif = setupForRecv(op, info, docs);
+	tif = setupForRecv(info, docs, emsg);
 	if (tif == NULL)
 	    return (FALSE);
-	recvStart = time(0);
+	fileStart = pageStart = Sys::now();
     }
     /*NOTREACHED*/
 }
@@ -155,7 +236,7 @@ FaxServer::recvDocuments(const char* op, TIFF* tif, FaxRecvInfo& info, FaxRecvIn
  * Receive Phase B protocol processing.
  */
 fxBool
-FaxServer::recvFaxPhaseD(TIFF* tif, int& ppm, fxStr& emsg)
+FaxServer::recvFaxPhaseD(TIFF* tif, FaxRecvInfo& info, int& ppm, fxStr& emsg)
 {
     ppm = PPM_EOP;
     do {
@@ -165,125 +246,68 @@ FaxServer::recvFaxPhaseD(TIFF* tif, int& ppm, fxStr& emsg)
 	}
 	if (!modem->recvPage(tif, ppm, emsg))
 	    return (FALSE);
+	info.npages++;
+	info.time = (u_int) getPageTransferTime();
+	info.params = modem->getRecvParams();
+	notifyPageRecvd(tif, info, ppm);
 	if (PPM_PRI_MPS <= ppm && ppm <= PPM_PRI_EOP) {
 	    emsg = "Procedure interrupt received, job terminated";
 	    return (FALSE);
 	}
+	pageStart = Sys::now();			// reset for next page
     } while (ppm == PPM_MPS || ppm == PPM_PRI_MPS);
     return (TRUE);
 }
 
-/*
- * Fill in a receive information block
- * from the server's current receive state.
- */
 void
-FaxServer::recvComplete(FaxRecvInfo& info, time_t recvTime, const fxStr& emsg)
-{
-    info.time = recvTime;
-    info.npages = npages;
-    info.pagewidth = clientParams.pageWidth();
-    info.pagelength = clientParams.pageLength();
-    info.sigrate = ::atoi(clientParams.bitRateName());
-    info.protocol = clientParams.dataFormatName();
-    info.resolution = (clientParams.vr == VR_FINE ? 196 : 98);
-    info.sender = recvTSI;
-    info.reason = emsg;
-}
-
-/*
- * Process a received DCS.
- */
-void
-FaxServer::recvDCS(const Class2Params& params)
-{
-    clientParams = params;
-
-    traceProtocol("REMOTE wants %s", params.bitRateName());
-    traceProtocol("REMOTE wants %s", params.pageWidthName());
-    traceProtocol("REMOTE wants %s", params.pageLengthName());
-    traceProtocol("REMOTE wants %s", params.verticalResName());
-    traceProtocol("REMOTE wants %s", params.dataFormatName());
-}
-
-/*
- * Process a received Non-Standard-Facilities message.
- */
-void
-FaxServer::recvNSF(u_int)
+FaxServer::notifyRecvBegun(const FaxRecvInfo&)
 {
 }
 
 /*
- * Check a received TSI against any list of acceptable
- * TSI patterns defined for the server.  This form of
- * access control depends on the sender passing a valid
- * TSI.  With caller-ID, this access control can be made
- * more reliable.
- */
-fxBool
-FaxServer::recvCheckTSI(const fxStr& tsi)
-{
-    recvTSI = tsi;
-    okToRecv = isTSIOk(tsi);
-    traceProtocol("REMOTE TSI \"%s\"", (char*) tsi);
-    traceServer("%s TSI \"%s\"", okToRecv ? "ACCEPT" : "REJECT", (char*) tsi);
-    if (okToRecv)
-	setServerStatus("Receiving from \"%s\"", (char*) tsi);
-    return (okToRecv);
-}
-
-#include "version.h"
-
-/*
- * Prepare for the reception of page data by setting the
- * TIFF tags to reflect the data characteristics.
+ * Handle notification that a page has been received.
  */
 void
-FaxServer::recvSetupPage(TIFF* tif, long group3opts, int fillOrder)
+FaxServer::notifyPageRecvd(TIFF*, const FaxRecvInfo& ri, int)
 {
-    TIFFSetField(tif, TIFFTAG_SUBFILETYPE,	FILETYPE_PAGE);
-    TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,
-	(uint32) clientParams.pageWidth());
-    TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,	1);
-    TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,	PHOTOMETRIC_MINISWHITE);
-    TIFFSetField(tif, TIFFTAG_ORIENTATION,	ORIENTATION_TOPLEFT);
-    TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,	1);
-    TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,	(uint32) -1);
-    TIFFSetField(tif, TIFFTAG_PLANARCONFIG,	PLANARCONFIG_CONTIG);
-    TIFFSetField(tif, TIFFTAG_FILLORDER,	(uint16) fillOrder);
-    TIFFSetField(tif, TIFFTAG_XRESOLUTION,	204.);
-    TIFFSetField(tif, TIFFTAG_YRESOLUTION,
-	(float) clientParams.verticalRes());
-    TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT,	RESUNIT_INCH);
-    TIFFSetField(tif, TIFFTAG_SOFTWARE,		VERSION);
-    TIFFSetField(tif, TIFFTAG_IMAGEDESCRIPTION,	(char*) recvTSI);
-    switch (clientParams.df) {
-    case DF_2DMMR:
-	TIFFSetField(tif, TIFFTAG_COMPRESSION,	COMPRESSION_CCITTFAX4);
-	break;
-    case DF_2DMRUNCOMP:
-	TIFFSetField(tif, TIFFTAG_COMPRESSION,	COMPRESSION_CCITTFAX3);
-	group3opts |= GROUP3OPT_2DENCODING|GROUP3OPT_UNCOMPRESSED;
-	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,(uint32) group3opts);
-	break;
-    case DF_2DMR:
-	TIFFSetField(tif, TIFFTAG_COMPRESSION,	COMPRESSION_CCITTFAX3);
-	group3opts |= GROUP3OPT_2DENCODING;
-	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,(uint32) group3opts);
-	break;
-    case DF_1DMR:
-	TIFFSetField(tif, TIFFTAG_COMPRESSION,	COMPRESSION_CCITTFAX3);
-	group3opts &= ~GROUP3OPT_2DENCODING;
-	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,(uint32) group3opts);
-	break;
-    }
-    char dateTime[24];
-    time_t now = time(0);
-    ::strftime(dateTime, sizeof (dateTime), "%Y:%m:%d %H:%M:%S",
-	::localtime(&now));
-    TIFFSetField(tif, TIFFTAG_DATETIME,	    dateTime);
-    TIFFSetField(tif, TIFFTAG_MAKE,	    (char*) modem->getManufacturer());
-    TIFFSetField(tif, TIFFTAG_MODEL,	    (char*) modem->getModel());
-    TIFFSetField(tif, TIFFTAG_HOSTCOMPUTER, (char*) hostname);
+    traceServer("RECV FAX (%s): from %s, page %u in %s, %s, %s, %s"
+	, (const char*) ri.commid
+	, (const char*) ri.sender
+	, ri.npages
+	, fmtTime((time_t) ri.time)
+	, (ri.params.ln == LN_A4 ? "A4" : ri.params.ln == LN_B4 ? "B4" : "INF")
+	, ri.params.verticalResName()
+	, ri.params.dataFormatName()
+	, ri.params.bitRateName()
+    );
+}
+
+/*
+ * Handle notification that a document has been received.
+ */
+void
+FaxServer::notifyDocumentRecvd(const FaxRecvInfo& ri)
+{
+    traceServer("RECV FAX (%s): %s from %s, route to %s, %u pages in %s"
+	, (const char*) ri.commid
+	, (const char*) ri.qfile
+	, (const char*) ri.sender
+	, ri.subaddr != "" ? (const char*) ri.subaddr : "<unspecified>"
+	, ri.npages
+	, fmtTime((time_t) ri.time)
+    );
+}
+
+/*
+ * Handle final actions associated with a document being received.
+ */
+void
+FaxServer::notifyRecvDone(const FaxRecvInfo& ri)
+{
+    if (ri.reason != "")
+	traceServer("RECV FAX (%s): session with %s terminated abnormally: %s"
+	    , (const char*) ri.commid
+	    , (const char*) ri.sender
+	    , (const char*) ri.reason
+	);
 }

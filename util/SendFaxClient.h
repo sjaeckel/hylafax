@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/SendFaxClient.h,v 1.16 1995/04/08 21:44:22 sam Rel $ */
+/*	$Id: SendFaxClient.h,v 1.24 1996/06/24 03:06:01 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,125 +27,154 @@
 #define	_SendFaxClient_
 
 #include "FaxClient.h"
-#include "StrArray.h"
+#include "SendFaxJob.h"
 
 class TypeRule;
 class TypeRules;
 class DialStringRules;
-class PageSizeInfo;
-class FileInfo;
+struct FileInfo;
 class FileInfoArray;
-
-typedef unsigned int FaxNotify;
+struct PollRequest;
+class PollRequestArray;
 
 class SendFaxClient : public FaxClient {
 public:
-    enum {
-	no_notice,
-	when_done,
-	when_requeued
+    // NB: the SF_ prefixes workaround a bug in the AIX xlC compiler
+    struct SF_stringtag {
+	const char*	 name;
+	fxStr SendFaxClient::* p;
+	const char*	 def;		// NULL is shorthand for ""
     };
 private:
-    fxStrArray	destNames;		// FAX destination names
-    fxStrArray	destNumbers;		// FAX destination dialstrings
-    fxStrArray	externalNumbers;	// FAX destination displayable numbers
-    fxStrArray	destLocations;		// FAX destination locations
-    fxStrArray	destCompanys;		// FAX destination companys
-    fxStrArray	coverPages;		// cover pages
+    SendFaxJobArray* jobs;		// job state information
+    SendFaxJob	proto;			// prototypical job
+    fxStr	typeRulesFile;		// filename for type deduction rules
     TypeRules*	typeRules;		// file type/conversion database
+    fxStr	dialRulesFile;		// filename for dialstring rules
     DialStringRules* dialRules;		// dial string conversion database
     FileInfoArray* files;		// files to send (possibly converted)
-    fxBool	pollCmd;		// do poll rather than send
-    fxBool	coverSheet;		// if TRUE, prepend cover sheet
-    fxBool	gotPermission;		// got response to checkPermission
-    fxBool	permission;		// permission granted/denied
-    fxBool	verbose;
-    fxStr	killtime;		// job's time to be killed
-    fxStr	sendtime;		// job's time to be sent
-    float	hres, vres;		// sending resolution (dpi)
-    float	pageWidth;		// sending page width (mm)
-    float	pageLength;		// sending page length (mm)
-    fxStr	pageSize;		// arg to pass to subprocesses
-    int		totalPages;		// counted pages (for cover sheet)
-    int		maxRetries;		// max number times to try send
-    int		maxDials;		// max number times to dial telephone
-    int		priority;		// scheduling priority
-    FaxNotify	notify;
+    PollRequestArray* polls;		// polling requests
+    fxBool	verbose;		// enable debugging information
     fxBool	setup;			// if true, then ready to send
-    fxStrArray	tempFiles;		// stuff to cleanup on abort
-
-    fxStr	mailbox;		// user@host return mail address
-    fxStr	jobtag;			// user-specified job identifier
-    fxStr	comments;		// comments on cover sheet
-    fxStr	regarding;		// regarding line on cover sheet
+    fxStr	tmpFile;		// stuff to cleanup on abort
     fxStr	from;			// command line from information
     fxStr	senderName;		// sender's full name
+    fxStr	coverCmd;		// cover page program name
+    u_int	totalPages;		// total pages in submitted documents
 
-    static const fxStr TypeRulesFile;
+    static const SF_stringtag strings[];
 protected:
     SendFaxClient();
 
-    virtual fxStr makeCoverPage(const fxStr& name, const fxStr& number,
-	const fxStr& company, const fxStr& location,
-	const fxStr& senderName);
-
-    virtual void printError(const char* va_alist ...) = 0;
-    virtual void printWarning(const char* va_alist ...) = 0;
-
+    /*
+     * Derived classes can override these methods to
+     * provide more suitable feedback than the default
+     * ``print to the terminal'' work done by FaxClient.
+     */
+    virtual void vprintError(const char* fmt, va_list ap);
+    virtual void vprintWarning(const char* fmt, va_list ap);
+    virtual void vtraceServer(const char* fmt, va_list ap);
+    /*
+     * Derived classes can override this method to capture
+     * job identifiers returned by the server when a job is
+     * submitted.  The default action is to print a message
+     * to the terminal identifying the jobid and groupid of
+     * newly submitted job.
+     */
+    virtual void notifyNewJob(const SendFaxJob& job);
+    /*
+     * Derived classes can override makeCoverPage to supply an
+     * application-specific cover page generation scheme.
+     */
+    virtual fxBool makeCoverPage(const SendFaxJob&, fxStr& file, fxStr& emsg);
+    /*
+     * These methods are used to count/estimate the number
+     * of pages in a document that is to be transmitted.
+     * Counting pages in a TIFF document is easy and reliable
+     * but doing it for a PostScript document is not; so that
+     * method is marked virtual in case a derived class wants to
+     * provide a better algorithm than the default one.
+     */
     void countTIFFPages(const char* name);
-    void estimatePostScriptPages(const char* name);
-    const TypeRule* fileType(const char* filename);
-    fxBool handleFile(FileInfo& info);
-    fxBool sendCoverLine(const char* va_alist ...);
+    virtual void estimatePostScriptPages(const char* name);
 
-    virtual void recvConf(const char* cmd, const char* tag);
-    virtual void recvEof();
-    virtual void recvError(const int err);
+    /*
+     * Configuration file support; derived classes may override
+     * these to implement application-specific config controls.
+     */
+    virtual void setupConfig();
+    virtual void resetConfig();
+    virtual fxBool setConfigItem(const char* tag, const char* value);
+
+    /*
+     * File typerule support.
+     */
+    const TypeRule* fileType(const char* filename, fxStr& emsg);
+    fxBool prepareFile(FileInfo& info, fxStr& emsg);
+
+    /*
+     * Miscellaneous stuff used by setupSenderIdentity.
+     */
+    void setBlankMailboxes(const fxStr&);
+    fxBool getNonBlankMailbox(fxStr&);
 public:
     virtual ~SendFaxClient();
 
-    virtual fxBool prepareSubmission();
-    virtual fxBool submitJob();
+						// prepare jobs for submission
+    virtual fxBool prepareForJobSubmissions(fxStr& emsg);
+    void purgeFileConversions(void);		// purge any converted docs
+    virtual fxBool submitJobs(fxStr& emsg);	// submit documents & jobs
+    virtual fxBool sendDocuments(fxStr& emsg);	// send prepared documents
 
-    fxBool setupSenderIdentity(const fxStr&);
-    const fxStr& getSenderName() const;
+    /*
+     * Job manipulation interfaces.
+     */
+    SendFaxJob& addJob(void);
+    SendFaxJob* findJob(const fxStr& number, const fxStr& name);
+    SendFaxJob* findJobByTag(const fxStr& tag);
+    void removeJob(const SendFaxJob&);
+    u_int getNumberOfJobs() const;
 
-    fxBool addDestination(const char* person, const char* faxnum,
-	const char* company, const char* location);
-    u_int getNumberOfDestinations() const;
-
-    void addFile(const char* filename);
+    SendFaxJob& getProtoJob();
+    /*
+     * Document transmit request interfaces.
+     */
+    u_int addFile(const fxStr& filename);
+    u_int findFile(const fxStr& filename) const;
+    void removeFile(u_int);
     u_int getNumberOfFiles() const;
+    const fxStr& getFileDocument(u_int) const;
+    /*
+     * Polled retrieval request interfaces.
+     */
+    u_int addPollRequest();
+    u_int addPollRequest(const fxStr& sep);
+    u_int addPollRequest(const fxStr& sep, const fxStr& pwd);
+    void removePollRequest(u_int);
+    u_int getNumberOfPollRequests() const;
+    void getPollRequest(u_int, fxStr& sep, fxStr& pwd);
 
-    fxBool getVerbose() const;
-    void setVerbose(fxBool);
-    float getPageWidth() const;		// sending page width (mm)
-    float getPageLength() const;	// sending page length (mm)
-    const fxStr& getPageSize() const;	// arg to pass to subprocesses
-    u_int getTotalPages() const;	// counted pages (for cover sheet)
-
-    void setCoverComments(const char*);
-    const fxStr& getCoverComments() const;
-    void setCoverRegarding(const char*);
-    const fxStr& getCoverRegarding() const;
-    void setCoverSheet(fxBool);
-
-    void setResolution(float);
-    void setPollRequest(fxBool);
-    fxBool getPollRequest() const;
-    void setNotification(FaxNotify);
-    void setKillTime(const char*);
-    void setSendTime(const char*);
-    void setFromIdentity(const char*);
-    void setJobTag(const char*);
+    /*
+     * Sender identity controls.  There are two separate
+     * identities maintained, one for the actual user/account
+     * that submits the jobs and another for person identified
+     * as the sender on the outbound facsimile.  This distinction
+     * is used by proxy services such as email to fax gateways
+     * and for folks people that submit jobs for other people.
+     */
+						// identity associated with job
+    fxBool setupSenderIdentity(const fxStr&, fxStr& emsg);
+    const fxStr& getSenderName() const;
+    void setFromIdentity(const char*);		// identity associated with fax
     const fxStr& getFromIdentity() const;
-    void setMailbox(const char*);
-    const fxStr& getMailbox() const;
-    fxBool setPageSize(const char* name);
-    void setMaxRetries(int);
-    void setMaxDials(int);
 
-    virtual void setPriority(int);	// NB: may want to apply policy here
-    int getPriority() const;
+    fxBool getVerbose() const;			// trace operation
+    void setVerbose(fxBool);
 };
+
+inline SendFaxJob& SendFaxClient::getProtoJob()		   { return proto; }
+inline const fxStr& SendFaxClient::getFromIdentity() const { return from; }
+inline const fxStr& SendFaxClient::getSenderName() const   { return senderName;}
+inline void SendFaxClient::setVerbose(fxBool b)		   { verbose = b; }
+inline fxBool SendFaxClient::getVerbose() const		   { return verbose; }
 #endif /* _SendFaxClient_ */

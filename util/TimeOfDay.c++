@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/TimeOfDay.c++,v 1.8 1995/04/08 21:44:34 sam Rel $ */
+/*	$Id: TimeOfDay.c++,v 1.11 1996/06/24 03:06:09 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -71,7 +71,8 @@ TimeOfDay::add(int days, time_t start, time_t end)
 	tod.end = end;
     } else {
 	_tod* t = new _tod(days, start, end);
-	for (_tod** tpp = &tod.next; *tpp; tpp = &(*tpp)->next)
+	_tod** tpp;
+	for (tpp = &tod.next; *tpp; tpp = &(*tpp)->next)
 	    ;
 	*tpp = t;
     }
@@ -125,7 +126,8 @@ TimeOfDay::parse(const char* cp)
 	} else if (isalpha(*cp)) {		// list of days
 	    do {
 		static const char* dayNames = "Sun Mon Tue Wed Thu Fri Sat";
-		for (u_int i = 0; dayNames[i] != '\0'; i += 4)
+		u_int i;
+		for (i = 0; dayNames[i] != '\0'; i += 4)
 		    if (cp[0] == dayNames[i] && cp[1] == dayNames[i+1])
 			break;
 		if (dayNames[i] == '\0') {

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/DialRules.h,v 1.13 1995/04/08 21:43:55 sam Rel $ */
+/*	$Id: DialRules.h,v 1.17 1996/06/24 03:05:41 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -59,22 +59,29 @@ private:
     fxBool parseRuleSet(RuleArray& rules);
     const char* parseToken(const char* cp, fxStr& v);
     char* nextLine(char* line, int lineSize);
-    void parseError(const char* fmt ...);
     void subRHS(fxStr& v);
+protected:
+    virtual void parseError(const char* fmt ...);
+    virtual void traceParse(const char* fmt ...);
+    virtual void traceRules(const char* fmt ...);
 public:
     DialStringRules(const char* filename);
-    ~DialStringRules();
+    virtual ~DialStringRules();
 
     void setVerbose(fxBool b);
+    u_int getLineno() const;
+    const fxStr& getFilename() const;
 
     void def(const fxStr& var, const fxStr& value);
     void undef(const fxStr& var);
 
-    fxBool parse();
+    fxBool parse(fxBool shouldExist = TRUE);
 
     fxStr applyRules(const fxStr& name, const fxStr& s);
     fxStr canonicalNumber(const fxStr&);
     fxStr dialString(const fxStr&);
     fxStr displayNumber(const fxStr&);
 };
+inline u_int DialStringRules::getLineno() const		 { return lineno; }
+inline const fxStr& DialStringRules::getFilename() const { return filename; }
 #endif /* _DialStringRules_ */

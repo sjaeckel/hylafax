@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/faxcron.1m,v 1.17 1995/04/08 21:35:42 sam Rel $
+.\"	$Id: faxcron.1m,v 1.21 1996/06/24 03:04:08 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1994-1995 Sam Leffler
-.\" Copyright (c) 1994-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1994-1996 Sam Leffler
+.\" Copyright (c) 1994-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,7 +27,7 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH FAXCRON 1M "April 3, 1995"
+.TH FAXCRON 1M "May 12, 1996"
 .SH NAME
 faxcron \- \*(Fx routine maintenance script
 .SH SYNOPSIS
@@ -50,7 +50,7 @@ For example, the following crontab might be setup for the fax user:
 .sp .5
 .nf
 .ti +.2i
-\fC25   23    *    *    *   sh ${SBIN}/faxcron | mail FaxManager\fP
+\fC25   23    *    *    *   sh ${SBIN}/faxcron | mail FaxMaster\fP
 .fi
 .PP
 The
@@ -75,6 +75,8 @@ purge data that is 30 days or older from the remote machine information director
 .IP \(bu 3
 delete information that is 30 days or older from session trace log files;
 .IP \(bu 3
+remove files from the tmp directory that are older than 1 day;
+.IP \(bu 3
 remove received facsimile that are 7 days or older;
 .IP \(bu 3
 report sites that are currently having jobs rejected; and
@@ -88,7 +90,7 @@ Forces
 .I faxcron
 to run without updating any files.
 .TP 10
-.BI -l " lastrun"
+.BI \-l " lastrun"
 Forces the notion of the last time that
 .I faxcron
 was run to be 
@@ -98,6 +100,32 @@ The value of
 is a date and time string of the form ``MM/DD/YY HH:MM'' (the
 .IR date (1)
 format string ``%D %H:%M'').
+.TP 10
+.BI \-info " n"
+Set the expiration time for data in the info database to be
+.I n
+days.
+.TP 10
+.BI \-log " n"
+Set the expiration time for session log data to be
+.I n
+days.
+.TP 10
+.BI \-rcv " n"
+Set the expiration time for files in the received facsimile queue to be
+.I n
+days.
+.TP 10
+.BI \-tmp " n"
+Set the expiration time for files in the tmp directory to be
+.I n
+days.
+.TP 10
+.BI \-mode " m"
+Set the file protection mode for session logs to 
+.IR m
+(a command line argument to 
+.IR chmod (1)).
 .SH NOTES
 This script requires
 .IR nawk (1)
@@ -109,6 +137,8 @@ program that supports the ``+format'' option.
 .PP
 If session logs are to be kept private this script must be modified
 to filter out sensitive information such as calling card numbers.
+(It should also be run with ``\-mode 0600'' so that
+session log files are not publicly readable.)
 .SH FILES
 .nf
 .ta \w'${SPOOL}/etc/xferstats    'u

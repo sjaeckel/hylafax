@@ -1,19 +1,20 @@
-# $Header: /usr/people/sam/fax/./port/irix/RCS/so_locations,v 1.1 1995/02/05 06:19:15 sam Rel $
+# $Id: so_locations,v 1.6 1996/06/24 03:04:55 sam Rel $
 #
 # Layout for HylaFAX DSO's.
 #
+# These values were calculated under IRIX 5.3 with patches
+# 894 and 1116; you may need to update them for a different
+# system (make this file writable and rebuild the software).
+#
 libfaxserver.so \
-		:st = $range 0x51000000, 0x00200000:\
-		:st =  .text 0x51000000, 0x00040000:\
-		:st =  .data 0x510e0000, 0x00010000:\
+		:st = .text 0x5ff20000, 0x00040000:\
+		:st = .data 0x5ff60000, 0x00010000:\
 
-libtiff.so \
-		:st = $range 0x51000000, 0x00400000:\
-		:st =  .text 0x51040000, 0x00020000:\
-		:st =  .data 0x510b0000, 0x00030000:\
+libz.so \
+		:st = .text 0x5ff70000, 0x00010000:\
+		:st = .data 0x5ff80000, 0x00010000:\
 
 libfaxutil.so \
-		:st = $range 0x51000000, 0x00400000:\
-		:st =  .text 0x51060000, 0x00040000:\
-		:st =  .data 0x510a0000, 0x00010000:\
+		:st = .text 0x5ff90000, 0x00060000:\
+		:st = .data 0x5fff0000, 0x00010000:\
 

@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/ps2fax.1m,v 1.22 1995/04/08 21:36:30 sam Rel $
+.\"	$Id: ps2fax.1m,v 1.27 1996/08/26 22:23:27 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990-1995 Sam Leffler
-.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1996 Sam Leffler
+.\" Copyright (c) 1991-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,11 +28,11 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH PS2FAX 1M "April 3, 1995"
+.TH PS2FAX 1M "August 26, 1996"
 .SH NAME
 ps2fax \- image \*(Ps\(tm for facsimile transmission by \*(Fx
 .SH SYNOPSIS
-.B ${LIBEXEC}/ps2fax
+.B ${SPOOL}/bin/ps2fax
 [
 .I options
 ] [
@@ -53,6 +53,13 @@ On other machines \*(Ps imaging is typically done using the
 freely available
 .I Ghostscript
 software.
+.PP
+.I ps2fax
+is actually a link (symbolic or otherwise) to the script
+appropriate for the \*(Ps imaging tool.
+The link is setup when the
+.IR faxsetup (1M)
+script is run to configure a \*(Fx server machine for use.
 .PP
 Input files containing \*(Ps may be specified on the
 command line.
@@ -89,17 +96,25 @@ Group 3 2D-encoding scheme (\c
 codes are still padded to byte boundaries).
 .PP
 Note that
-.I ps2fax
+.B bin/ps2fax
 is usually just a link to a shell script that invokes the
 appropriate \*(Ps
 .SM RIP
 to do the work.
 .SH OPTIONS
+The following operations are recognized:
 .TP 10
 .B \-1
-(\c
-.BR \-2 )
-Write Group 3 1D- (2D-) encoded data to the output file.
+Write Group 3 1D-encoded data to the output file.
+.TP 10
+.B \-2
+Write Group 3 2D-encoded data to the output file.
+.TP 10
+.BI \-m " pages"
+Set the maximum number of pages that are permitted in the
+output file.
+If more pages are present in the input document then
+abort processing.
 .TP 10
 .BI \-o " file"
 Write output to the specified

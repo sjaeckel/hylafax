@@ -1,9 +1,9 @@
-#	$Header: /usr/people/sam/fax/./util/RCS/typerules,v 1.6 1995/04/08 21:45:08 sam Rel $
+#	$Id: typerules,v 1.9 1996/06/24 03:06:27 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -125,12 +125,10 @@
 0	string		WNGZWZSS	error	Wingz spreadsheet
 0       string          #Inventor V	error	IRIS Inventor file 
 >15     string          binary		error	binary IRIS Inventor file
->15     string          ascii		ps	%F/textfmt -f Courier-Bold\
+>15     string          ascii		ps	%F/textfmt -B -f Courier-Bold\
 						    -p 11 -s %s >%o <%i
 #
 # This causes anything else with ascii-only data to be treated as text.
-# Note that we use an explicit pathname for lptops because it might be
-# installed elsewhere on the system and our version is very different.
 #
-0	ascii		x		ps	%F/textfmt -f Courier-Bold\
+0	ascii		x		ps	%F/textfmt -B -f Courier-Bold\
 						    -p 11 -s %s >%o <%i

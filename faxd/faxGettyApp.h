@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/faxGettyApp.h,v 1.13 1995/04/08 21:31:16 sam Rel $ */
+/*	$Id: faxGettyApp.h,v 1.28 1996/06/24 03:00:48 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -46,15 +46,15 @@ public:
 	u_int faxGettyApp::*p;
 	u_int		 def;
     };
+    struct booltag {
+	const char*	 name;
+	fxBool faxGettyApp::*p;
+	u_int		 def;
+    };
 private:
 // runtime state
-    fxBool	debug;			// enable optional debugging info
-    fxStr	serverPID;		// pid of this process
+    fxStr	readyState;		// modem ready state to send queuer
     int		devfifo;		// fifo device interface
-					// XXX
-    time_t	jobStart;		// starting time for job
-    time_t	fileStart;		// starting time for file/poll
-
     UUCPLock*	modemLock;		// UUCP interlock
 
     u_short	ringsBeforeAnswer;	// # rings to wait
@@ -64,20 +64,24 @@ private:
     fxBoolArray* acceptCID;		// accept/reject matched cid
     fxStr	gettyArgs;		// getty arguments
     fxStr	vgettyArgs;		// voice getty arguments
+    fxStr	egettyArgs;		// extern getty arguments
     fxBool	adaptiveAnswer;		// answer as data if fax answer fails
+    fxBool	lockDataCalls;		// hold uucp lock for getty
+    fxBool	lockVoiceCalls;		// hold uucp lock for vgetty
+    fxBool	lockExternCalls;	// hold uucp lock for egetty
     u_int	answerBias;		// rotor bias applied after good calls
     u_short	answerRotor;		// rotor into possible selections
     u_short	answerRotorSize;	// rotor table size
     AnswerType	answerRotary[3];	// rotary selection of answer types
-    fxStr	notifyCmd;
-    fxStr	faxRcvdCmd;
+    fxStr	faxRcvdCmd;		// fax received command
+    u_int	modemPriority;		// modem priority passed to faxq
 
     static faxGettyApp* _instance;
 
     static const stringtag strings[];
     static const numbertag numbers[];
+    static const booltag booleans[];
 
-    static const fxStr fifoName;
     static const fxStr recvDir;
 
 // configuration support
@@ -94,16 +98,15 @@ private:
 // inbound call handling
     fxBool	isCIDOk(const fxStr& cid);
     fxBool	processCall(CallType ctype, fxStr& emsg);
-    void	runGetty(const char* what,
+    CallType	runGetty(const char* what,
 		    Getty* (*newgetty)(const fxStr&, const fxStr&),
-		    const char* args,
-		    fxBool keepLock);
+		    const char* args, fxStr &emsg,
+		    fxBool keepLock, fxBool keepModem = FALSE);
     void	setRingsBeforeAnswer(int rings);
     void	answerPhone(AnswerType, fxBool force);
+    fxBool	answerCall(AnswerType atype, CallType& ctype, fxStr& emsg);
 // miscellaneous stuff
-    void	sendQueuer(const fxStr& msg0);
-    void	recordRecv(const FaxRecvInfo& ri);
-    void	account(const char* cmd, const struct FaxAcctInfo&);
+    fxBool	sendModemStatus(const char* msg);
 // FIFO-related stuff
     void	openFIFOs();
     void	closeFIFOs();
@@ -112,10 +115,11 @@ private:
     int		inputReady(int);
 // notification interfaces used by FaxServer
     void	notifyModemReady();
-    void	notifyDocumentSent(FaxRequest&, u_int fileIndex);
-    void	notifyPollRecvd(FaxRequest&, const FaxRecvInfo&);
-    void	notifyPollDone(FaxRequest&, u_int pollIndex);
-    void	notifyRecvDone(const FaxRecvInfo& req);
+    void	notifyModemWedged();
+    void	notifyRecvBegun(const FaxRecvInfo&);
+    void	notifyPageRecvd(TIFF* tif, const FaxRecvInfo&, int ppm);
+    void	notifyDocumentRecvd(const FaxRecvInfo&);
+    void	notifyRecvDone(const FaxRecvInfo&);
 public:
     faxGettyApp(const fxStr& device, const fxStr& devID);
     ~faxGettyApp();

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/faxApp.h,v 1.9 1995/04/08 21:31:13 sam Rel $ */
+/*	$Id: faxApp.h,v 1.18 1996/06/24 03:00:48 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -29,14 +29,15 @@
  * HylaFAX Application Support.
  */
 #include "Str.h"
+#include "Syslog.h"
 #include <stdarg.h>
 
-class faxApp {
+class faxApp : public Syslog {
 private:
     static fxStr getopts;		// main arguments
-    static int	facility;		// syslog facility
 
     fxBool	running;		// server running
+    int		faxqfifo;		// cached descriptor to faxq
 protected:
     int		openFIFO(const char* fifoName, int mode,
 		    fxBool okToExist = FALSE);
@@ -45,11 +46,11 @@ public:
     faxApp();
     virtual ~faxApp();
 
+    static const fxStr fifoName;
+
     static void setupPermissions(void);
     static void detachFromTTY(void);
-    static void setupLogging(const char* appName);
-    static void setLogFacility(const char* facility);
-    static int getLogFacility(void);
+    static void fatal(const char* fmt ...);
 
     virtual void initialize(int argc, char** argv);
     virtual void open(void);
@@ -62,13 +63,24 @@ public:
     virtual int FIFOInput(int);
     virtual void FIFOMessage(const char* mesage);
 
+    fxBool sendModemStatus(const char* devid, const char* fmt ...);
+    fxBool sendJobStatus(const char* jobid, const char* fmt ...);
+    fxBool sendRecvStatus(const char* devid, const char* fmt ...);
+    fxBool sendQueuer(const char* fmt ...);
+    fxBool vsendQueuer(const char* fmt, va_list ap);
+
     static void setOpts(const char*);
     static const fxStr& getOpts(void);
+
+    static fxStr idToDev(const fxStr& id);
+    static fxStr devToID(const fxStr& dev);
+
+    static const fxStr quote;
+    static const fxStr enquote;
 
     fxBool runCmd(const char* cmd, fxBool changeIDs = FALSE);
 };
 inline fxBool faxApp::isRunning(void) const	{ return running; }
-inline int faxApp::getLogFacility(void)		{ return facility; }
 
 class GetoptIter {
 private:
@@ -91,9 +103,5 @@ public:
 inline int GetoptIter::option() const		{ return c; }
 inline fxBool GetoptIter::notDone() const	{ return c != -1; }
 
-extern void logError(const char* fmt ...);
-extern void logInfo(const char* fmt ...);
-extern void vlogError(const char* fmt, va_list ap);
-extern void vlogInfo(const char* fmt, va_list ap);
-extern void fxFatal(const char* fmt ...);
+extern	const char* fmtTime(time_t);
 #endif

@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/hylafax.1,v 1.18 1995/04/08 21:35:54 sam Rel $
+.\"	$Id: hylafax.1,v 1.25 1996/06/24 03:04:15 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993-1995 Sam Leffler
-.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1996 Sam Leffler
+.\" Copyright (c) 1993-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,14 +27,19 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Sn \s-1SNPP\s+1
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX 1 "December 22, 1994"
+.TH HYLAFAX 1 "May 8, 1996"
 .SH NAME
 HylaFAX \- introduction to \*(Fx client applications and usage
 .SH SYNOPSIS
 .B sendfax
 .RI [ options ]
 .RI [ files .\|.\|.]
+.br
+.B sendpage
+.RI [ options ]
+.RI [ message .\|.\|.]
 .br
 .B faxstat
 .RI [ options ]
@@ -50,15 +55,15 @@ HylaFAX \- introduction to \*(Fx client applications and usage
 .RI [ options ]
 .RI [ files .\|.\|.]
 .SH DESCRIPTION
-\*(Fx is a facsimile system for 
+\*(Fx is a telecommunication system for 
 .SM UNIX\c
 \(tm systems.
 Among the features of \*(Fx are:
 .IP \(bu 3
 \*(Fx runs as a network service; this means
-a fax modem may be effectively shared by a large number of users.
+a modem may be effectively shared by a large number of users.
 .IP \(bu 3
-\*(Fx can be configured to work with a wide variety of fax modems
+\*(Fx can be configured to work with a wide variety of modems
 on a wide variety of systems.
 .IP \(bu 3
 Access to the system can be restricted by the administrator
@@ -149,28 +154,38 @@ The \*(Fx server software optimizes preparation of broadcast
 documents and the client applications support the notion of a
 .I "job group"
 which permits a group of jobs to be manipulated together.
+.IP \(bu 3
+Support is provided for transmitting alpha-numeric messages to
+pager devices using the Simple Network Paging Protocol (\*(Sn)
+and the \s-1IXO\s+1 protocol (for message delivery).
 .PP
 The \*(Fx software is divided into two packages: software used on client
-machines and software used on machines where one or more fax
+machines and software used on machines where one or more
 modems reside.
 Client software includes:
 .IP \(bu 3
 .IR sendfax ,
 a program to submit outgoing facsimile;
 .IP \(bu 3
+.IR sendpage ,
+a program to submit alpha-numeric messages to \*(Sn servers;
+.IP \(bu 3
 .IR faxstat ,
 a program obtain status information
-about facsimile servers and jobs;
+about \*(Fx servers;
 .IP \(bu 3
 .IR faxrm ,
-a program to remove queued jobs;
+a program to remove jobs and documents;
 .IP \(bu 3
 .IR faxalter ,
 a program to change parameters of queued jobs; and
 .IP \(bu 3
 .IR fax2ps ,
 a program that converts facsimile documents to \*(Ps so that they
-may be viewed with a \*(Ps previewer or printed on a \*(Ps printer.
+may be viewed with a \*(Ps previewer or printed on a \*(Ps printer
+(this program is actually part of the companion 
+.SM TIFF
+distribution that is used by \*(Fx).
 .PP
 Many systems also support submission of outgoing
 facsimile by electronic mail and/or graphical interfaces to the
@@ -213,7 +228,7 @@ For example, for
 .I csh
 users,
 .IP
-\fCsetenv FAXSERVER flake.asd\fP
+setenv FAXSERVER flake.asd
 .LP
 or for
 .I ksh
@@ -221,7 +236,7 @@ or
 .I sh
 users,
 .IP
-\fCFAXSERVER=flake.asd; export FAXSERVER\fP
+FAXSERVER=flake.asd; export FAXSERVER
 .LP
 If there are multiple modems on your server then you may be
 assigned to use a specific modem.
@@ -231,15 +246,26 @@ port on the server machine, then the
 .SM FAXSERVER
 variable should be setup as
 .IP
-\fCFAXSERVER=ttym2@flake.asd; export FAXSERVER\fP
+FAXSERVER=ttym2@flake.asd; export FAXSERVER
+.LP
+(Note: the
+.SM SNPPSERVER
+environment variable is used instead of 
+.SM FAXSERVER
+by the
+.I sendpage
+program;  consult
+.IR sendpage (1M)
+for more information.)
 .LP
 Note also, that before you can submit outgoing facsimile jobs
 the administrator for the facsimile server may need to register
 your identity in an access control list.
 You will encounter the message
-``\fIService refused; you do not have permission to use the fax server...\fP''
+``\fI530 User %s access denied.\fP''
 if access to your server is controlled and you are not properly
-registered.
+registered or you may be prompted for a password and then denied
+service with ``\fI530 Login incorrect.\fP''.
 .SH "DIAL STRINGS"
 A dial string specifies how to dial the telephone in order to
 reach a destination facsimile machine.
@@ -247,7 +273,9 @@ reach a destination facsimile machine.
 so that users can specify credit card information, 
 .SM PBX
 routing information, etc.
-Non-numeric characters can be included for readability;
+Alphabetic characters are automatically mapped to their numeric
+key equivalents (e.g. ``1800GotMilk'' becomes ``18004686455'').
+Other characters can be included for readability;
 anything that must be stripped will be removed by the server
 before the dialing string is passed to the fax modem.
 Private information such as credit card access codes are
@@ -255,7 +283,7 @@ withheld from status messages and publicly accessible log files
 (with proper configuration).
 Facsimile servers also automatically insert any leading dialing
 prefixing strings that are required to place outgoing phone calls;
-e.g. dialing ``\fC\&9\fR'' to get an outside line.
+e.g. dialing ``\&9'' to get an outside line.
 Additionally, if a phone number is fully specified with the
 international direct dialing digits (\c
 .SM IDDD\c
@@ -263,13 +291,13 @@ international direct dialing digits (\c
 prefixing long distance or international dialing codes
 that are required to place the call will be inserted
 in the dial string by the server.
-For example, ``\fC\+31.77.594.131\fP'' is a phone number in
-the Netherlands; it would be converted to ``\fC\&0113177594131\fP''
+For example, ``\+31.77.594.131'' is a phone number in
+the Netherlands; it would be converted to ``\&0113177594131''
 if the call is placed in the United States.
-The number ``\fC\+14159657824\fP'' is a phone number in California;
+The number ``\+14159657824'' is a phone number in California;
 if this number is called from within the 415 area code in the
 United States, then the server would automatically convert this
-to ``\fC\&9657824\fP'' because in the San Francisco Bay Area, local phone
+to ``\&9657824'' because in the San Francisco Bay Area, local phone
 calls must not include the area code and long distance prefixing
 code.
 .PP
@@ -278,7 +306,7 @@ exactly what you would dial on your telephone; and,
 in addition, the actual phone number can be specified in a
 location-independent manner by using the 
 .SM IDD
-syntax of ``\fC\+country-code local-part\fP''.
+syntax of ``\+\fIcountry-code\fP \fIlocal-part\fP''.
 .SH "COVER PAGES"
 The
 .I sendfax
@@ -297,7 +325,6 @@ as part of the data that is to be transmitted.
 .PP
 Automatically-generated cover pages may include the following
 information:
-.RS
 .IP \(bu 3
 the sender's name, affiliation, geographic location, fax number,
 and voice telephone number;
@@ -312,7 +339,6 @@ text commentary;
 the local date and time that the job was submitted;
 .IP \(bu 3
 the number of pages to be transmitted.
-.RE
 .LP
 Certain of this information is currently obtained from a user's
 personal facsimile database file; 
@@ -367,10 +393,10 @@ For example, a sample file might be:
 .sp .5
 .nf
 .RS
-\fC[   Company:	"Silicon Graphics, Inc."
+\s-1[   Company:	"Silicon Graphics, Inc."
     Location:	"Mountain View, California"
     [ Name: "Sam Leff\&ler"	FAX-Number: +1.415.965.7824 ]
-]\fP
+]\s+1
 .fi
 .RE
 .LP
@@ -379,11 +405,11 @@ with the following:
 .sp .5
 .nf
 .RS
-\fC[   Company:	"Silicon Graphics, Inc."
+\s-1[   Company:	"Silicon Graphics, Inc."
     Location:	"Mountain View, California"
     [ Name: "Sam Leff\&ler"	FAX-Number: +1.415.965.7824 ]
     [ Name: "Paul Haeberli"	FAX-Number: +1.415.965.7824 ]
-]\fP
+]\s+1
 .RE
 .fi
 .PP
@@ -393,6 +419,44 @@ As a result it is being replaced by other, more straightforward
 databases that are managed by programs that front-end the
 .I sendfax
 program.
+.SH "CONFIGURATION FILES"
+\*(Fx client applications can be tailored on a per-user and
+per-site basis through configuration files.
+Per-site controls are placed in the file
+.BR ${LIBDATA}/hyla.conf ,
+while per-user controls go in
+.BR ~/.hylarc .
+In addition a few programs that have many parameters that are
+specific to their operation support an additional configuration
+file; these files are identified in their manual pages.
+.PP
+Configuration files have a simple format and are entirely
+.SM ASCII.
+A configuration parameter is of the form
+.sp .5
+.ti +0.5i
+\fBtag\fP: \fIvalue\fP
+.br
+.sp .5
+where a \fItag\fP identifies a parameter and a \fIvalue\fP
+is either a string, number, or boolean value.
+Comments are introduced by the ``#'' character
+and extend to the end of the line.
+String values start at the first non-blank character
+after the ``:'' and continue to the first non-whitespace
+character or, if whitespace is to be included, may be
+enclosed in quote marks (``"'').
+String values enclosed in quote marks may also use the
+standard C programming conventions for specifying escape
+codes; e.g. ``\en'' for a newline character and ``\exxx''
+for an octal value.
+Numeric values are specified according to the C programming
+conventions (leading ``0x'' for hex, leading ``0'' for octal, otherwise
+decimal).
+Boolean values are case insensitive.
+For a true value, either ``Yes'' or ``On'' should
+be used.
+For a false value, use ``No'' or ``Off''.
 .SH "RECEIVED FACSIMILE"
 Incoming facsimile are received by facsimile servers and deposited
 in a receive queue directory on the server machine.
@@ -405,17 +469,16 @@ directory:
 .sp .5
 .nf
 .RS
-\fCflake% faxstat -r
-Server on localhost:ttym2 for +1.415.965.7824: Running and idle.
+\s-1\fChyla% faxstat -r
+HylaFAX scheduler on hyla.chez.sgi.com: Running
+Modem ttyf2 (+1 510 999-0123): Running and idle
 
-Sender         Received At           Pages Quality 
-+15105268781   13:04 1993:05:14   1 NA-LET normal  
-               18:03 1993:05:12   1        fine    
-               12:29 1993:05:12   1        fine    
-+15105268781   11:16 1993:05:12   5        normal  
-+15105268781   14:12 1993:05:11   4 NA-LET normal  
-+15105268781   14:02 1993:05:11   4 NA-LET fine    
-+15105268781   13:43 1993:05:11   4        normal  \fP
+Protect Page  Owner        Sender/TSI  Recvd@ Filename
+-rw-r--    9  fax       1 510 5268781 05Jan96 fax00005.tif
+-rw-r--    8  fax       1 510 5268781 07Jan96 fax00009.tif
+-rw-r--    2  fax       1 510 5268781 07Jan96 fax00010.tif
+-rw-r--    3  fax        +14159657824 08Jan96 fax00011.tif
+-rw-r--    2  fax        +14159657824 08Jan96 fax00012.tif\fP\s+1
 .RE
 .fi
 .LP
@@ -428,7 +491,9 @@ Received facsimile are stored as
 Class F files.
 These files are bilevel images that are encoded using the
 .SM "CCITT T.4"
-encoding algorithm.
+or
+.SM "CCITT T.6"
+encoding algorithms.
 The
 .IR fax2ps (1)
 program can be used to view and print these files.
@@ -440,29 +505,57 @@ as
 .IR ghostview (1)
 (a public domain previewer),
 or image viewer programs such as
-.IR xv (1)
-(shareware and/or public domain),
-.IR xtiff (1)
-(a program included in the public domain
-.SM TIFF
-software distribution), or,
+.IR viewfax (1)
+(public domain),
 .IR faxview (1)
 (another public domain 
 .SM TIFF
-viewer program).
+viewer program),
+.IR xv (1)
+(shareware and/or public domain), or
+.IR xtiff (1)
+(a program included in the public domain
+.SM TIFF
+software distribution).
 Consult your local resources to figure out what tools are available
 for viewing and printing received facsimile.
+.SH "CLIENT-SERVER PROTOCOL"
+\*(Fx client applications communicate with servers using
+either a special-purpose
+.I "communications protocol"
+that is modeled after the Internet File Transfer Protocol (\s-1FTP\s+1)
+or, when submitting alpha-numeric pages, the Simple Network Paging Protocol
+(\*(Sn), specified in
+.SM RFC
+1861.
+All client programs support a
+.B \-v
+option that can be used to observe the protocol message exchanges.
+In some situations it may be more effective to communicate directly
+with a \*(Fx server using the client-server protocol.
+This can be accomplished with an
+.SM FTP
+or Telnet client application; though an
+.SM FTP
+client is recommended because it implements the protocol needed
+to obtain server status information.
+For information on the server-side support provided with \*(Fx consult
+.IR hfaxd (1M).
+For documentation on the client-server fax protocol consult \s-1RFC XXXX\s+1
+(\fIto be filled in\fP).
 .SH EXAMPLES
 This section gives several examples of command line usage;
 consult the manual pages for the individual commands for
 information on the options and program operation.
 .PP
 The following command queues the file
-.I zall.ps
+.B zall.ps
 for transmission to John Doe at the number (123)456-7890 using fine mode;
 the server will attempt to send it at 4:30 A.M.:
-.IP
-\fCsendfax -a "0430" -d "John Doe@1.123.456.7890" -m zall.ps\fP
+.sp .5
+.RS
+\s-1\fCsendfax -a "0430" -m -d "John Doe@1.123.456.7890" zall.ps\fP\s+1
+.RE
 .sp .5
 (the leading ``1.'' is supplied to dial area code ``123'' in the
 United States.)
@@ -472,28 +565,106 @@ is just a cover page:
 .sp .5
 .nf
 .RS
-\fCfaxcover -t "John Doe" -n "(123)456-7890" 
+\s-1\fCfaxcover -t "John Doe" -n "(123)456-7890" 
     -c "Sorry John, I forgot the meeting..." |
-    sendfax -n -d "(123)456-7890"\fP
+    sendfax -n -d "(123)456-7890"\fP\s+1
 .RE
 .fi
-.LP
+.sp .5
 (note that the line was broken into several lines solely for presentation.)
 .PP
 The following command displays the status of the facsimile
 server and any jobs queued for transmission:
-.IP
-\fCfaxstat -a\fP
+.sp .5
+.RS
+\s-1\fCfaxstat -s\fP\s+1
+.RE
 .PP
 The following command displays the status of the facsimile
 server and any documents waiting in the receive queue on the
 server machine:
-.IP
-\fCfaxstat -r\fP
+.sp .5
+.RS
+\s-1\fCfaxstat -r\fP\s+1
+.RE
+.PP
+The following command shows how to use an 
+.SM FTP
+client program to communicate directly with a \*(Fx server:
+.sp .5
+.nf
+.RS
+\s-1\fChyla% \fBftp localhost hylafax\fP
+Connected to localhost.
+220 hyla.chez.sgi.com server (HylaFAX (tm) Version 4.0beta005) ready.
+Name (localhost:sam): 
+230 User sam logged in.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> \fBdir sendq\fP
+200 PORT command successful.
+150 Opening new data connection for "sendq".
+208  126 S    sam 5268781       0:3   1:12   16:54 No local dialtone
+226 Transfer complete.
+ftp> \fBquote jkill 208\fP
+200 Job 208 killed.
+ftp> \fBdir doneq\fP
+200 PORT command successful.
+150 Opening new data connection for "doneq".
+208  126 D    sam 5268781       0:3   1:12         No local dialtone
+226 Transfer complete.
+ftp> \fBquote jdele 208\fP
+200 Job 208 deleted; current job: (default).
+ftp> \fBdir docq\fP
+200 PORT command successful.
+150 Opening new data connection for "docq".
+-rw----   1      sam    11093 Jan 21 16:48 doc9.ps
+226 Transfer complete.
+ftp> \fBdele docq/doc9.ps\fP
+250 DELE command successful.
+ftp> \fBdir recvq\fP
+200 PORT command successful.
+150 Opening new data connection for "recvq".
+-rw-r--    4  fax       1 510 5268781 30Sep95 faxAAAa006uh
+-rw-r--    9  fax        +14159657824 11Nov95 faxAAAa006nC
+-rw----   25  fax        +14159657824 Fri08PM fax00016.tif
+226 Transfer complete.
+ftp> \fBquit\fP
+221 Goodbye.\fP\s+1
+.RE
+.fi
+.LP
+The following command shows how to use a Telnet client program
+to communicate directly with an \*(Sn server:
+.sp .5
+.nf
+.RS
+\s-1\fChyla% \fBtelnet melange.esd 444\fP
+Trying 192.111.25.40...
+Connected to melange.esd.sgi.com.
+Escape character is '^]'.
+220 melange.esd.sgi.com SNPP server (HylaFAX (tm) Version 4.0beta010) ready.
+\fBlogin sam\fP
+230 User sam logged in.
+\fBhelp\fP
+214 The following commands are recognized (* =>'s unimplemented).
+214 2WAY*   ALER*   DATA    HOLD    LOGI    MSTA*   PING    RTYP*   STAT 
+214 ABOR    CALL*   EXPT*   KTAG*   MCRE*   NOQU*   QUIT    SEND    SUBJ 
+214 ACKR*   COVE*   HELP    LEVE    MESS    PAGE    RESE    SITE 
+250 Direct comments to FaxMaster@melange.esd.sgi.com.
+\fBpage 5551212\fP
+250 Pager ID accepted; provider: 1800SkyTel pin: 5551212 jobid: 276.
+\fBsend\fP
+250 Message processing completed.
+\fBquit\fP
+221 Goodbye.
+Connection closed by foreign host.
+.RE
 .SH FILES
 .ta \w'${LIBDATA}/faxcover.ps        'u
 .nf
 ${BIN}/sendfax	for sending facsimile
+${BIN}/sendpage	for sending alpha-numeric pages
 ${BIN}/fax2ps	for converting facsimile to \*(Ps
 ${BIN}/faxalter	for altering queued jobs
 ${BIN}/faxcover	for generating cover sheets
@@ -517,7 +688,8 @@ ${LIBDATA}/dialrules	optional client dialstring rules
 .IR faxrm (1),
 .IR faxstat (1),
 .IR sgi2fax (1),
-.IR faxq (1),
+.IR faxq (1M),
+.IR viewfax (1),
 .IR hylafax (4F),
 .IR dialrules (4F),
 .IR pagesizes (4F),

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/Sys.c++,v 1.4 1995/04/08 21:44:32 sam Rel $ */
+/*	$Id: Sys.c++,v 1.10 1996/06/24 03:06:06 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -37,8 +37,59 @@ Sys::isRegularFile(const char* filename)
 }
 
 fxBool
+Sys::isSocketFile(const char* filename)
+{
+#ifdef S_IFSOCK
+    struct stat sb;
+    return (Sys::stat(filename, sb) >= 0 && (sb.st_mode&S_IFMT) == S_IFSOCK);
+#else
+    return (FALSE);
+#endif
+}
+
+fxBool
 Sys::isFIFOFile(const char* filename)
 {
     struct stat sb;
     return (Sys::stat(filename, sb) >= 0 && (sb.st_mode&S_IFMT) == S_IFIFO);
+}
+
+fxBool
+Sys::isFIFOFile(int fd)
+{
+    struct stat sb;
+    return (Sys::fstat(fd, sb) >= 0 && (sb.st_mode&S_IFMT) == S_IFIFO);
+}
+
+fxBool
+Sys::isCharSpecialFile(const char* filename, struct stat& sb)
+{
+#ifdef S_IFCHR
+    return (Sys::stat(filename, sb) >= 0 && (sb.st_mode&S_IFMT) == S_IFCHR);
+#else
+    return (FALSE);
+#endif
+}
+
+fxBool
+Sys::isCharSpecialFile(const char* filename)
+{
+    struct stat sb;
+    return Sys::isCharSpecialFile(filename, sb);
+}
+
+#include <limits.h>
+
+int
+Sys::getOpenMax()
+{
+#if HAS_SYSCONF
+    return (int) sysconf(_SC_OPEN_MAX);
+#elif HAS_GETDTABLESIZE
+    return getdtablesize();
+#elif HAS_ULIMIT
+    return (int) ulimit(UL_GDESLIM, 0);
+#else
+    return (_POSIX_OPEN_MAX);
+#endif
 }

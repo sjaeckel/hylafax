@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/QLink.c++,v 1.5 1995/04/08 21:31:02 sam Rel $ */
+/*	$Id: QLink.c++,v 1.8 1996/06/24 03:00:41 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE.
  */
 #include "QLink.h"
+#include "Types.h"
 
 QLink::QLink() { next = prev = this; }
 QLink::QLink(const QLink& other) { next = other.next; prev = other.prev; }
@@ -36,6 +37,7 @@ QLink::~QLink() {}
 void
 QLink::insert(QLink& after)
 {
+    fxAssert(next == this, "QLink::insert: item already on a list");
     next = &after;
     prev = after.prev;
     after.prev->next = this;
@@ -46,8 +48,10 @@ QLink::insert(QLink& after)
  * Remove an item from a doubly-linked list.
  */
 void
-QLink::remove()
+QLink::remove(void)
 {
+    fxAssert(next != this, "QLink::remove: item not on a list");
     next->prev = prev;
     prev->next = next;
+    next = this;			// indicates job is not on list
 }

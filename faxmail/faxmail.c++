@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxmail/RCS/faxmail.c++,v 1.37 1995/04/08 21:33:56 sam Rel $ */
+/*	$Id: faxmail.c++,v 1.68 1996/08/16 21:02:47 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -23,834 +23,771 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include "Str.h"
+#include "MsgFmt.h"
+#include "MIMEState.h"
 #include "StackBuffer.h"
-#include "PageSize.h"
+#include "StrArray.h"
+#include "Sys.h"
+#include "SendFaxClient.h"
+#include "config.h"
 
-#include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdarg.h>
 #include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include <errno.h>
-#include <dirent.h>
+#if HAS_LOCALE
+extern "C" {
+#include <locale.h>
+}
+#endif
 
-#include <pwd.h>
-#include <osfcn.h>
-#include <fcntl.h>
+class MySendFaxClient : public SendFaxClient {
+public:
+    MySendFaxClient();
+    ~MySendFaxClient();
 
-extern void fxFatal(const char* fmt, ...);
-
-static	const int NCHARS = 256;		// chars per font
-
-struct Font {
-    fxStr	name;			// font name
-    fxStr	showproc;		// PostScript show operator
-    float	widths[NCHARS];		// width table
-
-    static const fxStr fontDir;
-
-    Font();
-
-    void show(FILE*, const char*, int len);
-    void show(FILE*, const fxStr&);
-    float strwidth(const char*);
-
-    void setDefaultMetrics(float w);
-    FILE* openFile(fxStr& pathname);
-    fxBool readMetrics(float pointsize, fxBool useISO8859);
-    fxBool getAFMLine(FILE* fp, char* buf, int bsize);
+    void setup(fxBool);
+    fxBool setConfigItem(const char* tag, const char* value);
+    void fatal(const char* fmt ...);
 };
-const fxStr Font::fontDir = FONTDIR;
+MySendFaxClient::MySendFaxClient() {}
+MySendFaxClient::~MySendFaxClient() {}
+void
+MySendFaxClient::setup(fxBool b)
+{
+    resetConfig();
+    readConfig(FAX_SYSCONF);
+    readConfig(FAX_LIBDATA "/sendfax.conf");
+    // XXX should we read faxmail.conf also??
+    readConfig(FAX_USERCONF);
+    setVerbose(b);
+    FaxClient::setVerbose(b);
+}
+fxBool MySendFaxClient::setConfigItem(const char* tag, const char* value)
+    { return SendFaxClient::setConfigItem(tag, value); }
 
-class faxMailApp {
+class faxMailApp : public TextFmt, public MsgFmt {
 private:
-    fxStr	appName;		// for error messages
-    long	pagefactor;		// n-up factor
-    int		row, col;		// row+column for n-up
-    int		pageno;			// page number
+    fxBool	markDiscarded;		// mark MIME parts not handled
+    fxStr	mimeConverters;		// pathname to MIME converter scripts
+    fxStr	mailProlog;		// site-specific prologue definitions
+    fxStr	clientProlog;		// client-specific prologue info
+    fxStr	msgDivider;		// digest message divider
+    fxStrArray	tmps;			// temp files
 
-    fxBool	lastHeaderShown;	// header is shown
-    fxBool	doBodyFont;		// look for body font in mail headers
-    fxBool	wrapLines;		// wrap/truncate long lines
-    fxBool	startNewPage;		// emit new page prologue
-    fxBool	useISO8859;		// use the ISO 8859-1 character encoding
+    MySendFaxClient* client;		// for direct delivery
+    SendFaxJob*	job;			// reference to outbound job
+    fxStr	mailUser;		// user ID for contacting server
+    fxBool	autoCoverPage;		// make cover page for direct delivery
 
-    char	buffer[2048];		// input buffer (mail)
-    fxStr	output;			// output buffer (postscript)
+    void formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg);
+    void formatText(FILE* fd, MIMEState& mime);
+    void formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg);
+    void formatMessage(FILE* fd, MIMEState& mime, MsgFmt& msg);
+    void formatApplication(FILE* fd, MIMEState& mime);
+    void formatDiscarded(MIMEState& mime);
+    fxBool formatWithExternal(FILE* fd, const fxStr& app, MIMEState& mime);
 
-    float	pageWidth, pageHeight;	// physical page dimensions
-    float	pagewidth, pageheight;	// imaged page dimensions
-    float	xMargin, yMargin;	// horizontal+vertical margins
-    float	ymax, ymin;		// max/min vertical spots for text
-    float	xmax;			// max horizontal spot for text
-    float	xpos, ypos;		// current x-y spot on logical page
-    float	vh;			// vertical height of a line
-    float	tabWidth;		// width in points of tab
-    float	headerStop;		// tab stop for headers
+    void emitClientPrologue(FILE*);
 
-    float	pointsize;		// font size
-    Font	italic;			// italic font info
-    Font	bold;			// bold font info
-    Font	body;			// body font info
-    fxStr	defBodyFont;		// fallback font to use for body
-    fxStr	bodyFont;		// body font name
-    fxStr	bodyFontFile;		// file holding body font
+    void discardPart(FILE* fd, MIMEState& mime);
+    fxBool copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile);
+    fxBool runConverter(const fxStr& app, const fxStr& tmp, MIMEState& mime);
+    void copyFile(FILE* fd, const char* filename);
 
-    static const char* headers[];
+    void resetConfig();
+    void setupConfig();
+    fxBool setConfigItem(const char* tag, const char* value);
 
-    void formatMail(FILE*);
-    void flushHeaderLine(FILE*, const fxStr&);
-    void calculateHeaderStop();
-    fxBool okToShowHeader(const char* tag);
-
-    void defineFont(FILE* fd, const char* psname, const char* fname);
-    void startLogicalPage(FILE*);
-    void endLogicalPage(FILE*);
-    void tab(FILE*);
-    void hmove(FILE*, float pos);
-    void lineBreak(FILE*);
-    void flushOutput(FILE*);
-    void showWrapItalic(FILE* fd, const char* cp);
-    void setupPageSize(const char* name);
-
-    void lookForBodyFont(const char* fromLine);
-    fxBool loadBodyFont(FILE*, const char* fileName, const char* fontName);
-
-    void usage();
-    void printError(const char* va_alist ...);
-    void fontWarn(const fxStr& name);
+    void usage(void);
 public:
     faxMailApp();
     ~faxMailApp();
 
-    void initialize(int argc, char** argv);
-    void open();
-};
+    void run(int argc, char** argv);
 
-const char* faxMailApp::headers[] = {
-    "To",
-    "Subject",
-    "From",
-    "Date",
-    "Cc",
-    "Summary",
-    "Keywords",
+    void setVerbose(fxBool b)		{ verbose = b; }
+    void setBoldFont(const char* cp)	{ boldFont = cp; }
+    void setItalicFont(const char* cp)	{ italicFont = cp; }
 };
-#define	NHEADERS \
-    (sizeof (faxMailApp::headers) / sizeof (faxMailApp::headers[0]))
 
 faxMailApp::faxMailApp()
 {
-    bold.name = "Helvetica-Bold";
-    italic.name = "Helvetica-Oblique";
-    defBodyFont = "Courier-Bold";
-    body.name = defBodyFont;
-    doBodyFont = TRUE;
-    useISO8859 = TRUE;
-    wrapLines = TRUE;
-    pagefactor = 1;
-    pointsize = 12.;			// medium size
-    xMargin = .35;			// .35" works ok with 12 point font
-    yMargin = .5;			// .5" top+bottom margins
-    pageno = 0;				// 1 input page per output page
-}
+    client = NULL;
 
+    faxMailApp::setupConfig();		// NB: virtual
+    setTitle("HylaFAX-Mail");
+}
 faxMailApp::~faxMailApp()
 {
+    delete client;
+    for (u_int i = 0, n = tmps.length(); i < n; i++)
+	Sys::unlink(tmps[i]);
 }
 
 void
-faxMailApp::initialize(int argc, char** argv)
+faxMailApp::run(int argc, char** argv)
 {
     extern int optind;
     extern char* optarg;
     int c;
 
-    appName = argv[0];
-    u_int l = appName.length();
-    appName = appName.tokenR(l, '/');
+    resetConfig();
+    readConfig(FAX_SYSCONF);
+    readConfig(FAX_LIBDATA "/faxmail.conf");
+    readConfig(FAX_USERCONF);
 
-    setupPageSize("default");
-    while ((c = getopt(argc, argv, "b:H:i:f:F:p:s:W:x:y:1234nw")) != -1)
+    fxBool deliver = FALSE;
+    while ((c = Sys::getopt(argc, argv, "12b:cdf:H:i:M:np:rRs:u:vW:")) != -1)
 	switch (c) {
+	case '1': case '2':		// format in 1 or 2 columns
+	    setNumberOfColumns(c - '0');
+	    break;
 	case 'b':			// bold font for headers
-	    bold.name = optarg;
+	    setBoldFont(optarg);
 	    break;
-	case 'D':			// don't use ISO 8859-1 encoding
-	    useISO8859 = FALSE; 
+	case 'c':			// truncate lines
+	    setLineWrapping(FALSE);
 	    break;
-	case 'H':			// page height
-	    pageHeight = atof(optarg);
-	    break;
-	case 'i':			// italic font for headers
-	    italic.name = optarg;
+	case 'd':			// enable direct delivery
+	    deliver = TRUE;
 	    break;
 	case 'f':			// default font for text body
-	    defBodyFont = optarg;
-	    body.name = defBodyFont;
+	    setTextFont(optarg);
 	    break;
-	case 'F':			// special body font
-	    bodyFontFile = optarg;
-	    doBodyFont = FALSE;
+	case 'H':			// page height
+	    setPageHeight(atof(optarg));
 	    break;
-	case 'n':			// no special body font
-	    doBodyFont = FALSE;
+	case 'i':			// italic font for headers
+	    setItalicFont(optarg);
+	    break;
+	case 'M':			// page margins
+	    setPageMargins(optarg);
+	    break;
+	case 'n':			// suppress cover page
+	    autoCoverPage = FALSE;
 	    break;
 	case 'p':			// point size
-	    pointsize = atof(optarg);
+	    setTextPointSize(TextFmt::inch(optarg));
+	    break;
+	case 'r':			// rotate page (landscape)
+	    setPageOrientation(TextFmt::LANDSCAPE);
+	    break;
+	case 'R':			// don't rotate page (portrait)
+	    setPageOrientation(TextFmt::PORTRAIT);
 	    break;
 	case 's':			// page size
-	    setupPageSize(optarg);
+	    setPageSize(optarg);
+	    break;
+	case 'u':			// mail/login user
+	    mailUser = optarg;
 	    break;
 	case 'W':			// page width
-	    pageWidth = atof(optarg);
+	    setPageWidth(atof(optarg));
 	    break;
-	case 'x':			// horizontal margins
-	    xMargin = atof(optarg);
-	    break;
-	case 'y':			// vertical margins
-	    yMargin = atof(optarg);
-	    break;
-	case '1': case '2': case '3': case '4':
-	    pagefactor = c - '0';
-	    break;
-	case 'w':
-	    wrapLines = FALSE;
+	case 'v':			// trace work
+	    setVerbose(TRUE);
 	    break;
 	case '?':
 	    usage();
 	    /*NOTREACHED*/
 	}
 
-    pagewidth = pageWidth - 2*xMargin;
-    pageheight = pageHeight - 2*yMargin;
+    MIMEState mime("text", "plain");
+    parseHeaders(stdin, mime.lineno);	// collect top-level headers
 
-    // vertical height of a line XXX should use descender info
-    vh = (pageHeight+.018*pageHeight)/(pageHeight-.018*pageHeight)*pointsize;
-    xmax = 72 * pagewidth;	// max horizontal place
-    ymax = 72 * pageheight;	// max vertical location
-    ymin = 0;			// lowest imageable point on page
-
-    if (!italic.readMetrics(pointsize, useISO8859))
-	fontWarn(italic.name);
-    if (!bold.readMetrics(pointsize, useISO8859))
-	fontWarn(bold.name);
-    calculateHeaderStop();
-
-    if (bodyFontFile != "") {
-	u_int l = bodyFontFile.length();
-	bodyFont = bodyFontFile.tokenR(l, '/');		// last component
-	l = bodyFont.nextR(bodyFont.length(), '.');	// strip any suffix
-	if (l > 0)
-	    bodyFont.resize(l-1);
-    }
-}
-
-void
-faxMailApp::setupPageSize(const char* name)
-{
-    PageSizeInfo* info = PageSizeInfo::getPageSizeByName(name);
-    if (!info)
-	fxFatal("Unknown page size \"%s\"", name);
-    pageWidth = info->width() / 25.4;
-    pageHeight = info->height() / 25.4;
-    delete info;
-}
-
-static const char* prolog =
-"/inch {72 mul} def\n"
-"/pw %.2f inch def\n"
-"/ph %.2f inch def\n"
-"/NL {"
-    "/vpos vpos %.2f sub def\n"
-    "0 vpos moveto\n"
-"} bind def\n"
-"/M {"
-    "vpos moveto\n"
-"} bind def\n"
-"/H {"
-    "/vpos %.2f def\n"
-    "0 vpos moveto\n"
-"} bind def\n"
-"/OL {\n"
-    ".1 setlinewidth\n"
-    "0.8 setgray\n"
-    "gsave\n"
-    ".1 inch -.1 inch translate\n"
-    "newpath\n"
-    "0 0 moveto\n"
-    "0 ph lineto\n"
-    "pw ph lineto\n"
-    "pw 0 lineto\n"
-    "closepath\n"
-    "fill\n"
-    "grestore\n"
-    "1.0 setgray\n"
-    "newpath\n"
-    "0 0 moveto\n"
-    "0 ph lineto\n"
-    "pw ph lineto\n"
-    "pw 0 lineto\n"
-    "closepath\n"
-    "fill\n"
-    "0.0 setgray\n"
-    "newpath\n"
-    "0 0 moveto\n"
-    "0 ph lineto\n"
-    "pw ph lineto\n"
-    "pw 0 lineto\n"
-    "closepath\n"
-    "stroke\n"
-"} bind def\n"
-"/I {ifont setfont show} bind def\n"
-"/B {bfont setfont show} bind def\n"
-"/R {bodyfont setfont show} bind def\n"
-;
-const char* ISOprologue1 = "\
-/ISOLatin1Encoding where{pop save true}{false}ifelse\n\
-/ISOLatin1Encoding[\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /space /exclam /quotedbl /numbersign\n\
- /dollar /percent /ampersand /quoteright /parenleft\n\
- /parenright /asterisk /plus /comma /minus /period\n\
- /slash /zero /one /two /three /four /five /six /seven\n\
- /eight /nine /colon /semicolon /less /equal /greater\n\
- /question /at /A /B /C /D /E /F /G /H /I /J /K /L /M\n\
- /N /O /P /Q /R /S /T /U /V /W /X /Y /Z /bracketleft\n\
- /backslash /bracketright /asciicircum /underscore\n\
- /quoteleft /a /b /c /d /e /f /g /h /i /j /k /l /m\n\
- /n /o /p /q /r /s /t /u /v /w /x /y /z /braceleft\n\
- /bar /braceright /asciitilde /guilsinglright /fraction\n\
- /florin /quotesingle /quotedblleft /guilsinglleft /fi\n\
- /fl /endash /dagger /daggerdbl /bullet /quotesinglbase\n\
- /quotedblbase /quotedblright /ellipsis /trademark\n\
- /perthousand /grave /scaron /circumflex /Scaron /tilde\n\
- /breve /zcaron /dotaccent /dotlessi /Zcaron /ring\n\
- /hungarumlaut /ogonek /caron /emdash /space /exclamdown\n\
- /cent /sterling /currency /yen /brokenbar /section\n\
- /dieresis /copyright /ordfeminine /guillemotleft\n\
- /logicalnot /hyphen /registered /macron /degree\n\
- /plusminus /twosuperior /threesuperior /acute /mu\n\
- /paragraph /periodcentered /cedilla /onesuperior\n\
- /ordmasculine /guillemotright /onequarter /onehalf\n\
- /threequarters /questiondown /Agrave /Aacute\n\
- /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla\n\
- /Egrave /Eacute /Ecircumflex /Edieresis /Igrave /Iacute\n\
- /Icircumflex /Idieresis /Eth /Ntilde /Ograve /Oacute\n\
- /Ocircumflex /Otilde /Odieresis /multiply /Oslash\n\
- /Ugrave /Uacute /Ucircumflex /Udieresis /Yacute /Thorn\n\
- /germandbls /agrave /aacute /acircumflex /atilde\n\
- /adieresis /aring /ae /ccedilla /egrave /eacute\n\
- /ecircumflex /edieresis /igrave /iacute /icircumflex\n\
- /idieresis /eth /ntilde /ograve /oacute /ocircumflex\n\
- /otilde /odieresis /divide /oslash /ugrave /uacute\n\
- /ucircumflex /udieresis /yacute /thorn /ydieresis\n\
-]def{restore}if\n\
-";
-const char* ISOprologue2 = "\
-/reencodeISO{\n\
-  dup length dict begin\n\
-    {1 index /FID ne {def}{pop pop} ifelse} forall\n\
-    /Encoding ISOLatin1Encoding def\n\
-    currentdict\n\
-  end\n\
-}def\n\
-/findISO{\n\
-  dup /FontType known{\n\
-    dup /FontType get 3 ne\n\
-    1 index /CharStrings known{\n\
-      1 index /CharStrings get /Thorn known\n\
-    }{false}ifelse\n\
-    and\n\
-  }{false}ifelse\n\
-}def\n\
-";
-
-void
-faxMailApp::open()
-{
-    printf("%%!PS-Adobe-3.0\n");
-    printf("%%%%Creator: faxmail\n");
-    printf("%%%%Title: E-Mail\n");
-    time_t t = time(0);
-    printf("%%%%CreationDate: %s", ctime(&t));
-    printf("%%%%Origin: 0 0\n");
-    printf("%%%%BoundingBox: 0 0 %.0f %.0f\n", pageHeight*72, pageWidth*72);
-    printf("%%%%Pages: (atend)\n");
-    printf("%%%%PageOrder: Ascend\n");
-    printf("%%%%EndComments\n");
-    printf("%%%%BeginProlog\n");
-    fputs("/$printdict 50 dict def $printdict begin\n", stdout);
-    printf(prolog, pageWidth, pageHeight, vh, ymax);
-    if (useISO8859) {
-	fputs(ISOprologue1, stdout);
-	fputs(ISOprologue2, stdout);
-    }
-    fputs("end\n", stdout);
-    printf("%%%%EndProlog\n");
-    printf("%%%%BeginSetup\n");
-    fputs("$printdict begin\n", stdout);
-    defineFont(stdout, "ifont", italic.name);	italic.showproc = "I";
-    defineFont(stdout, "bfont", bold.name);	bold.showproc = "B";
-    if (bodyFontFile == "" || !loadBodyFont(stdout, bodyFontFile, bodyFont))
-	defineFont(stdout, "bodyfont", defBodyFont);
-    body.showproc = "R";
-    fputs("end\n", stdout);
-    printf("%%%%EndSetup\n");
-    formatMail(stdout);
-    printf("%%%%Trailer\n");
-    printf("%%%%Pages: %d\n", pageno);
-    printf("%%%%EOF\n");
-}
-
-fxBool
-faxMailApp::loadBodyFont(FILE* fd, const char* fileName, const char* fontName)
-{
-    int f = ::open(fileName, O_RDONLY);
-    if (f >= 0) {
-	char buf[16*1024];
-	int n;
-	while ((n = read(f, buf, sizeof (buf))) > 0)
-	    fwrite(buf, n, 1, fd);
-	::close(f);
-	defineFont(fd, "bodyfont", fontName);
-	return (TRUE);
-    } else
-	return (FALSE);
-}
-
-void
-faxMailApp::formatMail(FILE* fd)
-{
-    startLogicalPage(fd);
-    int cc = 0;
-    char* bp = buffer;
-    int lastc = 0;
-    fxStr line;
-    for (;;) {
-	if (cc <= 0) {
-	    cc = fread(buffer, 1, sizeof (buffer), stdin);
-	    if (cc == 0)		// EOF
-		break;
-	    bp = buffer;
-	}
-	unsigned c = *bp++ & 0xff; cc--;
-	if (c == '\n') {
-	    if (lastc == '\n')
-		break;
-	    flushHeaderLine(fd, line);
-	    line.resize(0);
-	} else
-	    line.append(c);
-	lastc = c;
-    }
-    lineBreak(fd);
-    if (!body.readMetrics(pointsize, useISO8859))
-	fontWarn(body.name);
-    tabWidth = 8 * body.widths[' '];
-    for (;;) {
-	if (cc <= 0) {
-	    cc = fread(buffer, 1, sizeof (buffer), stdin);
-	    if (cc == 0)		// EOF
-		break;
-	    bp = buffer;
-	}
-	int c = *bp++; cc--;
-	switch (c) {
-	case '\t':
-	    tab(fd);
-	    break;
-	case '\f':
-	    endLogicalPage(fd);		// flush current page
-	    startLogicalPage(fd);	// ... and being a new one
-	    break;
-	case '\n':
-	    lineBreak(fd);
-	    break;
-	default:
-	    if (c >= NCHARS)		// skip out-of-range glyphs
-		break;
-	    if (startNewPage)
-		startLogicalPage(fd);
-	    if (xpos + body.widths[c] > xmax) {
-		if (!wrapLines)		// toss character
-		    break;
-		lineBreak(fd);
-	    }
-	    xpos += body.widths[c];
-	    output.append(c);
-	    break;
-	}
-    }
-    endLogicalPage(fd);
-    if (row != 0 || col != 0)
-	fputs("showpage end restore\n", fd);
-}
-
-void
-faxMailApp::flushHeaderLine(FILE* fd, const fxStr& line)
-{
-    /*
-     * Collect field name in a canonical format.
-     * If the line begins with whitespace, then
-     * it's the continuation of a previous header.
-     */ 
-    if (line.length() > 0 && !isspace(line[0])) { 
-	u_int l = 0;
-	fxStr field(line.token(l, ':'));
-	if (field == "" || l >= line.length())
-	    return;
-	if (lastHeaderShown = okToShowHeader(field)) {
-	    /*
-	     * Embolden field name and italicize field value.
-	     */
-	    fxStr value(line.tail(line.length() - l));
-	    bold.show(fd, field | ":");
-	    hmove(fd, headerStop);
-	    showWrapItalic(fd, value);
-	    lineBreak(fd);
-	    if (field == "from" && doBodyFont)
-		lookForBodyFont(value);
-	}
-    } else if (lastHeaderShown) {
-	hmove(fd, headerStop);			// line up with above header
-	showWrapItalic(fd, line);
-	lineBreak(fd);
-    }
-}
-
-void
-faxMailApp::showWrapItalic(FILE* fd, const char* cp)
-{
-    while (isspace(*cp))			// skip white space
-	cp++;
-    float x = xpos;
-    const char* tp = cp;
-    for (; *tp != '\0'; tp++) {
-	float w = italic.widths[*tp];
-	if (x + w > xmax) {
-	    italic.show(fd, cp, tp-cp);
-	    lineBreak(fd);
-	    hmove(fd, headerStop);
-	    cp = tp, x = xpos;
-	}
-	x += w;
-    }
-    if (tp > cp)
-	italic.show(fd, cp, tp-cp);
-}
-
-float fxmin(float a, float b)	{ return (a < b ? a : b); }
-
-void
-faxMailApp::startLogicalPage(FILE* fd)
-{
-    if (row == 0 && col == 0) {
-	pageno++;
-	fprintf(fd, "%%%%Page: \"%d\" %d\n", pageno, pageno);
-	fputs("save $printdict begin\n", fd);
-    }
-    ypos = ymax;
-    xpos = 0;				// translate offsets page
-    fprintf(fd, "gsave\n");
-    if (pagefactor > 1) {
-	fprintf(fd, "%g inch %g inch translate\n",
-	    xMargin + col * pagewidth / (float) pagefactor,
-	    yMargin + (pagefactor - row - 1) * pageheight / pagefactor);
-	float w = (pagewidth - (pagefactor-1)*xMargin) / pageWidth;
-	float h = (pageheight - (pagefactor-1)*yMargin) / pageHeight;
-	fprintf(fd, "%g dup scale\n", fxmin(w, h) / pagefactor);
-	fprintf(fd, "OL\n");
-    }
-    fprintf(fd, "%.2f inch %.2f inch translate\n", xMargin, yMargin);
-    fprintf(fd, "H\n");			// top of page
-    startNewPage = FALSE;
-}
-
-void
-faxMailApp::endLogicalPage(FILE* fd)
-{
-    flushOutput(fd);
-    fprintf(fd, "grestore\n");
-    if (++row == pagefactor) {
-	row = 0;
-	if (++col == pagefactor)
-	    col = 0;
-	if (row == 0 && col == 0)
-	    fputs("showpage end restore\n", fd);
-    }
-    startNewPage = TRUE;
-}
-
-void
-faxMailApp::lineBreak(FILE* fd)
-{
-    flushOutput(fd);
-    fprintf(fd, "NL\n");
-    ypos -= vh;
-    xpos = 0;
-    if (ypos < ymin)
-	endLogicalPage(fd);
-}
-
-void
-faxMailApp::tab(FILE* fd)
-{
-    flushOutput(fd);
-    if (xpos)
-	xpos = floor((xpos + 0.05) / tabWidth);
-    xpos = tabWidth * (1 + xpos);
-    hmove(fd, xpos);
-}
-
-void
-faxMailApp::hmove(FILE* fd, float pos)
-{
-    flushOutput(fd);
-    xpos = pos;
-    fprintf(fd, "%.2f M\n", xpos);
-}
-
-void
-faxMailApp::flushOutput(FILE* fd)
-{
-    if (startNewPage)
-	startLogicalPage(fd);
-    if (output.length() > 0) {
-	body.show(fd, output, output.length());
-	output.resize(0);
-    }
-}
-
-const char* ISOFont = "\
-/%s findfont \
-findISO{reencodeISO /%s-ISO exch definefont}if \
-%.1f scalefont \
-/%s exch def\n\
-";
-const char* STDFont = "\
-/%s findfont \
-%.1f scalefont \
-/%s exch def\n\
-";
-
-void
-faxMailApp::defineFont(FILE* fd, const char* psname, const char* fname)
-{
-    if (useISO8859)
-	fprintf(fd, ISOFont, fname, fname, pointsize, psname);
+    if (!getPageHeaders())		// narrow top+bottom margins
+	setPageMargins("t=0.35in,b=0.25in");
     else
-	fprintf(fd, STDFont, fname, pointsize, psname);
+	setPageMargins("t=0.6in,b=0.25in");
+
+    if (deliver) {
+	/*
+	 * Direct delivery was specified on the command line.
+	 * Setup to submit the formatted facsimile directly
+	 * to a server.
+	 */
+	client = new MySendFaxClient;
+	client->setup(verbose);
+
+	/*
+	 * Setup the destination (dialstring and
+	 * optionally a receipient).  Dialing stuff
+	 * given on the command line is replaced by
+	 * information in the envelope so that strings
+	 * that contain characters that are invalid
+	 * email addresses can be specified.
+	 */
+	job = &client->addJob();
+	if (optind < argc) {			// specified on command line
+	    fxStr dest(argv[optind]);		// [person@]number
+	    u_int l = dest.next(0, '@');
+	    if (l != dest.length()) {
+		job->setCoverName(dest.head(l));
+		dest.cut(0, l+1);
+	    }
+	    job->setDialString(dest);
+	}
+	const fxStr* s;
+	if (s = findHeader("x-fax-dialstring"))	// dialstring in envelope
+	    job->setDialString(*s);
+	if (job->getDialString() == "")
+	    fxFatal("No Destination/Dialstring specified");
+
+	/*
+	 * Establish the sender's identity.
+	 */
+	if (optind+1 < argc)
+	    client->setFromIdentity(argv[optind+1]);
+	else if (s = findHeader("from"))
+	    client->setFromIdentity(*s);
+	else
+	    fxFatal("No From/Sender identity specified");
+
+	/*
+	 * Scan envelope for any meta-headers that
+	 * control how job submission is to be done.
+	 */
+	job->setAutoCoverPage(autoCoverPage);
+	for (u_int i = 0, n = fields.length();  i < n; i++) {
+	    const fxStr& field = fields[i];
+	    if (strncasecmp(field, "x-fax-", 6) != 0)
+		continue;
+	    fxStr tag(field.tail(field.length() - 6));
+	    tag.lowercase();
+	    if (job->setConfigItem(tag, MsgFmt::headers[i]))
+		;
+	    else if (client->setConfigItem(tag, MsgFmt::headers[i]))
+		;
+	}
+
+	/*
+	 * If a cover page is desired fill in any info
+	 * from the envelope that might be useful.
+	 */
+	if (job->getAutoCoverPage()) {
+	    /*
+	     * If nothing has been specified for a
+	     * regarding field on the cover page and
+	     * a subject line exists, use that info.
+	     */
+	    if (job->getCoverRegarding() == "" && (s = findHeader("subject"))) {
+		fxStr subj(*s);
+		while (subj.length() > 3 && strncasecmp(subj, "Re:", 3) == 0)
+		    subj.remove(0, subj.skip(3, " \t"));
+		job->setCoverRegarding(subj);
+	    }
+	    /*
+	     * Likewise for the receipient name.
+	     */
+	    if (job->getCoverName() == "" && (s = findHeader("to"))) {
+		/*
+		 * Try to extract a user name from the to information.
+		 */
+		fxStr to(*s);
+		u_int l = to.next(0, '<');
+		u_int tl = to.length();
+		if (l == tl) {
+		    l = to.next(0, '(');
+		    if (l != tl)		// joe@foobar (Joe Schmo)
+			l++, to = to.token(l, ')');
+		    else {			// joe@foobar
+			l = to.next(0, '@');
+			if (l != tl)
+			    to = to.head(l);
+		    }
+		} else {			// Joe Schmo <joe@foobar>
+		    to = to.head(l);
+		}
+		// strip any leading&trailing white space
+		to.remove(0, to.skip(0, " \t"));
+		to.resize(to.skipR(to.length(), " \t"));
+		job->setCoverName(to);
+	    }
+	}
+
+	/*
+	 * Redirect formatted output to a temp
+	 * file and setup delivery of the file.
+	 */
+	fxStr tmpl = _PATH_TMP "/faxmailXXXXXX";
+	int fd = Sys::mkstemp(tmpl);
+	if (fd < 0)
+	    fxFatal("Cannot create temp file %s", (const char*) tmpl);
+	tmps.append(tmpl);
+	client->addFile(tmpl);
+	beginFormatting(fdopen(fd, "w"));
+    } else
+	beginFormatting(stdout);	// NB: sets up page info
+
+    beginFile();
+
+    formatHeaders(*this);		// format top-level headers
+
+    const fxStr* version = findHeader("MIME-Version");
+    if (version && *version == "1.0")
+	formatMIME(stdin, mime, *this);	// parse MIME format
+    else
+	formatText(stdin, mime);	// treat body as text/plain
+
+    endFile();
+    endFormatting();
+
+    if (client) {			// complete direct delivery
+	fxBool status = FALSE;
+	fxStr emsg;
+	const char* user = mailUser;
+	if (user[0] == '\0')		// null user =>'s use real uid
+	    user = NULL;
+	if (client->callServer(emsg)) {
+	    status = client->login(user, emsg)
+		  && client->prepareForJobSubmissions(emsg)
+		  && client->submitJobs(emsg);
+	    client->hangupServer();
+	}
+	if (!status)
+	    fxFatal("%s", (const char*) emsg);
+    }
 }
 
-fxBool
-faxMailApp::okToShowHeader(const char* tag)
+/*
+ * Emit PostScript prologue stuff defined in
+ * system-wide prologue file and possibly
+ * supplied in a MIME-encoded body part.
+ */
+void
+faxMailApp::emitClientPrologue(FILE* fd)
 {
-    for (u_int i = 0; i < NHEADERS; i++)
-	if (strcasecmp(headers[i], tag) == 0)
+    if (mailProlog != "")		// site-specific prologue
+	copyFile(fd, mailProlog);
+    if (clientProlog != "")		// copy client-specific prologue
+	copyFile(fd, clientProlog);
+}
+
+/*
+ * Parse MIME headers and dispatch to the appropriate
+ * formatter based on the content-type information.
+ */
+void
+faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
+{
+    fxStr emsg;
+    if (mime.parse(msg, emsg)) {
+	if (verbose)
+	    mime.trace(stderr);
+	// XXX anything but us-ascii is treated as ISO-8859-1
+	setISO8859(mime.getCharset() != CS_USASCII);
+
+	/*
+	 * Check first for any external script/command to
+	 * use in converting the body part to PostScript.
+	 * If something is present, then we just decode the
+	 * body part into a temporary file and hand it to
+	 * the script.  Otherwise we fallback on some builtin
+	 * body part handlers that process the most common
+	 * content types we expect to encounter.
+	 */
+	const fxStr& type = mime.getType();
+	fxStr app = mimeConverters | "/" | type | "/" | mime.getSubType();
+	if (Sys::access(app, X_OK) >= 0)
+	    formatWithExternal(fd, app, mime);
+	else if (type == "text")
+	    formatText(fd, mime);
+	else if (type == "application")
+	    formatApplication(fd, mime);
+	else if (type == "multipart")
+	    formatMultipart(fd, mime, msg);
+	else if (type == "message")
+	    formatMessage(fd, mime, msg);
+	else {					// cannot handle, discard
+	    discardPart(fd, mime);
+	    formatDiscarded(mime);
+	}
+    } else
+	error("%s", (const char*) emsg);
+}
+
+/*
+ * Format a text part.
+ */
+void
+faxMailApp::formatText(FILE* fd, MIMEState& mime)
+{
+    fxStackBuffer buf;
+    while (mime.getLine(fd, buf))
+	format(buf, buf.getLength());		// NB: treat as text/plain
+}
+
+/*
+ * Format a multi-part part.
+ */
+void
+faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
+{
+    discardPart(fd, mime);			// prologue
+    if (!mime.isLastPart()) {
+	do {
+	    int c = getc(fd);
+	    if (c == EOF) {
+		error("Badly formatted MIME; premature EOF");
+		break;
+	    }
+	    ungetc(c, fd);			// push back read ahead
+
+	    MsgFmt bodyHdrs(msg);		// parse any headers
+	    bodyHdrs.parseHeaders(fd, mime.lineno);
+
+	    MIMEState bodyMime(mime);		// state for sub-part
+	    formatMIME(fd, bodyMime, bodyHdrs);
+	} while (!mime.isLastPart());
+    }
+}
+
+/*
+ * Format a message part.
+ */
+void
+faxMailApp::formatMessage(FILE* fd, MIMEState& mime, MsgFmt& msg)
+{
+    if (mime.getSubType() == "rfc822") {	// discard anything else
+	msg.parseHeaders(fd, mime.lineno);	// collect headers
+	/*
+	 * Calculate the amount of space required to format
+	 * the message headers and any required inter-message
+	 * divider mark.  If there isn't enough space to put
+	 * the headers and one line of text together on the
+	 * same column then break and start a new column.
+	 */
+	const char* divider = NULL;
+	if (mime.isParent("multipart", "digest") && msgDivider != "") {
+	    /*
+	     * XXX, hack.  Avoid inserting a digest divider when
+	     * the sub-part is a faxmail prologue or related part.
+	     */
+	    const fxStr* s = msg.findHeader("Content-Type");
+	    if (!s || !strneq(*s, "application/x-faxmail", 21))
+		divider = msgDivider;
+	}
+	u_int nl = msg.headerCount()		// header lines
+	    + (nl > 0)				// blank line following header
+	    + (divider != NULL)			// digest divider
+	    + 1;				// 1st text line of message
+	reserveVSpace(nl*getTextLineHeight());
+	if (divider) {				// emit digest divider
+	    beginLine();
+		fprintf(getOutputFile(), " %s ", divider);
+	    endLine();
+	}
+	if (nl > 0)
+	    msg.formatHeaders(*this);		// emit formatted headers
+
+	MIMEState subMime(mime);
+	formatMIME(fd, subMime, msg);		// format message body
+    } else {
+	discardPart(fd, mime);
+	formatDiscarded(mime);
+    }
+}
+
+/*
+ * Format an application part.
+ */
+void
+faxMailApp::formatApplication(FILE* fd, MIMEState& mime)
+{
+    if (mime.getSubType() == "postscript") {	// copy PS straight thru
+	FILE* fout = getOutputFile();
+	fxStackBuffer buf;
+	while (mime.getLine(fd, buf))
+	    fwrite((const char*) buf, buf.getLength(), 1, fout);
+    } else if (mime.getSubType() == "x-faxmail-prolog") {
+	copyPart(fd, mime, clientProlog);	// save client PS prologue
+    } else {
+	discardPart(fd, mime);
+	formatDiscarded(mime);
+    }
+}
+
+/*
+ * Format a MIME part using an external conversion
+ * script to convert the decoded body to PostScript.
+ */
+fxBool
+faxMailApp::formatWithExternal(FILE* fd, const fxStr& app, MIMEState& mime)
+{
+    fxBool ok = FALSE;
+    if (verbose)
+	fprintf(stderr, "CONVERT: run %s\n", (const char*) app);
+    fxStr tmp;
+    if (copyPart(fd, mime, tmp)) {
+	flush();				// flush pending stuff
+	ok = runConverter(app, tmp, mime);
+	Sys::unlink(tmp);
+    }
+    return (ok);
+}
+
+/*
+ * Mark a discarded part if configured.
+ */
+void
+faxMailApp::formatDiscarded(MIMEState& mime)
+{
+    if (markDiscarded) {
+	fxStackBuffer buf;
+	buf.put("-----------------------------\n");
+	if (mime.getDescription() != "")
+	    buf.fput("DISCARDED %s (%s/%s) GOES HERE\n"
+		, (const char*) mime.getDescription()
+		, (const char*) mime.getType()
+		, (const char*) mime.getSubType()
+	    );
+	else
+	    buf.fput("DISCARDED %s/%s GOES HERE\n"
+		, (const char*) mime.getType()
+		, (const char*) mime.getSubType()
+	    );
+	format(buf, buf.getLength());
+    }
+}
+
+/*
+ * Discard input data up to the next boundary marker.
+ */
+void
+faxMailApp::discardPart(FILE* fd, MIMEState& mime)
+{
+    fxStackBuffer buf;
+    while (mime.getLine(fd, buf))
+	;					// discard input data
+}
+
+/*
+ * Copy input data up to the next boundary marker.
+ * The data is stored in a temporary file that is
+ * either created or, if passed in, appended to.
+ * The latter is used, for example, to accumulate
+ * client-specified prologue data.
+ */
+fxBool
+faxMailApp::copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile)
+{
+    int ftmp;
+    if (tmpFile == "") {
+	tmpFile = _PATH_TMP "/faxmailXXXXXX";
+	tmps.append(tmpFile);
+	ftmp = Sys::mkstemp(tmpFile);
+    } else
+	ftmp = Sys::open(tmpFile, O_WRONLY|O_APPEND);
+    if (ftmp >= 0) {
+	fxStackBuffer buf;
+	fxBool ok = TRUE;
+	while (mime.getLine(fd, buf) && ok)
+	    ok = (Sys::write(ftmp, buf, buf.getLength()) == buf.getLength());
+	if (ok) {
+	    Sys::close(ftmp);
 	    return (TRUE);
+	}
+	error("%s: write error: %s", (const char*) tmpFile, strerror(errno));
+	Sys::close(ftmp);
+    } else
+	error("%s: Can not create temporary file", (const char*) tmpFile);
+    discardPart(fd, mime);
     return (FALSE);
 }
 
-void
-faxMailApp::calculateHeaderStop()
+/*
+ * Run an external converter program.
+ */
+fxBool
+faxMailApp::runConverter(const fxStr& app, const fxStr& tmp, MIMEState& mime)
 {
-    headerStop = 0;
-    for (u_int i = 0; i < NHEADERS; i++) {
-	float w = bold.strwidth(headers[i]);
-	if (w > headerStop)
-	    headerStop = w;
+    const char* av[3];
+    av[0] = strrchr(app, '/');
+    if (av[0] == NULL)
+	av[0] = app;
+    // XXX should probably pass in MIME state like charset
+    av[1] = tmp;
+    av[2] = NULL;
+    pid_t pid = fork();
+    switch (pid) {
+    case -1:				// error
+	error("Error converting %s/%s; could not fork subprocess: %s"
+	    , (const char*) mime.getType()
+	    , (const char*) mime.getSubType()
+	    , strerror(errno)
+	);
+	break;
+    case 0:				// child, exec command
+	dup2(fileno(getOutputFile()), STDOUT_FILENO);
+	Sys::execv(app, (char* const*) av);
+	_exit(-1);
+	/*NOTREACHED*/
+    default:
+	int status;
+	if (Sys::waitpid(pid, status) == pid && status == 0)
+	    return (TRUE);
+	error("Error converting %s/%s; command was \"%s %s\"; exit status %x"
+	    , (const char*) mime.getType()
+	    , (const char*) mime.getSubType()
+	    , (const char*) app
+	    , (const char*) tmp
+	    , status
+	);
+	break;
     }
-    headerStop += bold.widths[':'];
-    float boldTab = 8 * bold.widths[' '];
-    headerStop = boldTab * (1 + floor((headerStop + 0.05) / boldTab));
+    return (FALSE);
+}
+
+/*
+ * Copy the contents of the specified file to
+ * the output stream.
+ */
+void
+faxMailApp::copyFile(FILE* fd, const char* filename)
+{
+    int fp = Sys::open(filename, O_RDONLY);
+    if (fp >= 0) {
+	char buf[16*1024];
+	u_int cc;
+	while ((cc = Sys::read(fp, buf, sizeof (buf))) > 0)
+	    (void) fwrite(buf, cc, 1, fd);
+	Sys::close(fp);
+    }
+}
+
+/*
+ * Configuration support.
+ */
+
+void
+faxMailApp::setupConfig()
+{
+    markDiscarded = TRUE;
+    mimeConverters = FAX_LIBEXEC "/faxmail";
+    mailProlog = FAX_LIBDATA "/faxmail.ps";
+    msgDivider = "";
+    mailUser = "";			// default to real uid
+    autoCoverPage = TRUE;		// a la sendfax
+
+    setPageHeaders(FALSE);		// disable normal page headers
+    setNumberOfColumns(1);		// 1 input page per output page
+
+    setLineWrapping(TRUE);
+    setISO8859(TRUE);
+
+    MsgFmt::setupConfig();
 }
 
 void
-faxMailApp::lookForBodyFont(const char* sender)
+faxMailApp::resetConfig()
 {
-    for (const char* cp = sender; isspace(*cp); cp++)
+    TextFmt::resetConfig();
+    setupConfig();
+}
+
+#undef streq
+#define	streq(a,b)	(strcasecmp(a,b)==0)
+
+fxBool
+faxMailApp::setConfigItem(const char* tag, const char* value)
+{
+    if (streq(tag, "markdiscarded"))
+	markDiscarded = getBoolean(value);
+    else if (streq(tag, "autocoverpage"))
+	autoCoverPage = getBoolean(value);
+    else if (streq(tag, "mimeconverters"))
+	mimeConverters = value;
+    else if (streq(tag, "prologfile"))
+	mailProlog = value;
+    else if (streq(tag, "digestdivider"))
+	msgDivider = value;
+    else if (streq(tag, "mailuser"))
+	mailUser = value;
+    else if (MsgFmt::setConfigItem(tag, value))
 	;
-    fxStr name(cp);
-    int l = name.next(0, '<');
-    if (l != name.length()) {	// Joe Schmo <joe@foobar>
-	name.remove(0, l);
-	name.resize(name.next(0, '>'));
-    } else			// joe@foobar (Joe Schmo)
-	name.resize(name.next(0, ' '));
-    if (name.length() == 0)
-	return;
-    // remove @host
-    name.resize(name.next(0, '@'));
-    // now strip leading host!host!...
-    while ((l = name.next(0, '!')) != name.length())
-	name.remove(0, l+1);
-    // got user account name, look for font in home directory!
-    struct passwd* pwd = getpwnam(name);
-    if (pwd) {
-	bodyFontFile = fxStr(pwd->pw_dir) | "/" | ".faxfont.ps";
-	bodyFont = name;
-    }
-}
-
-void
-faxMailApp::usage()
-{
-    fxFatal("usage: %s"
-	" [-p pointsize]"
-	" [-1234]"
-	, (char*) appName);
-}
-
-void
-faxMailApp::fontWarn(const fxStr& name)
-{
-    printError(
-	"Warning, can not open metrics for %s, using constant width instead.\n",
-	(char*) name);
-}
-
-void
-faxMailApp::printError(const char* va_alist ...)
-#define	fmt va_alist
-{
-    va_list ap;
-    va_start(ap, va_alist);
-    fprintf(stderr, "%s: ", (char*) appName);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    fprintf(stderr, ".\n");
-}
-#undef fmt
-
-Font::Font()
-{
-    setDefaultMetrics(10.);		// XXX insure something is defined
-}
-
-void
-Font::show(FILE* fd, const char* val, int len)
-{
-    if (len > 0) {
-	fprintf(fd, "(");
-	do {
-	    unsigned c = *val++ & 0xff;
-	    if ((c & 0200) == 0) {
-		if (c == '(' || c == ')' || c == '\\')
-		    putc('\\', fd);
-		putc(c, fd);
-	    } else
-		fprintf(fd, "\\%03o", c);
-	} while (--len);
-	fprintf(fd, ") %s\n", (char*) showproc);
-    }
-}
-
-void
-Font::show(FILE* fd, const fxStr& s)
-{
-    show(fd, s, s.length());
-}
-
-float
-Font::strwidth(const char* cp)
-{
-    float w = 0;
-    while (*cp)
-	w += widths[*cp++];
-    return w;
-}
-
-fxBool
-Font::getAFMLine(FILE* fp, char* buf, int bsize)
-{
-    if (fgets(buf, bsize, fp) == NULL)
+    else if (TextFmt::setConfigItem(tag, value))
+	;
+    else
 	return (FALSE);
-    char* cp = strchr(buf, '\n');
-    if (cp == NULL) {			// line too long, skip it
-	int c;
-	while ((c = getc(fp)) != '\n')	// skip to end of line
-	    if (c == EOF)
-		return (FALSE);
-	cp = buf;			// force line to be skipped
-    }
-    *cp = '\0';
     return (TRUE);
 }
+#undef streq
 
-FILE*
-Font::openFile(fxStr& pathname)
+#include <signal.h>
+
+static	faxMailApp* app = NULL;
+
+static void
+cleanup()
 {
-    FILE* fd;
-    pathname = fontDir | "/" | name | ".afm";
-    fd = fopen(pathname, "r");
-    if (fd != NULL || errno != ENOENT)
-	return (fd);
-    pathname.resize(pathname.length()-4);
-    return (fopen(pathname, "r"));
+    faxMailApp* a = app;
+    app = NULL;
+    delete a;
 }
 
-fxBool
-Font::readMetrics(float pointsize, fxBool useISO8859)
+static void
+sigDone(int)
 {
-    fxStr file;
-    FILE *fp = openFile(file);
-    if (fp == NULL) {
-	setDefaultMetrics(.625 * pointsize);	// NB: use fixed width metrics
-	return (FALSE);
-    }
-    /*
-     * Since many ISO-encoded fonts don't include metrics for
-     * the higher-order characters we cheat here and use a
-     * default metric for those glyphs that were unspecified.
-     */
-    setDefaultMetrics(useISO8859 ? .625*pointsize : 0.);
-
-    char buf[1024];
-    u_int line = 0;
-    do {
-	if (!getAFMLine(fp, buf, sizeof (buf))) {
-	    fclose(fp);
-	    return (TRUE);			// XXX
-	}
-	line++;
-    } while (strncmp(buf, "StartCharMetrics", 16));
-    while (getAFMLine(fp, buf, sizeof (buf)) && strcmp(buf, "EndCharMetrics")) {
-	line++;
-	int ix, w;
-	/* read the glyph position and width */
-	if (sscanf(buf, "C %d ; WX %d ;", &ix, &w) == 2) {
-	    if (ix == -1)			// end of unencoded glyphs
-		break;
-	    if (ix < NCHARS)
-		widths[ix] = (w/1000.) * pointsize;
-	} else
-	    fprintf(stderr, "%s, line %u: format error", (char*) file, line);
-    }
-    fclose(fp);
-    return (TRUE);
-}
-
-void
-Font::setDefaultMetrics(float w)
-{
-    for (int i = 0; i < NCHARS; i++)
-	widths[i] = w;
+    cleanup();
+    exit(-1);
 }
 
 int
 main(int argc, char** argv)
 {
-    faxMailApp app;
-    app.initialize(argc, argv);
-    app.open();
-    return 0;
+#ifdef LC_CTYPE
+    setlocale(LC_CTYPE, "");			// for <ctype.h> calls
+#endif
+
+    app = new faxMailApp;
+
+    app->run(argc, argv);
+    signal(SIGHUP, fxSIGHANDLER(SIG_IGN));
+    signal(SIGINT, fxSIGHANDLER(SIG_IGN));
+    signal(SIGTERM, fxSIGHANDLER(SIG_IGN));
+    cleanup();
+    return (0);
+}
+
+static void
+vfatal(FILE* fd, const char* fmt, va_list ap)
+{
+    fprintf(stderr, "faxmail: ");
+    vfprintf(fd, fmt, ap);
+    va_end(ap);
+    fputs(".\n", fd);
+    sigDone(0);
+}
+
+void
+MySendFaxClient::fatal(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vfatal(stderr, fmt, ap);
+    /*NOTTEACHED*/
+}
+
+void
+fxFatal(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vfatal(stderr, fmt, ap);
+    /*NOTREACHED*/
+}
+
+void
+faxMailApp::usage()
+{
+    fxFatal("usage: faxmail"
+	" [-b boldfont]"
+	" [-H pageheight]"
+	" [-i italicfont]"
+	" [-f textfont]"
+	" [-p pointsize]"
+	" [-s pagesize]"
+	" [-W pagewidth]"
+	" [-M margins]"
+	" [-12crRv]"
+    );
 }

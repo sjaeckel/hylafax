@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/Sys.h,v 1.8 1995/04/08 21:44:33 sam Rel $ */
+/*	$Id: Sys.h,v 1.19 1996/07/31 17:36:39 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -40,6 +40,10 @@
 
 #include "port.h"			// for anything not in system includes
 
+#if HAS_OSFCN_H
+#include <osfcn.h>
+#endif
+
 /*
  * Wrapper functions for C library calls.
  *
@@ -62,8 +66,14 @@ public:
 	{ return ::fstat(fd, &sb); }
     static fxBool isRegularFile(const char* filename);
     static fxBool isFIFOFile(const char* filename);
+    static fxBool isSocketFile(const char* filename);
+    static fxBool isFIFOFile(int fd);
+    static fxBool isCharSpecialFile(const char* filename);
+    static fxBool isCharSpecialFile(const char* filename, struct stat&);
     static int link(const char* file1, const char* file2)
 	{ return ::link(file1, file2); }
+    static int rename(const char* file1, const char* file2)
+	{ return ::rename(file1, file2); }
     static int unlink(const char* filename)
 	{ return  ::unlink(filename); }
     static int access(const char* path, int mode)
@@ -77,6 +87,7 @@ public:
 	{ return ::mkfifo(path, mode); }
     static int open(const char* filename, int flags, mode_t m = 0)
 	{ return ::open(filename, flags, m); }
+    static int close(int fd)		{ return ::close(fd); }
     // NB: char* param to read+write for implicit cast when using fxStr's
     static int write(int fd, const char *buf, u_int cc)
 	{ return ::write(fd, buf, cc); }
@@ -86,13 +97,13 @@ public:
     static time_t now(void)		{ return ::time(0); }
 
     static void execv(const char* path, char* const* argv)
-#if defined(sco)
+#ifdef CONFIG_BADEXECVPROTO
 	{ ::execv(path, (const char**) argv); }
 #else
 	{ ::execv(path, argv); }
 #endif
     static void execve(const char* path, char* const* argv, char* const* envp)
-#if defined(_AIX) || defined(sco)
+#ifdef CONFIG_BADEXECVEPROTO
 	{ ::execve(path, (const char**) argv, (const char**) envp); }
 #else
 	{ ::execve(path, argv, envp); }
@@ -102,7 +113,7 @@ public:
     static void waitpid(pid_t pid)	{ ::waitpid(pid, NULL, 0); }
 
     static int getopt(int argc, char* const* argv, const char* optstring)
-#if defined(_AIX)
+#ifdef CONFIG_BADGETOPTPROTO
 	{ return ::getopt(argc, (char**) argv, (char*) optstring); }
 #else
 	{ return ::getopt(argc, argv, optstring); }
@@ -111,14 +122,11 @@ public:
     static int gethostname(char* name, int namelen)
 	{ return ::gethostname(name, namelen); }
 
-    static char* tempnam(const char* dir, const char* prefix)
-#if defined(_AIX)
-	{ return ::tempnam((char*) dir, (char*) prefix); }
-#else
-	{ return ::tempnam(dir, prefix); }
-#endif
+    static char* mktemp(char* templ)	{ return ::mktemp(templ); }
     static int mkstemp(char* templ)	{ return ::mkstemp(templ); }
     static FILE* fopen(const char* filename, const char* mode)
 	{ return ::fopen(filename, mode); }
+
+    static int getOpenMax();
 };
 #endif /* _Sys_ */

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Encoder.h,v 1.7 1995/04/08 21:30:38 sam Rel $ */
+/*	$Id: G3Encoder.h,v 1.10 1996/06/24 03:00:31 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,16 +28,24 @@
 /*
  * Group 3 Facsimile Encoder Support.
  */
-#include "G3Base.h"
+#include "Types.h"
 
 class fxStackBuffer;
 struct tableentry;
 
-class G3Encoder : private G3Base {
+class G3Encoder {
 private:
+    fxBool	is2D;		// data is to be 1d/2d-encoded
+    const u_char* bitmap;	// bit reversal table
     short	data;		// current input/output byte
     short	bit;		// current bit in input/output byte
     fxStackBuffer& buf;
+
+    static const u_char zeroruns[256];
+    static const u_char oneruns[256];
+
+    static int findspan(const u_char**, int, int, const u_char*);
+    static int finddiff(const u_char*, int, int);
 
     void	putBits(u_int bits, u_int length);
     void	putcode(const tableentry& te);
@@ -47,7 +55,7 @@ public:
     G3Encoder(fxStackBuffer&);
     virtual ~G3Encoder();
 
-    void	setupEncoder(u_int fillOrder, fxBool is2d);
+    void	setupEncoder(u_int fillOrder, fxBool);
     void	encode(const void* raster, u_int w, u_int h);
 };
 #endif /* _G3Encoder_ */

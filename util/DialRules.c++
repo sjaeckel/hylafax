@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/DialRules.c++,v 1.20 1995/04/08 21:43:54 sam Rel $ */
+/*	$Id: DialRules.c++,v 1.28 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -54,12 +54,12 @@ DialRule::DialRule(){}
 DialRule::~DialRule(){}
 int DialRule::compare(const DialRule*) const { return 0; }
 
-fxDECLARE_ObjArray(RuleArray, DialRule);
-fxIMPLEMENT_ObjArray(RuleArray, DialRule);
-fxDECLARE_StrKeyDictionary(VarDict, fxStr);
-fxIMPLEMENT_StrKeyObjValueDictionary(VarDict, fxStr);
-fxDECLARE_StrKeyDictionary(RulesDict, RuleArrayPtr);
-fxIMPLEMENT_StrKeyObjValueDictionary(RulesDict, RuleArrayPtr);
+fxDECLARE_ObjArray(RuleArray, DialRule)
+fxIMPLEMENT_ObjArray(RuleArray, DialRule)
+fxDECLARE_StrKeyDictionary(VarDict, fxStr)
+fxIMPLEMENT_StrKeyObjValueDictionary(VarDict, fxStr)
+fxDECLARE_StrKeyDictionary(RulesDict, RuleArrayPtr)
+fxIMPLEMENT_StrKeyObjValueDictionary(RulesDict, RuleArrayPtr)
 
 DialStringRules::DialStringRules(const char* file) : filename(file)
 {
@@ -84,14 +84,16 @@ void DialStringRules::setVerbose(fxBool b) { verbose = b; }
  * to create the in-memory rules.
  */
 fxBool
-DialStringRules::parse()
+DialStringRules::parse(fxBool shouldExist)
 {
     fxBool ok = FALSE;
+    lineno = 0;
     fp = fopen(filename, "r");
     if (fp) {
 	ok = parseRules();
 	fclose(fp);
-    }
+    } else if (shouldExist)
+	parseError("Cannot open file for reading");
     return (ok);
 }
 
@@ -99,7 +101,8 @@ void
 DialStringRules::def(const fxStr& var, const fxStr& value)
 {
     if (verbose)
-	printf("Define %s = \"%s\"\n", (char*) var, (char*) value);
+	traceParse("Define %s = \"%s\"",
+	    (const char*) var, (const char*) value);
     (*vars)[var] = value;
 }
 
@@ -107,14 +110,13 @@ void
 DialStringRules::undef(const fxStr& var)
 {
     if (verbose)
-	printf("Undefine %s\n", (char*) var);
+	traceParse("Undefine %s", (const char*) var);
     vars->remove(var);
 }
 
 fxBool
 DialStringRules::parseRules()
 {
-    lineno = 0;
     char line[1024];
     char* cp;
     while (cp = nextLine(line, sizeof (line))) {
@@ -136,7 +138,7 @@ DialStringRules::parseRules()
 		    return (FALSE);
 		}
 	    if (verbose)
-		printf("%s := [\n", (char*) var);
+		traceParse("%s := [", (const char*) var);
 	    RuleArray* ra = new RuleArray;
 	    if (!parseRuleSet(*ra)) {
 		delete ra;
@@ -144,24 +146,24 @@ DialStringRules::parseRules()
 	    }
 	    (*rules)[var] = ra;
 	    if (verbose)
-		printf("]\n");
+		traceParse("]");
 	} else if (*cp == '=') {		// variable definition
 	    fxStr value;
 	    if (parseToken(cp+1, value) == NULL)
 		return (FALSE);
 	    def(var, value);
 	} else {				// an error
-	    parseError("Missing '=' or ':=' after \"%s\"", (char*) var);
+	    parseError("Missing '=' or ':=' after \"%s\"", (const char*) var);
 	    return (FALSE);
 	}
     }
     if (verbose) {
 	RuleArray* ra = (*rules)["CanonicalNumber"];
 	if (ra == 0)
-	    fprintf(stderr, "Warning, no \"CanonicalNumber\" rules.\n");
+	    traceParse("Warning, no \"CanonicalNumber\" rules.");
 	ra = (*rules)["DialString"];
 	if (ra == 0)
-	    fprintf(stderr, "Warning, no \"DialString\" rules.\n");
+	    traceParse("Warning, no \"DialString\" rules.");
     }
     return (TRUE);
 }
@@ -306,13 +308,16 @@ DialStringRules::parseRuleSet(RuleArray& rules)
 	if (parseToken(cp+1, r.replace) == NULL)
 	    return (FALSE);
 	if (verbose)
-	    printf("  \"%s\" = \"%s\"\n",
-		(char*) pat, (char*) r.replace);
+	    traceParse("  \"%s\" = \"%s\"",
+		(const char*) pat, (const char*) r.replace);
 	subRHS(r.replace);
-	for (u_int i = 0, n = regex->length(); i < n; i++) {
+	u_int i = 0;
+	u_int n = regex->length();
+	while (i < n) {
 	    RegEx* re = (*regex)[i];
 	    if (strcmp(re->pattern(), pat) == 0)
 		break;
+	    i++;
 	}
 	if (i >= n) {
 	    r.pat = new RegEx(pat);
@@ -328,22 +333,12 @@ DialStringRules::parseRuleSet(RuleArray& rules)
     }
 }
 
-#include <stdarg.h>
-
-void
-DialStringRules::parseError(const char* fmt ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    fprintf(stderr, "%s: line %u: ", (char*) filename, lineno); 
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    putc('\n', stderr);
-}
-
 fxStr
 DialStringRules::applyRules(const fxStr& name, const fxStr& s)
 {
+    if (verbose)
+	traceRules("Apply %s rules to \"%s\"",
+	    (const char*) name, (const char*) s);
     fxStr result(s);
     RuleArray* ra = (*rules)[name];
     if (ra) {
@@ -379,10 +374,49 @@ DialStringRules::applyRules(const fxStr& name, const fxStr& s)
 		result.remove(ix, len);
 		result.insert(replace, ix);
 		off = ix + replace.length();	// skip replace when searching
+		if (verbose)
+		    traceRules("--> match rule \"%s\", result now \"%s\"",
+			rule.pat->pattern(), (const char*) result);
 	    }
 	}
     }
+    if (verbose)
+	traceRules("--> return result \"%s\"", (const char*) result);
     return result;
+}
+
+#include <stdarg.h>
+
+void
+DialStringRules::parseError(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stderr, "%s: line %u: ", (const char*) filename, lineno); 
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    putc('\n', stderr);
+}
+
+void
+DialStringRules::traceParse(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    fprintf(stdout, "%s: line %u: ", (const char*) filename, lineno); 
+    vfprintf(stdout, fmt, ap);
+    va_end(ap);
+    putc('\n', stdout);
+}
+
+void
+DialStringRules::traceRules(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stdout, fmt, ap);
+    va_end(ap);
+    putc('\n', stdout);
 }
 
 /*

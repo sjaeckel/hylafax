@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1.h,v 1.57 1995/04/08 21:29:33 sam Rel $ */
+/*	$Id: Class1.h,v 1.63 1996/06/24 03:00:13 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -50,10 +50,11 @@ protected:
     fxStr	thCmd;			// command for transmitting a frame
     fxStr	rhCmd;			// command for receiving a frame
     u_int	dis;			// current remote DIS
-    Class2Params params;		// current params during send
-    long	group3opts;		// for writing received TIFF
+    u_int	xinfo;			// current remote DIS extensions
     const u_char* frameRev;		// HDLC frame bit reversal table
     fxStr	lid;			// encoded local id string
+    fxStr	pwd;			// transmit password
+    fxStr	sub;			// transmit subaddress
     Class1Cap	xmitCaps[15];		// modem send capabilities
     Class1Cap	recvCaps[15];		// modem recv capabilities
     const Class1Cap* curcap;		// capabilities being used
@@ -85,20 +86,24 @@ protected:
     virtual fxBool setupClass1Parameters();
     virtual fxBool setupFlowControl(FlowControl fc);
 // transmission support
-    fxBool	sendPrologue(u_int dcs, const fxStr& tsi);
+    fxBool	sendPrologue(u_int dcs, u_int xinfo, const fxStr& tsi);
     fxBool	dropToNextBR(Class2Params&);
     fxBool	raiseToNextBR(Class2Params&);
     fxBool	sendTraining(Class2Params&, int, fxStr& emsg);
     fxBool	sendTCF(const Class2Params&, u_int ms);
-    fxBool	sendPage(TIFF* tif, const Class2Params&, fxStr& emsg);
+    fxBool	sendPage(TIFF* tif, const Class2Params&, u_int, fxStr& emsg);
     fxBool	sendPageData(u_char* data, u_int cc, const u_char* bitrev);
     fxBool	sendRTC(fxBool is2D);
     fxBool	sendPPM(u_int ppm, HDLCFrame& mcf, fxStr& emsg);
     fxBool	decodePPM(const fxStr& pph, u_int& ppm, fxStr& emsg);
 // reception support
     const AnswerMsg* findAnswer(const char*);
-    fxBool	recvIdentification(u_int f1, const fxStr& id,
-		    u_int f2, u_int dics, u_int timer, fxStr& emsg);
+    fxBool	recvIdentification(
+		    u_int f1, const fxStr& pwd,
+		    u_int f2, const fxStr& addr,
+		    u_int f3, const fxStr& id,
+		    u_int f4, u_int dics, u_int xinfo,
+		    u_int timer, fxStr& emsg);
     fxBool	recvDCSFrames(HDLCFrame& frame);
     fxBool	recvTraining();
     fxBool	recvPPM(int& ppm, fxStr& emsg);
@@ -113,17 +118,19 @@ protected:
     virtual ATResponse atResponse(char* buf, long ms = 30*1000);
     virtual fxBool waitFor(ATResponse wanted, long ms = 30*1000);
     void	encodeTSI(fxStr& binary, const fxStr& ascii);
-    void	decodeTSI(fxStr& ascii, const HDLCFrame& binary);
+    const fxStr& decodeTSI(fxStr& ascii, const HDLCFrame& binary);
+    void	encodePWD(fxStr& binary, const fxStr& ascii);
+    const fxStr& decodePWD(fxStr& ascii, const HDLCFrame& binary);
     const Class1Cap* findSRCapability(u_short sr, const Class1Cap[]);
     const Class1Cap* findBRCapability(u_short br, const Class1Cap[]);
 // class 1 HDLC frame support
     fxBool	transmitFrame(u_char fcf, fxBool lastFrame = TRUE);
-    fxBool	transmitFrame(u_char fcf, u_int, fxBool lastFrame = TRUE);
+    fxBool	transmitFrame(u_char fcf, u_int, u_int, fxBool lastFrame = TRUE);
     fxBool	transmitFrame(u_char fcf, const fxStr&, fxBool lastFrame=TRUE);
     fxBool	transmitData(int br, u_char* data, u_int cc,
 		    const u_char* bitrev, fxBool eod);
     fxBool	sendFrame(u_char fcf, fxBool lastFrame = TRUE);
-    fxBool	sendFrame(u_char fcf, u_int, fxBool lastFrame = TRUE);
+    fxBool	sendFrame(u_char fcf, u_int, u_int, fxBool lastFrame = TRUE);
     fxBool	sendFrame(u_char fcf, const fxStr&, fxBool lastFrame = TRUE);
     fxBool	sendRawFrame(HDLCFrame& frame);
     fxBool	sendClass1Data(const u_char* data, u_int cc,
@@ -141,11 +148,11 @@ public:
     virtual ~Class1Modem();
 
 // send support
-    CallStatus	dialFax(const char* number, const Class2Params&, fxStr& emsg);
+    fxBool	sendSetup(FaxRequest&, const Class2Params&, fxStr& emsg);
     CallStatus	dialResponse(fxStr& emsg);
-    FaxSendStatus getPrologue(Class2Params&, u_int&, fxStr&, fxBool&, fxStr&);
-    void	sendBegin(const FaxRequest&);
-    void	sendSetupPhaseB();
+    FaxSendStatus getPrologue(Class2Params&, fxBool&, fxStr&);
+    void	sendBegin();
+    void	sendSetupPhaseB(const fxStr& pwd, const fxStr& sub);
     FaxSendStatus sendPhaseB(TIFF* tif, Class2Params&, FaxMachineInfo&,
 		    fxStr& pph, fxStr& emsg);
     void	sendEnd();
@@ -154,6 +161,7 @@ public:
 // receive support
     CallType	answerCall(AnswerType, fxStr& emsg);
     u_int	modemDIS() const;
+    u_int	modemXINFO() const;
     fxBool	setupReceive();
     fxBool	recvBegin(fxStr& emsg);
     fxBool	recvPage(TIFF*, int& ppm, fxStr& emsg);
@@ -161,8 +169,9 @@ public:
     void	recvAbort();
 
 // polling support
-    fxBool	requestToPoll();
-    fxBool	pollBegin(const fxStr& pollID, fxStr& emsg);
+    fxBool	requestToPoll(fxStr&);
+    fxBool	pollBegin(const fxStr& cig, const fxStr& sep, const fxStr& pwd,
+		    fxStr& emsg);
 
 // miscellaneous
     fxBool	faxService();			// switch to fax mode

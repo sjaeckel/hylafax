@@ -8,17 +8,45 @@
 # Edit your sendmail configuration.  Include the following
 # mailer definition (or similar):
 # 
-# Mfax,	P=/usr/local/lib/fax/mailfax, F=DFMhu, M=100000,
-# 	A=mailfax $u $h $f
+# Mfax,	P=/usr/local/lib/fax/mailfax, F=DFMShu, M=100000,
+# 	A=mailfax $h $f
 # 
 # and add the following address rewriting rule to rule set 0:
 # 
 # # forward FAX messages to HylaFAX software
 # R$+<@$+.FAX>		$#fax $@ $2 $: $1		user@host.FAX
 #
-# Note that the mailfax script must be invoked as either root, daemon, or
-# uucp if the from address is to be changed with the -f option to sendfax.
-# This is typically the case when sendmail invokes a mailer program and
-# the from address identity is different that of the real uid.
+# Things to note:
 #
-/usr/local/bin/faxmail | /usr/local/bin/sendfax -n -d "$1@$2" -f "$3"
+# 1. The above mailer definition includes the S flag which causes
+#    sendmail to invoke this script with the UID of the sender when
+#    mail is local.  This causes the submitted facsimile job to be
+#    owned by the sender which means they can remove it, alter its
+#    parameters, etc.  Mail received from another system will be
+#    owned by the user who's UID is specified in the sendmail config
+#    file as the default UID to use for doing delivery.  Typically
+#    this is daemon or similar.  Whatever user it is, they must be
+#    permitted to submit facsimile jobs w/o a password from the host
+#    where this script is run.
+# 2. The default setup below disables automatic cover page generation.
+#    If you enable it, faxmail will extract the name of the receipient
+#    from the To: header.  This is preferable to passing in the "user"
+#    information in the mail address (readily available from sendmail)
+#    since ``more friendly'' information may be available in the To:
+#    line in the form of a comment; e.g. To: joe@15551212.fax (Joe Schmo)
+#    would result in ``Joe Schmo'' being displayed on the cover page.
+# 3. If automatic cover page generation is to be used it is probably
+#    a good idea to create a special-purpose cover page template for
+#    facsimile generated though this gateway.  By default faxmail will
+#    use the default system cover page template.  An X-FAX-Cover-Template
+#    header line may also be inserted to select a cover page template file.
+# 4. Enabling a gateway facility with the scheme described here permits
+#    anyone to submit a facsimile if non-local submissions are accepted.
+#    Read the faxmail(1) manual page for some comments on extending
+#    the software to safely restrict off-machine submissions.
+# 5. The most effective use of this software involves inserting special
+#    headers that indicate how faxmail and the rest of the HylaFAX
+#    software should process the submitted facsimile.  Consult the
+#    faxmail documentation for details.
+#
+/usr/local/bin/faxmail -n -d "$1" "$2"

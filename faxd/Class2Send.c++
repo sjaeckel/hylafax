@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Send.c++,v 1.96 1995/04/08 21:29:52 sam Rel $ */
+/*	$Id: Class2Send.c++,v 1.103 1996/08/21 21:02:47 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -26,25 +26,49 @@
 #include <stdio.h>
 #include "Class2.h"
 #include "ModemConfig.h"
+#include "FaxRequest.h"
 
 /*
  * Send Protocol for Class-2-style modems.
  */
 
-CallStatus
-Class2Modem::dialFax(const char* number, const Class2Params& dis, fxStr& emsg)
+fxBool
+Class2Modem::sendSetup(FaxRequest& req, const Class2Params& dis, fxStr& emsg)
 {
+    const char* cmdFailed = " (modem command failed)";
+
+    /*
+     * PWD and SUB setup don't belong here, they should be done
+     * in setupSetupPhaseB at which time we know whether or not
+     * the receiver supports them.  However since no status message
+     * is defined for T.class2 such that we can determine this
+     * information and since some modems will undoubtedly require
+     * all session state to be setup prior to the initial call
+     * we'll send this stuff to the modem here (for now at least).
+     */
+    if (req.passwd != "" && pwCmd != "" && !class2Cmd(pwCmd, req.passwd)) {
+	emsg = fxStr::format("Unable to send password%s", cmdFailed);
+	return (FALSE);
+    }
+    if (req.subaddr != "" && saCmd != "" && !class2Cmd(saCmd, req.subaddr)) {
+	emsg = fxStr::format("Unable to send subaddress%s", cmdFailed);
+	return (FALSE);
+    }
+    if (req.minsp != BR_2400 && !class2Cmd(minspCmd, req.minsp)) {
+	emsg = fxStr::format("Unable to restrict minimum transmit speed to %s",
+	    Class2Params::bitRateNames[req.minsp], cmdFailed);
+	return (FALSE);
+    }
     if (conf.class2DDISCmd != "") {
-	Class2Params ddis(dis);
-	ddis.br = getBestSignallingRate();
-	ddis.ec = EC_DISABLE;		// XXX
-	ddis.bf = BF_DISABLE;
-	ddis.st = getBestScanlineTime();
-	if (class2Cmd(conf.class2DDISCmd, ddis))
-	    params = ddis;
+	if (!class2Cmd(conf.class2DDISCmd, dis)) {
+	    emsg = fxStr::format("Unable to setup session parameters "
+		"prior to call%s", cmdFailed);
+	    return (FALSE);
+	}
+	params = dis;
     }
     hadHangup = FALSE;
-    return (FaxModem::dialFax(number, dis, emsg));
+    return (FaxModem::sendSetup(req, dis, emsg));
 }
 
 /*
@@ -93,11 +117,10 @@ Class2Modem::dialResponse(fxStr& emsg)
  * sent to the caller on connecting to a fax machine.
  */
 FaxSendStatus
-Class2Modem::getPrologue(Class2Params& dis, u_int& nsf, fxStr& csi, fxBool& hasDoc, fxStr& emsg)
+Class2Modem::getPrologue(Class2Params& dis, fxBool& hasDoc, fxStr& emsg)
 {
     fxBool gotParams = FALSE;
     hasDoc = FALSE;
-    nsf = 0;
     for (;;) {
 	switch (atResponse(rbuf, conf.t1Timer)) {
 	case AT_FPOLL:
@@ -108,11 +131,10 @@ Class2Modem::getPrologue(Class2Params& dis, u_int& nsf, fxStr& csi, fxBool& hasD
 	    gotParams = parseClass2Capabilities(skipStatus(rbuf), dis);
 	    break;
 	case AT_FNSF:
-	    protoTrace("REMOTE NSF \"%s\"", skipStatus(rbuf));
+	    recvNSF(skipStatus(rbuf));
 	    break;
 	case AT_FCSI:
-	    csi = stripQuotes(skipStatus(rbuf));
-	    recvCSI(csi);
+	    recvCSI(stripQuotes(skipStatus(rbuf)));
 	    break;
 	case AT_OK:
 	    if (gotParams)
@@ -211,7 +233,7 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 	    }
 	    params = next;
 	}
-	if (dataTransfer() && sendPage(tif)) {
+	if (dataTransfer() && sendPage(tif, decodePageChop(pph, params))) {
 	    /*
 	     * Page transferred, process post page response from
 	     * remote station (XXX need to deal with PRI requests).).
@@ -228,8 +250,12 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		case PPR_MCF:		// page good
 		case PPR_PIP:		// page good, interrupt requested
 		case PPR_RTP:		// page good, retrain requested
-		    countPage();
-		    pph.remove(0,3);	// discard page-handling info
+		    countPage();	// bump page count
+		    notifyPageSent(tif);// update server
+		    if (pph[2] == 'Z')
+			pph.remove(0,2+5+1);	// discard page-chop+handling
+		    else
+			pph.remove(0,3);	// discard page-handling info
 		    ntrys = 0;
 		    if (ppr == PPR_PIP) {
 			emsg = "Procedure interrupt (operator intervention)";
@@ -291,6 +317,78 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 failed:
     sendAbort();
     return (send_failed);
+}
+
+/*
+ * Send one page of data to the modem, imaging any
+ * tag line that is configured.  We also implement
+ * page chopping based on the calculation done by
+ * faxq during document preparation.
+ *
+ * Note that we read an entire page of encoded data
+ * into memory before sending it to the modem.  This
+ * is done to avoid timing problems when the document
+ * is comprised of multiple strips.
+ */
+fxBool
+Class2Modem::sendPageData(TIFF* tif, u_int pageChop)
+{
+    fxBool rc = TRUE;
+
+    tstrip_t nstrips = TIFFNumberOfStrips(tif);
+    if (nstrips > 0) {
+	/*
+	 * Correct bit order of data if not what modem expects.
+	 */
+	uint16 fillorder;
+	TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
+	const u_char* bitrev =
+	    TIFFGetBitRevTable(fillorder != conf.sendFillOrder);
+	/*
+	 * Setup tag line processing.
+	 */
+	fxBool doTagLine = setupTagLineSlop(params);
+	u_int ts = getTagLineSlop();
+	/*
+	 * Calculate total amount of space needed to read
+	 * the image into memory (in its encoded format).
+	 */
+	uint32* stripbytecount;
+	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
+	tstrip_t strip;
+	uint32 totdata = 0;
+	for (strip = 0; strip < nstrips; strip++)
+	    totdata += stripbytecount[strip];
+	/*
+	 * Read the image into memory.
+	 */
+	u_char* data = new u_char[totdata+ts];
+	u_int off = ts;			// skip tag line slop area
+	for (strip = 0; strip < nstrips; strip++) {
+	    uint32 sbc = stripbytecount[strip];
+	    if (sbc > 0 && TIFFReadRawStrip(tif, strip, data+off, sbc) >= 0)
+		off += (u_int) sbc;
+	}
+	totdata -= pageChop;		// deduct trailing white space not sent
+	/*
+	 * Image the tag line, if intended, and then
+	 * pass the data to the modem, filtering DLE's
+	 * and being careful not to get hung up.
+	 */
+	u_char* dp;
+	if (doTagLine) {
+	    dp = imageTagLine(data+ts, fillorder, params);
+	    totdata = totdata+ts - (dp-data);
+	} else
+	    dp = data;
+	beginTimedTransfer();
+	rc = putModemDLEData(dp, (u_int) totdata, bitrev, getDataTimeout());
+	endTimedTransfer();
+	protoTrace("SENT %u bytes of data", totdata);
+
+	delete data;
+    }
+    return (rc);
 }
 
 /*

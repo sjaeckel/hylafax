@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/RegExArray.h,v 1.14 1995/04/08 21:44:20 sam Rel $ */
+/*	$Id: RegExArray.h,v 1.19 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -31,6 +31,5 @@
 #include "Array.h"
 #include "RegEx.h"
 
-fxDECLARE_Ptr(RegEx);
-fxDECLARE_ObjArray(RegExArray, RegExPtr);
+fxDECLARE_ObjArray(RegExArray, RegExPtr)
 #endif /* _RegExArray_ */

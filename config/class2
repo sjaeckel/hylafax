@@ -1,9 +1,9 @@
-# $Header: /usr/people/sam/fax/./config/RCS/class2,v 1.20 1995/04/08 21:25:03 sam Rel $
+# $Id: class2,v 1.23 1996/06/24 02:58:32 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -37,8 +37,8 @@ LongDistancePrefix:	1
 InternationalPrefix:	011
 AreaCode:		415
 DialStringRules:	etc/dialrules
-FAXNumber:		+1.415.965.7824
-LocalIdentifier:	+14159657824	# default is canonical FAXNumber
+FAXNumber:		+1.999.555.1212
+LocalIdentifier:	"NothingSetup"	# default is canonical FAXNumber
 ServerTracing:		1		# log server-related operations
 SessionTracing:		11		# log server-related operations
 RecvFileMode:		0600		# recvd facsimile are not public

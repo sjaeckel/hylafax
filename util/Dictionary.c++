@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/Dictionary.c++,v 1.14 1995/04/08 21:43:56 sam Rel $ */
+/*	$Id: Dictionary.c++,v 1.18 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,8 +27,8 @@
 
 #define DEFAULTSIZE 31
 
-fxIMPLEMENT_PtrArray(fxDictBuckets,fxDictBucket *);
-fxIMPLEMENT_PtrArray(fxDictIters, fxDictIter *);
+fxIMPLEMENT_PtrArray(fxDictBuckets,fxDictBucket *)
+fxIMPLEMENT_PtrArray(fxDictIters, fxDictIter *)
 
 #define KEYAT(base) (base)
 #define	VALUEAT(base) (void*)(((char*)base) + keysize)
@@ -62,8 +62,9 @@ fxDictionary::~fxDictionary()
 
 void fxDictionary::cleanup()
 {
+    u_int i;
     u_int l = buckets.length();
-    for (u_int i=0; i < l; i++) {
+    for (i=0; i < l; i++) {
 	fxDictBucket* bucket = buckets[i];
 	while (bucket) {
 	    fxDictBucket* bucket2 = bucket->next;

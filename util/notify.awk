@@ -1,10 +1,10 @@
 #! /bin/sh
-#	$Header: /usr/people/sam/fax/./util/RCS/notify.awk,v 1.20 1995/04/08 21:44:56 sam Rel $
+#	$Id: notify.awk,v 1.39 1996/06/24 03:06:21 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
 # its documentation for any purpose is hereby granted without fee, provided
@@ -32,20 +32,45 @@
 # overflowing the exec arg list on some systems like SCO.
 #
 
-func printItem(fmt, tag, value)
+function printItem(fmt, tag, value)
 {
     printf "%14s: " fmt "\n", tag, value;
+}
+
+function printBanner(banner)
+{
+    print "";
+    print "    ---- " banner " ----";
+    print "";
+}
+
+function docType(s)
+{
+    if (match(s, "\.cover"))
+	return "PostScript cover page";
+    else if (match(s, "\.ps"))
+	return "PostScript";
+    else if (match(s, "\.tif"))
+	return "TIFF";
+    else if (match(s, "\.pcl"))
+	return "PCL";
+    else
+	return "Unknown document type";
 }
 
 #
 # Construct a return-to-sender message.
 #
-func returnToSender()
+function returnToSender()
 {
-    printf "\n    ---- Unsent job status ----\n\n"
+    printBanner("Unsent job status");
     printItem("%s", "Destination", number);
+    printItem("%s", "JobID", jobid);
+    printItem("%s", "GroupID", groupid);
     printItem("%s", "Sender", sender);
     printItem("%s", "Mailaddr", mailaddr);
+    if (commid != "")
+	printItem("%s", "CommID", commid);
     if (modem != "any")
 	printItem("%s", "Modem", modem);
     printItem("%s", "Submitted From", client);
@@ -54,50 +79,63 @@ func returnToSender()
 	printItem("%.0f (mm)", "Page Length", pagelength);
 	printItem("%.0f (lpi)", "Resolution", resolution);
     }
-    printItem("%s", "Status", status);
+    printItem("%s", "Status", status == "" ? "  (nothing available)" : status);
     printItem("%u (exchanges with remote device)", "Dialogs", tottries);
     printItem("%u (consecutive failed calls to destination)", "Dials", ndials);
     printItem("%u (total phone calls placed)", "Calls", totdials);
     if (jobType == "facsimile") {
+	printItem("%u (pages transmitted)", "Pages", npages);
+	printItem("%u (total pages to transmit)", "TotPages", totpages);
 	printItem("%u (attempts to send current page)", "Attempts", ntries);
 	printItem("%u (directory of next page to send)", "Dirnum", dirnum);
 	if (nfiles > 0) {
-	    printf "\n    ---- Unsent files submitted for transmission ----\n\n";
-	    printf "This archive was created with %s, %s, and %s.\n",
-		tar, compressor, encoder;
-	    printf "The original files can be recovered by applying the following commands:\n";
-	    printf "\n";
-	    printf "    %s			# generates rts.%s.Z file\n", decoder, tar;
-	    printf "    %s rts.%s.Z  | %s xvf -	# generates separate files\n",
-		decompressor, tar, tar;
-	    printf "\n";
-	    printf "and the job can be resubmitted using the following command:\n";
-	    printf "\n";
-	    printf "    sendfax -d %s" poll notify resopt "%s\n", number, files;
-	    printf "\n";
-
-	    system("cd docq;" tar " cf - " files \
-			    " | " compressor \
-			    " | " encoder " rts." tar ".Z");
+	    printBanner("Documents submitted for transmission");
+	    print "The following documents were submitted for transmission and are";
+	    print "available on the server for reuse until they are automatically";
+	    print "purged when this job is " doneop "d.  Documents may also be manually";
+	    print "removed using the faxrm command; consult faxrm(1) for information.";
+	    print ""
+	    printf "%-20s %8s %s\n", "Filename", "Size", "Type";
+	    for (i = 0; i < nfiles; i++) {
+		"wc -c " files[i] | getline;
+		printf "%-20s %8d %s\n", files[i], $1, docType(files[i]);
+		close("wc -c " files[i]);
+	     }
 	}
     } else if (jobType == "pager") {
-	printf "\n    ---- Unsent pages submitted for transmission ----\n\n";
-	for (i = 0; i < npins; i++)
-	    printf "%14s\n",  "PIN " pins[i];
+	if (npins != 0) {
+	    printBanner("Unsent pages submitted for transmission");
+	    for (i = 0; i < npins; i++)
+		printf "%15s\n",  "PIN " pins[i];
+	}
 	if (nfiles != 0) {
-	    printf "\n    ---- Message text ----\n\n";
-	    while (getline <files)
+	    printBanner("Message text");
+	    while ((getline <files[0]) > 0)
 		print $0;
+	    close(files[0]);
 	}    
     }
 }
 
-func returnTranscript(pid, canon)
+function returnTranscript()
 {
-    system(transcript " " pid " \"" canon "\" 2>&1");
+    printBanner("Transcript of session follows");
+    comFile = "log/c" commid;
+    if ((getline <comFile) > 0) {
+	do {
+	    if (index($0, "-- data") == 0)
+		print $0
+	} while ((getline <comFile) > 0);
+	close(comFile);
+    } else {
+	printf "    No transcript available";
+	if (commid != "")
+	    printf "(CommID c" commid ")";
+	print ".";
+    }
 }
 
-func printStatus(s)
+function printStatus(s)
 {
     if (s == "")
 	print "<no reason recorded>";
@@ -105,7 +143,7 @@ func printStatus(s)
 	print s
 }
 
-func putHeaders(subject)
+function putHeaders(subject)
 {
     print "To: " mailaddr;
     print "Subject: " subject;
@@ -121,7 +159,13 @@ BEGIN		{ nfiles = 0;
 		  jobType = "facsimile";
 		  signalrate = "unknown";
 		  dataformat = "unknown";
+		  doneop = "default";
+		  commid = "";
 		}
+/^jobid/	{ jobid = $2; }
+/^groupid/	{ groupid = $2; }
+/^state/	{ state = $2+0; }
+/^doneop/	{ doneop = $2; }
 /^number/	{ number = $2; }
 /^external/	{ number = $2; }		# override unprocessed number
 /^sender/	{ sender = $2; }
@@ -130,21 +174,20 @@ BEGIN		{ nfiles = 0;
 /^jobtype/	{ jobType = $2; }
 /^status/	{ status = $0; sub("status:", "", status);
 		  if (status ~ /\\$/) {
-		      sub("\\\\$", "", status);
-		      while (getline) {
+		      sub("\\\\$", "\n", status);
+		      while (getline > 0) {
 			  status = status $0;
-			  sub("\\\\$", "", status);
+			  sub("\\\\$", "\n", status);
 			  if ($0 !~ /\\$/)
 			      break;
 		      }
 		  }
 		}
-/^resolution/	{ resolution = $2;
-		  if (resolution == 196)
-		      resopt = " -m";
-		}
+/^resolution/	{ resolution = $2; }
 /^npages/	{ npages = $2; }
+/^totpages/	{ totpages = $2; }
 /^dirnum/	{ dirnum = $2; }
+/^commid/	{ commid = $2; }
 /^ntries/	{ ntries = $2; }
 /^ndials/	{ ndials = $2; }
 /^pagewidth/	{ pagewidth = $2; }
@@ -155,34 +198,17 @@ BEGIN		{ nfiles = 0;
 /^totdials/	{ totdials = $2; }
 /^tottries/	{ tottries = $2; }
 /^client/	{ client = $2; }
-/^notify/	{ if ($2 == "when done")
-		      notify = " -D";
-		  else if ($2 == "when requeued")
-		      notify = " -R";
-		}
-/^[!]*post/	{ if (NF == 2)
-		      split($2, parts, "/");
-		  else
-		      split($3, parts, "/");
-		  if (!match(parts[2], "\.cover")) {	# skip cover pages
-		     files = files " " parts[2];
-		     nfiles++;
-		  }
-		}
-/^!tiff/	{ if (NF == 2)
-		      split($2, parts, "/");
-		  else
-		      split($3, parts, "/");
-		  files = files " " parts[2]; nfiles++;
-		}
-/^!page/	{ pins[npins++] = $3; }
-/^data/		{ files = $3; nfiles++; }
+/^[!]*post/	{ files[nfiles++] = $4; }
+/^[!]*tiff/	{ files[nfiles++] = $4; }
+/^[!]*pcl/	{ files[nfiles++] = $4; }
+/^page:/	{ pins[npins++] = $4; }
+/^data:/	{ files[nfiles++] = $4; }
 /^poll/		{ poll = " -p"; }
 END {
-    if (jobtag == "") {
-	jobtag = FILENAME;
-	sub(".*/q", jobType " job ", jobtag);
-    }
+    if (jobtag == "")
+	jobtag = jobType " job " jobid;;
+    if (doneop == "default")
+	doneop = "remove";
     if (why == "done") {
 	putHeaders(jobtag " to " number " completed");
 	print " was completed successfully.";
@@ -205,14 +231,19 @@ END {
 	if (modem != "any")
 	    printItem("%s", "Modem", modem);
 	printItem("%s", "Submitted From", client);
-	printf "\nTotal transmission time was " jobTime ".";
-	if (status != "")
+	printItem("%s", "JobID", jobid);
+	printItem("%s", "GroupID", groupid);
+	printItem("%s", "CommID", "c" commid);
+	printf "\nProcessing time was " jobTime ".\n";
+	if (status != "") {
 	    print "  Additional information:\n    " status;
+	    returnTranscript();
+	}
     } else if (why == "failed") {
 	putHeaders(jobtag " to " number " failed");
 	printf " failed because:\n    ";
 	printStatus(status);
-	returnTranscript(pid, canon);
+	returnTranscript();
 	returnToSender();
     } else if (why == "rejected") {
 	putHeaders(jobtag " to " number " failed");
@@ -231,7 +262,7 @@ END {
 	printStatus(status);
 	print "";
 	print "The job will be retried at " nextTry "."
-	returnTranscript(pid, canon);
+	returnTranscript();
     } else if (why == "removed" || why == "killed") {
 	putHeaders(jobtag " to " number " removed from queue");
 	print " was deleted from the queue.";
@@ -239,20 +270,20 @@ END {
 	    returnToSender();
     } else if (why == "timedout") {
 	putHeaders(jobtag " to " number " failed");
-	print " could not be sent after repeated attempts.";
+	print " could not be completed before the appointed deadline.";
 	returnToSender();
     } else if (why == "format_failed") {
 	putHeaders(jobtag " to " number " failed");
-	print " was not sent because conversion"
-	print "of PostScript to facsimile failed.  The output from \"" ps2fax "\" was:\n";
+	print " was not sent because document conversion"
+	print "to facsimile failed.  The output from the converter program was:\n";
 	print status "\n";
-	printf "Check your job for non-standard fonts %s.\n",
-	    "and invalid PostScript constructs";
+	printf "Check any PostScript documents for non-standard fonts %s.\n",
+	    "and invalid constructs";
 	returnToSender();
     } else if (why == "no_formatter") {
 	putHeaders(jobtag " to " number " failed");
 	print " was not sent because";
-	print "the conversion program \"" ps2fax "\" was not found.";
+	print "the document conversion script was not found.";
 	returnToSender();
     } else if (match(why, "poll_*")) {
 	putHeaders("Notice about " jobtag);
@@ -264,7 +295,8 @@ END {
 	else if (why == "poll_failed")
 	    print "an unspecified problem occurred.";
 	print "";
-	printf "Total connect time was %s.\n", jobTime;
+	printf "Processing time was %s.\n", jobTime;
+	returnTranscript();
     } else {
 	putHeaders("Notice about " jobtag);
 	print " had something happen to it."
@@ -273,11 +305,10 @@ END {
 	print "so the rest of this message is for debugging:\n";
 	print "why: " why;
 	print "jobTime: " jobTime;
-	print "pid: " pid;
-	print "canon: " canon;
 	print "nextTry: " nextTry;
 	print  "";
 	print "This should not happen, please report it to your administrator.";
+	returnTranscript();
 	returnToSender();
     }
 }

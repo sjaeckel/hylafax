@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/cvtfacility.c,v 1.4 1995/04/08 21:44:44 sam Rel $ */
+/*	$Id: cvtfacility.c,v 1.6 1996/06/24 03:06:15 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./etc/RCS/lockname.c,v 1.4 1995/04/08 21:18:02 sam Rel $ */
+/*	$Id: lockname.c,v 1.7 1996/08/21 01:35:32 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -29,6 +29,7 @@
  * conventions
  */
 #include "port.h"
+#include <stdio.h>
 #if HAS_MKDEV
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/RegEx.h,v 1.8 1995/04/08 21:44:18 sam Rel $ */
+/*	$Id: RegEx.h,v 1.13 1996/06/24 03:05:57 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -26,14 +26,16 @@
 #ifndef _RegEx_
 #define	_RegEx_
 
+#include <sys/types.h>
 #include "regex.h"
 #include "Str.h"
+#include "Ptr.h"
 
 /*
  * Reference-counted regular expressions;
- * for use with Ptrs and Arrays.
+ * for use with Ptrs, Arrays, and Dicts.
  */
-class RegEx {
+class RegEx : public fxObj {
 public:
     RegEx(const char* pat, int length = 0 , int flags = REG_EXTENDED);
     RegEx(const fxStr& pat, int flags = REG_EXTENDED);
@@ -43,19 +45,12 @@ public:
     const char* pattern() const;
 
     fxBool Find(const char* text, u_int length, u_int off = 0);
-    fxBool Find(const fxStr& s, u_int off = 0)
-	{ return Find(s, s.length(), off); }
-    int StartOfMatch(u_int subexp = 0);
-    int EndOfMatch(u_int subexp = 0);
+    fxBool Find(const fxStr& s, u_int off = 0);
+    int StartOfMatch(u_int subexp = 0) const;
+    int EndOfMatch(u_int subexp = 0) const;
 
     int getErrorCode() const;
     void getError(fxStr&) const;
-
-    void inc();
-    void dec();
-    u_long getReferenceCount();
-protected:
-    u_long	referenceCount;
 private:
     int		compResult;		// regcomp result
     int		execResult;		// last regexec result
@@ -65,10 +60,37 @@ private:
 
     void	init(int flags);
 };
+
+inline fxBool RegEx::Find(const fxStr& s, u_int off)
+    { return Find(s, s.length(), off); }
 inline const char* RegEx::pattern() const	{ return _pattern; }
-inline u_long RegEx::getReferenceCount()	{ return referenceCount; }
-inline void RegEx::inc()			{ referenceCount++; }
-inline void RegEx::dec()
-    { if (--referenceCount <= 0) delete this; }
 inline int RegEx::getErrorCode() const		{ return execResult; }
+
+/*
+ * This private RegExPtr definition is done to work
+ * around problems with certain C++ compilers not
+ * properly making the destructor method either inline
+ * or static.  We also can save some space by eliminating
+ * some inline functions that compilers frequently can't
+ * handle in-line.
+ */
+class RegExPtr {
+protected:
+    void destroy();
+    RegEx* p;
+public:	
+    RegExPtr() { p = 0; }
+    RegExPtr(RegEx *tp) { p = tp ? (tp->inc(),tp) : 0; }
+    RegExPtr(const RegExPtr& other)
+	{ p = other.p ? (other.p->inc(),other.p) : 0; }
+    ~RegExPtr();
+    RegExPtr& operator=(const RegExPtr& other);
+    RegExPtr& operator=(RegEx* tp);
+    int compare(const RegExPtr *other) const
+	{ return int((char*) p - (char*) other->p); }
+    operator RegEx*() { return p; }
+    operator const RegEx*() const { return p; }
+    RegEx* operator ->() { return p; }
+    const RegEx* operator ->() const { return p; }
+};
 #endif /* _RegEx_ */

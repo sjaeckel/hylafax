@@ -1,9 +1,9 @@
-# $Header: /usr/people/sam/fax/./config/RCS/everex-2496d,v 1.21 1995/04/08 21:25:03 sam Rel $
+# $Id: everex-2496d,v 1.24 1996/06/24 02:58:34 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -61,3 +61,8 @@ Class2RELCmd:		AT+FREL=1	# enable byte-aligned EOLs
 #     for the modem to grok
 #
 Class2CQCmd:		"AT+FCQ=1\nAT+FBADMUL=20\nAT+FBADLIN=10"
+#
+# Disable 2D-encoded data 'cuz some PROM versions appear
+# to receive bad data (if you figure out why, then remove this).
+#
+Class2DCCQueryCmd:      !(0,1),(0-3),(0-2),(0-2),(0),(0),(0),(0-7)

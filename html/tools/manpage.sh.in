@@ -1,5 +1,5 @@
 #!@SCRIPT_SH@
-#	$Header: /usr/people/sam/fax/./html/tools/RCS/manpage.sh.in,v 1.18 1995/04/08 21:48:03 sam Rel $
+#	$Id: manpage.sh.in,v 1.20 1996/06/24 03:03:40 sam Rel $
 #
 # Copyright (c) 1994-1995 Sam Leffler
 # Copyright (c) 1994-1995 Silicon Graphics, Inc.
@@ -54,6 +54,12 @@ CAT=@CAT@
 MAN=@MAN@
 COL=@COL@
 MAN2HTML=@CGIDIR@/man2html
+
+case "@TARGET@" in
+*-irix*)	MAN_FLAGS="-p -c" ;;
+*)		MAN_FLAGS="" ;;
+esac
+
 #
 # XXX the server expands the pathname when
 # setting SCRIPT_NAME, so it can't be reused.
@@ -92,7 +98,7 @@ $CAT<<EOF
 EOF
 
 if [ -x $MAN -a -x $COL -a -x $MAN2HTML ]; then
-    CMD=`$MAN -p -c $QUERY | $SED 1q`
+    CMD=`$MAN $MAN_FLAGS $QUERY | $SED 1q`
     case "$CMD" in
     *[nN]o*manual*)
 	echo "<H2><IMG SRC=\"@HTMLPATH@/icons/button.excl.gif\">$CMD</H2>"
@@ -104,7 +110,7 @@ if [ -x $MAN -a -x $COL -a -x $MAN2HTML ]; then
 	;;
     *)
 	echo '<PRE WIDTH=80>'
-	$CMD 2>/dev/null | $COL -x | $MAN2HTML | cvtLinks
+	$MAN $MAN_FLAGS $QUERY 2>/dev/null | $COL -x | $MAN2HTML | cvtLinks
 	echo '</PRE>'
 	;;
     esac

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class20.c++,v 1.24 1995/04/08 21:29:41 sam Rel $ */
+/*	$Id: Class20.c++,v 1.34 1996/07/31 00:14:00 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -25,6 +25,7 @@
  */
 #include "Class20.h"
 #include "ModemConfig.h"
+#include "StackBuffer.h"
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -50,6 +51,7 @@ Class20Modem::Class20Modem(FaxServer& s, const ModemConfig& c) : Class2Modem(s,c
     setupDefault(cigCmd,	conf.class2CIGCmd,	"AT+FPI");
     setupDefault(splCmd,	conf.class2SPLCmd,	"AT+FSP");
     setupDefault(ptsCmd,	conf.class2PTSCmd,	"AT+FPS");
+    setupDefault(minspCmd,	conf.class2MINSPCmd,	"AT+FMS");
 
     setupDefault(noFlowCmd,	conf.class2NFLOCmd,	"AT+FLO=0");
     setupDefault(softFlowCmd,	conf.class2SFLOCmd,	"AT+FLO=1");
@@ -96,6 +98,12 @@ Class20Modem::atResponse(char* buf, long ms)
 	    lastResponse = AT_FTSI;
 	else if (strneq(buf, "+FET:", 5))
 	    lastResponse = AT_FET;
+	else if (strneq(buf, "+FPA:", 5))
+	    lastResponse = AT_FPA;
+	else if (strneq(buf, "+FSA:", 5))
+	    lastResponse = AT_FSA;
+	else if (strneq(buf, "+FPW:", 5))
+	    lastResponse = AT_FPW;
     }
     return (lastResponse);
 }
@@ -106,6 +114,7 @@ Class20Modem::atResponse(char* buf, long ms)
 void
 Class20Modem::abortDataTransfer()
 {
+    protoTrace("SEND abort data transfer");
     char c = CAN;
     putModemData(&c, 1);
 }
@@ -114,51 +123,12 @@ Class20Modem::abortDataTransfer()
  * Send a page of data using the ``stream interface''.
  */
 fxBool
-Class20Modem::sendPage(TIFF* tif)
+Class20Modem::sendPage(TIFF* tif, u_int pageChop)
 {
-    fxBool rc = TRUE;
     protoTrace("SEND begin page");
     if (flowControl == FLOW_XONXOFF)
 	setXONXOFF(FLOW_XONXOFF, FLOW_NONE, ACT_FLUSH);
-    /*
-     * Correct bit order of data if not what modem expects.
-     */
-    uint16 fillorder;
-    TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
-    const u_char* bitrev = TIFFGetBitRevTable(fillorder != conf.sendFillOrder);
-
-    fxBool firstStrip = setupTagLineSlop(params);
-    u_int ts = getTagLineSlop();
-    uint32* stripbytecount;
-    (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
-    for (tstrip_t strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
-	uint32 totbytes = stripbytecount[strip];
-	if (totbytes > 0) {
-	    u_char* data = new u_char[totbytes+ts];
-	    if (TIFFReadRawStrip(tif, strip, data+ts, totbytes) >= 0) {
-		u_char* dp;
-		if (firstStrip) {
-		    /*
-		     * Generate tag line at the top of the page.
-		     */
-		    dp = imageTagLine(data, fillorder, params);
-		    totbytes = totbytes+ts - (dp-data);
-		    firstStrip = FALSE;
-		} else
-		    dp = data;
-		/*
-		 * Pass data to modem, filtering DLE's and
-		 * being careful not to get hung up.
-		 */
-		beginTimedTransfer();
-		rc = putModemDLEData(dp, (u_int) totbytes, bitrev,
-		    getDataTimeout());
-		endTimedTransfer();
-		protoTrace("SENT %u bytes of data", totbytes);
-	    }
-	    delete data;
-	}
-    }
+    fxBool rc = sendPageData(tif, pageChop);
     if (!rc)
 	abortDataTransfer();
     else
@@ -219,11 +189,17 @@ bad:
  * <DLE><SUB> escape (translate to <DLE><DLE>).
  */
 int
-Class20Modem::decodeNextByte()
+Class20Modem::nextByte()
 {
-    int b = getModemDataChar();
-    if (b == EOF)
-	raiseEOF();
+    int b;
+    if (bytePending & 0x100) {
+	b = bytePending & 0xff;
+	bytePending = 0;
+    } else {
+	b = getModemDataChar();
+	if (b == EOF)
+	    raiseEOF();
+    }
     if (b == DLE) {
 	switch (b = getModemDataChar()) {
 	case EOF: raiseEOF();
@@ -232,10 +208,13 @@ Class20Modem::decodeNextByte()
 	case SUB: b = DLE;		// <DLE><SUB> -> <DLE><DLE>
 	    /* fall thru... */
 	default:
-	    setPendingByte(b);
+	    bytePending = b | 0x100;
 	    b = DLE;
 	    break;
 	}
     }
+    b = getBitmap()[b];
+    if (recvBuf)
+	recvBuf->put(b);
     return (b);
 }

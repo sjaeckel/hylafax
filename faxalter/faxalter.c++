@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxalter/RCS/faxalter.c++,v 1.23 1995/04/08 21:28:17 sam Rel $ */
+/*	$Id: faxalter.c++,v 1.34 1996/06/24 03:00:04 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -24,65 +24,70 @@
  * OF THIS SOFTWARE.
  */
 #include "FaxClient.h"
-#include "StrArray.h"
+#include "Sys.h"
 #include "config.h"
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdarg.h>
+extern int
+parseAtSyntax(const char* s, const struct tm& ref, struct tm& at0, fxStr& emsg);
 
 class faxAlterApp : public FaxClient {
 private:
-    fxStr	appName;		// for error messages
     fxBool	groups;			// group or job id's
-    fxStr	notify;
-    fxStr	tts;
-    fxStr	killtime;
-    fxStr	maxdials;
-    fxStr	modem;
-    fxStr	priority;
-    fxStrArray	jobids;
+    fxStr	script;			// commands to send for each job
 
-    const char* alterCmd(const char* param);
+    void addToScript(const char* fmt ...);
+
     void usage();
-    void printError(const char* fmt, ...);
-    void printWarning(const char* fmt, ...);
 public:
     faxAlterApp();
     ~faxAlterApp();
 
-    void initialize(int argc, char** argv);
-    void open();
-
-    void recvConf(const char* cmd, const char* tag);
-    void recvEof();
-    void recvError(const int err);
+    void run(int argc, char** argv);
 };
 faxAlterApp::faxAlterApp() { groups = FALSE; }
 faxAlterApp::~faxAlterApp() {}
 
 void
-faxAlterApp::initialize(int argc, char** argv)
+faxAlterApp::run(int argc, char** argv)
 {
-    int c, n;
+    resetConfig();
+    readConfig(FAX_SYSCONF);
+    readConfig(FAX_USERCONF);
 
-    appName = argv[0];
-    u_int l = appName.length();
-    appName = appName.tokenR(l, '/');
+    fxStr emsg;
+    time_t now = Sys::now();
+    struct tm tts = *localtime(&now);
+    struct tm when;
+
+    int c;
     while ((c = getopt(argc, argv, "a:h:k:m:n:P:t:DQRgpv")) != -1)
 	switch (c) {
 	case 'D':			// set notification to when done
-	    notify = "when done";
+	    addToScript("NOTIFY DONE");
 	    break;
 	case 'Q':			// no notification (quiet)
-	    notify = "none";
+	    addToScript("NOTIFY NONE");
 	    break;
 	case 'R':			// set notification to when requeued
-	    notify = "when requeued";
+	    addToScript("NOTIFY DONE+REQUEUE");
 	    break;
 	case 'a':			// send at specified time
-	    tts = optarg;
+	    if (strcasecmp(optarg, "NOW")) {
+		if (!parseAtSyntax(optarg, *localtime(&now), tts, emsg)) {
+		    printError("%s", (const char*) emsg);
+		    return;
+		}
+		now = mktime(&tts);
+		when = *gmtime(&now);	// NB: must be relative to GMT
+		addToScript("SENDTIME %d%02d%02d%02d%02d"
+		    , when.tm_year+1900
+		    , when.tm_mon+1
+		    , when.tm_mday
+		    , when.tm_hour
+		    , when.tm_min
+		);
+	    } else
+		addToScript("SENDTIME NOW");
 	    break;
 	case 'g':			// apply to groups, not jobs
 	    groups = TRUE;
@@ -91,33 +96,40 @@ faxAlterApp::initialize(int argc, char** argv)
 	    setHost(optarg);
 	    break;
 	case 'k':			// kill job at specified time
-	    killtime = optarg;
+	    if (!parseAtSyntax(optarg, tts, when, emsg)) {
+		printError("%s", optarg, (const char*) emsg);
+		return;
+	    }
+	    { time_t tv = mktime(&when) - now;
+	      addToScript("LASTTIME %02d%02d%02d"
+		, tv/(24*60*60)
+		, (tv/(60*60))%60
+		, (tv/60)%60
+	      );
+	    }
 	    break;
 	case 'm':			// modem
-	    modem = optarg;
+	    addToScript("MODEM %s", optarg);
 	    break;
 	case 'n':			// set notification
-	    if (strcmp(optarg, "done") == 0)
-		notify = "when done";
-	    else if (strcmp(optarg, "requeued") == 0)
-		notify = "when requeued";
-	    else
-		notify = optarg;
+	    addToScript("NOTIFY %s",
+		strcasecmp(optarg, "done") == 0 ?	"DONE" :
+		strcasecmp(optarg, "requeued") == 0 ?	"DONE+REQUEUE" :
+							optarg);
 	    break;
 	case 'p':			// send now (push)
-	    tts = "now";
+	    addToScript("SENDTIME NOW");
 	    break;
 	case 'P':			// scheduling priority
-	    priority = optarg;
-	    if ((u_int) atoi(priority) > 255)
+	    if ((u_int) atoi(optarg) > 255)
 		fxFatal("Invalid job priority %s;"
 		    " values must be in the range [0,255]", optarg);
+	    addToScript("SCHEDPRI %s", optarg);
 	    break;
 	case 't':			// set max number of retries
-	    n = atoi(optarg);
-	    if (n < 0)
+	    if (atoi(optarg) < 0)
 		fxFatal("Bad number of retries for -t option: %s", optarg);
-	    maxdials = fxStr(n, "%d");
+	    addToScript("MAXDIALS %s", optarg);
 	    break;
 	case 'v':			// trace protocol
 	    setVerbose(TRUE);
@@ -127,18 +139,33 @@ faxAlterApp::initialize(int argc, char** argv)
 	}
     if (optind >= argc)
 	usage();
-    if (tts == "" && notify == "" && killtime == "" &&
-      maxdials == "" && modem == "" && priority == "")
+    if (script == "")
 	fxFatal("No job parameters specified for alteration.");
-    setupUserIdentity();
-    for (; optind < argc; optind++)
-	jobids.append(argv[optind]);
+    if (callServer(emsg)) {
+	if (login(NULL, emsg)) {
+	    for (; optind < argc; optind++) {
+		const char* jobid = argv[optind];
+		if (setCurrentJob(jobid) && jobSuspend(jobid)) {
+		    if (!runScript(script, script.length(), "<stdin>", emsg))
+			break;			// XXX???
+		    if (!jobSubmit(jobid)) {
+			emsg = getLastResponse();
+			break;
+		    }
+		    printf("Job %s: done.\n", jobid);
+		}
+	    }
+	}
+	hangupServer();
+    }
+    if (emsg != "")
+	printError(emsg);
 }
 
 void
 faxAlterApp::usage()
 {
-    fxFatal("usage: %s"
+    fxFatal("usage: faxalter"
       " [-h server-host]"
       " [-a time]"
       " [-k time]"
@@ -149,120 +176,24 @@ faxAlterApp::usage()
       " [-p]"
       " [-g]"
       " [-DQR]"
-      " jobID...", (char*) appName);
-}
-
-const char*
-faxAlterApp::alterCmd(const char* param)
-{
-    static char cmd[80];
-    ::sprintf(cmd, "alter%s%s", groups ? "Group" : "", param);
-    return (cmd);
+      " jobID...");
 }
 
 void
-faxAlterApp::open()
-{
-    if (callServer()) {
-	for (int i = 0; i < jobids.length(); i++) {
-	    fxStr line = jobids[i] | ":" | getSenderName();
-	    // do notify first 'cuz setting tts causes q rescan
-	    if (notify != "")
-		sendLine(alterCmd("Notify"), (char*)(line | ":" | notify));
-	    if (tts != "")
-		sendLine(alterCmd("TTS"), (char*)(line | ":" | tts));
-	    if (killtime != "")
-		sendLine(alterCmd("KillTime"), (char*)(line | ":" | killtime));
-	    if (maxdials != "")
-		sendLine(alterCmd("MaxDials"), (char*)(line | ":" | maxdials));
-	    if (priority != "")
-		sendLine(alterCmd("Priority"), (char*)(line | ":" | priority));
-	    if (modem != "")
-		sendLine(alterCmd("Modem"), (char*)(line | ":" | modem));
-	}
-	sendLine(".\n");
-	startRunning();
-    } else
-	fxFatal("Could not call server.");
-}
-
-void
-faxAlterApp::printError(const char* va_alist ...)
-#define	fmt va_alist
+faxAlterApp::addToScript(const char* fmt0 ...)
 {
     va_list ap;
-    va_start(ap, va_alist);
-    fprintf(stderr, "%s: ", (char*) appName);
-    vfprintf(stderr, fmt, ap);
+    va_start(ap, fmt0);
+    char fmt[1024];
+    sprintf(fmt, "%s %s\n", groups ? "JGPARM" : "JPARM", fmt0);
+    script.append(fxStr::vformat(fmt, ap));
     va_end(ap);
-    fputs("\n", stderr);
-    exit(-1);
 }
-#undef fmt
-
-void
-faxAlterApp::printWarning(const char* va_alist ...)
-#define	fmt va_alist
-{
-    va_list ap;
-    va_start(ap, va_alist);
-    fprintf(stderr, "%s: Warning, ", (char*) appName);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    fputs("\n", stderr);
-}
-#undef fmt
-
-#define isCmd(s)	(strcasecmp(s, cmd) == 0)
-
-void
-faxAlterApp::recvConf(const char* cmd, const char* tag)
-{
-    if (isCmd("altered")) {
-//	printf("Job %s altered.\n", tag);
-    } else if (isCmd("notQueued")) {
-	printf("Job %s not altered: it was not queued.\n", tag);
-    } else if (isCmd("jobLocked")) {
-	printf("Job %s not altered: it is being sent.\n", tag);
-    } else if (isCmd("openFailed")) {
-	printf("Job %s not altered: open failed; check SYSLOG.\n", tag);
-    } else if (isCmd("sOwner")) {
-	printf(
-	"Job %s not altered: could not establish server process owner.\n",
-	    tag);
-    } else if (isCmd("jobOwner")) {
-	printf(
-	"Job %s not altered: you neither own it nor are the fax user.\n",
-	    tag);
-    } else if (isCmd("error")) {
-	printf("%s\n", tag);
-    } else {
-	printf("Unknown status message \"%s:%s\"\n", cmd, tag);
-    }
-}
-
-void
-faxAlterApp::recvEof()
-{
-    stopRunning();
-}
-
-void
-faxAlterApp::recvError(const int err)
-{
-    printf("Fatal socket read error: %s\n", strerror(err));
-    stopRunning();
-}
-
-#include "Dispatcher.h"
 
 int
 main(int argc, char** argv)
 {
     faxAlterApp app;
-    app.initialize(argc, argv);
-    app.open();
-    while (app.isRunning())
-	Dispatcher::instance().dispatch();
+    app.run(argc, argv);
     return 0;
 }

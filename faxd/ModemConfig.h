@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ModemConfig.h,v 1.48 1995/04/08 21:30:56 sam Rel $ */
+/*	$Id: ModemConfig.h,v 1.55 1996/06/24 03:00:39 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -37,8 +37,13 @@ private:
     u_int	getFill(const char*);
     FlowControl	getFlow(const char*);
     void	setVolumeCmds(const fxStr& value);
+    u_int	getSpeed(const char* value);
+    u_int	getDataFormat(const char* value);
 
-    static BaudRate findRate(const char*);
+    static fxBool findRate(const char*, BaudRate&);
+    static fxBool findATResponse(const char*, ATResponse&);
+    static fxBool findFlow(const char*, FlowControl&);
+    static fxBool findDataFormat(const char*, u_int&);
 protected:
     ModemConfig();
 
@@ -135,12 +140,19 @@ public:
     fxStr	class2NFLOCmd;		// cmd to setup no flow control
     fxStr	class2SFLOCmd;		// cmd to setup software flow control
     fxStr	class2HFLOCmd;		// cmd to setup hardware flow control
+    fxStr	class2MINSPCmd;		// cmd to setup min transmit speed
     fxStr	class2RecvDataTrigger;	// send to start recv
     fxBool	class2XmitWaitForXON;	// wait for XON before send
     fxBool	class2SendRTC;		// append RTC to page data on transmit
 					// for class 2.0:
     fxStr	class2PIECmd;		// cmd to set proc interrupt handling
     fxStr	class2NRCmd;		// cmd to set status reporting
+					// for class T.class2:
+    fxStr	class2APQueryCmd;	// cmd to query address&polling caps.
+    fxStr	class2APCmd;		// cmd to setup address&polling caps.
+    fxStr	class2SACmd;		// cmd to set subaddress
+    fxStr	class2PACmd;		// cmd to set selective polling address
+    fxStr	class2PWCmd;		// cmd to set password for transmit/poll
 
     FlowControl	flowControl;		// DTE-DCE flow control method
     BaudRate	maxRate;		// max DTE-DCE rate to try
@@ -149,13 +161,14 @@ public:
     u_int	frameFillOrder;		// bit order of HDLC frames
     u_int	resetDelay;		// delay (ms) after reseting modem
     u_int	baudRateDelay;		// delay (ms) after setting baud rate
-    u_int	maxPacketSize;		// max page data packet size (bytes)
-    u_int	interPacketDelay;	// delay (ms) between outgoing packets
+    u_int	atCmdDelay;		// delay (ms) between each AT cmd
     u_int	percentGoodLines;	// required % of good lines in page
     u_int	maxConsecutiveBadLines;	// max consecutive bad lines in page
+    u_int	minSpeed;		// minimum speed for fax transmits
     fxBool	waitForConnect;		// modem sends multiple answer responses
     fxStr	tagLineFmt;		// format string for tag lines
     fxStr	tagLineFontFile;	// font file for imaging tag lines
+    u_int	recvDataFormat;		// received facsimile data format
 
     virtual ~ModemConfig();
 

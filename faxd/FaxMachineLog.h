@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxMachineLog.h,v 1.11 1995/04/08 21:30:11 sam Rel $ */
+/*	$Id: FaxMachineLog.h,v 1.14 1996/06/24 03:00:25 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -45,10 +45,8 @@ private:
     int		fd;
     pid_t	pid;
 public:
-    FaxMachineLog(const fxStr& number, mode_t protect);
+    FaxMachineLog(int fd, const fxStr& number, const fxStr& commid);
     ~FaxMachineLog();
-
-    static const fxStr logDir;
 
     void log(const char* fmt, ...);
     void vlog(const char* fmt, va_list ap);

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/typetest.c++,v 1.5 1995/04/08 21:45:09 sam Rel $ */
+/*	$Id: typetest.c++,v 1.8 1996/07/31 17:37:40 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -29,14 +29,11 @@
  *
  * Usage: typetest [-f rulesfile] files
  */
+#include "Sys.h"
+
 #include <stdlib.h>
 #include <stdarg.h>
-
-#include <osfcn.h>
-#include <unistd.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
 
 #include "TypeRules.h"
 #include "config.h"

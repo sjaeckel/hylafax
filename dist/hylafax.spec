@@ -1,9 +1,9 @@
-#	$Header: /usr/people/sam/fax/./dist/RCS/hylafax.spec,v 1.33 1995/04/08 21:08:39 sam Rel $
+#	$Id: hylafax.spec,v 1.43 1996/08/27 23:16:10 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -26,7 +26,7 @@
 # OF THIS SOFTWARE.
 #
 define CUR_MAJ_VERS	1006		# Major Version number
-define CUR_MIN_VERS	004		# Minor Version number
+define CUR_MIN_VERS	009		# Minor Version number
 define CUR_VERS		${CUR_MAJ_VERS}${CUR_MIN_VERS}${ALPHA}
 define FAX_NAME		"HylaFAX"
 
@@ -45,30 +45,49 @@ product hylafax
 	    exp	"hylafax.sw.client"
 	    replaces self
 	    replaces flexfax.sw.client 0 oldvers
+	    prereq (
+		dps_eoe.sw.dpsfonts	1006000000 maxint	# AFM files
+		tiff.sw.tools		1006001029 maxint	# TIFF DSO
+	    )
 	endsubsys
 	subsys server
 	    id	"${FAX_NAME} Server Software"
 	    exp	"hylafax.sw.server"
 	    replaces self
 	    replaces flexfax.sw.server 0 oldvers
-	endsubsys
-	subsys dpsrip
-	    id	"${FAX_NAME} DPS-based PostScript RIP (for server)"
-	    exp	"hylafax.sw.dpsrip"
-	    # need DPS fonts and VM startup file
+	    #
+	    # Server requires a PostScript RIP: either DPS-,
+	    # Impressario-2.1- or Ghostscript-based.
+	    #
 	    prereq (
-		dps_eoe.sw.dps		1006000000 maxint
-		dps_eoe.sw.dpsfonts	1006000000 maxint
+		hylafax.sw.dpsrip	0 maxint		# DPS-based RIP
+		tiff.sw.tools		1006001029 maxint	# TIFF DSO
+	    )
+	    prereq (
+		hylafax.sw.imprip	0 maxint		# IMP 2.1 RIP
+		tiff.sw.tools		1006001029 maxint	# TIFF DSO
+	    )
+	    prereq (
+		fw_gs.sw.gs		0 maxint		# Ghostscript &
+		tiff.sw.tools		1006001029 maxint	# TIFF DSO
 	    )
 	endsubsys
-	subsys gsrip
-	    id	"Ghostscript-based PostScript RIP (for server)"
-	    exp	"hylafax.sw.gsrip"
+	subsys dpsrip
+	    id	"DPS-based PostScript RIP (for server, COFF only)"
+	    exp	"hylafax.sw.dpsrip"
+	    prereq (
+		dps_eoe.sw.dps		1006000000 maxint	# VM startup
+		dps_eoe.sw.dpsfonts	1006000000 maxint	# fonts
+	    )
 	endsubsys
-	subsys afm
-	    id	"${FAX_NAME} Font Metric Files (for client)"
-	    exp	"hylafax.sw.afm"
-	    incompat dps_eoe.sw.dpsfonts 0 maxint
+	subsys imprip
+	    id	"Impressario 2.1-based PostScript RIP (for server)"
+	    exp	"hylafax.sw.imprip"
+	    prereq (
+		impr_rip.sw.impr	1232807300 maxint	# psrip & co.
+		dps_eoe.sw.dpsfonts	1232729832 maxint	# fonts
+		tiff.sw.tools		1006001029 maxint	# TIFF DSO
+	    )
 	endsubsys
     endimage
 
@@ -87,11 +106,6 @@ product hylafax
 	    replaces self
 	    replaces flexfax.man.* 0 oldvers
 	endsubsys
-	subsys gsrip
-	    id	"Ghostscript Manual Pages"
-	    exp	"hylafax.man.gsrip"
-	    replaces self
-	endsubsys
     endimage
 
     image html
@@ -101,23 +115,9 @@ product hylafax
 	    id	"${FAX_NAME} Online Documentation"
 	    exp	"hylafax.html.docs"
 	endsubsys
-	subsys faq
-	    id	"${FAX_NAME} Frequently Asked Questions"
-	    exp	"hylafax.html.faq"
-	endsubsys
 	subsys tools
 	    id	"${FAX_NAME} CGI Scripts & Tools"
 	    exp	"hylafax.html.cgi"
-	endsubsys
-    endimage
-
-    image doc
-	id "Ancillary Documentation"
-	version	"${CUR_VERS}"
-	subsys gsrip
-	    id	"Ghostscript Documentation"
-	    exp	"hylafax.doc.gsrip"
-	    replaces self
 	endsubsys
     endimage
 endproduct

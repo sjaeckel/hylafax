@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/DestInfo.c++,v 1.7 1995/04/08 21:29:59 sam Rel $ */
+/*	$Id: DestInfo.c++,v 1.14 1996/08/21 21:53:43 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -84,7 +84,8 @@ DestInfo::active(Job& job)
 	return;
     } else {					// general case
 	Job* jp;
-	for (Job** jpp = &running->dnext; (jp = *jpp) != NULL; jpp = &jp->dnext)
+	Job** jpp;
+	for (jpp = &running->dnext; (jp = *jpp) != NULL; jpp = &jp->dnext)
 	    if (jp == &job)
 		return;
 	*jpp = &job;
@@ -117,7 +118,16 @@ DestInfo::done(Job& job)
 void
 DestInfo::block(Job& job)
 {
-    job.insert(*this);
+    /*
+     * Insert job in blocked queue maintaining
+     * priority order so that when the job is
+     * removed and placed back on the ready-to-run
+     * queue the priority ordering will be preserved.
+     */
+    JobIter iter(*this);
+    while (iter.notDone() && iter.job().pri <= job.pri)
+	iter++;
+    job.insert(iter.job());
     blockedCount++;
 }
 
@@ -133,18 +143,18 @@ DestInfo::nextBlocked()
 	return (NULL);
 }
 
-Job*
-DestInfo::unblock(const fxStr& filename)
+void
+DestInfo::unblock(const Job& job)
 {
-    for (JobIter iter(*this); iter.notDone(); iter++) {
-	Job& job = iter;
-	if (job.file == filename) {
-	    job.remove();
-	    blockedCount--;
-	    return (&job);
-	}
-    }
-    return (NULL);
+    // XXX this is for gcc which is too stupid to do it automatically
+    if (next != & *(const QLink*) &job) {
+	for (JobIter iter(*this); iter.notDone(); iter++)
+	    if (&iter.job() == &job) {
+		blockedCount--;
+		break;
+	    }
+    } else
+	blockedCount--;
 }
 
-fxIMPLEMENT_StrKeyObjValueDictionary(DestInfoDict, DestInfo);
+fxIMPLEMENT_StrKeyObjValueDictionary(DestInfoDict, DestInfo)

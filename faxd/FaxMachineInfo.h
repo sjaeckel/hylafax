@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxMachineInfo.h,v 1.26 1995/04/08 21:30:09 sam Rel $ */
+/*	$Id: FaxMachineInfo.h,v 1.30 1996/06/24 03:00:24 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -32,6 +32,7 @@
 #include "FaxConfig.h"
 #include <stdarg.h>
 
+class fxStackBuffer;
 /*
  * Each remote machine the server sends a facsimile to
  * has information that describes capabilities that are
@@ -63,10 +64,11 @@ private:
     fxStr	lastDialFailure;	// reason for last failed dial attempt
     u_int	pagerMaxMsgLength;	// max text message length for pages
     fxStr	pagerPassword;		// pager service password string
+    fxStr	pagerTTYParity;		// tty setting required by pager service
 
     static const fxStr infoDir;
 
-    void writeConfig(FILE*);
+    void writeConfig(fxStackBuffer&);
 
     fxBool setConfigItem(const char* tag, const char* value);
     void vconfigError(const char* fmt0, va_list ap);
@@ -115,6 +117,7 @@ public:
 
     u_int getPagerMaxMsgLength() const;
     const fxStr& getPagerPassword() const;
+    const fxStr& getPagerTTYParity() const;
 };
 
 inline fxBool FaxMachineInfo::getSupportsHighRes() const
@@ -149,4 +152,6 @@ inline u_int FaxMachineInfo::getPagerMaxMsgLength() const
     { return pagerMaxMsgLength; }
 inline const fxStr& FaxMachineInfo::getPagerPassword() const
     { return pagerPassword; }
+inline const fxStr& FaxMachineInfo::getPagerTTYParity() const
+    { return pagerTTYParity; }
 #endif /* _FaxMachineInfo_ */
