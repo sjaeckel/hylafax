@@ -1,4 +1,4 @@
-/*	$Id: faxcover.c++,v 1.43 1996/11/14 19:55:58 sam Rel $ */
+/*	$Id: faxcover.c++,v 1.44 1997/09/25 09:39:59 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -349,8 +349,16 @@ faxCoverApp::emitCommentDefs()
 		len = l;
 	    // otherwise, break in the middle of this really long word
 	}
+      int tot = comments.length();
+      u_int crlf = comments.find(0, "\\n", (u_int) 0);
+      if ( crlf < comments.length() && crlf < len ) {
+              len = crlf;
+      }
 	fxStr num(line, "%u");
 	coverDef("comments" | num, comments.cut(0,len));
+      if ( crlf < tot && comments.length() >= 2 ) {
+              comments.cut(0, 2);
+      }
 	line++;
     }
     for (; line < maxcomments; line++) {

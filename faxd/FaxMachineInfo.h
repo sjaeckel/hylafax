@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.h,v 1.30 1996/06/24 03:00:24 sam Rel $ */
+/*	$Id: FaxMachineInfo.h,v 1.31 1998/02/07 12:31:43 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -65,6 +65,9 @@ private:
     u_int	pagerMaxMsgLength;	// max text message length for pages
     fxStr	pagerPassword;		// pager service password string
     fxStr	pagerTTYParity;		// tty setting required by pager service
+    fxStr	pagingProtocol;		// Protocol spoken by paging central
+    fxStr	pageSource;		// String identifying page source
+    fxStr	pagerSetupCmds;		// atcmds to overwrite value in config
 
     static const fxStr infoDir;
 
@@ -118,6 +121,9 @@ public:
     u_int getPagerMaxMsgLength() const;
     const fxStr& getPagerPassword() const;
     const fxStr& getPagerTTYParity() const;
+    const fxStr& getPagingProtocol() const;
+    const fxStr& getPageSource() const;
+    const fxStr& getPagerSetupCmds() const;
 };
 
 inline fxBool FaxMachineInfo::getSupportsHighRes() const
@@ -154,4 +160,10 @@ inline const fxStr& FaxMachineInfo::getPagerPassword() const
     { return pagerPassword; }
 inline const fxStr& FaxMachineInfo::getPagerTTYParity() const
     { return pagerTTYParity; }
+inline const fxStr& FaxMachineInfo::getPagingProtocol() const
+    { return pagingProtocol; }
+inline const fxStr& FaxMachineInfo::getPageSource() const
+    { return pageSource; }
+inline const fxStr& FaxMachineInfo::getPagerSetupCmds() const
+    { return pagerSetupCmds; }
 #endif /* _FaxMachineInfo_ */

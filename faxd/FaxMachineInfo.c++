@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.c++,v 1.55 1996/08/02 18:09:09 sam Rel $ */
+/*	$Id: FaxMachineInfo.c++,v 1.56 1998/02/07 12:31:43 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -48,6 +48,9 @@ FaxMachineInfo::FaxMachineInfo(const FaxMachineInfo& other)
     , lastDialFailure(other.lastDialFailure)
     , pagerPassword(other.pagerPassword)
     , pagerTTYParity(other.pagerTTYParity)
+    , pagingProtocol(other.pagingProtocol)
+    , pageSource(other.pageSource)
+    , pagerSetupCmds(other.pagerSetupCmds)
 {
     locked = other.locked;
 
@@ -109,6 +112,9 @@ FaxMachineInfo::resetConfig()
     pagerMaxMsgLength = (u_int) -1;	// unlimited length
     pagerPassword = "";			// no password string
     pagerTTYParity = "";		// unspecified
+    pagingProtocol = "ixo";		// ixo/tap or ucp
+    pageSource = "";			// source unknown
+    pagerSetupCmds = "";		// use values from config file
 
     locked = 0;
 }
@@ -213,6 +219,12 @@ FaxMachineInfo::setConfigItem(const char* tag, const char* value)
 	pagerPassword = value;
     } else if (streq(tag, "pagerttyparity")) {
 	pagerTTYParity = value;
+    } else if (streq(tag, "pagingprotocol")) {
+	pagingProtocol = value;
+    } else if (streq(tag, "pagesource")) {
+	pageSource = value;
+    } else if (streq(tag, "pagersetupcmds")) {
+	pagerSetupCmds = value;
     } else
 	return (FALSE);
     return (TRUE);
@@ -339,4 +351,7 @@ FaxMachineInfo::writeConfig(fxStackBuffer& buf)
 	putDecimal(buf, "pagerMaxMsgLength", TRUE, pagerMaxMsgLength);
     putIfString(buf, "pagerPassword", TRUE, pagerPassword);
     putIfString(buf, "pagerTTYParity", TRUE, pagerTTYParity);
+    putIfString(buf, "pagingProtocol", TRUE, pagingProtocol);
+    putIfString(buf, "pageSource", TRUE, pageSource);
+    putIfString(buf, "pagerSetupCmds", TRUE, pagerSetupCmds);
 }

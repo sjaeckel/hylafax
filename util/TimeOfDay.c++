@@ -1,4 +1,4 @@
-/*	$Id: TimeOfDay.c++,v 1.12 1996/09/30 21:03:43 sam Rel $ */
+/*	$Id: TimeOfDay.c++,v 1.13 1997/09/29 17:49:10 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -136,7 +136,7 @@ TimeOfDay::parse(const char* cp)
 		}
 		days |= BIT(i>>2);
 		cp += (cp[2] == dayNames[i+2] ? 3 : 2);
-		for (; !isalpha(*cp) && *cp != ',' && *cp; cp++)
+		for (; !isalnum(*cp) && *cp != ',' && *cp; cp++)
 		    ;
 	    } while (isalpha(*cp));
 	} else

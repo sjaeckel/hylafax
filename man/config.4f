@@ -1,4 +1,4 @@
-.\"	$Id: config.4f,v 1.79 1996/08/28 18:19:44 sam Rel $
+.\"	$Id: config.4f,v 1.82 1998/02/07 12:31:43 guru Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -147,7 +147,7 @@ LocalIdentifier	string	\-	local station identification string
 LongDistancePrefix	string	\-	dialing prefix for long distance calls
 MaxConcurrentJobs\(dg	integer	\s-11\s+1	max concurrent jobs to process for a destination
 MaxConsecutiveBadLines	integer	\s-15\s+1	max consecutive bad rows for \s-1OK\s+1 page quality
-MaxDials\(dg	integer	\s-1\fIunlimited\fP\s+1	max phone calls to make to transmit a job
+MaxDials\(dg	integer	\s-112\s+1	max phone calls to make to transmit a job
 MaxRecvPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a receive
 MaxSendPages\(dg	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a send
 MaxSetupAttempts	integer	\s-12\s+1	max attempts to initialize a modem
@@ -313,14 +313,14 @@ PagerMaxMsgLength	integer	\s-1128\s+1	max length of a text message
 .sp .5
 IXOService	string	\s-1``PG''\s+1	IXO: service identification string
 IXODeviceID	string	\s-1``1''\s+1	IXO: device identification string
-IXOMaxUnknown	integer	\s-13\s+1	IXO: max unknown responses before abort
+IXOMaxUnknown	integer	\s-13\s+1	IXO and UCP: max unknown responses before abort
 IXOIDProbe	integer	\s-12\s+1	IXO: time between sending \er during ID sequence (secs)
 IXOIDTimeout	integer	\s-120\s+1	IXO: max time to wait for ID= response (secs)
 IXOLoginRetries	integer	\s-13\s+1	IXO: max attempts to login
 IXOLoginTimeout	integer	\s-115\s+1	IXO: max time to complete login (secs)
 IXOGATimeout	integer	\s-130\s+1	IXO: max time to wait for Go-Ahead response (secs)
-IXOXmitRetries	integer	\s-13\s+1	IXO: max retries to send text msg block
-IXOXmitTimeout	integer	\s-115\s+1	IXO: max time to transmit text msg block
+IXOXmitRetries	integer	\s-13\s+1	IXO and UCP: max retries to send text msg block
+IXOXmitTimeout	integer	\s-115\s+1	IXO and UCP: max time to transmit text msg block
 IXOAckTimeout	integer	\s-130\s+1	IXO: max time to wait for msg block ack (secs)
 .fi
 .SH "SERVER-ORIENTED CONFIGURATION PARAMETERS"
@@ -1001,7 +1001,7 @@ flag associated with each area should be bit-or'd to
 form the value for this tag.
 .ne 1i
 .sp .5
-.ta \w'\fB65536 (0x04000)    \fP'u +\w'Modem Communications    'u
+.ta \w'\fB131072 (0x20000)    \fP'u +\w'Modem Communications    'u
 .nf
 \fBFlag	Area	Description\fP
 1 (0x00001)	Server Operation	queue management and general operation
@@ -1021,6 +1021,7 @@ form the value for this tag.
 16384 (0x04000)	FIFO Messages	inter-application messages
 32768 (0x08000)	Modem State Transitions	modem state changes (down, busy, ready)
 65536 (0x10000)	Dial Rules	dialstring rules parsing and execution
+131072 (0x20000)	Docq Changes	document reference handling
 .sp .5
 .fi
 For example, to enable tracing of server operations and
@@ -2130,15 +2131,18 @@ character will be sent to the host.
 .SH "PAGER-RELATED CONFIGURATION PARAMETERS"
 .PP
 The following parameters are specific to the configuration
-and operation of the IXO/TAP support for sending pager messages.
+and operation of the IXO/TAP and UCP support for sending pager messages
+and GSM SM. Parameter not used for UCP are marked with
+``(\fIIXO/TAP only\fP)''.
 .TP
 .B PagerSetupCmds
 The commands to send to a modem to prepare the modem for a
 call to pager service provider.
 Typically these commands place direct the modem to communicate
 with the service provider at 300 bps using the V.21 protocol.
-Note that there is no method to define different setup command strings
-for different services.
+Per-service provider command strings can be setup in the
+info database; see
+.IR info (4F).
 .TP
 .B PagerMaxMsgLength
 The maximum length for a pager text message.
@@ -2148,11 +2152,13 @@ info database; see
 .IR info (4F).
 .TP 
 .B IXOService
+(\fIIXO/TAP only\fP)
 The service identification string transmitted as part of the
 .SM IXO/TAP
 protocol.
 .TP 
 .B IXODeviceID
+(\fIIXO/TAP only\fP)
 The terminal device identification string transmitted as part of the
 .SM IXO/TAP
 protocol.
@@ -2164,22 +2170,27 @@ at various stages of the
 protocol before the sender will abort and hangup the phone.
 .TP 
 .B IXOIDProbe
+(\fIIXO/TAP only\fP)
 The time, in seconds, between sending a ``\er'' during the
 initial ID recognition sequence of the
 .SM IXO/TAP
 protocol.
 .TP 
 .B IXOIDTimeout
+(\fIIXO/TAP only\fP)
 The maximum time, in seconds, to wait for the initial ID response from
 the service provider.
 .TP 
 .B IXOLoginRetries
+(\fIIXO/TAP only\fP)
 The maximum number of attempts to login to a service provider.
 .TP 
 .B IXOLoginTimeout
+(\fIIXO/TAP only\fP)
 The maximum time, in seconds, to wait to complete the login procedure.
 .TP 
 .B IXOGATimeout
+(\fIIXO/TAP only\fP)
 The maximum time, in seconds, to wait for a Go-Ahead message from the service
 provider.
 .TP 
@@ -2191,6 +2202,7 @@ in a single call.
 The maximum time, in seconds, to try transmitting a text message block.
 .TP 
 .B IXOAckTimeout
+(\fIIXO/TAP only\fP)
 integer	\s-130\s+1	IXO: max time to wait for msg block ack (secs)
 The maximum time, in seconds, to wait for an acknowledgement
 to a transmitted message.

@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++,v 1.100 1996/08/21 21:02:47 sam Rel $ */
+/*	$Id: FaxRecv.c++,v 1.101 1997/10/12 10:55:43 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -141,7 +141,8 @@ FaxServer::getRecvFile(fxStr& qfile, fxStr& emsg)
 	(void) flock(ftmp, LOCK_EX|LOCK_NB);
 	sprintf(line, "%u", seqnum);
 	(void) lseek(fseqf, 0, SEEK_SET);
-	if (Sys::write(fseqf, line, strlen(line)) != strlen(line)) {
+	if (Sys::write(fseqf, line, strlen(line)) != strlen(line) ||
+		ftruncate(fseqf,strlen(line))) {
 	    emsg = fxStr::format("error updating %s: %s",
 		FAX_RECVSEQF, strerror(errno));
 	    Sys::unlink(qfile);

@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.c++,v 1.25 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: TypeRules.c++,v 1.27 1997/11/25 07:58:18 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -32,6 +32,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+extern "C" {
+#include <netinet/in.h>
+}
 
 TypeRule::TypeRule() {}
 TypeRule::~TypeRule() {}
@@ -57,9 +60,9 @@ fxBool
 TypeRule::match(const void* data, u_int size, fxBool verbose) const
 {
     if (verbose) {
-	printf("rule: %soffset %#x %s %s",
+	printf("rule: %soffset %#lx %s %s",
 	    cont ? ">" : "",
-	    off,
+	    (u_long) off,
 	    typeNames[type],
 	    opNames[op]
 	);
@@ -106,7 +109,7 @@ TypeRule::match(const void* data, u_int size, fxBool verbose) const
 	if (off + 2 < size) {
 	    u_short w;
 	    memcpy(&w, cp+off, 2);
-	    v = w;
+	    v = ntohs(w);
 	    break;
 	}
 	if (verbose)
@@ -115,6 +118,7 @@ TypeRule::match(const void* data, u_int size, fxBool verbose) const
     case LONG:
 	if (off + 4 < size) {
 	    memcpy(&v, cp+off, 4);
+	    v = ntohl(v);
 	    break;
 	}
 	if (verbose)
@@ -184,9 +188,9 @@ TypeRule::getFmtdCmd(
 	    switch (c = cmd[i]) {
 	    case 'i':	fmtd.append(input);			  continue;
 	    case 'o':	fmtd.append(output);			  continue;
-	    case 'R':	fmtd.append(fxStr(hr, "%.2g"));		  continue;
+	    case 'R':	fmtd.append(fxStr(hr, "%.2f"));		  continue;
 	    case 'r':	fmtd.append(fxStr(hr/25.4, "%.2g"));	  continue;
-	    case 'V':	fmtd.append(fxStr(vr, "%.2g"));		  continue;
+	    case 'V':	fmtd.append(fxStr(vr, "%.2f"));		  continue;
 	    case 'v':	fmtd.append(fxStr(vr/25.4, "%.2g"));	  continue;
 	    case 'f':	fmtd.append(df);			  continue;
 	    case 'W':	fmtd.append(fxStr(pw, "%.2g"));		  continue;

@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in,v 1.31 1996/06/24 02:58:30 sam Rel $
+#	$Id: Makefile.in,v 1.32 1997/10/12 10:37:14 guru Rel $
 #
 # @WARNING@
 #
@@ -81,7 +81,8 @@ CONFIGFILES=class1 \
 	zyxel-1496e \
 	zyxel-1496e-1 \
 	zyxel-1496e-2.0 \
-	zyxel-2864
+	zyxel-2864 \
+	sierra
 TARGETS=
 
 default all::

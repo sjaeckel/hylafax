@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: notify.awk,v 1.39 1996/06/24 03:06:21 sam Rel $
+#	$Id: notify.awk,v 1.40 1997/09/25 09:12:46 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -160,6 +160,7 @@ BEGIN		{ nfiles = 0;
 		  signalrate = "unknown";
 		  dataformat = "unknown";
 		  doneop = "default";
+                pagernum = "unknown";
 		  commid = "";
 		}
 /^jobid/	{ jobid = $2; }
@@ -202,6 +203,7 @@ BEGIN		{ nfiles = 0;
 /^[!]*tiff/	{ files[nfiles++] = $4; }
 /^[!]*pcl/	{ files[nfiles++] = $4; }
 /^page:/	{ pins[npins++] = $4; }
+/^[!]page:/   { pagernum = $4; }
 /^data:/	{ files[nfiles++] = $4; }
 /^poll/		{ poll = " -p"; }
 END {
@@ -209,6 +211,8 @@ END {
 	jobtag = jobType " job " jobid;;
     if (doneop == "default")
 	doneop = "remove";
+    if (jobType == "pager")
+      number = pagernum;
     if (why == "done") {
 	putHeaders(jobtag " to " number " completed");
 	print " was completed successfully.";

@@ -1,4 +1,4 @@
-.\"	$Id: pagermap.4f,v 1.4 1996/06/24 03:04:18 sam Rel $
+.\"	$Id: pagermap.4f,v 1.5 1998/02/07 12:31:43 guru Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -38,6 +38,8 @@ The file
 to map pager identifiers specified with the \s-1PAGE\s+1 directive
 to
 .SM IXO/TAP
+or
+.SM SMS
 service providers and optionally a Pager Identification
 Number (\s-1PIN\s+1).
 (The ability to specify a \s-1PIN\s+1 makes it possible to define 
@@ -71,6 +73,8 @@ Regular expressions are distinguished from plain strings by the
 presence of one or more of the magic characters ``[]*.^$-+{}()''.
 The <\fIdialstring\fP> identifies the
 .SM IXO/TAP
+or
+.SM SMS
 service provider to contact for delivery or, if <\fIdialstring\fP>
 is the string ``reject'' (case insensitive) then the pager identifier
 is rejected.

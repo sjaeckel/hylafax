@@ -1,4 +1,4 @@
-#	$Id: distrules,v 1.315 1996/09/30 22:28:09 sam Rel $
+#	$Id: distrules,v 1.326 1998/01/04 11:41:01 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -70,6 +70,7 @@ HTMLFILES=\
     html/operation.html				\
     html/overview.html				\
     html/sam.html				\
+    html/matthias.html				\
     html/setup.html				\
     html/setup-advanced.html			\
     html/setup-client.html			\
@@ -96,6 +97,9 @@ HTMLFILES=\
     html/Modems/usr-courier.html		\
     html/Modems/usr-sportster.html		\
     html/Modems/zyxel-1496.html			\
+    html/Modems/K56flex.html			\
+    html/Modems/multitech-2834.html		\
+    html/Modems/hayes-accura288.html		\
     html/Modems/Telebit/faxcmds.html		\
     html/Modems/ZyXEL/autodetect.html		\
     html/Modems/ZyXEL/codes.html		\
@@ -144,6 +148,7 @@ HTMLFILES=\
     html/v4.0beta020.html			\
     html/v4.0beta021.html			\
     html/v4.0beta022.html			\
+    html/v4.0beta023.html			\
     html/Modems/Supra/class2.html		\
     html/Modems/Supra/class1.html		\
     html/Modems/Hayes/hayes.html		\
@@ -216,6 +221,7 @@ HYLAFAXSRC=\
 	config/zyxel-1496e-1			\
 	config/zyxel-1496e-2.0			\
 	config/zyxel-2864			\
+	config/sierra				\
     etc/Makefile.in				\
 	etc/copy.h				\
 	etc/copy.m				\
@@ -504,6 +510,7 @@ HYLAFAXSRC=\
 	faxmail/faxmail.ps			\
 	faxmail/mailfax.sh-sendmail		\
 	faxmail/mailfax.sh-smail		\
+	faxmail/mailfax.sh-qmail		\
     faxrm/Makefile.in				\
 	faxrm/faxrm.c++				\
     faxstat/Makefile.in				\
@@ -554,6 +561,21 @@ HYLAFAXSRC=\
 	sgi2fax/lut.h				\
 	sgi2fax/rand.c				\
 	sgi2fax/row.c				\
+    pkg/Makefile.in				\
+        pkg/depend				\
+        pkg/proto.local				\
+        pkg/preremove				\
+        pkg/spkginfo.in				\
+        pkg/make_proto.sh.in			\
+        pkg/README				\
+        pkg/crequest.in				\
+        pkg/cproto.stub.in			\
+        pkg/sproto.stub.in			\
+        pkg/make.links				\
+        pkg/cpkginfo.in				\
+        pkg/postinstall.in			\
+        pkg/srequest.in				\
+        pkg/postremove.in			\
     ${PORTFILES}				\
     ${NULL}
 #
@@ -627,6 +649,7 @@ MANPAGES=\
 HTMLDIST=\
     ${HTMLFILES}				\
     html/sam.gif				\
+    html/matthias.gif				\
     html/hylafax.gif				\
     html/icons/frog.gif				\
     html/icons/next.gif				\
@@ -682,6 +705,7 @@ AFMFILES=\
     afm/Times-Roman.afm				\
     afm/ZapfChancery-MediumItalic.afm		\
     afm/ZapfDingbats.afm			\
+    afm/fontmap.pl				\
     ${NULL}
 #
 # These rules are used to create the source distribution images
@@ -708,9 +732,10 @@ rcsclean:
 alpha:
 	(cd ${SRCDIR}/dist; sh newversion)
 	-${MAKE} clobber
+	echo touching Makedepend ; touch Makedepend
 	${MAKE} alpha.stamp
-	${SRCDIR}/configure ${CONFIG}
-	${MAKE} product
+#	${SRCDIR}/configure ${CONFIG}
+#	${MAKE} product
 	${MAKE} alpha.tar
 
 #
@@ -772,12 +797,11 @@ alpha.tar:
 	ln -s ${SRCDIR} hylafax-$$VERSION;				\
 	(for i in ${HYLAFAXSRC} dist/hylafax.alpha; do			\
 	   echo $$i;							\
-	done) | sed "s;.*;hylafax-$$VERSION/&;" >$$VERSION;		\
-	tar cvf $$VERSION-tar `cat $$VERSION`;				\
+	done) | sed "s;.*;hylafax-$$VERSION/&;" >  $$VERSION;		\
 	(for i in ${MANPAGES} ${HTMLDIST} ${AFMFILES}; do		\
 	   echo $$i;							\
-	done) | sed "s;.*;hylafax-$$VERSION/&;" >$$VERSION;		\
-	tar rvf $$VERSION-tar `cat $$VERSION`;				\
+	done) | sed "s;.*;hylafax-$$VERSION/&;" >> $$VERSION;		\
+	gtar -cvf $$VERSION-tar --files-from $$VERSION;			\
 	rm -f hylafax-$$VERSION-tar.${ZIPSUF};				\
 	cat $$VERSION-tar | ${COMPRESS} >hylafax-$$VERSION-tar.${ZIPSUF};\
 	rm -f hylafax-$$VERSION $$VERSION $$VERSION-tar;
@@ -785,9 +809,10 @@ alpha.tar:
 release:
 	(cd ${SRCDIR}/dist; sh newversion)
 	-${MAKE} clobber
+	echo touching Makedepend ; touch Makedepend
 	${MAKE} release.stamp
-	${SRCDIR}/configure ${CONFIG}
-	${MAKE} product
+#	${SRCDIR}/configure ${CONFIG}
+#	${MAKE} product
 	${MAKE} release.tar
 
 release.stamp:
@@ -814,12 +839,11 @@ release.tar:
 	ln -s ${SRCDIR} hylafax-$$VERSION;				\
 	(for i in ${HYLAFAXSRC} dist/hylafax.alpha; do			\
 	   echo $$i;							\
-	done) | sed "s;.*;hylafax-$$VERSION/&;" >$$VERSION;		\
-	tar cvf $$VERSION-tar `cat $$VERSION`;				\
+	done) | sed "s;.*;hylafax-$$VERSION/&;" >  $$VERSION;		\
 	(for i in ${MANPAGES} ${HTMLDIST} ${AFMFILES}; do		\
 	   echo $$i;							\
-	done) | sed "s;.*;hylafax-$$VERSION/&;" >$$VERSION;		\
-	tar rvf $$VERSION-tar `cat $$VERSION`;				\
+	done) | sed "s;.*;hylafax-$$VERSION/&;" >> $$VERSION;		\
+	gtar -cvf $$VERSION-tar --files-from $$VERSION;			\
 	rm -f hylafax-$$VERSION-tar.${ZIPSUF};				\
 	cat $$VERSION-tar | ${COMPRESS} >hylafax-$$VERSION-tar.${ZIPSUF};\
 	rm -f hylafax-$$VERSION $$VERSION $$VERSION-tar;

@@ -1,4 +1,4 @@
-/*	$Id: DialRules.c++,v 1.28 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: DialRules.c++,v 1.30 1998/01/19 06:40:03 guru Rel $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -93,7 +93,8 @@ DialStringRules::parse(fxBool shouldExist)
 	ok = parseRules();
 	fclose(fp);
     } else if (shouldExist)
-	parseError("Cannot open file for reading");
+	parseError("Cannot open file \"%s\" for reading",
+		(const char*) filename);
     return (ok);
 }
 

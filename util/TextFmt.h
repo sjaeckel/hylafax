@@ -1,4 +1,4 @@
-/*	$Id: TextFmt.h,v 1.9 1996/07/02 23:05:54 sam Rel $ */
+/*	$Id: TextFmt.h,v 1.12 1998/02/07 12:57:57 guru Rel $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -65,7 +65,10 @@ public:
 
     fxBool readMetrics(TextCoord pointsize, fxBool useISO8859, fxStr& emsg);
 };
-inline TextCoord TextFont::charwidth(const char c) const { return widths[c]; }
+/*
+ * we have to use unsigned const char
+ */
+inline TextCoord TextFont::charwidth(const char c) const { return widths[(unsigned const char) c]; }
 inline const char* TextFont::getFamily(void) const	 { return family; }
 
 class FontDict;

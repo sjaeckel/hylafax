@@ -1,4 +1,4 @@
-# $Id: config.site,v 1.40 1996/11/23 17:28:45 sam Rel $
+# $Id: config.site,v 1.43 1997/12/14 14:24:38 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -90,7 +90,7 @@
 #FAXUID="uucp"				# user ID for fax user
 #PAGESIZE="North American Letter"	# default page size
 #SYSGID="sys"				# group ID for system installs
-#SYSUID="bin				# user ID for system installs
+#SYSUID="bin"				# user ID for system installs
 #LOCKS="ansi"				# default UUCP lockfile scheme
 #
 #PATH_GETTY="/etc/getty"		# pathname of suitable getty program
@@ -101,6 +101,12 @@
 #PATH_DPSRIP="/var/spool/fax/bin/ps2fax.exe"	# pathname of DPS-based RIP
 #PATH_IMPRIP="/usr/lib/print/psrip"	# pathname of Impressario 2.1 RIP
 #MANSCHEME="sysv-source-cat-strip"	# manual page installation scheme
+
+# SVR4 packaging stuff
+#PKG_ARCH=				# ARCH variable in pkginfo file
+#PKG_EMAIL=someone@somehost.somedomain	# EMAIL variable in pkginfo file
+#PKG_VENDOR="Your Name Here"		# VENDOR variable in pkginfo file
+#
 
 #
 # Parameters used when building the software.
@@ -201,6 +207,7 @@
 #CONFIG_SOCKARGLENTYPE="unsigned long"	# call-by-ref arg type for socket funcs
 #CONFIG_BADSELECTPROTO="no"		# system has way old select func decl
 #CONFIG_MAXGID="5999"			# maximum permissable GID
+#CONFIG_OSFCNH="auto"			# control inclusion of <osfcn.h>
 
 #
 # Dynamic Shared Object (DSO) support.

@@ -1,4 +1,4 @@
-.\"	$Id: pagesend.1m,v 1.10 1996/06/24 03:04:18 sam Rel $
+.\"	$Id: pagesend.1m,v 1.11 1998/02/07 12:31:43 guru Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -29,7 +29,7 @@
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .TH PAGESEND 1M "October 3, 1995"
 .SH NAME
-pagesend \- \*(Fx IXO/TAP transmit program
+pagesend \- \*(Fx IXO/TAP and UCP transmit program
 .SH SYNOPSIS
 .B ${LIBEXEC}/pagesend
 [
@@ -47,6 +47,8 @@ pagesend \- \*(Fx IXO/TAP transmit program
 .I pagesend
 is the program that implements the
 .SM IXO/TAP
+and the
+.SM UCP
 transmission protocol for the \*(Fx system.
 .I pagesend
 is invoked by the
@@ -96,6 +98,11 @@ subdirectory and is named
 consult
 .IR config (4F)
 for detailed information on the contents of configuration files.
+.PP
+The protocol which must be used for a specific service provider
+is controled from the
+.IR info (4F)
+file.
 .SH OPTIONS
 .TP 10
 .BI \-c " config"
@@ -157,4 +164,5 @@ content of the spooling area.
 .SH "SEE ALSO"
 .IR faxq (1M),
 .IR hylafax (4F),
-.IR config (4F)
+.IR config (4F),
+.IR info (4F)

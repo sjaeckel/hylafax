@@ -1,4 +1,4 @@
-/*	$Id: choptest.c++,v 1.9 1996/07/29 19:12:44 sam Rel $ */
+/*	$Id: choptest.c++,v 1.10 1997/11/25 07:46:10 guru Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -185,7 +185,7 @@ main(int argc, char* argv[])
     params.ln = LN_INF;
     params.df = DF_1DMR;
 
-    printf("Chop pages with >=%.2g\" of white space at the bottom.\n"
+    printf("Chop %s >=%.2g\" of white space at the bottom.\n"
 	, doAll ? "all pages with" : "last page if"
 	, minChop
     );

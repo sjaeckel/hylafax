@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in,v 1.32 1996/11/26 23:18:54 sam Rel $
+#	$Id: faxsetup.sh.in,v 1.34 1997/11/22 11:46:11 guru Rel $
 #
 # @WARNING@
 #
@@ -1225,7 +1225,7 @@ EOF
     if [ -n "$LN_S" ]; then
 	$LN $LN_S ps2fax.$PS bin/ps2fax;
     else
-	$LN bin/ps2fax/$PS bin/ps2fax;
+	$LN bin/ps2fax.$PS bin/ps2fax;
     fi
 fi
 
@@ -1298,7 +1298,9 @@ GNU shell utilities package that can be retrieved by public FTP.
 EOF
     boom
 fi
-dumpPromptFuncs >&5
+if onServer; then
+    dumpPromptFuncs >&5
+fi
 
 #
 # Prompt the user for a string that can not be null.
@@ -2242,4 +2244,7 @@ fi
 Note ""
 Note "Done verifying system setup."
 
-$RM $JUNK; exit 0
+if onServer; then
+    $RM $JUNK
+fi
+exit 0

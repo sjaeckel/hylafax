@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++,v 1.103 1996/08/21 21:02:47 sam Rel $ */
+/*	$Id: Class2Send.c++,v 1.104 1998/02/07 12:10:54 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -54,7 +54,7 @@ Class2Modem::sendSetup(FaxRequest& req, const Class2Params& dis, fxStr& emsg)
 	emsg = fxStr::format("Unable to send subaddress%s", cmdFailed);
 	return (FALSE);
     }
-    if (req.minsp != BR_2400 && !class2Cmd(minspCmd, req.minsp)) {
+    if (minsp != BR_2400 && !class2Cmd(minspCmd, minsp)) {
 	emsg = fxStr::format("Unable to restrict minimum transmit speed to %s",
 	    Class2Params::bitRateNames[req.minsp], cmdFailed);
 	return (FALSE);

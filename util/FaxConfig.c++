@@ -1,4 +1,4 @@
-/*	$Id: FaxConfig.c++,v 1.18 1996/07/02 19:51:30 sam Rel $ */
+/*	$Id: FaxConfig.c++,v 1.20 1997/11/25 07:54:23 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -54,8 +54,10 @@ FaxConfig::readConfig(const fxStr& filename)
     if (fd) {
 	configTrace("Read config file %s", (const char*) filename);
 	char line[1024];
-	while (fgets(line, sizeof (line)-1, fd))
+	while (fgets(line, sizeof (line)-1, fd)){
+	    line[strlen(line)-1]='\0';		// Nuke \r at end of line
 	    (void) readConfigItem(line);
+	}
 	fclose(fd);
     }
 }
@@ -134,10 +136,12 @@ FaxConfig::getNumber(const char* s)
     return ((int) strtol(s, NULL, 0));
 }
 
+#define	valeq(a,b)	(strcasecmp(a,b)==0)
+
 fxBool
 FaxConfig::getBoolean(const char* cp)
 {
-    return (streq(cp, "on") || streq(cp, "yes") || streq(cp, "true"));
+    return (valeq(cp, "on") || valeq(cp, "yes") || valeq(cp, "true"));
 }
 
 fxBool

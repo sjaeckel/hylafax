@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.h,v 1.6 1996/07/08 15:29:04 sam Rel $ */
+/*	$Id: SNPPServer.h,v 1.7 1997/10/12 10:02:20 guru Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -68,7 +68,7 @@ protected:
     void dataCmd(void);
     void helpCmd(const tab* ctab, const char* s);
     void holdCmd(time_t when);
-    void loginCmd(const char* loginID, const char* pwd = NULL);
+    void loginCmd(const char* loginID, const char* pwd = "");
     void messageCmd(const char* msg);
     void pagerCmd(const char* pagerID, const char* pin = NULL);
     void pingCmd(const char* pagerID);

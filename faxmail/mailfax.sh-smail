@@ -9,7 +9,7 @@
 #       fax: driver=pipe, local;
 #           pipe_as_sender, cmd="/usr/local/bin/mailfax"
 #
-#   Add the following to /usr/local/lib/smail/routers:
+#   Add the following at the start of /usr/local/lib/smail/routers:
 #       fax: driver=queryprogram, transport=fax;
 #           cmd="/usr/bin/expr ${lc:host} : '.*\.fax$'"
 #

@@ -1,4 +1,4 @@
-/*	$Id: SNPPJob.c++,v 1.11 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: SNPPJob.c++,v 1.12 1997/11/25 08:05:46 guru Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -58,6 +58,9 @@ SNPPJob::SNPPJob(const SNPPJob& other)
 }
 SNPPJob::~SNPPJob() {}
 
+#define	valeq(a,b)	(strcasecmp(a,b)==0)
+#define	valneq(a,b,n)	(strncasecmp(a,b,n)==0)
+
 fxBool
 SNPPJob::setNotification(const char* v0)
 {
@@ -66,13 +69,13 @@ SNPPJob::setNotification(const char* v0)
 	for (v += 4; isspace(*v); v++)
 	    ;
     }
-    if (streq(v, "done"))
+    if (valeq(v, "done"))
 	notify = when_done;
-    else if (strneq(v, "req", 3))
+    else if (valneq(v, "req", 3))
 	notify = when_requeued;
-    else if (streq(v, "none") || streq(v, "off"))
+    else if (valeq(v, "none") || valeq(v, "off"))
 	notify = no_notice;
-    else if (streq(v, "default"))
+    else if (valeq(v, "default"))
 	setNotification(SNPP_DEFNOTIFY);
     else
 	return (FALSE);

@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxcron.sh.in,v 1.38 1996/10/22 18:48:29 sam Rel $
+#	$Id: faxcron.sh.in,v 1.41 1998/02/07 14:16:38 guru Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -39,7 +39,7 @@
 
 AGEINFO=30			# purge remote info after 30 days inactivity
 AGELOG=30			# keep log info for last 30 days
-AGERCV=2			# purge received facsimile after 2 days
+AGERCV=7			# purge received facsimile after 2 days
 AGETMP=1			# purge orphaned temp files after 1 day
 FAXUSER=fax			# owner of log files
 LOGMODE=0644			# mode for log files
@@ -304,6 +304,7 @@ echo ""
 #
 find info -ctime +$AGEINFO -print >$JUNK
 
+if [ -s $JUNK ]; then
 echo "Purge remote device capabilities older than $AGEINFO days:"
 INFOTMP=info/tmp$$
 for i in `$CAT $JUNK`; do
@@ -317,6 +318,9 @@ for i in `$CAT $JUNK`; do
     fi
 done
 $RM $INFOTMP			# for -n option
+else 
+    echo "Nothing to purge in info directory."
+fi
 echo ""
 
 find log -mtime +$AGELOG -print >$JUNK
@@ -425,7 +429,7 @@ echo ""
 #
 # Purge old stuff from the temp directory.
 #
-find tmp -mtime +$AGETMP -print >$JUNK
+find tmp -type f -mtime +$AGETMP -print >$JUNK
 if [ -s $JUNK ]; then
     echo "Purge tmp files older than $AGETMP days:"
     for i in `$CAT $JUNK`; do

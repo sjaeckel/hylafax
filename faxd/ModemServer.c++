@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++,v 1.38 1996/11/22 00:05:04 sam Rel $ */
+/*	$Id: ModemServer.c++,v 1.40 1997/10/12 10:55:43 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -257,7 +257,11 @@ static const int schedCtlParams[9][2] = {
 #elif HAS_PRIOCNTL
 extern "C" {
 #include <sys/priocntl.h>
+#ifdef HAS_FPPRIOCNTL
+#include <sys/fppriocntl.h>
+#else
 #include <sys/rtpriocntl.h>
+#endif
 #include <sys/tspriocntl.h>
 }
 static struct SchedInfo {
@@ -269,9 +273,15 @@ static struct SchedInfo {
     { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// MODEMWAIT
     { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// LOCKWAIT
     { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// GETTYWAIT
+#ifdef HAS_FPPRIOCNTL	// if still fails, set prio to 0
+    { "FP", { FP_NOCHANGE, FP_NOCHANGE, FP_TQDEF } },// SENDING
+    { "FP", { FP_NOCHANGE, FP_NOCHANGE, FP_TQDEF } },// ANSWERING
+    { "FP", { FP_NOCHANGE, FP_NOCHANGE, FP_TQDEF } },// RECEIVING
+#else
     { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// SENDING
     { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// ANSWERING
     { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// RECEIVING
+#endif
     { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// LISTENING
 };
 #elif HAS_RTPRIO
@@ -318,11 +328,19 @@ ModemServer::setProcessPriority(ModemServerState s)
 	if (priocntl((idtype_t)0, 0, PC_GETCID, (caddr_t)&pcinfo) >= 0) {
 	    pcparms_t pcparms;
 	    pcparms.pc_cid = pcinfo.pc_cid;
+#ifdef HAS_FPPRIOCNTL
+	    if (streq(si.clname, "FP")) {
+		fpparms_t* fpp = (fpparms_t*) pcparms.pc_clparms;
+		fpp->fp_pri	= si.params[0];
+		fpp->fp_tqsecs	= (ulong) si.params[1];
+		fpp->fp_tqnsecs	= si.params[2];
+#else
 	    if (streq(si.clname, "RT")) {
 		rtparms_t* rtp = (rtparms_t*) pcparms.pc_clparms;
 		rtp->rt_pri	= si.params[0];
 		rtp->rt_tqsecs	= (ulong) si.params[1];
 		rtp->rt_tqnsecs	= si.params[2];
+#endif
 	    } else {
 		tsparms_t* tsp = (tsparms_t*) pcparms.pc_clparms;
 		tsp->ts_uprilim	= si.params[0];
@@ -588,7 +606,8 @@ ModemServer::beginSession(const fxStr& number)
 	if (ftmp >= 0) {
 	    sprintf(line, "%u", seqnum);
 	    (void) lseek(fseqf, 0, SEEK_SET);
-	    if (Sys::write(fseqf, line, strlen(line)) != strlen(line))
+	    if (Sys::write(fseqf, line, strlen(line)) != strlen(line) ||
+		ftruncate(fseqf,strlen(line)))
 		logError("Error writing commid sequence number file");
 	    Sys::close(fseqf);			// NB: implicit unlock
 	    log = new

@@ -1,4 +1,4 @@
-/*	$Id: faxrm.c++,v 1.35 1996/06/24 03:01:30 sam Rel $ */
+/*	$Id: faxrm.c++,v 1.36 1997/09/26 06:35:17 guru Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -56,8 +56,13 @@ faxRmApp::run(int argc, char** argv)
 
     fxBool jobs = TRUE;
     fxBool docs = FALSE;
-    while ((c = getopt(argc, argv, "h:dv")) != -1)
+    fxBool useadmin = FALSE;
+
+    while ((c = getopt(argc, argv, "ah:dv")) != -1)
 	switch (c) {
+	case 'a':
+	    useadmin = TRUE;
+	    break;
 	case 'd':			// treat args as document names
 	    jobs = FALSE;
 	    docs = TRUE;
@@ -75,7 +80,9 @@ faxRmApp::run(int argc, char** argv)
 	usage();
     fxStr emsg;
     if (callServer(emsg)) {
-	if (login(NULL, emsg)) {
+	if (login(NULL, emsg) &&
+	    (!useadmin || admin (NULL, emsg))) {
+
 	    for (; optind < argc; optind++) {
 		const char* id = argv[optind];
 		if (jobs) {
@@ -125,7 +132,7 @@ faxRmApp::deleteDoc(const char* id)
 void
 faxRmApp::usage()
 {
-    fxFatal("usage: faxrm [-h server-host] [-dv] id...");
+    fxFatal("usage: faxrm [-h server-host] [-adv] id...");
 }
 
 int

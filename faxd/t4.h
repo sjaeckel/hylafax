@@ -1,4 +1,4 @@
-/* $Id: t4.h,v 1.16 1996/06/24 03:00:54 sam Rel $ */
+/* $Id: t4.h,v 1.1 1997/02/16 11:18:20 guru Rel $ */
 
 /*
  * Copyright (c) 1988-1996 Sam Leffler

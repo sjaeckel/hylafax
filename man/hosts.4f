@@ -1,4 +1,4 @@
-.\"	$Id: hosts.4f,v 1.24 1996/06/24 03:04:15 sam Rel $
+.\"	$Id: hosts.4f,v 1.25 1998/01/04 13:48:58 guru Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -31,9 +31,6 @@
 .SH NAME
 hosts \- \*(Fx client access control list
 .SH DESCRIPTION
-[\fIThe contents of this file is likely to grow and/or change before
-the first public beta distribution.\fP]
-.PP
 The 
 .SM ASCII
 file

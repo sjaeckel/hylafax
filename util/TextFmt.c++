@@ -1,4 +1,4 @@
-/*	$Id: TextFmt.c++,v 1.18 1996/09/20 16:00:52 sam Rel $ */
+/*	$Id: TextFmt.c++,v 1.20 1997/09/25 13:23:39 guru Rel $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -846,7 +846,7 @@ TextFmt::format(const char* cp, u_int cc)
 {
     const char* ep = cp+cc;
     while (cp < ep) {
-	int c = *cp++;
+	int c = *cp++ & 0xff;
 	switch (c) {
 	case '\0':			// discard nulls
 	    break;
@@ -1210,7 +1210,7 @@ TextFont::show(FILE* fd, const char* val, int len) const
 		fputc(c, fd);
 	    } else
 		fprintf(fd, "\\%03o", c);
-	    hm += widths[c];
+	    hm += widths[(unsigned) c];		// Leif Erlingsson <leif@lege.com>
 	} while (--len);
 	fprintf(fd, ")%s ", (const char*) showproc);
     }
@@ -1228,7 +1228,7 @@ TextFont::strwidth(const char* cp) const
 {
     TextCoord w = 0;
     while (*cp)
-	w += widths[*cp++];
+	w += widths[(unsigned) (*cp++ & 0xff)];	// Leif Erlingsson <leif@lege.com>
     return w;
 }
 
@@ -1295,6 +1295,13 @@ TextFont::readMetrics(TextCoord ps, fxBool useISO8859, fxStr& emsg)
 		"%s: No glyph metric table located; using fixed widths",
 		(const char*) file);
 	    fclose(fp);
+	    /*
+	     * Next line added by Leif Erlingsson <leif@lege.com> because
+	     * otherwise, if the metrics-file has no glyph metric table
+	     * and useISO8859 == False, the FixedMetrics will be all 0's!
+	     * (I don't know if this does or does not cause any problem.)
+	     */
+	    loadFixedMetrics(625*ps/1000L);	// NB: use fixed width metrics
 	    return (FALSE);
 	}
 	lineno++;
@@ -1311,6 +1318,16 @@ TextFont::readMetrics(TextCoord ps, fxBool useISO8859, fxStr& emsg)
 	}
 	if (ix == -1)			// end of unencoded glyphs
 	    break;
+	/*
+	 * Next if-clause added by Leif Erlingsson <leif@lege.com> because
+	 * experience has shown most glyph metric table's to be useless
+	 * for obtaining character widths of iso8859-1 characters > 127.
+	 * The Adobe Helvetica-Oblique metrics-file created Tue Apr 1
+	 * 12:54:09 PST 1986 caused bad spacing for eight-bit iso-8859-1
+	 * characters, for example.
+	 */
+	if (ix > 127)
+	    w = 625;			// distrust metrics-file for char > 127
 	if (ix < NCHARS)
 	    widths[ix] = w*ps/1000L;
     }

@@ -1,4 +1,4 @@
-.\"	$Id: faxrm.1,v 1.27 1996/06/24 03:04:12 sam Rel $
+.\"	$Id: faxrm.1,v 1.28 1997/10/19 14:04:15 guru Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -33,6 +33,8 @@ faxrm \- remove a \*(Fx job or document from a server
 .SH SYNOPSIS
 .B faxrm
 [
+.B \-a
+] [
 .B \-d
 ] [
 .B \-v
@@ -69,8 +71,16 @@ option to
 .IR faxstat .
 .PP
 Unprivileged users can only remove jobs or documents that they own.
-Clients with administrative privileges can remove any job or document.
+Clients with administrative privileges can remove any job or document
+(see the
+.B \-a
+option below).
 .SH OPTIONS
+.TP 10
+.B \-a
+Use administrative privileges;
+.I faxrm
+will prompt for the password to set administrative privileges.
 .TP 10
 .B \-d
 Interpret each

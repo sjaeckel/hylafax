@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++,v 1.42 1996/08/03 00:43:08 sam Rel $ */
+/*	$Id: faxSendApp.c++,v 1.43 1997/10/26 06:33:37 guru Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -251,9 +251,12 @@ faxSendApp::notifyDocumentSent(FaxRequest& req, u_int fi)
 {
     FaxSendInfo si(req.requests[fi].item, req.commid, req.npages,
 	getFileTransferTime(), getClientParams());
-    sendJobStatus(req.jobid, "D%s", (const char*) si.encode());
 
     FaxServer::notifyDocumentSent(req, fi);
+
+    // NB: there is a racing with the scheduler and we should delay
+    //     the FIFO message to scheduler until we renamed the document
+    sendJobStatus(req.jobid, "D%s", (const char*) si.encode());
 }
 
 /*

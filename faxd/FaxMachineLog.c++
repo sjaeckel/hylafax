@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineLog.c++,v 1.26 1996/08/02 21:31:03 sam Rel $ */
+/*	$Id: FaxMachineLog.c++,v 1.27 1997/02/12 00:05:51 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE.
  */
 #include <ctype.h>
+extern "C" {
 #include <sys/time.h>
+}
 #include <errno.h>
 
 #include "Sys.h"

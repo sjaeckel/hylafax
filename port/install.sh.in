@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: install.sh.in,v 1.20 1996/06/24 03:04:33 sam Rel $
+#	$Id: install.sh.in,v 1.21 1997/02/11 20:29:36 sam Rel $
 #
 # @WARNING@
 #
@@ -108,7 +108,7 @@ do
     -o)		SaveFirst=yes;;
     -O)		RemoveFirst=yes; SaveFirst=yes;;
     -root)	shift; ROOT=$1;;
-    -dir)	CMD=@MKDIR@; HasSource=no;
+    -dir)	CMD="@MKDIR@"; HasSource=no;
 		RM=":"; STRIP=":"
 		objectExists()
 		{

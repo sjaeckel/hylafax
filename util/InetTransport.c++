@@ -1,4 +1,4 @@
-/*	$Id: InetTransport.c++,v 1.16 1996/07/31 17:37:40 sam Rel $ */
+/*	$Id: InetTransport.c++,v 1.17 1997/09/26 15:38:49 guru Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -65,11 +65,7 @@ InetTransport::callServer(fxStr& emsg)
 	if (l < s.length())
 	    proto = s.tail(s.length()-(l+1));
     }
-    struct hostent* hp = Socket::gethostbyname(client.getHost());
-    if (!hp) {
-	emsg = client.getHost() | ": Unknown host";
-	return (FALSE);
-    }
+
     int protocol;
     const char* cproto = proto;			// XXX for busted include files
     struct protoent* pp = getprotobyname(cproto);
@@ -79,6 +75,13 @@ InetTransport::callServer(fxStr& emsg)
 	protocol = 0;
     } else
 	protocol = pp->p_proto;
+
+    struct hostent* hp = Socket::gethostbyname(client.getHost());
+    if (!hp) {
+	emsg = client.getHost() | ": Unknown host";
+	return (FALSE);
+    }
+    
     int fd = socket(hp->h_addrtype, SOCK_STREAM, protocol);
     if (fd < 0) {
 	emsg = "Can not create socket to connect to server.";
