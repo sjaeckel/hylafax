@@ -1,86 +1,107 @@
-#ident	$Header: /usr/people/sam/flexkit/fax/recvfax/RCS/remove.c,v 1.2 91/05/31 12:04:59 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/recvfax/RCS/remove.c,v 1.16 1994/06/14 23:48:25 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include "defs.h"
-
 #include <sys/file.h>
 
 static void
-reallyRemoveJob(Job* job, int fifo, char* jobname, char* arg)
+reallyRemoveJob(const char* op, Job* job, const char* jobname)
 {
     char line[1024];		/* call it line to use isCmd() on it */
     char* cp;
     char* tag;
+    char* cmd;
     int fd;
     FILE* fp;
 
     fp = fopen((char*) job->qfile, "r+w");
     if (fp == NULL) {
-	syslog(LOG_ERR, "remove: cannot open %s (%m)", job->qfile);
+	syslog(LOG_ERR, "%s: cannot open %s (%m)", op, job->qfile);
 	sendClient("openFailed", "%s", jobname);
 	return;
     }
     fd = fileno(fp);
-    if (flock(fd, LOCK_EX|LOCK_NB) < 0) {
-	syslog(LOG_INFO, "%s locked during removal (%m)", job->qfile);
-	sendClient("jobLocked", "%s", jobname);
-	fclose(fp);
-	return;
-    }
-    while (fgets(line, sizeof (line) - 1, fp)) {
-	if (line[0] == '#')
-	    continue;
-	if (cp = strchr(line, '\n'))
-	    *cp = '\0';
-	tag = strchr(line, ':');
-	if (tag)
-	    *tag++ = '\0';
-	while (isspace(*tag))
-	    tag++;
-	if (isCmd("tiff") || isCmd("postscript")) {
-	    if (unlink(tag) < 0) {
-		syslog(LOG_ERR, "remove: unlink %s failed (%m)", tag);
-		sendClient("docUnlinkFailed", "%s", jobname);
+    /*
+     * First ask server to do removal.  If the job is being
+     * processed, it will first be aborted.  Otherwise, do
+     * the cleanup here.
+     */
+    cmd = (strcmp(op, "remove") == 0 ? "R" : "K");
+    if (notifyServer(job->modem, "%s%s", cmd, job->qfile)) {
+	sendClient("removed", "%s", jobname);
+    } else if (flock(fd, LOCK_EX|LOCK_NB) == 0) {
+	while (fgets(line, sizeof (line) - 1, fp)) {
+	    if (line[0] == '#')
+		continue;
+	    if (cp = strchr(line, '\n'))
+		*cp = '\0';
+	    tag = strchr(line, ':');
+	    if (tag)
+		*tag++ = '\0';
+	    while (isspace(*tag))
+		tag++;
+	    if (isCmd("tiff") || isCmd("!tiff") ||
+		isCmd("postscript") || isCmd("!postscript") ||
+		isCmd("fax")) {
+		if (unlink(tag) < 0) {
+		    syslog(LOG_ERR, "%s: unlink %s failed (%m)", op, tag);
+		    sendClient("docUnlinkFailed", "%s", jobname);
+		}
 	    }
-	} else if (isCmd("sendjob") || isCmd("killjob")) {
-	    char buf[1024];
-	    sprintf(buf, "%s %s > /dev/null 2>&1\n", FAX_ATRM, tag);
-	    system(buf);
-	    syslog(LOG_INFO, "remove at job \"%s\"", tag);
+	}
+	if (unlink(job->qfile) < 0) {
+	    syslog(LOG_ERR, "%s: unlink %s failed (%m)", op, job->qfile);
+	    sendClient("unlinkFailed", "%s", jobname);
+	} else {
+	    syslog(LOG_INFO, "%s %s completed", 
+		strcmp(op, "remove") == 0 ? "REMOVE" : "KILL",
+		job->qfile);
+	    sendClient("removed", "%s", jobname);
 	}
     }
-    if (unlink(job->qfile) < 0) {
-	syslog(LOG_ERR, "remove: unlink %s failed (%m)", job->qfile);
-	sendClient("unlinkFailed", "%s", jobname);
-    } else {
-	syslog(LOG_INFO, "REMOVE %s completed", job->qfile);
-	sendClient("removed", "%s", jobname);
-    }
     job->flags |= JOB_INVALID;
-    (void) flock(fileno(fp), LOCK_UN);
-    (void) fclose(fp);
-
-    /* tell server about removal */
-    /* XXX this will only reach one server */
-    if (fifo != -1) {
-	int len;
-	sprintf(line, "R%s", job->qfile);
-	len = strlen(line);
-	if (write(fifo, line, len+1) != len+1)
-	    syslog(LOG_ERR, "fifo write failed for remove (%m)");
-    }
+    (void) fclose(fp);			/* implicit unlock */
 }
 
-void
-removeJob(char* tag, int fifo)
+static void
+doRemove(Job* job, const char* jobname, const char* arg)
 {
-    applyToJob(tag, fifo, "remove", reallyRemoveJob);
+    reallyRemoveJob("remove", job, jobname);
+}
+void
+removeJob(const char* modem, char* tag)
+{
+    applyToJob(modem, tag, "remove", doRemove);
+}
+
+static void
+doKill(Job* job, const char* jobname, const char* arg)
+{
+    reallyRemoveJob("kill", job, jobname);
+}
+void
+killJob(const char* modem, char* tag)
+{
+    applyToJob(modem, tag, "kill", doKill);
 }

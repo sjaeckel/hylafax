@@ -1,13 +1,26 @@
-#ident	$Header: /usr/people/sam/flexkit/fax/recvfax/RCS/status.c,v 1.2 91/05/31 12:05:01 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/recvfax/RCS/status.c,v 1.27 1994/06/17 01:16:50 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include "defs.h"
 #include "tiffio.h"
@@ -19,62 +32,210 @@
 #include <errno.h>
 
 static	void getConfig(char* fileName, config* configp, config* deflt);
+static	void getServerStatus(char* fileName, char buf[1024]);
 
 void
-sendServerStatus()
+sendServerStatus(const char* modem, char* tag)
 {
     DIR* dirp;
     struct dirent* dentp;
     config deflt;
+    char fifomatch[80];
+    int fifomatchlen;
 
     if (!(dirp = opendir("."))) {
 	syslog(LOG_ERR, "%s: opendir: %m", SPOOLDIR);
-	sendError("Problem accessing spool directory");
-	if (debug)
-	    syslog(LOG_DEBUG, "EXIT");
-	exit(-1);
+	sendError("Problem accessing spool directory.");
+	done(-1, "EXIT");
     }
-    getConfig(FAX_CONFIG, &deflt, 0);
-
+    /*
+     * Setup a prefix for matching potential FIFO files.
+     * We do this carefully and in a way that insures we
+     * use only the definitions in config.h.
+     */
+    if (strcmp(modem, MODEM_ANY) == 0)
+	modem = "";
+    sprintf(fifomatch, "%s.%.*s", FAX_FIFO,
+	sizeof (fifomatch) - (sizeof (FAX_FIFO)+2), modem);
+    fifomatchlen = strlen(fifomatch);
     while ((dentp = readdir(dirp)) != 0) {
-	char configName[1024];
 	int fifo;
 
-	if (strncmp(dentp->d_name, "FIFO.", 5) == 0 &&
-	  (fifo = open(dentp->d_name, O_WRONLY|O_NDELAY)) > -1) {
+	if (strncmp(dentp->d_name, fifomatch, fifomatchlen) != 0)
+	    continue;
+	fifo = open(dentp->d_name, O_WRONLY|O_NDELAY);
+	if (fifo != -1) {
 	    config configuration;
+	    char fileName[1024];
 	    char* cp;
 
 	    (void) close(fifo);
 	    cp = strchr(dentp->d_name, '.') + 1;
-	    sprintf(configName, "%s.%s", FAX_CONFIG, cp);
-	    getConfig(configName, &configuration, &deflt);
-	    if (debug)
-		syslog(LOG_DEBUG, "send \"server:%s\"",
-		    configuration.faxNumber);
-	    sendClient("server", "%s", configuration.faxNumber);
+	    sprintf(fileName, "%s.%s", FAX_CONFIG, cp);
+	    getConfig(fileName, &configuration, &deflt);
+	    if (version > 0) {
+		char serverStatus[1024];
+		char* tp;
+
+		sprintf(fileName, "%s/%s", FAX_STATUSDIR, cp);
+		getServerStatus(fileName, serverStatus);
+		/*
+		 * Convert fifo name from canonical format back
+		 * to a pathname by replacing '_'s with '/'s.
+		 */
+		for (tp = cp; tp = strchr(tp, '_'); *tp = '/')
+		    ;
+		sendClient("server", "%s:%s:%s",
+		    configuration.faxNumber, cp, serverStatus);
+	    } else
+		sendClient("server", "%s", configuration.faxNumber);
 	}
     }
     (void) closedir(dirp);
 }
 
-
 void
-sendClientJobStatus(Job* job, char* jobname)
+checkServerStatus(const char* modem)
 {
-    sendClient("jobStatus", "%s:%s:%d:%s", jobname,
-	job->sender, job->tts, job->number);
+    DIR* dirp;
+    struct dirent* dentp;
+    char fifomatch[80];
+    int fifomatchlen;
+    char downFileName[1024];
+    int ndown, nservers;
+
+    if (!(dirp = opendir("."))) {
+	syslog(LOG_ERR, "%s: opendir: %m", SPOOLDIR);
+	sendError("Problem accessing spool directory.");
+	done(-1, "EXIT");
+    }
+    /*
+     * Setup a prefix for matching potential FIFO files.
+     * We do this carefully and in a way that insures we
+     * use only the definitions in config.h.
+     */
+    if (strcmp(modem, MODEM_ANY) == 0)
+	modem = "";
+    sprintf(fifomatch, "%s.%.*s", FAX_FIFO,
+	sizeof (fifomatch) - (sizeof (FAX_FIFO)+2), modem);
+    fifomatchlen = strlen(fifomatch);
+    ndown = nservers = 0;
+    while ((dentp = readdir(dirp)) != 0) {
+	int fifo;
+
+	if (strncmp(dentp->d_name, fifomatch, fifomatchlen) != 0)
+	    continue;
+	fifo = open(dentp->d_name, O_WRONLY|O_NDELAY);
+	if (fifo != -1) {
+	    char fileName[1024];
+	    char* cp;
+	    struct stat sb;
+
+	    (void) close(fifo);
+	    cp = strchr(dentp->d_name, '.') + 1;
+	    sprintf(fileName, "%s/%s.%s", FAX_STATUSDIR, cp, FAX_SHUTDOWNSUF);
+	    if (stat(fileName, &sb) == 0) {
+		ndown++;
+		strcpy(downFileName, fileName);
+	    }
+	    nservers++;
+	}
+    }
+    (void) closedir(dirp);
+    if (nservers > 0 && ndown == nservers) {
+	char status[1024];
+	/*
+	 * All servers are marked shutdown.
+	 */
+	getServerStatus(downFileName, status);
+	if (nservers == 1)
+	    sendAndLogError("The server is unavailable: %s", status);
+	else
+	    sendAndLogError("All servers are unavailable: %s", status);
+	done(-1, "EXIT");
+    }
 }
 
 void
-sendClientJobLocked(Job* job, char* jobname)
+sendServerInfo(const char* modem, char* tag)
 {
-    sendClient("jobLocked", "%s:%s:0:%s", jobname,
-	job->sender, job->number);
+    DIR* dirp;
+    struct dirent* dentp;
+    char infoFile[80];
+
+    if (strcmp(modem, MODEM_ANY) == 0)
+	strcpy(infoFile, "");
+    else
+	sprintf(infoFile, "%s.%s", modem, FAX_INFOSUF);
+    if (!(dirp = opendir(FAX_STATUSDIR))) {
+	syslog(LOG_ERR, "%s/%s: opendir: %m", SPOOLDIR, FAX_STATUSDIR);
+	sendError("Problem accessing status directory.");
+	done(-1, "EXIT");
+    }
+    while ((dentp = readdir(dirp)) != 0) {
+	char modemFile[80];
+	char fileName[80];
+	const char* cp = strrchr(dentp->d_name, '.');
+	char* tp;
+	FILE* fd;
+
+	if (!cp || strcmp(cp+1, FAX_INFOSUF))
+	    continue;
+	if (infoFile[0] != '\0' && strcmp(infoFile, dentp->d_name))
+	    continue;
+	/*
+	 * Convert modem name from canonical format back
+	 * to a pathname by replacing '_'s with '/'s.
+	 */
+	strcpy(modemFile, dentp->d_name);
+	for (tp = modemFile; tp = strchr(tp, '_'); *tp = '/')
+	    ;
+	if (tp = strrchr(modemFile, '.'))
+	    *tp = '\0';
+	sprintf(fileName, "%s/%s", FAX_STATUSDIR, dentp->d_name);
+	if ((fd = fopen(fileName, "r")) != NULL) {
+	    while (fgets(line, sizeof (line), fd) != NULL) {
+		tp = strchr(line, '\n');
+		if (tp)
+		    *tp = '\0';
+		sendClient("serverInfo", "%s:%s", modemFile, line);
+	    }
+	    fclose(fd);
+	}
+    }
+    (void) closedir(dirp);
+}
+
+static void
+sendClientJobStatus(Job* job, const char* jobname)
+{
+    if (version > 0) {
+	char tts[30];
+	if (job->tts != 0)
+	    strftime(tts, sizeof (tts), "%Y/%m/%d %H.%M.%S",
+		localtime(&job->tts));
+	else
+	    strcpy(tts, "asap");
+	sendClient("jobStatus", "%s:%s:%s:%s:%s:%s",
+	    jobname, job->sender, tts, job->external, job->modem, job->status);
+    } else
+	sendClient("jobStatus", "%s:%s:%d:%s",
+	    jobname, job->sender, job->tts, job->external);
+}
+
+static void
+sendClientJobLocked(Job* job, const char* jobname)
+{
+    if (version > 0)
+	sendClient("jobStatus", "%s:%s:locked:%s:%s:%s",
+	    jobname, job->sender, job->external, job->modem, job->status);
+    else
+	sendClient("jobLocked", "%s:%s:0:%s",
+	    jobname, job->sender, job->external);
 }
 
 void
-sendAllStatus()
+sendAllStatus(const char* modem, char* tag)
 {
     Job* job;
 
@@ -82,6 +243,8 @@ sendAllStatus()
 	jobList = readJobs();
     for(job = jobList; job; job = job->next) {
 	char *jobname = job->qfile+strlen(FAX_SENDDIR)+2;
+	if (!modemMatch(modem, job->modem))
+	    continue;
 	if (job->flags & JOB_SENT)
 	    continue;
 	job->flags |= JOB_SENT;
@@ -93,7 +256,7 @@ sendAllStatus()
 }
 
 void
-sendJobStatus(char* onwhat)
+sendJobStatus(const char* modem, char* onwhat)
 {
     Job* job;
 
@@ -101,6 +264,8 @@ sendJobStatus(char* onwhat)
 	jobList = readJobs();
     for(job = jobList; job; job = job->next) {
 	char *jobname = job->qfile+strlen(FAX_SENDDIR)+2;
+	if (!modemMatch(modem, job->modem))
+	    continue;
 	if ((job->flags & JOB_SENT) || strcmp(jobname, onwhat) != 0)
 	    continue;
 	job->flags |= JOB_SENT;
@@ -112,7 +277,7 @@ sendJobStatus(char* onwhat)
 }
 
 void
-sendUserStatus(char* onwhat)
+sendUserStatus(const char* modem, char* onwhat)
 {
     Job* job;
 
@@ -120,6 +285,8 @@ sendUserStatus(char* onwhat)
 	jobList = readJobs();
     for(job = jobList; job; job = job->next) {
 	char *jobname = job->qfile+strlen(FAX_SENDDIR)+2;
+	if (!modemMatch(modem, job->modem))
+	    continue;
 	if (job->flags & JOB_SENT)
 	    continue;
 	if (job->flags & JOB_LOCKED) {
@@ -149,6 +316,15 @@ isFAXImage(TIFF* tif)
     return (1);
 }
 
+static void
+sanitize(char* dst, const char* src, u_int maxlen)
+{
+    u_int i;
+    for (i = 0; i < maxlen-1 && src[i] != '\0'; i++)
+	dst[i] = (isascii(src[i]) && isprint(src[i]) ? src[i] : '?');
+    dst[i] = '\0';
+}
+
 static int
 readQFile(int fd, char* qfile, int beingReceived, struct stat* sb)
 {
@@ -160,6 +336,7 @@ readQFile(int fd, char* qfile, int beingReceived, struct stat* sb)
 	    u_long pageWidth, pageLength;
 	    char* cp;
 	    char sender[80];
+	    char date[30];
 	    float resolution = 98;
 	    int npages;
 
@@ -172,29 +349,52 @@ readQFile(int fd, char* qfile, int beingReceived, struct stat* sb)
 		    resolution *= 25.4;
 	    } else
 		resolution = 98;
-	    if (!TIFFGetField(tif, TIFFTAG_IMAGEDESCRIPTION, &cp))
-		cp = "<unknown>";
-	    strncpy(sender, cp, sizeof (sender));
-	    sender[sizeof (sender)-1] = '\0';
+	    if (TIFFGetField(tif, TIFFTAG_IMAGEDESCRIPTION, &cp))
+		sanitize(sender, cp, sizeof (sender));
+	    else
+		strcpy(sender, "<unknown>");
+	    if (TIFFGetField(tif, TIFFTAG_DATETIME, &cp))
+		sanitize(date, cp, sizeof (date));
+	    else
+		strftime(date, sizeof (date), "%Y:%m:%d %H:%M:%S",
+		    localtime(&sb->st_mtime));
 	    npages = 0;
 	    do {
 		npages++;
 	    } while (TIFFReadDirectory(tif));
-	    sendClient("recvJob", "%d:%lu:%lu:%3.1f:%d:%d:%s",
-		beingReceived, pageWidth, pageLength, resolution,
-		npages, sb->st_mtime, sender);
+	    if (version > 0)
+		sendClient("recvJob", "%d:%lu:%lu:%3.1f:%u:%s:%s",
+		    beingReceived, pageWidth, pageLength, resolution,
+		    npages, date, sender);
+	    else
+		sendClient("recvJob", "%d:%lu:%lu:%3.1f:%u:%u:%s",
+		    beingReceived, pageWidth, pageLength, resolution,
+		    npages, sb->st_mtime, sender);
 	}
 	TIFFClose(tif);
     }
     return (ok);
 }
 
+/*
+ * NB: received files must be opened with write access
+ * under svr4 because the flock emulation needs it.
+ */
+#if defined(svr4) || defined(hpux)
+#define	RECV_OMODE	O_RDWR
+#else
+#define	RECV_OMODE	O_RDONLY
+#endif
+
 void
-sendRecvStatus()
+sendRecvStatus(const char* modem, char* tag)
 {
     DIR* dir = opendir(FAX_RECVDIR);
     if (dir != NULL) {
 	struct dirent* dp;
+
+	TIFFSetErrorHandler(NULL);
+	TIFFSetWarningHandler(NULL);
 	while (dp = readdir(dir)) {
 	    char entry[1024];
 	    struct stat sb;
@@ -205,18 +405,18 @@ sendRecvStatus()
 	    sprintf(entry, "%s/%s", FAX_RECVDIR, dp->d_name);
 	    if (stat(entry, &sb) < 0 || (sb.st_mode & S_IFMT) != S_IFREG)
 		continue;
-	    fd = open(entry, O_RDONLY);
+	    fd = open(entry, RECV_OMODE);
 	    if (fd > 0) {
 		int beingReceived =
 		   (flock(fd, LOCK_EX|LOCK_NB) < 0 && errno == EWOULDBLOCK);
-		if (!readQFile(fd, entry, beingReceived, &sb) && !beingReceived)
-		    sendError("Could not read recvq file \"%s\"", dp->d_name);
+		(void) readQFile(fd, entry, beingReceived, &sb);
 		close(fd);
 	    }
 	}
 	closedir(dir);
     } else
-	sendError("Can not access receive queue directory \"%s\"", FAX_RECVDIR);
+	sendAndLogError("Can not access receive queue directory \"%s\".",
+	    FAX_RECVDIR);
 }
 
 static void
@@ -251,4 +451,22 @@ getConfig(char* fileName, config* configp, config* deflt)
 	}
     }
     (void) fclose(configFile);
+}
+
+static void
+getServerStatus(char* fileName, char buf[1024])
+{
+    int fd = open(fileName, O_RDONLY);
+    if (fd > 0) {
+	int n;
+	flock(fd, LOCK_SH);
+	n = read(fd, buf, 1024-1);
+	buf[n] = '\0';
+	if (n > 0 && buf[n-1] == '\n')
+	    buf[n-1] = '\0';
+	if (n == 0)
+	    strcpy(buf, "No status (empty file)");
+	close(fd);
+    } else
+	strcpy(buf, "No status (cannot open file)");
 }

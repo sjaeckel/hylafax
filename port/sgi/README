@@ -1,0 +1,45 @@
+$Header: /usr/people/sam/fax/port/sgi/RCS/README,v 1.1 1994/04/27 19:28:36 sam Exp $
+
+From: Sam Leffler <sam@sgi.com>
+Date: Wed Apr 27 12:20:11 PDT 1994
+Subject: building FlexFAX v2.2.2 under IRIX 5.2 with gcc 2.5.8
+
+To build v2.2.2 under IRIX 5.2 (or similar) with gcc 2.5.8 beware
+of two known problems in the gcc distribution.
+
+1. The configure script does not specify that "collect" must be used
+   for C++ programs.  Without collect global constructors will not be
+   executed leaving many global variables in the fax server program
+   (and other programs) uninitialized.  To correct this problem patch
+   the configure script before building gcc:
+
+       *** configure       Fri Nov 19 13:44:34 1993
+       --- configure.new   Wed Apr 27 11:35:27 1994
+       *************** for machine in $canon_build $canon_host
+       *** 1050,1055 ****
+       --- 1050,1057 ----
+	       xmake_file=mips/x-iris
+	       # mips-tfile doesn't work yet
+	       tmake_file=mips/t-mips-gas
+   +           # See comment in mips/iris5.h file.
+   +           use_collect2=yes
+	       ;;
+       mips-sgi-irix4loser*)           # Mostly like a MIPS.
+	       if [ x$stabs = xyes ]; then
+
+2. Build gcc using the following cookbook:
+
+    ./configure
+    make LANGUAGES=c
+    make stage1
+    make CC="stage1/xgcc -Bstage1/" CFLAGS="-O2 -save-temps"
+    make stage2
+    make CC="stage2/xgcc -Bstage2/" CFLAGS="-O2 -save-temps"
+    make compare
+    make CC="stage2/xgcc -Bstage2/" CFLAGS="-O2 -save-temps" install
+
+   (or similar.)  The extra "-save-temps" is necessary to get a
+   correctly functioning compiler.  The option is NOT needed when
+   invoking gcc; only when building it.
+
+	Sam

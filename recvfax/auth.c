@@ -1,17 +1,29 @@
-#ident	$Header: /usr/people/sam/flexkit/fax/recvfax/RCS/auth.c,v 1.1 91/05/31 10:09:31 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/recvfax/RCS/auth.c,v 1.13 1994/09/19 15:05:17 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include "defs.h"
 
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -55,25 +67,29 @@ local_domain(char* h)
     return (p1 == NULL || p2 == NULL || !strcasecmp(p1, p2));
 }
 
+extern int rexMatch(const char* pat,
+		const char* dotform, int dotlen,
+		const char* hostform, int hostlen);
+
 void
 checkPermission()
 {
     static int alreadyChecked = 0;
-    int sinlen;
+    char dotform[1024], hostform[1024];
+    int dotlen, hostlen;
     char* dotaddr;
     struct sockaddr_in sin;
+    int sinlen;
     FILE* db;
 
     if (alreadyChecked)
 	return;
     alreadyChecked = 1;
     sinlen = sizeof (sin);
-    if (getpeername(fileno(stdin), &sin, &sinlen) < 0) {
+    if (getpeername(fileno(stdin), (struct sockaddr*)&sin, &sinlen) < 0) {
 	syslog(LOG_ERR, "getpeername: %m");
-	sendError("Can not get your network address");
-	if (debug)
-	    syslog(LOG_DEBUG, "EXIT");
-	exit(-1);
+	sendError("Can not get your network address.");
+	done(-1, "EXIT");
     }
     dotaddr = inet_ntoa(sin.sin_addr);
     db = fopen(FAX_PERMFILE, "r");
@@ -82,7 +98,7 @@ checkPermission()
 	char* hostname = NULL;
 	char line[1024];
 
-	hp = gethostbyaddr(&sin.sin_addr, sizeof (sin.sin_addr),
+	hp = gethostbyaddr((char*) &sin.sin_addr, sizeof (sin.sin_addr),
 		sin.sin_family);
 	if (hp) {
 	    /*
@@ -97,38 +113,43 @@ checkPermission()
 		hp = gethostbyname(line);
 		if (hp) {
 		    for (; hp->h_addr_list[0] != NULL; hp->h_addr_list++) {
-			if (bcmp(hp->h_addr_list[0], (caddr_t) &sin.sin_addr,
+			if (memcmp(hp->h_addr_list[0], (caddr_t) &sin.sin_addr,
 			  hp->h_length) == 0) {
 			    hostname = hp->h_name;	/* accept name */
 			    break;
 			}
 		    }
-		    if (hostname == NULL) {
-			sendError(
-		    "Your host address \"%s\" is not listed for host \"%s\"",
+		    if (hostname == NULL)
+			sendAndLogError(
+		    "Your host address \"%s\" is not listed for host \"%s\".",
 			    dotaddr, hp->h_name);
-			syslog(LOG_ERR,
-			  "Host address \"%s\" not listed for host \"%s\"",
-			    dotaddr, hp->h_name);
-		    }
-		} else {
-		    sendError("Could not find the address for \"%s\"", line);
-		    syslog(LOG_ERR, "Could not look up address for \"%s\"",
-			line);
-		}
+		} else
+		    sendAndLogError("Could not find the address for \"%s\".",
+		       line);
 	    } else
 		hostname = hp->h_name;
-	} else {
-	    sendError("Can not map your network address to a hostname");
-	    syslog(LOG_ERR, "Could not look up hostname for \"%s\"", dotaddr);
-	}
+	} else
+	    sendAndLogError(
+		"Can not map your network address (\"%s\") to a hostname",
+		dotaddr);
 	/*
 	 * Now check the host name/address against
 	 * the list of hosts that are permitted to
 	 * submit jobs.
 	 */
+	strcpy(dotform, userID);
+	strcat(dotform, "@");
+	strcat(dotform, dotaddr);
+	dotlen = strlen(dotform);
+	if (hostname != NULL) {
+	    strcpy(hostform, userID);
+	    strcat(hostform, "@");
+	    strcat(hostform, hostname);
+	    hostlen = strlen(hostform);
+	} else
+	    hostlen = 0;
 	while (fgets(line, sizeof (line)-1, db)) {
-	    char* cp = cp = strchr(line, '#');
+	    char* cp = strchr(line, '#');
 	    if (cp || (cp = strchr(line, '\n')))
 		*cp = '\0';
 	    /* trim off trailing white space */
@@ -136,16 +157,35 @@ checkPermission()
 		if (!isspace(cp[-1]))
 		    break;
 	    *cp = '\0';
-	    if (strcmp(line, dotaddr) == 0 ||
-	      (hostname != NULL && strcasecmp(line, hostname) == 0))
-		return;
+	    if (line[0] == '\0')		/* no regex */
+		continue;
+	    if (line[0] == '!') {
+		/*
+		 * "!" in the first column means, disallow on match.
+		 */
+		if (rexMatch(line+1, dotform, dotlen, hostform, hostlen))
+		    break;
+	    } else {
+		/*
+		 * Hack for backwards compatibility; take pure host
+		 * specification and form the regex ".*@<host>" to
+		 * match against all users from that host.
+		 */
+		if (strchr(line+0, '@') == NULL) {
+		    char line1[1024];
+		    strcpy(line1, ".*@");
+		    strcat(line1, line+0);
+		    if (rexMatch(line1, dotform, dotlen, hostform, hostlen))
+			return;
+		} else if (rexMatch(line+0, dotform, dotlen, hostform, hostlen))
+		    return;
+	    }
 	}
 	fclose(db);
     } else
-	sendError("The server does not have a permissions file");
-    syslog(LOG_ERR, "%s: Service refused", dotaddr);
-    sendError("Your host does not have permission to use the fax server");
-    if (debug)
-	syslog(LOG_DEBUG, "EXIT");
-    exit(-1);
+	sendError("The server does not have a permissions file.");
+    syslog(LOG_ERR, "%s: Service refused", hostlen == 0 ? dotform : hostform);
+    sendError("You do not have permission to %s.",
+	"use the fax server from this host");
+    done(-1, "EXIT");
 }

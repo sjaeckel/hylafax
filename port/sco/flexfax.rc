@@ -1,0 +1,117 @@
+#! /bin/sh
+#	$Header: /usr/people/sam/fax/port/sco/RCS/flexfax.rc,v 1.1 1994/04/18 18:46:51 sam Exp $
+#
+# FlexFAX Facsimile Software
+#
+# Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+# Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+#
+# Script for starting FlexFAX faxd at system boot.
+# On SCO:
+#	Copy this script to /etc/init.d/flexfax
+#	Set the permissions to 744
+#	Set the owner to 'root'
+#	Set the group to 'sys'
+#	Link /etc/init.d/flexfax /etc/rc0.d/K80fax
+#	Link /etc/init.d/flexfax /etc/rc2.d/S80fax
+#
+
+
+#
+# Check this is where you have faxd and faxquit installed.
+#
+FAXD=/usr/local/lib/fax/faxd
+FAXQUIT=/usr/local/bin/faxquit
+
+#
+# Specify space seperated list of port(s) to service
+# relative to /dev. e.g. PORTS="ttyA01 ttyA02 tty1A"
+#
+PORTS=
+
+	state=$1
+	rc=0
+
+	if [ "x$state" = "x" ]
+	then
+		echo "$0: Must give argument \"start\" or \"stop\"\n"
+		exit 1
+	fi
+
+	if [ "x$PORTS" = "x" ]
+	then
+		echo "$0: No devices specified, please read script\n"
+		exit 1
+	fi
+
+	case $state in
+		'start')
+			if [ "$9" = "2" -o "$9" = "3" ]
+			then
+				exit $rc
+			fi
+
+			if [ -x "$FAXD" ] 
+			then
+				for port in $PORTS
+				do
+					echo "Starting up FlexFAX deamon on $port ... \c"
+					$FAXD -m /dev/$port
+
+					if [ $? = 0 ]
+					then
+						echo "[faxd startup completed]"
+					else
+						echo "[faxd startup failed on $port]"
+						rc=1
+					fi
+				done
+			else
+				echo "FlexFAX startup failed: could not exec $FAXD"
+			fi
+		;;
+
+		'stop')
+			if [ -x "$FAXQUIT" ] 
+			then
+				for port in $PORTS
+				do
+					echo "Stopping FlexFAX deamon on $port ... \c"
+					$FAXQUIT /dev/$port
+
+					if [ $? = 0 ]
+					then
+						echo "[faxd shutdown completed]"
+					else
+						echo "[faxd shutdown failed on $port]"
+						rc=1
+					fi
+				done
+			else
+				echo "FlexFAX shutdown failed: could not exec $FAXQUIT"
+			fi
+		;;
+	esac
+
+	exit $rc

@@ -1,19 +1,32 @@
 #! smake
+#	$Header: /usr/people/sam/fax/recvfax/RCS/Makefile,v 1.19 1994/02/28 14:21:52 sam Exp $
 #
-# $Revision: 1.4 $
-# $Date: 91/05/31 12:04:55 $
+# FlexFAX Facsimile Software
 #
-# FlexFAX Facsimile System
+# Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+# Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
 #
-# Copyright (c) 1991 by Sam Leffler.
-# All rights reserved.
-#
-# This file is provided for unrestricted use provided that this
-# legend is included on all tape media and as a part of the
-# software program in whole or part.  Users may copy, modify or
-# distribute this file at will.
-#
-include ../defs
+DEPTH=..
+include ${DEPTH}/defs
 
 CFILES=\
 	alter.c \
@@ -24,25 +37,21 @@ CFILES=\
 	status.c \
 	submit.c \
 	${NULL}
-TARGETS=faxd.recv
-
-LCINCS=	-I${UTIL} -I${TIFF}
-LIBS=\
-	${TIFF}/libtiff.a \
+C++FILES=\
+	regex.c++ \
 	${NULL}
-#LLDLIBS= $(LIBS) -lsun -lbsd -lc
-LLDLIBS= $(LIBS) -lsun -lbsd
+TARGETS=faxd.recv
 
 default all::
 	@${MAKE} incdepend
 	@${MAKE} targets
-	
+
 targets: $(TARGETS)
 
 include ${COMMONRULES}
 
 faxd.recv: ${OBJECTS} ${LIBS}
-	${CC} -o $@ ${OBJECTS} ${LDFLAGS}
+	${C++F} -o $@ ${OBJECTS} ${LDFLAGS}
 
 install: default
-	/etc/install -f ${ETC} -m 755 -O faxd.recv
+	${INSTALL} -F ${USRETC} -m 755 -idb '${PRODUCT}.sw.server' -O faxd.recv

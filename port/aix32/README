@@ -1,0 +1,22 @@
+$Header: /usr/people/sam/fax/port/aix32/RCS/README,v 1.4 1994/03/23 16:23:26 sam Exp $
+
+This directory contains the files needed to port the FlexFax fax server to
+the IBM RISC System/6000.  The environments under which this port is known
+to compile are:
+
+	RISC System/6000 models 3xx, 5xx and 9xx
+	all versions of AIX between v3.2.3 extended and v3.2.5
+	gcc v2.4.5 with g++ libraries v2.3.1 
+		or
+	gcc v2.5.8 with g++ libraries v2.5.3
+
+I have tried to compile with libg++ v2.4 but without success.
+
+There are several directories under this port directory.  The
+gcc-related directory contains wrappers for system headers for use by gcc
+during comilation of C++ code.  The redefinition of certain system functions
+in unistd.h is intentional and avoids problems with prototyping under C++.
+
+Robert MacKinnon,    UNIX Support | Internet/Email: robmack@bsc.no
+Bergen Environmental Sciences and | 		    robmack at bergen
+Solution Centre,  Bergen,  NORWAY | Phone:          +47-5-544618

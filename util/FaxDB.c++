@@ -1,38 +1,55 @@
-#ident $Header: /usr/people/sam/flexkit/fax/util/RCS/FaxDB.c++,v 1.3 91/06/04 15:44:25 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/util/RCS/FaxDB.c++,v 1.16 1994/06/23 00:25:23 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include "FaxDB.h"
-#include "SLinearPattern.h"
+#include "RegEx.h"
 
 FaxDBRecord::FaxDBRecord()
 {
+    parent = 0;
 }
 
 FaxDBRecord::FaxDBRecord(FaxDBRecord* other)
 {
-    parent = other;
+    if (parent = other)
+	parent->inc();
 }
 
 FaxDBRecord::~FaxDBRecord()
 {
+    if (parent)
+	parent->dec();
 }
 
 const char* FaxDBRecord::className() const { return "FaxDBRecord"; }
 
-fxStr FaxDBRecord::nullStr("");
+const fxStr FaxDBRecord::nullStr("");
 
 const fxStr&
 FaxDBRecord::find(const fxStr& key)
 {
-    fxStr* s = 0;
+    const fxStr* s = 0;
     FaxDBRecord* rec = this;
     for (; rec && !(s = rec->dict.find(key)); rec = rec->parent)
 	;
@@ -70,12 +87,16 @@ FaxDBRecord*
 FaxDB::find(const fxStr& s, fxStr* name)
 {
     fxStr canon(s);
-    canon.lower();
-    fxSLinearPattern pat(canon);
+    canon.lowercase();
+    for (u_int l = 0; l < canon.length(); l = canon.next(l, "+?*[].\\")) {
+	canon.insert('\\', l);
+	l += 2;
+    }
+    RegEx pat(canon);
     for (FaxInfoDictIter iter(dict); iter.notDone(); iter++) {
 	fxStr t(iter.key());
-	t.lower();
-	if (pat.find(t) != -1) {
+	t.lowercase();
+	if (pat.Find(t) != REG_NOMATCH) {
 	    if (name)
 		*name = iter.key();
 	    return (iter.value());

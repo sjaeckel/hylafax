@@ -1,0 +1,35 @@
+.ds FF Flex\s-1FAX\s+1
+.nr H1 7
+.H 1 "Contributed Software"
+Contributed software for use with \*(FF is available by public ftp on
+the host sgi.com in the directory ~ftp/sgi/fax/contrib.
+This software is not part of the \*(FF distribution.
+The following software is currently available for use on or
+with Silicon Graphics machines:
+.BL
+.LI
+dialrules \(em a directory of contributed dial string rules files.
+.LI
+faxmgr \(em a GUI front-end for composing facsimile.
+Binary-only distribution.
+.LI
+faxtool \(em an OpenLook GUI front-end to \*(FF.
+Requires OpenWindows 3.0 and DevGuide 3.0.
+Source-only distribution.
+.LI
+faxview \(em an X-based program for displaying received
+facsmile (\s-1TIFF/F\s+1) in a page-at-a-time manner.
+Source-only distribution.
+.LI
+quickfax \(em a Motif-style GUI front-end for \*(FF.
+The program supports composing facsimile, monitoring
+the send and receive queues, and viewing facsimile.
+Binary-only distribution.
+.LI
+winflex \(em a simple Windows 3 client that supports the submission
+of a single PostScript file to a \*(FF host for transmission.
+Binary-only distribution for Windows.
+.P
+Each piece of software includes a \s-1README\s+1 file that should
+be consulted for more information; including the authors name and
+email address.

@@ -1,0 +1,682 @@
+#	$Header: /usr/people/sam/fax/RCS/distrules,v 1.145 1994/07/05 03:09:13 sam Exp $
+#
+# FlexFAX Facsimile Software
+#
+# Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+# Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+#
+# FlexFAX distribution rules.
+#
+
+#
+# Files for specific systems.
+#
+PORTSUNFILES=\
+    port/sun/README				\
+    port/sun/Makefile.flexfax			\
+    port/sun/defs				\
+    port/sun/install.sh				\
+    port/sun/paths.h				\
+    port/sun/zsundev/Makefile			\
+    port/sun/zsundev/README			\
+    port/sun/zsundev/TESTING			\
+    port/sun/zsundev/zsunbuf.c			\
+    port/sun/zsundev/zsunbuftest.c		\
+    ${NULL}
+PORTSGIFILES=\
+    port/sgi/README				\
+    port/sgi/Makefile.flexfax			\
+    port/sgi/defs.cc				\
+    port/sgi/defs.gcc				\
+    port/sgi/Makefile.libtiff			\
+    port/sgi/paths.h				\
+    ${NULL}
+PORTBSDIFILES=\
+    port/bsdi/README				\
+    port/bsdi/Makefile				\
+    port/bsdi/Makefile.flexfax			\
+    port/bsdi/Makefile.libtiff			\
+    port/bsdi/defs				\
+    port/bsdi/install.sh			\
+    port/bsdi/cuserid.c				\
+    port/bsdi/paths.h				\
+    ${NULL}
+PORTSVR4FILES=\
+    port/svr4/README				\
+    port/svr4/Makefile.flexfax			\
+    port/svr4/Makefile				\
+    port/svr4/defs				\
+    port/svr4/install.sh			\
+    port/svr4/limits.h				\
+    port/svr4/paths.h				\
+    port/svr4/signal.h				\
+    port/svr4/syslog.h				\
+    port/svr4/ulimit.h				\
+    port/svr4/utmp.h				\
+    port/svr4/sys/byteorder.h			\
+    port/svr4/mkdev.patch			\
+    port/svr4/flock.c				\
+    port/svr4/lockname.c			\
+    ${NULL}
+PORT386BSDFILES=\
+    port/386bsd/README				\
+    port/386bsd/Makefile.flexfax		\
+    port/386bsd/defs				\
+    ${NULL}
+PORTFREEBSDFILES=\
+    port/freebsd/README				\
+    port/freebsd/Makefile.flexfax		\
+    port/freebsd/defs				\
+    port/freebsd/ctype.h			\
+    port/freebsd/paths.h			\
+    ${NULL}
+PORTSOLARIS2FILES=\
+    port/solaris2/README			\
+    port/solaris2/Makefile			\
+    port/solaris2/Makefile.flexfax		\
+    port/solaris2/Makefile.libtiff		\
+    port/solaris2/defs.cc			\
+    port/solaris2/defs.gcc			\
+    port/solaris2/flock.c			\
+    port/solaris2/lockname.c			\
+    port/solaris2/paths.h			\
+    port/solaris2/random.c			\
+    port/solaris2/utmp.h			\
+    ${NULL}
+PORTSCOFILES=\
+    port/sco/README				\
+    port/sco/Makefile				\
+    port/sco/Makefile.flexfax			\
+    port/sco/defs				\
+    port/sco/flock.c				\
+    port/sco/ftruncate.c			\
+    port/sco/install.sh				\
+    port/sco/mkstemp.c				\
+    port/sco/paths.h				\
+    port/sco/flexfax.rc				\
+    ${NULL}
+PORT4DOT4BSDFILES=\
+    port/4.4bsd/README				\
+    port/4.4bsd/Makefile			\
+    port/4.4bsd/Makefile.flexfax		\
+    port/4.4bsd/cuserid.c			\
+    port/4.4bsd/defs				\
+    port/4.4bsd/install.sh			\
+    port/4.4bsd/paths.h				\
+    ${NULL}
+PORTLINUXFILES=					\
+    port/linux/README				\
+    port/linux/Makefile.flexfax			\
+    port/linux/defs				\
+    port/linux/install.sh			\
+    port/linux/kernel.patch			\
+    port/linux/mkdepend				\
+    port/linux/paths.h				\
+    ${NULL}
+PORTAIXFILES=					\
+    port/aix32/Makefile				\
+    port/aix32/Makefile.flexfax			\
+    port/aix32/README				\
+    port/aix32/defs.gcc				\
+    port/aix32/install.sh			\
+    port/aix32/strcasecmp.c			\
+    port/aix32/vsyslog.c			\
+    port/aix32/gcc-related/ctype.h		\
+    port/aix32/gcc-related/dirent.h		\
+    port/aix32/gcc-related/fcntl.h		\
+    port/aix32/gcc-related/math.h		\
+    port/aix32/gcc-related/netdb.h		\
+    port/aix32/gcc-related/pwd.h		\
+    port/aix32/gcc-related/setjmp.h		\
+    port/aix32/gcc-related/signal.h		\
+    port/aix32/gcc-related/stdio.h		\
+    port/aix32/gcc-related/stdlib.h		\
+    port/aix32/gcc-related/string.h		\
+    port/aix32/gcc-related/time.h		\
+    port/aix32/gcc-related/unistd.h		\
+    port/aix32/gcc-related/sys/fcntl.h		\
+    port/aix32/gcc-related/sys/select.h		\
+    port/aix32/gcc-related/sys/stat.h		\
+    port/aix32/gcc-related/sys/time.h		\
+    port/aix32/gcc-related/sys/wait.h		\
+    ${NULL}
+PORTULTRIXFILES=				\
+    port/ultrix/README				\
+    port/ultrix/Makefile			\
+    port/ultrix/Makefile.flexfax		\
+    port/ultrix/defs				\
+    port/ultrix/install.sh			\
+    port/ultrix/mkstemp.c			\
+    port/ultrix/paths.h				\
+    port/ultrix/vsyslog.c			\
+    ${NULL}
+PORTHPUXFILES=					\
+    port/hpux/README				\
+    port/hpux/Makefile				\
+    port/hpux/Makefile.flexfax			\
+    port/hpux/install.sh			\
+    port/hpux/defs.cc				\
+    port/hpux/defs.gcc				\
+    port/hpux/flock.c				\
+    port/hpux/paths.h				\
+    port/hpux/random.c				\
+    port/hpux/setegid.c				\
+    port/hpux/seteuid.c				\
+    port/hpux/vsyslog.c				\
+    ${NULL}
+PORTISCFILES=					\
+    port/isc/README				\
+    port/isc/Makefile				\
+    port/isc/Makefile.flexfax			\
+    port/isc/defs				\
+    port/isc/errno.h				\
+    port/isc/flock.c				\
+    port/isc/ftruncate.c			\
+    port/isc/install.sh				\
+    port/isc/mkstemp.c				\
+    port/isc/paths.h				\
+    port/isc/vsyslog.c				\
+    port/isc/sys/types.h			\
+    ${NULL}
+PORTFILES=\
+    port/generic/mkdepend			\
+	port/generic/Makefile.libtiff.gcc	\
+	port/generic/GCC-PATCH			\
+    ${PORTSUNFILES}				\
+    ${PORTSGIFILES}				\
+    ${PORTBSDIFILES}				\
+    ${PORTSVR4FILES}				\
+    ${PORT386BSDFILES}				\
+    ${PORTFREEBSDFILES}				\
+    ${PORTSOLARIS2FILES}			\
+    ${PORTSCOFILES}				\
+    ${PORT4DOT4BSDFILES}			\
+    ${PORTLINUXFILES}				\
+    ${PORTAIXFILES}				\
+    ${PORTULTRIXFILES}				\
+    ${PORTHPUXFILES}				\
+    ${PORTISCFILES}				\
+    ${NULL}
+#
+# Files that are part of FlexFAX proper.
+#
+FLEXFAXFILES=\
+    VERSION					\
+    README					\
+    HOWTO					\
+    CHANGES-v2.1				\
+    CHANGES-v2.2				\
+    CHANGES-v2.3				\
+    MODEMS					\
+    BLURB					\
+    SURVEY					\
+    TODO					\
+    configure rules distrules			\
+    doc/Makefile				\
+	doc/README				\
+	doc/scorecard				\
+	doc/class1.txt				\
+	doc/class2.txt				\
+	doc/hayes.txt				\
+	doc/modems-faq				\
+	doc/telebit				\
+    relnotes/Makefile				\
+	relnotes/TC.online			\
+	relnotes/cFront				\
+	relnotes/ch1.cmm			\
+	relnotes/ch2.cmm			\
+	relnotes/ch3.cmm			\
+	relnotes/ch4.cmm			\
+	relnotes/ch5.cmm			\
+	relnotes/ch6.cmm			\
+	relnotes/ch7.cmm			\
+	relnotes/ch8.cmm			\
+	relnotes/cover.x			\
+	relnotes/credit.x			\
+	relnotes/errata.x			\
+	relnotes/macros.online			\
+	relnotes/table_template			\
+    dist/flexfax.spec				\
+	dist/newalpha				\
+	dist/newversion				\
+    etc/Makefile				\
+	etc/config.att-dataport			\
+	etc/config.att-dataport-2		\
+	etc/config.att-dataport-2.0		\
+	etc/config.class1			\
+	etc/config.class2			\
+	etc/config.class2.0			\
+	etc/config.dsi-scout+			\
+	etc/config.e-tech			\
+	etc/config.everex-2496d			\
+	etc/config.intel-400e			\
+	etc/config.mt-1432			\
+	etc/config.nuvo-voyager			\
+	etc/config.skel				\
+	etc/config.ppi-pm14400fxmt		\
+	etc/config.ppi-pm14400fxsa		\
+	etc/config.rc32acl			\
+	etc/config.rc32acl-class1		\
+	etc/config.rockwell			\
+	etc/config.rockwell-class1		\
+	etc/config.tricom2842			\
+	etc/config.telebit-wb			\
+	etc/config.usr-courier			\
+	etc/config.usr-courier-2.0		\
+	etc/config.usr-sportster		\
+	etc/config.zyxel-1496e			\
+	etc/config.zyxel-1496e-2.0		\
+	etc/copy.h				\
+	etc/copy.m				\
+	etc/copy.ps				\
+	etc/dialrules				\
+	etc/dialrules.sf-ba			\
+	etc/dialrules.europe			\
+	etc/faxd				\
+	etc/faxaddmodem.sh			\
+	etc/probemodem.sh			\
+    gs/README					\
+	gs/gdevtiff.c				\
+    util/Makefile				\
+	util/Array.c++				\
+	util/AtSyntax.c++			\
+	util/BoolArray.c++			\
+	util/DialRules.c++			\
+	util/Dictionary.c++			\
+	util/Dispatcher.c++			\
+	util/Fatal.c++				\
+	util/FaxClient.c++			\
+	util/FaxDB.c++				\
+	util/IOHandler.c++			\
+	util/Obj.c++				\
+	util/PageSize.c++			\
+	util/RegEx.c++				\
+	util/RegExArray.c++			\
+	util/SendFaxClient.c++			\
+	util/StackBuffer.c++			\
+	util/Str.c++				\
+	util/StrArray.c++			\
+	util/TypeRules.c++			\
+	util/Array.h				\
+	util/BoolArray.h			\
+	util/DSmacros.h				\
+	util/DialRules.h			\
+	util/Dictionary.h			\
+	util/Dispatcher.h			\
+	util/FaxClient.h			\
+	util/FaxDB.h				\
+	util/IOHandler.h			\
+	util/Obj.h				\
+	util/PageSize.h				\
+	util/Ptr.h				\
+	util/RegEx.h				\
+	util/RegExArray.h			\
+	util/SendFaxClient.h			\
+	util/StackBuffer.h			\
+	util/Str.h				\
+	util/StrArray.h				\
+	util/Types.h				\
+	util/TypeRules.h			\
+	util/config.h				\
+	util/faxinfo.c				\
+	util/faxmsg.c				\
+	util/fxassert.c				\
+	util/ondelay.c				\
+	util/pagesizes				\
+	util/notify.awk				\
+	util/faxcron.sh				\
+	util/faxrcvd.sh				\
+	util/mkcover.sh				\
+	util/notify.sh				\
+	util/pollrcvd.sh			\
+	util/ps2fax.dps.sh			\
+	util/ps2fax.gs.sh			\
+	util/recvstats.sh			\
+	util/transcript.sh			\
+	util/wedged.sh				\
+	util/xferstats.sh			\
+	util/typerules				\
+	util/fax.chestrc			\
+	util/fax.ftr				\
+	util/cover.templ			\
+	util/dpsprinter.ps			\
+	util/faxdb				\
+	util/checkat.c++			\
+	util/dialtest.c++			\
+	util/textfmt.c++			\
+	util/typetest.c++			\
+	\
+	util/regex.h				\
+	util/regex/README			\
+	util/regex/COPYRIGHT			\
+	util/regex/WHATSNEW			\
+	util/regex/cclass.h			\
+	util/regex/cname.h			\
+	util/regex/engine.c			\
+	util/regex/re_format.7			\
+	util/regex/regcomp.c			\
+	util/regex/regerror.c			\
+	util/regex/regex.3			\
+	util/regex/regex2.h			\
+	util/regex/regexec.c			\
+	util/regex/regfree.c			\
+	util/regex/utils.h			\
+    fax2ps/Makefile				\
+    faxalter/Makefile				\
+	faxalter/faxalter.c++			\
+    faxcover/Makefile				\
+	faxcover/faxcover.c++			\
+	faxcover/faxcover.ps			\
+	faxcover/contrib/herber.ps		\
+    faxd/Makefile				\
+	faxd/Class1.h				\
+	faxd/Class2.h				\
+	faxd/Class2Ersatz.h			\
+	faxd/Class20.h				\
+	faxd/Class2Params.h			\
+	faxd/FaxFont.h				\
+	faxd/FaxMachineInfo.h			\
+	faxd/FaxMachineLog.h			\
+	faxd/FaxModem.h				\
+	faxd/FaxRecvInfo.h			\
+	faxd/FaxRequest.h			\
+	faxd/FaxSendStatus.h			\
+	faxd/FaxServer.h			\
+	faxd/FaxTrace.h				\
+	faxd/G3Base.h				\
+	faxd/G3Decoder.h			\
+	faxd/G3Encoder.h			\
+	faxd/Getty.h				\
+	faxd/GettyBSD.h				\
+	faxd/GettySysV.h			\
+	faxd/HDLCFrame.h			\
+	faxd/ModemConfig.h			\
+	faxd/PCFFont.h				\
+	faxd/UUCPLock.h				\
+	faxd/class2.h				\
+	faxd/faxServerApp.h			\
+	faxd/t.30.h				\
+	faxd/Class1.c++				\
+	faxd/Class1Poll.c++			\
+	faxd/Class1Recv.c++			\
+	faxd/Class1Send.c++			\
+	faxd/Class2.c++				\
+	faxd/Class2Params.c++			\
+	faxd/Class2Poll.c++			\
+	faxd/Class2Recv.c++			\
+	faxd/Class2Send.c++			\
+	faxd/Class2Ersatz.c++			\
+	faxd/Class20.c++			\
+	faxd/CopyQuality.c++			\
+	faxd/FaxFont.c++			\
+	faxd/FaxMachineInfo.c++			\
+	faxd/FaxMachineLog.c++			\
+	faxd/FaxModem.c++			\
+	faxd/FaxPoll.c++			\
+	faxd/FaxRecv.c++			\
+	faxd/FaxRecvInfo.c++			\
+	faxd/FaxRequest.c++			\
+	faxd/FaxSend.c++			\
+	faxd/FaxServer.c++			\
+	faxd/G3Base.c++				\
+	faxd/G3Decoder.c++			\
+	faxd/G3Encoder.c++			\
+	faxd/Getty.c++				\
+	faxd/GettyBSD.c++			\
+	faxd/GettySysV.c++			\
+	faxd/HDLCFrame.c++			\
+	faxd/ModemConfig.c++			\
+	faxd/PCFFont.c++			\
+	faxd/TagLine.c++			\
+	faxd/UUCPLock.c++			\
+	faxd/faxServerApp.c++			\
+	faxd/tif_compress.c			\
+	faxd/tagtest.c++			\
+	faxd/tsitest.c++			\
+    faxmail/Makefile				\
+	faxmail/README				\
+	faxmail/faxmail.c++			\
+	faxmail/haeberli.ps			\
+	faxmail/calligraphy.ps			\
+	faxmail/mailfax.sh-sendmail		\
+	faxmail/mailfax.sh-smail		\
+    faxrm/Makefile				\
+	faxrm/faxrm.c++				\
+    faxstat/Makefile				\
+	faxstat/FaxStatClient.h			\
+	faxstat/RecvStatus.h			\
+	faxstat/SendStatus.h			\
+	faxstat/ServerStatus.h			\
+	faxstat/FaxStatClient.c++		\
+	faxstat/RecvStatus.c++			\
+	faxstat/SendStatus.c++			\
+	faxstat/ServerStatus.c++		\
+	faxstat/faxstat.c++			\
+    man/Makefile				\
+	man/cinfo.4f				\
+	man/config.4f				\
+	man/dialrules.4f			\
+	man/dialtest.1m				\
+	man/fax2ps.1				\
+	man/faxabort.1m				\
+	man/faxaddmodem.1m			\
+	man/faxalter.1				\
+	man/faxanswer.1m			\
+	man/faxcover.1				\
+	man/faxcron.1m				\
+	man/faxd.1m				\
+	man/faxd.recv.1m			\
+	man/faxmail.1				\
+	man/faxquit.1m				\
+	man/faxrcvd.1m				\
+	man/faxrm.1				\
+	man/faxstat.1				\
+	man/flexfax.1				\
+	man/flexfax.4f				\
+	man/hosts.4f				\
+	man/info.4f				\
+	man/log.4f				\
+	man/mkcover.1m				\
+	man/notify.1m				\
+	man/pagesizes.4f			\
+	man/pollrcvd.1m				\
+	man/ps2fax.1m				\
+	man/recvq.4f				\
+	man/recvstats.1m			\
+	man/sendfax.1				\
+	man/sendq.4f				\
+	man/sgi2fax.1				\
+	man/status.4f				\
+	man/tagtest.1m				\
+	man/textfmt.1				\
+	man/transcript.1m			\
+	man/tsi.4f				\
+	man/tsitest.1m				\
+	man/typerules.4f			\
+	man/wedged.1m				\
+	man/xferlog.4f				\
+	man/xferstats.1m			\
+    recvfax/Makefile				\
+	recvfax/alter.c				\
+	recvfax/auth.c				\
+	recvfax/defs.h				\
+	recvfax/jobs.c				\
+	recvfax/main.c				\
+	recvfax/remove.c			\
+	recvfax/status.c			\
+	recvfax/submit.c			\
+	recvfax/regex.c++			\
+    sendfax/Makefile				\
+	sendfax/sendfax.c++			\
+    sgi2fax/Makefile				\
+	sgi2fax/hipass.c			\
+	sgi2fax/hipass.h			\
+	sgi2fax/imgtofax.c			\
+	sgi2fax/izoom.c				\
+	sgi2fax/izoom.h				\
+	sgi2fax/lum.h				\
+	sgi2fax/lut.c				\
+	sgi2fax/lut.h				\
+	sgi2fax/rand.c				\
+	sgi2fax/row.c				\
+    ${PORTFILES}				\
+    ${NULL}
+#
+# Files imported from libtiff.
+#
+TIFFFILES=\
+    libtiff/README				\
+    libtiff/Makefile.aix			\
+    libtiff/Makefile.apollo			\
+    libtiff/Makefile.gcc			\
+    libtiff/Makefile.hpux			\
+    libtiff/Makefile.mips			\
+    libtiff/Makefile.mpw			\
+    libtiff/Makefile.next			\
+    libtiff/Makefile.sco			\
+    libtiff/Makefile.sgi			\
+    libtiff/Makefile.sun			\
+    libtiff/Makefile.tahoe			\
+    libtiff/Makefile.vax			\
+    libtiff/t4.h				\
+    libtiff/tiff.h				\
+    libtiff/tiffcomp.h				\
+    libtiff/tiffconf.h				\
+    libtiff/tiffio.h				\
+    libtiff/tiffiop.h				\
+    libtiff/tif_fax3.h				\
+    libtiff/mkg3states.c			\
+    libtiff/mkspans.c				\
+    libtiff/tif_apple.c				\
+    libtiff/tif_aux.c				\
+    libtiff/tif_ccittrle.c			\
+    libtiff/tif_close.c				\
+    libtiff/tif_compress.c			\
+    libtiff/tif_dir.c				\
+    libtiff/tif_dirinfo.c			\
+    libtiff/tif_dirread.c			\
+    libtiff/tif_dirwrite.c			\
+    libtiff/tif_dumpmode.c			\
+    libtiff/tif_error.c				\
+    libtiff/tif_fax3.c				\
+    libtiff/tif_fax4.c				\
+    libtiff/tif_flush.c				\
+    libtiff/tif_getimage.c			\
+    libtiff/tif_jpeg.c				\
+    libtiff/tif_lzw.c				\
+    libtiff/tif_machdep.c			\
+    libtiff/tif_msdos.c				\
+    libtiff/tif_next.c				\
+    libtiff/tif_open.c				\
+    libtiff/tif_packbits.c			\
+    libtiff/tif_print.c				\
+    libtiff/tif_read.c				\
+    libtiff/tif_strip.c				\
+    libtiff/tif_swab.c				\
+    libtiff/tif_thunder.c			\
+    libtiff/tif_tile.c				\
+    libtiff/tif_unix.c				\
+    libtiff/tif_version.c			\
+    libtiff/tif_vms.c				\
+    libtiff/tif_warning.c			\
+    libtiff/tif_write.c				\
+    ${NULL}
+#
+# Files imported from tiff/contrib/fax2ps.
+#
+FAX2PSFILES=\
+    fax2ps/README				\
+    fax2ps/defs.h				\
+    fax2ps/fax2ps.c				\
+    fax2ps/faxdecode.c				\
+    ${NULL}
+#
+# Files that comprise the FlexFAX source distribution.
+#
+DISTFILES=\
+    ${FLEXFAXFILES} dist/flexfax.alpha		\
+    ${TIFFFILES}				\
+    ${FAX2PSFILES}				\
+    ${NULL}
+
+#
+# These rules are used to create the source distribution images
+#
+COMPRESS=gzip
+ZIPSUF=gz
+
+rcsclean:
+	rcsclean ${FLEXFAXFILES} && co ${FLEXFAXFILES}
+
+alpha:
+	(cd dist; sh newversion; sh newalpha)
+	${MAKE} clobber
+	${MAKE} alpha.stamp
+	./configure
+	${MAKE} product
+	${MAKE} alpha.tar
+
+# stamp relevant files according to current alpha
+alpha.stamp:
+	VERSION=`awk '{print "Alpha" $$3}' dist/flexfax.alpha`;		\
+	NOW=`date`;							\
+	for i in ${FLEXFAXFILES}; do					\
+	    REV=`rlog -h -d"$$NOW" $$i|fgrep 'head:'|awk '{print $$2}'`;\
+	    rcs "-N$$VERSION:$$REV" "-sExp:$$REV" $$i && co -sExp $$i;	\
+	done
+
+purge-old-alphas:
+	VERSIONS=`awk '{for (i=1; i<=$$3; i++) printf " -nAlpha%03d",i}'\
+	    dist/flexfax.alpha`;					\
+	for i in ${FLEXFAXFILES}; do					\
+	    echo rcs $$VERSIONS $$i;					\
+	    rcs $$VERSIONS $$i && co $$i;				\
+	done
+
+# create alpha distribution archive
+alpha.tar:
+	VERSION="v`cat VERSION``awk '{print $$3}' dist/flexfax.alpha`";	\
+	rm -f $$VERSION.src.tar.Z;					\
+	tar cvf - ${DISTFILES} | ${COMPRESS} > $$VERSION.src.tar.${ZIPSUF}
+
+release:
+	${MAKE} clobber
+	${MAKE} release.stamp
+	./configure
+	${MAKE} product
+	${MAKE} release.tar
+
+release.stamp:
+	VERSION="Release`sed 's/\./_/g' VERSION`";			\
+	NOW=`date`;							\
+	for i in ${FLEXFAXFILES}; do					\
+	    REV=`rlog -h -d"$$NOW" $$i|fgrep 'head:'|awk '{print $$2}'`;\
+	    rcs "-N$$VERSION:$$REV" "-sRel:$$REV" $$i && co -sRel $$i;	\
+	done
+
+# create release distribution archive
+release.tar:
+	VERSION=v`cat VERSION`;						\
+	rm -f $$VERSION.src.tar.Z;					\
+	tar cvf - ${DISTFILES} | ${COMPRESS} > $$VERSION.src.tar.${ZIPSUF}

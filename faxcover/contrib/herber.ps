@@ -1,0 +1,150 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%BoundingBox: 0 0 612 792
+%%Title: fax cover
+%%Pages: 1 1
+%
+% Contributed by: Randolph J. Herber <herber@fnalv.fnal.gov>
+%
+%%EndComments
+/nullstring () def
+/D { bind def } bind def
+/X { exch def } D
+/IS { dup where {pop load S}{pop}ifelse} D
+/RS { dup stringwidth pop neg 0 rmoveto S } D
+/CenterS { dup stringwidth pop .5 mul neg 0 rmoveto S } D
+/CenterRuleS { dup stringwidth pop dup .5 mul neg 0 rmoveto exch S
+	dup neg UnderlineDrop neg rmoveto 0 rlineto stroke} D
+/M  { moveto } D
+/S { show } D
+/R { rmoveto } D
+/L { lineto } D
+/down {/CurrY CurrY Leading sub def } D
+/LongLabel { LabelCol 3 index add CurrY M RS
+	 TextCol 2 index add CurrY UnderlineDrop sub M
+	 RuleLen 2 index sub 0 rlineto stroke
+	 exch TextCol add CurrY M IS down } D
+/Label { LabelCol CurrY M RS
+	 TextCol CurrY UnderlineDrop sub M RuleLen 0 rlineto stroke
+	 TextCol CurrY M IS down } D
+%%EndProlog
+%%Page: 1 1
+newpath clippath pathbbox /URy X /URx X /LLy X /LLx X
+/Width  URx LLx sub 0.005 sub def
+/Height URy LLy sub 0.005 sub def
+LLx LLy translate
+Width 612 div Height 792 div gt
+    { /Y_size Height def
+      /X_size 612 792 div Y_size mul def
+      /Scale Height 792 div def }
+    { /X_size Width def
+      /Y_size 792 612 div X_size mul def
+      /Scale Width 612 div def } ifelse
+Width  X_size sub 2 div
+Height Y_size sub 2 div translate
+Scale Scale scale
+gsave
+newpath
+
+/BreakIntoLines {
+30 dict begin
+  /proc exch def
+  /linewidth exch def
+  /text exch def
+  /wordbreak ( ) def
+  /breakwidth wordbreak stringwidth pop def
+
+  /breakLines {
+    /textstring exch def
+    /curwidth 0 def
+    /lastwordbreak 0 def
+    /startchar 0 def
+    /restoftext textstring def
+    { restoftext wordbreak search		% post match pre bool
+      exch /nextword exch def			% post match bool
+      /wordwidth nextword stringwidth pop def	% post match bool
+      { pop					% post
+	/restoftext exch def			% -
+	curwidth wordwidth add linewidth gt {
+	  textstring startchar lastwordbreak startchar sub getinterval proc
+	  /startchar lastwordbreak def
+	  /curwidth wordwidth breakwidth add def
+	} {
+	  /curwidth curwidth wordwidth add breakwidth add def
+	} ifelse
+	/lastwordbreak lastwordbreak nextword length add 1 add def
+      } { exit } ifelse
+    } loop
+    curwidth wordwidth add linewidth gt {
+      textstring startchar lastwordbreak startchar sub getinterval proc
+      /startchar lastwordbreak def
+    } if
+    /lastchar textstring length def
+    textstring startchar lastchar startchar sub getinterval proc
+  } def
+
+  { text (\n) search				% post match pre bool
+    { breakLines				% post match
+      pop					% post
+      /text exch def				% -
+    } { exit } ifelse				% string
+  } loop
+  breakLines
+end
+} def
+
+gsave
+50 696 translate
+(FFNC)
+/LogoY 72 def
+/Helvetica-Bold findfont
+	[LogoY 0 LogoY dup add LogoY .8 mul 0 0] makefont 
+	setfont
+.8 setgray
+dup 0 0 moveto show
+/Helvetica-Bold findfont LogoY scalefont setfont
+.6 setgray
+dup 0 0 moveto show
+gsave
+0 setgray
+dup 0 0 moveto true charpath clip
+stringwidth pop .5 mul LogoY .35 mul translate
+2.5 10 360{newpath /a exch def 0 0 moveto 0 0 LogoY dup add a a 5 add arc fill}
+	for
+grestore
+0 setgray
+/Helvetica findfont 9 scalefont setfont
+300 30 moveto (Full Formal Name of Corporation) show
+300 20 moveto (9999 Street Name \267 City, State \267 00000) show
+300 10 moveto (+1 700 555 1212 \267 Fax: +1 700 555 2121) show
+grestore
+
+
+/FontSize  24 def
+/Leading   36 def
+/CurrY    586 def
+/Center   306 def % pagewidth (612) divided by 2
+/LabelCol 208 def
+/TextCol  226 def
+/RuleLen  288 def
+/UnderlineDrop 3 def
+2 setlinewidth
+/Helvetica-Bold findfont FontSize scalefont setfont
+Center   644   M (Applications Consulting) CenterRuleS
+Center   CurrY M (Fax Cover Sheet) CenterS down down
+/to (To:) Label
+/to-fax-number (Fax Number:) Label
+/to-company (Company:) Label
+/from (From:) Label
+/regarding (Re:) Label
+/todays-date (Today's Date:) Label
+84 /page-count (# of following pages:) LongLabel
+
+down
+/Leading 29 def
+LabelCol CurrY M (Comments:) RS
+CurrY Leading neg 73 { TextCol exch M RuleLen 0 rlineto stroke } for
+/comments where {pop
+	comments RuleLen { TextCol CurrY M S down } BreakIntoLines
+} if
+grestore
+showpage

@@ -1,0 +1,28 @@
+#
+# A sample menu to add to your ~/.chestrc
+# file on a machine with a server
+#
+# Top Level Menu Description
+#Menu ToolChest
+#{
+#    "System"            f.menu System
+#     no-label           f.separator
+#    "Windows"           f.menu Windows
+#     no-label           f.separator
+#    "Tools"             f.menu Tools
+#     no-label           f.separator
+#    "Hosts"             f.menu Hosts
+#     no-label           f.separator
+#    "FlexFAX"           f.menu FlexFAX
+#}
+
+Menu FlexFAX
+{
+    "FlexFAX"           f.title
+    "View Receive Queue" f.exec "/usr/sbin/dirview /usr/spool/fax/recvq"
+    no-label            f.separator
+    "Answer Phone"      f.exec "/usr/local/bin/faxanswer ttym2"
+    "Start Server"      f.exec "/bin/su root -c \"/usr/etc/faxd -m /dev/ttym2\"&"
+    "Stop Server"       f.exec "/usr/local/bin/faxquit ttym2"
+    "Control Panel"     f.exec "/bin/su root -c \"/usr/lib/vadmin/fax -m /dev/ttym2\"&"
+}

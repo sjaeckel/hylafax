@@ -1,111 +1,145 @@
-#ident $Header: /d/sam/flexkit/fax/faxd/RCS/Class2.h,v 1.5 91/09/23 13:44:38 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2.h,v 1.65 1994/06/06 22:54:36 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #ifndef _CLASS2_
 #define	_CLASS2_
-
+/*
+ * Base class for a Class 2 and Class 2.0 Modem Drivers.
+ */
 #include "FaxModem.h"
-#include "Str.h"
-#include <setjmp.h>
 #include <stdarg.h>
 
-/*
- * Class 2-style FAX Modem.
- */
 class Class2Modem : public FaxModem {
-private:
-    int		services;		// services modem supports
-    fxStr	manufacturer;		// manufacturer identification
-    fxStr	model;			// model identification
-    fxStr	revision;		// product revision identification
-    int		maxsignal;		// signalling capabilities
-    int		bor;			// phase B/C/D data bit ordering
-    fxBool	is2D;			// true if working w/ 2d-encoded data
-    char	rbuf[1024];		// last line of input received
-    TIFF*	tif;			// temp file for receiving
-    u_int	hangupCode;		// hangup reason (from modem)
+protected:
+    fxStr	classCmd;		// set class command
+    fxStr	cqCmds;			// copy quality setup commands
+    fxStr	tbcCmd;			// modem-host communication mode command
+    fxStr	crCmd;			// enable receiving command
+    fxStr	phctoCmd;		// set Phase C timeout command
+    fxStr	bugCmd;			// enable HDLC tracing command
+    fxStr	lidCmd;			// set local ID command
+    fxStr	dccCmd;			// set configuration parameters command
+    fxStr	dccQueryCmd;		// modem capabilities query command
+    fxStr	disCmd;			// set session parameters command
+    fxStr	cigCmd;			// set polling ID string command
+    fxStr	splCmd;			// set polling request command
+    fxStr	nrCmd;			// negotiation message reporting control
+    fxStr	pieCmd;			// procedure interrupt enable control
+    fxStr	borCmd;			// set bit order command
+    fxStr	abortCmd;		// abort session command
+    fxStr	ptsCmd;			// set page status command
+    u_int	serviceType;		// modem service required
+    u_int	modemCQ;		// copy quality capabilities mask
 
-    static u_int logicalRate[4];	// map modem speed code to our speed
-// tables for mapping modem codes to T.30 DIS codes
-    static u_int vrDISTab[2];		// vertical resolution
-    static u_int dfDISTab[2];		// data compression format
-    static u_int brDISTab[4];		// baud rate
-    static u_int wdDISTab[3];		// page width
-    static u_int lnDISTab[3];		// page length
-    static u_int stDISTab[8];		// min scanline time
-// tables for mapping modem codes to T.30 DCS codes
-    static u_int brDCSTab[4];		// baud rate
-// tables for mapping T.30 DCS values to modem codes
-    static u_int DCSbrTab[4];		// baud rate
-    static u_int DCSwdTab[4];		// page width
-    static u_int DCSlnTab[4];		// page length
-    static u_int DCSstTab[8];		// min scanline time
+    Class2Params params;		// current params during send
+    fxBool	xmitWaitForXON;		// if true, wait for XON when sending
+    fxBool	hostDidCQ;		// if true, copy quality done on host
+    fxBool	hasPolling;		// if true, modem does polled recv
+    char	recvDataTrigger;	// char to send to start recv'ing data
+    char	hangupCode[4];		// hangup reason (from modem)
+    long	group3opts;		// for writing received TIFF
 
-    fxBool setupModem();
-    fxBool waitFor(const char* wanted);
-    const char* hangupCause(u_int code);
+// modem setup stuff
+    void setupDefault(fxStr&, const fxStr&, const char*);
+    virtual fxBool setupModem();
+    virtual fxBool setupModel(fxStr& model);
+    virtual fxBool setupRevision(fxStr& rev);
+    virtual fxBool setupDCC();
+    virtual fxBool setupClass2Parameters();
+// transmission support
+    fxBool	dataTransfer();
 
-    fxBool sendPage(TIFF* tif);
-    fxBool sendEOT();
+    virtual fxBool sendPage(TIFF* tif) = 0;
+    virtual fxBool pageDone(u_int ppm, u_int& ppr) = 0;
+// reception support
+    const AnswerMsg* findAnswer(const char*);
+    fxBool	recvDCS(const char*);
+    fxBool	recvPageData(TIFF*, fxStr& emsg);
+    fxBool	recvPPM(TIFF*, int& ppr);
+    fxBool	parseFPTS(TIFF*, const char* cp, int& ppr);
+    void	abortPageRecv();
+// miscellaneous
+    enum {			// Class 2-specific AT responses
+	AT_FHNG		= 100,	// remote hangup
+	AT_FCON		= 101,	// fax connection status
+	AT_FPOLL	= 102,	// document available for polling status
+	AT_FDIS		= 103,	// DIS received status
+	AT_FNSF		= 104,	// NSF received status
+	AT_FCSI		= 105,	// CSI received status
+	AT_FPTS		= 106,	// post-page status
+	AT_FDCS		= 107,	// DCS received status
+	AT_FNSS		= 108,	// NSS received status
+	AT_FTSI		= 109,	// TSI received status
+	AT_FET		= 110,	// post-page-response status
+	AT_FVO		= 111,	// voice transition status
+    };
+    virtual ATResponse atResponse(char* buf, long ms = 30*1000) = 0;
+    fxBool	waitFor(ATResponse wanted, long ms = 30*1000);
+    fxStr	stripQuotes(const char*);
+// hangup processing
+    void	processHangup(const char*);
+    fxBool	isNormalHangup();
+    const char*	hangupCause(const char* code);
+    void	tracePPR(const char* dir, u_int ppr);
+    void	tracePPM(const char* dir, u_int ppm);
+// class 2 command support routines
+    fxBool	class2Cmd(const char* cmd, const Class2Params& p);
+    fxBool	class2Cmd(const char* cmd);
+    fxBool	class2Cmd(const char* cmd, int a0);
+    fxBool	class2Cmd(const char* cmd, const char* s);
+// parsing routines for capability&parameter strings
+    fxBool	parseClass2Capabilities(const char* cap, Class2Params&);
+    fxBool	parseRange(const char*, Class2Params&);
+    const char* skipStatus(const char*);
 
-    CallStatus answer();
-    fxBool recvDCS(const char*);
-    fxBool recvTSI(const char*);
-    fxBool recvPage();
-    fxBool recvPageData();
-    void recvData(u_char* buf, int n);
-
-    fxBool dataTransfer();
-    fxBool dataReception();
-
-    fxBool class2Cmd(const char* cmd);
-    fxBool class2Cmd(const char* cmd, int a0);
-    fxBool class2Cmd(const char* cmd, int a0, int a1);
-    fxBool class2Cmd(const char* cmd, int a0, int a1, int a2);
-    fxBool class2Cmd(const char* cmd, int a0, int a1, int a2, int a3);
-    fxBool class2Cmd(const char* cmd, int, int, int, int, int, int, int, int);
-    fxBool class2Cmd(const char* cmd, const char* s);
-    fxBool vclass2Cmd(const char* cmd, fxBool waitForOK, int nargs ... );
-
-    fxBool class2Query(const char* what);
-    fxBool class2Query(const char* what, int& v);
-    fxBool class2Query(const char* what, fxStr& v);
-
-    fxBool parseRange(const char*, int&);
-    fxBool parseRange(const char*, int&, int&);
-    fxBool parseRange(const char*, int&, int&, int&);
-    fxBool parseRange(const char*, int&, int&, int&, int&);
-    fxBool parseRange(const char*, int&, int&, int&, int&, int&);
-    fxBool parseRange(const char*, int&, int&, int&, int&, int&, int&);
-    fxBool parseRange(const char*, int&, int&, int&, int&, int&, int&, int&);
-    fxBool parseRange(const char*, int&, int&, int&, int&, int&, int&, int&, int&);
-    fxBool vparseRange(const char*, int nargs ...);
+    Class2Modem(FaxServer&, const ModemConfig&);
 public:
-    Class2Modem(FaxServer& s);
     virtual ~Class2Modem();
 
-    const char* getName() const;
+// send support
+    CallStatus	dial(const char* number, const Class2Params& dis, fxStr& emsg);
+    CallStatus	dialResponse(fxStr& emsg);
+    fxBool	getPrologue(Class2Params&, u_int& nsf, fxStr&, fxBool& hasDoc);
+    FaxSendStatus sendPhaseB(TIFF* tif, Class2Params&, FaxMachineInfo&,
+		    fxStr& pph, fxStr& emsg);
+    void	sendAbort();
 
-    fxBool reset();
-    fxBool abort();
-    void setLID(const fxStr& number);
+// receive support
+    fxBool	recvBegin(fxStr& emsg);
+    fxBool	recvPage(TIFF*, int& ppm, fxStr& emsg);
+    fxBool	recvEnd(fxStr& emsg);
+    void	recvAbort();
 
-    CallStatus dial(const fxStr& number);
-    int selectSignallingRate(u_int t30rate);
-    u_int getBestSignallingRate() const;
-    fxBool getPrologue(u_int& dis, u_int& xinfo, u_int& nsf);
+// polling support
+    fxBool	requestToPoll();
+    fxBool	pollBegin(const fxStr& pollID, fxStr& emsg);
 
-    fxBool sendPhaseB(TIFF* tif, u_int dcs, fxStr& emsg, fxBool lastDoc);
-
-    fxBool recvBegin(u_int dis);
-    TIFF* recvPhaseB(fxBool okToRecv);
+// miscellaneous
+    fxBool	dataService();			// establish data service
+    fxBool	voiceService();			// establish voice service
+    fxBool	reset(long ms);			// reset modem
+    void	setLID(const fxStr& number);	// set local id string
+    fxBool	supportsPolling() const;	// modem capability
 };
 #endif /* _CLASS2_ */

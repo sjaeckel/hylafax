@@ -1,182 +1,264 @@
-#ident $Header: /d/sam/flexkit/fax/faxd/RCS/FaxServer.h,v 1.22 91/09/23 13:45:40 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxServer.h,v 1.112 1994/07/04 18:37:16 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #ifndef _FaxServer_
 #define	_FaxServer_
+/*
+ * Fax Modem and Protocol Server.
+ */
+#include <stdarg.h>
 
-#include "Application.h"
-#include "Str.h"
-#include "StrArray.h"
-#include "FaxMachineInfo.h"
+#include "FaxMachineLog.h"
 #include "FaxModem.h"
+#include "ModemConfig.h"
+#include "FaxRequest.h"
 #include "FaxTrace.h"
-#include "Exec.h"
+#include "IOHandler.h"
 
-class FaxRequest;
+#include <sys/time.h>
+
 class RegExArray;
+class fxBoolArray;
+class FaxSendOpArray;
+class faxServerApp;
+class Getty;
+class FaxMachineInfo;
+class FaxMachineLog;
+class UUCPLock;
+class FaxRecvInfo;
+class FaxRecvInfoArray;
+class DialStringRules;
 
-class FaxServer : public fxApplication {
+/*
+ * This class defines the ``server process'' that manages the fax
+ * modem and implements the necessary protocol above the FaxModem
+ * driver interface.  When the server is multi-threaded, this class
+ * embodies a separate thread.
+ */
+class FaxServer : public IOHandler {
 private:
-    class ModemListener : public fxSelectHandler {
-    protected:
-	fxOutputChannel*	ringChannel;
-    public:
-	ModemListener(int f);
-	~ModemListener();
-	const char* className() const;
-	void handleRead();
+    enum FaxServerState {
+	BASE		= 0,
+	RUNNING		= 1,
+	MODEMWAIT	= 2,
+	LOCKWAIT	= 3,
+	GETTYWAIT	= 4,
+	SENDING		= 5,
+	ANSWERING	= 6,
+	RECEIVING	= 7,
     };
-
+    FaxServerState state;
+    faxServerApp* app;			// client server app
+    Getty*	getty;			// currently active getty
+    UUCPLock*	modemLock;		// UUCP interlock
+    FILE*	statusFile;		// server status file
+    fxBool	abortCall;		// abort current send
+    fxBool	deduceComplain;		// if true, complain when can't deduce
+    fxBool	changePriority;		// change process priority by state
 // generic modem-related stuff
     int		modemFd;		// open modem file
-    fxStr	modemType;		// modem type identifier
     fxStr	modemDevice;		// name of device to open
-    fxStr	modemCSI;		// encoded phone number
+    fxStr	modemDevID;		// device identifier
     FaxModem*	modem;			// modem driver
+    ModemConfig* modemConfig;		// modem configuration info
+    time_t	lastConfigModTime;	// last mod time of configuration file
+    SpeakerVolume speakerVolume;	// volume control
+    BaudRate	curRate;		// current baud rate
+    u_int	consecutiveBadCalls;	// count of consecutive bad phone calls
 // server configuration
     u_short	ringsBeforeAnswer;	// # rings to wait
-    u_short	waitTimeForCarrier;	// timeout waiting for carrier
-    u_short	commaPauseTime;		// for "," in dial string
-    SpeakerVolume speakerVolume;	// volume control
-    fxBool	toneDialing;		// tone/pulse dialing
-    fxBool	useDialPrefix;		// if true, prefix to dial out
-    fxBool	okToReceive2D;		// alright to receive 2d-encoded fax
-    fxBool	qualifyTSI;		// if true, no recv w/o acceptable tsi
-    int		recvFileMode;		// protection mode for received files
-    int		tracingLevel;		// protocol tracing level
+    fxStr	qualifyTSI;		// if set, no recv w/o acceptable tsi
+    int		noCarrierRetrys;	// # times to retry on no carrier
+    mode_t	recvFileMode;		// protection mode for received files
+    mode_t	deviceMode;		// protection mode for modem device
+    mode_t	logMode;		// protection mode for log files
+    int		tracingLevel;		// tracing level w/o session
+    int		logTracingLevel;	// tracing level during session
+    int		tracingMask;		// tracing level control mask
+    fxStr	gettyArgs;		// getty arguments
+    fxStr	contCoverPageTemplate;	// continuation cover page template
+    fxBool	adaptiveAnswer;		// answer as data if fax answer fails
+    short	answerBias;		// rotor bias applied after good calls
+    u_short	answerRotor;		// rotor into possible selections
+    u_short	answerRotorSize;	// rotor table size
+    AnswerType	answerRotary[3];	// rotary selection of answer types
+    u_int	requeueTTS[9];		// requeue intervals[CallStatus code]
+    u_int	requeueProto;		// requeue interval after protocol error
+    u_int	requeueOther;		// requeue interval after other problem
+    u_int	pollModemWait;		// polling interval in modem wait state
+    u_int	pollLockWait;		// polling interval in lock wait state
+    u_int	maxRecvPages;		// max pages to accept on receive
+    u_int	maxSendPages;		// max pages in a send
+    u_int	maxConsecutiveBadCalls;	// max consecutive bad phone calls
+    u_int	postscriptTimeout;	// timeout on PostScript imager calls
+    fxStr	localIdentifier;	// to use in place of FAXNumber
 // phone number-related state
-    fxStr	dialPrefix;		// prefix str for external dialing
     fxStr	longDistancePrefix;	// prefix str for long distance dialing
     fxStr	internationalPrefix;	// prefix str for international dialing
     fxStr	myAreaCode;		// local area code
     fxStr	myCountryCode;		// local country code
+    DialStringRules* dialRules;		// dial string rules
     fxStr	FAXNumber;		// phone number
 // group 3 protocol-related state
-    u_int	clientDIS;		// received client DIS
-    u_int	clientDCS;		// client's DCS
-    FaxMachineInfo clientInfo;		// remote machine info
+    Class2Params clientCapabilities;	// received client capabilities
+    Class2Params clientParams;		// current session parameters
 // buffered i/o stuff
     short	rcvCC;			// # bytes pending in rcvBuf
     short	rcvNext;		// next available byte in rcvBuf
-    char	rcvBuf[1024];		// receive buffering
+    u_char	rcvBuf[1024];		// receive buffering
 // for fax reception ...
-    ModemListener* rcvHandler;		// XXX modem select handler
     fxBool	timeout;		// timeout during data reception
     fxBool	okToRecv;		// ok to accept stuff for this session
     fxStr	recvTSI;		// sender's TSI
+    fxStr	hostname;		// host on which fax is received
+    u_int	recvPages;		// count of received pages
+    time_t	recvStart;		// starting time for document receive
     time_t	lastPatModTime;		// last mod time of patterns file
-    RegExArray*	tsiPats;		// acceptable recv tsi patterns
+    RegExArray*	tsiPats;		// recv tsi patterns
+    fxBoolArray* acceptTSI;		// accept/reject matched tsi
 // send+receive stats
     u_int	npages;			// # pages sent/received
-
-    fxOutputChannel* sendCompleteChannel;
-    fxOutputChannel* jobCompleteChannel;
-    fxOutputChannel* jobRecvdChannel;
-    fxOutputChannel* recvCompleteChannel;
-    fxOutputChannel* sendStatusChannel;
-    fxOutputChannel* traceChannel;
+// logging and tracing
+    FaxMachineLog* log;			// current log device
 
     friend class FaxModem;
+    friend class faxServerApp;	// XXX for access to setServerStatus, yech
+
+    static int pageWidthCodes[8];	// map wd to pixel count
+    static int pageLengthCodes[4];	// map ln to mm length
 
 // FAX transmission protocol support
-    fxBool	sendClientCapabilitiesOK();
-    fxBool	sendFaxPhaseB(const fxStr& file, fxStr& emsg, fxBool lastDoc);
-    fxBool	sendSetupDCS(TIFF*, u_int& dcs, fxStr& emsg);
+    void	sendFax(FaxRequest& fax, FaxMachineInfo&, const fxStr& number);
+    fxBool	sendPrepareFax(FaxRequest&, FaxMachineInfo&, fxStr& emsg);
+    fxBool	sendClientCapabilitiesOK(FaxMachineInfo&, u_int nsf, fxStr&);
+    fxBool	sendFaxPhaseB(FaxRequest&, u_int ix, FaxMachineInfo&);
+    void	sendPoll(FaxRequest& fax, fxBool remoteHasDoc);
+    FaxSendStatus sendSetupParams(TIFF*, Class2Params&, FaxMachineInfo&,fxStr&);
+    FaxSendStatus sendSetupParams1(TIFF*, Class2Params&,FaxMachineInfo&,fxStr&);
+    void	sendFailed(FaxRequest& fax,
+		    FaxSendStatus, const char* notice, u_int tts = 0);
 // FAX reception support
-    void	recvComplete(const char* qfile, time_t recvTime);
+    fxBool	recvFax();
+    TIFF*	setupForRecv(const char* op, FaxRecvInfo&, FaxRecvInfoArray&);
+    fxBool	recvDocuments(const char* op, TIFF*,
+		    FaxRecvInfo&, FaxRecvInfoArray&, fxStr& emsg);
+    fxBool	recvFaxPhaseB(TIFF* tif, int& ppm, fxStr& emsg);
+    void	recvComplete(FaxRecvInfo&, time_t, const fxStr& emsg);
+    fxBool	pollFaxPhaseB(const char* cig, FaxRecvInfoArray&, fxStr& emsg);
     void	updateTSIPatterns();
-    RegExArray*	readTSIPatterns(FILE*);
-// modem capability negotiation & co.
-    static int pageLengthCodes[4];
-    static int pageWidthCodes[4];
-    static int minScanlineTimeCodes[8][2];
+    void	readTSIPatterns(FILE*, RegExArray*&, fxBoolArray*&);
+// miscellaneous stuff
+    void	setupConfig();
+    fxBool	setupCall(AnswerType atype, CallType ctype,
+		    fxBool& waitForProcess, fxStr& emsg);
+    fxBool	runGetty(const char* args);
+    void	setAnswerRotary(const fxStr& value);
+// state-related stuff
+    static const char* stateNames[8];
+    static const char* stateStatus[8];
 
-    fxBool	setupModem(const char* type);
-    int		modemDIS();
+    fxBool	setupModem();
+    fxBool	openDevice(const char* dev);
+    fxBool	reopenDevice();
+    void	discardModem(fxBool dropDTR);
+    void	changeState(FaxServerState, long timeout = 0);
+    void	setServerStatus(const char* fmt, ...);
+    fxBool	abortRequested();
+    void	setProcessPriority(FaxServerState s);
 // modem i/o support
-    int		getModemLine(char buf[], int timer = 0);
-    fxBool	getTimedModemLine(char buf[], int timer);
-    int		getModemChar(int timer = 0);
+    int		inputReady(int);
+    void	timerExpired(long, long);
+    void	childStatus(pid_t, int);
+    int		getModemLine(char buf[], u_int bufSize, long ms = 0);
+    int		getModemChar(long ms = 0);
     void	flushModemInput();
-    fxBool	putModem(void* data, int n, int timer = 0);
-    void	putModemLine(const char* cp);
-    void	startTimeout(int seconds);
+    fxBool	putModem(const void* data, int n, long ms = 0);
+    fxBool	putModem1(const void* data, int n, long ms = 0);
+    void	startTimeout(long ms);
     void	stopTimeout(const char* whichdir);
-    void	modemFlushInput();
 // modem line control
     fxBool	sendBreak(fxBool pause);
-    fxBool	setBaudRate(int rate, fxBool enableFlow = TRUE);
-    fxBool	setInputFlowControl(fxBool enable, fxBool flush = TRUE);
-public:
-    FaxServer(const fxStr& deviceName);
-    ~FaxServer();
+    fxBool	setBaudRate(BaudRate rate);
+    fxBool	setBaudRate(BaudRate rate, FlowControl i, FlowControl o);
+    fxBool	setXONXOFF(FlowControl i, FlowControl o, SetAction act);
+    fxBool	setDTR(fxBool on);
+    fxBool	setInputBuffering(fxBool on);
+    fxBool	modemStopOutput();
+    void	modemFlushInput();
 
-    const char* className() const;
+// general trace interface (used by modem classes)
+    void	traceStatus(int kind, const char* fmt ...);
+    void	vtraceStatus(int kind, const char* fmt, va_list ap);
+    void	traceModemIO(const char* dir, const u_char* buf, u_int cc);
+// FAX receiving protocol support (used by modem classes)
+    void	recvDCS(const Class2Params&);
+    void	recvNSF(u_int);
+    fxBool	recvCheckTSI(const fxStr& tsi);
+    void	recvSetupPage(TIFF* tif, long group3opts, int fillOrder);
+public:
+    FaxServer(faxServerApp* app, const fxStr& deviceName, const fxStr& devID);
+    ~FaxServer();
 
     void open();
     void close();
-    virtual void initialize(int argc, char** argv);
+    void initialize(int argc, char** argv);
 
-    fxBool openSucceeded() const;		// server is ready
+    void setDialRules(const char* filename);
     fxStr canonicalizePhoneNumber(const fxStr& number);
-    fxStr localizePhoneNumber(const fxStr& canon);
+    fxStr prepareDialString(const fxStr& ds);
 
     void restoreState(const fxStr& filename);
-    void restoreStateItem(const char* buf);
+    void restoreStateItem(const char* line);
 
     void setModemNumber(const fxStr& number);	// fax phone number
     const fxStr& getModemNumber();
+    void setLocalIdentifier(const fxStr& number);
+    const fxStr& getLocalIdentifier();
 
-    void setTracing(int level);			// protocol tracing
-    int getTracing();
-    void setToneDialing(fxBool on);		// default dialing technique
-    fxBool getToneDialing();
+    fxBool modemReady() const;
+    fxBool modemSupports2D() const;
+    fxBool modemSupportsEOLPadding() const;
+    fxBool modemSupportsVRes(float res) const;
+    fxBool modemSupportsPageWidth(u_int w) const;
+    fxBool modemSupportsPageLength(u_int l) const;
+    fxBool modemSupportsPolling() const;
+
+    fxBool serverBusy() const;
+
+    void setSessionTracing(int level);		// tracing during send+receive
+    int getSessionTracing();
+    void setServerTracing(int level);		// tracing outside send+receive
+    int getServerTracing();
     void setModemSpeakerVolume(SpeakerVolume);	// speaker volume
     SpeakerVolume getModemSpeakerVolume();
     void setRingsBeforeAnswer(int rings);	// rings to wait before answer
     int getRingsBeforeAnswer();
-    void setCommaPauseTime(int seconds);	// delay for "," in phone number
-    int getCommaPauseTime();
-    void setWaitTimeForCarrier(int seconds);	// time to wait for carrier
-    int getWaitTimeForCarrier();
-    void setRecvFileMode(int mode);		// protection mode of recvd fax
-    int getRecvFileMode();
-    void setOkToReceive2D(fxBool yes);		// alright to receive 2d stuff
-    fxBool getOkToReceive2D();
-    void setQualifyTSI(fxBool yes);		// qualify tsi before recv
-    fxBool getQualifyTSI();
 
-// client-server send interface
-    void sendFax(FaxRequest*);
-    fxStr sendFax(const fxStr& number, const fxStr& canonicalNumber,
-		const fxStrArray& files);
+    const fxStr& getContCoverPage() const;	// cont. cover page template
 
-// client-server recv interface
-    void recvFax(fxBool answerThePhone = FALSE);
-// FAX receiving protocol support (used by modem classes)
-    void recvDCS(u_int dcs, u_int xinfo);
-    fxBool recvCheckTSI(const fxStr& tsi);
-    void recvSetupPage(TIFF* tif, long group3opts, int fillOrder);
-
-// general trace interface (public for modem classes)
-    void traceStatus(int kind, const char* fmt ...);
+    void sendFax(FaxRequest&, FaxMachineInfo&);	// client-server send interface
+    void answerPhone(AnswerType, fxBool force);	// client-server recv interface
+    void abortSession();			// abort send/receive session
 };
-
-typedef void (*sig_type)(int ...);
-#ifndef CYPRESS_XGL
-extern "C" sig_type signal(const int, const sig_type);
-#endif
-
-inline fxBool streq(const char* a, const char* b)
-    { return (strcmp(a,b) == 0); }
-inline fxBool streq(const char* a, const char* b, int n)
-    { return (strncmp(a,b,n) == 0); }
 #endif /* _FaxServer_ */

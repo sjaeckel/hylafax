@@ -1,139 +1,357 @@
-#ident $Header: /d/sam/flexkit/fax/faxd/RCS/Class2.c++,v 1.8 91/10/21 14:23:49 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2.c++,v 1.85 1994/06/18 00:35:59 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include "Class2.h"
-#include "FaxServer.h"
-#include "class2.h"
-#include "t.30.h"
+#include "ModemConfig.h"
 
-#include <sys/termio.h>
-#include <libc.h>
+#include <stdlib.h>
 #include <ctype.h>
 
-u_int Class2Modem::logicalRate[4] = { 0, 1, 3, 2 };
-
-Class2Modem::Class2Modem(FaxServer& s) : FaxModem(s, UNKNOWN)
+Class2Modem::Class2Modem(FaxServer& s, const ModemConfig& c) : FaxModem(s,c)
 {
-    // we use BOR_C_DIR instead of BOR_C_REV (which makes more
-    // sense for our big-endian machine 'cuz of a bug in the
-    // modem firmware (Rev 901231 or earlier) -- BOR=3 and REL=1
-    // generates garbage data when receiving facsimile (in the
-    // pad bytes)
-    bor = BOR_C_DIR + BOR_BD_REV;
-    if (selectBaudRate())
-	setupModem();
+    hangupCode[0] = '\0';
+    group3opts = 0;
+    serviceType = 0;			// must be set in derived class
 }
 
 Class2Modem::~Class2Modem()
 {
 }
 
-const char* Class2Modem::getName() const { return "Class2"; }
+void
+Class2Modem::setupDefault(fxStr& s, const fxStr& configured, const char* def)
+{
+    if (configured == "")
+	s = def;
+    else
+	s = configured;
+}
 
+/*
+ * Check if the modem is a Class 2 modem and, if so,
+ * configure it for use.  We try to confine a lot of
+ * the manufacturer-specific bogosity here and leave
+ * the remainder of the Class 2 support fairly generic.
+ */
 fxBool
 Class2Modem::setupModem()
 {
-    type = UNKNOWN;
-    if (class2Query("CLASS=") &&
-      getModemLine(rbuf) > 0 && parseRange(rbuf, services)) {
-	if (services & SERVICE_DATA)
-	    server.traceStatus(FAXTRACE_SERVER, "MODEM Service \"data\"");
-	if (services & SERVICE_CLASS1)
-	    server.traceStatus(FAXTRACE_SERVER, "MODEM Service \"class1\"");
-	if (services & SERVICE_CLASS2) {
-	    server.traceStatus(FAXTRACE_SERVER, "MODEM Service \"class2\"");
-	    type = CLASS2;
-	}
-	sync();
-    }
-    if (type != CLASS2)
+    if (!selectBaudRate(conf.maxRate, conf.flowControl, conf.flowControl))
 	return (FALSE);
-    class2Cmd("CLASS", 2);
-    if (class2Query("MFR", manufacturer))
-	server.traceStatus(FAXTRACE_SERVER, "MODEM Mfr \"%s\"",
-	    (char*) manufacturer);
-    if (class2Query("MDL", model))
-	server.traceStatus(FAXTRACE_SERVER, "MODEM Model \"%s\"",
-	    (char*) model);
-    if (class2Query("REV", revision))
-	server.traceStatus(FAXTRACE_SERVER, "MODEM Revision \"%s\"",
-	    (char*) revision);
-    if (class2Query("DCC=")) {
-	int vr, br, wd, pl, df, ec, bf, st;
-	// syntax: (vr),(br),(wd),(ln),(df),(ec),(bf),(st)
-	// where,
-	//	vr	vertical resolution
-	//	br	bit rate
-	//	wd	page width
-	//	pl	page length
-	//	df	data compression
-	//	ec	error correction
-	//	bf	binary file transfer
-	//	st	scan time/line
-	if (getModemLine(rbuf) > 0 &&
-	  parseRange(rbuf, vr, br, wd, pl, df, ec, bf, st)) {
-	    maxsignal = 0;
-	    for (u_int i = 0; i < 4; i++)
-		if (br & BIT(i)) {
-		    server.traceStatus(FAXTRACE_SERVER, "MODEM supports %s",
-			getSignallingRateName(logicalRate[i]));
-		    maxsignal = i;
-		}
-	    if (ec & (BIT(1)|BIT(2)))
-		server.traceStatus(FAXTRACE_SERVER,
-		    "MODEM supports error correction");
-	    if (bf & BIT(1))
-		server.traceStatus(FAXTRACE_SERVER,
-		    "MODEM supports binary file transfer");
-	}
-	sync();
+    // Query service support information
+    if (atQuery("+FCLASS=?", modemServices, 500))
+	traceBits(modemServices & SERVICE_ALL, serviceNames);
+    if ((modemServices & serviceType) == 0)
+	return (FALSE);
+    atCmd(classCmd);
+
+    /*
+     * Query manufacturer, model, and firmware revision.
+     * We use the manufacturer especially as a key to
+     * working around firmware bugs (yech!).
+     */
+    if (setupManufacturer(modemMfr)) {
+	modemCapability("Mfr \"%s\"", (char*) modemMfr);
+	modemMfr.raisecase();
     }
-    int cq = 0;
-    if (class2Query("CQ=", cq)) {
-	if (cq & BIT(1)) {
-	    server.traceStatus(FAXTRACE_SERVER,
-		"MODEM supports 1-D copy quality checking");
-	    class2Cmd("CQ", 1);		// enable checking
-	    server.traceStatus(FAXTRACE_SERVER,
-		"MODEM error threshold multiplier %d", 20);
-	    class2Cmd("BADMUL", 20);	// error threshold multiplier
-	    server.traceStatus(FAXTRACE_SERVER,
-		"MODEM bad line threshold %d", 10);
-	    class2Cmd("BADLIN", 10);	// bad line threshold
-	} else
-	    server.traceStatus(FAXTRACE_SERVER,
-		"MODEM does no copy quality checking");
+    (void) setupModel(modemModel);
+    (void) setupRevision(modemRevision);
+    if (modemModel != "")
+	modemCapability("Model \"%s\"", (char*) modemModel);
+    if (modemRevision != "")
+	modemCapability("Revision \"%s\"", (char*) modemRevision);
+
+    /*
+     * Get modem capabilities and calculate best signalling
+     * rate, data formatting capabilities, etc. for use in
+     * T.30 negotiations.
+     */
+    fxStr t30parms;
+    if (!doQuery(dccQueryCmd, t30parms, 500)) {
+	serverTrace("Error getting modem capabilities");
+	return (FALSE);
     }
-    server.traceStatus(FAXTRACE_SERVER, "MODEM Phase C timeout %d", 30);
-    class2Cmd("PHCTO", 30);		// phase C timeout
-    class2Cmd("TBC", 0);		// stream mode
-    class2Cmd("BOR", bor);		// bit ordering
-    class2Cmd("CR", 1);			// enable receiving
-    class2Cmd("REL", 1);		// byte-align received EOL's
-    if (server.getTracing() & FAXTRACE_PROTOCOL)
-	class2Cmd("BUG", 1);
+    /*
+     * Syntax: (vr),(br),(wd),(ln),(df),(ec),(bf),(st)
+     * where,
+     *	vr	vertical resolution
+     *	br	bit rate
+     *	wd	page width
+     *	ln	page length
+     *	df	data compression
+     *	ec	error correction
+     *	bf	binary file transfer
+     *	st	scan time/line
+     */
+    if (!parseRange(t30parms, modemParams)) {
+	serverTrace("Error parsing \"%s\" query response: \"%s\"",
+	    (char*) dccQueryCmd, (char*) t30parms);
+	return (FALSE);
+    }
+    traceModemParams();
+    /*
+     * Check to see if the modem supports copy quality checking.
+     * If the modem is capable, then enable it using the configured
+     * commands.  If the modem is incapable of doing copy quality
+     * checking, then the host will do the work.
+     */
+    cqCmds = "";
+    fxStr s;
+    if (doQuery(conf.class2CQQueryCmd, s) && FaxModem::parseRange(s, modemCQ)) {
+	if (modemCQ >>= 1)
+	    cqCmds = conf.class2CQCmd;
+    } else
+	modemCQ = 0;
+    static const char* whatCQ[4] = { "no", "1D", "2D", "1D+2D" };
+    modemSupports("%s copy quality checking", whatCQ[modemCQ&3]);
+    if (modemCQ && cqCmds == "")
+	serverTrace("Warning, modem copy quality checking disabled");
+    /*
+     * Check if the modem supports polled reception of documents.
+     */
+    u_int t;
+    if (doQuery("+F" | splCmd | "=?", s) && FaxModem::parseRange(s, t))
+	hasPolling = (t & BIT(1)) != 0;
+    /*
+     * Define the code to send to the modem to trigger the
+     * transfer of received Phase C data to the host.  Most
+     * modems based on SP-2388-A (Class 2) use DC1 while those
+     * based on SP-2388-B (Class 2.0) use DC2.  There are some
+     * exceptions (ZyXEL and modems based on Rockwell RC32ACL
+     * parts), but they are expected to set the appropriate
+     * value in the config file.
+     */
+    if (conf.class2RecvDataTrigger == "")
+	recvDataTrigger = (serviceType == SERVICE_CLASS2 ? DC1 : DC2);
+    else
+	recvDataTrigger = conf.class2RecvDataTrigger[0];
+    /*
+     * SP-2388-A (Class 2) specifies that the modem should send
+     * XON to the host when it is ready to received page data
+     * during a transmission.  This went away in SP-2388-B and in
+     * the final Class 2.0 spec.  Consequently we configure the
+     * modem either to ignore it (Class 2.0) or to use whatever
+     * is configured (it defaults to TRUE).
+     */
+    if (serviceType == SERVICE_CLASS20)
+	xmitWaitForXON = FALSE;
+    else
+	xmitWaitForXON = conf.class2XmitWaitForXON;
+    setupClass2Parameters();			// send parameters to the modem
     return (TRUE);
 }
 
-u_int
-Class2Modem::getBestSignallingRate() const
+/*
+ * Send the modem the Class 2 configuration commands.
+ */
+fxBool
+Class2Modem::setupClass2Parameters()
 {
-    return brDCSTab[maxsignal] >> 12;
+    if (modemServices & serviceType) {		// when resetting at startup
+	atCmd(classCmd);
+	class2Cmd(tbcCmd);			// stream mode
+	class2Cmd(borCmd);			// Phase B+C bit order
+	class2Cmd(crCmd);			// enable receiving
+	/*
+	 * Set Phase C data transfer timeout parameter.
+	 * Note that we also have our own timeout parameter
+	 * that should be at least as large (though it
+	 * probably doesn't matter).  Some modem manufacturers
+	 * do not support this command (or perhaps they
+	 * hide it under a different name).
+	 */
+	class2Cmd(phctoCmd);
+	/*
+	 * Try to setup byte-alignment of received EOL's.
+	 * As always, this is problematic.  If the modem
+	 * does not support this, but accepts the command
+	 * (as many do!), then received facsimile will be
+	 * incorrectly tagged as having byte-aligned EOL
+	 * codes in them--not usually much of a problem.
+	 */
+	if (conf.class2RELCmd != "" && class2Cmd(conf.class2RELCmd))
+	    group3opts |= GROUP3OPT_FILLBITS;
+	else
+	    group3opts &= ~GROUP3OPT_FILLBITS;
+	/*
+	 * Setup various other parameters if defined for modem.
+	 */
+	if (cqCmds != "")			// copy quality checking
+	    (void) class2Cmd(cqCmds);
+	if (nrCmd != "")			// negotiation reporting
+	    (void) class2Cmd(nrCmd);
+	if (pieCmd != "")			// program interrupt enable
+	    (void) class2Cmd(pieCmd);
+	if (getHDLCTracing() && bugCmd != "")	// HDLC frame tracing
+	    class2Cmd(bugCmd);
+	/*
+	 * Force the DCC so that we override whatever
+	 * the modem defaults are.
+	 */
+	setupDCC();
+	/*
+	 * Enable adaptive-answer support.  If we're configured,
+	 * we'll act like getty and initiate a login session if
+	 * we get a data connection.  Note that we do this last
+	 * so that the modem can be left in a state other than
+	 * +FCLASS=2 (e.g. Rockwell-based modems often need to be
+	 * in Class 0).
+	 */
+	if (conf.setupAACmd != "")
+	    (void) atCmd(conf.setupAACmd);
+    }
+    return (TRUE);
 }
 
-int
-Class2Modem::selectSignallingRate(u_int t30rate)
+/*
+ * Setup DCC to reflect best capabilities of the server.
+ */
+fxBool
+Class2Modem::setupDCC()
 {
-    int rate = DCSbrTab[t30rate];
-    return brDISTab[fxmin(rate, maxsignal)];	// NB: assumes DIS* == DCS*
+    params.vr = getBestVRes();
+    params.br = getBestSignallingRate();
+    params.wd = getBestPageWidth();
+    params.ln = getBestPageLength();
+    params.df = getBestDataFormat();
+    params.ec = EC_DISABLE;		// XXX
+    params.bf = BF_DISABLE;
+    params.st = getBestScanlineTime();
+    return class2Cmd(dccCmd, params);
+}
+
+/*
+ * Parse a ``capabilities'' string from the modem and
+ * return the values through the params parameter.
+ */
+fxBool
+Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params)
+{
+    int n = sscanf(cap, "%d,%d,%d,%d,%d,%d,%d,%d",
+	&params.vr, &params.br, &params.wd, &params.ln,
+	&params.df, &params.ec, &params.bf, &params.st);
+    if (n == 8) {
+	/*
+	 * Clamp values to insure modem doesn't feed us
+	 * nonsense; should log bogus stuff also.
+	 */
+	params.vr = fxmin(params.vr, (u_int) VR_FINE);
+	params.br = fxmin(params.br, (u_int) BR_14400);
+	params.wd = fxmin(params.wd, (u_int) WD_864);
+	params.ln = fxmin(params.ln, (u_int) LN_INF);
+	params.df = fxmin(params.df, (u_int) DF_2DMMR);
+	if (params.ec > EC_ENABLE)
+	    params.ec = EC_DISABLE;
+	if (params.bf > BF_ENABLE)
+	    params.bf = BF_DISABLE;
+	params.st = fxmin(params.st, (u_int) ST_40MS);
+	return (TRUE);
+    } else {
+	protoTrace("MODEM protocol botch, can not parse \"%s\"", cap);
+	return (FALSE);
+    }
+}
+
+/*
+ * Set the modem into data service after auto-detecting
+ * an incoming data connection.  Class 2 says this should
+ * be automatically done for us.
+ */
+fxBool
+Class2Modem::dataService()
+{
+    return (TRUE);				// nothing to do
+}
+
+/*
+ * Set the modem into voice service after auto-detecting
+ * an incoming voice call.  ZyXEL (only modem that supports
+ * this) say that it should be done automatically.
+ */
+fxBool
+Class2Modem::voiceService()
+{
+    return (TRUE);
+}
+
+fxBool
+Class2Modem::setupRevision(fxStr& revision)
+{
+    if (FaxModem::setupRevision(revision)) {
+	/*
+	 * Cleanup ZyXEL response (argh), modem gives:
+	 * +FREV?	"U1496E   V 5.02 M    "
+	 */
+	if (modemMfr == "ZYXEL") {
+	    u_int pos = modemRevision.next(0, ' ');
+	    if (pos != modemRevision.length()) {	// rev. has model 1st
+		pos = modemRevision.skip(pos, ' ');
+		modemRevision.remove(0, pos);
+	    }
+	}
+	return (TRUE);
+    } else
+	return (FALSE);
+}
+
+fxBool
+Class2Modem::setupModel(fxStr& model)
+{
+    if (FaxModem::setupModel(model)) {
+	/*
+	 * Cleanup ZyXEL response (argh), modem gives:
+	 * +FMDL?	"U1496E   V 5.02 M    "
+	 */
+	if (modemMfr == "ZYXEL")
+	    modemModel.resize(modemModel.next(0, ' '));	// model is first word
+	return (TRUE);
+    } else
+	return (FALSE);
+}
+
+fxBool
+Class2Modem::supportsPolling() const
+{
+    return (hasPolling);
+}
+
+/*
+ * Strip any quote marks from a string.  This
+ * is used for received TSI+CSI strings passed
+ * to the server.
+ */
+fxStr
+Class2Modem::stripQuotes(const char* cp)
+{
+    fxStr s(cp);
+    u_int pos = s.next(0, '"');
+    if (pos != s.length())
+	s.remove(0,pos+1);
+    pos = s.next(0, '"');
+    if (pos != s.length())
+	s.remove(pos, s.length()-pos);
+    return (s);
 }
 
 /*
@@ -151,277 +369,294 @@ Class2Modem::setLID(const fxStr& number)
     u_int n = fxmin((u_int) number.length(), (u_int) 20);
     for (u_int i = 0; i < n; i++) {
 	char c = number[i];
-	if (c == ' ' || c == '-' || c == '.')
-	    csi.append(' ');
-	else if (c == '+' || isdigit(c))
+	if (isprint(c) || c == ' ')
 	    csi.append(c);
     }
-    class2Cmd("LID", (char*) csi);
+    class2Cmd(lidCmd, (char*) csi);
 }
 
 /* 
  * Modem manipulation support.
  */
 
+/*
+ * Reset a Class 2 modem.
+ */
 fxBool
-Class2Modem::reset()
+Class2Modem::reset(long ms)
 {
-    return (FaxModem::reset());
+    return (FaxModem::reset(ms) && setupClass2Parameters());
 }
 
+/*
+ * Wait (carefully) for some response from the modem.
+ * In particular, beware of unsolicited hangup messages
+ * from the modem.  Some modems seem to not use the
+ * Class 2 required +FHNG response--and instead give
+ * us an unsolicited NO CARRIER message.  Isn't life
+ * wondeful?
+ */
 fxBool
-Class2Modem::abort()
+Class2Modem::waitFor(ATResponse wanted, long ms)
 {
-    return class2Cmd("K");
-}
-
-fxBool
-Class2Modem::waitFor(const char* wanted)
-{
-    u_int len = strlen(wanted);
-    fxBool status = TRUE;
-    do {
-	if (getModemLine(rbuf) < 0)
+    for (;;) {
+	ATResponse response = atResponse(rbuf, ms);
+	if (response == wanted)
+	    return (TRUE);
+	switch (response) {
+	case AT_TIMEOUT:
+	case AT_EMPTYLINE:
+	case AT_ERROR:
+	case AT_NOCARRIER:
+	case AT_NODIALTONE:
+	case AT_NOANSWER:
+	    modemTrace("MODEM ERROR: %s", ATresponses[response]);
 	    return (FALSE);
-	if (streq(rbuf, "+FHNG:", 6)) {
-	    hangupCode = (u_int) atoi(rbuf+6);
-	    server.traceStatus(FAXTRACE_PROTOCOL,
-		"REMOTE HANGUP: %s (code %s)", hangupCause(hangupCode), rbuf+6);
-	    // return failure, but wait for wanted string
-	    status = (hangupCode == 0);
+	case AT_FHNG:
+	    // return hangup status, but try to wait for requested response
+	    { char buf[1024]; (void) atResponse(buf, 2*1000); }
+	    return (isNormalHangup());
 	}
-	if (streq(rbuf, "ERROR", 5)) {
-	    server.traceStatus(FAXTRACE_PROTOCOL,
-		"MODEM ERROR: Command error (unknown reason)");
-	    return (FALSE);
-	}
-    } while (!streq(rbuf, wanted, len));
-    return (status);
-}
-
-fxBool Class2Modem::class2Cmd(const char* cmd)
-    { return vclass2Cmd(cmd, TRUE, 0); }
-fxBool Class2Modem::class2Cmd(const char* cmd, int a0)
-    { return vclass2Cmd(cmd, TRUE, 1, a0); }
-fxBool Class2Modem::class2Cmd(const char* cmd, int a0, int a1)
-    { return vclass2Cmd(cmd, TRUE, 2, a0, a1); }
-fxBool Class2Modem::class2Cmd(const char* cmd, int a0, int a1, int a2)
-    { return vclass2Cmd(cmd, TRUE, 3, a0, a1, a2); }
-fxBool Class2Modem::class2Cmd(const char* cmd, int a0, int a1, int a2, int a3)
-    { return vclass2Cmd(cmd, TRUE, 4, a0, a1, a2, a3); }
-fxBool Class2Modem::class2Cmd(const char* cmd, int a0, int a1, int a2, int a3, int a4, int a5, int a6, int a7)
-    { return vclass2Cmd(cmd, TRUE, 8, a0, a1, a2, a3, a4, a5, a6, a7); }
-
-fxBool Class2Modem::dataTransfer()
-    { return vclass2Cmd("DT", FALSE, 0); }
-fxBool Class2Modem::dataReception()
-    { return vclass2Cmd("DR", FALSE, 0); }
-
-fxBool
-Class2Modem::vclass2Cmd(const char* cmd, fxBool waitForOK, int nargs ... )
-{
-    char buf[512];
-    char* cp = buf;
-    sprintf(buf, "+F%s", cmd);
-    va_list ap;
-    va_start(ap, nargs);
-    char* sep = "=";
-    while (nargs-- > 0) {
-	cp = strchr(cp, '\0');
-	sprintf(cp, "%s%d", sep, va_arg(ap, int));
-	sep = ",";
     }
-    va_end(ap);
-    if (!atCmd(buf, FALSE))
-	return (FALSE);
-    return waitForOK ? waitFor("OK") : TRUE;
 }
 
+/*
+ * Interfaces for sending a Class 2 command; i.e, AT+F<cmd>
+ */
+
+/*
+ * Send <cmd> and wait for "OK"
+ */
+fxBool
+Class2Modem::class2Cmd(const char* cmd)
+{
+    return vatFaxCmd(AT_OK, "%s", cmd);
+}
+
+/*
+ * Send <cmd>=<a0> and wait for "OK"
+ */
+fxBool
+Class2Modem::class2Cmd(const char* cmd, int a0)
+{
+    return vatFaxCmd(AT_OK, "%s=%u", cmd, a0);
+}
+
+/*
+ * Send AT+F<cmd>=<t.30 parameters> and wait for "OK".
+ */
+fxBool
+Class2Modem::class2Cmd(const char* cmd, const Class2Params& p)
+{
+    const fxStr& params = p.cmd();
+    return vatFaxCmd(AT_OK, "%s=%s", cmd, (char*) params);
+}
+
+/*
+ * Send AT+F<cmd>="<s>" and wait for "OK".
+ */
 fxBool
 Class2Modem::class2Cmd(const char* cmd, const char* s)
 {
-    char buf[512];
-    sprintf(buf, "+F%s=\"%s\"", cmd, s);	// XXX handle escapes
-    return atCmd(buf, FALSE) && waitFor("OK");
+    return vatFaxCmd(AT_OK, "%s=\"%s\"", cmd, s);	// XXX handle escapes
 }
 
+/*
+ * Parse a Class 2 parameter specification
+ * and return the resulting bit masks.
+ */
 fxBool
-Class2Modem::class2Query(const char* what)
+Class2Modem::parseRange(const char* cp, Class2Params& p)
 {
-    char buf[80];
-    sprintf(buf, "+F%s?", what);
-    return atCmd(buf, FALSE);
-}
-
-fxBool
-Class2Modem::class2Query(const char* what, int& v)
-{
-    fxBool status =
-	(class2Query(what) && getModemLine(rbuf) > 0 && parseRange(rbuf, v));
-    sync();
-    return (status);
-}
-
-fxBool
-Class2Modem::class2Query(const char* what, fxStr& v)
-{
-    if (class2Query(what)) {
-	v.resize(0);
-	int n;
-	while ((n = getModemLine(rbuf)) >= 0 && !streq(rbuf, "OK", 2)) {
-	    if (v.length())
-		v.append('\n');
-	    v.append(rbuf);
-	}
-	return (TRUE);
-    } else {
-	sync();
+    if (!vparseRange(cp, 8, &p.vr,&p.br,&p.wd,&p.ln,&p.df,&p.ec,&p.bf,&p.st))
 	return (FALSE);
-    }
+    p.vr &= VR_ALL;
+    p.br &= BR_ALL;
+    p.wd &= WD_ALL;
+    p.ln &= LN_ALL;
+    p.df &= DF_ALL;
+    p.ec &= EC_ALL;
+    p.bf &= BF_ALL;
+    p.st &= ST_ALL;
+    return TRUE;
 }
-
-fxBool Class2Modem::parseRange(const char* cp, int& a0)
-    { return vparseRange(cp, 1, &a0); }
-fxBool Class2Modem::parseRange(const char* cp, int& a0, int& a1)
-    { return vparseRange(cp, 2, &a0, &a1); }
-fxBool Class2Modem::parseRange(const char* cp, int& a0, int& a1, int& a2)
-    { return vparseRange(cp, 3, &a0, &a1, &a2); }
-fxBool Class2Modem::parseRange(const char* cp, int& a0, int& a1, int& a2, int& a3)
-    { return vparseRange(cp, 4, &a0, &a1, &a2, &a3); }
-fxBool Class2Modem::parseRange(const char* cp, int& a0, int& a1, int& a2, int& a3, int& a4)
-    { return vparseRange(cp, 5, &a0, &a1, &a2, &a3, &a4); }
-fxBool Class2Modem::parseRange(const char* cp, int& a0, int& a1, int& a2, int& a3, int& a4, int& a5)
-    { return vparseRange(cp, 6, &a0, &a1, &a2, &a3, &a4, &a5); }
-fxBool Class2Modem::parseRange(const char* cp, int& a0, int& a1, int& a2, int& a3, int& a4, int& a5, int& a6)
-    { return vparseRange(cp, 7, &a0, &a1, &a2, &a3, &a4, &a5, &a6); }
-fxBool Class2Modem::parseRange(const char* cp, int& a0, int& a1, int& a2, int& a3, int& a4, int& a5, int& a6, int& a7)
-    { return vparseRange(cp, 8, &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7); }
-
-const char OPAREN = '(';
-const char CPAREN = ')';
-const char COMMA = ',';
-const char SPACE = ' ';
-
-#include <ctype.h>
-
-fxBool
-Class2Modem::vparseRange(const char* cp, int nargs ... )
-{
-    fxBool b = TRUE;
-    va_list ap;
-    va_start(ap, nargs);
-    while (nargs-- > 0) {
-	if (cp[0] != OPAREN) {
-	    b = FALSE;
-	    break;
-	}
-	cp++;				// skip OPAREN
-	int mask = 0;
-	while (cp[0] != CPAREN) {
-	    if (!isdigit(cp[0])) {
-		b = FALSE;
-		goto done;
-	    }
-	    int v = 0;
-	    do {
-		v = v*10 + (cp[0] - '0');
-	    } while (isdigit((++cp)[0]));
-	    int r = v;
-	    if (cp[0] == '-' && isdigit((++cp)[0])) {	// range
-		r = 0;
-		do {
-		    r = r*10 + (cp[0] - '0');
-		} while (isdigit((++cp)[0]));
-	    }
-	    for (; v <= r; v++)
-		mask |= 1<<v;
-	    if (cp[0] == SPACE || cp[0] == COMMA)
-		cp++;
-	}
-	cp++;				// skip CPAREN
-	*va_arg(ap, int*) = mask;
-	if (cp[0] == SPACE || cp[0] == COMMA)
-	    cp++;
-    }
-done:
-    va_end(ap);
-    return (b);
-}
-
-static struct HangupCode {
-    u_int	code;
-    char*	message;
-} hangupCodes[] = {
-// Call placement and termination
-    {  0, "Normal and proper end of connection" },
-    {  1, "Ring detect without successful handshake" },
-    {  2, "Call aborted, from +FK or <CAN>" },
-    {  3, "No loop current" },
-// Transmit Phase A & miscellaneous errors
-    { 10, "Unspecified Phase A error" },
-    { 11, "No answer (T.30 T1 timeout)" },
-// Transmit Phase B
-    { 20, "Unspecified Transmit Phase B error" },
-    { 21, "Remote cannot be polled" },
-    { 22, "COMREC error in transmit Phase B/got DCN" },
-    { 23, "COMREC invalid command received/no DIS or DTC" },
-    { 24, "RSPEC error/got DCN" },
-    { 25, "DCS sent 3 times without response" },
-    { 26, "DIS/DTC recieved 3 times; DCS not recognized" },
-    { 27, "Failure to train at 2400 bps or +FMINSP value" },
-    { 28, "RSPREC invalid response received" },
-// Transmit Phase C
-    { 40, "Unspecified Transmit Phase C error" },
-    { 43, "DTE to DCE data underflow" },
-// Transmit Phase D
-    { 50, "Unspecified Transmit Phase D error, including +FPHCTO timeout"
-	  " between data and +FET command" },
-    { 51, "RSPREC error/got DCN" },
-    { 52, "No response to MPS repeated 3 times" },
-    { 53, "Invalid response to MPS" },
-    { 54, "No response to EOP repeated 3 times" },
-    { 55, "Invalid response to EOP" },
-    { 56, "No response to EOM repeated 3 times" },
-    { 57, "Invalid response to EOM" },
-    { 58, "Unable to continue after PIN or PIP" },
-// Received Phase B
-    { 70, "Unspecified Receive Phase B error" },
-    { 71, "RSPREC error/got DCN" },
-    { 72, "COMREC error" },
-    { 73, "T.30 T2 timeout, expected page not received" },
-    { 74, "T.30 T1 timeout after EOM received" },
-// Receive Phase C
-    { 90, "Unspecified Phase C error, including too much delay between"
-	  " TCF and +FDR command" },
-    { 91, "Missing EOL after 5 seconds (section 3.2/T.4)" },
-    { 92, "-unused code 92-" },
-    { 93, "DCE to DTE buffer overflow" },
-    { 94, "Bad CRC or frame (ECM or BFT modes)" },
-// Receive Phase D
-    { 100,"Unspecified Phase D error" },
-    { 101,"RSPREC invalid response received" },
-    { 102,"COMREC invalid response received" },
-    { 103,"Unable to continue after PIN or PIP, no PRI-Q" },
-// Everex proprietary error codes (9/28/90)
-    { 128,"Cannot send: +FMINSP > remote's +FDIS(BR) code" },
-    { 129,"Cannot send: remote is V.29 only,"
-	  " local DCE constrained to 2400 or 4800 bps" },
-    { 130,"Remote station cannot receive (DIS bit 10)" },
-    { 131,"+FK aborted or <CAN> aborted" },
-    { 132,"+Format conversion error in +FDT=DF,VR,WD,LN"
-	  " Incompatible and inconvertable data format" },
-    { 133,"Remote cannot receive" },
-    { 134,"After +FDR, DCE waited more than 30 seconds for"
-	  " XON from DTE after XOFF from DTE" },
-    { 135,"In Polling Phase B, remote cannot be polled" },
-    { 256 }
-};
 
 const char*
-Class2Modem::hangupCause(u_int code)
+Class2Modem::skipStatus(const char* s)
 {
-    for (HangupCode* hc = hangupCodes; hc->code != 256; hc++)
-	if (hc->code == code)
-	    return (hc->message);
-    return "Unknown code";
+    const char* cp;
+    for (cp = s; *cp != '\0' && *cp != ':'; cp++)
+	;
+    return (*cp == ':' ? cp+1 : s);
+}
+
+/*
+ * Hangup codes are broken up according to:
+ *   2388/89
+ *   2388/90 and 2388-A
+ *   2388-B
+ * The table to search is based on the modem type deduced
+ * at modem configuration time.
+ *
+ * Note that we keep the codes as strings to avoid having
+ * to distinguish the decimal numbers of 2388-A from the
+ * hexadecimal renumbering done in 2388-B!
+ */
+static struct HangupCode {
+    const char*	code[3];	// from 2388/89, 2388/90, 2388-A, and 2388-B
+    const char*	message;	// what code means
+} hangupCodes[] = {
+// Call placement and termination
+    {{  "0",  "0",  "0" }, "Normal and proper end of connection" },
+    {{  "1",  "1",  "1" }, "Ring detect without successful handshake" },
+    {{  "2",  "2",  "2" }, "Call aborted,  from +FK or <CAN>" },
+    {{ NULL,  "3",  "3" }, "No loop current" },
+    {{ NULL, NULL,  "4" }, "Ringback detected, no answer (timeout)" },
+    {{ NULL, NULL,  "5" }, "Ringback detected, no answer without CED" },
+// Transmit Phase A & miscellaneous errors
+    {{ "10", "10", "10" }, "Unspecified Phase A error" },
+    {{ "11", "11", "11" }, "No answer (T.30 T1 timeout)" },
+// Transmit Phase B
+    {{ "20", "20", "20" }, "Unspecified Transmit Phase B error" },
+    {{ "21", "21", "21" }, "Remote cannot be polled" },
+    {{ "22", "22", "22" }, "COMREC error in transmit Phase B/got DCN" },
+    {{ "23", "23", "23" }, "COMREC invalid command received/no DIS or DTC" },
+    {{ "24", "24", "24" }, "RSPREC error/got DCN" },
+    {{ "25", "25", "25" }, "DCS sent 3 times without response" },
+    {{ "26", "26", "26" }, "DIS/DTC received 3 times; DCS not recognized" },
+    {{ "27", "27", "27" }, "Failure to train at 2400 bps or +FMINSP value" },
+    {{ "28", "28", "28" }, "RSPREC invalid response received" },
+// Transmit Phase C
+    {{ "30", "40", "40" }, "Unspecified Transmit Phase C error" },
+    {{ NULL, NULL, "41" }, "Unspecified Image format error" },
+    {{ NULL, NULL, "42" }, "Image conversion error" },
+    {{ "33", "43", "43" }, "DTE to DCE data underflow" },
+    {{ NULL, NULL, "44" }, "Unrecognized Transparent data command" },
+    {{ NULL, NULL, "45" }, "Image error, line length wrong" },
+    {{ NULL, NULL, "46" }, "Image error, page length wrong" },
+    {{ NULL, NULL, "47" }, "Image error, wrong compression code" },
+// Transmit Phase D
+    {{ "40", "50", "50" }, "Unspecified Transmit Phase D error, including"
+			   " +FPHCTO timeout between data and +FET command" },
+    {{ "41", "51", "51" }, "RSPREC error/got DCN" },
+    {{ "42", "52", "52" }, "No response to MPS repeated 3 times" },
+    {{ "43", "53", "53" }, "Invalid response to MPS" },
+    {{ "44", "54", "54" }, "No response to EOP repeated 3 times" },
+    {{ "45", "55", "55" }, "Invalid response to EOP" },
+    {{ "46", "56", "56" }, "No response to EOM repeated 3 times" },
+    {{ "47", "57", "57" }, "Invalid response to EOM" },
+    {{ "48", "58", "58" }, "Unable to continue after PIN or PIP" },
+// Received Phase B
+    {{ "50", "70", "70" }, "Unspecified Receive Phase B error" },
+    {{ "51", "71", "71" }, "RSPREC error/got DCN" },
+    {{ "52", "72", "72" }, "COMREC error" },
+    {{ "53", "73", "73" }, "T.30 T2 timeout, expected page not received" },
+    {{ "54", "74", "74" }, "T.30 T1 timeout after EOM received" },
+// Receive Phase C
+    {{ "60", "90", "90" }, "Unspecified Phase C error, including too much delay"
+			   " between TCF and +FDR command" },
+    {{ "61", "91", "91" }, "Missing EOL after 5 seconds (section 3.2/T.4)" },
+    {{ "63", "93", "93" }, "DCE to DTE buffer overflow" },
+    {{ "64", "94", "92" }, "Bad CRC or frame (ECM or BFT modes)" },
+// Receive Phase D
+    {{ "70","100", "A0" }, "Unspecified Phase D error" },
+    {{ "71","101", "A1" }, "RSPREC invalid response received" },
+    {{ "72","102", "A2" }, "COMREC invalid response received" },
+    {{ "73","103", "A3" }, "Unable to continue after PIN or PIP, no PRI-Q" },
+// Everex proprietary error codes (9/28/90)
+    {{ NULL,"128", NULL }, "Cannot send: +FMINSP > remote's +FDIS(BR) code" },
+    {{ NULL,"129", NULL }, "Cannot send: remote is V.29 only,"
+			   " local DCE constrained to 2400 or 4800 bps" },
+    {{ NULL,"130", NULL }, "Remote station cannot receive (DIS bit 10)" },
+    {{ NULL,"131", NULL }, "+FK aborted or <CAN> aborted" },
+    {{ NULL,"132", NULL }, "+Format conversion error in +FDT=DF,VR, WD,LN"
+			   " Incompatible and inconvertable data format" },
+    {{ NULL,"133", NULL }, "Remote cannot receive" },
+    {{ NULL,"134", NULL }, "After +FDR, DCE waited more than 30 seconds for"
+			   " XON from DTE after XOFF from DTE" },
+    {{ NULL,"135", NULL }, "In Polling Phase B, remote cannot be polled" },
+};
+#define	NCODES	(sizeof (hangupCodes) / sizeof (hangupCodes[0]))
+
+/*
+ * Given a hangup code from a modem return a
+ * descriptive string.  We use strings here to
+ * avoid having to know what type of modem we're
+ * talking to (Rev A or Rev B or SP-2388).  This
+ * works right now becase the codes don't overlap
+ * (as strings).  Hopefully this'll continue to
+ * be true.
+ */
+const char*
+Class2Modem::hangupCause(const char* code)
+{
+    for (u_int i = 0; i < NCODES; i++) {
+	const HangupCode& c = hangupCodes[i];
+	if ((c.code[1] != NULL && strcasecmp(code, c.code[1]) == 0) ||
+	    (c.code[2] != NULL && strcasecmp(code, c.code[2]) == 0))
+	    return (c.message);
+    }
+    return ("Unknown hangup code");
+}
+
+/*
+ * Process a hangup code string.
+ */
+void
+Class2Modem::processHangup(const char* cp)
+{
+    while (isspace(*cp))			// strip leading white space
+	cp++;
+    while (*cp == '0' && cp[1] != '\0')		// strip leading 0's
+	cp++;
+    strncpy(hangupCode, cp, sizeof (hangupCode));
+    protoTrace("REMOTE HANGUP: %s (code %s)", hangupCause(hangupCode), hangupCode);
+}
+
+/*
+ * Does the current hangup code string indicate
+ * that the remote side hung up the phone in a
+ * "normal and proper way".
+ */
+fxBool
+Class2Modem::isNormalHangup()
+{
+    // normal hangup is "", "0", or "00"
+    return (hangupCode[0] == '\0' ||
+	(hangupCode[0] == '0' &&
+	 (hangupCode[1] == '0' || hangupCode[1] == '\0')));
+}
+
+#include "t.30.h"
+
+void
+Class2Modem::tracePPM(const char* dir, u_int ppm)
+{
+    static u_int ppm2fcf[8] = {
+	FCF_MPS,
+	FCF_EOM,
+	FCF_EOP,
+	0,
+	FCF_PRI_MPS,
+	FCF_PRI_EOM,
+	FCF_PRI_EOP,
+	0
+    };
+    FaxModem::tracePPM(dir, ppm2fcf[ppm&7]);
+}
+
+void
+Class2Modem::tracePPR(const char* dir, u_int ppr)
+{
+    static u_int ppr2fcf[8] = {
+	0,
+	FCF_MCF,
+	FCF_RTN,
+	FCF_RTP,
+	FCF_PIN,
+	FCF_PIP,
+	0,
+	0
+    };
+    FaxModem::tracePPR(dir, ppr2fcf[ppr&7]);
 }

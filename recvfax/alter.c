@@ -1,16 +1,28 @@
-#ident	$Header: /usr/people/sam/flexkit/fax/recvfax/RCS/alter.c,v 1.1 91/05/31 12:52:03 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/recvfax/RCS/alter.c,v 1.15 1994/05/16 19:19:56 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include "defs.h"
-
 #include <sys/file.h>
 #include <stdarg.h>
 
@@ -18,7 +30,7 @@
  * Setup a job's description file for alteration.
  */
 static FILE*
-setupAlteration(Job* job, char* jobname)
+setupAlteration(Job* job, const char* jobname)
 {
     FILE* fp = fopen(job->qfile, "a+");
     if (fp == NULL) {
@@ -35,76 +47,81 @@ setupAlteration(Job* job, char* jobname)
     return (fp);
 }
 
-/*
- * Notify server of job parameter alteration.
- */
-static void
-notifyServer(int fifo, char* va_alist, ...)
-#define	fmt va_alist
+static int
+reallyAlterJob(Job* job, const char* jobname, char* tag, const char* item)
 {
-    if (fifo != -1) {
-	char buf[1024];
-	int len;
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsprintf(buf, fmt, ap);
-	va_end(ap);
-	len = strlen(buf);
-	/* XXX this will only reach one server */
-	if (write(fifo, buf, len+1) != len+1)
-	    syslog(LOG_ERR, "fifo write failed for alter (%m)");
-    }
-}
-#undef fmt
-
-static void
-reallyAlterJobTTS(Job* job, int fifo, char* jobname, char* tts)
-{
-    if (tts) {
+    if (item) {
 	FILE* fp = setupAlteration(job, jobname);
 	if (fp) {
-	    fprintf(fp, "tts:%s\n", tts);
+	    fprintf(fp, "%s:%s\n", tag, item);
 	    (void) flock(fileno(fp), LOCK_UN);
 	    (void) fclose(fp);
-	    /* XXX at job for delayed submissions! */
-	    notifyServer(fifo, "JT%s %s", job->qfile, tts);
-	    syslog(LOG_INFO, "ALTER %s TTS %s completed", job->qfile, tts);
+	    syslog(LOG_INFO, "ALTER %s %s %s completed", job->qfile, tag, item);
 	    sendClient("altered", "%s", jobname);
+	    return (1);
 	}
-    } else {
-	syslog(LOG_ERR, "protocol botch, expecting tts specification");
-	sendError("Protocol botch, no time-to-send specification");
-    }
+    } else
+	protocolBotch("no %s specification.", tag);
+    return (0);
 }
 
 static void
-reallyAlterJobNotification(Job* job, int fifo, char* jobname, char* note)
+cvtTimeToAscii(const char* spec, char* buf, const char* what)
 {
-    if (note) {
-	FILE* fp = setupAlteration(job, jobname);
-	if (fp) {
-	    fprintf(fp, "notify:%s\n", note);
-	    (void) flock(fileno(fp), LOCK_UN);
-	    (void) fclose(fp);
-	    /* NB: no server notification */
-	    syslog(LOG_INFO, "ALTER %s NOTIFY %s completed", job->qfile, note);
-	    sendClient("altered", "%s", jobname);
-	}
-    } else {
-	syslog(LOG_ERR, "protocol botch, expecting notification specification");
-	sendError("Protocol botch, no notification specification");
+    u_long when;
+
+    if (!cvtTime(spec, &now, &when, what)) {
+	done(1, "EXIT");
+	/*NOTREACHED*/
     }
+    sprintf(buf, "%lu", when);
 }
 
-void
-alterJobTTS(char* tag, int fifo)
+static void
+reallyAlterJobTTS(Job* job, const char* jobname, const char* spec)
 {
-    applyToJob(tag, fifo, "alter", reallyAlterJobTTS);
+    char tts[20];
+    cvtTimeToAscii(spec, tts, "time-to-send");
+    if (reallyAlterJob(job, jobname, "tts", tts))
+	notifyServer(job->modem, "JT%s %s", job->qfile, tts);
+}
+void
+alterJobTTS(const char* modem, char* tag)
+{
+    applyToJob(modem, tag, "alter", reallyAlterJobTTS);
 }
 
-void
-alterJobNotification(char* tag, int fifo)
+static void
+reallyAlterJobKilltime(Job* job, const char* jobname, const char* spec)
 {
-    applyToJob(tag, fifo, "alter", reallyAlterJobNotification);
+    char killtime[20];
+    cvtTimeToAscii(spec, killtime, "kill-time");
+    (void) reallyAlterJob(job, jobname, "killtime", killtime);
+}
+void
+alterJobKillTime(const char* modem, char* tag)
+{
+    applyToJob(modem, tag, "alter", reallyAlterJobKilltime);
+}
+
+static void
+reallyAlterJobMaxDials(Job* job, const char* jobname, const char* max)
+{
+    (void) reallyAlterJob(job, jobname, "maxdials", max);
+}
+void
+alterJobMaxDials(const char* modem, char* tag)
+{
+    applyToJob(modem, tag, "alter", reallyAlterJobMaxDials);
+}
+
+static void
+reallyAlterJobNotification(Job* job, const char* jobname, const char* note)
+{
+    (void) reallyAlterJob(job, jobname, "notify", note);
+}
+void
+alterJobNotification(const char* modem, char* tag)
+{
+    applyToJob(modem, tag, "alter", reallyAlterJobNotification);
 }

@@ -1,0 +1,95 @@
+.\"	$Header: /usr/people/sam/fax/man/RCS/faxcron.1m,v 1.5 1994/06/24 02:32:04 sam Exp $
+.\"
+.\" FlexFAX Facsimile Software
+.\"
+.\" Copyright (c) 1994 Sam Leffler
+.\" Copyright (c) 1994 Silicon Graphics, Inc.
+.\" 
+.\" Permission to use, copy, modify, distribute, and sell this software and 
+.\" its documentation for any purpose is hereby granted without fee, provided
+.\" that (i) the above copyright notices and this permission notice appear in
+.\" all copies of the software and related documentation, and (ii) the names of
+.\" Sam Leffler and Silicon Graphics may not be used in any advertising or
+.\" publicity relating to the software without the specific, prior written
+.\" permission of Sam Leffler and Silicon Graphics.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+.\" EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+.\" WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+.\" 
+.\" IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+.\" ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+.\" OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+.\" WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+.\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+.\" OF THIS SOFTWARE.
+.\"
+.ds Fx \fIFlexFAX\fP
+.TH FAXCRON 1M "June 14, 1994"
+.SH NAME
+faxcron \- \*(Fx routine maintenance script
+.SH SYNOPSIS
+.B ${SPOOL}/bin/faxcron
+[
+.B \-n
+]
+.SH DESCRIPTION
+.B faxcron
+is a command script that does routine upkeep tasks in a \*(Fx
+spooling directory hierarchy.
+This script is intended to be invoked from
+.IR cron (1M)
+on behalf of the fax user once a day,
+with the standard output sent by mail to the \*(Fx administrator.
+For example, the following crontab might be setup for the fax user:
+.sp
+.nf
+.ti +.5i
+\fC25   23    *    *    *   sh ${SPOOL}/bin/faxcron | mail FaxManager\fP
+.fi
+.PP
+The
+.I faxcron
+script does the following work:
+.IP \(bu 3
+report any recent calls that failed suspiciously and return the associated trace log;
+.IP \(bu 3
+purge data that is 30 days or older from the remote machine information directory;
+.IP \(bu 3
+delete information that is 30 days or older from session trace log files;
+.IP \(bu 3
+remove received facsimile that are 7 days or older;
+.IP \(bu 3
+report sites that are currently having jobs rejected; and
+.IP \(bu 3
+force all session log files to be owned by the fax user
+and kept with protection mode 644.
+.PP
+The
+.B \-n
+option forces
+.I faxcron
+to run without updating any files.
+.SH NOTES
+This script requires
+.IR nawk (1)
+or
+.IR gawk (1)
+and a
+.I date (1)
+program that supports the ``+format'' option.
+.PP
+If session logs are to be kept private this script must be modified
+to filter out sensitive information such as calling card numbers.
+.SH FILES
+.nf
+.ta \w'${SPOOL}/etc/lastrun    'u
+${SPOOL}	spooling area
+${SPOOL}/etc/lastrun	timestamp of last run
+/tmp/faxcronXXXX	temporary file for truncating session logs
+/tmp/faxlogXXXX	temporary file for logs of failed calls
+.fi
+.SH "SEE ALSO"
+.IR cron (1M),
+.IR faxd (1M),
+.IR flexfax (4F)

@@ -1,18 +1,32 @@
 #! smake
-# $Revision: 1.5 $
-# $Date: 91/05/23 12:36:39 $
+#	$Header: /usr/people/sam/fax/sgi2fax/RCS/Makefile,v 1.18 1994/02/28 14:23:02 sam Exp $
 #
-# FlexFAX Facsimile System
+# FlexFAX Facsimile Software
 #
-# Copyright (c) 1991 by Sam Leffler.
-# All rights reserved.
+# Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+# Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
 #
-# This file is provided for unrestricted use provided that this
-# legend is included on all tape media and as a part of the
-# software program in whole or part.  Users may copy, modify or
-# distribute this file at will.
-#
-include ../defs
+DEPTH=..
+include ${DEPTH}/defs
 
 CFILES=\
 	imgtofax.c \
@@ -24,20 +38,19 @@ CFILES=\
 	${NULL}
 TARGETS=sgi2fax
 
-LCINCS=	-I${TIFF} -I/usr/include/gl
-LIBS=	${TIFF}/libtiff.a
-LLDLIBS= $(LIBS) -limage -lm
+LCINCS=	-I/usr/include/gl
+LLDLIBS= ${LIBS} ${MACHDEPLIBS} -limage -lm
 
 default all::
 	@${MAKE} incdepend
 	@${MAKE} targets
-	
+
 targets: $(TARGETS)
 
 include ${COMMONRULES}
 
 sgi2fax: ${OBJECTS} ${LIBS}
-	${CC} -o $@ ${CFLAGS} ${OBJECTS} ${LLDLIBS}
+	${CC} -o $@ ${OBJECTS} ${LDFLAGS}
 
 install: default
-	/etc/install -f ${BIN} -m 755 -O sgi2fax
+	${INSTALL} -F ${LIBEXEC} -m 755 -idb ${PRODUCT}.sw.client -O sgi2fax

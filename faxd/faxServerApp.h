@@ -1,38 +1,61 @@
-#ident $Header: /d/sam/flexkit/fax/faxd/RCS/faxServerApp.h,v 1.13 91/05/23 12:26:58 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxd/RCS/faxServerApp.h,v 1.57 1994/06/23 00:36:40 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #ifndef _faxServerApp_
 #define	_faxServerApp_
-
-#include "OrderedGlobal.h"
-#include "Application.h"
-#include "StrArray.h"
-#include <sys/types.h>
+/*
+ * Fax Queue Manager and Command Handler.
+ */
 #include <stdarg.h>
+#include "IOHandler.h"
+#include "Str.h"
 
 class FaxServer;
-class FIFOServer;
 class FaxRequest;
 class FaxMachineInfo;
 class FaxRecvInfo;
+typedef	struct tiff TIFF;
 
+typedef unsigned int JobStatus;
+
+/*
+ * Jobs represent send requests in the queue.
+ */
 struct Job {
-    enum JobStatus {
-	no_status,
-	done,
-	requeued,
-	removed,
-	timedout,
-	no_formatter,
-	format_failed,
+    enum {
+	no_status	= 0,
+	done		= 1,
+	requeued	= 2,
+	removed		= 3,
+	timedout	= 4,
+	no_formatter	= 5,
+	format_failed	= 6,
+	poll_rejected	= 7,
+	poll_no_document= 8,
+	poll_failed	= 9,
+	file_rejected	= 10,
+	killed		= 11,
     };
     Job*	next;		// linked list
     fxStr	file;		// queue file name
@@ -45,67 +68,117 @@ struct Job {
     ~Job() {}
 };
 
-class faxServerApp : public fxApplication {
+/*
+ * This class represents a thread of control that manages the
+ * send queue, deals with system-related notification (sends
+ * complete, facsimile received, errors), and delivers external
+ * commands passed in through the command FIFOs.  This class is
+ * also responsible for preparing documents for sending by
+ * doing formatting tasks such as converting PostScript to TIFF.
+ *
+ * In a multi-threaded environment, this class represents a
+ * separate thread of control.
+ */
+class faxServerApp : public IOHandler {
 private:
-    fxStr		appName;		// program name
-    fxStr		device;			// modem device
-    fxStr		queueDir;		// spooling directory
-    FaxServer*		server;			// active server app
-    Job*		queue;			// job queue
-    fxBool		okToUse2D;		// if TRUE, 2-d encoding works
-    int			requeueInterval;	// time between job retries
-    unsigned		currentTimeout;		// time associated with alarm
-    time_t		jobStart;		// starting time for job
-    time_t		fileStart;		// starting time for file
-    fxOutputChannel*	sendChannel;		// to fax server app
-    fxOutputChannel*	scanChannel;		// for poking app after timeout
-    FIFOServer*		fifo;			// fifo job queue interface
-    FIFOServer*		devfifo;		// fifo device interface
-    FaxRequest*		request;		// current send request
+    fxStr	appName;		// program name
+    fxStr	device;			// modem device
+    fxStr	devID;			// mangled device name
+    fxStr	queueDir;		// spooling directory
+    fxStr	serverPID;		// pid of this process
+    FaxServer*	server;			// active server app
+    Job*	queue;			// job queue
+    fxBool	use2D;			// ok to generate 2D-encoded facsimile
+    fxBool	running;		// server running
+    int		requeueInterval;	// time between job retries
+    u_long	currentTimeout;		// time associated with timer
+    time_t	jobStart;		// starting time for job
+    time_t	fileStart;		// starting time for file/poll
+    int		fifo;			// fifo job queue interface
+    int		devfifo;		// fifo device interface
+    FaxRequest*	curreq;			// current job being processed
 
     static const fxStr fifoName;
-    static const fxStr configName;
     static const fxStr sendDir;
     static const fxStr recvDir;
-    static const fxStr mailCmd;
+    static const fxStr docDir;
     static const fxStr notifyCmd;
+    static const fxStr faxRcvdCmd;
+    static const fxStr pollRcvdCmd;
     static const fxStr ps2faxCmd;
+    static const fxStr coverCmd;
+    static const fxStr wedgedCmd;
 
-    void logError(const char* fmt ...);
-    void vlogError(const char* fmt, va_list ap);
-    void record(const char* cmd, const char* from, const char* to,
-	int npages, float time);
+// miscellaneous stuff
+    void	setupPermissions();
+    void	detachFromTTY();
+    void	setRealIDs();
+    void	logError(const char* fmt ...);
+    void	vlogError(const char* fmt, va_list ap);
+    void	traceServer(const char* fmt ...);
+    void	traceQueue(const char* fmt ...);
+    void	traceAtJobs(const char* fmt ...);
+    const char*	fmtTime(time_t);
+    void	recordRecv(const FaxRecvInfo& ri);
+    void	account(const char* cmd, const struct FaxAcctInfo&);
+    fxBool	runCmd(const char* cmd, fxBool changeIDs = FALSE);
+    time_t	requeueTTS(time_t now) const;
 
-    void sendJob(FaxRequest* request);
-    void insertJob(Job* job);
-    void processJob(Job* job);
-    void deleteJob(const fxStr& name);
-    Job* removeJob(const fxStr& name);
-    void alterJob(const char* s);
-    FaxRequest* readQFile(const fxStr& filename, int fd);
-    void scanQueueDirectory();
-    void deleteRequest(JobStatus why, FaxRequest* req, fxBool force = FALSE);
-    void notifySender(JobStatus why, FaxRequest* req);
-    JobStatus convertPostScript(const fxStr& inFile, const fxStr& outFile,
-	float resolution, u_int pageWidth, float pageLength,
-	const FaxMachineInfo& info);
+    static struct popenRecord* popenList;
+    FILE*	popen(const char* cmd, const char* mode);
+    int		pclose(FILE*);
+    void	pkill(FILE*, int);
+// FIFO-related stuff
+    int		openFIFO(const char* fifoName, int mode,
+		    fxBool okToExist = FALSE);
+    void	fifoMessage(const char* mesage);
+// job management interfaces
+    void	processJob(Job* job);
+    void	processJob1(Job*, FaxRequest* req);
+    void	sendJob(FaxRequest* req, FaxMachineInfo&);
+    void	requestComplete(FaxRequest* req, fxBool notify);
+    void	insertJob(Job* job);
+    void	deleteJob(const fxStr& name);
+    Job*	removeJob(const fxStr& name);
+    fxBool	alterJob(const char* s);
+// job preparation stuff
+    void	scanQueueDirectory();
+    void	scanJobQueue();
+    void	startTimer(u_long sec);
+    void	stopTimer();
+    FaxRequest*	readQFile(const fxStr& filename, int fd);
+    void	deleteRequest(JobStatus why, FaxRequest* req,
+		    fxBool force = FALSE);
+    void	notifySender(JobStatus why, FaxRequest& req);
+    JobStatus	convertPostScript(const fxStr& inFile, const fxStr& outFile,
+		    FaxRequest& req, const FaxMachineInfo& info);
+    JobStatus	checkFileFormat(const fxStr& file, const FaxMachineInfo& info,
+		    fxStr& emsg);
+    fxBool	checkPageFormat(TIFF*, const FaxMachineInfo& info, fxStr& emsg);
+    void	makeCoverPage(FaxRequest&, const FaxMachineInfo&);
 public:
     faxServerApp();
     ~faxServerApp();
 
-    void initialize(int argc, char** argv);
-    void open();
-    void close();
-    virtual const char *className() const;
+    void	initialize(int argc, char** argv);
+    void	open();
+    void	close();
 
-    void fifoMessage(const char* mesage);
-    void notifySendComplete(const char* filename);
-    void notifyJobComplete(FaxRequest* req = 0);
-    void notifyJobRecvd(const FaxRecvInfo& req);
-    void scanQueue();
-    void timeout();
-
-    void logInfo(const char* fmt ...);
-    void vlogInfo(const char* fmt, va_list ap);
+    fxBool	isRunning() const;
+// Dispatcher hooks
+    int		inputReady(int);
+    void	timerExpired(long sec, long usec);
+// notification interfaces used by FaxServer
+    void	notifyModemReady();
+    void	notifyModemWedged();
+    void	notifyDocumentSent(FaxRequest&, u_int fileIndex);
+    void	notifyPollRecvd(FaxRequest&, const FaxRecvInfo&);
+    void	notifyPollDone(FaxRequest&, u_int pollIndex);
+    void	notifySendDone(FaxRequest* req, u_int npages,
+		    const char* csi, u_int sigrate, const char* df);
+    void	notifyRecvDone(const FaxRecvInfo& req);
+// system logging interfaces used by FaxServer
+    void	vlogInfo(const char* fmt, va_list ap);
 };
+inline fxBool faxServerApp::isRunning() const { return running; }
 #endif

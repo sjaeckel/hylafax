@@ -1,48 +1,68 @@
-#ident $Header: /usr/people/sam/flexkit/fax/faxcover/RCS/faxcover.c++,v 1.7 91/06/04 16:52:03 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxcover/RCS/faxcover.c++,v 1.30 1994/06/06 15:15:24 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
-#include "OrderedGlobal.h"
-#include "Application.h"
 #include "StrArray.h"
 #include "FaxDB.h"
 #include "config.h"
+#include "PageSize.h"
 
-#include <getopt.h>
 #include <stdarg.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <libc.h>
 #include <time.h>
 #include <osfcn.h>
 #include <pwd.h>
+#include <fcntl.h>
 #include <sys/file.h>
+#include <stdlib.h>
 
-class faxCoverApp : public fxApplication {
+class faxCoverApp {
 private:
-    fxStr	appName;		// for error messages
-    fxStr	cover;			// prototype cover sheet
-    fxStr	filterDir;		// filter programs directory
-    FaxDB*	db;			// fax machine database
-    fxStr	destName;
-    fxStr	destNumber;
-    fxStr	comments;
-    fxStr	sender;
-    fxStr	voiceNumber;
-    fxStr	location;
-    fxStr	pageCount;
+    fxStr	appName;	// for error messages
+    fxStr	cover;		// prototype cover sheet
+    FaxDB*	db;		// fax machine database
+    fxStr	toName;		// to person's name
+    fxStr	toFaxNumber;	// to's fax number
+    fxStr	toVoiceNumber;	// to's voice number
+    fxStr	toLocation;	// to's geographical location
+    fxStr	toCompany;	// to's company/institution
+    fxStr	regarding;	// fax is regarding...
+    fxStr	comments;	// general comments
+    fxStr	sender;		// sender's identity
+    fxStr	pageCount;	// # pages, not counting cover page
+    float	pageWidth;	// page width (mm)
+    float	pageLength;	// page length (mm)
 
     static fxStr dbName;
 
     fxStr tildeExpand(const fxStr& filename);
+    void setupPageSize(const char* name);
+    void emitToDefs(const char* to, FaxDBRecord* rec);
+    void emitFromDefs(FaxDBRecord* rec);
+    void emitCommentDefs();
+    void emitDateDefs();
     void coverDef(const char* tag, const char* value);
     void makeCoverSheet();
     void usage();
@@ -53,16 +73,11 @@ public:
 
     void initialize(int argc, char** argv);
     void open();
-    virtual const char *className() const;
 };
-
-fxAPPINIT(faxCoverApp,0);
 
 fxStr faxCoverApp::dbName("~/.faxdb");
 
-faxCoverApp::faxCoverApp() :
-    filterDir(FAX_FILTERDIR),
-    cover(FAX_COVER)
+faxCoverApp::faxCoverApp() : cover(FAX_COVER)
 {
     db = 0;
 }
@@ -70,8 +85,6 @@ faxCoverApp::faxCoverApp() :
 faxCoverApp::~faxCoverApp()
 {
 }
-
-const char* faxCoverApp::className() const { return "faxCoverApp"; }
 
 void
 faxCoverApp::initialize(int argc, char** argv)
@@ -83,13 +96,28 @@ faxCoverApp::initialize(int argc, char** argv)
     appName = argv[0];
     u_int l = appName.length();
     appName = appName.tokenR(l, '/');
-    while ((c = getopt(argc, argv, "n:t:f:c:p:l:v:")) != -1)
+
+    const char* cp = getenv("FAXCOVER");
+    if (cp && *cp)
+	cover = cp;
+
+    setupPageSize("default");
+    while ((c = getopt(argc, argv, "C:n:t:f:c:p:l:r:s:v:x:")) != -1)
 	switch (c) {
+	case 's':			// page size
+	    setupPageSize(optarg);
+	    break;
+	case 'C':			// cover sheet
+	    cover = optarg;
+	    break;
 	case 'n':			// fax number
-	    destNumber = optarg;
+	    toFaxNumber = optarg;
+	    break;
+	case 'r':			// regarding
+	    regarding = optarg;
 	    break;
 	case 't':			// to identity
-	    destName = optarg;
+	    toName = optarg;
 	    break;
 	case 'f':			// from identity
 	    sender = optarg;
@@ -101,16 +129,32 @@ faxCoverApp::initialize(int argc, char** argv)
 	    pageCount = optarg;
 	    break;
 	case 'l':			// to's location
-	    location = optarg;
+	    toLocation = optarg;
 	    break;
 	case 'v':			// to's voice phone number
-	    voiceNumber = optarg;
+	    toVoiceNumber = optarg;
+	    break;
+	case 'x':			// to's company
+	    toCompany = optarg;
 	    break;
 	case '?':
 	    usage();
 	}
-    if (sender == "" || destNumber == "")
+    if (sender == "" || toFaxNumber == "")
 	usage();
+}
+
+extern void fxFatal(const char* fmt, ...);
+
+void
+faxCoverApp::setupPageSize(const char* name)
+{
+    PageSizeInfo* info = PageSizeInfo::getPageSizeByName(name);
+    if (!info)
+	fxFatal("Unknown page size \"%s\"", name);
+    pageWidth = info->width();
+    pageLength = info->height();
+    delete info;
 }
 
 void
@@ -119,7 +163,6 @@ faxCoverApp::open()
     if (!db)
 	db = new FaxDB(tildeExpand(dbName));
     makeCoverSheet();
-    exit(0);
 }
 
 void
@@ -130,7 +173,11 @@ faxCoverApp::usage()
 	" [-c comments]"
 	" [-p #pages]"
 	" [-l to-location]"
+	" [-r regarding]"
 	" [-v to-voice-number]"
+	" [-x to-company]"
+	" [-C template-file]"
+	" [-s pagesize]"
 	" -f from"
 	" -n fax-number"
 	, (char*) appName);
@@ -141,76 +188,38 @@ faxCoverApp::makeCoverSheet()
 {
     int fd;
     if (cover.length() > 0 && cover[0] != '/') {
-	fd = ::open(tildeExpand("~/" | cover), O_RDONLY);
+	fd = ::open((char*) tildeExpand("~/" | cover), O_RDONLY);
 	if (fd < 0)
-	    fd = ::open(filterDir | "/" | cover, O_RDONLY);
+	    fd = ::open((char*) (fxStr(FAX_LIBDATA) | "/" | cover), O_RDONLY);
     } else
-	fd = ::open(cover, O_RDONLY);
+	fd = ::open((char*) cover, O_RDONLY);
     if (fd < 0) {
-	printError( "Could not locate prototype cover sheet \"%s\";"
-	    " no cover sheet sent", (char*) cover);
+	printError( "Could not locate prototype cover sheet \"%s\"",
+	    (char*) cover);
 	return;
     }
-    FaxDBRecord* rec;
     printf("%%!PS-Adobe-2.0 EPSF-2.0\n");
     printf("%%%%Creator: faxcover\n");
     printf("%%%%Title: FlexFAX Cover Sheet\n");
     time_t t = time(0);
     printf("%%%%CreationDate: %s", ctime(&t));
     printf("%%%%Origin: 0 0\n");
-    printf("%%%%BoundingBox: 0 0 %d %d\n", 11*72, (int)(8.5*72));
+    printf("%%%%BoundingBox: 0 0 %.0f %.0f\n",
+	(pageWidth/25.4)*72, (pageLength/25.4)*72);
     printf("%%%%Pages: 1 +1\n");
     printf("%%%%EndComments\n");
+    printf("%%%%BeginProlog\n");
     printf("100 dict begin\n");
-    if (destName != "") {
-	rec = db->find(destName);
-	coverDef("to", rec->find(FaxDB::nameKey));
-	coverDef("to-company", rec->find("Company"));
-	if (location == "")
-	    coverDef("to-location", rec->find("Location"));
-	else
-	    coverDef("to-location", location);
-	if (voiceNumber == "") {
-	    voiceNumber = rec->find("Voice-Number");
-	    if (voiceNumber != "") {
-		fxStr areaCode(rec->find("Area-Code"));
-		if (areaCode != "")
-		    voiceNumber.insert("1-" | areaCode | "-");
-	    }
-	}
-    } else {
-	coverDef("to", "<unknown>");
-	coverDef("to-company", "");
-	coverDef("to-location", location);
-    }
-    coverDef("to-voice-number", voiceNumber);
-    coverDef("to-fax-number", destNumber);
-    coverDef("comments", comments);
+    emitToDefs(toName, toName != "" ? db->find(toName) : NULL);
+    printf("/pageWidth %.2f def\n", pageWidth);
+    printf("/pageLength %.2f def\n", pageLength);
+    emitFromDefs(db->find(sender));
     coverDef("page-count", pageCount);
-    coverDef("from", sender);
-    rec = db->find(sender);
-    if (rec) {
-	coverDef("from-company", rec->find("Company"));
-	coverDef("from-location", rec->find("Location"));
-	fxStr areaCode(rec->find("Area-Code"));
-	fxStr number(rec->find(FaxDB::numberKey));
-	if (number != "")
-	    if (areaCode != "")
-		number.insert("1-" | areaCode | "-");
-	coverDef("from-fax-number", number);
-	number = rec->find("Voice-Number");
-	if (number != "")
-	    if (areaCode != "")
-		number.insert("1-" | areaCode | "-");
-	coverDef("from-voice-number", number);
-    } else {
-	coverDef("from-company", "");
-	coverDef("from-location", "");
-	coverDef("from-fax-number", "");
-	coverDef("from-voice-number", "");
-    }
+    emitDateDefs();
+    coverDef("regarding", regarding);
+    emitCommentDefs();
     printf("%%%%EndProlog\n");
-    printf("%%%%Page: 1 1\n");
+    printf("%%%%Page: \"1\" 1\n");
     // copy prototype cover page
     char buf[16*1024];
     int n;
@@ -221,10 +230,97 @@ faxCoverApp::makeCoverSheet()
 }
 
 void
+faxCoverApp::emitToDefs(const char* to, FaxDBRecord* rec)
+{
+    if (rec) {
+	to = rec->find(FaxDB::nameKey);
+	if (toCompany == "")
+	    toCompany = rec->find("Company");
+	if (toLocation == "")
+	    toLocation = rec->find("Location");
+	if (toVoiceNumber == "") {
+	    toVoiceNumber = rec->find("Voice-Number");
+	    if (toVoiceNumber != "") {
+		fxStr areaCode(rec->find("Area-Code"));
+		if (areaCode != "")
+		    toVoiceNumber.insert("1-" | areaCode | "-");
+	    }
+	}
+    }
+    coverDef("to",		to);
+    coverDef("to-company",	toCompany);
+    coverDef("to-location",	toLocation);
+    coverDef("to-voice-number",	toVoiceNumber);
+    coverDef("to-fax-number",	toFaxNumber);
+}
+
+void
+faxCoverApp::emitFromDefs(FaxDBRecord* rec)
+{
+    fxStr fromCompany;
+    fxStr fromLocation;
+    fxStr fromFaxNumber;
+    fxStr fromVoiceNumber;
+
+    if (rec) {
+	fromCompany = rec->find("Company");
+	fromLocation = rec->find("Location");
+	fromFaxNumber = rec->find(FaxDB::numberKey);
+	fromVoiceNumber = rec->find("Voice-Number");
+	fxStr areaCode(rec->find("Area-Code"));
+	if (areaCode != "") {
+	    if (fromFaxNumber != "")
+		fromFaxNumber.insert("1-" | areaCode | "-");
+	    if (fromVoiceNumber != "")
+		fromVoiceNumber.insert("1-" | areaCode | "-");
+	}
+    }
+    coverDef("from",		sender);
+    coverDef("from-fax-number",	fromFaxNumber);
+    coverDef("from-voice-number",fromVoiceNumber);
+    coverDef("from-company",	fromCompany);
+    coverDef("from-location",	fromLocation);
+}
+
+void
+faxCoverApp::emitCommentDefs()
+{
+    /*
+     * Break comment string into multiple lines (if needed).
+     */
+    coverDef("comments", comments);
+    int line = 1;
+    while (comments.length() > 0) {
+	// strip leading white space
+	while (comments.length() > 0 && isspace(comments[0]))
+	    comments.remove(0);
+	int len = fxmin(comments.length(), (u_int) 35);
+	if (len == 35 && !isspace(comments[len-1])) {// break on word boundary
+	    int l = len-1;
+	    for (; l > 1 && !isspace(comments[l-1]); l--)
+		;
+	    if (l > 0)
+		len = l;
+	    // otherwise, break in the middle of this really long word
+	}
+	fxStr num(line, "%u");
+	coverDef("comments" | num, comments.cut(0,len));
+	line++;
+    }
+}
+
+void
+faxCoverApp::emitDateDefs()
+{
+    time_t t = time(0);
+    char date[128];
+    strftime(date, sizeof (date), "%a %b %d %Y, %H:%M %Z", localtime(&t));
+    coverDef("todays-date", date);
+}
+
+void
 faxCoverApp::coverDef(const char* tag, const char* value)
 {
-    if (*value == '\0')
-	return;
     printf("/%s (", tag);
     for (const char* cp = value; *cp; cp++) {
 	if (*cp == '(' || *cp == ')')
@@ -264,3 +360,12 @@ faxCoverApp::printError(const char* va_alist ...)
     fprintf(stderr, ".\n");
 }
 #undef fmt
+
+int
+main(int argc, char** argv)
+{
+    faxCoverApp app;
+    app.initialize(argc, argv);
+    app.open();
+    return 0;
+}

@@ -1,7 +1,7 @@
-#ident	$Header: /d/sam/flexkit/fax/fax2ps/RCS/fax2ps.c,v 1.16 91/09/12 13:53:28 sam Exp $
+/* $Header: /usr/people/sam/fax/fax2ps/RCS/fax2ps.c,v 1.36 1994/05/16 20:51:19 sam Exp $ */
 
 /*
- * Copyright (c) 1991 by Sam Leffler.
+ * Copyright (c) 1991, 1992, 1993, 1994 by Sam Leffler.
  * All rights reserved.
  *
  * This file is provided for unrestricted use provided that this
@@ -12,22 +12,29 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "defs.h"
 
 #define	MAXCODEPROBES	5
 CodeEntry* codehash[CODEHASH];
-CodeEntry codetable[MAXCODES];
+CodeEntry* codetable;
 
 char**	codeNames;		/* codeNames[code] => ASCII code name */
 char*	codeNameSpace;		/* storage space for codeNames and strings */
 int	ncodes = 0;		/* number of assigned codes */
+int	maxcodes = 0;		/* max # codes that fit in codetable */
+int	maxpairs = 0;		/* max # pairs that fit in pairtable */
 int	includeStatistics = FALSE;/* if 1, add comments w/ frequency stats */
 int	startOfRow;		/* if 1, have yet to emit a code for this row */
-int	debug = FALSE;		/* if 1, trace decoding process */
 int	dopairs = FALSE;	/* if 1, encode pairs of codes */
 float	defxres = 204.;		/* default x resolution (pixels/inch) */
 float	defyres = 98.;		/* default y resolution (lines/inch) */
+float	pageWidth = 8.5;	/* image page width (inches) */
+float	pageHeight = 11.0;	/* image page length (inches) */
+int	scaleToPage = FALSE;	/* if true, scale raster to page dimensions */
 
 CodeEntry*
 enterCode(int dx, int len)
@@ -50,9 +57,16 @@ enterCode(int dx, int len)
 		return (cp);
 	}
     }
-    if (ncodes == MAXCODES) {
-	fprintf(stderr, "Panic, code table overflow\n");
-	exit(-1);
+    if (ncodes == maxcodes) {
+	maxcodes += MAXCODES;
+	codetable = (CodeEntry*) (maxcodes == MAXCODES ?
+	    malloc(maxcodes * sizeof (CodeEntry)) :
+	    realloc(codetable, maxcodes * sizeof (CodeEntry))
+	);
+	if (codetable == NULL) {
+	    fprintf(stderr, "Panic, code table overflow\n");
+	    exit(-1);
+	}
     }
     codehash[h] = cp = &codetable[ncodes++];
     cp->c.count = 0;
@@ -64,10 +78,10 @@ enterCode(int dx, int len)
 }
 
 void
-printCode(TIFF* tif, CodeEntry* cp)
+printCode(CodeEntry* cp)
 {
     if (startOfRow) {
-	printf("%d r\n", TIFFCurrentRow(tif));
+	printf("%d r\n", fax.row);
 	startOfRow = FALSE;
     }
     if (cp->c.code == (u_short) -1)
@@ -78,7 +92,7 @@ printCode(TIFF* tif, CodeEntry* cp)
 }
 
 CodePairEntry* pairhash[PAIRHASH];
-CodePairEntry pairtable[MAXPAIRS];
+CodePairEntry* pairtable;
 int	npairs = 0;
 
 CodePairEntry*
@@ -122,9 +136,16 @@ enterPair(CodeEntry* a, CodeEntry* b)
 		return (pp);
 	}
     }
-    if (npairs == MAXPAIRS) {
-	fprintf(stderr, "Help, pair table overflow\n");
-	exit(-1);
+    if (npairs == maxpairs) {
+	maxpairs += MAXPAIRS;
+	pairtable = (CodePairEntry*) (maxpairs == MAXPAIRS ?
+	    malloc(maxpairs * sizeof (CodePairEntry)) :
+	    realloc(pairtable, maxpairs * sizeof (CodePairEntry))
+	);
+	if (pairtable == NULL) {
+	    fprintf(stderr, "Panic, pair table overflow\n");
+	    exit(-1);
+	}
     }
     pairhash[h] = pp = &pairtable[npairs++];
     pp->c.count = 0;
@@ -136,13 +157,13 @@ enterPair(CodeEntry* a, CodeEntry* b)
 }
 
 int
-printPair(TIFF* tif, CodeEntry* a, CodeEntry* b)
+printPair(CodeEntry* a, CodeEntry* b)
 {
     CodePairEntry* pp = findPair(a,b);
 
     if (pp && pp->c.code != (u_short) -1) {
 	if (startOfRow) {
-	    printf("%d r\n", TIFFCurrentRow(tif));
+	    printf("%d r\n", fax.row);
 	    startOfRow = FALSE;
 	}
 	printf("%s\n", codeNames[pp->c.code]);
@@ -253,9 +274,11 @@ codeLength(int code)
 }
 
 int
-codeCostCompare(Code** c1, Code** c2)
+codeCostCompare(const void* a1, const void* a2)
 {
-    return ((*c2)->cost - (*c1)->cost);
+    const Code* c1 = *(const Code**)a1;
+    const Code* c2 = *(const Code**)a2;
+    return (c2->cost - c1->cost);
 }
 
 /*
@@ -306,7 +329,7 @@ assignCodes(Code** sorted, int clearCounts)
 }
 
 void
-makeCodeTable()
+makeCodeTable(void)
 {
     int i, n;
     Code** sorted;
@@ -360,27 +383,20 @@ setupPass(TIFF* tif, int pass)
     long* stripbytecount;
 
     fax.pass = pass;
+    fax.row = 0;
     TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
     fax.cc = stripbytecount[0];
     fax.bp = fax.buf;
-    fax.b.bit = fax.b.data = 0;
-    fax.b.tag = G3_1D;
-    if (fax.b.refline)
-	/*
-	 * 2d encoding/decoding requires a scanline
-	 * buffer for the ``reference line''; the
-	 * scanline against which delta encoding
-	 * is referenced.  The reference line must
-	 * be initialized to be ``white.''
-	 */
-	bzero(fax.b.refline, TIFFScanlineSize(tif));
+    FaxPreDecode();
 }
+
+static	int totalPages = 0;
 
 void
 printTIF(TIFF* tif, int pageNumber)
 {
     u_long w, h;
-    short fill, unit, photometric;
+    short fill, unit, photometric, compression;
     float xres, yres;
     long g3opts;
     long* stripbytecount;
@@ -401,34 +417,47 @@ printTIF(TIFF* tif, int pageNumber)
     if (!TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres)) {
 	TIFFWarning(TIFFFileName(tif),
 	    "No y-resolution, assuming %g lpi", defyres);
-	yres = defyres;
+	yres = defyres;					/* XXX */
     }
-    TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &unit);
-    if (unit == RESUNIT_CENTIMETER) {
+    if (TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &unit) &&
+      unit == RESUNIT_CENTIMETER) {
 	xres *= 25.4;
 	yres *= 25.4;
     }
     TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photometric);
     fax.b.white = (photometric == PHOTOMETRIC_MINISBLACK);
-    if (TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts)) {
+    /*
+     * Calculate the scanline/tile widths.
+     */
+    if (isTiled(tif)) {
+        fax.b.rowbytes = TIFFTileRowSize(tif);
+	TIFFGetField(tif, TIFFTAG_TILEWIDTH, &fax.b.rowpixels);
+    } else {
+        fax.b.rowbytes = TIFFScanlineSize(tif);
+	TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &fax.b.rowpixels);
+    }
+    if (TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts))
 	fax.is2d = (g3opts & GROUP3OPT_2DENCODING) != 0;
-	if (fax.is2d) {
-	    int scanlinesize = TIFFScanlineSize(tif);
-	    fax.scanline = (u_char*) malloc(2*scanlinesize);
-	    fax.b.refline = fax.scanline + scanlinesize;
-	}
-    } else
-	fax.scanline = fax.b.refline = 0;
+    else
+	fax.is2d = 0;
+    fax.scanline = (u_char*) malloc(2*fax.b.rowbytes);
+    fax.b.refline = fax.scanline + fax.b.rowbytes;
+    TIFFGetField(tif, TIFFTAG_COMPRESSION, &compression);
+    if (compression == COMPRESSION_CCITTFAX4)
+	fax.options = FAX3_NOEOL;
     /*
      * First pass: create code and pair frequency tables.
      */
-    bzero((char*) codehash, sizeof (codehash));
-    bzero((char*) pairhash, sizeof (pairhash));
+    memset((char*) codehash, 0, sizeof (codehash));
+    memset((char*) pairhash, 0, sizeof (pairhash));
+    maxcodes = 0;
+    maxpairs = 0;
     setupPass(tif, 1);
     ncodes = npairs = 0;
-    for (tif->tif_row = 0; tif->tif_row < h; tif->tif_row++)
-	if (!Fax3DecodeRow(tif, w))
-	    break;
+    if (compression == COMPRESSION_CCITTFAX4)
+	Fax4DecodeRow(tif, h*w);
+    else
+	Fax3DecodeRow(tif, h*w);
     if (dopairs) {
 	/*
 	 * Second pass: assign codes according to frequency
@@ -439,31 +468,51 @@ printTIF(TIFF* tif, int pageNumber)
 	assignCodes((Code**) sorted, TRUE);
 	free((char*) sorted);
 	setupPass(tif, 2);
-	for (tif->tif_row = 0; tif->tif_row < h; tif->tif_row++)
-	    if (!Fax3DecodeRow(tif, w))
-		break;
+	if (compression == COMPRESSION_CCITTFAX4)
+	    Fax4DecodeRow(tif, h*w);
+	else
+	    Fax3DecodeRow(tif, h*w);
     }
     /*
      * Third pass: generate code table and encoded data.
      */
     printf("%%%%Page: \"%d\" %d\n", pageNumber, pageNumber);
     printf("gsave\n");
-    printf("0 %d translate\n", (int)(h/yres*72.));
-    printf("%g %g scale\n", 72./xres, -72./yres);
+    if (scaleToPage) {
+	float yscale = pageHeight / (h/yres);
+	float xscale = pageWidth / (w/xres);
+	printf("0 %d translate\n", (int)(yscale*(h/yres)*72.));
+	printf("%g %g scale\n", (72.*xscale)/xres, -(72.*yscale)/yres);
+    } else {
+	printf("0 %d translate\n", (int)(72.*h/yres));
+	printf("%g %g scale\n", 72./xres, -72./yres);
+    }
     printf("0 setgray\n");
     makeCodeTable();
     setupPass(tif, 3);
-    for (tif->tif_row = 0; tif->tif_row < h; tif->tif_row++) {
+    while (fax.cc > 0) {
 	startOfRow = 1;
-	if (!Fax3DecodeRow(tif, w))
-	    break;
+	if (compression == COMPRESSION_CCITTFAX4)
+	    Fax4DecodeRow(tif, w);
+	else
+	    Fax3DecodeRow(tif, w);
 	if (!startOfRow)
 	    printf("s\n");
     }
     printf("p\n");
     printf("grestore\n");
+    free((char*) fax.scanline);
     free((char*) fax.buf);
     free(codeNameSpace);
+    if (maxcodes > 0) {
+	free((char*) codetable);
+	codetable = NULL;
+    }
+    if (maxpairs > 0) {
+	free((char*) pairtable);
+	pairtable = NULL;
+    }
+    totalPages++;
 }
 
 #define	GetPageNumber(tif) \
@@ -482,7 +531,7 @@ findPage(TIFF* tif, int pageNumber)
 }
 
 void
-fax2ps(TIFF* tif, int npages, int pages[], char* filename)
+fax2ps(TIFF* tif, int npages, int* pages, char* filename)
 {
     if (npages > 0) {
 	short pn, ptotal;
@@ -510,33 +559,40 @@ fax2ps(TIFF* tif, int npages, int pages[], char* filename)
 static int
 pcompar(const void* va, const void* vb)
 {
-    const int* pa = (int*) va;
-    const int* pb = (int*) vb;
+    const int* pa = (const int*) va;
+    const int* pb = (const int*) vb;
     return (*pa - *pb);
 }
 
-#ifdef notdef
-#include <getopt.h>
+#ifndef atof			/* XXX for GNU gcc, gack! */
+extern	double atof();
 #endif
 
 main(int argc, char** argv)
 {
     extern int optind;
     extern char* optarg;
-    int c, pageNumber = -1;
+    int c, pageNumber;
     int* pages = 0, npages = 0;
+    int dowarnings = FALSE;	/* if 1, enable library warnings */
     long t;
     TIFF* tif;
 
-    while ((c = getopt(argc, argv, "p:x:y:adzs")) != -1)
+    while ((c = getopt(argc, argv, "p:x:y:W:H:aswzS")) != -1)
 	switch (c) {
+	case 'H':		/* page height */
+	    pageHeight = atof(optarg);
+	    break;
+	case 'S':		/* scale to page */
+	    scaleToPage = TRUE;
+	    break;
+	case 'W':		/* page width */
+	    pageWidth = atof(optarg);
+	    break;
 	case 'a':		/* use only upper-case alphabetics */
 	    MaxAlpha = 26;
 	    for (t = 0; t < MaxAlpha; t++)
 		alphabet[t] = 'A' + t;
-	    break;
-	case 'd':
-	    debug++;
 	    break;
 	case 'p':		/* print specific page */
 	    pageNumber = atoi(optarg);
@@ -554,6 +610,9 @@ main(int argc, char** argv)
 	case 's':		/* include frequency statistics as comments */
 	    includeStatistics = TRUE;
 	    break;
+	case 'w':
+	    dowarnings = TRUE;
+	    break;
 	case 'x':
 	    defxres = atof(optarg);
 	    break;
@@ -565,13 +624,15 @@ main(int argc, char** argv)
 	    break;
 	case '?':
 	    fprintf(stderr,
-"usage: %s [-a] [-d] [-p pagenumber] [-s] [-x xres] [-y yres] [files]\n",
+"usage: %s [-a] [-w] [-p pagenumber] [-x xres] [-y res] [-s] [-S] [-W pagewidth] [-H pageheight] [files]\n",
 		argv[0]);
 	    exit(-1);
 	}
     if (npages > 0)
 	qsort(pages, npages, sizeof (int), pcompar);
-    printf("%%!\n");
+    if (!dowarnings)
+	TIFFSetWarningHandler(0);
+    printf("%%!PS-Adobe-3.0\n");
     printf("%%%%Creator: fax2ps\n");
 #ifdef notdef
     printf("%%%%Title: %s\n", file);
@@ -579,29 +640,32 @@ main(int argc, char** argv)
     t = time(0);
     printf("%%%%CreationDate: %s", ctime(&t));
     printf("%%%%Origin: 0 0\n");
-    printf("%%%%BoundingBox: 0 0 %d %d\n", 11*72, (int)(8.5*72));/* XXX */
+    printf("%%%%BoundingBox: 0 0 %u %u\n",
+	(int)(pageHeight*72), (int)(pageWidth*72));	/* XXX */
+    printf("%%%%Pages: (atend)\n");
     printf("%%%%EndComments\n");
+    printf("%%%%BeginProlog\n");
     printf("/d{bind def}def\n");			/* bind and def proc */
     printf("/f{0 rmoveto 0 rlineto}d\n");		/* fill span */
     printf("/r{0 exch moveto}d\n");			/* begin row */
     printf("/s{stroke}d\n");				/* stroke row */
     printf("/p{end showpage}d \n");			/* end page */
+    printf("%%%%EndProlog\n");
     if (optind < argc) {
-	for (; optind < argc; optind++) {
+	do {
 	    tif = TIFFOpen(argv[optind], "r");
-	    if (!tif) {
+	    if (tif) {
+		fax2ps(tif, npages, pages, argv[optind]);
+		TIFFClose(tif);
+	    } else
 		fprintf(stderr, "%s: Can not open, or not a TIFF file.\n",
 		    argv[optind]);
-		continue;
-	    }
-	    fax2ps(tif, npages, pages, argv[optind]);
-	    TIFFClose(tif);
-	}
+	} while (++optind < argc);
     } else {
 	int n, fd;
 	char temp[1024], buf[16*1024];
 
-	strcmp(temp, "/tmp/fax2psXXXXXX");
+	strcpy(temp, "/tmp/fax2psXXXXXX");
 	fd = mkstemp(temp);
 	if (fd == -1) {
 	    fprintf(stderr, "Could not create temp file \"%s\"\n", temp);
@@ -619,5 +683,7 @@ main(int argc, char** argv)
 	close(fd);
     }
     printf("%%%%Trailer\n");
+    printf("%%%%Pages: %u\n", totalPages);
+    printf("%%%%EOF\n");
     exit(0);
 }
