@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++,v 1.39 1996/08/21 21:53:25 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -360,7 +360,7 @@ HylaFAXServer::replyJobParamValue(Job& job, int code, Token t)
 	return;
     case T_LASTTIME:
 	time_t tv; tv = job.killtime - job.tts;		// XXX for __GNUC__
-	reply(code, "%02d%02d%02d", tv/(24*60*60), (tv/(60*60))%60, (tv/60)%60);
+	reply(code, "%02d%02d%02d", tv/(24*60*60), (tv/(60*60))%24, (tv/60)%60);
 	return;
     case T_RETRYTIME:
 	reply(code, "%02d%02d", job.retrytime/60, job.retrytime%60);
@@ -489,7 +489,7 @@ HylaFAXServer::jstatCmd(const Job& job)
     if (checkAccess(job, T_LASTTIME, A_READ)) {
 	time_t tv = job.killtime - job.tts;
 	jstatLine(T_LASTTIME, "%02d%02d%02d",
-	    tv/(24*60*60), (tv/(60*60))%60, (tv/60)%60);
+	    tv/(24*60*60), (tv/(60*60))%24, (tv/60)%60);
     }
     if (checkAccess(job, T_RETRYTIME, A_READ))
 	jstatLine(T_RETRYTIME, "%02d%02d", job.retrytime/60, job.retrytime%60);

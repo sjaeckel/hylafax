@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++,v 1.37 1996/07/25 21:56:27 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1035,7 +1035,7 @@ HylaFAXServer::param_cmd(Token t)
 	    reply(213, "%s set to %02d%02d%02d."
 		, parmToken(t)
 		, ticks/(24*60*60)
-		, (ticks/(60*60))%60
+		, (ticks/(60*60))%24
 		, (ticks/60)%60
 	    );
 	    return (TRUE);
