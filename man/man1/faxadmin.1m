@@ -1,0 +1,300 @@
+.\"	$Header: /usr/people/sam/flexkit/fax/man/man1/RCS/faxadmin.1m,v 1.2 91/05/28 21:51:07 sam Exp $
+.\"
+.\" Copyright (c) 1991 by Sam Leffler.
+.\" All rights reserved.
+.\"
+.\" This file is provided for unrestricted use provided that this
+.\" legend is included on all tape media and as a part of the
+.\" software program in whole or part.  Users may copy, modify or
+.\" distribute this file at will.
+.\"
+.TH FAXADMIN 1M "April 29, 1991"
+.SH NAME
+/usr/lib/vadmin/fax \- facsimile service administration tool
+.SH SYNOPSIS
+.B /usr/lib/vadmin/fax
+[
+.B \-m
+.I device
+] [
+.B \-q
+.I queue-dir
+] [
+.B \-r
+] [
+.B \-x
+.I xpos
+] [
+.B \-y
+.I ypos
+]
+.SH DESCRIPTION
+The
+.I fax
+command is an interactive tool for administrating a
+.I FlexFAX
+facsimile server.
+The tool is normally invoked through the system
+administration interface; i.e. off the palette of tools
+brought up from the ``
+.IR System Manager ''
+menu.
+.PP
+In keeping with the system manager conventions, the
+.I fax
+tool provides different services depending on whether it
+is invoked by the system administrator (i.e. root),
+or by a normal user.
+When invoked by a normal user, the send and receive
+queues are displayed, as well as the status of the
+facsimile server.
+When invoked by the system administrator, the send
+and receive queues are displayed, and their contents
+can be manipulated.
+The server can be started and stopped, and numerous
+parameters may be directly modified.
+.PP
+The user interface uses popup
+menus bound to the right mouse button.
+The left mouse button is uniformly used to select
+items and to click on buttons.
+Commands that may not be invoked in a particular
+state are always displayed in an
+.IR "unselectable form" \-
+e.g. menu items are
+.I "greyed out"
+when they may not be selected.
+.SH OPTIONS
+The
+.B \-m
+option is used to specify the server's modem device.
+For example,
+.I ttym2
+for 
+.IR /dev/ttym2 .
+.PP
+The
+.B \-q
+option is used to specify a spooling directory other than
+.IR /usr/spool/fax .
+.PP
+The
+.B \-r
+option is used to force a read-only interface;
+even if invoked by the system administrator.
+.PP
+The
+.B \-x
+and
+.B \-y
+options are used to specify the position of the
+lower left hand corner of the window.
+.SH "SERVER CONTROLS"
+Each server has a configuration file that defines how
+it should operate.
+The most common items in the configuration file are displayed
+in a single ``main window.''
+.PP
+The
+.I "FAX Phone Number"
+gives the phone number for the phone line that the fax modem
+is attached to.
+The
+.I "Voice Phone Number"
+gives the phone number that should be used to reach a person
+that administers the fax modem.
+To edit either number, a standard the field editor widget
+is provided (one must hit carriage return at the end of
+the string to force an update).
+.PP
+The server status area has 
+.I Stop
+and
+.I Start
+buttons for stopping a running server and for starting a
+server when none is present.
+The button marked
+.I "Answer Phone"
+immediately to the right is used to force the server to take
+the phone ``off hook''.
+This is especially useful when a fax modem shares a phone
+line with a voice phone.
+In this case, the server can be setup to not answer the phone.
+To receive a facsimile, voice confirmation is first made, and
+then the fax server is brought ``on-line'' to receive the facsimile.
+.PP
+The
+.I "Qualify TSI"
+buttons control whether or not the server should check
+the Transmitter Subscriber Identification (\c
+.SM TSI\c
+) code of a remote facsimile machine before accepting
+reception of a document.
+If this is enabled, then the sender's
+.SM TSI
+must be ``listed'' in the
+.IR tsi (4F)
+file.
+Otherwise, facsimile will be received from any caller.
+.PP
+The row of buttons labeled
+.I "Modem Speaker"
+control the volume of the builtin speaker in the fax modem.
+If the speaker volume is not 
+.IR Off ,
+then the speaker will be enabled while protocol-related operations
+are carried out.
+The modem speaker is always disabled while facsimile data is
+being transferred.
+.PP
+The
+.I "Rings Before Answer"
+slider is used to control the number of rings that
+a fax server will wait before automatically answering
+the phone.
+Setting this value to 0 causes the server to not
+answer the phone, except when directly commanded by clicking
+on the
+.I "Answer Phone"
+button.
+.SH "SERVER TRACING"
+The
+.I FlexFAX
+server provides extensive support for tracing the operation
+of the server.
+Tracing is divided into
+.I categories
+that may be invdividually enabled and disabled.
+Tracing output is logged with the
+.IR syslog (3)
+facility.
+.PP
+The
+.I Tracing
+pull-aside menu in the main window provides
+control over tracing of server operations.
+Those items marked with a checkmark are enabled.
+.PP
+The
+.I "Server Operation"
+category covers tasks related to the operation of the
+server; for example, managing the send and receive queues.
+The
+.I "FAX Protocol"
+category includes operations related to the implementation
+of the Group 3 facsimile communication protocol.
+The
+.I "Modem Operations"
+category includes operations done to the facsimile
+modem hardware; for example, changing baud rate of
+the serial line to which the modem is attached.
+The
+.I "Modem Communication"
+category controls tracing of all communication between
+the host and the modem;
+enabling this category causes all comands sent to the
+modem and received from the modem to be logged.
+The
+.I "Timeouts"
+category controls tracing of all timer-related operations
+in the server; this generates voluminous tracing information.
+.SH "SEND QUEUE"
+The send queue region of the main window is a multi-selection
+scrolling list with an associated popup menu bound
+to the right mouse button.
+There is one item in the send queue for each job
+queued for transmission.
+The job field is the job identifier for the job.
+The sender field is the name of the account that
+submitted the job.
+The number field is the phone number of the facsimile
+machine that is to be called.
+The time field is the time at which the job is to be
+sent.
+.PP
+The send queue display is sorted by the time
+to send field and is updated every 5 seconds.
+.PP
+Items in the send queue can be deleted by selecting
+them in the list and then invoking the
+.I Delete
+operation from the popup menu.
+Items that are queued for later transmission can
+be sent immediately by selecting them and then invoking the
+.I "Send Now"
+operation from the popup menu.
+.SH "RECEIVE QUEUE"
+The receive queue region of the main window is a multi-selection
+scrolling list with an associated popup menu attached
+to the right mouse button.
+There is one item in the receive queue for each received
+facsimile that is waiting delivery.
+The received field gives the date and time
+at which the facsimile was received.
+The sender field gives the
+.I "Transmission Subscriber Identifier"
+(typically the phone number)
+of the remote facsimile machine,
+the pages field displays the total number of pages in
+the facsimile document, and the
+quality field indicates if the facsimile was received
+with regular (98 lines/inch) or high (196 lines/inch)
+quality resolution.
+.PP
+Commands on the popup menu allow facsimile to be:
+viewed on the display,
+delivered by electronic mail,
+resent as facsimile,
+deleted, and
+spooled for printing.
+To do any of these operations, first select items
+from the list, and then select the appropriate
+command from the menu.
+.PP
+The receive queue display is sorted by the arrival
+time and is updated every 5 seconds.
+.SH "CONFIGRATION INFORMATION"
+Interactive operations that alter configuration state,
+such as changing the modem speaker volume, are sent
+directly to a running server.
+The configuration file is not written out unless the
+.I Save
+button is clicked, or a new server is started (and the
+configuration has been modified).
+The
+.I Restore
+button resets the runtime state according to the current
+contents of the server configuration file.
+.SH BUGS
+Not all configuration parameters can be edited; some
+must be changed by editing the configuration file.
+Starting or stopping the server by hand can confuse the
+.I fax
+tool.
+There is no support for adding new fax modems or deleting
+existing modems.
+Help is not currently implemented.
+The user interface is somewhat different from
+the other system administration tools.
+.SH FILES
+.ta \w'/usr/spool/fax/etc/config.\fIdevice\fP    'u
+.nf
+/usr/lib/vadmin/fax.hlp	help text
+/usr/spool/fax/etc/config.\fIdevice\fP	configuration file
+/usr/spool/fax/sendq	send queue
+/usr/spool/fax/recvq	receive queue
+/usr/spool/fax/FIFO.\fIdevice\fP	for talking to the server
+/usr/local/bin/fax/faxview	for viewing received facsimile
+/usr/spool/fax/bin/deliver	for delivering facsimile by mail
+.fi
+.SH "SEE ALSO"
+.IR vadmin (1G),
+.IR faxview (1),
+.IR faxstat (1),
+.IR faxrm (1),
+.IR sendfax (1),
+.IR faxd (1M),
+.IR flexfax (4F),
+.IR config (4F),
+.IR sendq (4F),
+.IR recvq (4F),

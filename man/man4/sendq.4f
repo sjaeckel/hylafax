@@ -1,0 +1,163 @@
+.\"	$Header: /usr/people/sam/flexkit/fax/man/man4/RCS/sendq.4f,v 1.1 91/05/11 16:46:54 sam Exp $
+.\"
+.\" Copyright (c) 1991 by Sam Leffler.
+.\" All rights reserved.
+.\"
+.\" This file is provided for unrestricted use provided that this
+.\" legend is included on all tape media and as a part of the
+.\" software program in whole or part.  Users may copy, modify or
+.\" distribute this file at will.
+.\"
+.TH SENDQ 4F "April 29, 1991"
+.SH NAME
+sendq/q* \- 
+.I FlexFAX
+facsimile transmission job description
+.SH DESCRIPTION
+Files in the
+.B sendq
+directory specify facsimile transmission job requests.
+These files are usually created by
+.IR faxd.recv (1M),
+when submitting a job on behalf of
+.IR sendfax (1).
+.PP
+Job description files are 
+.SM ASCII
+files with lines of the form
+.sp .5
+.ti +0.5i
+\fBtag\fP: \fIvalue\fP
+.br
+.sp .5
+where a \fItag\fP is one of the identifiers described below
+and a \fIvalue\fP is either a string or number.
+If a line
+.I begins
+with the ``#'' character, it is ignored.
+String values start at the first non-blank character
+after the ``:'' and continue to the end of the line.
+Numeric values are either decimal integers or floating point numbers.
+.PP
+The following table lists the possible tags and the required
+type of the associated value.
+.sp .5
+.in +0.5i
+.ta \w'pagelength    'u +\w'integer    'u
+.nf
+\fBTag	Type	Description\fP
+killjob	string	\fIat\fP\|(1) job identifier for killing job
+killtime	string	when to give up trying to send facsimile
+mailaddr	string	email address of sender
+notify	string	email notification specification
+npages	integer	number of pages in facsimile
+number	string	phone number to call
+pagelength	float	facsimile page length (millimeters)
+pagewidth	integer	facsimile page width (pixels)
+postscript	string	postscript document specification
+resolution	float	vertical resolution of facsimile
+sender	string	identity of sender
+sendjob	string	\fIat\fP\|(1) job identifier for delayed send job
+tiff	string	\s-2TIFF\s0 document specification
+tts	integer	time to send facsimile
+.fi
+.in -0.5i
+.SH "PARAMETERS"
+.TP
+.B killjob
+The identifier returned by
+.IR at (1)
+for the job that is to
+.I kill
+this transmit request.
+Each facsimile transmission request has a
+timeout associated with it.
+If the transmission is not successful before the timeout
+expires, the request is aborted.
+.IR faxd (1M)
+uses
+.I at
+to implement timeouts by submitting a
+.I "kill job"
+that removes the submitted job from the queue of jobs to process.
+The value of
+.I killjob
+identifies the 
+.I at
+job submitted to timeout this request.
+.TP
+.B killtime
+The time to kill this job, expressed in syntax acceptable to
+.IR at .
+Note that this time is specified relative to time of the
+first attempt to transmit the facsimile.
+.TP
+.B mailaddr
+The electronic mail address to which notification
+messages should be directed.
+.TP
+.B notify
+A specification of whether the sender wants
+notification: whenever the job is requeued after
+a failed attempt to transmit (``\c
+.IR "when requeued" ''),
+when the job is completed (``\c
+.IR "when done" ''),
+or not at all (``\c
+.IR "none" '').
+.TP
+.B npages
+The number of pages in the facsimile, including
+the cover page, that are still to be transmitted.
+.TP
+.B number
+The phone number of the destination facsimile machine.
+.TP
+.B pagelength
+The desired page length in millimeters.
+.TP
+.B pagewidth
+The desired page width in pixels.
+.TP
+.B postscript
+The value is a pathname to a file containing a
+PostScript\(tm document to send.
+Files must be owned by the 
+.IR "fax user" .
+Pathnames must be relative to the top of the
+.I FlexFAX
+spooling directory and not include ``..''.
+.TP
+.B resolution
+The desired vertical resolution in lines per inch.
+This value should be either 98 or 196.
+.TP
+.B sender
+The ``full name'' of the sender of the facsimile.
+.TP
+.B sendjob
+The identifier returned by
+.IR at (1)
+for the job that is to do a delayed submission
+(if any).
+.TP
+.B tiff
+The value is a pathname to a file containing a
+.SM TIFF
+Class F document to send.
+Files must be owned by the 
+.IR "fax user" .
+Pathnames must be relative to the top of the
+.I FlexFAX
+spooling directory and not include ``..''.
+.TP
+.B tts
+The time to send the facsimile.
+If this value is non-zero, it is number of seconds
+since 00:00:00 GMT, January 1, 1970.
+Otherwise, a value of 0 is interpreted to mean
+transmit immediately.
+.SH "SEE ALSO"
+.IR sendfax (1),
+.IR faxd (1M),
+.IR faxd.recv (1M)

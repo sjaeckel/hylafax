@@ -1,0 +1,155 @@
+.\"	$Header: /usr/people/sam/flexkit/fax/man/man1/RCS/faxmail.1,v 1.1 91/05/08 17:38:45 sam Exp $
+.\"
+.\" Copyright (c) 1991 by Sam Leffler.
+.\" All rights reserved.
+.\"
+.\" This file is provided for unrestricted use provided that this
+.\" legend is included on all tape media and as a part of the
+.\" software program in whole or part.  Users may copy, modify or
+.\" distribute this file at will.
+.\"
+.TH FAXMAIL 1 "April 29, 1991"
+.SH NAME
+faxmail \- convert a mail message to PostScript\(tm for sending as facsimile
+.SH SYNOPSIS
+.B faxmail
+[
+.B \-f
+.I font-name
+] [
+.B \-F
+.I font-file
+] [
+.B -p
+.IR pointsize
+] [
+.B \-n
+] [
+.B \-1234
+]
+.SH DESCRIPTION
+.I Faxmail
+takes an electronic mail message on standard input
+and generates an Encapsulated PostScript (\c
+.SM EPS\c
+) document on the standard output that is suitable
+for transmission as a facsimile.
+The resultant document fills 8.5" by 11" pages and
+is created in a stylized format that is described below.
+.I Faxmail
+is intended to be invoked directly by the mail system.
+For example, mail aliases may be created to automatically
+transmit electronic mail; e.g.
+.PP
+.nf
+.ti +0.5i
+sam: "|/usr/local/bin/fax/faxmail | /usr/local/bin/fax/sendfax \-d sam@5551212 \-n"
+.fi
+.PP
+.I Faxmail
+formats a mail message according to the following rules.
+First, it strips all header information except the following:
+.nf
+.in +0.5i
+.ta \w'Keywords    'u +\w'Keywords    'u +\w'Keywords    'u
+From	To	Cc	Subject
+Date	Summary	Keywords
+.in -0.5i
+.fi
+.PP
+(The 
+.I Summary
+and
+.I Keywords
+header lines are useful when forwarding news articles.)
+Header lines that are kept have the 
+.I tag
+set in a ``Helvetica-Bold'' font and the
+.I value
+set in a ``Helvetica-Oblique'' font.
+.PP
+The body of the mail message is wrapped at line boundaries
+and set in a 
+.IR "body font" .
+By default,
+.I faxmail
+searches for a file containing a personalized body font
+by using the account name specified in the
+.I From
+address line of the header.
+If a
+.I From
+line is found,
+.I faxmail
+will look for a file 
+.I .faxfont.ps
+in the sender's home directory.
+This file should contain a PostScript
+description for a font whose name is the name of the account.
+For example, if the following line, is encountered,
+.PP
+.ti +0.5i
+From: Sam Leffler <sam@sgi.com>
+.PP
+.I faxmail
+will look for the file
+.I ~sam/.faxfont.ps
+on the current machine.
+If this file exists, it should contain a description for
+a font named ``sam''.
+.PP
+If no personalized body font is found, or if the
+.B \-n
+option is specified on the command line,
+.I faxmail
+will set the body of the mail message in a ``Courier-Bold'' font.
+The
+.B \-f
+option can be used to specify an alternate default
+PostScript font name to use.
+The
+.B \-F
+option can be used to specify the name of a file containing a
+PostScript font description.
+In the latter case, the font's PostScript name should be the
+same as the filename; e.g.
+.I "/tmp/MyFont.ps"
+must define a font named ``MyFont''.
+.PP
+By default,
+.I faxmail
+sets all text in 14 point type.
+The
+.B \-p
+option may be used to specify an alternate point size.
+.PP
+.I Faxmail
+can also format multiple pages of text in an 
+.IR n -up
+format; where
+.I n
+is 1, 2, 3, or 4.
+That is, 1-up generates 1 ouput page per input page
+(default),
+2-up generates 1 output page for each 4 input pages,
+3-up generates 1 output page for each 9 input pages,
+and
+4-up generates 1 output page for reach 16 input pages.
+.SH NOTES
+The personalized body fonts are intended to be
+fonts that represent a person's handwriting.
+As such, 
+.I faxmail
+should inject some randomness into the formatting of
+the body in order to make the result look more realistic.
+.SH BUGS
+There is no way to specify alternate fonts for header information.
+The set of header lines accepted and stripped is fixed.
+The rule for deducing body font names can be error prone
+(it depends on the user's account name).
+It would be nice to set some of the formatting parameters,
+such as the 
+.IR n -up
+control, according to header information.
+.SH "SEE ALSO"
+.IR sendfax (1)

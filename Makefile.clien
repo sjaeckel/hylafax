@@ -1,0 +1,111 @@
+# $Revision: 1.9 $
+# $Date: 91/06/11 18:02:19 $
+#
+# FlexFAX Facsimile System
+#
+# Copyright (c) 1991 by Sam Leffler.
+# All rights reserved.
+#
+# This file is provided for unrestricted use provided that this
+# legend is included on all tape media and as a part of the
+# software program in whole or part.  Users may copy, modify or
+# distribute this file at will.
+#
+SHELL=	/bin/sh
+NULL=	
+
+GREP=	/bin/grep
+YPCAT=	/usr/bin/ypcat
+DOMAINNAME=/usr/bin/domainname
+CHOWN=	/bin/chown
+CHMOD=	/bin/chmod
+MKDIR=	/bin/mkdir
+RM=	/bin/rm
+ECHO=	/bin/echo
+
+OWNER=	bin				# uid of fax agent
+
+TOP=	
+BIN=	${TOP}/usr/local/bin/fax
+MAN=	${TOP}/usr/man/u_man
+
+install: setupChecks setupDirs installStuff
+
+setupChecks: faxservice
+
+# verify the fax service is present
+faxservice:
+	@DOMAIN=`${DOMAINNAME}`; \
+	if test -z "$$DOMAIN"; then \
+	    SERVICE=`${GREP} '^fax' /etc/services`; \
+	else \
+	    SERVICE=`${YPCAT} services | ${GREP} '^fax'`; \
+	fi; \
+	if test -z "$$SERVICE"; then \
+	    ${ECHO} "You must have a \"fax\" service defined before this"; \
+	    ${ECHO} "installation can be done.  Install the following in"; \
+	    ${ECHO} "/etc/services or in your Yellow Pages database:"; \
+	    ${ECHO} "fax	4557/tcp	# FAX transmission service"; \
+	    exit; \
+	fi
+
+setupDirs: setupBinDirs
+
+setupBinDirs:
+	@${ECHO} "Setup the ${BIN} directory where the client applications go"
+	-${MKDIR} ${BIN}
+	${CHMOD} 755 ${BIN}
+	${CHOWN} ${OWNER} ${BIN}
+
+installStuff: installClient installUtilities installMan
+
+installClient: installClientNoise \
+    installFax2ps	\
+    installFaxalter	\
+    installFaxcomp	\
+    installFaxstat	\
+    installFaxrm	\
+    installFaxview	\
+    installFaxcover	\
+    installFaxmail	\
+    installSendfax	\
+    installSgi2fax	\
+    ${NULL}
+
+installClientNoise:
+	@${ECHO} "Install the client applications:"
+
+installFax2ps: fax2ps/fax2ps
+	(cd fax2ps; /etc/install -f ${BIN} -u ${OWNER} -m 755 fax2ps)
+installFaxalter: faxalter/faxalter
+	(cd faxalter; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxalter)
+installFaxstat: faxstat/faxstat
+	(cd faxstat; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxstat)
+installFaxrm: faxrm/faxrm
+	(cd faxrm; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxrm)
+installFaxview: faxview/faxview
+	(cd faxview; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxview)
+installFaxcover: faxcover/faxcover faxcover/faxcover.ps
+	(cd faxcover; \
+	    /etc/install -f ${BIN} -u ${OWNER} -m 755 faxcover; \
+	    /etc/install -f ${BIN} -u ${OWNER} -m 444 -O faxcover.ps; \
+	)
+installFaxcomp: faxcomp/faxcomp
+	(cd faxcomp; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxcomp)
+installFaxmail: faxmail/faxmail
+	(cd faxmail; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxmail)
+installSendfax: sendfax/sendfax
+	(cd sendfax; /etc/install -f ${BIN} -u ${OWNER} -m 755 sendfax)
+installSgi2fax: sgi2fax/sgi2fax
+	(cd sgi2fax; /etc/install -f ${BIN} -u ${OWNER} -m 755 sgi2fax)
+
+installMan: man/man1
+	-${MKDIR} ${MAN} ${MAN}/man1
+	-(cd man/man1; /etc/install -f ${MAN}/man1 -m 444 *.1*)
+
+installUtilities: util/text2fax.sh
+installUtilities: util/dit2fax.sh
+	(cd util; \
+	 /etc/install -f ${BIN} -u ${OWNER} -m 755 -src text2fax.sh -O text2fax; \
+	 /etc/install -f ${BIN} -u ${OWNER} -m 755 -src dit2fax.sh -O dit2fax; \
+	)

@@ -1,0 +1,62 @@
+.\"	$Header: /usr/people/sam/flexkit/fax/man/man4/RCS/info.4f,v 1.1 91/05/11 16:46:44 sam Exp $
+.\"
+.\" Copyright (c) 1991 by Sam Leffler.
+.\" All rights reserved.
+.\"
+.\" This file is provided for unrestricted use provided that this
+.\" legend is included on all tape media and as a part of the
+.\" software program in whole or part.  Users may copy, modify or
+.\" distribute this file at will.
+.\"
+.TH INFO 4F "April 29, 1991"
+.SH NAME
+info \- remote facsimile machine capability data base
+.SH DESCRIPTION
+The
+.B info
+subdirectory in the
+.I FlexFAX
+spooling area holds information about the capabilities
+of facsimile machines that have been called.
+One file exists for each machine, with the filename
+created from the remote machine's fully-qualified
+phone number.
+Capabilities files have a simple
+.SM ASCII
+format.
+Each line is of the form
+.sp .5
+.ti +0.5i
+\fBtag\fP: \fIvalue\fP
+.br
+.sp .5
+where a \fItag\fP identifies a capability and a \fIvalue\fP
+is either a string, number, or boolean value.
+The following capabilities are recorded:
+.in +0.5i
+.sp .5
+.ta \w'supports2DEncoding    'u +\w'boolean    'u
+.nf
+\fBTag	Type	Description\fP
+supportsHighRes	boolean	accepts 196 line/inch images
+supports2DEncoding	boolean	accepts Group 2D encoding
+maxPageWidth	number	maximum page width in pixels
+maxPageLength	number	maximum page length in millimeters
+.fi
+.in -0.5i
+.PP
+The facsimile server,
+.IR faxd (1M),
+uses the information stored in this directory when
+preparing documents for transmission.
+If a remote machine's capabilities are known, then
+documents are prepared according to the capabilities.
+Otherwise, documents are prepared using only the
+minimum capabilities required by the Group 3
+standard\(em 1D encoding, 98 lines/inch, standard
+A4 page dimensions.
+.I Faxd
+automatically creates and updates entries in this
+directory, as required.
+.SH "SEE ALSO"
+.IR faxd (1M)

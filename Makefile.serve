@@ -1,0 +1,264 @@
+# $Revision: 1.13 $
+# $Date: 91/09/16 11:29:05 $
+#
+# FlexFAX Facsimile System
+#
+# Copyright (c) 1991 by Sam Leffler.
+# All rights reserved.
+#
+# This file is provided for unrestricted use provided that this
+# legend is included on all tape media and as a part of the
+# software program in whole or part.  Users may copy, modify or
+# distribute this file at will.
+#
+SHELL=	/bin/sh
+NULL=	
+
+GREP=	/bin/grep
+YPCAT=	/usr/bin/ypcat
+DOMAINNAME=/usr/bin/domainname
+FTR=	/usr/sbin/ftr
+CHOWN=	/bin/chown
+CHMOD=	/bin/chmod
+MKDIR=	/bin/mkdir
+RM=	/bin/rm
+ECHO=	/bin/echo
+
+OWNER=	fax				# uid of fax agent
+
+TOP=	
+BIN=	${TOP}/usr/local/bin/fax
+FAX=	${TOP}/usr/spool/fax
+INITD=	${TOP}/etc/init.d
+USRETC=	${TOP}/usr/etc
+DPSLIB=	${TOP}/usr/lib/DPS		# where DPS stuff gets placed
+MAN=	${TOP}/usr/man/u_man
+
+VADMIN=	${TOP}/usr/lib/vadmin		# where to place vadmin tools & help
+FILETYPE=/usr/lib/filetype
+VADMINCTR=${TOP}/${FILETYPE}/vadmin.ctr	# vadmin ctr definitions
+VADMINFTR=vadmin.ftr
+#
+# PS2FAX should defined to be one of:
+#	DPSps2fax	Adobe DisplayPostScript-based imager
+#	GSps2fax	Ghostscript-based imager
+# Note that some PostScript to facsimile conversion program
+# must be installed for the server to work properly!
+#
+PS2FAX=	DPSps2fax			# DPS-based stuff
+#PS2FAX=	GSps2fax		# Ghoscript-based stuff
+
+install: setupChecks setupDirs installStuff setupSpool setupSysadmin
+
+setupChecks: faxuser faxservice faxserver
+
+# verify the ``fax'' user id is properly installed
+faxuser:
+	@FAXUSER=`${GREP} '^fax' /etc/passwd`; \
+	if test -z "$$FAXUSER"; then \
+	    ${ECHO} "You must have a \"${OWNER}\" user setup in the password database.";\
+	    ${ECHO} "An example entry for /etc/passwd is:"; \
+	    ${ECHO} ""; \
+	    ${ECHO} "fax:*:999:999:Facsimile Agent:/usr/spool/fax:"; \
+	    exit; \
+	fi
+
+# verify the fax service is present
+faxservice:
+	@DOMAIN=`${DOMAINNAME}`; \
+	if test -z "$$DOMAIN"; then \
+	    SERVICE=`${GREP} '^fax' /etc/services`; \
+	else \
+	    SERVICE=`${YPCAT} services | ${GREP} '^fax'`; \
+	fi; \
+	if test -z "$$SERVICE"; then \
+	    ${ECHO} "You must have a \"fax\" service defined before this"; \
+	    ${ECHO} "installation can be done.  Install the following in"; \
+	    ${ECHO} "/etc/services or in your Yellow Pages database:"; \
+	    ${ECHO} "fax	4557/tcp	# FAX transmission service"; \
+	    exit; \
+	fi
+
+# verify the fax server that receives client send requests
+# is known to inetd; note that this requires a fax service
+# and fax user already be registered
+faxserver:
+	@INETD=`${GREP} '^fax' /usr/etc/inetd.conf`; \
+	if test -z "$$INETD"; then \
+	    ${ECHO} "You need faxd.recv started by inetd from /usr/etc/inetd.conf:"; \
+	    ${ECHO} ""; \
+	    ${ECHO} "fax	stream	tcp	nowait	${OWNER}	/usr/etc/faxd.recv	faxd.recv"; \
+	    ${ECHO} ""; \
+	    ${ECHO} "(Don't forget to poke inetd when this setup is done: /etc/killall -HUP inetd)"; \
+	    exit; \
+	fi
+
+setupDirs: setupBinDirs setupSpoolDirs
+
+setupBinDirs:
+	@${ECHO} "Setup the ${BIN} directory where the client applications go"
+	-${MKDIR} ${BIN}
+	${CHMOD} 755 ${BIN}
+	${CHOWN} ${OWNER} ${BIN}
+
+setupSpoolDirs:
+	@${ECHO} "Setup the spooling area ${FAX}:"
+	-${MKDIR} ${FAX};\
+	    ${CHMOD} 755 ${FAX};	${CHOWN} ${OWNER} ${FAX}
+	-${MKDIR} ${FAX}/bin;\
+	    ${CHMOD} 755 ${FAX}/bin;	${CHOWN} ${OWNER} ${FAX}/bin
+	-${MKDIR} ${FAX}/docq;\
+	    ${CHMOD} 700 ${FAX}/docq;	${CHOWN} ${OWNER} ${FAX}/docq
+	-${MKDIR} ${FAX}/etc;\
+	    ${CHMOD} 755 ${FAX}/etc;	${CHOWN} ${OWNER} ${FAX}/etc
+	-${MKDIR} ${FAX}/recvq;\
+	    ${CHMOD} 755 ${FAX}/recvq;	${CHOWN} ${OWNER} ${FAX}/recvq
+	-${MKDIR} ${FAX}/sendq;\
+	    ${CHMOD} 755 ${FAX}/sendq;	${CHOWN} ${OWNER} ${FAX}/sendq
+	-${MKDIR} ${FAX}/tmp;\
+	    ${CHMOD} 755 ${FAX}/tmp;	${CHOWN} ${OWNER} ${FAX}/tmp
+	-${MKDIR} ${FAX}/info;\
+	    ${CHMOD} 755 ${FAX}/info;	${CHOWN} ${OWNER} ${FAX}/info
+
+installStuff: installServers installClient installUtilities installMan ${PS2FAX}
+
+installServers: faxd/faxd recvfax/faxd.recv
+	@${ECHO} "Install the servers"
+	(cd faxd; /etc/install -f ${USRETC} -u ${OWNER} -m 4755 -O faxd)
+	(cd recvfax; /etc/install -f ${USRETC} -u ${OWNER} -m 755 -O faxd.recv)
+
+installClient: installClientNoise \
+    installFax2ps	\
+    installFaxalter	\
+    installFaxcomp	\
+    installFaxstat	\
+    installFaxrm	\
+    installFaxview	\
+    installFaxcover	\
+    installFaxmail	\
+    installSendfax	\
+    installSgi2fax	\
+    ${NULL}
+
+installClientNoise:
+	@${ECHO} "Install the client applications:"
+
+installFax2ps: fax2ps/fax2ps
+	(cd fax2ps; /etc/install -f ${BIN} -u ${OWNER} -m 755 fax2ps)
+installFaxalter: faxalter/faxalter
+	(cd faxalter; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxalter)
+installFaxstat: faxstat/faxstat
+	(cd faxstat; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxstat)
+installFaxrm: faxrm/faxrm
+	(cd faxrm; \
+	    /etc/install -f ${BIN} -u ${OWNER} -m 755 faxrm; \
+	    /etc/install -f ${FAX}/bin -u ${OWNER} -m 755 faxrm; \
+	)
+installFaxview: faxview/faxview
+	(cd faxview; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxview)
+installFaxcover: faxcover/faxcover faxcover/faxcover.ps
+	(cd faxcover; \
+	    /etc/install -f ${BIN} -u ${OWNER} -m 755 faxcover; \
+	    /etc/install -f ${BIN} -u ${OWNER} -m 444 -O faxcover.ps; \
+	)
+installFaxcomp: faxcomp/faxcomp
+	(cd faxcomp; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxcomp)
+installFaxmail: faxmail/faxmail
+	(cd faxmail; /etc/install -f ${BIN} -u ${OWNER} -m 755 faxmail)
+installSendfax: sendfax/sendfax
+	(cd sendfax; /etc/install -f ${BIN} -u ${OWNER} -m 755 sendfax)
+installSgi2fax: sgi2fax/sgi2fax
+	(cd sgi2fax; /etc/install -f ${BIN} -u ${OWNER} -m 755 sgi2fax)
+
+installMan: man/man1 man/man4
+	-${MKDIR} ${MAN} ${MAN}/man1 ${MAN}/man4
+	-(cd man/man1; /etc/install -f ${MAN}/man1 -m 444 *.1*)
+	-(cd man/man4; /etc/install -f ${MAN}/man4 -m 444 *.4*)
+
+installUtilities: util/text2fax.sh
+installUtilities: util/dit2fax.sh
+installUtilities: util/faxanswer
+installUtilities: util/faxquit
+installUtilities: util/faxinfo
+installUtilities: util/faxsubmit
+installUtilities: util/ps2fax.sh
+installUtilities: util/notify.sh
+installUtilities: util/submit2at.sh
+installUtilities: util/deliver.sh
+installUtilities: util/faxd
+	(cd util; \
+	 /etc/install -f ${BIN} -u ${OWNER} -m 755 -src text2fax.sh -O text2fax; \
+	 /etc/install -f ${BIN} -u ${OWNER} -m 755 -src dit2fax.sh -O dit2fax; \
+	 /etc/install -f ${BIN} -u ${OWNER} -m 4755 -O faxanswer; \
+	 /etc/install -f ${BIN} -u ${OWNER} -m 4755 -O faxquit; \
+	 /etc/install -f ${FAX}/bin -u ${OWNER} -m 755 -O faxsubmit faxinfo; \
+	 /etc/install -f ${FAX}/bin -u ${OWNER} -m 755 -src ps2fax.sh -O ps2fax; \
+	 /etc/install -f ${FAX}/bin -u ${OWNER} -m 755 -src notify.sh -O notify; \
+	 /etc/install -f ${FAX}/bin -u ${OWNER} -m 755 -src submit2at.sh -O submit2at; \
+	 /etc/install -f ${FAX}/bin -u ${OWNER} -m 755 -src deliver.sh -O deliver; \
+	)
+	@${ECHO} "Note that this install will setup the system so that"
+	@${ECHO} "fax servers are started for each modem at boot time"
+	(cd util; /etc/install -f ${INITD} -m 755 -O faxd)
+
+# this sets up the DPS-based PostScript imaging stuff
+DPSps2fax: ps2fax/afm
+DPSps2fax: ps2fax/default.dps_vm 
+DPSps2fax: ps2fax/dpsstartup.ps 
+DPSps2fax: ps2fax/outline 
+DPSps2fax: ps2fax/prebuilt 
+DPSps2fax: ps2fax/ps2fax
+DPSps2fax: ps2fax/Makefile
+	(cd ps2fax; /bin/make DPSLIB=${DPSLIB} BIN=${BIN} install)
+
+GSps2fax:
+	@${ECHO} "Can't yet handle Ghostscript setup."
+
+setupSpool: createSampleFiles
+
+createSampleFiles: sampleConfig sampleHosts sampleTSI sampleXferlog
+
+sampleConfig: etc/config.ttym2
+	@if test ! -r ${FAX}/etc/config.ttym2; then \
+	    ${ECHO} "Install a sample modem configuration file in ${FAX}/etc/config.ttym2."; \
+	    /etc/install -F ${FAX} -m 644 -u ${OWNER} -O etc/config.ttym2; \
+	fi
+
+sampleHosts:
+	@if test ! -r ${FAX}/etc/hosts; then \
+	    ${ECHO} "Install a hosts database that allows only local clients to send facsimile."; \
+	    ${ECHO} "127.0.0.1" > ${FAX}/etc/hosts;	\
+	    ${CHMOD} 644 ${FAX}/etc/hosts;		\
+	    ${CHOWN} ${OWNER} ${FAX}/etc/hosts;		\
+	fi
+
+sampleTSI:
+	@if test ! -r ${FAX}/etc/tsi; then \
+	    ${ECHO} "If you want TSI checking, create a ${FAX}/etc/tsi file"; \
+	    ${ECHO} "  with appropriate patterns and set \"qualifyTSI\" to yes"; \
+	    ${ECHO} "  in the configuration file."; \
+	fi
+
+sampleXferlog:
+	@if test ! -r ${FAX}/etc/xferlog; then \
+	    ${ECHO} "Creating a publicly-readable transfer log file."; \
+	    cp /dev/null ${FAX}/etc/xferlog;		\
+	    ${CHMOD} 644 ${FAX}/etc/xferlog;		\
+	    ${CHOWN} ${OWNER} ${FAX}/etc/xferlog;	\
+	fi
+
+setupSysadmin: ${FTR}
+setupSysadmin: ${FILETYPE}/vadmin/${VADMINFTR}
+setupSysadmin: faxadmin/vadmin-fax.ftr
+setupSysadmin: faxadmin/faxadmin faxadmin/fax.hlp
+	@${ECHO} "Hook the fax manager program into the system manager:"
+	cd faxadmin; \
+	    /etc/install -f ${VADMIN} -u ${OWNER} -m 4755 \
+		-src faxadmin -O fax; \
+	    /etc/install -f ${VADMIN} -m 444 -O fax.hlp; \
+	    /etc/install -f ${FILETYPE}/vadmin -m 444 -O vadmin-fax.ftr
+	cd ${FILETYPE}/vadmin; \
+	    ${RM} -f ${VADMINCTR}; \
+	    ${FTR} ${VADMINFTR} vadmin-fax.ftr -o ${VADMINCTR}
+	@${ECHO} "You should invoke the fax manager from the system admin tool"
+	@${ECHO} "  area to customize the modem configuration for your machine!"

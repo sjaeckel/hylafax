@@ -1,0 +1,259 @@
+.\"	$Header: /usr/people/sam/flexkit/fax/man/man4/RCS/config.4f,v 1.1 91/05/11 16:46:27 sam Exp $
+.\"
+.\" Copyright (c) 1991 by Sam Leffler.
+.\" All rights reserved.
+.\"
+.\" This file is provided for unrestricted use provided that this
+.\" legend is included on all tape media and as a part of the
+.\" software program in whole or part.  Users may copy, modify or
+.\" distribute this file at will.
+.\"
+.TH CONFIG 4F "April 29, 1991"
+.SH NAME
+config \- 
+.I FlexFAX
+per-modem server configuration database
+.SH DESCRIPTION
+.I FlexFAX
+uses a configuration file for each facsimile modem attached
+to a machine.
+This file contains information about the modem and about how
+the facsimile server that services that modem should operate.
+Configuration files are located in the
+.B etc
+subdirectory and have names of the form
+.BI config. device ,
+where
+.I device
+is the name of the modem's device file; for example
+.I ttym2
+for a facsimile modem attached to the serial port
+.IR /dev/ttym2 .
+.PP
+Configuration files have a simple format and are entirely
+.SM ASCII.
+A configuration parameter is of the form
+.sp .5
+.ti +0.5i
+\fBtag\fP: \fIvalue\fP
+.br
+.sp .5
+where a \fItag\fP identifies a parameter and a \fIvalue\fP
+is either a string, number, or boolean value.
+Comments are introduced by the ``#'' character
+and extend to the end of the line.
+String values start at the first non-blank character
+after the ``:'' and continue to the end of the line
+(after comments have been removed).
+Numeric values are decimal integers; except for the
+value of
+.B RecvFileMode
+which is specified as octal.
+Boolean values are case insensitive.
+For a true value, either ``Yes'' or ``On'' should
+be used.
+For a false value, use ``No'' or ``Off''.
+.PP
+The following table itemizes the tags and the expected type
+of their value.
+More detailed information about each tag is given below.
+.in +0.5i
+.sp .5
+.nf
+.ta \w'RingsBeforeAnswer    'u +\w'integer    'u +\w'Abaton    'u
+\fBTag	Type	Default	Description\fP
+AreaCode	string	\-	local area code
+CommaPauseTime	integer	2	time (secs) to pause for ``,'' in dialing string
+CountryCode	string	\-	local country code
+DialPrefix	string	\-	external dialing prefix
+FAXNumber	string	\-	facsimile modem phone number
+InternationalPrefix	string	\-	dialing prefix for international calls
+LongDistancePrefix	string	\-	dialing prefix for long distance calls
+ModemType	string	Abaton	type of facsimile modem
+ProtocolTracing	integer	0	server operation tracing
+QualifyTSI	boolean	No	use TSI to control reception
+RecvFileMode	octal	0600	protection mode to use for received facsimile files
+RingsBeforeAnswer	integer	0	rings to wait before answering phone
+SpeakerVolume	integer	1	volume level for modem speaker
+ToneDialing	boolean	Yes	tone or pulse dialing as default
+UseDialPrefix	boolean	No	use external dialing prefix
+WaitForCarrier	integer	30	time (secs) to wait for carrier when dialing
+.fi
+.in -0.5i
+.SH "CONFIGURATION PARAMETERS"
+.TP
+.B AreaCode
+The local area code in which the facsimile machine resides.
+This value is used to formulate canonical phone numbers for
+dialing.
+It is also used to determine if a phone call is local in
+which case any leading long distance dialing information
+is stripped off to avoid confusing the local carrier.
+That is, dialing 1.415.555.1212 in area code 415 (in the
+United States) does not work\(em one must dial only 555.1212.
+.TP
+.B CommaPauseTime
+The time, in seconds, that the modem should pause when encountering
+a ``,'' modifier in the dialing string.
+.TP
+.B CountryCode
+The local country code in which the facsimile machine resides.
+As for
+.BR AreaCode ,
+this value is used to formulate canonical phone numbers for dialing.
+.TP
+.B DialPrefix
+A string to prepend to all outgoing dialing strings.
+This can be used, for example, to reach an outside phone line
+when dialing from within a PBX system.
+Note that this string is prepended only if the
+.B UseDialPrefix
+parameter is true.
+.TP
+.B FAXNumber
+The phone number associated with the facsimile modem.
+If this phone number is not a fully qualified number,
+the values of
+.B AreaCode
+and
+.B CountryCode
+are used to generate the Caller Subscriber Identification (\c
+.SM CSI\c
+) that is transmitted to remote machines.
+.TP
+.B InternationalPrefix
+The string to use to place an international phone call.
+In the United States, this is ``011''.
+.TP
+.B LongDistancePrefix
+The string to use to place a long distance phone call.
+In the United States, this is typically ``1''.
+.TP
+.B ModemType
+A string that identifies the type of facsimile modem.
+Possible values are:
+.sp .5
+.nf
+.ta \w'Class2    'u
+Abaton	Abaton InterFax (24/96)
+EV958	Everex model 958 (packaged under Abaton label)
+EV968	Everex model 968 (packaged under Abaton label)
+Class2	modems that conform to EIA PN-2388/EIA-592
+Class1	modems that conform to a forthcoming EIA spec
+.fi
+.IP
+.I Abaton
+indicates the modem is sold under the Abaton label
+as an InterFax 24/96 (usually for the Macintosh).
+These modems are actually made by Everex and are
+either model
+.I EV958
+or (the newer)
+.IR EV968 .
+The modem type can be specified as
+.IR Abaton ,
+in which case the model number is identified at runtime,
+or as a specific Everex model.
+.IP
+A
+.I Class2
+modem is a modem that conforms to the draft industry
+standard EIA PN-2388 document
+that specifies a standard host-modem command interface.
+One modem that is known to satisfy this criteria is
+the Everex 24/96D, model EV968-51, with firmware dated
+December 31, 1990, or later.
+.IP
+A
+.I Class1
+modem is a modem that confirms to a forthcoming industry
+standard similar to EIA PN-2388.
+Class1 modems are expected to have an interface that
+requires host support much like that provided for the
+.IR Abaton -style
+modems (and as such should be easy to support once the
+standard is made available).
+.TP
+.B ProtocolTracing
+A number that controls the generation of tracing
+information by a server.
+Tracing is divided into 
+.I areas
+that are individually controlled.
+To enable tracing of multiple areas of operation, the
+flag associated with each area should be bit-or'd to
+form the value for this tag.
+.sp .5
+.ta \w'\fBFlag    \fP'u +\w'Modem Communications    'u
+.nf
+\fBFlag	Area	Description\fP
+1	Server Operation	queue management & general operation
+2	FAX Protocol	Group 3 facsimile protocol
+4	Modem Operations	modem hardware manipulation
+8	Modem Communications	comands passed between host and modem
+16	Timeouts	timer-relation operations
+.fi
+For example, to enable tracing of server operations and
+modem communications, a value of 1+8=9 should be specified.
+.TP
+.B QualifyTSI
+A boolean that specifies if the identity of calling
+facsimile machines should be checked against an access
+control list before receiving facsimile.
+If 
+.B QualifyTSI
+is true, then only messages from facsimile machines identified
+in the file
+.B etc/tsi
+will be accepted; see
+.IR tsi (4F).
+Otherwise, all incoming facsimile messages will be accepted.
+.TP
+.B RecvFileMode
+The file protection mode that should be used when
+creating files to hold incoming facsimile.
+Note that this value is given in octal.
+The default value of 0600 implies that only the
+facsimile user can read received facsimile.
+If incoming facsimile are to be publicly accessible, this
+value may be set, for example, to 0644.
+.TP
+.B RingsBeforeAnswer
+The number of rings to wait before answering the phone
+as a facsimile machine (i.e. generate 2100HZ answer tone).
+If this value is set to 0, then the phone will only
+be answered in response to an explicit ``answer command''; see
+.IR faxadmin (1M).
+.TP
+.B SpeakerVolume
+The volume level that the in-modem speaker should be
+adjusted to while in a command (non-data-transfer) state.
+The possible values are:
+.sp .5
+.ta \w'\fBValue\fP    'u +\w'Medium    'u
+.nf
+\fBValue	Name	Description\fP
+0	Off	silent
+1	Quiet	almost inaudible
+2	Low	tolerable in privacy
+3	Medium	loud enough to hear in the next room
+4	High	intolerable
+.fi
+Note that the speaker is always turned off
+while facsimile data is being transferred.
+.TP
+.B ToneDialing
+A boolean that specifies if calls should
+be placed with tone dialing (true) or with pulse dialing (false).
+.TP
+.B UseDialPrefix
+A boolean that specifies if the value of
+.B DialPrefix
+should be prepended to the dialing string for all outgoing calls.
+.TP
+.B WaitForCarrier
+The number of seconds to wait for a carrier signal
+when placing a call.
+.SH "SEE ALSO"
+.IR faxadmin (1M),
+.IR faxd (1M)

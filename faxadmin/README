@@ -1,0 +1,12 @@
+$Header: /usr/people/sam/flexkit/fax/faxadmin/RCS/README,v 1.1 91/03/27 13:38:54 sam Exp $
+
+This is the start of a vadmin tool for dealing with
+the facsimile server.  It had most of the important
+stuff done for dealing with an installed server.  There's
+no support for rearranging the send queue (but then
+again, the print tool doesn't either).  Most glaring
+is the need to support installation.  Help is also
+not implemented and some of the UI stuff is inconsistent
+with the rest of vadmin (use of menus on button 3).
+
+	Sam
