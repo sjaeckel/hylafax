@@ -1,4 +1,4 @@
-/*	$Id: sendpage.c++,v 1.25 1996/07/31 17:40:35 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -257,6 +257,7 @@ main(int argc, char** argv)
     signal(SIGHUP, fxSIGHANDLER(sigDone));
     signal(SIGINT, fxSIGHANDLER(sigDone));
     signal(SIGTERM, fxSIGHANDLER(sigDone));
+    signal(SIGCHLD, fxSIGHANDLER(SIG_DFL));    // by YC
     app = new sendPageApp;
     if (!app->run(argc, argv))
 	sigDone(0);
