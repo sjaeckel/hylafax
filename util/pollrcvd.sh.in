@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: pollrcvd.sh,v 1.20 1996/06/24 03:06:23 sam Rel $
+#	$Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -43,7 +43,7 @@ test -f etc/setup.cache || {
 FATAL ERROR: $SPOOL/etc/setup.cache is missing!
 
 The file $SPOOL/etc/setup.cache is not present.  This
-probably means the machine has not been setup using the faxsetup(1M)
+probably means the machine has not been setup using the faxsetup(@MANNUM1_8@)
 command.  Read the documentation on setting up HylaFAX before you
 startup a server system.
 
