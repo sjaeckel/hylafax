@@ -1,265 +1,304 @@
-#ident $Header: /d/sam/flexkit/fax/faxd/RCS/Class2Recv.c++,v 1.7 91/05/23 12:25:08 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2Recv.c++,v 1.66 1994/07/04 18:36:46 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include <stdio.h>
-#include "tiffio.h"
 #include "Class2.h"
-#include "FaxServer.h"
+#include "ModemConfig.h"
 
 #include "t.30.h"
-#include "class2.h"
-#include <libc.h>
+#include <stdlib.h>
 #include <osfcn.h>
-
-#include "flock.h"		// XXX
 
 /*
  * Recv Protocol for Class-2-style modems.
  */
+
+static const AnswerMsg answerMsgs[] = {
+{ "+FCO",	4,
+  FaxModem::AT_NOTHING, FaxModem::OK,	    FaxModem::CALLTYPE_FAX },
+{ "+FDM",	4,
+  FaxModem::AT_NOTHING, FaxModem::OK,	    FaxModem::CALLTYPE_DATA },
+{ "+FHNG:",	6,
+  FaxModem::AT_NOTHING, FaxModem::NOCARRIER,FaxModem::CALLTYPE_ERROR },
+{ "VCON",	4,
+  FaxModem::AT_NOTHING, FaxModem::OK,	    FaxModem::CALLTYPE_VOICE },
+};
+#define	NANSWERS	(sizeof (answerMsgs) / sizeof (answerMsgs[0]))
+
+const AnswerMsg*
+Class2Modem::findAnswer(const char* s)
+{
+    for (u_int i = 0; i < NANSWERS; i++)
+	if (strneq(s, answerMsgs[i].msg, answerMsgs[i].len))
+	    return (&answerMsgs[i]);
+    return FaxModem::findAnswer(s);
+}
+
+/*
+ * Begin a fax receive session.
+ */
 fxBool
-Class2Modem::recvBegin(u_int dis)
+Class2Modem::recvBegin(fxStr& emsg)
 {
     fxBool status = FALSE;
-
-    dis >>= 8;			// convert to 24-bit format
-    int vr = (dis & DIS_7MMVRES) != 0;
-    int br = DCSbrTab[(dis & DIS_SIGRATE) >> 12];
-    int wd = DCSwdTab[(dis & DIS_PAGEWIDTH) >> 6];
-    int ln = DCSlnTab[(dis & DIS_PAGELENGTH) >> 4];
-    int df = (dis & DIS_2DENCODE) != 0;
-    int st = DCSstTab[(dis & DIS_MINSCAN) >> 1];
-    if (class2Cmd("DCC", vr, br, wd, ln, df, 0, 0, st) && answer() == OK) {
-	int n;
-	do {
-	    n = getModemLine(rbuf);
-	    if (n >= 6) {
-		if (streq(rbuf, "+FNSS:", 6)) {
-		} else if (streq(rbuf, "+FTSI:", 6)) {
-		    recvTSI(rbuf+7);
-		} else if (streq(rbuf, "+FDCS:", 6)) {
-		    if (recvDCS(rbuf+6))
-			status = TRUE;
-		} else if (streq(rbuf, "+FHNG:", 6)) {
-		    u_int code = (u_int) atoi(rbuf+6);
-		    server.traceStatus(FAXTRACE_PROTOCOL,
-			"REMOTE HANGUP: %s (code %s)",
-			hangupCause(code), rbuf+6);
-		    status = FALSE;
-		}
-	    }
-	} while (n >= 0 && !streq(rbuf, "OK", 2));
-    }
+    hangupCode[0] = '\0';
+    ATResponse r;
+    do {
+	switch (r = atResponse(rbuf, 3*60*1000)) {
+	case AT_NOANSWER:
+	case AT_NOCARRIER:
+	case AT_NODIALTONE:
+	case AT_ERROR:
+	case AT_TIMEOUT:
+	case AT_EMPTYLINE:
+	    processHangup("70");
+	    status = FALSE;
+	    break;
+	case AT_FNSS:
+	    // XXX parse and pass on to server
+	    break;
+	case AT_FTSI:
+	    recvCheckTSI(stripQuotes(skipStatus(rbuf)));
+	    break;
+	case AT_FDCS:
+	    if (recvDCS(rbuf))
+		status = TRUE;
+	    break;
+	case AT_FHNG:
+	    status = FALSE;
+	    break;
+	}
+    } while (r != AT_TIMEOUT && r != AT_EMPTYLINE && r != AT_OK);
+    if (!status)
+	emsg = hangupCause(hangupCode);
     return (status);
 }
 
-CallStatus
-Class2Modem::answer()
-{
-    if (!atCmd("A", FALSE))
-	return (FAILURE);
-    for (;;) {
-	if (getModemLine(rbuf) <= 0)
-	    return (FAILURE);
-	if (streq(rbuf, "+FCON", 5))
-	    return (OK);
-	if (streq(rbuf, "+FHNG:", 6)) {
-	    u_int code = (u_int) atoi(rbuf+6);
-	    server.traceStatus(FAXTRACE_PROTOCOL,
-		"REMOTE HANGUP: %s (code %s)",
-		hangupCause(code), rbuf+6);
-	    return (NOCARRIER);		// XXX
-	}
-	if (streq(rbuf, "NO CARRIER", 10))
-	    return (NOCARRIER);
-	if (streq(rbuf, "NO DIALTONE", 11))
-	    return (NODIALTONE);
-	if (streq(rbuf, "ERROR", 5))
-	    return (ERROR);
-    }
-}
-
-fxBool
-Class2Modem::recvTSI(const char* cp)
-{
-    fxStr tsi = cp;
-    if (tsi.length() > 1) {		// strip quote marks
-	if (tsi[0] == '"')
-	    tsi.remove(0);
-	if (tsi[tsi.length()-1] == '"')
-	    tsi.resize(tsi.length()-1);
-    }
-    tsi.remove(0, tsi.skip(0, " \t"));	// strip leading white space
-    return server.recvCheckTSI(tsi);
-}
-
+/*
+ * Process a received DCS.
+ */
 fxBool
 Class2Modem::recvDCS(const char* cp)
 {
-    int vr, br, wd, ln, df, ec, bf, st;
-    int n = sscanf(cp, "%d,%d,%d,%d,%d,%d,%d,%d",
-	&vr, &br, &wd, &ln, &df, &ec, &bf, &st);
-    if (n == 8) {		// protocol botch
-	// fabricate DCS from component pieces
-	// XXX bounds check array indexes
-	u_int xinfo = 0;
-	u_int dcs = DCS_T4RCVR
-	    | stDISTab[st]
-	    | lnDISTab[ln]
-	    | wdDISTab[wd]
-	    | dfDISTab[df]
-	    | vrDISTab[vr]
-	    | brDISTab[br]
-	    ;
-	is2D = (dcs & DCS_2DENCODE) != 0;
-	server.recvDCS(dcs, xinfo);
+    if (parseClass2Capabilities(skipStatus(cp), params)) {
+	setDataTimeout(60, params.br);
+	FaxModem::recvDCS(params);
 	return (TRUE);
-    } else {
-	server.traceStatus(FAXTRACE_PROTOCOL,
-	    "MODEM protocol botch, can't parse \"%s\"", cp);
+    } else {				// protocol botch
+	processHangup("72");		// XXX "COMREC error"
 	return (FALSE);
     }
 }
 
-TIFF*
-Class2Modem::recvPhaseB(fxBool okToRecv)
-{
-    // NB: this assumes we're in the "right" directory
-    if (okToRecv) {
-	tif = TIFFOpen(tempnam("recvq", "fax"), "w");
-	if (tif) {
-	    (void) flock(TIFFFileno(tif), LOCK_EX|LOCK_NB);
-	    server.traceStatus(FAXTRACE_SERVER,
-		"RECV data in \"%s\"", TIFFFileName(tif));
-	    resetPages();
-	    while (recvPage() && okToRecv)
-		;
-	    return (tif);		// caller does close
-	}
-    } else
-	tif = 0;
-    abort();				// terminate session
-    if (tif)
-	(void) unlink(TIFFFileName(tif));
-    return (tif);
-}
-
+/*
+ * Signal that we're ready to receive a page
+ * and then collect the data.  Return the
+ * received post-page-message.
+ */
 fxBool
-Class2Modem::recvPage()
+Class2Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 {
-    if (dataReception()) {
-	do {
-	    int n = getModemLine(rbuf);
-	    if (n <= 0)
+    int ppr;
+
+    do {
+	ppm = PPM_EOP;
+	hangupCode[0] = 0;
+	if (!vatFaxCmd(AT_NOTHING, "DR"))
+	    goto bad;
+	ATResponse r;
+	while ((r = atResponse(rbuf, conf.pageStartTimeout)) != AT_CONNECT)
+	    switch (r) {
+	    case AT_FDCS:			// inter-page DCS
+		(void) recvDCS(rbuf);
 		break;
-	    if (streq(rbuf, "CONNECT", 7)) {
-		server.traceStatus(FAXTRACE_PROTOCOL, "RECV: begin page");
-		long group3opts = GROUP3OPT_FILLBITS;
-		if (is2D)
-		    group3opts |= GROUP3OPT_2DENCODING;
-		server.recvSetupPage(tif, group3opts,
-		    (bor & BOR_C) == BOR_C_REV ?
-			FILLORDER_MSB2LSB : FILLORDER_LSB2MSB);
-		(void) recvPageData();	// XXX
-		TIFFWriteDirectory(tif);
-		countPage();
-		server.traceStatus(FAXTRACE_PROTOCOL, "RECV: end page");
-		return (TRUE);
+	    case AT_TIMEOUT:
+	    case AT_EMPTYLINE:
+	    case AT_ERROR:
+	    case AT_NOCARRIER:
+	    case AT_NODIALTONE:
+	    case AT_NOANSWER:
+	    case AT_FHNG:			// remote hangup
+		goto bad;
 	    }
-	    if (streq(rbuf, "+FHNG:", 6)) {
-		u_int code = (u_int) atoi(rbuf+6);
-		server.traceStatus(FAXTRACE_PROTOCOL,
-		    "REMOTE HANGUP: %s (code %s)", hangupCause(code), rbuf+6);
-	    }
-	} while (!streq(rbuf, "OK", 2) && !streq(rbuf, "ERROR", 5));
-    }
+	protoTrace("RECV: begin page");
+	/*
+	 * NB: always write data in LSB->MSB for folks that
+	 *     don't understand the FillOrder tag!
+	 */
+	recvSetupPage(tif, group3opts, FILLORDER_LSB2MSB);
+	if (!recvPageData(tif, emsg) || !recvPPM(tif, ppr))
+	    goto bad;
+	/*
+	 * T.30 says to process operator intervention requests
+	 * here rather than before the page data is received.
+	 * This has the benefit of not recording the page as
+	 * received when the post-page response might need to
+	 * be retransmited.
+	 */
+	if (abortRequested()) {
+	    // XXX no way to purge TIFF directory
+	    emsg = "Receive aborted due to operator intervention";
+	    return (FALSE);
+	}
+	// XXX deal with PRI interrupts
+	/*
+	 * If the host did the copy quality checking,
+	 * then override the modem-specified post-page
+	 * response according to the quality of the
+	 * received page.
+	 */
+	if (hostDidCQ)
+	    ppr = isQualityOK(params) ? PPR_MCF : PPR_RTN;
+	if (ppr & 1) {
+	    TIFFWriteDirectory(tif);	// complete page write
+	    countPage();
+	} else {
+	    recvResetPage(tif);		// reset to overwrite data
+	}
+	if (!waitFor(AT_FET))		// post-page message status
+	    goto bad;
+	ppm = atoi(skipStatus(rbuf));
+	if (!waitFor(AT_OK))		// synchronization from modem
+	    goto bad;
+	tracePPM("RECV recv", ppm);
+	tracePPR("RECV send", ppr);
+	if (ppr & 1)			// page good, work complete
+	    return (TRUE);
+    } while (!hostDidCQ || class2Cmd(ptsCmd, ppr));
+bad:
+    if (hangupCode[0] == 0)
+	processHangup("90");			// "Unspecified Phase C error"
+    emsg = hangupCause(hangupCode);
     return (FALSE);
 }
 
 void
-Class2Modem::recvData(u_char* buf, int n)
+Class2Modem::abortPageRecv()
 {
-    TIFFWriteRawStrip(tif, 0, buf, n);
-    server.traceStatus(FAXTRACE_PROTOCOL, "RECV: %d bytes of data", n);
+    char c = CAN;
+    putModem(&c, 1, 1);
+}
+
+/*
+ * Receive Phase C data using the Class 2 ``stream interface''.
+ */
+fxBool
+Class2Modem::recvPageData(TIFF* tif, fxStr& emsg)
+{
+    if (flowControl == FLOW_XONXOFF)
+	(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_FLUSH);
+    (void) putModem(&recvDataTrigger, 1);	// initiate data transfer
+
+    /*
+     * Have host do copy quality checking if the modem does not
+     * support checking for this data format and if the configuration
+     * parameters indicate CQ checking is to be done.
+     */
+    hostDidCQ = (modemCQ && BIT(params.df)) == 0 && checkQuality();
+    fxBool pageRecvd = recvPageDLEData(tif, hostDidCQ, params, emsg);
+
+    // be careful about flushing here -- otherwise we lose +FPTS codes
+    if (flowControl == FLOW_XONXOFF)
+	(void) setXONXOFF(FLOW_XONXOFF, getInputFlow(), ACT_DRAIN);
+
+    if (!pageRecvd)
+	processHangup("91");			// "Missing EOL after 5 seconds"
+    return (pageRecvd);
 }
 
 fxBool
-Class2Modem::recvPageData()
+Class2Modem::recvPPM(TIFF* tif, int& ppr)
 {
-    (void) setInputFlowControl(FALSE);	// disable xon/xoff interpretation
-    char dc1 = DC1;
-    (void) putModem(&dc1, 1);		// initiate data transfer
-
-    u_char buf[16*1024];
-    int n = 0;
     for (;;) {
-	int b = getModemChar(30);
-	if (b == EOF) {
-	    server.traceStatus(FAXTRACE_PROTOCOL, "RECV: premature EOF");
-	    break;
+	switch (atResponse(rbuf, conf.pageDoneTimeout)) {
+	case AT_OK:
+	    protoTrace("MODEM protocol botch: OK without +FPTS:");
+	    /* fall thru... */
+	case AT_TIMEOUT:
+	case AT_EMPTYLINE:
+	case AT_NOCARRIER:
+	case AT_NODIALTONE:
+	case AT_NOANSWER:
+	case AT_ERROR:
+	    processHangup("50");
+	    return (FALSE);
+	case AT_FPTS:
+	    return parseFPTS(tif, skipStatus(rbuf), ppr);
+	case AT_FET:
+	    protoTrace("MODEM protocol botch: +FET: without +FPTS:");
+	    processHangup("100");		// "Unspecified Phase D error"
+	    return (FALSE);
+	case AT_FHNG:
+	    waitFor(AT_OK);			// resynchronize modem
+	    return (FALSE);
 	}
-	if (b == DLE) {
-	    b = getModemChar(30);
-	    if (b == EOF || b == ETX) {
-		if (b == EOF)
-		    server.traceStatus(FAXTRACE_PROTOCOL, "RECV: premature EOF");
-		break;
-	    }
-	    if (b != DLE) {
-		if (n == sizeof (buf))
-		    recvData(buf, sizeof (buf)), n = 0;
-		buf[n++] = DLE;
-	    }
-	}
-	if (n == sizeof (buf))
-	    recvData(buf, sizeof (buf)), n = 0;
-	buf[n++] = b;
     }
-    if (n > 0)
-	recvData(buf, n);
-    // be careful about flushing here -- otherwise we lose +FPTS codes
-    (void) setInputFlowControl(TRUE, FALSE);
+}
 
-    /*
-     * Handle end-of-page protocol.
-     */
-    fxBool pageGood = FALSE;
-    do {
-	n = getModemLine(rbuf);
-	if (n <= 0)
-	    break;
-	if (streq(rbuf, "+FET:", 4)) {
-	} else if (streq(rbuf, "+FHNG:", 6)) {
-	    u_int code = (u_int) atoi(rbuf+6);
-	    server.traceStatus(FAXTRACE_PROTOCOL,
-		"REMOTE HANGUP: %s (code %s)", hangupCause(code), rbuf+6);
-	} else if (streq(rbuf, "+FPTS:", 6)) {
-	    int ppr = 0;
-	    int lc = 0;
-	    int blc = 0;
-	    int cblc = 0;
-	    if (sscanf(rbuf+6, "%d,%d,%d,%d", &ppr, &lc, &blc, &cblc) < 2) {
-		server.traceStatus(FAXTRACE_PROTOCOL,
-		    "MODEM protocol botch (\"%s\"), can't parse line count",
-		    rbuf); 
-		continue;
-	    }
-	    TIFFSetField(tif, TIFFTAG_IMAGELENGTH, (u_long) lc);
-	    TIFFSetField(tif, TIFFTAG_CLEANFAXDATA,
-		blc ? CLEANFAXDATA_REGENERATED : CLEANFAXDATA_CLEAN);
-	    if (blc) {
-		TIFFSetField(tif, TIFFTAG_BADFAXLINES,  (u_long) blc);
-		TIFFSetField(tif, TIFFTAG_CONSECUTIVEBADFAXLINES, cblc);
-	    }
-	    pageGood = ppr & 1;		// XXX handle interrupts
+fxBool
+Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
+{
+    int lc = 0;
+    int blc = 0;
+    int cblc = 0;
+    ppr = 0;
+    if (sscanf(cp, "%d,%d,%d,%d", &ppr, &lc, &blc, &cblc) > 0) {
+	// NB: ignore modem line count, always use our own
+	TIFFSetField(tif, TIFFTAG_IMAGELENGTH, getRecvEOLCount());
+	TIFFSetField(tif, TIFFTAG_CLEANFAXDATA, blc ?
+	    CLEANFAXDATA_REGENERATED : CLEANFAXDATA_CLEAN);
+	if (blc) {
+	    TIFFSetField(tif, TIFFTAG_BADFAXLINES, (u_long) blc);
+	    TIFFSetField(tif, TIFFTAG_CONSECUTIVEBADFAXLINES, cblc);
 	}
-    } while (!streq(rbuf, "OK", 2));
-    return (pageGood); 
+	return (TRUE);
+    } else {
+	protoTrace("MODEM protocol botch: \"%s\"; "
+	    "can not parse line count", cp);
+	processHangup("100");		// "Unspecified Phase D error"
+	return (FALSE);
+    }
+}
+
+/*
+ * Complete a receive session.
+ */
+fxBool
+Class2Modem::recvEnd(fxStr&)
+{
+    if (isNormalHangup())
+	(void) vatFaxCmd(AT_NOCARRIER, "DR");	// wait for DCN
+    else
+	(void) class2Cmd(abortCmd);		// abort session
+    return (TRUE);
+}
+
+/*
+ * Abort an active receive session.
+ */
+void
+Class2Modem::recvAbort()
+{
+    strcpy(hangupCode, "50");			// force abort in recvEnd
 }

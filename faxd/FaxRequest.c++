@@ -1,33 +1,52 @@
-#ident $Header: /d/sam/flexkit/fax/faxd/RCS/FaxRequest.c++,v 1.12 91/05/23 12:25:49 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxRequest.c++,v 1.50 1994/07/04 18:37:16 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
-#include <ctype.h>
 #include <unistd.h>
-#include "SLinearPattern.h"
+#include <syslog.h>
+#include <osfcn.h>
+#include <fcntl.h>
+
 #include "FaxRequest.h"
 #include "config.h"
-extern "C" {
-#include <syslog.h>
-void syslog(int, const char* ...);
-}
-#ifndef CYPRESS_XGL
-extern "C" int ftruncate(const long, const long);
-#endif
+
+RegEx FaxRequest::jobidPat(FAX_QFILEPREF);
 
 FaxRequest::FaxRequest(const fxStr& qf) : qfile(qf)
 {
     tts = 0;
+    killtime = 0;
+    (void) jobidPat.Find(qf);
+    int qfileTail = jobidPat.EndOfMatch();
+    jobid = qf.extract(qfileTail, qf.length()-qfileTail);
     fp = NULL;
-    status = FALSE;
+    status = send_retry;
     npages = 0;
+    totpages = 0;
+    ntries = 0;
+    ndials = 0;
+    totdials = 0;
+    maxdials = (u_short) FAX_RETRIES;
     notify = no_notice;
 }
 
@@ -37,9 +56,59 @@ FaxRequest::~FaxRequest()
 	fclose(fp);
 }
 
-#define	isCmd(cmd)	(strcasecmp(line, cmd) == 0)
+#define	N(a)		(sizeof (a) / sizeof (a[0]))
 
-// Return True for success, False for failure
+static const struct {
+    const char* name;
+    fxStr FaxRequest::* p;
+} strvals[] = {
+    { "external",	&FaxRequest::external },	// NB: must precede number
+    { "number",		&FaxRequest::number },
+    { "mailaddr",	&FaxRequest::mailaddr },
+    { "sender",		&FaxRequest::sender },
+    { "jobtag",		&FaxRequest::jobtag },
+    { "pagehandling",	&FaxRequest::pagehandling },
+    { "modem",		&FaxRequest::modem },
+    { "receiver",	&FaxRequest::receiver },
+    { "company",	&FaxRequest::company },
+    { "location",	&FaxRequest::location },
+    { "cover",		&FaxRequest::cover },
+};
+static const struct {
+    const char* name;
+    u_short FaxRequest::* p;
+} shortvals[] = {
+    { "npages",		&FaxRequest::npages },
+    { "totpages",	&FaxRequest::totpages },
+    { "ntries",		&FaxRequest::ntries },
+    { "ndials",		&FaxRequest::ndials },
+    { "totdials",	&FaxRequest::totdials },
+    { "maxdials",	&FaxRequest::maxdials },
+    { "pagewidth",	&FaxRequest::pagewidth },
+    { "resolution",	&FaxRequest::resolution },
+    { "pagelength",	&FaxRequest::pagelength },
+};
+static const struct {
+    const char* name;
+    time_t FaxRequest::* p;
+} timevals[] = {
+    { "tts",		&FaxRequest::tts },
+    { "killtime",	&FaxRequest::killtime },
+};
+static const struct {
+    const char* name;
+    fxBool	check;
+    FaxSendOp	op;
+} docvals[] = {
+    { "poll",		FALSE,	send_poll },
+    { "tiff",		TRUE,	send_tiff },
+    { "!tiff",		FALSE,	send_tiff_saved },
+    { "postscript",	TRUE,	send_postscript },
+    { "!postscript",	FALSE,	send_postscript_saved },
+    { "fax",		FALSE,	send_fax },
+};
+static const char* notifyVals[] = { "none", "when done", "when requeued" };
+
 fxBool
 FaxRequest::readQFile(int fd)
 {
@@ -49,148 +118,239 @@ FaxRequest::readQFile(int fd)
 	fp = fopen((char*) qfile, "r+w");
     if (fp == NULL) {
 	syslog(LOG_ERR, "%s: open: %m", (char*) qfile);
-	return FALSE;
+	return (FALSE);
     }
-    char line[1024];
-    char* cp;
-    // XXX maybe use object transcription!!!
+    char line[2048];
+    lineno = 0;
     while (fgets(line, sizeof (line) - 1, fp)) {
+	lineno++;
 	if (line[0] == '#')
 	    continue;
-	if (cp = strchr(line, '\n'))
-	    *cp = '\0';
-	char* tag = strchr(line, ':');
-	if (!tag) {
-	    syslog(LOG_ERR, "%s: Malformed line \"%s\"", (char*) qfile, line);
-	    return FALSE;
+	fxStr cmd(line);
+	cmd.resize(cmd.next(0, '\n'));
+	u_int l = cmd.next(0,':');
+	if (l >= cmd.length()) {
+	    error("Malformed line \"%s\"", line);
+	    return (FALSE);
 	}
-	*tag++ = '\0';
-	while (isspace(*tag))
-	    tag++;
-	if (isCmd("tts")) {		// time to send
-	    tts = atoi(tag);
-	    if (tts == 0)
+	// split tag from command
+	fxStr tag(cmd.tail(cmd.length()-(l+1)));
+	tag.remove(0, tag.skip(0, " \t"));
+	// cleanup command and convert to lower case
+	cmd.resize(l);
+	cmd.lowercase();
+	if (isStrCmd(cmd, tag)) {
+	    ;
+	} else if (isShortCmd(cmd, tag)) {
+	    ;
+	} else if (isTimeCmd(cmd, tag)) {
+	    if (cmd == "tts" && tts == 0)
 		tts = time(0);		// distinguish "now" from unset
-	} else if (isCmd("killtime")) {	// time to kill job
-	    killtime = tag;
-	} else if (isCmd("killjob")) {	// at job to kill fax job
-	    killjob = tag;
-	} else if (isCmd("sendjob")) {	// at job to send fax job
-	    sendjob = tag;
-	} else if (isCmd("number")) {	// phone number
-	    number = tag;
-	} else if (isCmd("sender")) {	// sender's name
-	    sender = tag;
-	} else if (isCmd("mailaddr")) {	// return mail address
-	    mailaddr = tag;
-	} else if (isCmd("resolution")) {// vertical resolution in dpi
-	    resolution = atof(tag);
-	} else if (isCmd("npages")) {	// number of pages
-	    npages = atoi(tag);
-	} else if (isCmd("pagewidth")) {// page width in pixels
-	    pagewidth = atoi(tag);
-	} else if (isCmd("pagelength")) {// page length in mm
-	    pagelength = atof(tag);
-	} else if (isCmd("notify")) {	// email notification
-	    if (strcmp(tag, "when done") == 0) {
-		notify = when_done;
-	    } else if (strcmp(tag, "when requeued") == 0) {
-		notify = when_requeued;
-	    } else if (strcmp(tag, "none") == 0) {
-		notify = no_notice;
-	    } else {
-		syslog(LOG_ERR, "job %s: Invalid notify value \"%s\"\n",
-		    (char*) qfile, tag);
+	} else if (cmd == "notify") {	// email notification
+	    checkNotifyValue(tag);
+	} else if (cmd == "status") {
+	    // check for strings w/ continued values (lines end with ``\'')
+	    if (tag.length() && tag[tag.length()-1] == '\\') {
+		fxBool cont = FALSE;
+		fxStr s;
+		do {
+		    if (fgets(line, sizeof (line)-1, fp) == NULL)
+			break;
+		    lineno++;
+		    s = line;
+		    s.resize(s.next(0,'\n'));
+		    cont = (s.length() && s[s.length()-1] == '\\');
+		    if (cont)
+			s.resize(s.length()-1);
+		    tag.append(s);
+		} while (cont);
 	    }
-	} else if (isCmd("postscript") || isCmd("tiff")) {// document file
-	    fxBool format = isCmd("postscript");
-	    // XXX scan full pathname to avoid security holes
-	    if (tag[0] == '.' || tag[0] == '/') {
-		syslog(LOG_ERR,
-		    "%s: Invalid data file \"%s\"; not in same directory",
-		    (char*) qfile, tag);
-		return FALSE;
-	    }
-	    if (access(tag, 4) != 0) {
-		syslog(LOG_ERR, "%s: Can not access data file \"%s\"",
-		    (char*) qfile, tag);
-		return FALSE;
-	    }
-	    files.append(tag);
-	    formats.append(format);
-	} else
-	    syslog(LOG_INFO, "%s: ignoring unknown command line \"%s: %s\"",
-		(char*) qfile, line, tag);
+	    notice = tag;
+	} else {
+	    fxBool fileOK;
+	    if (isDocCmd(cmd, tag, fileOK)) {
+		if (!fileOK)
+		    return (FALSE);
+	    } else
+		error("Ignoring unknown qfile line \"%s\"", line);
+	}
     }
     if (tts == 0) {
-	syslog(LOG_INFO, "%s: not ready to send yet", (char*) qfile);
-	return FALSE;
+	error("Invalid time-to-send (zero)");
+	return (FALSE);
     }
     if (number == "" || sender == "" || mailaddr == "") {
-	syslog(LOG_ERR, "%s: Malformed job description, "
-	    "missing number|sender|mailaddr", (char*) qfile);
-	return FALSE;
+	error("Malformed job description, missing number|sender|mailaddr");
+	return (FALSE);
     }
-    if (files.length() > 0)
-	return TRUE;
-    syslog(LOG_ERR, "%s: No files to send (number \"%s\")",
-	(char*) qfile, (char*) number);
-    return FALSE;
+    if (killtime == 0) {
+	error("No kill time, or time is zero");
+	return (FALSE);
+    }
+    if (files.length() == 0) {
+	error("No files to send");
+	return (FALSE);
+    }
+    if (modem == "")
+	modem = MODEM_ANY;
+    return (TRUE);
+}
+
+#define	DUMP(fp, vals, fmt, cast) {					\
+    for (int i = N(vals)-1; i >= 0; i--)				\
+	fprintf(fp, fmt, vals[i].name, cast((*this).*vals[i].p));	\
 }
 
 void
 FaxRequest::writeQFile()
 {
     rewind(fp);
-    fprintf(fp, "tts:%d\n", tts);
-    fprintf(fp, "number:%s\n", (char*) number);
-    fprintf(fp, "sender:%s\n", (char*) sender);
-    fprintf(fp, "resolution:%g\n", resolution);
-    fprintf(fp, "npages:%d\n", npages);
-    fprintf(fp, "pagewidth:%d\n", pagewidth);
-    fprintf(fp, "pagelength:%g\n", pagelength);
-    fprintf(fp, "mailaddr:%s\n", (char*) mailaddr);
-    if (killjob.length() == 0) {
-	if (killtime.length() == 0)
-	    killtime = "now + 1 day";
-	fxStr atCmd = "/bin/echo ";
-	fxSLinearPattern pat = FAX_QFILEPREF;
-	int qfileTail = pat.findEnd(qfile);
-	atCmd = atCmd
-	    | FAX_RM
-	    | " "
-	    | qfile.extract(qfileTail, qfile.length()-qfileTail)
-	    | " | "
-	    | FAX_ATCMD
-	    | " "
-	    | killtime;
-	FILE* atFile = popen(atCmd, "r");
-	if (atFile) {
-	    char buf[80];
-	    if (fgets(buf, sizeof (buf)-1, atFile) == 0) {
-		syslog(LOG_ERR, "read from \"%s\" failed: %m", (char*) atCmd);
-		pclose(atFile);
-	    } else {
-		killjob = buf;
-		pclose(atFile);
-		fprintf(fp, "killjob:%s\n", (char*) killjob);
-		syslog(LOG_INFO, "%s: submitted at job \"%s\" to kill request",
-		    (char*) qfile, (char*) killjob);
+    DUMP(fp, timevals,	"%s:%u\n",);
+    DUMP(fp, shortvals,	"%s:%d\n",);
+    DUMP(fp, strvals,	"%s:%s\n", (char*));
+    { fxStr s(notice);;
+      for (u_int l = 0; (l = s.next(l,'\n')) < s.length(); l += 2)
+	s.insert('\\', l);
+      fprintf(fp, "status:%s\n", (char*) s);
+    }
+    fprintf(fp, "notify:%s\n", notifyVals[int(notify)]);
+    for (u_int i = 0; i < files.length(); i++)
+	for (int j = N(docvals)-1; j >= 0; j--)
+	    if (ops[i] == docvals[j].op) {
+		fprintf(fp, "%s:%u:%s\n", docvals[j].name, dirnums[i],
+		    (char*) files[i]);
+		break;
 	    }
-	} else {
-	    syslog(LOG_ERR, "%s: could not submit kill job to at: %m",
-		(char*) qfile);
-	}
-    } else
-	fprintf(fp, "killjob:%s\n", (char*) killjob);
-    fprintf(fp, "killtime:%s\n", (char*) killtime);
-    if (notify == when_requeued)
-	fprintf(fp, "notify:when requeued\n");
-    else if (notify == when_done)
-	fprintf(fp, "notify:when done\n");
-    for (u_int i = 0, n = files.length(); i < n; i++)
-	fprintf(fp, "%s:%s\n", formats[i] ? "postscript" : "tiff",
-	    (char*) files[i]);
+    fflush(fp);
     if (ftruncate(fileno(fp), ftell(fp)) < 0)
 	syslog(LOG_ERR, "%s: truncate failed: %m", (char*) qfile);
+    // XXX maybe should fsync, but not especially portable
 }
+#undef DUMP
+
+fxBool
+FaxRequest::isStrCmd(const fxStr& cmd, const fxStr& tag)
+{
+    for (int i = N(strvals)-1; i >= 0; i--)
+	if (strvals[i].name == cmd) {
+	    (*this).*strvals[i].p = tag;
+	    return (TRUE);
+	}
+    return (FALSE);
+}
+
+fxBool
+FaxRequest::isShortCmd(const fxStr& cmd, const fxStr& tag)
+{
+    for (int i = N(shortvals)-1; i >= 0; i--)
+	if (shortvals[i].name == cmd) {
+	    (*this).*shortvals[i].p = atoi(tag);
+	    return (TRUE);
+	}
+    return (FALSE);
+}
+
+fxBool
+FaxRequest::isTimeCmd(const fxStr& cmd, const fxStr& tag)
+{
+    for (int i = N(timevals)-1; i >= 0; i--)
+	if (timevals[i].name == cmd) {
+	    (*this).*timevals[i].p = atoi(tag);
+	    return (TRUE);
+	}
+    return (FALSE);
+}
+
+fxBool
+FaxRequest::checkDocument(const char* pathname)
+{
+    /*
+     * XXX Scan full pathname to avoid security holes (e.g. foo/../../..)
+     */
+    if (pathname[0] == '.' || pathname[0] == '/') {
+	error("Invalid document file \"%s\" (not in same directory)", pathname);
+	return (FALSE);
+    }
+    int fd = open(pathname, 0);
+    if (fd == -1) {
+	error("Can not access document file \"%s\": %%m", pathname);
+	return (FALSE);
+    }
+    close(fd);
+    return (TRUE);
+}
+
+fxBool
+FaxRequest::isDocCmd(const fxStr& cmd, const fxStr& tag, fxBool& fileOK)
+{
+    for (int i = N(docvals)-1; i >= 0; i--)
+	if (docvals[i].name == cmd) {
+	    fxStr file(tag);			// need to extract dirnum
+	    u_short dirnum;
+	    u_int l = file.next(0,':');
+	    if (l != file.length()) {		// extract directory index
+		dirnum = (u_short) atoi(file);
+		file.remove(0,l+1);
+	    } else				// none present, zero
+		dirnum = 0;
+	    if (fileOK = (!docvals[i].check || checkDocument(file)))
+		appendItem(file, dirnum, docvals[i].op);
+	    return (TRUE);
+	}
+    return (FALSE);
+}
+
+void
+FaxRequest::checkNotifyValue(const fxStr& tag)
+{
+    for (int i = N(notifyVals)-1; i >= 0; i--)
+	 if (tag == notifyVals[i]) {
+	    notify = FaxNotify(i);
+	    return;
+	}
+    error("Invalid notify value \"%s\"", (char*) tag);
+}
+
+void
+FaxRequest::appendItem(const fxStr& file, u_short dirnum, FaxSendOp op)
+{
+    files.append(file);
+    dirnums.append(dirnum);
+    ops.append(op);
+}
+
+void
+FaxRequest::insertItem(u_int ix, const fxStr& file, u_short dirnum, FaxSendOp op)
+{
+    files.insert(file, ix);
+    dirnums.insert(dirnum, ix);
+    ops.insert(op, ix);
+}
+
+void
+FaxRequest::removeItems(u_int ix, u_int n)
+{
+    for (u_int i = 0; i < n; i++)
+	if (ops[i] != send_poll)
+	    ::unlink((char*) files[ix + i]);
+    files.remove(ix, n);
+    dirnums.remove(ix, n);
+    ops.remove(ix, n);
+}
+
+#include <stdarg.h>
+
+void
+FaxRequest::error(const char* fmt, ...)
+{
+    char buf[2200];		// NB: big enough for line[2048]
+    sprintf(buf, "%s: line %u: ", (char*) qfile, lineno);
+    va_list ap;
+    va_start(ap, fmt);
+    vsprintf(strchr(buf,'\0'), fmt, ap);
+    va_end(ap);
+    syslog(LOG_ERR, buf);
+}
+
+fxIMPLEMENT_PrimArray(FaxSendOpArray, FaxSendOp);
+fxIMPLEMENT_PrimArray(DirnumArray, u_short);

@@ -1,13 +1,26 @@
-#ident	$Header: /d/sam/flexkit/fax/sgi2fax/RCS/row.c,v 1.2 91/05/23 12:36:56 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/sgi2fax/RCS/row.c,v 1.7 1994/05/16 19:27:59 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 /*
  *	row -
@@ -25,14 +38,14 @@ zerorow(sptr,n)
 short *sptr;
 int n;
 {
-    bzero(sptr,n*sizeof(short));
+    memset(sptr,0,n*sizeof(short));
 }
 
 copyrow(s,d,n)
 short *s, *d;
 int n;
 {
-    bcopy(s,d,n*sizeof(short));
+    memcpy(d,s,n*sizeof(short));
 }
 
 setrow(sptr,val,n)
@@ -65,8 +78,6 @@ clamprow(iptr,optr,n)
 short *iptr, *optr;
 int n;
 {
-    short  val;
-
     while(n>=8) {
 	DOCLAMP(iptr+0,optr+0);
 	DOCLAMP(iptr+1,optr+1);
@@ -567,7 +578,7 @@ static int malloclen = 0;
 
 getbwrow(image,buf,y)
 IMAGE *image;
-char *buf;
+short *buf;
 int y;
 {
     if(malloclen!=image->xsize) {
@@ -627,6 +638,7 @@ int y, z, flipcode;
 #define XSIZE	8
 #define YSIZE	8
 
+#ifdef NOTDEF
 static short dithmat[YSIZE][XSIZE] = {		/* 8x8 Limb */
 	0,	8,	36,	44,	2,	10,	38,	46,
 	16,	24,	52,	60,	18,	26,	54,	62,
@@ -638,7 +650,6 @@ static short dithmat[YSIZE][XSIZE] = {		/* 8x8 Limb */
 	51,	59,	23,	31,	49,	57,	21,	29,
 };
 
-#ifdef NOTDEF
 static short dithmat[YSIZE][XSIZE] = {		/* halftone dots */
 	3,	17,	55,     63,	61,     47,	9,	1,
 	15, 	29,	39,	51,	49,	35,	25,	13,

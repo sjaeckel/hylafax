@@ -1,0 +1,92 @@
+$Header: /usr/people/sam/fax/port/sco/RCS/README,v 1.4 1994/04/18 18:47:01 sam Exp $
+
+This is a re-write of the SCO README file that I re-vamped from the
+one provided by Daniel I. Rosenblatt. I believe that it is somewhat
+more generic than the original. I have used the original text wherever
+appropriate and made modifications/deletions/additions as I saw fit. I
+only refer back to Daniel where I feel his experience was particular to
+his installation (marked [DIR]). I thank Daniel for taking the first
+shot at SCO, it made my life considerably easier. Contact me or Daniel
+if you have any questions pertaining to our comments or how to get
+FlexFAX running on SCO.
+
+Joel Rosi-Schwartz
+--
+               T E C H N E   R E S E A R C H    L I M I T E D          
+          12 Waverley Way            +   Email: joel@filomena.co,uk     
+          Finchampstead, Wokingham   +   Phone: +44 (734) 730.260      
+          Berkshire RG11 4YD (UK)    +   Fax:   +44 (734) 730.272      
+
+[ From previous README:
+    This stuff is from "Daniel I. Rosenblatt" <dir@csn.org>.
+    Please contact him regarding problems.
+]
+
+Stuff to make sure you check:
+    - all configurable pathnames
+    - bin/notify calls sendmail, which is NOT configured by default
+        on SCO UNIX.  I tried to use execmail from MMDF, but the
+        call syntax is so different it would take a considerable
+        effort to re-write the scripts that do mailing (notify etc).
+        Since sendmail is available on under SCO, I felt it best to
+        use it.  You may have to load it via custom if your initial
+        install did not include it.  Note that sendmail and MMDF
+        co-exist on disk and you do _not_ have to use sendmail as
+        the active mail agent for your system to use it for FlexFax.
+    - I have provided an rc script for placement as /etc/init.d/flexfax
+        with links to /etc/rc0.d/K80faxd and /etc/rc2.d/S80faxd. 
+        They are not installed automatically by FlexFAX, so do it
+        by hand if you want faxd to run when the system boots.
+        The perms should be 744 with ownership root:sys.  Check
+        the locations of faxd and faxquit in the script.  Make
+        certain you set the device(s) to service in $PORTS.
+    - faxd/modem sometimes seem to hang waiting for each other; I
+        haven't looked into this one yet [DIR]
+        I have not noticed this problem.
+    - incoming faxes are completely garbled/severely truncated; I
+        haven't figured out why yet [DIR]
+        I have not had this problem.  Possibly it was due to Daniel's
+        brand of modem.
+    - I could not get the SCO getty to leave the line open when FlexFAX
+        exec'ed it.  One problem lies in the /tcb/lib/initcond(ADM)
+        program which is called by getty.  Even after testing replacing
+        that with a stub that returns 0 (not a good idea to mess with
+        tcb actually), getty still forced a drop on the line.  getty
+        does this even when given the -h option, which seems to be
+        only passed on to ct(C).
+
+        My solution was to replace the exec call to getty with a call
+        to agetty.  This is found in ports/sco/paths.h:
+            #define _PATH_GETTY "/etc/agetty"
+        Agetty is a freely available replacement for getty written by
+        Wietse Venema (wietse@wzv.win.tue.nl).  This worked fine.  I
+        did have to strap out the call to update_utmp(), which broke
+        on SCO.  I have not pursued a proper fix yet; one more item
+        for the todo list ;-(  If you can not find a copy of agetty
+        on your favourite server---or are just lazy---send me e-mail
+        and I'll post you a copy. BTW, I have version 1.9 (8/20/93)
+        and will be sending mail to Wietse to see if this is current.
+
+        In the config file I used:
+            GettyArgs:  "-h -t 60 -- - %s,19200,9600,4800,2400"
+
+Other random notes:
+    - my OS is SCO ODT 2.0; your mileage may vary [BOTH]
+    - gcc is 2.3.3, libg++ is 2.3, gas is 2.0, ld is from binutils-2.1 [DIR]
+    - gcc is 2.5.8, libg++ is 2.5.3 [JIS]
+    - I've got a SupraFAXModem Rev V1.70B-03, not what sam@sgi.com
+        used (V1.200-H); this might explain the next note and the
+        problem with incoming faxes being trashed [DIR]
+    - with my version of the SupraFAXModem, I have to disable adaptive
+        answering when dialing out, i.e.:
+            ModemDialCmd +FAA=0DT%s@
+        if I don't, I get a data connection instead of a fax
+        connection when dialing another fax-modem to send a fax [DIR]
+    - I tested the Multi-Tech MT1432L and MT1932ZDXK.  Both worked fine
+        with FlexFAX.  I do have a problem with V.17 (14.4k) with the
+        ZDX, but it seems to be local to my site or the UK and Multi-Tech
+        has been putting in considerable efforts to figure out the
+        problem.
+
+Cheers,
+Joel

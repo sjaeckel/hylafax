@@ -1,0 +1,179 @@
+.\"	$Header: /usr/people/sam/fax/man/RCS/faxaddmodem.1m,v 1.15 1994/07/03 00:25:02 sam Exp $
+.\"
+.\" FlexFAX Facsimile Software
+.\"
+.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" 
+.\" Permission to use, copy, modify, distribute, and sell this software and 
+.\" its documentation for any purpose is hereby granted without fee, provided
+.\" that (i) the above copyright notices and this permission notice appear in
+.\" all copies of the software and related documentation, and (ii) the names of
+.\" Sam Leffler and Silicon Graphics may not be used in any advertising or
+.\" publicity relating to the software without the specific, prior written
+.\" permission of Sam Leffler and Silicon Graphics.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+.\" EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+.\" WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+.\" 
+.\" IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+.\" ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+.\" OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+.\" WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+.\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+.\" OF THIS SOFTWARE.
+.\"
+.ds Fx \fIFlexFAX\fP
+.TH FAXADDMODEM 1M "June 20, 1994"
+.SH NAME
+faxaddmodem \- configure a facsimile modem for use with \*(Fx
+.SH SYNOPSIS
+.B ${SPOOL}/bin/faxaddmodem
+[
+.B \-os
+.I system
+] [
+.B \-s
+.I speed
+] [
+.I tty
+]
+.SH DESCRIPTION
+.I faxaddmodem
+is an interactive shell script that does the
+necessary setup work to configure
+a facsimile modem for use by the \*(Fx software.
+If the serial port name is not specified on the command line
+.I faxaddmodem
+will prompt for it.
+.PP
+The configuration work done by
+.I faxaddmodem
+falls into two main areas: creating the necessary files to run
+a facsimile server process, and defining the contents of the
+configuration database file.
+The 
+.I config (4F)
+manual page has an in-depth description of the contents of the
+configuration file and should be consulted when installing a
+modem.
+.PP
+Many aspects of configuring a modem are operating system-specific.
+.I Faxaddmodem
+deduces the kind of operating system by invoking the
+.IR uname (1)
+program.
+If this program is not available, the operating system must
+be explicitly specified with the
+.B \-os
+option.
+Consult the shell script for the set of known operating systems.
+.PP
+.I faxaddmodem
+can be used to install a new modem or re-install an existing modem.
+In the latter case it will try to propagate the important
+server-related configuration parameters from the existing
+configuration file to the new configuration file.
+These parameter include items such as the phone number, area code,
+and tracing control parameters.
+Modem-related configuration parameters are, however, not propagated.
+Instead
+.I faxaddmodem
+attempts to deduce the type of modem attached to the specified serial
+port and then set up the configuration parameters using a set of
+.I prototype
+configuration files that have previously been tested with like modems.
+If a modem is to be installed for which there is no existing
+prototype file,
+.I faxaddmodem
+will install a comprehensive template of parameters that can be
+edited either during or after the installation process.
+.PP
+.I faxaddmodem
+deduces the type of modem attached to the serial port by sending
+commands to the modem at a fixed speed.
+By default the highest possible speed to send commands is deduced by
+probing the modem at successively decreasing speeds until a valid
+response is received.
+A fixed speed can be specified from the command line with the
+.B \-s
+option.
+.PP
+Because
+.I faxaddmodem
+needs to read and write the modem that is to be installed
+it will not proceed with an installation if the modem is
+locked for use by another process.
+.PP
+Finally, note that an installation can be safely aborted at any
+time by hitting the interrupt key.
+.I faxaddmodem
+delays making installation-related changes until after everything
+has been setup.
+.SH "PROTOTYPE CONFIGURATION FILES"
+.I Faxaddmodem
+uses prototype configuration files that have been
+created for known modems.
+The appropriate configuration file is selected
+according to information
+retrieved from the modem and comments embedded in the prototype files.
+For Class 1 modems the product ID code returned by the command
+``\s-1ATI0\s+1''
+is used to select a prototype configuration file, while for Class 2
+modems the manufacturer and model as returned by
+``\s-1AT+FMFR?\s+1'' and ``\s-1AT+FMDL?\s+1'', respectively, are
+used (or ``\s-1AT+FMI?\s+1'' and ``\s-1AT+FMM?\s+1'' for
+Class 2.0 modems).
+.PP
+A Class 1 prototype configuration file is identified for use by
+searching for a comment of the form:
+.nf
+.sp .5
+\fC# CONFIG: CLASS1: 144: Manufacturer='AT&T' Model=Dataport\fP
+.sp .5
+.fi
+In this example ``144'' is the product ID code for an AT&T DataPort
+modem.  The remainder of the line is evaluated by the
+.IR sh (1)
+and used to specify the modem's manufacturer and model (since Class 1
+modems do not have standard commands to query this information).
+.PP
+Class 2 and 2.0 prototype configuration files match the string
+``\fImanufacturer\fP-\fImodel\fP'' against a
+.IR sh (1)
+glob pattern specified in the configuration file, where
+.I manufacturer
+and
+.I model
+are the strings returned by querying the modem.
+For example:
+.sp .5
+.fi
+\fC# CONFIG: CLASS2: ZyXEL*\fP
+.br
+\fC# CONFIG: CLASS2.0: USRobotics*\fP
+.sp .5
+.fi
+are configuration comments that appear in the prototype file for
+a ZyXEL 1496E with Class 2 support, and for a US Robotics Courier
+modem with Class 2.0 firmware.
+.SH BUGS
+Server-related (as opposed to modem-related) configuration parameters
+are propagated only if they appear in the prototype configuration file.
+.SH FILES
+.ta \w'${SPOOL}/bin/lockname    'u
+.nf
+${SPOOL}/config	prototype configuration files
+${SPOOL}/bin/ondelay	program to open device without waiting for carrier
+${SPOOL}/bin/lockname	SVR4 UUCP lock filename generator
+.fi
+.PP
+Consult
+.IR flexfax (4F)
+for a complete discussion of the structure and
+content of the spooling area.
+.SH "SEE ALSO"
+.IR flexfax (4F),
+.IR config (4F),
+.IR faxd (1M)

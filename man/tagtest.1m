@@ -1,0 +1,60 @@
+.\"	$Header: /usr/people/sam/fax/man/RCS/tagtest.1m,v 1.2 1994/06/24 02:32:04 sam Exp $
+.\"
+.\" FlexFAX Facsimile Software
+.\"
+.\" Copyright (c) 1994 Sam Leffler
+.\" Copyright (c) 1994 Silicon Graphics, Inc.
+.\" 
+.\" Permission to use, copy, modify, distribute, and sell this software and 
+.\" its documentation for any purpose is hereby granted without fee, provided
+.\" that (i) the above copyright notices and this permission notice appear in
+.\" all copies of the software and related documentation, and (ii) the names of
+.\" Sam Leffler and Silicon Graphics may not be used in any advertising or
+.\" publicity relating to the software without the specific, prior written
+.\" permission of Sam Leffler and Silicon Graphics.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+.\" EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+.\" WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+.\" 
+.\" IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+.\" ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+.\" OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+.\" WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+.\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+.\" OF THIS SOFTWARE.
+.\"
+.ds Fx \fIFlexFAX\fP
+.TH TAGTEST 1M "June 20, 1994"
+.SH NAME
+tagtest \- \*(Fx tag line testing program
+.SH SYNOPSIS
+.B bin/tagtest
+[
+.B \-f
+.I fontfile
+] [
+.B \-m
+.I format
+] [
+.B \-o
+.I output
+] input.tif
+.I aclfile
+.SH DESCRIPTION
+.I tagtest
+is a program for testing the ``tag line'' support in the facsimile server.
+It takes as input a
+.SM TIFF/F
+(\c
+.SM TIFF
+Class F) file, a tag line format string, and a tag line font file and
+generates a new
+.SM TIFF/F
+file that is a copy of the input file, but with sample tag lines imaged
+across the top of each page.
+This permits users to test out tag line format strings and fonts before
+they are configured for use in the facsimile server.
+.SH "SEE ALSO"
+.IR faxd (1M),
+.IR config (4F)

@@ -1,0 +1,26 @@
+B fix line regeneration for modems that return EOLs not byte-aligned
+B fix tag line imaging for 2D-encoded source with EOLs not byte-aligned
+B slip login aborts 'cuz of uucp lock file problem
+B faxmail multi-page output loses pages
+B aborted receives get an extra page written to the file 'cuz there's no
+  way to force TIFF directory to be unlinked
+H rewrite queue management to better utilize modems and to minimize
+  document conversion
+H permit call type deduction logic used when answering an inbound call to
+  be user-configurable (useful for distinctive ring)
+M bound transmit page count on a per-user basis
+M time-of-day restrictions on dialing
+M polled transmission of documents (can already poll to receive)
+M fix race condition between remove and dial failure
+M redo client-server protocol along the lines of ftp et. al.
+M complete api for integration with applications
+  (perhaps should wait new client-server protocol)
+M calculate filled region of each page and transmit only the imaged
+  area if the receiver is capable
+L faxmove program, analogous to lpmove
+L support for new T.30 routing stuff
+
+B = outright bug
+H = high priority
+M = medium priority
+L = low priority

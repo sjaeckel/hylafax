@@ -1,15 +1,27 @@
-#ident	$Header: /d/sam/flexkit/fax/sgi2fax/RCS/imgtofax.c,v 1.6 91/05/23 12:36:46 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/sgi2fax/RCS/imgtofax.c,v 1.16 1994/05/16 19:27:59 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
-
 /*
  * Prepare SGI image files for transmission as facsimile.
  * Each image is scaled to fit a standard page, sharpened
@@ -21,42 +33,22 @@
  *
  * Derived from Paul Haeberli's imgtofax program.
  */
-#include "stdio.h"
-#include "math.h"
-#include "image.h"
+#include <stdio.h>
+#include <math.h>
+#include <image.h>
 #include "hipass.h"
 #include "izoom.h"
 #include "lut.h"
 #include "lum.h"
 #include "tiffio.h"
 #include <stdarg.h>
+#include "PageSize.h"
 
 #define GAMMAVAL        0.8
 
-#define FULLXSIZE       1728
-
-#define DEFXSIZE        1664
-#define DEFYSIZE        2145
-#define XORIGIN         40
-
-#define FAXXSIZE        1664
-#define FAXYSIZE        2150
-
-/* A4 standard dimensions according to appendix 1 of T.4 */
-#define	A4_WIDTH	210		/* millimeters */
-#define	A4_LENGTH	297		/* millimeters */
-#define	A4_TOPMARGIN	(int)(4 * 7.7)
-#define	A4_BOTMARGIN	(int)(11.54 * 7.7)
-#define	A4_PIXHEIGHT	(int)(A4_LENGTH * 7.7)
-#define	A4_PIXWIDTH	1728		/* width in pixels w/ margins */
-#define	A4_MARGIN	(int)(6.7 * (A4_PIXWIDTH/A4_WIDTH))
-
-/* default dimensions based on standard US 8.5x11 inch page */
-#define	US_PIXWIDTH	1728
-#define	US_MARGIN	14
-#define	US_PIXHEIGHT	2166		/* 11i*196lpi - margin */
-#define	US_TOPMARGIN	0
-#define	US_BOTMARGIN	0
+#define	DEF_MARGIN	14
+#define	DEF_TOPMARGIN	0
+#define	DEF_BOTMARGIN	0
 
 static	short sbuf[4096];
 static	IMAGE* iimage;
@@ -65,14 +57,13 @@ static	zoom* zm;
 static	TIFF* tif;
 static	lut* lookup;
 static	int npages;
-static	int verbose;
 
-static	int pixelWidth	= US_PIXWIDTH;
-static	int pixelHeight	= US_PIXHEIGHT;
-static	int leftMargin	= US_MARGIN;
-static	int rightMargin	= US_MARGIN;
-static	int topMargin	= US_TOPMARGIN;
-static	int bottomMargin = US_BOTMARGIN;
+static	int pixelWidth;
+static	int pixelHeight;
+static	int leftMargin		= DEF_MARGIN;
+static	int rightMargin		= DEF_MARGIN;
+static	int topMargin		= DEF_TOPMARGIN;
+static	int bottomMargin	= DEF_BOTMARGIN;
 static	int pageWidth;
 static	int pageHeight;
 static	float pageres	= 196.;		/* default is medium res */
@@ -111,10 +102,11 @@ int y;
 static void
 tofax(short* wp, int n)
 {
-    char row[(FULLXSIZE+7) &~ 7], *rp = row;
+#define MAXXSIZE	2432
+    unsigned char row[(MAXXSIZE+7) &~ 7], *rp = row;
     int bit = 0x80;
 
-    bzero(row, sizeof (row));
+    memset(row, 0, sizeof (row));
     while (n-- > 0) {
 	if (*wp++ < 128)
 	    *rp |= bit;
@@ -142,6 +134,7 @@ float f;
 #define XSIZE   8
 #define YSIZE   8
 
+#ifdef notdef
 static short Xdithmat[YSIZE][XSIZE] = {         /* 8x8 floyd-steinberg */
         0,      8,      36,     44,     2,      10,     38,     46,
         16,     24,     52,     60,     18,     26,     54,     62,
@@ -152,7 +145,7 @@ static short Xdithmat[YSIZE][XSIZE] = {         /* 8x8 floyd-steinberg */
         35,     43,     7,      15,     33,     41,     5,      13,
         51,     59,     23,     31,     49,     57,     21,     29,
 };
-
+#endif
 static short dithmat[YSIZE][XSIZE] = {          /* halftone dots */
         3,      17,     55,     63,     61,     47,     9,      1,
         15,     29,     39,     51,     49,     35,     25,     13,
@@ -172,7 +165,7 @@ int y, n;
 {
     int r, val;
     int rshades, rmaxbits;
-    short *rdith, *gdith, *bdith;
+    short *rdith;
 
     rdith = &dithmat[y%YSIZE][0];
     rshades = TOTAL+1;
@@ -190,18 +183,6 @@ int y, n;
 }
 
 static void
-usage()
-{
-    fprintf(stderr, "usage: sgi2fax %s %s %s %s %s [-ABv] [-lm] file ...\n",
-	"[-r %red]",
-	"[-g %green]",
-	"[-b %blue]",
-	"[-h threshold]",
-	"[-o output]");
-    exit(-1);
-}
-
-static void
 blankSpace(int nrows)
 {
     setrow(sbuf,255,pixelWidth);
@@ -215,7 +196,7 @@ imgtofax(char* input, int pn)
     int ixsize, iysize;
     int oxsize, oysize;
     int ymargin;
-    int i, y;
+    int y;
 
     TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, (long) pixelWidth);
     TIFFSetField(tif, TIFFTAG_IMAGELENGTH, (long) pixelHeight);
@@ -244,7 +225,7 @@ imgtofax(char* input, int pn)
     iysize = iimage->ysize;
     oxsize = pageWidth;
     oysize = (iysize*pageWidth)/ixsize;		/* maintain aspect ratio */
-    if (pageres == 100.)
+    if (pageres == 98.)
 	oysize /= 2;
 
 /* set up the filters */
@@ -260,19 +241,29 @@ imgtofax(char* input, int pn)
         applylut(lookup, sbuf, oxsize);
         ditherrow(sbuf, y, oxsize);
         tofax(sbuf, pixelWidth);
-	if (verbose) {
-	     putchar('.');
-	     fflush(stdout);
-	}
     }
-    if (verbose)
-	putchar('\n');
     blankSpace(bottomMargin + ymargin);
 
     freezoom(zm);
     freehp(hp);
 
     TIFFWriteDirectory(tif);
+}
+
+static void
+usage()
+{
+    fprintf(stderr, "usage: sgi2fax %s %s %s %s %s %s %s [-12] file ...\n",
+	"[-h height]",
+	"[-w width]",
+	"[-v vres]",
+	"[-o output]",
+	"[-r %red]",
+	"[-g %green]",
+	"[-b %blue]",
+	""
+    );
+    exit(-1);
 }
 
 #define	CVT(x)	(((x)*255)/100)
@@ -285,20 +276,20 @@ main(argc, argv)
     extern char* optarg;
     char* output = "sgi.fax";
     int c;
+    float w, h;
+    struct pageSizeInfo* info;
 
-    while ((c = getopt(argc, argv, "o:r:g:b:lmv12")) != -1)
+    info = getPageSize("default");
+    w = getPageWidth(info);
+    h = getPageHeight(info);
+    delPageSize(info);
+    while ((c = getopt(argc, argv, "o:r:g:b:h:s:v:w:12")) != -1)
 	switch (c) {
 	case '1':
 	    g3opts &= ~GROUP3OPT_2DENCODING;
 	    break;
 	case '2':
 	    g3opts |= GROUP3OPT_2DENCODING;
-	    break;
-	case 'l':			/* low resolution */
-	    pageres = 98.;
-	    break;
-	case 'm':			/* medium resolution */
-	    pageres = 196.;
 	    break;
 	case 'r':			/* %red illumination */
 	    _RILUM = CVT(atoi(optarg));
@@ -312,14 +303,50 @@ main(argc, argv)
 	case 'o':			/* output file */
 	    output = optarg;
 	    break;
-	case 'v':			/* verbose */
-	    verbose = 1;
+	case 's':			/* page size */
+	    info = getPageSize(optarg);
+	    if (!info) {
+		fprintf(stderr, "%s: Unknown page size \"%s\".\n",
+		    argv[0], optarg);
+		exit(-1);
+	    }
+	    w = getPageWidth(info);
+	    h = getPageHeight(info);
+	    delPageSize(info);
+	    break;
+	case 'v':			/* vertical resolution (lines/inch) */
+	    pageres = atof(optarg);
+	    /* XXX force acceptable resolutions */
+	    if (pageres < 120.)
+		pageres = 98.;
+	    else
+		pageres = 196.;
+	    break;
+	case 'w':			/* page width (mm) */
+	    w = atof(optarg);
+	    break;
+	case 'h':			/* page height (mm) */
+	    h = atof(optarg);
 	    break;
 	case '?':
 	    usage();
 	}
     if (argc - optind < 1)
 	usage();
+
+    /* XXX force known sizes */
+    if (w > 280)
+	pixelWidth = 2432;
+    else if (w > 230)
+	pixelWidth = 2048;
+    else
+	pixelWidth = 1728;
+    if (h > 350)
+	pixelHeight = 2810;
+    else if (h > 280)
+	pixelHeight = 2292;
+    else
+	pixelHeight = 2166;
 
     if (pageres == 98.) {
 	pixelHeight /= 2;
@@ -338,8 +365,6 @@ main(argc, argv)
 
     npages = argc - optind;
     for (c = 0; optind < argc; c++, optind++) {
-	if (verbose && npages > 1)
-	    printf("%s:\n", argv[optind]);
 	iimage = iopen(argv[optind], "r");
 	if (!iimage) {
 	    fprintf(stderr, "sgi2fax: %s: Can not open\n", argv[optind]);

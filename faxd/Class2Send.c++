@@ -1,208 +1,316 @@
-#ident $Header: /d/sam/flexkit/fax/faxd/RCS/Class2Send.c++,v 1.10 91/09/23 13:45:34 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2Send.c++,v 1.82 1994/06/15 23:40:00 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include <stdio.h>
-#include "tiffio.h"
 #include "Class2.h"
-#include "FaxServer.h"
-
-#include "t.30.h"
-#include "class2.h"
+#include "ModemConfig.h"
 
 /*
  * Send Protocol for Class-2-style modems.
  */
+
 CallStatus
-Class2Modem::dial(const fxStr& number)
+Class2Modem::dial(const char* number, const Class2Params& dis, fxStr& emsg)
 {
-    char* dialCmd = server.getToneDialing() ? "DT" : "DP";
-    if (!atCmd(dialCmd | number, FALSE))
-	return (FAILURE);
-    for (;;) {
-	if (getModemLine(rbuf) <= 0)
-	    return (FAILURE);
-	if (streq(rbuf, "+FCON", 5))
-	    return (OK);
-	if (streq(rbuf, "BUSY", 4))
-	    return (BUSY);
-	if (streq(rbuf, "ERROR", 5))
-	    return (FAILURE);
-	if (streq(rbuf, "NO CARRIER", 10))
-	    return (NOCARRIER);
-	if (streq(rbuf, "NO DIALTONE", 11))
-	    return (NODIALTONE);
-	if (streq(rbuf, "+FHNG:", 6)) {
-	    hangupCode = (u_int) atoi(rbuf+6);
-	    server.traceStatus(FAXTRACE_PROTOCOL,
-		"REMOTE HANGUP: %s (code %s)",
-		hangupCause(hangupCode), rbuf+6);
-	    return (FAILURE);
-	}
-	return (ERROR);		// XXX
+    if (conf.class2DDISCmd != "") {
+	Class2Params ddis(dis);
+	ddis.br = getBestSignallingRate();
+	ddis.ec = EC_DISABLE;		// XXX
+	ddis.bf = BF_DISABLE;
+	ddis.st = getBestScanlineTime();
+	if (class2Cmd(conf.class2DDISCmd, ddis))
+	    params = ddis;
     }
-}
-
-fxBool
-Class2Modem::getPrologue(u_int& dis, u_int& xinfo, u_int& nsf)
-{
-    fxBool status = FALSE;
-    int n;
-
-    nsf = 0;
-    do {
-	n = getModemLine(rbuf);
-	if (n >= 6) {
-	    if (streq(rbuf, "+FNSF:", 6)) {
-	    } else if (streq(rbuf, "+FCSI:", 6)) {
-		fxStr csi = rbuf+7;
-		if (csi.length() > 1) {		// strip quote marks
-		    if (csi[0] == '"')
-			csi.remove(0);
-		    if (csi[csi.length()-1] == '"')
-			csi.resize(csi.length()-1);
-		}
-		// strip leading white space
-		csi.remove(0, csi.skip(0, " \t"));
-		server.traceStatus(FAXTRACE_PROTOCOL,
-		    "REMOTE CSI \"%s\"", (char*) csi);
-	    } else if (streq(rbuf, "+FDIS:", 6)) {
-		int vr, br, wd, ln, df, ec, bf, st;
-		n = sscanf(rbuf+6, "%d,%d,%d,%d,%d,%d,%d,%d",
-		    &vr, &br, &wd, &ln, &df, &ec, &bf, &st);
-		if (n != 8) {		// protocol botch
-		    server.traceStatus(FAXTRACE_PROTOCOL,
-			"MODEM protocol botch, can't parse \"%s\"", rbuf);
-		    continue;
-		}
-		// fabricate DIS from component pieces
-		// XXX bounds check array indexes
-		dis = DIS_T4RCVR
-		    | stDISTab[st]
-		    | lnDISTab[ln]
-		    | wdDISTab[wd]
-		    | dfDISTab[df]
-		    | vrDISTab[vr]
-		    | brDISTab[br]
-		    ;
-		xinfo = 0;
-		status = TRUE;
-	    }
-	}
-    } while (n >= 0 && !streq(rbuf, "OK", 2));
-    return (status);
+    return (FaxModem::dial(number, dis, emsg));
 }
 
 /*
- * Send the specified document using the
- * supplied DCS.  The min-scanline-time
- * parameter is not used as the modem handles
- * the negotiation.  lastDoc indicates if this
- * is the last document to be sent.
+ * Status messages to ignore when dialing.
+ */
+static fxBool
+isNoise(const char* s)
+{
+    static const char* noiseMsgs[] = {
+	"CED",		// RC32ACL-based modems send this before +FCON
+	"DIALING",
+	"RRING",	// Telebit
+	"RINGING",	// ZyXEL
+	"+FHR:",	// Intel 144e
+	NULL
+    };
+
+    for (u_int i = 0; noiseMsgs[i] != NULL; i++)
+	if (strneq(s, noiseMsgs[i], strlen(noiseMsgs[i])))
+	    return (TRUE);
+    return (FALSE);
+}
+
+/*
+ * Process the response to a dial command.
+ */
+CallStatus
+Class2Modem::dialResponse(fxStr& emsg)
+{
+    ATResponse r;
+
+    hangupCode[0] = '\0';
+    do {
+	/*
+	 * Use a dead-man timeout since some
+	 * modems seem to get hosed and lockup.
+	 */
+	r = atResponse(rbuf, conf.dialResponseTimeout);
+	switch (r) {
+	case AT_ERROR:	    return (ERROR);	// error in dial command
+	case AT_BUSY:	    return (BUSY);	// busy signal
+	case AT_NOCARRIER:  return (NOCARRIER);	// no carrier detected
+	case AT_OK:	    return (NOCARRIER);	// (for AT&T DataPort)
+	case AT_NODIALTONE: return (NODIALTONE);// local phone connection hosed
+	case AT_NOANSWER:   return (NOANSWER);	// no answer or ring back
+	case AT_FHNG:				// Class 2 hangup code
+	    emsg = hangupCause(hangupCode);
+	    switch (atoi(hangupCode)) {
+	    case 1:	    return (NOANSWER);	// Ring detected w/o handshake
+	    case 3:	    return (NOANSWER);	// No loop current (???)
+	    case 4:	    return (NOANSWER);	// Ringback detected, no answer
+	    case 5:	    return (NOANSWER);	// Ringback ", no answer w/o CED
+	    case 10:	    return (NOFCON);	// Unspecified Phase A error
+	    case 11:	    return (NOFCON);	// No answer (T.30 timeout)
+	    }
+	    break;
+	case AT_FCON:	    return (OK);	// fax connection
+	case AT_TIMEOUT:    return (FAILURE);	// timed out w/o response
+	case AT_CONNECT:    return (DATACONN);	// modem thinks data connection
+	}
+    } while (r == AT_OTHER && isNoise(rbuf));
+    return (FAILURE);
+}
+
+/*
+ * Process the string of session-related information
+ * sent to the caller on connecting to a fax machine.
  */
 fxBool
-Class2Modem::sendPhaseB(TIFF* tif, u_int dcs, fxStr& emsg, fxBool lastDoc)
+Class2Modem::getPrologue(Class2Params& dis, u_int& nsf, fxStr& csi, fxBool& hasDoc)
 {
-    fxBool transferOK = FALSE;
-    int EOPcmd = lastDoc ? PPM_EOP : PPM_EOM;
-    int cmd;
-
-    // XXX this should be done on a page-by-page basis
-    is2D = (dcs & DCS_2DENCODE) != 0;
-    int vr = (dcs & DCS_7MMVRES) != 0;
-    int br = DCSbrTab[(dcs & DCS_SIGRATE) >> 12];
-    int wd = DCSwdTab[(dcs & DCS_PAGEWIDTH) >> 6];
-    int ln = DCSlnTab[(dcs & DCS_PAGELENGTH) >> 4];
-    int st = DCSstTab[(dcs & DCS_MINSCAN) >> 1];
-    hangupCode = 0;
-    if (class2Cmd("DCC", vr, br, wd, ln, is2D, 0, 0, st)) {
-	setSpeakerVolume(FaxModem::OFF);
-	do {
-	    if (dataTransfer() && waitFor("CONNECT")) {
-		transferOK = sendPage(tif);
-		cmd = (TIFFReadDirectory(tif) ? PPM_MPS : EOPcmd);
-		if (transferOK)
-		    transferOK = class2Cmd("ET", cmd);	// XXX check status
-	    } else {
-		transferOK = FALSE;
-		abort();
+    fxBool gotParams = FALSE;
+    hasDoc = FALSE;
+    nsf = 0;
+    for (;;) {
+	switch (atResponse(rbuf, conf.t1Timer)) {
+	case AT_TIMEOUT:
+	case AT_EMPTYLINE:
+	case AT_NOCARRIER:
+	case AT_NODIALTONE:
+	case AT_NOANSWER:
+	case AT_ERROR:
+	    processHangup("10");		// Unspecified Phase A error
+	    return (FALSE);
+	case AT_FPOLL:
+	    hasDoc = TRUE;
+	    protoTrace("REMOTE has document to POLL");
+	    break;
+	case AT_FDIS:
+	    gotParams = parseClass2Capabilities(skipStatus(rbuf), dis);
+	    break;
+	case AT_FNSF:
+	    { const char* cp = skipStatus(rbuf);
+	      nsf = fromHex(cp, strlen(cp));
+	      protoTrace("REMOTE NSF \"%s\"", cp);
 	    }
-	} while (transferOK && cmd != EOPcmd);
-	setSpeakerVolume(server.getModemSpeakerVolume());
-    }
-    if (!transferOK) {
-	if (hangupCode)
-	    emsg = hangupCause(hangupCode);
-	else
-	    emsg = "communication failure during Phase B";
-    }
-    return (transferOK);
-}
-
-fxBool
-Class2Modem::sendPage(TIFF* tif)
-{
-    fxBool rc = TRUE;
-    server.traceStatus(FAXTRACE_PROTOCOL, "SEND begin page");
-    u_long* stripbytecount;
-    (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
-    int totbytes = (int) stripbytecount[0];
-    if (totbytes > 3) {
-	u_char* buf = new u_char[totbytes];
-	if (TIFFReadRawStrip(tif, 0, buf, totbytes) >= 0) {
-	    int sentbytes = 0;
-	    // correct bit order of data if not what modem expects
-	    u_short fillorder = FILLORDER_MSB2LSB;
-	    (void) TIFFGetField(tif, TIFFTAG_FILLORDER, &fillorder);
-	    int modemBitOrder = (bor & BOR_C) == BOR_C_REV ?
-		FILLORDER_MSB2LSB : FILLORDER_LSB2MSB;
-	    u_char* bitRevTable = (fillorder != modemBitOrder) ?
-		TIFFBitRevTable : TIFFNoBitRevTable;
-	    // pass data to modem, filtering DLE's and
-	    // being careful not to get hung up
-	    beginTimedTransfer();
-	    u_char* cp = buf;
-	    u_char dlebuf[2*1024];
-	    while (totbytes > 0 && !wasTimeout()) {
-		// copy to temp buffer, doubling DLE's & doing bit reversal
-		u_int i, j;
-		u_int n = fxmin((u_int) totbytes, sizeof (dlebuf)/2);
-		for (i = 0, j = 0; i < n; i++, j++) {
-		    dlebuf[j] = bitRevTable[cp[i]];
-		    if (dlebuf[j] == DLE)
-			dlebuf[++j] = DLE;
-		}
-		// 60 seconds should be enough
-		if (putModem(dlebuf, j, 30)) {
-		    sentbytes += n;
-		    cp += n;
-		    totbytes -= n;
-		}
-	    }
-	    endTimedTransfer();
-	    rc = !wasTimeout();		// return TRUE if no timeout
-	    server.traceStatus(FAXTRACE_PROTOCOL,
-		"SENT %d bytes of data", sentbytes);
+	    break;
+	case AT_FCSI:
+	    csi = stripQuotes(skipStatus(rbuf));
+	    recvCSI(csi);
+	    break;
+	case AT_FHNG:
+	    return (FALSE);
+	case AT_OK:
+	    return (gotParams);
 	}
-	delete buf;
     }
-    sendEOT();
-    server.traceStatus(FAXTRACE_PROTOCOL, "SEND end page");
-    countPage();
-    return (!waitFor("OK") ? FALSE : rc);
 }
 
+/*
+ * Initiate data transfer from the host to the modem when
+ * doing a send.  Note that some modems require that we
+ * wait for an XON from the modem in response to the +FDT,
+ * before actually sending any data.
+ */
 fxBool
-Class2Modem::sendEOT()
+Class2Modem::dataTransfer()
 {
-    char EOT[2];
-    EOT[0] = DLE; EOT[1] = ETX;
-    return (putModem(EOT, sizeof (EOT), 30));
+    fxBool status;
+    if (xmitWaitForXON) {
+	/*
+	 * Wait for XON (DC1) from the modem after receiving
+	 * CONNECT and before sending page data.  If XON/XOFF
+	 * flow control is in use then disable it temporarily
+	 * so that we can read the input stream for DC1.
+	 */
+	FlowControl oiFlow = getInputFlow();
+	if (flowControl == FLOW_XONXOFF)
+	    setXONXOFF(FLOW_NONE, getOutputFlow(), ACT_NOW);
+	status = vatFaxCmd(AT_NOTHING, "DT") &&
+	    waitFor(AT_CONNECT, conf.pageStartTimeout);
+	if (status) {
+	    protoTrace("SEND wait for XON");
+	    int c;
+	    startTimeout(conf.pageStartTimeout);
+	    while ((c = getModemChar()) != EOF) {
+		modemTrace("--> [1:%c]", c);
+		if (c == DC1)
+		    break;
+	    }
+	    stopTimeout("waiting for XON before sending page data");
+	    status = (c == DC1);
+	}
+	if (flowControl == FLOW_XONXOFF)
+	    setXONXOFF(oiFlow, getOutputFlow(), ACT_NOW);
+    } else {
+	status = vatFaxCmd(AT_NOTHING, "DT") &&
+	    waitFor(AT_CONNECT, conf.pageStartTimeout);
+    }
+    return (status);
+}
+
+static fxBool
+pageInfoChanged(const Class2Params& a, const Class2Params& b)
+{
+    return (a.vr != b.vr || a.wd != b.wd || a.ln != b.ln || a.df != b.df);
+}
+
+/*
+ * Send the specified document using the supplied
+ * parameters.  The pph is the post-page-handling
+ * indicators calculated prior to intiating the call.
+ */
+FaxSendStatus
+Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
+    fxStr& pph, fxStr& emsg)
+{
+    int ntrys = 0;			// # retraining/command repeats
+
+    setDataTimeout(60, next.br);	// 60 seconds for 1024 byte writes
+    hangupCode[0] = '\0';
+
+    fxBool transferOK;
+    fxBool morePages = FALSE;
+    do {
+	transferOK = FALSE;
+	if (abortRequested())
+	     goto failed;
+	/*
+	 * Check the next page to see if the transfer
+	 * characteristics change.  If so, update the
+	 * current T.30 session parameters.
+	 */
+	if (pageInfoChanged(params, next)) {
+	    if (!class2Cmd(disCmd, next)) {
+		emsg = "Unable to set session parameters";
+		break;
+	    }
+	    params = next;
+	}
+	if (dataTransfer() && sendPage(tif)) {
+	    /*
+	     * Page transferred, process post page response from
+	     * remote station (XXX need to deal with PRI requests).).
+	     */
+	    morePages = !TIFFLastDirectory(tif);
+	    u_int ppm;
+	    if (!decodePPM(pph, ppm, emsg))
+		goto failed;
+	    tracePPM("SEND send", ppm);
+	    u_int ppr;
+	    if (pageDone(ppm, ppr)) {
+		tracePPR("SEND recv", ppr);
+		switch (ppr) {
+		case PPR_MCF:		// page good
+		case PPR_PIP:		// page good, interrupt requested
+		case PPR_RTP:		// page good, retrain requested
+		    countPage();
+		    pph.remove(0,3);	// discard page-handling info
+		    ntrys = 0;
+		    if (ppr == PPR_PIP) {
+			emsg = "Procedure interrupt (operator intervention)";
+			goto failed;
+		    }
+		    if (morePages) {
+			if (!TIFFReadDirectory(tif)) {
+			    emsg = "Problem reading document directory";
+			    goto failed;
+			}
+			FaxSendStatus status =
+			    sendSetupParams(tif, next, info, emsg);
+			if (status != send_ok) {
+			    sendAbort();
+			    return (status);
+			}
+		    }
+		    transferOK = TRUE;
+		    break;
+		case PPR_RTN:		// page bad, retrain requested
+		    if (++ntrys >= 3) {
+			emsg = "Unable to transmit page"
+			       " (giving up after 3 attempts)";
+			break;
+		    }
+		    morePages = TRUE;	// retransmit page
+		    transferOK = TRUE;
+		    break;
+		case PPR_PIN:		// page bad, interrupt requested
+		    emsg = "Unable to transmit page"
+		       " (NAK with operator intervention)";
+		    goto failed;
+		default:
+		    emsg = "Modem protocol error (unknown post-page response)";
+		    break;
+		}
+	    }
+	}
+    } while (transferOK && morePages);
+    if (!transferOK) {
+	if (emsg == "") {
+	    if (hangupCode[0])
+		emsg = hangupCause(hangupCode);
+	    else
+		emsg = "Communication failure during Phase B/C";
+	}
+	sendAbort();			// terminate session
+    }
+    return (transferOK ? send_done : send_retry);
+failed:
+    sendAbort();
+    return (send_failed);
+}
+
+/*
+ * Abort an active Class 2 session.
+ */
+void
+Class2Modem::sendAbort()
+{
+    (void) class2Cmd(abortCmd);
 }

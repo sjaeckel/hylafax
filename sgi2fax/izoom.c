@@ -1,15 +1,27 @@
-#ident	$Header: /d/sam/flexkit/fax/sgi2fax/RCS/izoom.c,v 1.2 91/05/23 12:36:48 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/sgi2fax/RCS/izoom.c,v 1.8 1994/05/16 19:27:59 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
-
 /*
  *      izoom- 
  *              Magnify or minify a picture with or without filtering.  The 
@@ -27,11 +39,18 @@
 #define ONE             (1<<SHIFT)
 #define EPSILON         0.0001
 
-FILTER *makefilt();
-float filterrad();
-float filterinteg();
-float mitchell();
+static FILTER *makefilt();
+static float filterrad();
+static float filterinteg();
+static float mitchell();
 static int (*xfiltfunc)(); 
+
+static makexmap();
+static xscalebuf();
+static addrow();
+static divrow();
+static freefilt();
+static applyxfilt();
 
 static int filtershape;
 static float blurfactor;
@@ -135,7 +154,7 @@ int y;
                 if(xfiltfunc) 
                     xfiltfunc(z->abuf,z->bnx);
             }
-            bcopy(z->abuf,buf,z->bnx*sizeof(short)); 
+            memcpy(buf,z->abuf,z->bnx*sizeof(short)); 
         } else {
             if(z->curay != ay) {
                 z->getfunc(z->abuf,ay);
@@ -144,7 +163,7 @@ int y;
                 if(xfiltfunc)
                     xfiltfunc(z->bbuf,z->bnx);
             }
-            bcopy(z->bbuf,buf,z->bnx*sizeof(short)); 
+            memcpy(buf,z->bbuf,z->bnx*sizeof(short)); 
         }
     } else if(z->any == 1 && z->bny == 1) {
             z->getfunc(z->abuf,z->ay++);
@@ -153,9 +172,9 @@ int y;
                 xfiltfunc(z->filtrows[0],z->bnx);
             if(z->clamp) {
                 clamprow(z->filtrows[0],z->tbuf,z->bnx);
-                bcopy(z->tbuf,buf,z->bnx*sizeof(short)); 
+                memcpy(buf,z->tbuf,z->bnx*sizeof(short)); 
             } else {
-                bcopy(z->filtrows[0],buf,z->bnx*sizeof(short)); 
+                memcpy(buf,z->filtrows[0],z->bnx*sizeof(short)); 
             }
     } else {
         f = z->yfilt+z->y;
@@ -173,21 +192,21 @@ int y;
         if(f->n == 1) {
             if(z->clamp) {
                 clamprow(z->filtrows[z->nrows-1],z->tbuf,z->bnx);
-                bcopy(z->tbuf,buf,z->bnx*sizeof(short)); 
+                memcpy(buf,z->tbuf,z->bnx*sizeof(short)); 
             } else {
-                bcopy(z->filtrows[z->nrows-1],buf,z->bnx*sizeof(short)); 
+                memcpy(buf,z->filtrows[z->nrows-1],z->bnx*sizeof(short)); 
             }
         } else {
-            bzero(z->accrow,z->bnx*sizeof(int));
+            memset(z->accrow,0,z->bnx*sizeof(int));
             for(i=0; i<f->n; i++) 
                 addrow(z->accrow, z->filtrows[i+(z->nrows-1)-(f->n-1)],
                                                           f->w[i],z->bnx);
             divrow(z->accrow,z->bbuf,f->totw,z->bnx);
             if(z->clamp) {
                 clamprow(z->bbuf,z->tbuf,z->bnx);
-                bcopy(z->tbuf,buf,z->bnx*sizeof(short)); 
+                memcpy(buf,z->tbuf,z->bnx*sizeof(short)); 
             } else {
-                bcopy(z->bbuf,buf,z->bnx*sizeof(short)); 
+                memcpy(buf,z->bbuf,z->bnx*sizeof(short)); 
             }
         }
     }
@@ -339,7 +358,7 @@ int anx, bnx;
 int *maxn;
 {
     FILTER *f, *filter;
-    int x, min, max, n, pos;
+    int x, n;
     float bmin, bmax, bcent, brad;
     float fmin, fmax, acent, arad;
     int amin, amax;
@@ -445,17 +464,14 @@ static float filterrad()
     switch(filtershape) {
         case BOX:
             return 0.5*blurfactor;
-            break;
         case TRIANGLE:
             return 1.0*blurfactor;
-            break;
         case QUADRATIC:
             return 1.0*blurfactor;
-            break;
         case MITCHELL:
             return 2.0*blurfactor;
-            break;
     }
+    /*NOTREACHED*/
 }
 
 static float quadinteg(x)
@@ -484,7 +500,6 @@ int side;
                 return 1.0;
             else
                 return x+0.5;
-            break;
         case TRIANGLE:
             if(x<-1.0)
                 return 0.0;
@@ -497,18 +512,17 @@ int side;
                 val = 1.0-x;
                 return 1.0-0.5*val*val;
             }
-            break;
         case QUADRATIC:
             if(x<0.0)
                 return quadinteg(x);
             else
                 return 1.0-quadinteg(-x);
-            break;
         case MITCHELL:
             if(side == 0)
                 return 0.0;
             return mitchell(x);
     }
+    /*NOTREACHED*/
 }
 
 static float p0, p2, p3, q0, q1, q2, q3;
@@ -517,6 +531,19 @@ static float p0, p2, p3, q0, q1, q2, q3;
  * see Mitchell&Netravali, "Reconstruction Filters in Computer Graphics",
  * SIGGRAPH 88.  Mitchell code provided by Paul Heckbert.
  */
+static mitchellinit(b,c)
+float b, c;
+{
+
+    p0 = (  6. -  2.*b        ) / 6.;
+    p2 = (-18. + 12.*b +  6.*c) / 6.;
+    p3 = ( 12. -  9.*b -  6.*c) / 6.;
+    q0 = (           8.*b + 24.*c) / 6.;
+    q1 = (        - 12.*b - 48.*c) / 6.;
+    q2 = (           6.*b + 30.*c) / 6.;
+    q3 = (     -     b -  6.*c) / 6.;
+}
+
 static float mitchell(x)        /* Mitchell & Netravali's two-param cubic */
 float x;
 {
@@ -532,17 +559,4 @@ float x;
     if (x<1.) return 2.0*(p0+x*x*(p2+x*p3));
     if (x<2.) return 2.0*(q0+x*(q1+x*(q2+x*q3)));
     return 0.0;
-}
-
-static mitchellinit(b,c)
-float b, c;
-{
-
-    p0 = (  6. -  2.*b        ) / 6.;
-    p2 = (-18. + 12.*b +  6.*c) / 6.;
-    p3 = ( 12. -  9.*b -  6.*c) / 6.;
-    q0 = (           8.*b + 24.*c) / 6.;
-    q1 = (        - 12.*b - 48.*c) / 6.;
-    q2 = (           6.*b + 30.*c) / 6.;
-    q3 = (     -     b -  6.*c) / 6.;
 }

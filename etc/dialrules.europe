@@ -1,0 +1,53 @@
+! $Header: /usr/people/sam/fax/etc/RCS/dialrules.europe,v 1.1 1994/07/05 02:58:58 sam Exp $
+!
+! FlexFAX Dialing String Processing Rules
+!   for much of Europe.
+!
+! From: "Ed Cole" <ed@neu.sgi.com>
+!
+! This file describes how to process user-specified dialing strings
+! to create two items:
+!
+! CanonicalNumber: a unique string that is derived from all dialing
+! strings to the same destination phone number.  This string is used
+! by the fax server for ``naming'' the destination. 
+!
+! DialString: the string passed to the modem for use in dialing the
+! telephone.  This string should be void of any characters that might
+! confuse the modem.
+!
+Area=${AreaCode}		! local area code
+Country=${CountryCode}		! local country code
+IDPrefix=${InternationalPrefix}	! prefix for placing an international call
+LDPrefix=${LongDistancePrefix}	! prefix for placing a long distance call
+!
+WS=" 	"			! our notion of white space
+!
+! Convert a phone number to a canonical format:
+!
+!    +<country><areacode><rest>
+!
+! by (possibly) stripping off leading dialing prefixes for
+! long distance and/or international dialing.
+!
+CanonicalNumber := [
+#.*                     =                       ! strip calling card stuff
+[^+0-9]+                =                       ! strip white space etc.
+^${IDPrefix}            = +                     ! replace int. dialing code
+^${LDPrefix}            = +${Country}           ! STD call (long distance)
+^[^+]                   = +${Country}${Area}&   ! else cononicalize
+]
+!
+! Process a dialing string according to local requirements.
+! These rules do only one transformation: they convert in-country
+! international calls to long-distance calls.
+!
+DialString := [
+[-${WS}.]+              =                       ! strip syntactic sugar
+^${IDPrefix}${Country}${Area}   =               ! local phone call
+^${LDPrefix}${Area}     =                       ! local phone call
+^${IDPrefix}${Country}  = ${LDPrefix}           ! STD call (long distance)
+^[+]${Country}${Area}   =                       ! local phone call
+^[+]${Country}          = ${LDPrefix}           ! STD call (long distance)
+^[+]                    = ${IDPrefix}           ! international call
+]

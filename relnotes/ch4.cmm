@@ -1,0 +1,102 @@
+.ds FF Flex\s-1FAX\s+1
+.nr H1 3
+.H 1 "Changes and Additions"
+.\"
+.\"
+.\"
+.\" What changes have been made to <product> features that were in its
+.\" last release? Include feature enhancements here.
+.\"
+.\"
+.\" What features have been added to <product> since its last release?
+.\"
+.\"
+The following list describes changes and additions made to this software
+since the 2.2.1 release.
+.P
+General changes:
+.BL
+.LI
+Support has been added for modems that conform
+to the EIA/TIA-592 Class 2.0 specification.
+.LI
+The software has been updated to work on IRIX 5.X systems.
+.LE
+.P
+Changes in the prototype config files:
+.BL
+.LI
+The AT&T DataPort Class 1 support now sets \f3NoCarrierRetrys\fP to 3 to
+deal with the modem's braindamaged way of returning "\s-1OK\s+1" instead of
+"\s-1NO ANSWER\s+1" when a dial request times out.
+.LI
+The Telebit file is now used for QBlazer modems with fax support.
+.LI
+There is a new file for the AT&T DataPort with Class 2 firmware.
+.LI
+There is a new file for the USR Courier with Class 2.0 firmware.
+.LE
+.P
+Changes to the fax server:
+.BL
+.LI
+It is now possible to override the \s-1+FDCC=?\s+1 query with fixed values
+(this is to workaround a bug in the AT&T DataPort Class 2 firmware).
+.LI
+Practical Peripherals modems are now automatically recognized as
+not properly handling the \s-1+FDIS\s+1 command and their capabilities are
+restricted so that they work correctly (albeit in a limited configuration).
+.LI
+Most of the Class 2-related commands are now settable through the
+modem configuration file.
+.LI
+The Class 1 and 2 drivers now interpret an "\s-1OK\s+1" result to a dial request
+to mean "\s-1NO ANSWER\s+1" (for the AT&T DataPort).
+.LI
+The negotiated min scanline time can now be controlled through info files.
+.LI
+Jobs that encounter a protocol error are now retried more quickly
+(see the \f3JobReqProto\fP configuration parameter).
+.LI
+The server status now reflects when it is preparing jobs for transmission.
+.LI
+It is now easier to fiddle with the job queueing parameters; the default
+values can be overridden through the
+\f3JobReqBusy\fP, \f3JobReqNoAnswer\fP,
+\f3JobReqNoCarrier\fP, \f3JobReqProto\fP, and
+\f3JobReqOther\fP configuration parameters.
+.LI
+It is now possible to control the \s-1UUCP\s+1 lock file timeout handling; see
+the \f3UUCPLockTimeout\fP configuration parameter.
+.LE
+.P
+Changes to the \f2faxaddmodem\fP program:
+.BL
+.LI
+Support was added for Class 2.0 modems.
+.LI
+A warning is now generated if multiple prototype config files exist
+for the same product ID code (for Class 1 modems).
+.LI
+If a modem supports multiple classes the user is prompted to choose
+which class to configure.
+.LE
+.P
+Changes in the utility code:
+.BL
+.LI
+A new \f2typetest\fP program was added for testing typerules files.
+.LI
+The \f2xferstats\fP script now merges similar user accounts and is also
+more careful about ignoring calls that fail during dialing\(emthis
+makes the generated statistics more informative.
+.LI
+A new \f2faxcron\fP shell script is included for use on machines where
+\*(FF servers are run.
+.LE
+.P
+Changes to the manual pages:
+.BL
+.LI
+\f2faxcron\fP\|(1M) is a new page that describes the maintenenance script
+.LE

@@ -1,233 +1,992 @@
-#ident $Header: /d/sam/flexkit/fax/faxd/RCS/FaxServer.c++,v 1.16 91/05/23 12:26:00 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxServer.c++,v 1.159 1994/07/04 18:37:16 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include <osfcn.h>
 #include <ctype.h>
-#include <sys/termio.h>
-#include <sys/fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
+#include <sys/file.h>
 
+
+#include "Dispatcher.h"
 #include "t.30.h"
-
+#include "tiffio.h"
 #include "FaxServer.h"
-#include "FaxRequest.h"
+#include "faxServerApp.h"
 #include "FaxRecvInfo.h"
 #include "RegExArray.h"
+#include "BoolArray.h"
+#include "Getty.h"
+#include "UUCPLock.h"
+#include "DialRules.h"
+#include "config.h"
 
-int FaxServer::pageWidthCodes[4] = {
-    1728,	// 1728 along 215 mm line
-    2432,	// 1728 (215 mm), 2048 (255 mm), or 2432 (303 mm)
-    2048,	// 1728 (215 mm), 2048 (255 mm)
-    2432,	// Invalid, but must be interpreted as #1
+#ifndef MAXHOSTNAMELEN
+#define	MAXHOSTNAMELEN	64
+#endif
+#ifndef O_NOCTTY
+#define	O_NOCTTY	0		// no POSIX O_NOCTTY support
+#endif
+
+/*
+ * FAX Modem Server.
+ */
+
+extern	void fxFatal(const char* va_alist ...);
+
+int FaxServer::pageWidthCodes[8] = {
+    1728,	// 1728 in 215 mm line
+    2048,	// 2048 in 255 mm line
+    2432,	// 2432 in 303 mm line
+    1216,	// 1216 in 151 mm line
+    864,	// 864 in 107 mm line
+    1728,	// undefined
+    1728,	// undefined
+    1728,	// undefined
 };
 int FaxServer::pageLengthCodes[4] = {
-    297,	// A4 paper (mm)
+    297,	// A4 paper
+    364,	// B4 paper
     -1,		// unlimited
-    364,	// can handle both A4 and B4 (mm)
-    0		// invalid
-};
-// the first column is for T3.85, the second for T7.7
-int FaxServer::minScanlineTimeCodes[8][2] = {
-    { 20, 20 },		// 20 ms at 3.85 l/mm; T7.7 = T3.85
-    { 40, 40 },		// 40 ms at 3.85 l/mm; T7.7 = T3.85
-    { 10, 10 },		// 10 ms at 3.85 l/mm; T7.7 = T3.85
-    {  5,  5 },		//  5 ms at 3.85 l/mm; T7.7 = T3.85
-    { 10,  5 },		// 10 ms at 3.85 l/mm; T7.7 = 1/2 T3.85
-    { 20, 10 },		// 20/2 ms at 3.85 l/mm; T7.7 = 1/2 T3.85
-    { 40, 20 },		// 40/2 ms at 3.85 I/mm; T7.7 = 1/2 T3.85
-    {  0,  0 },		// 0 ms at 3.85 I/mm; T7.7 = T3.85
+    -1		// undefined
 };
 
-static void s0(FaxServer* o, FaxRequest* fax)	{ o->sendFax(fax); }
-static void s1(FaxServer* o)			{ o->recvFax(); }
+// map FaxModem::BaudRate to numeric value
+static u_int baudRates[] = {
+    0,		// BR0
+    300,	// BR300
+    1200,	// BR1200
+    2400,	// BR2400
+    4800,	// BR4800
+    9600,	// BR9600
+    19200,	// BR19200
+    38400,	// BR38400
+    57600,	// BR57600
+};
 
-FaxServer::FaxServer(const fxStr& devName) :
-    modemDevice(devName)
+FaxServer::FaxServer(faxServerApp* a, const fxStr& devName, const fxStr& devID)
+    : modemDevice(devName), modemDevID(devID)
 {
-    addInput("sendFax",			fxDT_FaxRequest,this, (fxStubFunc) s0);
-    addInput("recvFax",			fxDT_void,	this, (fxStubFunc) s1);
-
-    jobCompleteChannel	= addOutput("jobComplete",	fxDT_FaxRequest);
-    sendCompleteChannel	= addOutput("sendComplete",	fxDT_CharPtr);
-    jobRecvdChannel	= addOutput("jobRecvd",		fxDT_FaxRecvd);
-    recvCompleteChannel	= addOutput("recvComplete",	fxDT_void);
-    sendStatusChannel	= addOutput("sendStatus",	fxDT_int);
-    traceChannel	= addOutput("trace",		fxDT_CharPtr);
-
+    state = BASE;
+    app = a;
+    getty = NULL;
+    statusFile = NULL;
+    abortCall = FALSE;
+    deduceComplain = TRUE;		// first failure causes complaint
     modemFd = -1;
-    modem = 0;
+    modemLock = OSnewUUCPLock(devName);
+    modem = NULL;
+    modemConfig = NULL;
+    lastConfigModTime = 0;
+    curRate = FaxModem::BR0;		// unspecified baud rate
+    tracingMask = FAXTRACE_MODEMIO|FAXTRACE_TIMEOUTS;
     rcvNext = rcvCC = 0;
-    speakerVolume = FaxModem::QUIET;
-    modemType = "Abaton";
-    ringsBeforeAnswer = 0;
-    tracingLevel = 0;
-    toneDialing = TRUE;
-    waitTimeForCarrier = 30;		// modem's default value
-    commaPauseTime = 2;			// modem's default value
-    rcvHandler = 0;
-    okToReceive2D = TRUE;
-    recvFileMode = 0600;		// default protection mode
-    qualifyTSI = FALSE;
     lastPatModTime = 0;
-    tsiPats = 0;
+    tsiPats = NULL;
+    acceptTSI = NULL;
+    log = NULL;
+    dialRules = NULL;
+    changePriority = TRUE;
+    consecutiveBadCalls = 0;
+
+    setupConfig();
 }
 
 FaxServer::~FaxServer()
 {
-    delete rcvHandler;
-    delete modem;
+    close();
+    delete modemLock;
+    delete modemConfig;
     delete tsiPats;
+    delete acceptTSI;
+    delete getty;
+    delete log;
+    delete dialRules;
 }
 
-const char* FaxServer::className() const { return "FaxServer"; }
-
+/*
+ * Startup the server for the first time.
+ */
 void
 FaxServer::open()
 {
-    if (opened)
-	return;
-    opened = TRUE;
-    ::umask(077);				// keep all temp files private
-    startTimeout(3);
-    modemFd = ::open(modemDevice, O_RDWR);
-    stopTimeout("opening");
-    if (modemFd >= 0 && setBaudRate(B1200)) {
-	if (setupModem(modemType)) {
-	    rcvHandler = new ModemListener(modemFd);
-	    rcvHandler->connect("ring", this, "recvFax");
-	    fx_theExecutive->addSelectHandler(rcvHandler);
-	} else
-	    traceStatus(FAXTRACE_SERVER,
-		"\"%s\": Cannot deduce or handle modem type.",
-		(char*) modemDevice);
-    } else
-	traceStatus(FAXTRACE_SERVER, "\"%s\": Can not open modem.",
+    if (modemLock->lock()) {
+	fxBool modemReady = setupModem();
+	modemLock->unlock();
+	if (!modemReady)
+	    changeState(MODEMWAIT, pollModemWait);
+	else
+	    changeState(RUNNING, 0);
+    } else {
+	traceStatus(FAXTRACE_SERVER, "%s: Can not lock device.",
 	    (char*) modemDevice);
+	changeState(LOCKWAIT, pollLockWait);
+    }
 }
-fxBool FaxServer::openSucceeded() const	{ return modem != 0; }
 
+/*
+ * Close down the server.
+ */
 void
 FaxServer::close()
 {
-    if (rcvHandler)
-	fx_theExecutive->removeSelectHandler(rcvHandler);
-    if (modemFd >= 0)
-	::close(modemFd);
-    fxApplication::close();
+    if (modemLock->lock()) {
+	if (modem)
+	    modem->hangup();
+	discardModem(TRUE);
+	modemLock->unlock();
+    }
 }
 
+/*
+ * Initialize the server from command line arguments.
+ */
 void
 FaxServer::initialize(int argc, char** argv)
 {
+    extern int optind, opterr;
+    extern char* optarg;
+    int c;
+    optind = 1;				// 'cuz we're using getopt twice
+    opterr = 0;
+    while ((c = getopt(argc, argv, "m:g:i:q:dp1x")) != -1)
+	switch (c) {
+	case 'p':
+	    changePriority = FALSE;
+	    break;
+	case 'g':
+	    if (*optarg == '\0')
+		fxFatal("No getty speed specified");
+	    gettyArgs = optarg;
+	    break;
+	case 'x':
+	    tracingMask &= ~(FAXTRACE_MODEMIO|FAXTRACE_TIMEOUTS);
+	    break;
+	}
+    TIFFSetErrorHandler(NULL);
+    TIFFSetWarningHandler(NULL);
     updateTSIPatterns();
+    // setup server's status file
+    fxStr file(FAX_STATUSDIR);
+    file.append("/" | modemDevID);
+    statusFile = fopen(file, "w");
+    if (statusFile != NULL) {
+#if HAS_FCHMOD
+	fchmod(fileno(statusFile), 0644);
+#else
+	chmod((char*) file, 0644);
+#endif
+	setServerStatus("Initializing server");
+    }
+    hostname.resize(MAXHOSTNAMELEN);
+    if (gethostname((char*) hostname, MAXHOSTNAMELEN) == 0)
+	hostname.resize(strlen(hostname));
+    ::umask(077);			// keep all temp files private
 }
 
-fxBool
-FaxServer::setupModem(const char* name)
-{
-    modem = FaxModem::getModemByName(name, *this);
-    if (!modem)
-	return (FALSE);
-    modem->reset();
-    modem->setSpeakerVolume(speakerVolume);
-    modem->setCommaPauseTime(commaPauseTime);
-    modem->setWaitTimeForCarrier(waitTimeForCarrier);
-    modem->setLID(canonicalizePhoneNumber(FAXNumber));
+const char* FaxServer::stateNames[8] = {
+    "BASE",
+    "RUNNING",
+    "MODEMWAIT",
+    "LOCKWAIT",
+    "GETTYWAIT",
+    "SENDING",
+    "ANSWERING",
+    "RECEIVING"
+};
+const char* FaxServer::stateStatus[8] = {
+    "Initializing server and modem",		// BASE
+    "Running and idle",				// RUNNING
+    "Waiting for modem to come ready",		// MODEMWAIT
+    "Waiting for modem to come free",		// LOCKWAIT
+    "Waiting for login session to terminate",	// GETTYWAIT
+    "Sending facsimile",			// SENDING
+    "Answering the phone",			// ANSWERING
+    "Receiving facsimile",			// RECEIVING
+};
 
-    traceStatus(FAXTRACE_SERVER, "MODEM \"%s\"", modem->getName());
+/*
+ * Change the server's state and, optionally,
+ * start a timer running for timeout seconds.
+ */
+void
+FaxServer::changeState(FaxServerState s, long timeout)
+{
+    if (s != state) {
+	if (timeout)
+	    traceStatus(FAXTRACE_STATETRANS,
+		"STATE CHANGE: %s -> %s (timeout %ld)",
+		stateNames[state], stateNames[s], timeout);
+	else
+	    traceStatus(FAXTRACE_STATETRANS, "STATE CHANGE: %s -> %s",
+		stateNames[state], stateNames[s]);
+	state = s;
+	if (changePriority)
+	    setProcessPriority(state);
+	setServerStatus(stateStatus[state]);
+	if (s == RUNNING)
+	    app->notifyModemReady();		// notify surrogate
+    }
+    if (timeout)
+	Dispatcher::instance().startTimer(timeout, 0, this);
+}
+
+#ifdef sgi
+#include <sys/schedctl.h>
+/*
+ * When low latency is required, use a nondegrading process
+ * priority; otherwise just remove any nondegrading priority.
+ * Note that we assign a high nondegrading priority when sending,
+ * answering the telephone, or receiving.  We assume that if the
+ * incoming call spawns a getty process that the priority will
+ * be reset in the child before the getty is exec'd.
+ */
+static const int schedCtlParams[8][2] = {
+    { NDPRI, 0 },		// BASE
+    { NDPRI, 0 },		// RUNNING
+    { NDPRI, 0 },		// MODEMWAIT
+    { NDPRI, 0 },		// LOCKWAIT
+    { NDPRI, 0 },		// GETTYWAIT
+    { NDPRI, NDPHIMIN },	// SENDING
+    { NDPRI, NDPHIMIN },	// ANSWERING
+    { NDPRI, NDPHIMIN },	// RECEIVING
+};
+#elif svr4 
+extern "C" {
+#include <sys/priocntl.h>
+#include <sys/rtpriocntl.h>
+#include <sys/tspriocntl.h>
+}
+static struct SchedInfo {
+    const char*	clname;		// scheduling class name
+    int		params[3];	// scheduling class parameters
+} schedInfo[8] = {
+    { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// BASE
+    { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// RUNNING
+    { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// MODEMWAIT
+    { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// LOCKWAIT
+    { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// GETTYWAIT
+    { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// SENDING
+    { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// ANSWERING
+    { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// RECEIVING
+};
+#endif
+
+void
+FaxServer::setProcessPriority(FaxServerState s)
+{
+#ifdef sgi
+    uid_t euid = geteuid();
+    if (seteuid(0) >= 0) {		// must be done as root
+	if (schedctl(schedCtlParams[s][0], 0, schedCtlParams[s][1]) < 0)
+	    traceStatus(FAXTRACE_SERVER, "schedctl: %m");
+	if (seteuid(euid) < 0)		// restore previous effective uid
+	    traceStatus(FAXTRACE_SERVER, "seteuid(%d): %m", euid);
+    } else
+	traceStatus(FAXTRACE_SERVER, "seteuid(root): %m");
+#elif svr4
+    uid_t euid = geteuid();
+    if (seteuid(0) >= 0) {		// must be done as root
+	const SchedInfo& si = schedInfo[s];
+	pcinfo_t pcinfo;
+	strcpy(pcinfo.pc_clname, si.clname);
+	if (priocntl((idtype_t)0, 0, PC_GETCID, (caddr_t)&pcinfo) >= 0) {
+	    pcparms_t pcparms;
+	    pcparms.pc_cid = pcinfo.pc_cid;
+	    if (strcmp(si.clname,"RT") == 0) {
+		rtparms_t* rtp = (rtparms_t*) pcparms.pc_clparms;
+		rtp->rt_pri	= si.params[0];
+		rtp->rt_tqsecs	= (ulong) si.params[1];
+		rtp->rt_tqnsecs	= si.params[2];
+	    } else {
+		tsparms_t* tsp = (tsparms_t*) pcparms.pc_clparms;
+		tsp->ts_uprilim	= si.params[0];
+		tsp->ts_upri	= si.params[1];
+	    }
+	    if (priocntl(P_PID, P_MYID, PC_SETPARMS, (caddr_t)&pcparms) < 0)
+		traceStatus(FAXTRACE_SERVER,
+		    "Unable to set %s scheduling parameters: %m", si.clname);
+	} else
+	    traceStatus(FAXTRACE_SERVER, "priocntl(%s): %m", si.clname);
+	if (seteuid(euid) < 0)		// restore previous effective uid
+	    traceStatus(FAXTRACE_SERVER, "setreuid(%d): %m", euid);
+    } else
+	traceStatus(FAXTRACE_SERVER, "setreuid(root): %m");
+#endif
+}
+
+/*
+ * Record the server status in the status file.
+ */
+void
+FaxServer::setServerStatus(const char* fmt, ...)
+{
+    if (statusFile != NULL) {	// NB: XXX workaround for YET ANOTHER gcc bug
+	flock(fileno(statusFile), LOCK_EX);
+	fseek(statusFile, 0L, 0);
+	ftruncate(fileno(statusFile), 0);
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(statusFile, fmt, ap);
+	fprintf(statusFile, "\n");
+	fflush(statusFile);
+	flock(fileno(statusFile), LOCK_UN);
+    }
+}
+
+/*
+ * Setup the modem; if needed.  Note that we reread
+ * the configuration file if it's been changed prior
+ * to setting up the modem.  This makes it easy to
+ * swap modems that need different configurations
+ * just by yanking the cable and then swapping the
+ * config file before hooking up the new modem.
+ */
+fxBool
+FaxServer::setupModem()
+{
+    /*
+     * Possibly reread the configuration file.  We
+     * always do this prior to setting up the modem
+     * so that someone can tweak the configuration file
+     * and have the server automatically select new
+     * modem configuration parameters (instead of
+     * requiring that the server be restarted).
+     */
+    fxStr file(FAX_CONFIG);
+    file.append("." | modemDevID);
+    struct stat sb;
+    if (stat((char*) file, &sb) >= 0 && sb.st_mtime != lastConfigModTime) {
+	if (modem)
+	    discardModem(TRUE);
+	restoreState(file);
+	lastConfigModTime = sb.st_mtime;
+    }
+    if (!modem) {
+	const char* dev = modemDevice;
+	if (!openDevice(dev))
+	    return (FALSE);
+	/*
+	 * Deduce modem type and setup configuration info.
+	 * The deduceComplain cruft is just to reduce the
+	 * noise in the log file when probing for a modem.
+	 */
+	modem = FaxModem::deduceModem(*this, *modemConfig);
+	if (!modem) {
+	    discardModem(TRUE);
+	    if (deduceComplain) {
+		traceStatus(FAXTRACE_SERVER,
+		    "%s: Can not deduce modem type.", dev);
+		deduceComplain = FALSE;
+	    }
+	    return (FALSE);
+	} else {
+	    deduceComplain = TRUE;
+	    traceStatus(FAXTRACE_SERVER, "MODEM %s %s/%s",
+		(char*) modem->getManufacturer(),
+		(char*) modem->getModel(),
+		(char*) modem->getRevision());
+	}
+    } else
+	/*
+	 * Reset the modem in case some other program
+	 * went in and messed with the configuration.
+	 */
+	modem->reset();
+    /*
+     * Most modem-related parameters are dealt with
+     * in the modem driver.  The speaker volume is
+     * kept in the fax server because it often gets
+     * changed on the fly.  The phone number has no
+     * business in the modem class.
+     */
+    modem->setSpeakerVolume(speakerVolume);
+    modem->setLID(localIdentifier);
+    /*
+     * If the server is configured, listen for incoming calls.
+     */
+    setRingsBeforeAnswer(ringsBeforeAnswer);
     return (TRUE);
 }
 
 /*
- * Convert a phone number to a canonical format:
- *	+<country><areacode><number>
- * This involves, possibly, stripping off leading
- * dialing prefixes for long distance and/or
- * international dialing.
+ * Open the tty device associated with the modem
+ * and change the device file to be owned by us
+ * and with a protected file mode.
  */
-fxStr
-FaxServer::canonicalizePhoneNumber(const fxStr& number)
+fxBool
+FaxServer::openDevice(const char* dev)
 {
-    fxStr canon(number);
-    // strip everything but digits
-    for (int i = canon.length()-1; i >= 0; i--)
-	if (!isdigit(canon[i]))
-	    canon.remove(i);
-    if (number[number.skip(0, " \t")] != '+') {
-	// form canonical phone number by removing
-	// any long-distance and/or international
-	// dialing stuff and by prepending local
-	// area code and country code -- as appropriate
-	fxStr prefix = canon.extract(0, internationalPrefix.length());
-	if (prefix != internationalPrefix) {
-	    prefix = canon.extract(0, longDistancePrefix.length());
-	    if (prefix != longDistancePrefix)
-		canon.insert(myAreaCode);
-	    else
-		canon.remove(0, longDistancePrefix.length());
-	    canon.insert(myCountryCode);
-	} else
-	    canon.remove(0, internationalPrefix.length());
+    /*
+     * Temporarily become root to open the device.
+     * Routines that call setupModem *must* first
+     * lock the device with the usual effective uid.
+     */
+    uid_t euid = geteuid();
+    if (seteuid(0) < 0) {
+	 traceStatus(FAXTRACE_SERVER, "%s: seteuid root failed (%m)", dev);
+	 return (FALSE);
     }
-    canon.insert('+');
-    return (canon);
+#ifdef O_NDELAY
+    /*
+     * Open device w/ O_NDELAY to bypass modem
+     * control signals, then turn off the flag bit.
+     */
+    modemFd = ::open(dev, O_RDWR|O_NDELAY|O_NOCTTY);
+    if (modemFd < 0) {
+	seteuid(euid);
+	traceStatus(FAXTRACE_SERVER, "%s: Can not open modem (%m)", dev);
+	return (FALSE);
+    }
+    int flags = fcntl(modemFd, F_GETFL, 0);
+    if (fcntl(modemFd, F_SETFL, flags &~ O_NDELAY) < 0) {
+	 traceStatus(FAXTRACE_SERVER, "%s: fcntl: %m", dev);
+	 ::close(modemFd), modemFd = -1;
+	 return (FALSE);
+    }
+#else
+    startTimeout(3*1000);
+    modemFd = ::open(dev, O_RDWR);
+    stopTimeout("opening modem");
+    if (modemFd < 0) {
+	seteuid(euid);
+	traceStatus(FAXTRACE_SERVER,
+	    (timeout ?
+		"%s: Can not open modem (timed out)." :
+		"%s: Can not open modem (%m)."),
+	    dev, errno);
+	return (FALSE);
+    }
+#endif
+    /*
+     * NB: we stat and use the gid because passing -1
+     *     through the gid_t parameter in the prototype
+     *	   causes it to get truncated to 65535.
+     */
+    struct stat sb;
+    (void) fstat(modemFd, &sb);
+#if HAS_FCHOWN
+    if (fchown(modemFd, UUCPLock::getUUCPUid(), sb.st_gid) < 0)
+#else
+    if (chown((char*) dev, UUCPLock::getUUCPUid(), sb.st_gid) < 0)
+#endif
+	traceStatus(FAXTRACE_SERVER, "%s: chown: %m", dev);
+#if HAS_FCHMOD
+    if (fchmod(modemFd, deviceMode) < 0)
+#else
+    if (chmod((char*) dev, deviceMode) < 0)
+#endif
+	traceStatus(FAXTRACE_SERVER, "%s: chmod: %m", dev);
+    seteuid(euid);
+    return (TRUE);
+}
+
+fxBool
+FaxServer::reopenDevice()
+{
+    if (modemFd >= 0)
+	::close(modemFd), modemFd = -1;
+    return openDevice(modemDevice);
 }
 
 /*
- * Convert a canonical phone number to one that
- * reflects local dialing characteristics.  This
- * means stripping country and area codes, when
- * local, and inserting dialing prefixes.
+ * Discard any handle on the modem.
+ */
+void
+FaxServer::discardModem(fxBool dropDTR)
+{
+    if (modemFd >= 0) {
+	if (Dispatcher::instance().handler(modemFd, Dispatcher::ReadMask))
+	    Dispatcher::instance().unlink(modemFd);
+	if (dropDTR)
+	    (void) setDTR(FALSE);			// force hangup
+	::close(modemFd), modemFd = -1;			// discard open file
+    }
+    delete modem, modem = NULL;
+}
+
+/*
+ * Return true if a request has been made to abort
+ * the current session.  This is true if a previous
+ * abort request was made or if an external abort
+ * message is dispatched during our processing.
+ */
+fxBool
+FaxServer::abortRequested()
+{
+#ifndef SERVERABORTBUG
+    if (!abortCall) {
+	// poll for input so abort commands get processed
+	long sec = 0;
+	long usec = 0;
+	while (Dispatcher::instance().dispatch(sec,usec) && !abortCall)
+	    ;
+    }
+#endif
+    return (abortCall);
+}
+
+void
+FaxServer::abortSession()
+{
+    abortCall = TRUE;
+    traceStatus(FAXTRACE_SERVER, "ABORT: job abort requested");
+}
+
+/*
+ * Dispatcher input ready routine.  This is usually called
+ * because the phone is ringing, but it can also be called
+ * when, for example, a process dials out on the modem.
+ */
+int
+FaxServer::inputReady(int)
+{
+    answerPhone(FaxModem::ANSTYPE_ANY, FALSE);
+    return (0);
+}
+
+/*
+ * Dispatcher timer expired routine.  Perform the action
+ * associated with the server's state and, possible, transition
+ * to a new state.
+ */
+void
+FaxServer::timerExpired(long, long)
+{
+    switch (state) {
+    case MODEMWAIT:
+    case LOCKWAIT:
+	/*
+	 * Waiting for modem to start working.  Retry setup
+	 * and either change state or restart the timer.
+	 * Note that we unlock the modem before we change
+	 * our state to RUNNING after a modem setup so that
+	 * any callback doesn't find the modem locked (and
+	 * so cause jobs to be requeued).
+	 */
+	if (modemLock->lock()) {
+	    fxBool modemReady = setupModem();
+	    modemLock->unlock();
+	    if (modemReady)
+		changeState(RUNNING, 0);
+	    else
+		changeState(MODEMWAIT, pollModemWait);
+	} else
+	    changeState(LOCKWAIT, pollLockWait);
+	break;
+    }
+}
+
+void
+FaxServer::childStatus(pid_t, int status)
+{
+    switch (state) {
+    case GETTYWAIT:
+	/*
+	 * Waiting for getty/login process to terminate.
+	 * Unlock the modem and reset the world because
+	 * we discarded modem state when we started the getty.
+	 */
+	traceStatus(FAXTRACE_SERVER, "GETTY: exit status %#o", status);
+	delete getty, getty = NULL;
+	modemLock->unlock();		// it's safe now to remove the lock
+	changeState(MODEMWAIT, 2);	// wait a touch for the modem to settle
+	break;
+    }
+}
+
+/*
+ * Answer the telephone in response to data from the modem
+ * (e.g. a "RING" message) or an explicit command from the
+ * user (sending an "ANSWER" command through the FIFO).
+ */
+void
+FaxServer::answerPhone(AnswerType atype, fxBool force)
+{
+    if (modemLock->lock()) {
+	changeState(ANSWERING);
+	if (force || modem->waitForRings(ringsBeforeAnswer)) {
+	    fxStr emsg;
+	    fxStr canon(canonicalizePhoneNumber(FAXNumber));
+	    log = new FaxMachineLog(canon, logMode);
+	    /*
+	     * Answer the phone according to atype.  If this is
+	     * ``any'', then pick a more specific type.  If
+	     * adaptive-answer is enabled and ``any'' is requested,
+	     * then rotate through the set of possibilities.
+	     */
+	    CallType ctype;
+	    fxBool waitForProcess;
+	    fxBool callSetup;
+	    if (atype == FaxModem::ANSTYPE_ANY) {
+		int r = answerRotor;
+		do {
+		    atype = answerRotary[r];
+		    ctype = modem->answerCall(atype, emsg);
+		    callSetup = setupCall(atype, ctype, waitForProcess, emsg);
+		    r = (r+1) % answerRotorSize;
+		} while (!callSetup && adaptiveAnswer && r != answerRotor);
+	    } else {
+		ctype = modem->answerCall(atype, emsg);
+		callSetup = setupCall(atype, ctype, waitForProcess, emsg);
+	    }
+	    /*
+	     * Call resolved.  If we were able to recognize the call
+	     * type and setup a session, then reset the answer rotary
+	     * state if there is a bias toward a specific answer type.
+	     * Also, deal with call types that are processed through
+	     * a subprocess, rather than within this process.  Otherwise,
+	     * if the call failed, advance the rotor to the next answer
+	     * type in preparation for the next call.
+	     */
+	    if (callSetup) {
+		if (answerBias >= 0)
+		    answerRotor = answerBias;
+		/*
+		 * Some calls are handled by starting up a subprocess
+		 * that does the work.  For such calls we have to wait
+		 * for the process to exit before we can remove the
+		 * lock file and do related cleanup work.
+		 */
+		if (waitForProcess)
+		    return;
+	    } else {
+		if (adaptiveAnswer)
+		    answerRotor = 0;
+		else
+		    answerRotor = (answerRotor+1) % answerRotorSize;
+	    }
+	    delete log, log = NULL;
+	} else
+	    modemFlushInput();
+	/*
+	 * Because some modems are impossible to safely hangup in the
+	 * event of a problem, we force a close on the device so that
+	 * the modem will see DTR go down and (hopefully) clean up any
+	 * bad state its in.  We then immediately try to setup the modem
+	 * again so that we can be ready to answer incoming calls again.
+	 */
+	modem->hangup();
+	discardModem(TRUE);
+	fxBool modemReady = setupModem();
+	modemLock->unlock();
+	if (!modemReady)
+	    changeState(MODEMWAIT, pollModemWait);
+	else
+	    changeState(RUNNING);
+    } else {
+	/*
+	 * The modem is in use to call out, or by way of an incoming
+	 * call.  If we're not sending or receiving, discard our handle
+	 * on the modem and change to MODEMWAIT state where we wait
+	 * for the modem to come available again.
+	 */
+	traceStatus(FAXTRACE_SERVER, "ANSWER: Can not lock modem device");
+	if (state != SENDING && state != ANSWERING && state != RECEIVING) {
+	    discardModem(FALSE);
+	    changeState(LOCKWAIT, pollLockWait);
+	}
+    }
+}
+
+/*
+ * Do setup after answering an incoming call.
+ */
+fxBool
+FaxServer::setupCall(AnswerType atype, CallType ctype, fxBool& waitForProcess,
+    fxStr& emsg)
+{
+    fxBool callSetup = FALSE;
+    waitForProcess = FALSE;
+
+    switch (ctype) {
+    case FaxModem::CALLTYPE_FAX:
+	traceStatus(FAXTRACE_SERVER, "ANSWER: FAX CONNECTION");
+	callSetup = recvFax();
+	break;
+    case FaxModem::CALLTYPE_DATA:
+	traceStatus(FAXTRACE_SERVER, "ANSWER: DATA CONNECTION");
+	if (gettyArgs == "") {
+	    traceStatus(FAXTRACE_SERVER,
+		"ANSWER: Data connections are not permitted");
+	    break;
+	}
+	/*
+	 * If call was answered using an adaptive-answering
+	 * facility, then give the modem an opportunity to
+	 * establish data services.
+	 */
+	if (atype == FaxModem::ANSTYPE_ANY && !modem->dataService()) {
+	    traceStatus(FAXTRACE_SERVER,
+		"ANSWER: Could not switch modem to data service");
+	    break;
+	}
+	/*
+	 * Fork and exec a getty process to handle the
+	 * data connection.  Note that we return without
+	 * removing our lock on the modem--this is done
+	 * after we reap the child getty process to insure
+	 * outgoing modem use is disallowed.
+	 */
+	if (runGetty(gettyArgs)) {
+	    delete log, log = NULL;
+	    callSetup = TRUE;
+	    waitForProcess = TRUE;
+	}
+	break;
+    case FaxModem::CALLTYPE_VOICE:
+	traceStatus(FAXTRACE_SERVER, "ANSWER: VOICE CONNECTION");
+	/*
+	 * If call was answered using an adaptive-answering
+	 * facility, then give the modem an opportunity to
+	 * establish voice services.
+	 */
+	if (atype == FaxModem::ANSTYPE_ANY && !modem->voiceService()) {
+	    traceStatus(FAXTRACE_SERVER,
+		"ANSWER: Could not switch modem to voice service");
+	    break;
+	}
+	// XXX setup voice process a la getty
+	break;
+    case FaxModem::CALLTYPE_ERROR:
+	traceStatus(FAXTRACE_SERVER, "ANSWER: %s", (char*) emsg);
+	break;
+    }
+    return (callSetup);
+}
+
+/*
+ * Startup a getty process in response to a data connection.
+ * The speed parameter is passed to getty to use in establishing
+ * a login session.
+ */
+fxBool
+FaxServer::runGetty(const char* args)
+{
+    fxStr prefix(DEV_PREFIX);
+    fxStr dev(modemDevice);
+    if (dev.head(prefix.length()) == prefix)
+	dev.remove(0, prefix.length());
+    getty = OSnewGetty(dev, fxStr((int) baudRates[curRate], "%u"));
+    if (!getty) {
+	traceStatus(FAXTRACE_SERVER, "GETTY: could not create");
+	return (FALSE);
+    }
+    pid_t pid = fork();
+    if (pid == -1) {
+	traceStatus(FAXTRACE_SERVER, "GETTY: can not fork");
+	return (FALSE);
+    }
+    if (pid == 0) {
+	setProcessPriority(BASE);		// remove any high priority
+	if (setegid(getgid()) < 0)
+	    traceStatus(FAXTRACE_SERVER, "runGetty::setegid: %m");
+	if (seteuid(getuid()) < 0)
+	    traceStatus(FAXTRACE_SERVER, "runGetty::seteuid: %m");
+	getty->run(modemFd, args);
+	_exit(127);
+	/*NOTREACHED*/
+    } else {
+	traceStatus(FAXTRACE_SERVER, "GETTY: start pid %u, \"%s\"",
+	   pid, args);
+	getty->setPID(pid);
+	/*
+	 * Purge existing modem state because the getty+login processed
+	 * will change everything and because we must close the descriptor
+	 * so that the getty will get SIGHUP on last close.
+	 */
+	discardModem(FALSE);
+	changeState(GETTYWAIT);
+	Dispatcher::instance().startChild(pid, this);
+	return (TRUE);
+    }
+}
+
+void
+FaxServer::setDialRules(const char* name)
+{
+    delete dialRules;
+    dialRules = new DialStringRules(name);
+    /*
+     * Setup configuration environment.
+     */
+    dialRules->def("AreaCode", myAreaCode);
+    dialRules->def("CountryCode", myCountryCode);
+    dialRules->def("LongDistancePrefix", longDistancePrefix);
+    dialRules->def("InternationalPrefix", internationalPrefix);
+    if (!dialRules->parse()) {
+	traceStatus(FAXTRACE_SERVER,
+	    "Parse error in dial string rules \"%s\"", name);
+	delete dialRules, dialRules = NULL;
+    }
+}
+
+/*
+ * Convert a dialing string to a canonical format.
  */
 fxStr
-FaxServer::localizePhoneNumber(const fxStr& canon)
+FaxServer::canonicalizePhoneNumber(const fxStr& ds)
 {
-    fxStr number(canon);
-    if (number.extract(1, myCountryCode.length()) == myCountryCode) {
-	number.remove(0, myCountryCode.length()+1);
-	if (number.extract(0, myAreaCode.length()) == myAreaCode)
-	    number.remove(0, myAreaCode.length());
-	else
-	    number.insert(longDistancePrefix);	
-    } else {
-	number.remove(0);		// remove "+"
-	number.insert(internationalPrefix);
-    }
-    if (useDialPrefix)
-	number.insert(dialPrefix);
-    return (number);
+    if (dialRules)
+	return dialRules->canonicalNumber(ds);
+    else
+	return ds;
+}
+
+/*
+ * Prepare a dialing string for use.
+ */
+fxStr
+FaxServer::prepareDialString(const fxStr& ds)
+{
+    if (dialRules)
+	return dialRules->dialString(ds);
+    else
+	return ds;
+}
+
+/*
+ * Modem support interfaces.  Note that the values
+ * returned when we don't have a handle on the modem
+ * are selected so that any imaged facsimile should
+ * still be sendable.
+ */
+fxBool FaxServer::modemReady() const
+    { return modem != NULL; }
+fxBool FaxServer::modemSupports2D() const
+    { return modem ? modem->supports2D() : FALSE; }
+fxBool FaxServer::modemSupportsEOLPadding() const
+    { return modem ? modem->supportsEOLPadding() : FALSE; }
+fxBool FaxServer::modemSupportsVRes(float res) const
+    { return modem ? modem->supportsVRes(res) : TRUE; }
+fxBool FaxServer::modemSupportsPageWidth(u_int w) const
+    { return modem ? modem->supportsPageWidth(w) : TRUE; }
+fxBool FaxServer::modemSupportsPageLength(u_int l) const
+    { return modem ? modem->supportsPageLength(l) : TRUE; }
+
+fxBool FaxServer::modemSupportsPolling() const
+    { return modem ? modem->supportsPolling() : FALSE; }
+fxBool FaxServer::serverBusy() const
+    { return state != RUNNING; }
+
+/*
+ * FaxServer configuration and query methods.
+ */
+
+/*
+ * Setup server and modem configuration information.
+ */
+void
+FaxServer::setupConfig()
+{
+    speakerVolume = FaxModem::QUIET;	// default speaker volume
+    ringsBeforeAnswer = 0;		// default is not to answer phone
+    noCarrierRetrys = 1;		// retry sends once if no carrier
+    recvFileMode = 0600;		// default protection mode
+    deviceMode = 0600;			// default mode for modem device
+    logMode = 0600;			// default mode for log files
+    requeueTTS[FaxModem::OK]		= 0;
+    requeueTTS[FaxModem::BUSY]		= FAX_REQBUSY;
+    requeueTTS[FaxModem::NOCARRIER]	= FAX_REQUEUE;
+    requeueTTS[FaxModem::NOANSWER]	= FAX_REQUEUE;
+    requeueTTS[FaxModem::NODIALTONE]	= FAX_REQUEUE;
+    requeueTTS[FaxModem::ERROR]		= FAX_REQUEUE;
+    requeueTTS[FaxModem::FAILURE]	= FAX_REQUEUE;
+    requeueTTS[FaxModem::NOFCON]	= FAX_REQUEUE;
+    requeueTTS[FaxModem::DATACONN]	= FAX_REQUEUE;
+    requeueProto = FAX_REQPROTO;
+    requeueOther = FAX_REQUEUE;
+    pollModemWait = 30;			// default polling every 30 seconds
+    pollLockWait = 30;			// default polling every 30 seconds
+    maxRecvPages = (u_int) -1;		// default to unlimited
+    maxSendPages = (u_int) -1;		// default to unlimited
+    tracingLevel = FAXTRACE_SERVER;
+    logTracingLevel = FAXTRACE_SERVER;
+    contCoverPageTemplate = "";		// don't generate pages by default
+    adaptiveAnswer = FALSE;		// don't answer data if fax answer fails
+    answerBias = -1;
+    setAnswerRotary("any");
+    maxConsecutiveBadCalls = 25;	// default to some ``large'' number
+    postscriptTimeout = 5*60;		// default is 5 minutes
+
+    delete dialRules, dialRules = NULL;
+    localIdentifier = "";
+    FAXNumber = "";
+    longDistancePrefix = "";
+    internationalPrefix = "";
+    myAreaCode = "";
+    myCountryCode = "";
+
+    delete modemConfig;
+    modemConfig = new ModemConfig;
 }
 
 void
 FaxServer::setModemNumber(const fxStr& number)
 {
     FAXNumber = number;
-    if (modem)
-	modem->setLID(canonicalizePhoneNumber(number));
+    if (localIdentifier == "")
+	setLocalIdentifier(canonicalizePhoneNumber(number));
 }
 const fxStr& FaxServer::getModemNumber()	{ return (FAXNumber); }
 
-void FaxServer::setOkToReceive2D(fxBool on)	{ okToReceive2D = on; }
-fxBool FaxServer::getOkToReceive2D()		{ return (okToReceive2D); }
-void FaxServer::setQualifyTSI(fxBool on)	{ qualifyTSI = on; }
-fxBool FaxServer::getQualifyTSI()		{ return (qualifyTSI); }
+void
+FaxServer::setLocalIdentifier(const fxStr& lid)
+{
+    localIdentifier = lid;
+    if (modem)
+	modem->setLID(localIdentifier);
+}
+const fxStr& FaxServer::getLocalIdentifier()	{ return (localIdentifier); }
 
-void FaxServer::setTracing(int level)		{ tracingLevel = level; }
-int FaxServer::getTracing()			{ return (tracingLevel); }
-void FaxServer::setToneDialing(fxBool on)	{ toneDialing = on; }
-fxBool FaxServer::getToneDialing()		{ return (toneDialing); }
-void FaxServer::setRingsBeforeAnswer(int rings)	{ ringsBeforeAnswer = rings; }
+void FaxServer::setServerTracing(int level)	{ tracingLevel = level; }
+int FaxServer::getServerTracing()		{ return (tracingLevel); }
+void FaxServer::setSessionTracing(int level)	{ logTracingLevel = level; }
+int FaxServer::getSessionTracing()		{ return (logTracingLevel); }
+
+void
+FaxServer::setRingsBeforeAnswer(int rings)
+{
+    ringsBeforeAnswer = rings;
+    if (modem) {
+	IOHandler* h =
+	    Dispatcher::instance().handler(modemFd, Dispatcher::ReadMask);
+	if (rings > 0 && h == NULL)
+	    Dispatcher::instance().link(modemFd, Dispatcher::ReadMask, this);
+	else if (rings == 0 && h != NULL)
+	    Dispatcher::instance().unlink(modemFd);
+    }
+}
 int FaxServer::getRingsBeforeAnswer()		{ return (ringsBeforeAnswer); }
-void FaxServer::setRecvFileMode(int mode)	{ recvFileMode = mode; }
-int FaxServer::getRecvFileMode()		{ return (recvFileMode); }
 
 void
 FaxServer::setModemSpeakerVolume(SpeakerVolume lev)
@@ -238,280 +997,645 @@ FaxServer::setModemSpeakerVolume(SpeakerVolume lev)
 }
 SpeakerVolume FaxServer::getModemSpeakerVolume(){ return (speakerVolume); }
 
-void
-FaxServer::setCommaPauseTime(int secs)
+const fxStr& FaxServer::getContCoverPage() const
+    { return contCoverPageTemplate; }
+
+static SpeakerVolume
+getVol(const char* cp)
 {
-    commaPauseTime = secs;
-    if (modem)
-	modem->setCommaPauseTime(secs);
+    return (strcasecmp(cp, "off") == 0	 ? FaxModem::OFF :
+	    strcasecmp(cp, "quiet") == 0 ? FaxModem::QUIET :
+	    strcasecmp(cp, "low") == 0	 ? FaxModem::LOW :
+	    strcasecmp(cp, "medium") == 0? FaxModem::MEDIUM :
+	    strcasecmp(cp, "high") == 0	 ? FaxModem::HIGH :
+					   (SpeakerVolume) atoi(cp));
 }
-int FaxServer::getCommaPauseTime()		{ return (commaPauseTime); }
-
-void
-FaxServer::setWaitTimeForCarrier(int secs)
-{
-    waitTimeForCarrier = secs;
-    if (modem)
-	modem->setWaitTimeForCarrier(secs);
-}
-int FaxServer::getWaitTimeForCarrier()		{ return (waitTimeForCarrier); }
-
-// XXX need preferences database
-
-static const char* putBoolean(fxBool b)
-    { return (b ? "yes" : "no"); }
-static fxBool getBoolean(const char* cp)
-    { return (strcasecmp(cp, "on") == 0 || strcasecmp(cp, "yes") == 0); }
 
 void
 FaxServer::restoreState(const fxStr& filename)
 {
     FILE* fd = fopen(filename, "r");
-    if (!fd)
-	return;
-    char line[512];
-    while (fgets(line, sizeof (line)-1, fd))
-	restoreStateItem(line);
-    fclose(fd);
+    if (fd) {
+	setupConfig();			// reset to base config state
+	char line[512];
+	while (fgets(line, sizeof (line)-1, fd))
+	    restoreStateItem(line);
+	fclose(fd);
+    }
+}
+
+static int
+getnum(const char* s)
+{
+    return ((int) strtol(s, NULL, 0));
+}
+
+static fxBool
+getbool(const char* cp)
+{
+    return (streq(cp, "on") || streq(cp, "yes"));
+}
+
+/*
+ * Process an answer rotary spec string.
+ */
+void
+FaxServer::setAnswerRotary(const fxStr& value)
+{
+    u_int l = 0;
+    for (u_int i = 0; i < 3 && l < value.length(); i++) {
+	fxStr type(value.token(l, " \t"));
+	type.raisecase();
+	if (type == "FAX")
+	    answerRotary[i] = FaxModem::ANSTYPE_FAX;
+	else if (type == "DATA")
+	    answerRotary[i] = FaxModem::ANSTYPE_DATA;
+	else if (type == "VOICE")
+	    answerRotary[i] = FaxModem::ANSTYPE_VOICE;
+	else {
+	    if (type != "ANY")
+		traceStatus(FAXTRACE_SERVER,
+		    "Unknown answer type \"%s\"", (char*) type);
+	    answerRotary[i] = FaxModem::ANSTYPE_ANY;
+	}
+    }
+    if (i == 0)				// void string
+	answerRotary[i++] = FaxModem::ANSTYPE_ANY;
+    answerRotor = 0;
+    answerRotorSize = i;
 }
 
 void
 FaxServer::restoreStateItem(const char* b)
 {
     char buf[512];
+    char* cp;
 
     strncpy(buf, b, sizeof (buf));
-    char* cp = strchr(buf, '#');
-    if (!cp)
-	cp = strchr(buf, '\n');
-    if (cp)
-	*cp = '\0';
-    cp = strchr(buf, ':');
-    if (cp) {
-	*cp++ = '\0';
-	while (isspace(*cp))
-	    cp++;
-	if (strcasecmp(buf, "RingsBeforeAnswer") == 0)
-	    ringsBeforeAnswer = atoi(cp);
-	else if (strcasecmp(buf, "WaitForCarrier") == 0)
-	    waitTimeForCarrier = atoi(cp);
-	else if (strcasecmp(buf, "CommaPauseTime") == 0)
-	    commaPauseTime = atoi(cp);
-	else if (strcasecmp(buf, "RecvFileMode") == 0)
-	    recvFileMode = (int) strtol(cp, 0, 8);
-	else if (strcasecmp(buf, "SpeakerVolume") == 0)
-	    speakerVolume = (SpeakerVolume) atoi(cp);
-	else if (strcasecmp(buf, "ToneDialing") == 0)
-	    toneDialing = getBoolean(cp);
-	else if (strcasecmp(buf, "ProtocolTracing") == 0)
-	    tracingLevel = atoi(cp);
-	else if (strcasecmp(buf, "FAXNumber") == 0)
-	    setModemNumber(cp);
-	else if (strcasecmp(buf, "AreaCode") == 0)
-	    myAreaCode = cp;
-	else if (strcasecmp(buf, "CountryCode") == 0)
-	    myCountryCode = cp;
-	else if (strcasecmp(buf, "DialPrefix") == 0)
-	    dialPrefix = cp;
-	else if (strcasecmp(buf, "LongDistancePrefix") == 0)
-	    longDistancePrefix = cp;
-	else if (strcasecmp(buf, "InternationalPrefix") == 0)
-	    internationalPrefix = cp;
-	else if (strcasecmp(buf, "UseDialPrefix") == 0)
-	    useDialPrefix = getBoolean(cp);
-	else if (strcasecmp(buf, "ModemType") == 0)
-	    modemType = cp;
-	else if (strcasecmp(buf, "QualifyTSI") == 0)
-	    qualifyTSI = getBoolean(cp);
+    for (cp = buf; isspace(*cp); cp++)		// skip leading white space
+	;
+    if (*cp == '#')
+	return;
+    const char* tag = cp;			// start of tag
+    while (*cp && *cp != ':') {			// skip to demarcating ':'
+	if (isupper(*cp))
+	    *cp = tolower(*cp);
+	cp++;
     }
+    if (*cp != ':') {
+	traceStatus(FAXTRACE_SERVER, "Syntax error, missing ':' in \"%s\"", b);
+	return;
+    }
+    for (*cp++ = '\0'; isspace(*cp); cp++)	// skip white space again
+	;
+    const char* value;
+    if (*cp == '"') {				// "..." value
+	int c;
+	/*
+	 * Parse quoted string and deal with \ escapes.
+	 */
+	char* dp = ++cp;
+	for (value = dp; (c = *cp) != '"'; cp++) {
+	    if (c == '\0') {			// unmatched quote mark
+		traceStatus(FAXTRACE_SERVER,
+		    "Syntax error, missing quote mark in \"%s\"", b);
+		return;
+	    }
+	    if (c == '\\') {
+		c = *++cp;
+		if (isdigit(c)) {		// \nnn octal escape
+		    int v = c - '0';
+		    if (isdigit(c = cp[1])) {
+			cp++, v = (v << 3) + (c - '0');
+			if (isdigit(c = cp[1]))
+			    cp++, v = (v << 3) + (c - '0');
+		    }
+		    c = v;
+		} else {			// \<char> escapes
+		    for (const char* tp = "n\nt\tr\rb\bf\fv\013"; *tp; tp += 2)
+			if (c == tp[0]) {
+			    c = tp[1];
+			    break;
+			}
+		}
+	    }
+	    *dp++ = c;
+	}
+	*dp = '\0';
+    } else {					// value up to 1st non-ws
+	for (value = cp; *cp && !isspace(*cp); cp++)
+	    ;
+	*cp = '\0';
+    }
+    if (streq(tag, "recvfilemode"))	
+	recvFileMode = (mode_t) strtol(value, 0, 8);
+    else if (streq(tag, "devicemode"))	
+	deviceMode = (mode_t) strtol(value, 0, 8);
+    else if (streq(tag, "logfilemode"))	
+	logMode = (mode_t) strtol(value, 0, 8);
+    else if (streq(tag, "ringsbeforeanswer"))
+	setRingsBeforeAnswer(getnum(value));
+    else if (streq(tag, "speakervolume"))
+	setModemSpeakerVolume(getVol(value));
+    else if (streq(tag, "protocoltracing"))
+	tracingLevel = logTracingLevel = getnum(value) &~ tracingMask;
+    else if (streq(tag, "servertracing"))
+	tracingLevel = getnum(value) &~ tracingMask;
+    else if (streq(tag, "sessiontracing"))
+	logTracingLevel = getnum(value) &~ tracingMask;
+    else if (streq(tag, "faxnumber"))		setModemNumber(value);
+    else if (streq(tag, "areacode"))		myAreaCode = value;
+    else if (streq(tag, "countrycode"))		myCountryCode = value;
+    else if (streq(tag, "longdistanceprefix"))	longDistancePrefix = value;
+    else if (streq(tag, "internationalprefix"))	internationalPrefix = value;
+    else if (streq(tag, "localidentifier"))	setLocalIdentifier(value);
+    else if (streq(tag, "dialstringrules"))	setDialRules(value);
+    else if (streq(tag, "qualifytsi"))		qualifyTSI = value;
+    else if (streq(tag, "gettyspeed"))		gettyArgs = value;
+    else if (streq(tag, "gettyargs"))		gettyArgs = value;
+    else if (streq(tag, "nocarrierretrys"))	noCarrierRetrys = getnum(value);
+    else if (streq(tag, "adaptiveanswer"))	adaptiveAnswer = getbool(value);
+    else if (streq(tag, "contcoverpage"))	contCoverPageTemplate = value;
+    else if (streq(tag, "answerrotary"))	setAnswerRotary(value);
+    else if (streq(tag, "answerbias"))
+	answerBias = fxmin(getnum(value),2);
+    else if (streq(tag, "uucplocktimeout"))
+	UUCPLock::setLockTimeout(getnum(value));
+    else if (streq(tag, "jobreqbusy"))
+	requeueTTS[FaxModem::BUSY] = getnum(value);
+    else if (streq(tag, "jobreqnocarrier"))
+	requeueTTS[FaxModem::NOCARRIER] = getnum(value);
+    else if (streq(tag, "jobreqnoanswer"))
+	requeueTTS[FaxModem::NOANSWER] = getnum(value);
+    else if (streq(tag, "jobreqnofcon"))
+	requeueTTS[FaxModem::NOFCON] = getnum(value);
+    else if (streq(tag, "jobreqdataconn"))
+	requeueTTS[FaxModem::DATACONN] = getnum(value);
+    else if (streq(tag, "jobreqproto"))		requeueProto = getnum(value);
+    else if (streq(tag, "jobreqother"))		requeueOther = getnum(value);
+    else if (streq(tag, "pollmodemwait"))	pollModemWait = getnum(value);
+    else if (streq(tag, "polllockwait"))	pollLockWait = getnum(value);
+    else if (streq(tag, "maxrecvpages"))	maxRecvPages = getnum(value);
+    else if (streq(tag, "maxsendpages"))	maxSendPages = getnum(value);
+    else if (streq(tag, "maxbadcalls"))
+	maxConsecutiveBadCalls = getnum(value);
+    else if (streq(tag, "postscripttimeout"))
+	postscriptTimeout = getnum(value);
+    else if (!modemConfig->parseItem(tag, value))
+	traceStatus(FAXTRACE_SERVER,
+	    "Unknown configuration parameter \"%s\" ignored", b);
 }
-
-#include <stdarg.h>
 
 void
 FaxServer::traceStatus(int kind, const char* va_alist ...)
 #define	fmt va_alist
 {
-    if (tracingLevel & kind) {
-	va_list ap;
-	va_start(ap, fmt);
-	if (traceChannel->getNumberOfConnections() == 0) {
-	    vfprintf(stderr, fmt, ap);
-	    fprintf(stderr, "\n");
-	} else {
-	    char buf[1024];
-	    vsprintf(buf, fmt, ap);
-	    sendCharPtr(traceChannel, buf, fxObj::sync);
-	}
-	va_end(ap);
-    }
+    va_list ap;
+    va_start(ap, fmt);
+    vtraceStatus(kind, fmt, ap);
+    va_end(ap);
 }
 #undef fmt
 
-int
-FaxServer::modemDIS()
+#include "faxServerApp.h"
+
+void
+FaxServer::vtraceStatus(int kind, const char* fmt, va_list ap)
 {
-    int DIS = DIS_T4RCVR |
-	DIS_7MMVRES |
-	(DISWIDTH_2432 << 6) |
-	(DISLENGTH_UNLIMITED << 4) |
-	(modem->getBestSignallingRate() << 12) |
-	(modem->getBestScanlineTime() << 1);
-    // XXX this is optional 'cuz 2d encoding may be busted??
-    if (okToReceive2D)
-	DIS |= DIS_2DENCODE;
-    return (DIS << 8);
+    if (log) {
+	if (kind == FAXTRACE_SERVER)	// always log server stuff
+	    app->vlogInfo(fmt, ap);
+	if (logTracingLevel & kind)
+	    log->vlog(fmt, ap);
+    } else if (tracingLevel & kind)
+	app->vlogInfo(fmt, ap);
 }
 
-static int baudRates[] = {
-    0,		// B0
-    50,		// B50
-    75,		// B75
-    110,	// B110
-    134,	// B134
-    150,	// B150
-    200,	// B200
-    300,	// B300
-    600,	// B600
-    1200,	// B1200
-    1800,	// B1800
-    2400,	// B2400
-    4800,	// B4800
-    9600,	// B9600
-    19200,	// B19200
-    38400,	// B38400
+#include "StackBuffer.h"
+
+void
+FaxServer::traceModemIO(const char* dir, const u_char* data, u_int cc)
+{
+    if (log) {
+	if ((logTracingLevel& FAXTRACE_MODEMIO) == 0)
+	    return;
+    } else if ((tracingLevel & FAXTRACE_MODEMIO) == 0)
+	return;
+
+    const char* hexdigits = "0123456789ABCDEF";
+    fxStackBuffer buf;
+    for (u_int i = 0; i < cc; i++) {
+	u_char b = data[i];
+	if (i > 0)
+	    buf.put(' ');
+	buf.put(hexdigits[b>>4]);
+	buf.put(hexdigits[b&0xf]);
+    }
+    traceStatus(FAXTRACE_MODEMIO, "%s <%u:%.*s>",
+	dir, cc, buf.getLength(), (char*) buf);
+}
+
+#ifndef B38400
+#define	B38400	B19200
+#endif
+#ifndef B57600
+#define	B57600	B38400
+#endif
+#ifndef B76800
+#define	B76800	B57600
+#endif
+static u_int termioBaud[] = {
+    B0,		// BR0
+    B300,	// BR300
+    B1200,	// BR1200
+    B2400,	// BR2400
+    B4800,	// BR4800
+    B9600,	// BR9600
+    B19200,	// BR19200
+    B38400,	// BR38400
+    B57600,	// BR57600
+    B76800,	// BR76800
 };
+#define	NBAUDS	(sizeof (termioBaud) / sizeof (termioBaud[0]))
+static const char* flowNames[] = { "NONE", "XON/XOFF", "RTS/CTS", };
+
+#ifdef __bsdi__
+#undef	CRTSCTS
+#define	CRTSCTS	(CCTS_OFLOW|CRTS_IFLOW)
+#endif
+#ifndef CRTSCTS
+#ifdef CNEW_RTSCTS			/* XXX IRIX 5.x botch */
+#define	CRTSCTS	CNEW_RTSCTS
+#else
+#define	CRTSCTS	0
+#endif
+#endif
+
+static void
+setFlow(termios& term, FlowControl iflow, FlowControl oflow)
+{
+    switch (iflow) {
+    case FaxModem::FLOW_NONE:
+	term.c_iflag &= ~IXON;
+	term.c_cflag &= ~CRTSCTS;
+	break;
+    case FaxModem::FLOW_XONXOFF:
+	term.c_iflag |= IXON;
+	term.c_cflag &= ~CRTSCTS;
+	break;
+    case FaxModem::FLOW_RTSCTS:
+	term.c_iflag &= ~IXON;
+	term.c_cflag |= CRTSCTS;
+	break;
+    }
+    switch (oflow) {
+    case FaxModem::FLOW_NONE:
+	term.c_iflag &= ~IXOFF;
+	term.c_cflag &= ~CRTSCTS;
+	break;
+    case FaxModem::FLOW_XONXOFF:
+	term.c_iflag |= IXOFF;
+	term.c_cflag &= ~CRTSCTS;
+	break;
+    case FaxModem::FLOW_RTSCTS:
+	term.c_iflag &= ~IXOFF;
+	term.c_cflag |= CRTSCTS;
+	break;
+    }
+}
 
 /*
  * Device manipulation.
  */
+
+/*
+ * Set tty port baud rate and flow control.
+ */
 fxBool
-FaxServer::setBaudRate(int rate, fxBool enableFlow)
+FaxServer::setBaudRate(BaudRate rate, FlowControl iFlow, FlowControl oFlow)
 {
-    struct termio term;
-    if (ioctl(modemFd, TCGETA, &term) != 0)
+    struct termios term;
+    if (tcgetattr(modemFd, &term) == 0) {
+	if (rate >= NBAUDS)
+	    rate = NBAUDS-1;
+	curRate = rate;				// NB: for use elsewhere
+	term.c_oflag = 0;
+	term.c_lflag = 0;
+	term.c_iflag &= IXON|IXOFF;		// keep these bits
+	term.c_cflag &= CRTSCTS;		// and these bits
+	setFlow(term, iFlow, oFlow);
+	term.c_cflag |= CLOCAL | CS8 | CREAD;
+	cfsetospeed(&term, termioBaud[rate]);
+	cfsetispeed(&term, termioBaud[rate]);
+	term.c_cc[VMIN] = 127;			// buffer input by default
+	term.c_cc[VTIME] = 1;
+	traceStatus(FAXTRACE_MODEMOPS,
+	    "MODEM set baud rate: %d baud, input flow %s, output flow %s",
+	    baudRates[rate], flowNames[iFlow], flowNames[oFlow]);
+	flushModemInput();
+	return (tcsetattr(modemFd, TCSAFLUSH, &term) == 0);
+    } else
 	return (FALSE);
-    rate &= CBAUD;
-    term.c_iflag = 0;
-    if (enableFlow)
-	term.c_iflag |= IXON;
-    term.c_oflag = 0;
-    term.c_lflag = 0;
-    term.c_cflag = rate | CS8 | CREAD;
-    term.c_cc[VMIN] = 1;
-    term.c_cc[VTIME] = 0;
-    traceStatus(FAXTRACE_MODEMOPS,
-	"MODEM line set to %d baud (input XON/XOFF %s)",
-	baudRates[rate], enableFlow ? "enabled" : "disabled");
-    flushModemInput();
-    return (ioctl(modemFd, TCSETAF, &term) == 0);
 }
 
+/*
+ * Set tty port baud rate and leave flow control state unchanged.
+ */
 fxBool
-FaxServer::setInputFlowControl(fxBool enableFlow, fxBool flush)
+FaxServer::setBaudRate(BaudRate rate)
 {
-    struct termio term;
-    if (ioctl(modemFd, TCGETA, &term) == 0) {
-	if (enableFlow)
-	    term.c_iflag |= IXON;
-	else
-	    term.c_iflag &= ~IXON;
+    struct termios term;
+    if (tcgetattr(modemFd, &term) == 0) {
+	if (rate >= NBAUDS)
+	    rate = NBAUDS-1;
+	curRate = rate;				// NB: for use elsewhere
+	term.c_oflag = 0;
+	term.c_lflag = 0;
+	term.c_iflag &= IXON|IXOFF;		// keep these bits
+	term.c_cflag &= CRTSCTS;		// and these bits
+	term.c_cflag |= CLOCAL | CS8 | CREAD;
+	cfsetospeed(&term, termioBaud[rate]);
+	cfsetispeed(&term, termioBaud[rate]);
+	term.c_cc[VMIN] = 127;			// buffer input by default
+	term.c_cc[VTIME] = 1;
 	traceStatus(FAXTRACE_MODEMOPS,
-	    "MODEM input XON/XOFF %s", enableFlow ? "enabled" : "disabled");
-	if (flush)
+	    "MODEM set baud rate: %d baud (flow control unchanged)",
+	    baudRates[rate]);
+	flushModemInput();
+	return (tcsetattr(modemFd, TCSAFLUSH, &term) == 0);
+    } else
+	return (FALSE);
+}
+
+/*
+ * Manipulate DTR on tty port.
+ *
+ * On systems that support explicit DTR control this is done
+ * with an ioctl.  Otherwise we assume that setting the baud
+ * rate to zero causes DTR to be dropped (asserting DTR is
+ * assumed to be implicit in setting a non-zero baud rate).
+ *
+ * NB: we use the explicit DTR manipulation ioctls because
+ *     setting the baud rate to zero on some systems can cause
+ *     strange side effects.
+ */
+fxBool
+FaxServer::setDTR(fxBool onoff)
+{
+    traceStatus(FAXTRACE_MODEMOPS, "MODEM set DTR %s", onoff ? "ON" : "OFF");
+#ifdef TIOCMBIS
+    int mctl = TIOCM_DTR;
+#ifdef sun
+    /*
+     * Happy days! SVR4 passes the arg by value, while
+     * SunOS 4.x passes it by reference; is this progress?
+     */
+    if (ioctl(modemFd, onoff ? TIOCMBIS : TIOCMBIC, (char *)&mctl) == 0)
+#else
+    if (ioctl(modemFd, onoff ? TIOCMBIS : TIOCMBIC, (char *)mctl) == 0)
+#endif
+	return (TRUE);
+    /*
+     * Sigh, Sun seems to support this ioctl only on *some*
+     * devices (e.g. on-board duarts, but not the ALM-2 card);
+     * so if the ioctl that should work fails, we fallback
+     * on the usual way of doing things...
+     */
+#endif
+    return (onoff ? TRUE : setBaudRate(FaxModem::BR0));
+}
+
+static const char* actNames[] = { "NOW", "DRAIN", "FLUSH" };
+static u_int actCode[] = { TCSANOW, TCSADRAIN, TCSAFLUSH };
+
+/*
+ * Set tty modes so that the specified handling
+ * is done on data being sent and received.  When
+ * transmitting binary data, oFlow is FLOW_NONE to
+ * disable the transmission of XON/XOFF by the host
+ * to the modem.  When receiving binary data, iFlow
+ * is FLOW_NONE to cause XON/XOFF from the modem
+ * to not be interpreted.  In each case the opposite
+ * XON/XOFF handling should be enabled so that any
+ * XON/XOFF from/to the modem will be interpreted.
+ */
+fxBool
+FaxServer::setXONXOFF(FlowControl iFlow, FlowControl oFlow, SetAction act)
+{
+    struct termios term;
+    if (tcgetattr(modemFd, &term) == 0) {
+	setFlow(term, iFlow, oFlow);
+	traceStatus(FAXTRACE_MODEMOPS,
+	    "MODEM set XON/XOFF/%s: input %s, output %s",
+	    actNames[act],
+	    iFlow == FaxModem::FLOW_NONE ? "ignored" : "interpreted",
+	    oFlow == FaxModem::FLOW_NONE ? "disabled" : "generated"
+	);
+	if (act == FaxModem::ACT_FLUSH)
 	    flushModemInput();
-	if (ioctl(modemFd, flush ? TCSETAF : TCSETA, &term) == 0)
+	if (tcsetattr(modemFd, actCode[act], &term) == 0)
 	    return (TRUE);
     }
     return (FALSE);
 }
 
+#ifdef sgi
+#include <sys/stropts.h>
+#include <sys/z8530.h>
+#endif
+#ifdef sun
+#include <sys/stropts.h>
+#endif
+
+/*
+ * Setup process state either for minimum latency (no buffering)
+ * or reduced latency (input may be buffered).  We fiddle with
+ * the termio structure and, if required, the streams timer
+ * that delays the delivery of input data from the UART module
+ * upstream to the tty module.
+ */
+fxBool
+FaxServer::setInputBuffering(fxBool on)
+{
+    traceStatus(FAXTRACE_MODEMOPS, "MODEM input buffering %s",
+	on ? "enabled" : "disabled");
+#ifdef SIOC_ITIMER
+    /*
+     * Silicon Graphics systems have a settable timer
+     * that causes the UART driver to delay passing
+     * data upstream to the tty module.  This can cause
+     * anywhere from 20-30ms delay between input characters.
+     * We set it to zero when input latency is critical.
+     */
+    strioctl str;
+    str.ic_cmd = SIOC_ITIMER;
+    str.ic_timout = (on ? 2 : 0);	// 2 ticks = 20ms (usually)
+    str.ic_len = 4;
+    int arg = 0;
+    str.ic_dp = (char*)&arg;
+    if (ioctl(modemFd, I_STR, &str) < 0)
+	traceStatus(FAXTRACE_MODEMOPS, "MODEM ioctl(SIOC_ITIMER): %m");
+#endif
+#ifdef sun
+    /*
+     * SunOS has a timer similar to the SIOC_ITIMER described
+     * above for input on the on-board serial ports, but it is
+     * not generally accessible because it is controlled by a
+     * stream control message (M_CTL w/ either MC_SERVICEDEF or
+     * MC_SERVICEIMM) and you can not do a putmsg directly to
+     * the UART module and the tty driver does not provide an
+     * interface.  Also, the ALM-2 driver apparently also has
+     * a timer, but does not provide the M_CTL interface that's
+     * provided for the on-board ports.  All in all this means
+     * that the only way to defeat the timer for the on-board
+     * serial ports (and thereby provide enough control for the
+     * fax server to work with Class 1 modems) is to implement
+     * a streams module in the kernel that provides an interface
+     * to the timer--which is what has been done.  In the case of
+     * the ALM-2, however, you are just plain out of luck unless
+     * you have source code.
+     */
+    static fxBool zsunbuf_push_tried = FALSE;
+    static fxBool zsunbuf_push_ok = FALSE;
+    if (on) {			// pop zsunbuf if present to turn on buffering
+	char topmodule[FMNAMESZ+1];
+        if (zsunbuf_push_ok && ioctl(modemFd, I_LOOK, topmodule) >= 0 &&
+	  streq(topmodule, "zsunbuf")) {
+	    if (ioctl(modemFd, I_POP, 0) < 0)
+		traceStatus(FAXTRACE_MODEMOPS, "MODEM pop zsunbuf failed %m");
+	}
+    } else {			// push zsunbuf to turn off buffering
+        if (!zsunbuf_push_tried) {
+            zsunbuf_push_ok = (ioctl(modemFd, I_PUSH, "zsunbuf") >= 0);
+            traceStatus(FAXTRACE_MODEMOPS, "MODEM initial push zsunbuf %s",
+                zsunbuf_push_ok ? "succeeded" : "failed");
+            zsunbuf_push_tried = TRUE;
+        } else if (zsunbuf_push_ok) {
+            if (ioctl(modemFd, I_PUSH, "zsunbuf") < 0)
+                traceStatus(FAXTRACE_MODEMOPS, "MODEM push zsunbuf failed %m");
+        }
+    }
+#endif
+    struct termios term;
+    (void) tcgetattr(modemFd, &term);
+    if (on) {
+	term.c_cc[VMIN] = 127;
+	term.c_cc[VTIME] = 1;
+    } else {
+	term.c_cc[VMIN] = 1;
+	term.c_cc[VTIME] = 0;
+    }
+    return (tcsetattr(modemFd, TCSANOW, &term) == 0);
+}
+
 fxBool
 FaxServer::sendBreak(fxBool pause)
 {
-    traceStatus(FAXTRACE_MODEMOPS, "<-- break");
+    traceStatus(FAXTRACE_MODEMOPS, "MODEM send break");
     flushModemInput();
     if (pause) {
-	struct termio term;
 	/*
 	 * NB: TCSBRK is supposed to wait for output to drain,
-	 * but modem appears loses data if we don't do this
-	 * ioctl trick.
+	 * but modem appears loses data if we don't do this.
 	 */
-	if (ioctl(modemFd, TCGETA, &term) != -1)
-	    (void) ioctl(modemFd, TCSETAF, &term);
+	(void) tcdrain(modemFd);
     }
-    return (ioctl(modemFd, TCSBRK, 0) == 0);
+    return (tcsendbreak(modemFd, 0) == 0);
 }
 
 static fxBool timerExpired = FALSE;
-static void sigAlarm() { timerExpired = TRUE; }
+static void sigAlarm(int)		{ timerExpired = TRUE; }
+
+#ifndef SA_INTERRUPT
+#define	SA_INTERRUPT	0
+#endif
 
 void
-FaxServer::startTimeout(int t)
+FaxServer::startTimeout(long ms)
 {
-    timeout = timerExpired = FALSE;
-    signal(SIGALRM, (sig_type) sigAlarm);
-    traceStatus(FAXTRACE_TIMEOUTS, "start %d second timer", t);
-    alarm(t);
+    timeout = ::timerExpired = FALSE;
+#ifdef SV_INTERRUPT			/* BSD-style */
+    static struct sigvec sv;
+    sv.sv_handler = fxSIGVECHANDLER(sigAlarm);
+    sv.sv_flags = SV_INTERRUPT;
+    sigvec(SIGALRM, &sv, (struct sigvec*) 0);
+#else
+#ifdef SA_NOCLDSTOP			/* POSIX */
+    static struct sigaction sa;
+    sa.sa_handler = fxSIGACTIONHANDLER(sigAlarm);
+    sa.sa_flags = SA_INTERRUPT;
+    sigaction(SIGALRM, &sa, (struct sigaction*) 0);
+#else					/* System V-style */
+    signal(SIGALRM, fxSIGHANDLER(sigAlarm));
+#endif
+#endif
+#ifdef ITIMER_REAL
+    itimerval itv;
+    itv.it_value.tv_sec = ms / 1000;
+    itv.it_value.tv_usec = (ms % 1000) * 1000;
+    timerclear(&itv.it_interval);
+    (void) setitimer(ITIMER_REAL, &itv, (itimerval*) 0);
+    traceStatus(FAXTRACE_TIMEOUTS, "START %ld.%02ld second timeout",
+	itv.it_value.tv_sec, itv.it_value.tv_usec / 10000);
+#else
+    long secs = howmany(ms, 1000);
+    (void) alarm(secs);
+    traceStatus(FAXTRACE_TIMEOUTS, "START %ld second timeout", secs);
+#endif
 }
 
 void
 FaxServer::stopTimeout(const char* whichdir)
 {
-    alarm(0);
+#ifdef ITIMER_REAL
+    static itimerval itv = { 0, 0, 0, 0 };
+    (void) setitimer(ITIMER_REAL, &itv, (itimerval*) 0);
+#else
+    (void) alarm(0);
+#endif
     traceStatus(FAXTRACE_TIMEOUTS,
-	"stop timer%s", timerExpired ? ", timer expired" : "");
-    if (timeout = timerExpired)
-	traceStatus(FAXTRACE_MODEMOPS, "TIMEOUT: %s modem", whichdir);
+	"STOP timeout%s", ::timerExpired ? ", timer expired" : "");
+    if (timeout = ::timerExpired)
+	traceStatus(FAXTRACE_MODEMOPS, "TIMEOUT: %s", whichdir);
 }
-
-fxBool
-FaxServer::getTimedModemLine(char rbuf[], int timer)
-{
-    return (getModemLine(rbuf, timer) != 0 && !timeout);
-}
-
-const int CAN = 030;
 
 int
-FaxServer::getModemLine(char rbuf[], int timer)
+FaxServer::getModemLine(char rbuf[], u_int bufSize, long ms)
 {
     int c;
     int cc = 0;
+    if (ms) startTimeout(ms);
     do {
-	while ((c = getModemChar(timer)) != EOF && c != '\n')
-	    if (c != '\0' && c != '\r')
+	while ((c = getModemChar(0)) != EOF && c != '\n')
+	    if (c != '\0' && c != '\r' && cc < bufSize)
 		rbuf[cc++] = c;
     } while (cc == 0 && c != EOF);
     rbuf[cc] = '\0';
-    traceStatus(FAXTRACE_MODEMCOM, "--> [%d:%s]", cc, rbuf);
+    if (ms) stopTimeout("reading line from modem");
+    if (!timeout)
+	traceStatus(FAXTRACE_MODEMCOM, "--> [%d:%s]", cc, rbuf);
     return (cc);
 }
 
 int
-FaxServer::getModemChar(int timer)
+FaxServer::getModemChar(long ms)
 {
     if (rcvNext >= rcvCC) {
 	int n = 0;
-	if (timer) startTimeout(timer);
+	if (ms) startTimeout(ms);
 	do
 	    rcvCC = ::read(modemFd, rcvBuf, sizeof (rcvBuf));
 	while (n++ < 5 && rcvCC == 0);
-	if (timer) stopTimeout("reading from");
+	if (ms) stopTimeout("reading from modem");
 	if (rcvCC <= 0) {
 	    if (rcvCC < 0) {
-		extern int errno;
 		if (errno != EINTR)
 		    traceStatus(FAXTRACE_MODEMOPS,
-			"error %d reading from modem", errno);
-		else
-		    timeout = timerExpired;
-	    } else
-		traceStatus(FAXTRACE_MODEMOPS,
-		    "too many zero-length reads from modem");
+			"Error #%u reading from modem", errno);
+	    }
 	    return (EOF);
-	}
+	} else
+	    traceModemIO("-->", rcvBuf, rcvCC);
 	rcvNext = 0;
     }
     return (rcvBuf[rcvNext++]);
@@ -520,9 +1644,15 @@ FaxServer::getModemChar(int timer)
 void
 FaxServer::modemFlushInput()
 {
-    char rbuf[1024];
-    while (getTimedModemLine(rbuf, 1))
-	;
+    flushModemInput();
+    (void) tcflush(modemFd, TCIFLUSH);
+    traceStatus(FAXTRACE_MODEMOPS, "MODEM flush i/o");
+}
+
+fxBool
+FaxServer::modemStopOutput()
+{
+    return (tcflow(modemFd, TCOOFF) == 0);
 }
 
 void
@@ -532,34 +1662,25 @@ FaxServer::flushModemInput()
 }
 
 fxBool
-FaxServer::putModem(void* data, int n, int timer)
+FaxServer::putModem(const void* data, int n, long ms)
 {
     traceStatus(FAXTRACE_MODEMCOM, "<-- data [%d]", n);
-    if (timer)
-	startTimeout(timer);
+    return (putModem1(data, n, ms));
+}
+
+fxBool
+FaxServer::putModem1(const void* data, int n, long ms)
+{
+    if (ms)
+	startTimeout(ms);
     else
 	timeout = FALSE;
-    n -= ::write(modemFd, (char*) data, n);
-    if (timer)
-	stopTimeout("writing to");
+    int cc = ::write(modemFd, (char*) data, n);
+    if (ms)
+	stopTimeout("writing to modem");
+    if (cc > 0) {
+	traceModemIO("<--", (const u_char*) data, cc);
+	n -= cc;
+    }
     return (!timeout && n == 0);
 }
-
-void
-FaxServer::putModemLine(const char* cp)
-{
-    int n = strlen(cp);
-    traceStatus(FAXTRACE_MODEMCOM, "<-- [%d:%s]", n, cp);
-    ::write(modemFd, cp, n);
-    static char CR = '\r';
-    ::write(modemFd, &CR, 1);
-}
-
-ModemListener::ModemListener(int f)
-{
-    fd = f;
-    ringChannel = addOutput("ring", fxDT_void);
-}
-ModemListener::~ModemListener()			{}
-const char* ModemListener::className() const	{ return ("ModemListener"); }
-void ModemListener::handleRead()		{ sendVoid(ringChannel); }

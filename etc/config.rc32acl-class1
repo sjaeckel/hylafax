@@ -1,0 +1,41 @@
+# $Header: /usr/people/sam/fax/etc/RCS/config.rc32acl-class1,v 1.4 1994/07/03 17:41:57 sam Exp $
+#
+# Configuration for a Rockwell RC32ACL-based Class 1 modem.
+#
+# This configuration file sets up the modem to run at 38.4 and
+# the switches to 19.2 for sending and receiving facsimile ('cuz
+# the speed is locked by the modem firmware).  RTS/CTS is used
+# for flow control.
+#
+# CONFIG: CLASS1: 14400: Manufacturer=ROCKWELL Model=RC32ACL
+#
+CountryCode:		1		# USA
+LongDistancePrefix:	1
+InternationalPrefix:	011
+AreaCode:		510
+DialStringRules:	etc/dialrules.sf-ba
+FAXNumber:		"+1 510 526-8781"
+ServerTracing:		1
+SessionTracing:		0x4f
+RecvFileMode:		0644
+LogFileMode:		0644
+DeviceMode:		0600		# device is accessible only to uucp/fax
+#QualifyTSI:		etc/tsi		# accept facsimile from anyone
+SpeakerVolume:		off		# machine's are already too loud
+RingsBeforeAnswer:	1		# answer on first ring
+#
+ModemType:		Class1		# use this to supply a hint
+ModemRate:		38400
+ModemFlowControl:	rtscts
+ModemFlowControlCmd:	&K3		# hardware flow control
+ModemSetupDTRCmd:	&D2		# setup so DTR drop resets modem
+ModemSetupDCDCmd:	&C1		# setup so DCD reflects carrier (or not)
+#GettyArgs:		"-h %l dx_%s"	# requires modem to auto-detect fax/data
+ModemSetupAACmd:	+FAA=0		# in case modem supports Class 2 also
+#
+ModemMfrQueryCmd:	!Rockwell
+ModemModelQueryCmd:	!RC32ACL
+ModemRevQueryCmd:	I3
+#
+ModemDialCmd:		"<19200>\nDT%s"	# NB: fax transmits locked at 19.2
+ModemAnswerBeginFaxCmd:	"<19200>"	# NB: likewise, fax recv locked at 19.2

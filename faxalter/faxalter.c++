@@ -1,98 +1,70 @@
-#ident $Header: /usr/people/sam/flexkit/fax/faxalter/RCS/faxalter.c++,v 1.1 91/05/31 12:51:08 sam Exp $
-
+/*	$Header: /usr/people/sam/fax/faxalter/RCS/faxalter.c++,v 1.15 1994/06/23 00:35:24 sam Exp $ */
 /*
- * Copyright (c) 1991 by Sam Leffler.
- * All rights reserved.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
- * This file is provided for unrestricted use provided that this
- * legend is included on all tape media and as a part of the
- * software program in whole or part.  Users may copy, modify or
- * distribute this file at will.
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
  */
 #include "FaxClient.h"
-#include "OrderedGlobal.h"
-#include "Application.h"
 #include "StrArray.h"
 #include "config.h"
 
-#include <getopt.h>
-#include <stdarg.h>
-#include <ctype.h>
-
-#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
-#include <libc.h>
-#include <osfcn.h>
-#include <pwd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/fcntl.h>
-extern "C" {
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>		// XXX
-
-    int close(int);
-    int gethostname(char*, int);
-}
-
-class faxAlterApp : public fxApplication {
+class faxAlterApp : public FaxClient {
 private:
-    FaxClient	client;
     fxStr	appName;		// for error messages
-    fxStr	senderName;		// sender's full name (if available)
     fxStr	notify;
     fxStr	tts;
+    fxStr	killtime;
+    fxStr	maxdials;
     fxStrArray	jobids;
 
-    void setupUserIdentity();
     void usage();
+    void printError(const char* fmt, ...);
+    void printWarning(const char* fmt, ...);
 public:
     faxAlterApp();
     ~faxAlterApp();
 
     void initialize(int argc, char** argv);
     void open();
-    virtual const char *className() const;
 
-    void recvConf(const char* confMessage);	// recvConf wire
-    void recvEof();				// recvEof wire
-    void recvError(const int err);		// recvError wire
+    void recvConf(const char* cmd, const char* tag);
+    void recvEof();
+    void recvError(const int err);
 };
-
-static void s0(faxAlterApp* o, char* cp)	{ o->recvConf(cp); }
-static void s1(faxAlterApp* o)			{ o->recvEof(); }
-static void s2(faxAlterApp* o, int er)		{ o->recvError(er); }
-
-faxAlterApp::faxAlterApp()
-{
-    addInput("recvConf",	fxDT_CharPtr,	this, (fxStubFunc) s0);
-    addInput("recvEof",		fxDT_void,	this, (fxStubFunc) s1);
-    addInput("recvError",	fxDT_int,	this, (fxStubFunc) s2);
-
-    client.connect("faxMessage",	this, "recvConf");
-    client.connect("faxEof",		this, "recvEof");
-    client.connect("faxError",		this, "recvError");
-}
-
-faxAlterApp::~faxAlterApp()
-{
-}
-
-const char* faxAlterApp::className() const { return ("faxAlterApp"); }
+faxAlterApp::faxAlterApp() {}
+faxAlterApp::~faxAlterApp() {}
 
 void
 faxAlterApp::initialize(int argc, char** argv)
 {
-    extern int optind;
-    extern char* optarg;
-    int c;
+    int c, n;
 
     appName = argv[0];
     u_int l = appName.length();
     appName = appName.tokenR(l, '/');
-    while ((c = getopt(argc, argv, "a:h:n:DQRpv")) != -1)
+    while ((c = getopt(argc, argv, "a:h:k:n:t:DQRpv")) != -1)
 	switch (c) {
 	case 'D':			// set notification to when done
 	    notify = "when done";
@@ -107,7 +79,10 @@ faxAlterApp::initialize(int argc, char** argv)
 	    tts = optarg;
 	    break;
 	case 'h':			// server's host
-	    client.setHost(optarg);
+	    setHost(optarg);
+	    break;
+	case 'k':			// kill job at specified time
+	    killtime = optarg;
 	    break;
 	case 'n':			// set notification
 	    if (strcmp(optarg, "done") == 0)
@@ -118,17 +93,23 @@ faxAlterApp::initialize(int argc, char** argv)
 		notify = optarg;
 	    break;
 	case 'p':			// send now (push)
-	    tts = "0";
+	    tts = "now";
+	    break;
+	case 't':			// set max number of retries
+	    n = atoi(optarg);
+	    if (n < 0)
+		fxFatal("Bad number of retries for -t option: %s", optarg);
+	    maxdials = fxStr(n, "%d");
 	    break;
 	case 'v':			// trace protocol
-	    client.setVerbose(TRUE);
+	    setVerbose(TRUE);
 	    break;
 	case '?':
 	    usage();
 	}
     if (optind >= argc)
 	usage();
-    if (tts == "" && notify == "")
+    if (tts == "" && notify == "" && killtime == "" && maxdials == "")
 	fxFatal("No job parameters specified for alteration.");
     setupUserIdentity();
     for (; optind < argc; optind++)
@@ -138,73 +119,71 @@ faxAlterApp::initialize(int argc, char** argv)
 void
 faxAlterApp::usage()
 {
-    fxFatal("usage: %s [-h server-host] [-a time] [-n notify] [-p] [-DQR] jobID...", (char*) appName);
-}
-
-void
-faxAlterApp::setupUserIdentity()
-{
-    struct passwd* pwd = NULL;
-    char* name = cuserid(NULL);
-    if (!name) {
-	name = getlogin();
-	if (name)
-	    pwd = getpwnam(name);
-    }
-    if (!pwd)
-	pwd = getpwuid(getuid());
-    if (!pwd)
-	fxFatal("Can not determine your user name.");
-    if (pwd->pw_gecos) {
-	if (pwd->pw_gecos[0] == '&') {
-	    senderName = pwd->pw_gecos+1;
-	    senderName.insert(pwd->pw_name);
-	    if (islower(senderName[0]))
-		senderName[0] = toupper(senderName[0]);
-	} else
-	    senderName = pwd->pw_gecos;
-	senderName.resize(senderName.next(0,','));
-    } else
-	senderName = pwd->pw_name;
-    if (senderName.length() == 0)
-	fxFatal("Bad (null) user name.");
+    fxFatal("usage: %s"
+      " [-h server-host]"
+      " [-a time]"
+      " [-k time]"
+      " [-n notify]"
+      " [-t tries]"
+      " [-p]"
+      " [-DQR]"
+      " jobID...", (char*) appName);
 }
 
 void
 faxAlterApp::open()
 {
-    if (client.callServer() == client.Failure)
+    if (callServer()) {
+	for (int i = 0; i < jobids.length(); i++) {
+	    fxStr line = jobids[i] | ":" | getSenderName();
+	    // do notify first 'cuz setting tts causes q rescan
+	    if (notify != "")
+		sendLine("alterNotify", (char*)(line | ":" | notify));
+	    if (tts != "")
+		sendLine("alterTTS", (char*)(line | ":" | tts));
+	    if (killtime != "")
+		sendLine("alterKillTime", (char*)(line | ":" | killtime));
+	    if (maxdials != "")
+		sendLine("alterMaxDials", (char*)(line | ":" | maxdials));
+	}
+	sendLine(".\n");
+	startRunning();
+    } else
 	fxFatal("Could not call server.");
-    fx_theExecutive->addSelectHandler(&client);
-    for (int i = 0; i < jobids.length(); i++) {
-	fxStr line = jobids[i] | ":" | senderName;
-	// do notify first 'cuz setting tts causes q rescan
-	if (notify != "")
-	    client.sendLine("alterNotify", (char*)(line | ":" | notify));
-	if (tts != "")
-	    client.sendLine("alterTTS", (char*)(line | ":" | tts));
-    }
-    client.sendLine(".\n");
 }
 
-#define isCmd(cmd)	(strcasecmp(confMessage, cmd) == 0)
+void
+faxAlterApp::printError(const char* va_alist ...)
+#define	fmt va_alist
+{
+    va_list ap;
+    va_start(ap, va_alist);
+    fprintf(stderr, "%s: ", (char*) appName);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fputs("\n", stderr);
+    exit(-1);
+}
+#undef fmt
 
 void
-faxAlterApp::recvConf(const char* confMessage)
+faxAlterApp::printWarning(const char* va_alist ...)
+#define	fmt va_alist
 {
-    char* cp;
-    if (cp = strchr(confMessage, '\n'))
-	*cp = '\0';
-    char* tag = strchr(confMessage, ':');
-    if (!tag) {
-	fprintf(stderr, "Malformed confirmation message \"%s\"", confMessage);
-	client.hangupServer();
-	close();			// terminate app
-    }
-    *tag++ = '\0';
-    while (isspace(*tag))
-	tag++;
+    va_list ap;
+    va_start(ap, va_alist);
+    fprintf(stderr, "%s: Warning, ", (char*) appName);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fputs("\n", stderr);
+}
+#undef fmt
 
+#define isCmd(s)	(strcasecmp(s, cmd) == 0)
+
+void
+faxAlterApp::recvConf(const char* cmd, const char* tag)
+{
     if (isCmd("altered")) {
 //	printf("Job %s altered.\n", tag);
     } else if (isCmd("notQueued")) {
@@ -224,23 +203,32 @@ faxAlterApp::recvConf(const char* confMessage)
     } else if (isCmd("error")) {
 	printf("%s\n", tag);
     } else {
-	printf("Unknown status message \"%s:%s\"\n", confMessage, tag);
+	printf("Unknown status message \"%s:%s\"\n", cmd, tag);
     }
 }
 
 void
 faxAlterApp::recvEof()
 {
-    (void) client.hangupServer();
-    close();			// terminate app;
+    stopRunning();
 }
 
 void
 faxAlterApp::recvError(const int err)
 {
     printf("Fatal socket read error: %s\n", strerror(err));
-    (void) client.hangupServer();
-    close();			// terminate app;
+    stopRunning();
 }
 
-fxAPPINIT(faxAlterApp, 0);
+#include "Dispatcher.h"
+
+int
+main(int argc, char** argv)
+{
+    faxAlterApp app;
+    app.initialize(argc, argv);
+    app.open();
+    while (app.isRunning())
+	Dispatcher::instance().dispatch();
+    return 0;
+}
