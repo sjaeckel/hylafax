@@ -1,4 +1,4 @@
-/*	$Id: RegExDict.h,v 1.5 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -23,13 +23,13 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#ifndef _RegExDict_
-#define	_RegExDict_
+#ifndef _REDict_
+#define	_REDict_
 /*
  * Dictionary of Regular Expressions.
  */
 #include "Dictionary.h"
-#include "RegEx.h"
+#include "RE.h"
 
-fxDECLARE_StrKeyDictionary(RegExDict, RegExPtr)
-#endif /* _RegExDict_ */
+fxDECLARE_StrKeyDictionary(REDict, REPtr)
+#endif /* _REDict_ */

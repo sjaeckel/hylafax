@@ -1,4 +1,4 @@
-/*	$Id: RegExArray.c++,v 1.13 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -23,5 +23,5 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include "RegExArray.h"
-fxIMPLEMENT_ObjArray(RegExArray, RegExPtr)
+#include "REArray.h"
+fxIMPLEMENT_ObjArray(REArray, REPtr)

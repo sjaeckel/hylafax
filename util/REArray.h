@@ -1,4 +1,4 @@
-/*	$Id: RegExArray.h,v 1.19 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -23,13 +23,13 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#ifndef _RegExArray_
-#define	_RegExArray_
+#ifndef _REArray_
+#define	_REArray_
 /*
  * Array of Regular Expressions.
  */
 #include "Array.h"
-#include "RegEx.h"
+#include "RE.h"
 
-fxDECLARE_ObjArray(RegExArray, RegExPtr)
-#endif /* _RegExArray_ */
+fxDECLARE_ObjArray(REArray, REPtr)
+#endif /* _REArray_ */
