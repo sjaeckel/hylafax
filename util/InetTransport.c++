@@ -1,4 +1,4 @@
-/*	$Id: InetTransport.c++,v 1.17 1997/09/26 15:38:49 guru Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -146,7 +146,7 @@ fxBool
 InetTransport::initDataConn(fxStr& emsg)
 {
     struct sockaddr_in data_addr;
-    Socket::socklen_t dlen = sizeof (data_addr);
+    socklen_t dlen = sizeof (data_addr);
     if (Socket::getsockname(fileno(client.getCtrlFd()), &data_addr, &dlen) < 0) {
 	emsg = fxStr::format("getsockname(ctrl): %s", strerror(errno));
 	return (FALSE);
