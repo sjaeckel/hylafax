@@ -1,10 +1,10 @@
 #! /bin/sh
-#	$Id: pcl2fax.sh,v 1.5 1996/06/24 03:06:23 sam Rel $
+#	$Id$
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1996 Sam Leffler
-# Copyright (c) 1991-1996 Silicon Graphics, Inc.
+# Copyright (c) 1994-1996 Sam Leffler
+# Copyright (c) 1994-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,15 +28,14 @@
 #
 
 #
-# Convert PCL to facsimile.
+# wedged deviceID device 
 #
-# pcl2fax [-o output] [-l pagelength] [-w pagewidth]
-#	[-r resolution] [-m maxpages] [-*] file ...
+# Do something when a modem looks irretrievably wedged.
 #
-# NB: this shell script is assumed to be run from the
-#     top of the spooling hierarchy -- s.t. the etc directory
-#     is present.
-#
+if [ $# != 2 ]; then
+    echo "Usage: $0 deviceID device"
+    exit 1
+fi
 
 test -f etc/setup.cache || {
     SPOOL=`pwd`
@@ -45,7 +44,7 @@ test -f etc/setup.cache || {
 FATAL ERROR: $SPOOL/etc/setup.cache is missing!
 
 The file $SPOOL/etc/setup.cache is not present.  This
-probably means the machine has not been setup using the faxsetup(1M)
+probably means the machine has not been setup using the faxsetup(@MANNUM1_8@)
 command.  Read the documentation on setting up HylaFAX before you
 startup a server system.
 
@@ -54,5 +53,45 @@ EOF
 }
 . etc/setup.cache
 
-echo "PCL documents are not (currently) supported."
-exit 254			# causes document to be rejected
+devID=$1
+device=$2
+tty=`basename $device`
+
+($CAT<<EOF
+To: FaxMaster
+From: The HylaFAX Receive Agent <fax>
+Subject: modem on $device appears wedged
+
+The HylaFAX software thinks that there is a problem with the modem
+on device $device that needs attention; repeated attempts to
+initialize the modem have failed.
+EOF
+
+#
+# NB: this is for an System V-style system.
+#
+if [ -f /etc/inittab ]; then
+    ed - /etc/inittab<<EOF
+/^[^#].*:respawn:.*faxgetty[ ][ ]*$tty/s/respawn/off/
+w
+q
+EOF
+    #
+    # ed doesn't appear to have consistent exit
+    # status under SysV-style systems (does under BSD);
+    # this means checking if the above succeeded is
+    # problematic.
+    #
+    if [ $? -ne 0 ] && /bin/kill -1 1; then
+	cat<<EOF
+
+The $tty entry in /etc/inittab that spawns faxgetty on $device has
+been disabled.  After you have figured out what is wrong you may
+want to restart this process.
+EOF
+    fi
+fi
+
+echo ""
+echo "Consult the server trace logs for more information on what is happening."
+) | 2>&1 $SENDMAIL -t -ffax -oi

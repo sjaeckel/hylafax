@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: tiff2fax.sh,v 1.12 1996/08/29 23:22:16 sam Rel $
+#	$Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -47,7 +47,7 @@ test -f etc/setup.cache || {
 FATAL ERROR: $SPOOL/etc/setup.cache is missing!
 
 The file $SPOOL/etc/setup.cache is not present.  This
-probably means the machine has not been setup using the faxsetup(1M)
+probably means the machine has not been setup using the faxsetup(@MANNUM1_8@)
 command.  Read the documentation on setting up HylaFAX before you
 startup a server system.
 
