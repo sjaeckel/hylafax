@@ -1,4 +1,4 @@
-/*	$Id: Job.c++,v 1.30 1996/08/21 21:53:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -69,7 +69,7 @@ Job::Job(const FaxRequest& req)
 
     dnext = NULL;
     modem = NULL;
-    suspendPending = FALSE;
+    suspendPending = false;
     registry[jobid] = this;
 }
 

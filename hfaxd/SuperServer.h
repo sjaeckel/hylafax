@@ -1,4 +1,4 @@
-/*	$Id: SuperServer.h,v 1.2 1996/06/24 03:01:48 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -35,7 +35,7 @@ protected:
     SuperServer(const char* kind, int backlog);
 
     virtual HylaFAXServer* newChild(void) = 0;
-    virtual fxBool startServer(void) = 0;
+    virtual bool startServer(void) = 0;
 
     int inputReady(int fd);
     void timerExpired(long, long);

@@ -1,4 +1,4 @@
-/*	$Id: InetTransport.h,v 1.5 1996/06/24 03:05:51 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -35,12 +35,12 @@ public:
     InetTransport(FaxClient&);
     ~InetTransport();
 
-    static fxBool isA(const char*);
+    static bool isA(const char*);
 
-    fxBool callServer(fxStr& emsg);
-    fxBool abortCmd(fxStr& emsg);
+    bool callServer(fxStr& emsg);
+    bool abortCmd(fxStr& emsg);
 
-    fxBool initDataConn(fxStr& emsg);
-    fxBool openDataConn(fxStr& emsg);
+    bool initDataConn(fxStr& emsg);
+    bool openDataConn(fxStr& emsg);
 };
 #endif /* _InetTransport_ */

@@ -1,4 +1,4 @@
-/*	$Id: dialtest.c++,v 1.17 1996/06/24 03:06:16 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -65,7 +65,7 @@ main(int argc, char* argv[])
     char* countryCode = "1";
     char* internationalPrefix = "011";
     char* longDistancePrefix = "1";
-    fxBool verbose = FALSE;
+    bool verbose = false;
     extern int optind, opterr;
     extern char* optarg;
     int c;
@@ -86,7 +86,7 @@ main(int argc, char* argv[])
 	    longDistancePrefix = optarg;
 	    break;
 	case 'v':
-	    verbose = TRUE;
+	    verbose = true;
 	    break;
 	case '?':
 	    usage();
@@ -95,7 +95,7 @@ main(int argc, char* argv[])
     if (argc - optind != 1)
 	usage();
     DialStringRules rules(argv[optind]);
-    rules.setVerbose(TRUE);
+    rules.setVerbose(true);
     rules.def("AreaCode", areaCode);
     rules.def("CountryCode", countryCode);
     rules.def("InternationalPrefix", internationalPrefix);

@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++,v 1.33 1996/09/30 21:03:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -91,7 +91,7 @@ Class2Params::cmd() const
     return fxStr(buf);
 }
 
-fxBool
+bool
 Class2Params::is2D() const
 {
     return (DF_2DMR <= df && df <= DF_2DMRUNCOMP);

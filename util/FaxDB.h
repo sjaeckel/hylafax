@@ -1,4 +1,4 @@
-/*	$Id: FaxDB.h,v 1.16 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,7 +60,7 @@ protected:
     FaxInfoDict dict;			// name->record map
 
     void parseDatabase(FILE*, FaxDBRecord* parent);
-    fxBool getToken(FILE*, fxStr& token);
+    bool getToken(FILE*, fxStr& token);
 public:
     FaxDB(const fxStr& filename);
     ~FaxDB();

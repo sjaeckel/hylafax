@@ -1,4 +1,4 @@
-/*	$Id: faxRequest.c++,v 1.10 1996/08/21 21:53:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -44,7 +44,7 @@ faxRequest::~faxRequest() {}
 
 int faxRequest::compare(faxRequest const*) const { return 0; }
 
-fxBool
+bool
 faxRequest::isSavedOp() const
 {
     return (op == FaxRequest::send_tiff_saved ||

@@ -1,4 +1,4 @@
-/*	$Id: faxfetch.c++,v 1.2 1996/07/17 03:53:48 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -39,11 +39,11 @@ public:
 faxFetchApp::faxFetchApp() {}
 faxFetchApp::~faxFetchApp() {}
 
-static fxBool
+static bool
 writeStdout(void*, const char* buf, int cc, fxStr&)
 {
     (void) Sys::write(STDOUT_FILENO, buf, cc);
-    return (TRUE);
+    return (true);
 }
 
 void
@@ -77,7 +77,7 @@ faxFetchApp::run(int argc, char** argv)
 	    mode = MODE_S;
 	    break;
 	case 'v':			// enable protocol tracing
-	    setVerbose(TRUE);
+	    setVerbose(true);
 	    break;
 	case 'z':
 	    mode = MODE_Z;

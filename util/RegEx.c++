@@ -1,4 +1,4 @@
-/*	$Id: RegEx.c++,v 1.13 1996/09/30 21:03:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -63,7 +63,7 @@ RegEx::init(int flags)
     }
 }
 
-fxBool
+bool
 RegEx::Find(const char* text, u_int length, u_int off)
 {
     if (compResult == 0) {

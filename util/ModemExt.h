@@ -1,4 +1,4 @@
-/*	$Id: ModemExt.h,v 1.8 1996/06/24 03:05:54 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -36,7 +36,7 @@ struct ModemExt {
     fxStr	number;		// modem phone number
     fxStr	commid;		// communication identifier
     char	state;		// modem state
-    fxBool	canpoll;	// modem is capable of polling
+    bool	canpoll;	// modem is capable of polling
     u_short	priority;	// scheduling priority
     Class2Params caps;		// modem capabilities
 

@@ -1,4 +1,4 @@
-/*	$Id: FaxRecvInfo.h,v 1.25 1996/06/24 03:05:47 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -48,6 +48,6 @@ public:
     ~FaxRecvInfo();
 
     fxStr encode() const;
-    fxBool decode(const char*);
+    bool decode(const char*);
 };
 #endif /* _FaxRecvInfo_ */

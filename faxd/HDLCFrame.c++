@@ -1,4 +1,4 @@
-/*	$Id: HDLCFrame.c++,v 1.19 1996/07/19 23:05:08 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -37,7 +37,7 @@ HDLCFrame::HDLCFrame(u_int fo)
     base = next = buf;
     end = &buf[sizeof(buf)];
     amountToGrowBy = 1024;
-    ok = FALSE;
+    ok = false;
 }
 
 HDLCFrame::~HDLCFrame()

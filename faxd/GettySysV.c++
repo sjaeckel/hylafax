@@ -1,4 +1,4 @@
-/*	$Id: GettySysV.c++,v 1.47 1996/07/31 17:38:39 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -221,14 +221,14 @@ SysVGetty::hangup()
     Getty::hangup();
 }
 
-fxBool
-SysVGetty::wait(int& status, fxBool block)
+bool
+SysVGetty::wait(int& status, bool block)
 {
     if (Getty::wait(status, block)) {
 	exitStatus = status;
-	return (TRUE);
+	return (true);
     } else
-	return (FALSE);
+	return (false);
 }
 
 /*

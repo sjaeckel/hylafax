@@ -1,4 +1,4 @@
-/*	$Id: BoolArray.c++,v 1.7 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -25,4 +25,4 @@
  */
 #include "BoolArray.h"
 
-fxIMPLEMENT_PrimArray(fxBoolArray, fxBool)
+fxIMPLEMENT_PrimArray(fxBoolArray, bool)

@@ -1,4 +1,4 @@
-/*	$Id: DestControl.h,v 1.13 1996/08/21 22:31:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -86,8 +86,8 @@ private:
     DestControlInfoArray info;		// control information
 
     void	readContents();
-    fxBool	parseEntry(FILE* fp);
-    fxBool	readLine(FILE* fp, char line[], u_int cc);
+    bool	parseEntry(FILE* fp);
+    bool	readLine(FILE* fp, char line[], u_int cc);
     void	skipEntry(FILE*, char line[], u_int cc);
     void	parseError(const char* fmt ...);
 public:

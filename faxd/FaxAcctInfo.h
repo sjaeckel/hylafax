@@ -1,4 +1,4 @@
-/*	$Id: FaxAcctInfo.h,v 1.10 1996/06/24 03:00:22 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -44,6 +44,6 @@ struct FaxAcctInfo {
     u_int	params;		// encoded transfer parameters
     const char*	status;		// status info (optional)
 
-    fxBool record(const char* cmd) const;
+    bool record(const char* cmd) const;
 };
 #endif /* _FaxAcctInfo_ */

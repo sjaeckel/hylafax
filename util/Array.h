@@ -1,4 +1,4 @@
-/*	$Id: Array.h,v 1.18 1996/08/21 22:26:37 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -98,8 +98,8 @@ protected:
 	fxAddress()					{ ptr = 0; }
 	fxAddress(void* p)				{ ptr = (char*) p; }
 	fxAddress operator+(u_long offset) const	{ return ptr + offset; }
-	fxBool operator==(const fxAddress& r) const	{ return ptr == r.ptr; }
-	fxBool operator!=(const fxAddress& r) const	{ return ptr != r.ptr; }
+	bool operator==(const fxAddress& r) const	{ return ptr == r.ptr; }
+	bool operator!=(const fxAddress& r) const	{ return ptr != r.ptr; }
 	// NB: operator const void*() const does not work
 	operator void*() const				{ return ptr; }
     protected:

@@ -1,4 +1,4 @@
-/*	$Id: DestInfo.h,v 1.9 1996/08/21 22:31:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,9 +60,9 @@ public:
 
     u_int getActive() const;		// return count of active jobs
     u_int getCount() const;		// return count of active+blocked jobs
-    fxBool isEmpty() const;		// TRUE if any jobs referenced
+    bool isEmpty() const;		// true if any jobs referenced
 
-    fxBool isActive(Job&) const;	// TRUE if job is considered active
+    bool isActive(Job&) const;	// true if job is considered active
     void active(Job&);			// set job active to destination
     void done(Job&);			// remove job from active set
     void block(Job&);			// add job to blocked queue
@@ -76,7 +76,7 @@ public:
 inline u_int DestInfo::getActive() const	{ return activeCount; }
 inline u_int DestInfo::getCount() const
     { return activeCount + blockedCount; }
-inline fxBool DestInfo::isEmpty() const		{ return getCount() == 0; }
+inline bool DestInfo::isEmpty() const		{ return getCount() == 0; }
 
 fxDECLARE_StrKeyDictionary(DestInfoDict, DestInfo)
 #endif /* _DestInfo_ */

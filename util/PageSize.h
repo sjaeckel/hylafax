@@ -1,4 +1,4 @@
-/*	$Id: PageSize.h,v 1.14 1996/06/24 03:05:56 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -55,7 +55,7 @@ private:
 
     static const PageInfo* getPageInfoByName(const char* name);
     static PageInfoArray* readPageInfoFile();
-    static fxBool skipws(char*& cp,
+    static bool skipws(char*& cp,
 		const char* file, const char* item, u_int lineno);
 
     static float toMM(BMU v)		{ return (v/1200.)*25.4; }
@@ -98,7 +98,7 @@ public:
     void operator++();
     void operator++(int);
     operator const PageSizeInfo&();
-    fxBool notDone();
+    bool notDone();
 };
 #else
 /*

@@ -1,4 +1,4 @@
-/*	$Id: faxwatch.c++,v 1.7 1996/07/17 03:43:28 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -45,14 +45,14 @@ public:
 watchApp::watchApp() {}
 watchApp::~watchApp() {}
 
-static fxBool
+static bool
 writeData(void* arg, const char* buf, int cc, fxStr& emsg)
 {
     if (Sys::write((int) arg, buf, cc) != cc) {
 	emsg = fxStr::format("write error: %s", strerror(errno));
-	return (FALSE);
+	return (false);
     } else
-	return (TRUE);
+	return (true);
 }
 
 void
@@ -83,7 +83,7 @@ watchApp::run(int argc, char** argv)
 	    break;
 	case 'v':			// verbose mode
 	    setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
-	    FaxClient::setVerbose(TRUE);// protocol tracing
+	    FaxClient::setVerbose(true);// protocol tracing
 	    break;
 	case '?':
 	    usage();

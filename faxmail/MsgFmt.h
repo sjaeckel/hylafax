@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.h,v 1.5 1997/11/25 07:50:24 guru Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -36,7 +36,7 @@ struct MsgFmt {
     TextCoord	headerStop;		// tab stop for headers
     fxStr	boldFont;		// bold font family name
     fxStr	italicFont;		// italic font family name
-    fxBool	verbose;		// trace header handling
+    bool	verbose;		// trace header handling
 
     fxStrArray	fields;			// header tags
     fxStrArray	headers;		// header values
@@ -48,9 +48,9 @@ struct MsgFmt {
     virtual ~MsgFmt();
 
     void setupConfig();
-    virtual fxBool setConfigItem(const char* tag, const char* value);
+    virtual bool setConfigItem(const char* tag, const char* value);
 
-    static fxBool getLine(FILE* fd, fxStackBuffer& buf);
+    static bool getLine(FILE* fd, fxStackBuffer& buf);
 
     const fxStr* findHeader(const fxStr& name) const;
     u_int headerCount(void);

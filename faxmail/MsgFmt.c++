@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.c++,v 1.4 1996/07/03 00:17:09 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -67,7 +67,7 @@ MsgFmt::mapHeader(const fxStr& name)
     return (name);
 }
 
-fxBool
+bool
 MsgFmt::getLine(FILE* fd, fxStackBuffer& buf)
 {
     buf.reset();
@@ -80,7 +80,7 @@ MsgFmt::getLine(FILE* fd, fxStackBuffer& buf)
 	    break;
 	buf.put(c);
     }
-    return (TRUE);
+    return (true);
 }
 
 void
@@ -139,7 +139,7 @@ MsgFmt::parseHeaders(FILE* fd, u_int& lineno)
 void
 MsgFmt::setupConfig()
 {
-    verbose = FALSE;
+    verbose = false;
     boldFont = "Helvetica-Bold";
     italicFont = "Helvetica-Oblique";
 
@@ -157,7 +157,7 @@ MsgFmt::setupConfig()
 #undef streq
 #define	streq(a,b)	(strcasecmp(a,b)==0)
 
-fxBool
+bool
 MsgFmt::setConfigItem(const char* tag, const char* value)
 {
     if (streq(tag, "headers")) {
@@ -187,8 +187,8 @@ MsgFmt::setConfigItem(const char* tag, const char* value)
     } else if (streq(tag, "verbose")) {
 	verbose = FaxConfig::getBoolean(tag);
     } else
-	return (FALSE);
-    return (TRUE);
+	return (false);
+    return (true);
 }
 #undef streq
 

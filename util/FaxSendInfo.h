@@ -1,4 +1,4 @@
-/*	$Id: FaxSendInfo.h,v 1.4 1996/06/24 03:05:48 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -46,6 +46,6 @@ struct FaxSendInfo {
     ~FaxSendInfo();
 
     fxStr encode() const;
-    fxBool decode(const char*);
+    bool decode(const char*);
 };
 #endif /* _FaxSendInfo_ */

@@ -1,4 +1,4 @@
-/*	$Id: Class0.h,v 1.9 1996/06/24 03:00:12 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -35,11 +35,11 @@ public:
     Class0Modem(ModemServer&, const ModemConfig&);
     ~Class0Modem();
 
-    fxBool setupModem();
-    virtual fxBool setupFlowControl(FlowControl fc);
+    bool setupModem();
+    virtual bool setupFlowControl(FlowControl fc);
     CallStatus	dial(const char* number, fxStr& emsg);
     CallStatus dialResponse(fxStr& emsg);
 
-    fxBool isFaxModem() const;			// XXX safe to cast
+    bool isFaxModem() const;			// XXX safe to cast
 };
 #endif /* _Class0Modem_ */

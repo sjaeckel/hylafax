@@ -1,4 +1,4 @@
-/*	$Id: Class20.h,v 1.13 1996/06/24 03:00:16 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -33,8 +33,8 @@
 class Class20Modem : public Class2Modem {
 protected:
 // transmission support
-    fxBool	sendPage(TIFF* tif, u_int pageChop);
-    fxBool	pageDone(u_int ppm, u_int& ppr);
+    bool	sendPage(TIFF* tif, u_int pageChop);
+    bool	pageDone(u_int ppm, u_int& ppr);
 
     void	abortDataTransfer();
 // reception support

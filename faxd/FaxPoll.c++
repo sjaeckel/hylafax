@@ -1,4 +1,4 @@
-/*	$Id: FaxPoll.c++,v 1.25 1996/06/24 03:00:26 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -36,10 +36,10 @@
 /*
  * Initiate a polling receive and invoke the receiving protocol.
  */
-fxBool
+bool
 FaxServer::pollFaxPhaseB(const fxStr& sep, const fxStr& pwd, FaxRecvInfoArray& docs, fxStr& emsg)
 {
-    fxBool pollOK = FALSE;
+    bool pollOK = false;
     changeState(RECEIVING);
     traceProtocol("POLL FAX: begin (SEP \"%s\", PWD \"%s\")",
 	(const char*) sep, (const char*) pwd);

@@ -1,4 +1,4 @@
-/*	$Id: faxRequest.h,v 1.9 1996/08/21 22:31:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -52,7 +52,7 @@ struct faxRequest {
 
     int compare(faxRequest const *a) const;	// XXX needed for array
 
-    fxBool isSavedOp() const;
+    bool isSavedOp() const;
 };
 fxDECLARE_ObjArray(faxRequestArray, faxRequest)
 #endif /* _faxRequest_ */
