@@ -1,4 +1,4 @@
-#	$Id: README,v 1.13 1997/09/27 07:50:16 guru Rel $
+#	$Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -39,7 +39,10 @@ It's easy to setup an email to fax gateway with these simple steps:
 4. If your system uses qmail to deliver mail, then follow the
    instructions in mailfax.sh-qmail.
 
-5. Restart your mail software, refreeze your configuration or
+5. If your system uses Postfix to deliver mail, then follow the
+   instructions in mailfax.sh-postfix.
+
+6. Restart your mail software, refreeze your configuration or
    whatever is necessary to cause the configuration changes to be
    seen by the system.
 
