@@ -1,4 +1,4 @@
-/*	$Id: ixo.h,v 1.7 1996/08/16 21:02:29 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -41,7 +41,7 @@
 #define	IXO_LOGINTIMEOUT	15	// timeout on login response
 #define	IXO_GATIMEOUT		30	// timeout waiting for go-ahead msg
 #define	IXO_XMITRETRIES		3	// 3 attempts to send message block
-#define	IXO_XMITTIMEOUT		15	// timeout for message block xmit resp
+#define	IXO_XMITTIMEOUT		45	// timeout for message block xmit resp
 #define	IXO_ACKTIMEOUT		30	// timeout waiting for transaction ack
 
 #define STX	02
