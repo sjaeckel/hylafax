@@ -1,4 +1,4 @@
-/*	$Id: Sys.h,v 1.19 1996/07/31 17:36:39 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -124,6 +124,7 @@ public:
 
     static char* mktemp(char* templ)	{ return ::mktemp(templ); }
     static int mkstemp(char* templ)	{ return ::mkstemp(templ); }
+    static FILE* tmpfile()	{ return ::tmpfile(); }
     static FILE* fopen(const char* filename, const char* mode)
 	{ return ::fopen(filename, mode); }
 
