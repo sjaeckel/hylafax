@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: mkdepend.in,v 1.17 1996/06/24 03:04:33 sam Rel $
+#	$Id$
 #
 # @WARNING@
 #
@@ -249,7 +249,6 @@ fi
 depgenxx=`echo $depgen|sed -e s/\'//g -e 's/(/\\(/g' -e 's/)/\\)/g'`
 $depgenxx $* |
     eval "sed \
-	-e :loop -e 's:[^\./][^\./]*/\.\./::g' -e tloop \
 	-e 's:\([/ ]\)\./:\1:g' \
 	$sedprog" |
     $AWK "$awkprog" >> $newdepfile

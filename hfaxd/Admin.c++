@@ -1,4 +1,4 @@
-/*	$Id: Admin.c++,v 1.5 1996/11/15 01:29:27 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -133,7 +133,8 @@ HylaFAXServer::shutCmd(const struct tm& when, const char* reason)
 	return;
     }
     const char* msg = "Shutdown failed; ";
-    fxStr templ("/" FAX_TMPDIR "/shutXXXXXX");
+    char templ[128];
+    sprintf(templ, "/%s/shutXXXXXX", FAX_TMPDIR);
     int fd = Sys::mkstemp(templ);
     if (fd < 0) {
 	reply(550, "%serror creating temp file %s: %s.", msg,
