@@ -1,9 +1,10 @@
-#	$Header: /usr/people/sam/fax/RCS/distrules,v 1.145 1994/07/05 03:09:13 sam Exp $
+#	$Header: /usr/people/sam/fax/./RCS/distrules,v 1.234 1995/04/08 22:31:24 sam Rel $
 #
-# FlexFAX Facsimile Software
+# HylaFAX Facsimile Software
 #
-# Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
-# Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+# Copyright (c) 1988-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
 # its documentation for any purpose is hereby granted without fee, provided
@@ -26,279 +27,190 @@
 #
 
 #
-# FlexFAX distribution rules.
+# HylaFAX distribution rules.
 #
 
-#
-# Files for specific systems.
-#
-PORTSUNFILES=\
-    port/sun/README				\
-    port/sun/Makefile.flexfax			\
-    port/sun/defs				\
-    port/sun/install.sh				\
-    port/sun/paths.h				\
-    port/sun/zsundev/Makefile			\
-    port/sun/zsundev/README			\
-    port/sun/zsundev/TESTING			\
-    port/sun/zsundev/zsunbuf.c			\
-    port/sun/zsundev/zsunbuftest.c		\
-    ${NULL}
-PORTSGIFILES=\
-    port/sgi/README				\
-    port/sgi/Makefile.flexfax			\
-    port/sgi/defs.cc				\
-    port/sgi/defs.gcc				\
-    port/sgi/Makefile.libtiff			\
-    port/sgi/paths.h				\
-    ${NULL}
-PORTBSDIFILES=\
-    port/bsdi/README				\
-    port/bsdi/Makefile				\
-    port/bsdi/Makefile.flexfax			\
-    port/bsdi/Makefile.libtiff			\
-    port/bsdi/defs				\
-    port/bsdi/install.sh			\
-    port/bsdi/cuserid.c				\
-    port/bsdi/paths.h				\
-    ${NULL}
-PORTSVR4FILES=\
-    port/svr4/README				\
-    port/svr4/Makefile.flexfax			\
-    port/svr4/Makefile				\
-    port/svr4/defs				\
-    port/svr4/install.sh			\
-    port/svr4/limits.h				\
-    port/svr4/paths.h				\
-    port/svr4/signal.h				\
-    port/svr4/syslog.h				\
-    port/svr4/ulimit.h				\
-    port/svr4/utmp.h				\
-    port/svr4/sys/byteorder.h			\
-    port/svr4/mkdev.patch			\
-    port/svr4/flock.c				\
-    port/svr4/lockname.c			\
-    ${NULL}
-PORT386BSDFILES=\
-    port/386bsd/README				\
-    port/386bsd/Makefile.flexfax		\
-    port/386bsd/defs				\
-    ${NULL}
-PORTFREEBSDFILES=\
-    port/freebsd/README				\
-    port/freebsd/Makefile.flexfax		\
-    port/freebsd/defs				\
-    port/freebsd/ctype.h			\
-    port/freebsd/paths.h			\
-    ${NULL}
-PORTSOLARIS2FILES=\
-    port/solaris2/README			\
-    port/solaris2/Makefile			\
-    port/solaris2/Makefile.flexfax		\
-    port/solaris2/Makefile.libtiff		\
-    port/solaris2/defs.cc			\
-    port/solaris2/defs.gcc			\
-    port/solaris2/flock.c			\
-    port/solaris2/lockname.c			\
-    port/solaris2/paths.h			\
-    port/solaris2/random.c			\
-    port/solaris2/utmp.h			\
-    ${NULL}
-PORTSCOFILES=\
-    port/sco/README				\
-    port/sco/Makefile				\
-    port/sco/Makefile.flexfax			\
-    port/sco/defs				\
-    port/sco/flock.c				\
-    port/sco/ftruncate.c			\
-    port/sco/install.sh				\
-    port/sco/mkstemp.c				\
-    port/sco/paths.h				\
-    port/sco/flexfax.rc				\
-    ${NULL}
-PORT4DOT4BSDFILES=\
-    port/4.4bsd/README				\
-    port/4.4bsd/Makefile			\
-    port/4.4bsd/Makefile.flexfax		\
-    port/4.4bsd/cuserid.c			\
-    port/4.4bsd/defs				\
-    port/4.4bsd/install.sh			\
-    port/4.4bsd/paths.h				\
-    ${NULL}
-PORTLINUXFILES=					\
-    port/linux/README				\
-    port/linux/Makefile.flexfax			\
-    port/linux/defs				\
-    port/linux/install.sh			\
-    port/linux/kernel.patch			\
-    port/linux/mkdepend				\
-    port/linux/paths.h				\
-    ${NULL}
-PORTAIXFILES=					\
-    port/aix32/Makefile				\
-    port/aix32/Makefile.flexfax			\
-    port/aix32/README				\
-    port/aix32/defs.gcc				\
-    port/aix32/install.sh			\
-    port/aix32/strcasecmp.c			\
-    port/aix32/vsyslog.c			\
-    port/aix32/gcc-related/ctype.h		\
-    port/aix32/gcc-related/dirent.h		\
-    port/aix32/gcc-related/fcntl.h		\
-    port/aix32/gcc-related/math.h		\
-    port/aix32/gcc-related/netdb.h		\
-    port/aix32/gcc-related/pwd.h		\
-    port/aix32/gcc-related/setjmp.h		\
-    port/aix32/gcc-related/signal.h		\
-    port/aix32/gcc-related/stdio.h		\
-    port/aix32/gcc-related/stdlib.h		\
-    port/aix32/gcc-related/string.h		\
-    port/aix32/gcc-related/time.h		\
-    port/aix32/gcc-related/unistd.h		\
-    port/aix32/gcc-related/sys/fcntl.h		\
-    port/aix32/gcc-related/sys/select.h		\
-    port/aix32/gcc-related/sys/stat.h		\
-    port/aix32/gcc-related/sys/time.h		\
-    port/aix32/gcc-related/sys/wait.h		\
-    ${NULL}
-PORTULTRIXFILES=				\
-    port/ultrix/README				\
-    port/ultrix/Makefile			\
-    port/ultrix/Makefile.flexfax		\
-    port/ultrix/defs				\
-    port/ultrix/install.sh			\
-    port/ultrix/mkstemp.c			\
-    port/ultrix/paths.h				\
-    port/ultrix/vsyslog.c			\
-    ${NULL}
-PORTHPUXFILES=					\
-    port/hpux/README				\
-    port/hpux/Makefile				\
-    port/hpux/Makefile.flexfax			\
-    port/hpux/install.sh			\
-    port/hpux/defs.cc				\
-    port/hpux/defs.gcc				\
-    port/hpux/flock.c				\
-    port/hpux/paths.h				\
-    port/hpux/random.c				\
-    port/hpux/setegid.c				\
-    port/hpux/seteuid.c				\
-    port/hpux/vsyslog.c				\
-    ${NULL}
-PORTISCFILES=					\
-    port/isc/README				\
-    port/isc/Makefile				\
-    port/isc/Makefile.flexfax			\
-    port/isc/defs				\
-    port/isc/errno.h				\
-    port/isc/flock.c				\
-    port/isc/ftruncate.c			\
-    port/isc/install.sh				\
-    port/isc/mkstemp.c				\
-    port/isc/paths.h				\
-    port/isc/vsyslog.c				\
-    port/isc/sys/types.h			\
-    ${NULL}
 PORTFILES=\
-    port/generic/mkdepend			\
-	port/generic/Makefile.libtiff.gcc	\
-	port/generic/GCC-PATCH			\
-    ${PORTSUNFILES}				\
-    ${PORTSGIFILES}				\
-    ${PORTBSDIFILES}				\
-    ${PORTSVR4FILES}				\
-    ${PORT386BSDFILES}				\
-    ${PORTFREEBSDFILES}				\
-    ${PORTSOLARIS2FILES}			\
-    ${PORTSCOFILES}				\
-    ${PORT4DOT4BSDFILES}			\
-    ${PORTLINUXFILES}				\
-    ${PORTAIXFILES}				\
-    ${PORTULTRIXFILES}				\
-    ${PORTHPUXFILES}				\
-    ${PORTISCFILES}				\
+    port/Makefile.in				\
+    port/install.sh.in				\
+    port/mkdepend.in				\
+    port/cuserid.c				\
+    port/flock.c				\
+    port/ftruncate.c				\
+    port/mkstemp.c				\
+    port/random.c				\
+    port/setegid.c				\
+    port/seteuid.c				\
+    port/setvbuf.c				\
+    port/strcasecmp.c				\
+    port/strtod.c				\
+    port/syslog.c				\
+    port/vsyslog.c				\
+    port/writev.c				\
+    port/irix/so_locations			\
+    ${NULL}
+
+#
+# Files the comprise the html part of the distribution.
+#
+HTMLFILES=\
+    html/Makefile.in				\
+    \
+    html/HOWTO.html.in				\
+    html/binary.html.in				\
+    html/building.html.in			\
+    html/documentation.html.in			\
+    html/ghostscript.html.in			\
+    html/index.html.in				\
+    html/install-binary.html.in			\
+    html/mailing-lists.html.in			\
+    html/operation.html.in			\
+    html/overview.html.in			\
+    html/sam.html.in				\
+    html/setup.html.in				\
+    html/setup-advanced.html.in			\
+    html/setup-client.html.in			\
+    html/source.html.in				\
+    html/survey.html.in				\
+    html/toc.html.in				\
+    html/troubleshooting.html.in		\
+    html/v2.3beta036.html.in			\
+    html/Majordomo/help.html.in			\
+    html/Modems/index.html.in			\
+    html/Modems/att-dataport.html.in		\
+    html/Modems/digicom-scout.html.in		\
+    html/Modems/everex-2496d.html.in		\
+    html/Modems/hayes-optima2400.html.in	\
+    html/Modems/multitech-1432.html.in		\
+    html/Modems/multitech-1932.html.in		\
+    html/Modems/nuvo-96424pfx.html.in		\
+    html/Modems/ppi-pm14400fxmt.html.in		\
+    html/Modems/supra-v32bis.html.in		\
+    html/Modems/telebit-t3000.html.in		\
+    html/Modems/twincom-144df.html.in		\
+    html/Modems/ucom-traveller96.html.in	\
+    html/Modems/usr-courier.html.in		\
+    html/Modems/usr-sportster.html.in		\
+    html/Modems/zyxel-1496.html.in		\
+    html/Modems/Telebit/faxcmds.html.in		\
+    html/Modems/ZyXEL/autodetect.html.in	\
+    html/Modems/ZyXEL/codes.html.in		\
+    html/Modems/ZyXEL/commands.html.in		\
+    html/Modems/ZyXEL/compression.html.in	\
+    html/Modems/ZyXEL/examples.html.in		\
+    html/Modems/ZyXEL/voice.html.in		\
+    \
+    html/acknowledge.html			\
+    html/class1.html				\
+    html/class2.0.html				\
+    html/class2.html				\
+    html/contrib.html				\
+    html/copyright.html				\
+    html/faxgateway.html			\
+    html/hylafax.html				\
+    html/install-source.html			\
+    html/modems.html				\
+    html/namechange.html			\
+    html/survey-help.html			\
+    html/survey-query.html			\
+    html/version.html				\
+    html/ftpmail-help.html			\
+    html/v2.3beta036special.html		\
+    html/v3.0beta096.html			\
+    html/v3.0beta100.html			\
+    html/v3.0beta108.html			\
+    html/v3.0beta110.html			\
+    html/v3.0beta111.html			\
+    html/v3.0beta112.html			\
+    html/v3.0beta113.html			\
+    html/Modems/Supra/class2.html		\
+    html/Modems/Supra/class1.html		\
+    html/Modems/Hayes/hayes.html		\
+    \
+    html/tools/Makefile.in			\
+    html/tools/man2html.c			\
+    html/tools/unquote.c			\
+    html/tools/manpage.sh.in			\
+    html/tools/faxsurvey.sh.in			\
+    html/tools/majordomo.sh.in			\
+    html/tools/cat-pages.sh.in			\
+    html/tools/cat-faq.sh.in			\
+    html/tools/faq-feedback.sh.in		\
     ${NULL}
 #
-# Files that are part of FlexFAX proper.
+# Files that are part of HylaFAX proper.
 #
-FLEXFAXFILES=\
+HYLAFAXFILES=\
     VERSION					\
     README					\
-    HOWTO					\
-    CHANGES-v2.1				\
-    CHANGES-v2.2				\
-    CHANGES-v2.3				\
-    MODEMS					\
-    BLURB					\
-    SURVEY					\
+    README.ultrix				\
     TODO					\
-    configure rules distrules			\
-    doc/Makefile				\
-	doc/README				\
-	doc/scorecard				\
-	doc/class1.txt				\
-	doc/class2.txt				\
-	doc/hayes.txt				\
-	doc/modems-faq				\
-	doc/telebit				\
-    relnotes/Makefile				\
-	relnotes/TC.online			\
-	relnotes/cFront				\
-	relnotes/ch1.cmm			\
-	relnotes/ch2.cmm			\
-	relnotes/ch3.cmm			\
-	relnotes/ch4.cmm			\
-	relnotes/ch5.cmm			\
-	relnotes/ch6.cmm			\
-	relnotes/ch7.cmm			\
-	relnotes/ch8.cmm			\
-	relnotes/cover.x			\
-	relnotes/credit.x			\
-	relnotes/errata.x			\
-	relnotes/macros.online			\
-	relnotes/table_template			\
-    dist/flexfax.spec				\
-	dist/newalpha				\
-	dist/newversion				\
-    etc/Makefile				\
-	etc/config.att-dataport			\
-	etc/config.att-dataport-2		\
-	etc/config.att-dataport-2.0		\
-	etc/config.class1			\
-	etc/config.class2			\
-	etc/config.class2.0			\
-	etc/config.dsi-scout+			\
-	etc/config.e-tech			\
-	etc/config.everex-2496d			\
-	etc/config.intel-400e			\
-	etc/config.mt-1432			\
-	etc/config.nuvo-voyager			\
-	etc/config.skel				\
-	etc/config.ppi-pm14400fxmt		\
-	etc/config.ppi-pm14400fxsa		\
-	etc/config.rc32acl			\
-	etc/config.rc32acl-class1		\
-	etc/config.rockwell			\
-	etc/config.rockwell-class1		\
-	etc/config.tricom2842			\
-	etc/config.telebit-wb			\
-	etc/config.usr-courier			\
-	etc/config.usr-courier-2.0		\
-	etc/config.usr-sportster		\
-	etc/config.zyxel-1496e			\
-	etc/config.zyxel-1496e-2.0		\
+    COPYRIGHT					\
+    configure					\
+    config.guess				\
+    config.h.in					\
+    config.sub					\
+    config.site					\
+    defs.in					\
+    Makefile.in					\
+    rules.in					\
+    distrules					\
+    dist/hylafax.spec				\
+    dist/newalpha				\
+    dist/newversion				\
+    config/Makefile.in				\
+	config/att-dataport			\
+	config/att-dataport-2			\
+	config/att-dataport-2.0			\
+	config/cirrus				\
+	config/class1				\
+	config/class2				\
+	config/class2.0				\
+	config/dsi-scout+			\
+	config/e-tech				\
+	config/everex-2496d			\
+	config/exar				\
+	config/gvc-288				\
+	config/gvc-288-2			\
+	config/intel-400e			\
+	config/mt-1432				\
+	config/moto-288				\
+	config/nuvo-voyager			\
+	config/ppi-pm14400fxmt			\
+	config/ppi-pm14400fxsa			\
+	config/rc144ac				\
+	config/rc144ac-1			\
+	config/rc288dpi				\
+	config/rc288dpi-1			\
+	config/rc32acl				\
+	config/rc32acl-1			\
+	config/skel				\
+	config/telebit-qblazer			\
+	config/telebit-t3000			\
+	config/telebit-wb			\
+	config/tricom2842			\
+	config/uds-fastalk			\
+	config/usr-2.0				\
+	config/usr-rts				\
+	config/usr-xon				\
+	config/zyxel-1496e			\
+	config/zyxel-1496e-1			\
+	config/zyxel-1496e-2.0			\
+    etc/Makefile.in				\
 	etc/copy.h				\
 	etc/copy.m				\
 	etc/copy.ps				\
 	etc/dialrules				\
 	etc/dialrules.sf-ba			\
 	etc/dialrules.europe			\
-	etc/faxd				\
-	etc/faxaddmodem.sh			\
-	etc/probemodem.sh			\
-    gs/README					\
-	gs/gdevtiff.c				\
-    util/Makefile				\
+	etc/hylafax.in				\
+	etc/faxaddmodem.sh.in			\
+	etc/probemodem.sh.in			\
+	etc/lockname.c				\
+	etc/lutRS18.pcf				\
+	etc/ondelay.c				\
+    util/Makefile.in				\
+    util/Makefile.dso				\
 	util/Array.c++				\
 	util/AtSyntax.c++			\
 	util/BoolArray.c++			\
@@ -308,6 +220,7 @@ FLEXFAXFILES=\
 	util/Fatal.c++				\
 	util/FaxClient.c++			\
 	util/FaxDB.c++				\
+	util/FmtTime.c++			\
 	util/IOHandler.c++			\
 	util/Obj.c++				\
 	util/PageSize.c++			\
@@ -317,6 +230,10 @@ FLEXFAXFILES=\
 	util/StackBuffer.c++			\
 	util/Str.c++				\
 	util/StrArray.c++			\
+	util/StrDict.c++			\
+	util/Sys.c++				\
+	util/TimeOfDay.c++			\
+	util/Timeout.c++			\
 	util/TypeRules.c++			\
 	util/Array.h				\
 	util/BoolArray.h			\
@@ -336,26 +253,28 @@ FLEXFAXFILES=\
 	util/StackBuffer.h			\
 	util/Str.h				\
 	util/StrArray.h				\
+	util/StrDict.h				\
+	util/Sys.h				\
+	util/TimeOfDay.h			\
+	util/Timeout.h				\
 	util/Types.h				\
 	util/TypeRules.h			\
-	util/config.h				\
-	util/faxinfo.c				\
+	util/cvtfacility.c			\
+	util/faxinfo.c++			\
 	util/faxmsg.c				\
 	util/fxassert.c				\
-	util/ondelay.c				\
-	util/pagesizes				\
+	util/pagesizes.in			\
 	util/notify.awk				\
-	util/faxcron.sh				\
-	util/faxrcvd.sh				\
-	util/mkcover.sh				\
-	util/notify.sh				\
-	util/pollrcvd.sh			\
-	util/ps2fax.dps.sh			\
-	util/ps2fax.gs.sh			\
-	util/recvstats.sh			\
-	util/transcript.sh			\
-	util/wedged.sh				\
-	util/xferstats.sh			\
+	util/faxcron.sh.in			\
+	util/faxrcvd.sh.in			\
+	util/mkcover.sh.in			\
+	util/notify.sh.in			\
+	util/pollrcvd.sh.in			\
+	util/ps2fax.dps.sh.in			\
+	util/ps2fax.gs.sh.in			\
+	util/recvstats.sh.in			\
+	util/transcript.sh.in			\
+	util/xferstats.sh.in			\
 	util/typerules				\
 	util/fax.chestrc			\
 	util/fax.ftr				\
@@ -382,19 +301,25 @@ FLEXFAXFILES=\
 	util/regex/regexec.c			\
 	util/regex/regfree.c			\
 	util/regex/utils.h			\
-    fax2ps/Makefile				\
-    faxalter/Makefile				\
+    fax2ps/Makefile.in				\
+    faxalter/Makefile.in			\
 	faxalter/faxalter.c++			\
-    faxcover/Makefile				\
+    faxcover/Makefile.in			\
 	faxcover/faxcover.c++			\
 	faxcover/faxcover.ps			\
-	faxcover/contrib/herber.ps		\
-    faxd/Makefile				\
+    faxd/Makefile.in				\
+    faxd/Makefile.dso				\
+	faxd/Class0.h				\
 	faxd/Class1.h				\
 	faxd/Class2.h				\
-	faxd/Class2Ersatz.h			\
 	faxd/Class20.h				\
+	faxd/Class2Ersatz.h			\
 	faxd/Class2Params.h			\
+	faxd/ClassModem.h			\
+	faxd/DestControl.h			\
+	faxd/DestInfo.h				\
+	faxd/FaxAcctInfo.h			\
+	faxd/FaxConfig.h			\
 	faxd/FaxFont.h				\
 	faxd/FaxMachineInfo.h			\
 	faxd/FaxMachineLog.h			\
@@ -411,24 +336,41 @@ FLEXFAXFILES=\
 	faxd/GettyBSD.h				\
 	faxd/GettySysV.h			\
 	faxd/HDLCFrame.h			\
+	faxd/Job.h				\
+	faxd/Modem.h				\
 	faxd/ModemConfig.h			\
+	faxd/ModemServer.h			\
 	faxd/PCFFont.h				\
+	faxd/QLink.h				\
+	faxd/ServerConfig.h			\
 	faxd/UUCPLock.h				\
 	faxd/class2.h				\
-	faxd/faxServerApp.h			\
+	faxd/faxApp.h				\
+	faxd/faxGettyApp.h			\
+	faxd/faxQueueApp.h			\
+	faxd/faxRequest.h			\
+	faxd/faxSendApp.h			\
+	faxd/pageSendApp.h			\
+	faxd/ixo.h				\
 	faxd/t.30.h				\
+	faxd/Class0.c++				\
 	faxd/Class1.c++				\
 	faxd/Class1Poll.c++			\
 	faxd/Class1Recv.c++			\
 	faxd/Class1Send.c++			\
 	faxd/Class2.c++				\
+	faxd/Class20.c++			\
+	faxd/Class2Ersatz.c++			\
 	faxd/Class2Params.c++			\
 	faxd/Class2Poll.c++			\
 	faxd/Class2Recv.c++			\
 	faxd/Class2Send.c++			\
-	faxd/Class2Ersatz.c++			\
-	faxd/Class20.c++			\
+	faxd/ClassModem.c++			\
 	faxd/CopyQuality.c++			\
+	faxd/DestControl.c++			\
+	faxd/DestInfo.c++			\
+	faxd/FaxAcctInfo.c++			\
+	faxd/FaxConfig.c++			\
 	faxd/FaxFont.c++			\
 	faxd/FaxMachineInfo.c++			\
 	faxd/FaxMachineLog.c++			\
@@ -446,24 +388,34 @@ FLEXFAXFILES=\
 	faxd/GettyBSD.c++			\
 	faxd/GettySysV.c++			\
 	faxd/HDLCFrame.c++			\
+	faxd/Job.c++				\
+	faxd/Modem.c++				\
 	faxd/ModemConfig.c++			\
+	faxd/ModemServer.c++			\
 	faxd/PCFFont.c++			\
+	faxd/QLink.c++				\
+	faxd/ServerConfig.c++			\
 	faxd/TagLine.c++			\
 	faxd/UUCPLock.c++			\
-	faxd/faxServerApp.c++			\
-	faxd/tif_compress.c			\
+	faxd/faxApp.c++				\
+	faxd/faxGettyApp.c++			\
+	faxd/faxQueueApp.c++			\
+	faxd/faxRequest.c++			\
+	faxd/faxSendApp.c++			\
+	faxd/pageSendApp.c++			\
 	faxd/tagtest.c++			\
 	faxd/tsitest.c++			\
-    faxmail/Makefile				\
+	faxd/tif_compress.c			\
+    faxmail/Makefile.in				\
 	faxmail/README				\
 	faxmail/faxmail.c++			\
 	faxmail/haeberli.ps			\
 	faxmail/calligraphy.ps			\
 	faxmail/mailfax.sh-sendmail		\
 	faxmail/mailfax.sh-smail		\
-    faxrm/Makefile				\
+    faxrm/Makefile.in				\
 	faxrm/faxrm.c++				\
-    faxstat/Makefile				\
+    faxstat/Makefile.in				\
 	faxstat/FaxStatClient.h			\
 	faxstat/RecvStatus.h			\
 	faxstat/SendStatus.h			\
@@ -473,9 +425,12 @@ FLEXFAXFILES=\
 	faxstat/SendStatus.c++			\
 	faxstat/ServerStatus.c++		\
 	faxstat/faxstat.c++			\
-    man/Makefile				\
-	man/cinfo.4f				\
+    libtiff/Makefile.in				\
+    libtiff/Makefile.dso			\
+    man/Makefile.in				\
+	man/cid.4f				\
 	man/config.4f				\
+	man/destctrls.4f			\
 	man/dialrules.4f			\
 	man/dialtest.1m				\
 	man/fax2ps.1				\
@@ -485,26 +440,30 @@ FLEXFAXFILES=\
 	man/faxanswer.1m			\
 	man/faxcover.1				\
 	man/faxcron.1m				\
-	man/faxd.1m				\
+	man/faxq.1m				\
+	man/faxgetty.1m				\
+	man/faxsend.1m				\
 	man/faxd.recv.1m			\
 	man/faxmail.1				\
 	man/faxquit.1m				\
 	man/faxrcvd.1m				\
 	man/faxrm.1				\
 	man/faxstat.1				\
-	man/flexfax.1				\
-	man/flexfax.4f				\
 	man/hosts.4f				\
+	man/hylafax.1				\
+	man/hylafax.4f				\
 	man/info.4f				\
 	man/log.4f				\
 	man/mkcover.1m				\
 	man/notify.1m				\
+	man/pagesend.1m				\
 	man/pagesizes.4f			\
 	man/pollrcvd.1m				\
 	man/ps2fax.1m				\
 	man/recvq.4f				\
 	man/recvstats.1m			\
 	man/sendfax.1				\
+	man/sendpage.1				\
 	man/sendq.4f				\
 	man/sgi2fax.1				\
 	man/status.4f				\
@@ -514,10 +473,9 @@ FLEXFAXFILES=\
 	man/tsi.4f				\
 	man/tsitest.1m				\
 	man/typerules.4f			\
-	man/wedged.1m				\
 	man/xferlog.4f				\
 	man/xferstats.1m			\
-    recvfax/Makefile				\
+    recvfax/Makefile.in				\
 	recvfax/alter.c				\
 	recvfax/auth.c				\
 	recvfax/defs.h				\
@@ -526,10 +484,13 @@ FLEXFAXFILES=\
 	recvfax/remove.c			\
 	recvfax/status.c			\
 	recvfax/submit.c			\
+	recvfax/tif_compress.c			\
 	recvfax/regex.c++			\
-    sendfax/Makefile				\
+    sendfax/Makefile.in				\
 	sendfax/sendfax.c++			\
-    sgi2fax/Makefile				\
+    sendpage/Makefile.in			\
+	sendpage/sendpage.c++			\
+    sgi2fax/Makefile.in				\
 	sgi2fax/hipass.c			\
 	sgi2fax/hipass.h			\
 	sgi2fax/imgtofax.c			\
@@ -541,34 +502,20 @@ FLEXFAXFILES=\
 	sgi2fax/rand.c				\
 	sgi2fax/row.c				\
     ${PORTFILES}				\
+    ${HTMLFILES}				\
     ${NULL}
 #
 # Files imported from libtiff.
 #
 TIFFFILES=\
-    libtiff/README				\
-    libtiff/Makefile.aix			\
-    libtiff/Makefile.apollo			\
-    libtiff/Makefile.gcc			\
-    libtiff/Makefile.hpux			\
-    libtiff/Makefile.mips			\
-    libtiff/Makefile.mpw			\
-    libtiff/Makefile.next			\
-    libtiff/Makefile.sco			\
-    libtiff/Makefile.sgi			\
-    libtiff/Makefile.sun			\
-    libtiff/Makefile.tahoe			\
-    libtiff/Makefile.vax			\
     libtiff/t4.h				\
+    libtiff/tif_fax3.h				\
     libtiff/tiff.h				\
     libtiff/tiffcomp.h				\
     libtiff/tiffconf.h				\
     libtiff/tiffio.h				\
     libtiff/tiffiop.h				\
-    libtiff/tif_fax3.h				\
     libtiff/mkg3states.c			\
-    libtiff/mkspans.c				\
-    libtiff/tif_apple.c				\
     libtiff/tif_aux.c				\
     libtiff/tif_ccittrle.c			\
     libtiff/tif_close.c				\
@@ -585,8 +532,6 @@ TIFFFILES=\
     libtiff/tif_getimage.c			\
     libtiff/tif_jpeg.c				\
     libtiff/tif_lzw.c				\
-    libtiff/tif_machdep.c			\
-    libtiff/tif_msdos.c				\
     libtiff/tif_next.c				\
     libtiff/tif_open.c				\
     libtiff/tif_packbits.c			\
@@ -598,7 +543,6 @@ TIFFFILES=\
     libtiff/tif_tile.c				\
     libtiff/tif_unix.c				\
     libtiff/tif_version.c			\
-    libtiff/tif_vms.c				\
     libtiff/tif_warning.c			\
     libtiff/tif_write.c				\
     ${NULL}
@@ -610,73 +554,176 @@ FAX2PSFILES=\
     fax2ps/defs.h				\
     fax2ps/fax2ps.c				\
     fax2ps/faxdecode.c				\
+    fax2ps/savefont.ps				\
     ${NULL}
 #
-# Files that comprise the FlexFAX source distribution.
+# HTML-related files that aren't under RCS.
+#
+HTMLDIST=\
+    html/Majordomo/flexfax.info			\
+    html/Majordomo/flexfax-announce.info	\
+    html/FAQ/*.html.in				\
+    html/icons/next.gif				\
+    html/icons/button.excl.gif			\
+    html/icons/faq.new.gif			\
+    html/icons/faq.old.gif			\
+    html/icons/faq.updated.gif			\
+    html/icons/back.gif				\
+    html/icons/smiley.gif			\
+    html/icons/ball_blue_icon.gif		\
+    html/icons/warning_icon.gif			\
+    html/icons/at_work_icon.gif			\
+    html/icons/info_icon.gif			\
+    html/icons/new.gif				\
+    html/icons/faq-feedback.gif			\
+    html/icons/improved.gif			\
+    ${NULL}
+#
+# Adobe Font Metric information files.
+#
+AFMFILES=\
+    afm/Makefile.in				\
+    afm/AvantGarde-Book.afm			\
+    afm/AvantGarde-BookOblique.afm		\
+    afm/AvantGarde-Demi.afm			\
+    afm/AvantGarde-DemiOblique.afm		\
+    afm/Bookman-Demi.afm			\
+    afm/Bookman-DemiItalic.afm			\
+    afm/Bookman-Light.afm			\
+    afm/Bookman-LightItalic.afm			\
+    afm/Courier-Bold.afm			\
+    afm/Courier-BoldOblique.afm			\
+    afm/Courier-Oblique.afm			\
+    afm/Courier.afm				\
+    afm/Helvetica-Bold.afm			\
+    afm/Helvetica-BoldOblique.afm		\
+    afm/Helvetica-Narrow-Bold.afm		\
+    afm/Helvetica-Narrow-BoldOblique.afm	\
+    afm/Helvetica-Narrow-Oblique.afm		\
+    afm/Helvetica-Narrow.afm			\
+    afm/Helvetica-Oblique.afm			\
+    afm/Helvetica.afm				\
+    afm/NewCenturySchlbk-Bold.afm		\
+    afm/NewCenturySchlbk-BoldItalic.afm		\
+    afm/NewCenturySchlbk-Italic.afm		\
+    afm/NewCenturySchlbk-Roman.afm		\
+    afm/Palatino-Bold.afm			\
+    afm/Palatino-BoldItalic.afm			\
+    afm/Palatino-Italic.afm			\
+    afm/Palatino-Oblique.afm			\
+    afm/Palatino-Roman.afm			\
+    afm/Symbol.afm				\
+    afm/Times-Bold.afm				\
+    afm/Times-BoldItalic.afm			\
+    afm/Times-Italic.afm			\
+    afm/Times-Oblique.afm			\
+    afm/Times-Roman.afm				\
+    afm/ZapfChancery-MediumItalic.afm		\
+    afm/ZapfDingbats.afm			\
+    ${NULL}
+#
+# Files that comprise the HylaFAX source distribution.
 #
 DISTFILES=\
-    ${FLEXFAXFILES} dist/flexfax.alpha		\
+    ${HYLAFAXFILES} dist/hylafax.alpha		\
     ${TIFFFILES}				\
     ${FAX2PSFILES}				\
+    ${HTMLDIST}					\
+    ${AFMFILES}					\
     ${NULL}
 
 #
 # These rules are used to create the source distribution images
 #
-COMPRESS=gzip
-ZIPSUF=gz
+COMPRESS= gzip
+ZIPSUF	= gz
+CONFIG	= -with-CC=ncc \
+	  -with-CXX=NCC \
+	  -with-HTML \
+	  -with-AFM \
+	  -with-DPS \
+	  -with-LIBMALLOC=no \
+	  -with-SCRIPT_SH=/bin/sh
 
 rcsclean:
-	rcsclean ${FLEXFAXFILES} && co ${FLEXFAXFILES}
+	rcsclean ${HYLAFAXFILES} && co ${HYLAFAXFILES}
 
 alpha:
-	(cd dist; sh newversion; sh newalpha)
-	${MAKE} clobber
+	(cd ${SRCDIR}/dist; sh newversion)
+	-${MAKE} clobber
 	${MAKE} alpha.stamp
-	./configure
+	${SRCDIR}/configure ${CONFIG}
 	${MAKE} product
 	${MAKE} alpha.tar
 
 # stamp relevant files according to current alpha
 alpha.stamp:
-	VERSION=`awk '{print "Alpha" $$3}' dist/flexfax.alpha`;		\
+	VERSION=`awk '{print "Alpha" $$3}' ${SRCDIR}/dist/hylafax.alpha`;\
 	NOW=`date`;							\
-	for i in ${FLEXFAXFILES}; do					\
-	    REV=`rlog -h -d"$$NOW" $$i|fgrep 'head:'|awk '{print $$2}'`;\
-	    rcs "-N$$VERSION:$$REV" "-sExp:$$REV" $$i && co -sExp $$i;	\
+	for i in ${HYLAFAXFILES}; do					\
+	    REV=`rlog -h -d"$$NOW" ${SRCDIR}/$$i|fgrep 'head:'|awk '{print $$2}'`;\
+	    rcs "-N$$VERSION:$$REV" "-sExp:$$REV" ${SRCDIR}/$$i && co -sExp ${SRCDIR}/$$i;	\
 	done
 
 purge-old-alphas:
 	VERSIONS=`awk '{for (i=1; i<=$$3; i++) printf " -nAlpha%03d",i}'\
-	    dist/flexfax.alpha`;					\
-	for i in ${FLEXFAXFILES}; do					\
-	    echo rcs $$VERSIONS $$i;					\
-	    rcs $$VERSIONS $$i && co $$i;				\
+	    ${SRCDIR}/dist/hylafax.alpha`;				\
+	for i in ${HYLAFAXFILES}; do					\
+	    echo rcs $$VERSIONS ${SRCDIR}/$$i;				\
+	    rcs $$VERSIONS ${SRCDIR}/$$i && co ${SRCDIR}/$$i;		\
+	done
+
+alphadiff:
+	-@for i in ${HYLAFAXFILES}; do					\
+	    rcsdiff -r${ALPHA} ${SRCDIR}/$$i;				\
 	done
 
 # create alpha distribution archive
 alpha.tar:
-	VERSION="v`cat VERSION``awk '{print $$3}' dist/flexfax.alpha`";	\
-	rm -f $$VERSION.src.tar.Z;					\
-	tar cvf - ${DISTFILES} | ${COMPRESS} > $$VERSION.src.tar.${ZIPSUF}
+	VERSION="v`cat ${SRCDIR}/VERSION``awk '{print $$3}' ${SRCDIR}/dist/hylafax.alpha`";	\
+	rm -f hylafax-$$VERSION $$VERSION $$VERSION-tar;		\
+	ln -s ${SRCDIR} hylafax-$$VERSION;				\
+	(for i in ${HYLAFAXFILES} dist/hylafax.alpha; do		\
+	   echo $$i;							\
+	done) | sed "s;.*;hylafax-$$VERSION/&;" >$$VERSION;		\
+	tar cvf $$VERSION-tar `cat $$VERSION`;				\
+	(for i in ${TIFFFILES} ${FAX2PSFILES} ${HTMLDIST} ${AFMFILES}; do\
+	   echo $$i;							\
+	done) | sed "s;.*;hylafax-$$VERSION/&;" >$$VERSION;		\
+	tar rvf $$VERSION-tar `cat $$VERSION`;				\
+	rm -f hylafax-$$VERSION-tar.${ZIPSUF};				\
+	cat $$VERSION-tar | ${COMPRESS} >hylafax-$$VERSION-tar.${ZIPSUF};\
+	rm -f hylafax-$$VERSION $$VERSION $$VERSION-tar;
 
 release:
-	${MAKE} clobber
+	(cd ${SRCDIR}/dist; sh newversion)
+	-${MAKE} clobber
 	${MAKE} release.stamp
-	./configure
+	${SRCDIR}/configure ${CONFIG}
 	${MAKE} product
 	${MAKE} release.tar
 
 release.stamp:
-	VERSION="Release`sed 's/\./_/g' VERSION`";			\
+	VERSION="Release`sed 's/\./_/g' ${SRCDIR}/VERSION`";		\
 	NOW=`date`;							\
-	for i in ${FLEXFAXFILES}; do					\
-	    REV=`rlog -h -d"$$NOW" $$i|fgrep 'head:'|awk '{print $$2}'`;\
-	    rcs "-N$$VERSION:$$REV" "-sRel:$$REV" $$i && co -sRel $$i;	\
+	for i in ${HYLAFAXFILES}; do					\
+	    REV=`rlog -h -d"$$NOW" ${SRCDIR}/$$i|fgrep 'head:'|awk '{print $$2}'`;\
+	    rcs "-N$$VERSION:$$REV" "-sRel:$$REV" ${SRCDIR}/$$i && co -sRel ${SRCDIR}/$$i;	\
 	done
 
 # create release distribution archive
 release.tar:
-	VERSION=v`cat VERSION`;						\
-	rm -f $$VERSION.src.tar.Z;					\
-	tar cvf - ${DISTFILES} | ${COMPRESS} > $$VERSION.src.tar.${ZIPSUF}
+	VERSION=v`cat ${SRCDIR}/VERSION`;				\
+	rm -f hylafax-$$VERSION $$VERSION $$VERSION-tar;		\
+	ln -s ${SRCDIR} hylafax-$$VERSION;				\
+	(for i in ${HYLAFAXFILES} dist/hylafax.alpha; do		\
+	   echo $$i;							\
+	done) | sed "s;.*;hylafax-$$VERSION/&;" >$$VERSION;		\
+	tar cvf $$VERSION-tar `cat $$VERSION`;				\
+	(for i in ${TIFFFILES} ${FAX2PSFILES} ${HTMLDIST} ${AFMFILES}; do\
+	   echo $$i;							\
+	done) | sed "s;.*;hylafax-$$VERSION/&;" >$$VERSION;		\
+	tar rvf $$VERSION-tar `cat $$VERSION`;				\
+	rm -f hylafax-$$VERSION-tar.${ZIPSUF};				\
+	cat $$VERSION-tar | ${COMPRESS} >hylafax-$$VERSION-tar.${ZIPSUF};\
+	rm -f hylafax-$$VERSION $$VERSION $$VERSION-tar;

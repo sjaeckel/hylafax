@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_fax4.c,v 1.22 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_fax4.c,v 1.25.1.1 1995/02/10 19:04:23 sam Exp $ */
 
 /*
- * Copyright (c) 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -38,20 +38,21 @@
  * Decode the requested amount of data.
  */
 static int
-DECLARE4(Fax4Decode, TIFF*, tif, u_char*, buf, u_long, occ, u_int, s)
+Fax4Decode(TIFF* tif, tidata_t buf, tsize_t occ, tsample_t s)
 {
 	Fax3BaseState *sp = (Fax3BaseState *)tif->tif_data;
 	int status;
 
-	memset(buf, 0, occ);		/* decoding only sets non-zero bits */
+	(void) s;
+	_TIFFmemset(buf, 0, occ);	/* decoding only sets non-zero bits */
 	while ((long)occ > 0) {
 		status = Fax3Decode2DRow(tif, buf, sp->rowpixels);
 		if (status < 0)
 			return (status == G3CODE_EOF);
-		memcpy(sp->refline, buf, sp->rowbytes);
+		_TIFFmemcpy(sp->refline, buf, sp->rowbytes);
 		buf += sp->rowbytes;
 		occ -= sp->rowbytes;
-		if (occ > 0)
+		if (occ != 0)
 			tif->tif_row++;
 	}
 	return (1);
@@ -61,24 +62,25 @@ DECLARE4(Fax4Decode, TIFF*, tif, u_char*, buf, u_long, occ, u_int, s)
  * Encode the requested amount of data.
  */
 static int
-DECLARE4(Fax4Encode, TIFF*, tif, u_char*, bp, u_long, cc, u_int, s)
+Fax4Encode(TIFF* tif, tidata_t bp, tsize_t cc, tsample_t s)
 {
 	Fax3BaseState *sp = (Fax3BaseState *)tif->tif_data;
 
+	(void) s;
 	while ((long)cc > 0) {
 		if (!Fax3Encode2DRow(tif, bp, sp->refline, sp->rowpixels))
 			return (0);
-		memcpy(sp->refline, bp, sp->rowbytes);
+		_TIFFmemcpy(sp->refline, bp, sp->rowbytes);
 		bp += sp->rowbytes;
 		cc -= sp->rowbytes;
-		if (cc > 0)
+		if (cc != 0)
 			tif->tif_row++;
 	}
 	return (1);
 }
 
 static
-DECLARE1(Fax4PostEncode, TIFF*, tif)
+Fax4PostEncode(TIFF* tif)
 {
 	Fax3BaseState *sp = (Fax3BaseState *)tif->tif_data;
 
@@ -91,7 +93,7 @@ DECLARE1(Fax4PostEncode, TIFF*, tif)
 }
 
 int
-DECLARE1(TIFFInitCCITTFax4, TIFF*, tif)
+TIFFInitCCITTFax4(TIFF* tif)
 {
 	TIFFInitCCITTFax3(tif);		/* reuse G3 compression */
 	tif->tif_decoderow = Fax4Decode;

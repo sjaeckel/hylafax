@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class20.h,v 1.5 1994/09/23 00:59:30 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class20.h,v 1.9 1995/04/08 21:29:42 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,12 +32,9 @@
 
 class Class20Modem : public Class2Modem {
 protected:
-    const u_char* rtcRev;		// bit reversal table for RTC
-
 // transmission support
     fxBool	sendPage(TIFF* tif);
     fxBool	pageDone(u_int ppm, u_int& ppr);
-    fxBool	sendRTC(fxBool is2D);
 
     void	abortDataTransfer();
 // reception support

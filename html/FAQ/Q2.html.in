@@ -1,0 +1,63 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Why should I use HylaFAX instead of some other fax package?
+</TITLE></HEAD><BODY>
+<H1>Q2: Why should I use HylaFAX instead of some other fax package?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Why+should+I+use+HylaFAX+instead+of+some+other+fax+package%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Why should I use HylaFAX instead of some other fax package?</I>
+<P>
+<DT>A.
+<DD>HylaFAX is designed to be very robust and reliable. 
+The fax server is designed to guard against unexpected failures in the
+software, in the configuration, in the hardware, and in general use.
+HylaFAX uses an intelligent scheduling policy that attempts to
+recognize different
+types of failures and optimize retry attempts.
+An important design goal is that users must never worry
+about transmit jobs being lost or mishandled:
+jobs are either
+completed successfully or the submitter is notified what happened
+to their job <EM>and why the job failed</EM>.
+If you are
+willing to shepherd your facsimile transmissions then other software
+packages may be more suitable for you. 
+<P>
+HylaFAX supports a wide variety of modems and is designed to support
+<STRONG>any</STRONG> Class 1, Class 2, or Class 2.0 modem
+<EM>without modification to the source code</EM>.
+If you have a modem that provides only
+a Class 1 interface then HylaFAX is likely to be the only freely
+available software package that will work with your modem.
+<P>
+HylaFAX supports multiple modems and heavy traffic load.  If you
+expect to send or receive more than 1 or 2 facsimile a day, then
+HylaFAX is likely to be the best package for you to use.
+<P>
+HylaFAX is expressly designed to be highly configurable <EM>without
+modification or access to the source code</EM>.
+The software comes with extensive documentation to assist in understanding
+how the software functions and how to configure it.
+<P>
+HylaFAX is freely available.  There is no GNU copyleft policy.
+There are no requests for remuneration,
+constraints on use, or constraints on incorporation into products
+(compare this with other ``<I>freely available fax packages</I>'').
+The software copyright only restricts the use of the author's
+name and/or Silicon Graphics' name in any advertising; consult
+<A HREF="@HTMLPATH@/copyright.html">the copyright text</A> for details.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Getty.h,v 1.15 1994/02/28 14:14:34 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Getty.h,v 1.24 1995/04/08 21:30:40 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -33,44 +34,38 @@
 
 const int GETTY_MAXARGS		= 64;	// max args passed to getty
 
-struct termios;
-
 class Getty {
 private:
+    fxStr	getty;			// subprogram pathname
     pid_t	pid;			// pid of getty/login process
-    u_int	timeout;		// if nonzero, timeout login attempts
     fxStr	line;			// device name
     fxStr	speed;			// line speed
     char*	argv[GETTY_MAXARGS];	// argv passed to getty
     fxStr	argbuf;			// stash for argv strings
-
-    void setupArgv(const char* args);
+    fxStr	tzVar;			// TZ environment variable
+    fxStr	langVar;		// LANG environment variable
 protected:
-    Getty(const fxStr& line, const fxStr& speed, u_int timeout = 60);
+    Getty(const char* program, const fxStr& line, const fxStr& speed);
 
-    static const fxStr getty;		// getty program
-
-    virtual void setupSession(int modemFd) = 0;
-
-    virtual void error(const char* fmt, ...);
-    virtual void fatal(const char* fmt, ...);
+    void addEnvVar(int& envc, char* env[], fxStr& var);
+    virtual void setupSession(int modemFd);
+    virtual void fatal(const char* fmt ...);
 public:
     virtual ~Getty();
 
-    virtual void run(int fd, const char* args);
-    virtual fxBool wait(int& status, fxBool block = FALSE) = 0;
-    virtual void hangup();
+    void setupArgv(const char* args);	// setup arguments for getty process
+					// run getty process
+    virtual void run(int fd, fxBool parentIsInit);
+    virtual fxBool wait(int& status, fxBool block = FALSE);
+    virtual void hangup();		// cleanup state after hangup
 
-    pid_t getPID();
+    pid_t getPID() const;		// getty pid
     void setPID(pid_t);
 
-    const char* getLine();
-
-    void setTimeout(u_int);
+    const char* getLine() const;	// return tty filename
+    fxStr getCmdLine() const;		// return command line args
 };
-inline pid_t Getty::getPID()		{ return pid; }
-inline void Getty::setPID(pid_t p)	{ pid = p; }
-inline const char* Getty::getLine()	{ return line; }
 
 extern Getty* OSnewGetty(const fxStr& dev, const fxStr& speed);
+extern Getty* OSnewVGetty(const fxStr& dev, const fxStr& speed);
 #endif /* _GETTY_ */

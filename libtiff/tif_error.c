@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_error.c,v 1.16 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_error.c,v 1.19 1994/09/17 23:22:37 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -28,35 +28,22 @@
  * TIFF Library.
  */
 #include "tiffiop.h"
-#include <stdio.h>
-
-static void
-DECLARE3(defaultHandler, const char*, module, const char*, fmt, va_list, ap)
-{
-	if (module != NULL)
-		fprintf(stderr, "%s: ", module);
-	vfprintf(stderr, fmt, ap);
-	fprintf(stderr, ".\n");
-}
-
-static TIFFErrorHandler _errorHandler = defaultHandler;
 
 TIFFErrorHandler
-DECLARE1(TIFFSetErrorHandler, TIFFErrorHandler, handler)
+TIFFSetErrorHandler(TIFFErrorHandler handler)
 {
-	TIFFErrorHandler prev = _errorHandler;
-	_errorHandler = handler;
+	TIFFErrorHandler prev = _TIFFerrorHandler;
+	_TIFFerrorHandler = handler;
 	return (prev);
 }
 
 void
-/*VARARGS2*/
-DECLARE2V(TIFFError, const char*, module, const char*, fmt)
+TIFFError(const char* module, const char* fmt, ...)
 {
-	if (_errorHandler) {
+	if (_TIFFerrorHandler) {
 		va_list ap;
-		VA_START(ap, fmt);
-		(*_errorHandler)(module, fmt, ap);
+		va_start(ap, fmt);
+		(*_TIFFerrorHandler)(module, fmt, ap);
 		va_end(ap);
 	}
 }

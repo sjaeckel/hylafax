@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/tiff/libtiff/RCS/tiffcomp.h,v 1.32 92/10/30 11:43:31 sam Rel $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tiffcomp.h,v 1.37 1994/09/29 17:29:40 sam Exp $ */
 
 /*
- * Copyright (c) 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -36,43 +36,17 @@
  */
 
 /*
- * If nothing has been specified about the use of function prototypes,
- * deduce it's use from thje compilation environment.  Note that if
- * we decide protototypes should be used, we also assume that const is
- * supported.  If this is not true, then the user must force the
- * definitions in the Makefile or similar.
- */
-#if !defined(USE_PROTOTYPES)
-#if defined(__STDC__) || defined(__EXTENDED__) || defined(c_plusplus) || defined(__cplusplus)
-#define	USE_PROTOTYPES	1
-#define	USE_CONST	1
-#endif /* __STDC__ || __EXTENDED__ || c_plusplus || __cplusplus */
-#endif /* !defined(USE_PROTOTYPES) */
-
-/*
- * If nothing has been specified about the
- * use of const, define it to be void.
- */
-#if !USE_CONST
-#if !defined(const)
-#define	const
-#endif
-#endif
-
-/*
  * Setup basic type definitions and function declaratations.
  */
-#ifdef THINK_C
+#if defined(__MWERKS__) || defined(THINK_C)
 #include <unix.h>
 #include <math.h>
 #endif
-#if USE_PROTOTYPES
 #include <stdio.h>
-#endif
 #ifdef applec
 #include <types.h>
 #else
-#ifndef THINK_C
+#if !defined(__MWERKS__) && !defined(THINK_C)
 #include <sys/types.h>
 #endif
 #endif
@@ -82,10 +56,15 @@
 #else
 #include <fcntl.h>
 #endif
-#if defined(THINK_C) || defined(applec)
+#if defined(__MWERKS__) || defined(THINK_C) || defined(applec)
 #include <stdlib.h>
-typedef long off_t;
 #define	BSDTYPES
+#endif
+#ifdef _WINDOWS
+#define	BSDTYPES
+#if !defined(WIN32)
+#define	SMALLPOINTERS
+#endif
 #endif
 
 /*
@@ -124,23 +103,6 @@ typedef	unsigned long u_long;
 #endif
 
 /*
- * Default Read/Seek/Write definitions.  These aren't really
- * compatibility related and should probably go in tiffiop.h.
- */
-#ifndef ReadOK
-#define	ReadOK(tif, buf, size) \
-	(TIFFReadFile(tif, (char *)buf, size) == size)
-#endif
-#ifndef SeekOK
-#define	SeekOK(tif, off) \
-	(TIFFSeekFile(tif, (long)off, L_SET) == (long)off)
-#endif
-#ifndef WriteOK
-#define	WriteOK(tif, buf, size) \
-	(TIFFWriteFile(tif, (char *)buf, size) == size)
-#endif
-
-/*
  * dblparam_t is the type that a double precision
  * floating point value will have on the parameter
  * stack (when coerced by the compiler).
@@ -149,61 +111,5 @@ typedef	unsigned long u_long;
 typedef extended dblparam_t;
 #else
 typedef double dblparam_t;
-#endif
-
-/*
- * Varargs parameter list handling...YECH!!!!
- */
-#if defined(__STDC__) && !defined(USE_VARARGS)
-#define	USE_VARARGS	0
-#endif
-
-#if defined(USE_VARARGS)
-#if USE_VARARGS
-#include <varargs.h>
-#define	VA_START(ap, parmN)	va_start(ap)
-#else
-#include <stdarg.h>
-#define	VA_START(ap, parmN)	va_start(ap, parmN)
-#endif
-#endif /* defined(USE_VARARGS) */
-
-/*
- * Macros for declaring functions with and without
- * prototypes--according to the definition of USE_PROTOTYPES.
- */
-#if USE_PROTOTYPES
-#define	DECLARE1(f,t1,a1)		f(t1 a1)
-#define	DECLARE2(f,t1,a1,t2,a2)		f(t1 a1, t2 a2)
-#define	DECLARE3(f,t1,a1,t2,a2,t3,a3)	f(t1 a1, t2 a2, t3 a3)
-#define	DECLARE4(f,t1,a1,t2,a2,t3,a3,t4,a4)\
-	f(t1 a1, t2 a2, t3 a3, t4 a4)
-#define	DECLARE5(f,t1,a1,t2,a2,t3,a3,t4,a4,t5,a5)\
-	f(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5)
-#define	DECLARE6(f,t1,a1,t2,a2,t3,a3,t4,a4,t5,a5,t6,a6)\
-	f(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6)
-#define	DECLARE1V(f,t1,a1)		f(t1 a1 ...)
-#define	DECLARE2V(f,t1,a1,t2,a2)	f(t1 a1, t2 a2, ...)
-#define	DECLARE3V(f,t1,a1,t2,a2,t3,a3)	f(t1 a1, t2 a2, t3 a3, ...)
-#else
-#define	DECLARE1(f,t1,a1)		f(a1) t1 a1;
-#define	DECLARE2(f,t1,a1,t2,a2)		f(a1,a2) t1 a1; t2 a2;
-#define	DECLARE3(f,t1,a1,t2,a2,t3,a3)	f(a1, a2, a3) t1 a1; t2 a2; t3 a3;
-#define	DECLARE4(f,t1,a1,t2,a2,t3,a3,t4,a4) \
-	f(a1, a2, a3, a4) t1 a1; t2 a2; t3 a3; t4 a4;
-#define	DECLARE5(f,t1,a1,t2,a2,t3,a3,t4,a4,t5,a5)\
-	f(a1, a2, a3, a4, a5) t1 a1; t2 a2; t3 a3; t4 a4; t5 a5;
-#define	DECLARE6(f,t1,a1,t2,a2,t3,a3,t4,a4,t5,a5,t6,a6)\
-	f(a1, a2, a3, a4, a5, a6) t1 a1; t2 a2; t3 a3; t4 a4; t5 a5; t6 a6;
-#if USE_VARARGS
-#define	DECLARE1V(f,t1,a1) \
-	f(a1, va_alist) t1 a1; va_dcl
-#define	DECLARE2V(f,t1,a1,t2,a2) \
-	f(a1, a2, va_alist) t1 a1; t2 a2; va_dcl
-#define	DECLARE3V(f,t1,a1,t2,a2,t3,a3) \
-	f(a1, a2, a3, va_alist) t1 a1; t2 a2; t3 a3; va_dcl
-#else
-"Help, I don't know how to handle this case: !USE_PROTOTYPES and !USE_VARARGS?"
-#endif
 #endif
 #endif /* _COMPAT_ */

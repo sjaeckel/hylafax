@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/RegEx.h,v 1.2 1994/06/24 04:51:32 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/RegEx.h,v 1.8 1995/04/08 21:44:18 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -34,17 +35,21 @@
  */
 class RegEx {
 public:
-    RegEx(const char* pat);
-    RegEx(const char* pat, int length);
+    RegEx(const char* pat, int length = 0 , int flags = REG_EXTENDED);
+    RegEx(const fxStr& pat, int flags = REG_EXTENDED);
+    RegEx(const RegEx& other, int flags = REG_EXTENDED);
     ~RegEx();
 
     const char* pattern() const;
 
-    int Find(const char* text, u_int length, u_int off = 0);
-    int Find(const fxStr& s, u_int off = 0)
+    fxBool Find(const char* text, u_int length, u_int off = 0);
+    fxBool Find(const fxStr& s, u_int off = 0)
 	{ return Find(s, s.length(), off); }
     int StartOfMatch(u_int subexp = 0);
     int EndOfMatch(u_int subexp = 0);
+
+    int getErrorCode() const;
+    void getError(fxStr&) const;
 
     void inc();
     void dec();
@@ -58,11 +63,12 @@ private:
     regex_t	c_pattern;		// compiled regex
     regmatch_t*	matches;		// subexpression matches
 
-    void	init();
+    void	init(int flags);
 };
 inline const char* RegEx::pattern() const	{ return _pattern; }
 inline u_long RegEx::getReferenceCount()	{ return referenceCount; }
 inline void RegEx::inc()			{ referenceCount++; }
 inline void RegEx::dec()
     { if (--referenceCount <= 0) delete this; }
+inline int RegEx::getErrorCode() const		{ return execResult; }
 #endif /* _RegEx_ */

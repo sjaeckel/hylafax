@@ -1,0 +1,36 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: [SunOS 4.1.x] Getty aborts with Interrupted system call?
+</TITLE></HEAD><BODY>
+<H1>Q48: [SunOS 4.1.x] Getty aborts with Interrupted system call?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=%5BSunOS+4%2E1%2Ex%5D+Getty+aborts+with+Interrupted+system+call%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>[SunOS 4.1.x] Getty aborts with "Interrupted system call"?</I>
+<P>
+faxd answers the phone, determines it's a data call,
+and runs getty.  Nothing happens for a few seconds, then I get the
+following message in syslog:
+<LISTING>
+May 22 15:04:58 hbar getty: /dev/ttya: Interrupted system call
+</LISTING>
+(Relevant line from config file: GettyArgs: "std.%s %l")
+<P>
+<DT>A.
+<DD>I had this problem too until I changed GettyArgs.  Try using "std.%s -"
+instead of "std.%s %l".  This tells getty to use the stdin it was passed
+instead of opening the device itself.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

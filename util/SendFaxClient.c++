@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/SendFaxClient.c++,v 1.31 1994/07/02 01:38:37 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/SendFaxClient.c++,v 1.43 1995/04/08 21:44:21 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -25,7 +26,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <paths.h>
 
 #include <osfcn.h>
 #include <unistd.h>
@@ -53,12 +53,11 @@ struct FileInfo : public fxObj {
     fxBool	tagLine;
 
     FileInfo();
+    FileInfo(const FileInfo& other);
     ~FileInfo();
 };
 fxDECLARE_ObjArray(FileInfoArray, FileInfo);
 
-
-const fxStr SendFaxClient::TypeRulesFile(FAX_TYPERULES);
 
 SendFaxClient::SendFaxClient()
 {
@@ -76,7 +75,9 @@ SendFaxClient::SendFaxClient()
     pageWidth = 0;
     pageLength = 0;
     totalPages = 0;
+    maxDials = FAX_REDIALS;
     maxRetries = FAX_RETRIES;
+    priority = FAX_DEFPRIORITY;	// default priority
     notify = FAX_DEFNOTIFY;	// default notification
     setup = FALSE;
 }
@@ -102,13 +103,13 @@ SendFaxClient::prepareSubmission()
 	return (FALSE);
     if (pageSize == "" && !setPageSize("default"))
 	return (FALSE);
-    typeRules = TypeRules::read(fxStr(FAX_LIBDATA) | "/" | TypeRulesFile);
+    typeRules = TypeRules::read(FAX_LIBDATA "/" FAX_TYPERULES);
     if (!typeRules) {
 	printError("Unable to setup file typing and conversion rules");
 	return (FALSE);
     }
     typeRules->setVerbose(verbose);
-    dialRules = new DialStringRules(fxStr(FAX_LIBDATA) | "/" | FAX_DIALRULES);
+    dialRules = new DialStringRules(FAX_LIBDATA "/" FAX_DIALRULES);
     dialRules->setVerbose(verbose);
     if (!dialRules->parse() && verbose)		// NB: not fatal
 	printWarning("unable to setup dialstring rules");
@@ -173,18 +174,22 @@ SendFaxClient::submitJob()
 	if (info.rule->getResult() == TypeRule::TIFF)
 	    CHECKSEND(sendData("tiff", info.name))
 	else
-	    CHECKSEND(sendData("postscript", info.name))
+	    CHECKSEND(sendLZWData("zpostscript", info.name))
     }
     if (pollCmd)
 	CHECKSEND(sendLine("poll", ""))
     for (i = 0; i < destNumbers.length(); i++) {
 	CHECKSEND(sendLine("begin", i))
+	CHECKSEND(sendLine("jobtype", "facsimile"))
 	if (sendtime != "")
 	    CHECKSEND(sendLine("sendAt", sendtime))
+	if (maxDials >= 0)
+	    CHECKSEND(sendLine("maxdials", maxDials))
 	if (maxRetries >= 0)
-	    CHECKSEND(sendLine("maxdials", maxRetries))
+	    CHECKSEND(sendLine("maxtries", maxRetries))
 	if (killtime != "")
 	    CHECKSEND(sendLine("killtime", killtime))
+	CHECKSEND(sendLine("priority", priority));
 	/*
 	 * If the dialstring is different from the
 	 * displayable number then pass both.
@@ -213,26 +218,8 @@ SendFaxClient::submitJob()
 	    CHECKSEND(sendLine("notify", "when done"))
 	else if (notify == when_requeued)
 	    CHECKSEND(sendLine("notify", "when requeued"))
-	if (coverSheet) {
-	    FILE* fp = fopen(coverPages[i], "r");
-	    if (fp != NULL) {
-		sendLine("cover", 1);	// cover sheet sub-protocol version 1
-		// copy prototype cover page
-		char line[1024];
-		while (fgets(line, sizeof (line)-1, fp)) {
-		    char* cp = strchr(line, '\n');
-		    if (cp)
-			*cp = '\0';
-		    if (!sendCoverLine("%s", line))
-			break;
-		}
-		fclose(fp);
-		CHECKSEND(sendLine("..\n"))
-	    } else
-		printWarning(
-		    "the cover page for \"%s\" disappeared; none was sent",
-		    (char*) destNumbers[i]);
-	}
+	if (coverSheet)
+	    CHECKSEND(sendLZWData("zcover", coverPages[i]))
 	CHECKSEND(sendLine("end", i))
     }
     CHECKSEND(sendLine(".\n"));
@@ -270,8 +257,12 @@ void SendFaxClient::setFromIdentity(const char* s)	{ from = s; }
 void SendFaxClient::setJobTag(const char* s)		{ jobtag = s; }
 const fxStr& SendFaxClient::getFromIdentity() const	{ return from; }
 void SendFaxClient::setMaxRetries(int n)		{ maxRetries = n; }
+void SendFaxClient::setMaxDials(int n)			{ maxDials = n; }
 void SendFaxClient::setVerbose(fxBool b)		{ verbose = b; }
 fxBool SendFaxClient::getVerbose() const		{ return verbose; }
+
+int SendFaxClient::getPriority() const			{ return priority; }
+void SendFaxClient::setPriority(int p)			{ priority = p; }
 
 fxBool
 SendFaxClient::setPageSize(const char* name)
@@ -586,9 +577,10 @@ SendFaxClient::makeCoverPage(
 	FILE* fp = popen(cmd, "r");
 	if (fp != NULL) {
 	    // copy prototype cover page
-	    char line[1024];
-	    while (fgets(line, sizeof (line)-1, fp))
-		(void) write(fd, line, strlen(line));
+	    char buf[16*1024];
+	    int cc;
+	    while ((cc = fread(buf, 1, sizeof (buf)-1, fp)) > 0)
+		(void) write(fd, buf, cc);
 	    if (pclose(fp) == 0) {
 		::close(fd);
 		return (templ);
@@ -647,6 +639,14 @@ FileInfo::FileInfo()
     isTemp = FALSE;
     tagLine = TRUE;
     rule = NULL;
+}
+FileInfo::FileInfo(const FileInfo& other)
+    : fxObj(other)
+    , name(other.name)
+    , rule(other.rule)
+{
+    isTemp = other.isTemp;
+    tagLine = other.tagLine;
 }
 FileInfo::~FileInfo()
 {

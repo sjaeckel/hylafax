@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxSend.c++,v 1.110 1994/07/04 18:37:16 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxSend.c++,v 1.142 1995/04/08 21:30:25 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -23,16 +24,16 @@
  * OF THIS SOFTWARE.
  */
 #include <osfcn.h>
-#include <stdio.h>
-#include <sys/stat.h>
+
+#include "Sys.h"
 
 #include "Dispatcher.h"
 #include "tiffio.h"
 #include "FaxServer.h"
 #include "FaxMachineInfo.h"
 #include "FaxRecvInfo.h"
+#include "FaxAcctInfo.h"
 #include "UUCPLock.h"
-#include "faxServerApp.h"
 #include "t.30.h"
 #include "config.h"
 
@@ -40,45 +41,25 @@
  * FAX Server Transmission Protocol.
  */
 void
-FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo)
+FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, FaxAcctInfo& ai)
 {
-    assert(fax.number != "");
-    assert(fax.sender != "");
-    assert(fax.files.length() != 0);
-    assert(fax.files.length() == fax.ops.length());
-    assert(fax.dirnums.length() == fax.ops.length());
     npages = fax.npages;
-    if (modemLock->lock()) {
+    if (lockModem()) {
+	beginSession(fax.number);
 	if (setupModem()) {
 	    changeState(SENDING);
 	    IOHandler* handler =
-		Dispatcher::instance().handler(modemFd, Dispatcher::ReadMask);
+		Dispatcher::instance().handler(
+		    getModemFd(), Dispatcher::ReadMask);
 	    if (handler)
-		Dispatcher::instance().unlink(modemFd);
-	    /*
-	     * Prepare the job for transmission by analysing
-	     * the page characteristics and determining whether
-	     * or not the page transfer parameters will have
-	     * to be renegotiated after the page is sent.  This
-	     * is done before the call is placed because it can
-	     * be slow and there can be timing problems if this
-	     * is done during transmission.
-	     */
+		Dispatcher::instance().unlink(getModemFd());
 	    fxStr emsg;
-	    if (sendPrepareFax(fax, clientInfo, emsg)) {
-		/*
-		 * Construct the phone number to dial by applying the
-		 * dialing rules to the user-specified dialing string.
-		 */
-		fxStr dial = prepareDialString(fax.number);
-		fxStr canon = canonicalizePhoneNumber(fax.number);
-		log = new FaxMachineLog(canon, logMode);
-		setServerStatus("Sending job %s to %s",
-		    (char*) fax.jobid, (char*) fax.external);
-		sendFax(fax, clientInfo, dial);
-		delete log, log = NULL;
-	    } else
-		sendFailed(fax, send_failed, emsg);
+	    setServerStatus("Sending job " | fax.jobid);
+	    /*
+	     * Construct the phone number to dial by applying the
+	     * dialing rules to the user-specified dialing string.
+	     */
+	    sendFax(fax, clientInfo, prepareDialString(fax.number));
 	    /*
 	     * Because some modems are impossible to safely hangup in the
 	     * event of a problem, we force a close on the device so that
@@ -95,7 +76,8 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo)
 	    discardModem(TRUE);
 	    changeState(MODEMWAIT, pollModemWait);
 	}
-	modemLock->unlock();
+	endSession();
+	unlockModem();
     } else {
 	if (state != LOCKWAIT)
 	    sendFailed(fax, send_retry,
@@ -104,30 +86,14 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo)
 	    changeState(LOCKWAIT, pollLockWait);
     }
     /*
-     * Call back to app to notify it that the job has completed.
-     *
-     * NB: we can't reference ``fax'' after this call since the
-     *     structure may be reclaimed.
+     * Record transmit accounting information for caller.
      */
-    FaxSendStatus status = fax.status;
-    u_int pagesSent = npages - fax.npages;
+    ai.npages = npages - fax.npages;
     fax.npages = npages;
-    app->notifySendDone(&fax,
-	pagesSent,
-	clientInfo.getCSI(),
-	atoi(Class2Params::bitRateNames[clientParams.br & 7]),
-	Class2Params::dataFormatNames[clientParams.df & 3]);
-    if (status == send_failed || status == send_done)
-	clientInfo.setJobInProgress("");
-    /*
-     * If the modem appears wedged, notify the app so that
-     * it can do something such as notify the administrator
-     * and/or shut down the queue.
-     */
-    if (consecutiveBadCalls >= maxConsecutiveBadCalls) {
-	consecutiveBadCalls = 0;
-	app->notifyModemWedged();
-    }
+    fax.sigrate = clientParams.bitRateName();
+    ai.sigrate = atoi(fax.sigrate);
+    fax.df = clientParams.dataFormatName();
+    ai.df = fax.df;
 }
 
 void
@@ -142,8 +108,8 @@ FaxServer::sendFailed(FaxRequest& fax, FaxSendStatus stat, const char* notice, u
      * uses the command-line parameter and a random jitter.
      */
     if (tts != requeueOther)
-	fax.tts = time(0) + tts;
-    traceStatus(FAXTRACE_SERVER, "SEND FAILED: %s", notice);
+	fax.tts = Sys::now() + tts;
+    traceServer("SEND FAILED: %s", notice);
 }
 
 /*
@@ -153,20 +119,26 @@ FaxServer::sendFailed(FaxRequest& fax, FaxSendStatus stat, const char* notice, u
 void
 FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& number)
 {
-    int oTracingLevel = logTracingLevel;	// save default value
-    (void) clientInfo.getTracingLevel(logTracingLevel);
+    /*
+     * Force the modem into the appropriate class
+     * used to send facsimile.  We do this before
+     * doing any fax-specific operations such as
+     * requesting polling.
+     */
+    if (!modem->faxService()) {
+	sendFailed(fax, send_failed, "Unable to configure modem for fax use");
+	return;
+    }
     /*
      * Check if this job includes a poll request, and
      * if it does, inform the modem in case it needs to
      * do something to get back status about whether or
      * not documents are available for retrieval.
      */
-    FaxSendOp op = send_poll;
-    if (fax.ops.find(op) != fx_invalidArrayIndex)
+    if (fax.findRequest(FaxRequest::send_poll) != fx_invalidArrayIndex)
 	modem->requestToPoll();
     fax.notice = "";
     abortCall = FALSE;
-    clientInfo.setJobInProgress(fax.qfile);
     /*
      * Calculate initial page-related session parameters so
      * that braindead Class 2 modems can constrain the modem
@@ -175,26 +147,27 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
     fxStr notice;
     Class2Params dis;
     dis.decode(fax.pagehandling);
-    CallStatus callstat = modem->dial(number, dis, notice);
-    if (callstat == FaxModem::OK && !abortRequested()) {
+    CallStatus callstat = modem->dialFax(number, dis, notice);
+    (void) abortRequested();			// check for user abort
+    if (callstat == ClassModem::OK && !abortCall) {
 	/*
 	 * Call reached a fax machine.  Check remote's
 	 * capabilities against those required by the
 	 * job and setup for transmission.
 	 */
-	consecutiveBadCalls = 0;
-	fax.ndials = 0;
+	fax.ndials = 0;				// consec. failed dial attempts
+	fax.tottries++;				// total answered calls
+	fax.totdials++;				// total attempted calls
 	clientInfo.setCalledBefore(TRUE);
 	clientInfo.setDialFailures(0);
 	modem->sendBegin(fax);
 	fxBool remoteHasDoc = FALSE;
 	u_int nsf;
 	fxStr csi;
-	if (!modem->getPrologue(clientCapabilities, nsf, csi, remoteHasDoc)) {
-	    // NB: assume receiver is T.4 compatible...
-	    sendFailed(fax, send_retry,
-	"Unable to get remote capabilities or remote is not T.4 compatible",
-		requeueOther);
+	FaxSendStatus status = modem->getPrologue(
+	    clientCapabilities, nsf, csi, remoteHasDoc, notice);
+	if (status != send_ok) {
+	    sendFailed(fax, status, notice, requeueProto);
 	} else {
 	    clientInfo.setCSI(csi);			// record remote CSI
 	    if (!sendClientCapabilitiesOK(clientInfo, nsf, notice)) {
@@ -207,14 +180,13 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 		 */
 		fax.status = send_done;			// be optimistic
 		u_int opages = npages;
-		op = send_fax;
-		while (fax.ops.length() > 0) {		// send operations
-		    u_int i = fax.ops.find(op);
+		while (fax.requests.length() > 0) {	// send operations
+		    u_int i = fax.findRequest(FaxRequest::send_fax);
 		    if (i == fx_invalidArrayIndex)
 			break;
-		    traceStatus(FAXTRACE_PROTOCOL, "SEND file \"%s\"",
-			(char*) fax.files[i]);
-		    if (!sendFaxPhaseB(fax, i, clientInfo)) {
+		    faxRequest& freq = fax.requests[i];
+		    traceProtocol("SEND file \"%s\"", (char*) freq.item);
+		    if (!sendFaxPhaseB(fax, freq, clientInfo)) {
 			/*
 			 * On protocol errors retry more quickly
 			 * (there's no reason to wait is there?).
@@ -232,9 +204,9 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 		     * if the job is requeued).  This is why we call
 		     * find again at the top of the loop
 		     */
-		    app->notifyDocumentSent(fax, i);
+		    notifyDocumentSent(fax, i);
 		}
-		if (fax.status == send_done && fax.ops.length() > 0)
+		if (fax.status == send_done && fax.requests.length() > 0)
 		    sendPoll(fax, remoteHasDoc);
 		fax.totpages -= npages - opages;	// adjust total pages
 	    }
@@ -245,16 +217,17 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	    clientInfo.setLastSendFailure(fax.notice);
 	} else
 	    clientInfo.setSendFailures(0);
-    } else {
+    } else if (!abortCall) {
 	/*
 	 * Analyze the call status codes and selectively decide if the
 	 * job should be retried.  We try to avoid the situations where
 	 * we might be calling the wrong number so that we don't end up
 	 * harrassing someone w/ repeated calls.
 	 */
-	fax.ndials++;
+	fax.ndials++;			// number of consecutive failed calls
+	fax.totdials++;			// total attempted calls
 	switch (callstat) {
-	case FaxModem::NOCARRIER:	// no carrier detected on remote side
+	case ClassModem::NOCARRIER:	// no carrier detected on remote side
 	    /*
 	     * Since some modems can not distinguish between ``No Carrier''
 	     * and ``No Answer'' we offer this configurable hack whereby
@@ -264,56 +237,49 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	     * the modem is incapable of distinguishing betwee ``No Carrier''
 	     * and ``No Answer''.
 	     */
-	    if (!clientInfo.getCalledBefore() && fax.ndials > noCarrierRetrys) {
+	    if (!clientInfo.getCalledBefore() && fax.ndials > noCarrierRetrys)
 		sendFailed(fax, send_failed, notice);
-		/*
-		 * If the modem appears to distinguish ``No Carrier'' from
-		 * ``No Answer'', then also reject future jobs to this number
-		 * by setting up a rejection notice in the machine info
-		 * database.
-		 */
-		if (noCarrierRetrys <= 1)
-		    clientInfo.setRejectNotice(notice);
-	    } else
+	    else
 		sendFailed(fax, send_retry, notice, requeueTTS[callstat]);
-	    consecutiveBadCalls = 0;
 	    break;
-	case FaxModem::NODIALTONE:	// no local dialtone, possibly unplugged
-	case FaxModem::ERROR:		// modem might just need to be reset
-	case FaxModem::FAILURE:		// modem returned something unexpected
-	    ++consecutiveBadCalls;	// NB: checked after send is completed
+	case ClassModem::NODIALTONE:	// no local dialtone, possibly unplugged
+	case ClassModem::ERROR:		// modem might just need to be reset
+	case ClassModem::FAILURE:	// modem returned something unexpected
 	    sendFailed(fax, send_retry, notice, requeueTTS[callstat]);
 	    break;
-	case FaxModem::NOFCON:		// carrier seen, but handshake failed
-	case FaxModem::DATACONN:	// data connection established
+	case ClassModem::NOFCON:	// carrier seen, but handshake failed
+	case ClassModem::DATACONN:	// data connection established
 	    clientInfo.setCalledBefore(TRUE);
 	    /* fall thru... */
-	case FaxModem::BUSY:		// busy signal
-	case FaxModem::NOANSWER:	// no answer or ring back
+	case ClassModem::BUSY:		// busy signal
+	case ClassModem::NOANSWER:	// no answer or ring back
 	    sendFailed(fax, send_retry, notice, requeueTTS[callstat]);
 	    /* fall thru... */
-	case FaxModem::OK:		// call was aborted by user
-	    consecutiveBadCalls = 0;
+	case ClassModem::OK:		// call was aborted by user
 	    break;
 	}
-	if (callstat != FaxModem::OK) {
+	if (callstat != ClassModem::OK) {
 	    clientInfo.setDialFailures(clientInfo.getDialFailures()+1);
 	    clientInfo.setLastDialFailure(fax.notice);
 	}
     }
     if (abortCall)
 	sendFailed(fax, send_failed, "Job aborted by user");
-    else if (fax.status == send_retry && ++fax.totdials == fax.maxdials) {
-	notice = fax.notice | "; too many attempts to send";
-	sendFailed(fax, send_failed, notice);
+    else if (fax.status == send_retry) {
+	if (fax.totdials == fax.maxdials) {
+	    notice = fax.notice | "; too many attempts to dial";
+	    sendFailed(fax, send_failed, notice);
+	} else if (fax.tottries == fax.maxtries) {
+	    notice = fax.notice | "; too many attempts to send";
+	    sendFailed(fax, send_failed, notice);
+	}
     }
-    modem->hangup();
     /*
      * Cleanup after the call.  If we have new information on
      * the client's remote capabilities, the machine info
      * database will be updated when the instance is destroyed.
      */
-    logTracingLevel = oTracingLevel;	// restore default value
+    modem->hangup();
 }
 
 /*
@@ -322,39 +288,37 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 void
 FaxServer::sendPoll(FaxRequest& fax, fxBool remoteHasDoc)
 {
-    FaxSendOp op = send_poll;
-    u_int i = fax.ops.find(op);
+    u_int i = fax.findRequest(FaxRequest::send_poll);
     if (i == fx_invalidArrayIndex) {
 	fax.notice = "polling operation not done because of internal failure";
-	traceStatus(FAXTRACE_SERVER, "internal muckup, lost polling request");
+	traceServer("internal muckup, lost polling request");
 	// NB: job is marked done
     } else if (!remoteHasDoc) {
 	fax.notice = "remote has no document to poll";
-	traceStatus(FAXTRACE_SERVER, "REJECT: " | fax.notice);
+	traceServer("REJECT: " | fax.notice);
 	// override to force status about polling failure
 	if (fax.notify == FaxRequest::no_notice)
 	    fax.notify = FaxRequest::when_done;
     } else {
-	fxStr cig = canonicalizePhoneNumber(fax.files[i]);
+	fxStr cig = canonicalizePhoneNumber(fax.requests[i].item);
 	if (cig == "")
 	    cig = canonicalizePhoneNumber(FAXNumber);
-	traceStatus(FAXTRACE_PROTOCOL, "POLL with CIG \"%s\"", (char*) cig);
+	traceProtocol("POLL with CIG \"%s\"", (char*) cig);
 	FaxRecvInfoArray docs;
 	fax.status =
 	    (pollFaxPhaseB(cig, docs, fax.notice) ? send_done : send_retry);
 	for (u_int j = 0; j < docs.length(); j++) {
 	    const FaxRecvInfo& ri = docs[j];
 	    if (ri.npages > 0) {
-		(void) chmod((char*) ri.qfile, recvFileMode);
-		app->notifyPollRecvd(fax, ri);
+		Sys::chmod(ri.qfile, recvFileMode);
+		notifyPollRecvd(fax, ri);
 	    } else {
-		traceStatus(FAXTRACE_SERVER, "POLL: empty file \"%s\" deleted",
-		    (char*) ri.qfile);
-		unlink((char*) ri.qfile);
+		traceServer("POLL: empty file \"%s\" deleted", (char*)ri.qfile);
+		Sys::unlink(ri.qfile);
 	    }
 	}
 	if (fax.status == send_done)
-	    app->notifyPollDone(fax, i);
+	    notifyPollDone(fax, i);
     }
 }
 
@@ -362,14 +326,12 @@ FaxServer::sendPoll(FaxRequest& fax, fxBool remoteHasDoc)
  * Phase B of Group 3 protocol.
  */
 fxBool
-FaxServer::sendFaxPhaseB(FaxRequest& fax, u_int ix, FaxMachineInfo& clientInfo)
+FaxServer::sendFaxPhaseB(FaxRequest& fax, faxRequest& freq, FaxMachineInfo& clientInfo)
 {
     fax.status = send_failed;			// assume failure
 
-    const fxStr& file = fax.files[ix];
-    u_short dirnum = fax.dirnums[ix];
-    TIFF* tif = TIFFOpen(file, "r");
-    if (tif && (dirnum == 0 || TIFFSetDirectory(tif, dirnum))) {
+    TIFF* tif = TIFFOpen(freq.item, "r");
+    if (tif && (freq.dirnum == 0 || TIFFSetDirectory(tif, freq.dirnum))) {
 	// set up DCS according to file characteristics
 	fax.status = sendSetupParams(tif, clientParams, clientInfo, fax.notice);
 	if (fax.status == send_ok) {
@@ -391,24 +353,24 @@ FaxServer::sendFaxPhaseB(FaxRequest& fax, u_int ix, FaxMachineInfo& clientInfo)
 			fax.notice.append("; ");
 		    fax.notice.append(
 			"Giving up after 3 attempts to send same page");
-		    traceStatus(FAXTRACE_SERVER, "SEND: %s \"%s\", dirnum %d",
-			(char*) fax.notice, (char*) file, dirnum);
+		    traceServer("SEND: %s \"%s\", dirnum %d",
+			(char*) fax.notice, (char*) freq.item, freq.dirnum);
 		    fax.status = send_failed;
 		}
 	    } else {
-		fax.dirnums[ix] += npages - prevPages;
+		freq.dirnum += npages - prevPages;
 		fax.ntries = 0;
 	    }
 	}
     } else {
 	fax.notice = tif ? "Can not set directory in document file" :
 			   "Can not open document file";
-	traceStatus(FAXTRACE_SERVER, "SEND: %s \"%s\", dirnum %d",
-	    (char*) fax.notice, (char*) file, dirnum);
+	traceServer("SEND: %s \"%s\", dirnum %d",
+	    (char*) fax.notice, (char*) freq.item, freq.dirnum);
     }
     if (tif)
 	TIFFClose(tif);
-    return (fax.status == send_done);
+    return (fax.status == send_ok);
 }
 
 /*
@@ -441,7 +403,14 @@ FaxServer::sendClientCapabilitiesOK(FaxMachineInfo& clientInfo, u_int nsf, fxStr
     }
     clientParams.st = minScanlineTime;
 
-    clientParams.ec = EC_DISABLE;		// XXX
+    /*
+     * Use optional Error Correction Mode (ECM) if the
+     * peer implements and our modem is also capable.
+     */
+    if (clientCapabilities.ec == EC_ENABLE && modem->supportsECM())
+	clientParams.ec = EC_ENABLE;
+    else
+	clientParams.ec = EC_DISABLE;
     clientParams.bf = BF_DISABLE;
     /*
      * Record the remote machine's capabilities for use below in
@@ -451,129 +420,28 @@ FaxServer::sendClientCapabilitiesOK(FaxMachineInfo& clientInfo, u_int nsf, fxStr
      */
     clientInfo.setSupportsHighRes(clientCapabilities.vr == VR_FINE);
     clientInfo.setSupports2DEncoding(clientCapabilities.df >= DF_2DMR);
-    clientInfo.setMaxPageWidth(pageWidthCodes[clientCapabilities.wd]);
-    clientInfo.setMaxPageLength(pageLengthCodes[clientCapabilities.ln]);
+    clientInfo.setMaxPageWidthInPixels(clientCapabilities.pageWidth());
+    clientInfo.setMaxPageLengthInMM(clientCapabilities.pageLength());
     if (nsf) {
 	// XXX add Adobe's PostScript protocol
-	traceStatus(FAXTRACE_PROTOCOL, "REMOTE NSF %#x", nsf);
+	traceProtocol("REMOTE NSF %#x", nsf);
     }
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE best rate %s",
-	Class2Params::bitRateNames[clientCapabilities.br]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE max %s",
-	Class2Params::pageWidthNames[clientCapabilities.wd]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE max %s",
-	Class2Params::pageLengthNames[clientCapabilities.ln]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE best vres %s",
-	Class2Params::vresNames[clientCapabilities.vr]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE best format %s",
-	Class2Params::dataFormatNames[clientCapabilities.df]);
+    traceProtocol("REMOTE best rate %s", clientCapabilities.bitRateName());
+    traceProtocol("REMOTE max %s", clientCapabilities.pageWidthName());
+    traceProtocol("REMOTE max %s", clientCapabilities.pageLengthName());
+    traceProtocol("REMOTE best vres %s", clientCapabilities.verticalResName());
+    traceProtocol("REMOTE best format %s", clientCapabilities.dataFormatName());
     if (clientCapabilities.ec == EC_ENABLE)
-	traceStatus(FAXTRACE_PROTOCOL, "REMOTE supports error correction");
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE best %s",
-	Class2Params::scanlineTimeNames[clientCapabilities.st]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE %s PostScript transfer",
+	traceProtocol("REMOTE supports error correction mode");
+    traceProtocol("REMOTE best %s", clientCapabilities.scanlineTimeName());
+    traceProtocol("REMOTE %s PostScript transfer",
 	clientInfo.getSupportsPostScript() ? "supports" : "does not support");
 
-    traceStatus(FAXTRACE_PROTOCOL, "USE %s",
-	Class2Params::bitRateNames[clientParams.br]);
-    traceStatus(FAXTRACE_PROTOCOL, "USE %s",
-	Class2Params::scanlineTimeNames[clientParams.st]);
+    traceProtocol("USE %s", clientParams.bitRateName());
+    traceProtocol("USE %s", clientParams.scanlineTimeName());
+    if (clientParams.ec == EC_ENABLE)
+	traceProtocol("USE error correction mode");
     return (TRUE);
-}
-
-/*
- * Prepare the job for transmission by analysing
- * the page characteristics and determining whether
- * or not the page transfer parameters will have
- * to be renegotiated after the page is sent.  This
- * is done before the call is placed because it can
- * be slow and there can be timing problems if this
- * is done during transmission.
- */
-fxBool
-FaxServer::sendPrepareFax(FaxRequest& fax, FaxMachineInfo& clientInfo, fxStr& emsg)
-{
-    if (fax.pagehandling != "")		// already done
-	return (TRUE);
-    /*
-     * Scan the pages and figure out where session parameters
-     * will need to be renegotiated.  Construct a string of
-     * indicators to use when doing the actual transmission.
-     *
-     * NB: all files are coalesced into a single fax document
-     *     if possible
-     */
-    Class2Params params;		// current parameters
-    Class2Params next;			// parameters for ``next'' page
-    TIFF* tif = NULL;			// current open TIFF image
-    fax.totpages = 0;
-    for (u_int i = 0;;) {
-	if (!tif || TIFFLastDirectory(tif)) {
-	    /*
-	     * Locate the next file to be sent.
-	     */
-	    if (tif)			// close previous file
-		TIFFClose(tif), tif = NULL;
-	    if (i >= fax.ops.length())
-		goto done;
-	    FaxSendOp op = send_fax;
-	    i = fax.ops.find(op, i);
-	    if (i == fx_invalidArrayIndex)
-		goto done;
-	    tif = TIFFOpen(fax.files[i], "r");
-	    if (tif == NULL) {
-		emsg = "Can not open document file";
-		goto bad;
-	    }
-	    if (fax.dirnums[i] != 0 && !TIFFSetDirectory(tif, fax.dirnums[i])) {
-		emsg = "Can not set directory in document file";
-		goto bad;
-	    }
-	    i++;			// advance for next find
-	} else {
-	    /*
-	     * Read the next TIFF directory.
-	     */
-	    if (!TIFFReadDirectory(tif)) {
-		emsg = "Problem reading document directory";
-		goto bad;
-	    }
-	}
-	next = params;
-	if (sendSetupParams1(tif, next, clientInfo, emsg) != send_ok)
-	    goto bad;
-	if (params.df != (u_int) -1) {
-	    /*
-	     * The pagehandling string has:
-	     * 'M' = EOM, for when parameters must be renegotiated
-	     * 'S' = MPS, for when next page uses the same parameters
-	     * 'P' = EOP, for the last page to be transmitted
-	     */
-	    fax.pagehandling.append(next == params ? 'S' : 'M');
-	}
-	/*
-	 * Record the session parameters needed by each page
-	 * so that we can set the initial session parameters
-	 * as needed *before* dialing the telephone.  This is
-	 * to cope with Class 2 modems that do not properly
-	 * implement the +FDIS command.
-	 */
-	fax.pagehandling.append(next.encode());
-	params = next;
-	fax.totpages++;				// count page
-    }
-done:
-    fax.pagehandling.append('P');		// EOP
-    if (fax.totpages > maxSendPages) {
-	emsg = "Too many pages in submission (max " |
-	    fxStr((int) maxSendPages, "%u)");
-	return (FALSE);
-    }
-    return (TRUE);
-bad:
-    if (tif)
-	TIFFClose(tif);
-    return (FALSE);
 }
 
 /*
@@ -590,40 +458,37 @@ bad:
  * anything that might sneak by.
  */
 FaxSendStatus
-FaxServer::sendSetupParams1(TIFF* tif, Class2Params& params, FaxMachineInfo& clientInfo, fxStr& emsg)
+FaxServer::sendSetupParams1(TIFF* tif,
+    Class2Params& params, const FaxMachineInfo& clientInfo, fxStr& emsg)
 {
-    short compression;
+    uint16 compression;
     (void) TIFFGetField(tif, TIFFTAG_COMPRESSION, &compression);
     if (compression != COMPRESSION_CCITTFAX3) {
-	emsg = "Document is not in a Group 3-compatible format";
-	traceStatus(FAXTRACE_SERVER, "SEND: %s (file %s, compression %d)",
-	    (char*) emsg, TIFFFileName(tif), compression);
+	emsg = fxStr::format("Document is not in a Group 3-compatible"
+	    " format (compression %u)", compression);
 	return (send_failed);
     }
 
     // XXX perhaps should verify samples and bits/sample???
-    long g3opts;
+    uint32 g3opts;
     if (!TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts))
 	g3opts = 0;
     if (g3opts & GROUP3OPT_2DENCODING) {
 	if (!clientInfo.getSupports2DEncoding()) {
 	    emsg = "Document was encoded with 2DMR,"
 		   " but client does not support this data format";
-	    traceStatus(FAXTRACE_SERVER, "REJECT: %s", (char*) emsg);
 	    return (send_reformat);
 	}
 	params.df = DF_2DMR;
     } else
 	params.df = DF_1DMR;
 
-    u_long w;
+    uint32 w;
     (void) TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
-    if (w > clientInfo.getMaxPageWidth()) {
-	emsg = "Client does not support document page width";
-	traceStatus(FAXTRACE_SERVER,
-	    "REJECT: %s, max remote page width %u pixels"
-		 ", image width %lu pixels",
-	    (char*) emsg, clientInfo.getMaxPageWidth(), w);
+    if (w > clientInfo.getMaxPageWidthInPixels()) {
+	emsg = fxStr::format("Client does not support document page width"
+		", max remote page width %u pixels, image width %lu pixels",
+		clientInfo.getMaxPageWidthInPixels(), w);
 	return (send_reformat);
     }
     // NB: only common values
@@ -653,10 +518,8 @@ FaxServer::sendSetupParams1(TIFF* tif, Class2Params& params, FaxMachineInfo& cli
     }
     if (yres >= 7.) {
 	if (!clientInfo.getSupportsHighRes()) {
-	    emsg = "High resolution document is not supported by client";
-	    traceStatus(FAXTRACE_SERVER,
-		"REJECT: %s, image resolution %g lines/mm",
-		(char*) emsg, yres);
+	    emsg = fxStr::format("High resolution document is not supported"
+		          " by client, image resolution %g lines/mm", yres);
 	    return (send_reformat);
 	}
 	params.vr = VR_FINE;
@@ -671,16 +534,15 @@ FaxServer::sendSetupParams1(TIFF* tif, Class2Params& params, FaxMachineInfo& cli
      * to take into account sloppy coding practice (e.g.
      * using 200 dpi for high-res facsimile.
      */
-    if (clientInfo.getMaxPageLength() != -1) {
+    if (clientInfo.getMaxPageLengthInMM() != -1) {
 	u_long h = 0;
 	(void) TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
 	float len = h / yres;			// page length in mm
-	if (len > clientInfo.getMaxPageLength()) {
-	    emsg = "Client does not support document page length";
-	    traceStatus(FAXTRACE_SERVER,
-		"REJECT: %s, max remote page length %d mm"
-		    ", image length %lu rows (%.2f mm)",
-		(char*) emsg, clientInfo.getMaxPageLength(), h, len);
+	if ((int) len > clientInfo.getMaxPageLengthInMM()) {
+	    emsg = fxStr::format("Client does not support document page length"
+			  ", max remote page length %d mm"
+			  ", image length %lu rows (%.2f mm)",
+		clientInfo.getMaxPageLengthInMM(), h, len);
 	    return (send_reformat);
 	}
 	// 330 is chosen 'cuz it's half way between A4 & B4 lengths
@@ -691,18 +553,18 @@ FaxServer::sendSetupParams1(TIFF* tif, Class2Params& params, FaxMachineInfo& cli
 }
 
 FaxSendStatus
-FaxServer::sendSetupParams(TIFF* tif, Class2Params& params, FaxMachineInfo& clientInfo, fxStr& emsg)
+FaxServer::sendSetupParams(TIFF* tif, Class2Params& params, const FaxMachineInfo& clientInfo, fxStr& emsg)
 {
     FaxSendStatus status = sendSetupParams1(tif, params, clientInfo, emsg);
     if (status == send_ok) {
-	traceStatus(FAXTRACE_PROTOCOL, "USE %s",
-	    Class2Params::pageWidthNames[params.wd]);
-	traceStatus(FAXTRACE_PROTOCOL, "USE %s",
-	    Class2Params::pageLengthNames[params.ln]);
-	traceStatus(FAXTRACE_PROTOCOL, "USE %s",
-	    Class2Params::vresNames[params.vr]);
-	traceStatus(FAXTRACE_PROTOCOL, "USE %s",
-	    Class2Params::dataFormatNames[params.df]);
+	traceProtocol("USE %s", params.pageWidthName());
+	traceProtocol("USE %s", params.pageLengthName());
+	traceProtocol("USE %s", params.verticalResName());
+	traceProtocol("USE %s", params.dataFormatName());
+    } else if (status == send_reformat) {
+	traceServer(emsg);
+    } else if (status == send_failed) {
+	traceServer("REJECT: " | emsg);
     }
     return (status);
 }

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/TypeRules.c++,v 1.17 1994/02/28 14:24:23 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/TypeRules.c++,v 1.21 1995/04/08 21:44:38 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -32,12 +33,18 @@
 #include <string.h>
 #include <stdlib.h>
 
-TypeRule::TypeRule()
+TypeRule::TypeRule() {}
+TypeRule::~TypeRule() {}
+TypeRule::TypeRule(const TypeRule& other)
+    : fxObj(other)
+    , cmd(other.cmd)
 {
-}
-
-TypeRule::~TypeRule()
-{
+    off = other.off;
+    cont = other.cont;
+    type = other.type;
+    op = other.op;
+    value.v = other.value.v;
+    result = other.result;
 }
 
 static const char* typeNames[] =

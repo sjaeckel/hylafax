@@ -1,0 +1,19 @@
+# $Header: /usr/people/sam/fax/./port/irix/RCS/so_locations,v 1.1 1995/02/05 06:19:15 sam Rel $
+#
+# Layout for HylaFAX DSO's.
+#
+libfaxserver.so \
+		:st = $range 0x51000000, 0x00200000:\
+		:st =  .text 0x51000000, 0x00040000:\
+		:st =  .data 0x510e0000, 0x00010000:\
+
+libtiff.so \
+		:st = $range 0x51000000, 0x00400000:\
+		:st =  .text 0x51040000, 0x00020000:\
+		:st =  .data 0x510b0000, 0x00030000:\
+
+libfaxutil.so \
+		:st = $range 0x51000000, 0x00400000:\
+		:st =  .text 0x51060000, 0x00040000:\
+		:st =  .data 0x510a0000, 0x00010000:\
+

@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/notify.1m,v 1.9 1994/06/24 02:32:04 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/notify.1m,v 1.18 1995/04/08 21:36:00 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993, 1994 Sam Leffler
-.\" Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1995 Sam Leffler
+.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,8 +25,9 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.ds Ps P\s-1OST\s+1S\s-1CRIPT\s+1
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
 .TH NOTIFY 1M "June 14, 1994"
 .SH NAME
 notify \- \*(Fx user notification script
@@ -42,32 +44,33 @@ notify \- \*(Fx user notification script
 .SH DESCRIPTION
 .B bin/notify
 is the command script invoked by the facsimile server to notify a
-user about the status of an outgoing facsimile job.
+user about the status of an outbound job.
 The default notification script sends the appropriate user
 electronic mail describing the event or action.
 The arguments are:
 .TP 10
 .B qfile
-the pathname of the job description file relative.
+the pathname of the job description file.
 .TP
 .B why
 a string that specifies why the user is being notified; one of:
 .sp .5
 .nf
 .ta  +\w'poll_no_document    'u +\w'Notes    'u
-\fBWhy\fP	Notes	\fBMeaning\fP
-done		job was completed successfully
-failed	\(dg \(dd	job was not completed
-requeued	\(dd	job was not completed, but was requeued for retry
-removed		job was deleted from the queue
-killed	\(dg	job was deleted from the queue
-timedout	\(dg	job could not be sent after repeated attempts
-format_failed	\(dg	conversion of \*(Ps failed
-no_formatter	\(dg	the \*(Ps to facsimile conversion program was not found
-poll_rejected		a polling request was rejected by the remote side
-poll_no_document		a polling request failed because nothing was available
-poll_failed		a polling request failed for an unknown reason
-file_rejected		a submitted file was rejected, usually because of format
+\fBWhy\fP	\fBNotes\fP	\fBMeaning\fP
+\fIdone\fP		job was completed successfully
+\fIfailed\fP	\(dg \(dd	job was not completed
+\fIrejected\fP	\(dg	job was rejected for specified reasons
+\fIblocked\fP		job is blocked by concurrent jobs
+\fIrequeued\fP	\(dd	job was not completed, but was requeued for retry
+\fIremoved\fP		job was deleted from the queue
+\fIkilled\fP	\(dg	job was deleted from the queue
+\fItimedout\fP	\(dg	job could not be sent after repeated attempts
+\fIformat_failed\fP	\(dg	conversion of \*(Ps failed
+\fIno_formatter\fP	\(dg	the \*(Ps to facsimile conversion program was not found
+\fIpoll_rejected\fP		a polling request was rejected by the remote side
+\fIpoll_no_document\fP		a polling request failed because nothing was available
+\fIpoll_failed\fP		a polling request failed for an unknown reason
 .sp .5
 .fi
 \(dg Any pages that were not sucessfully transmitted should be
@@ -83,11 +86,11 @@ the total transmission time of a successful job or the connect
 time of a failed request (passed as a string).
 .TP
 .B pid
-the process identifier of the facsmile server process that invoked
-the notification service.
+the process identifier of the \*(Fx process that processed the
+job (used for locating communication transcripts).
 .TP 
 .B number
-the canonical phone number of the destination facsimile machine.
+the canonical phone number of the destination.
 .TP
 .B nextTry
 the time (passed as a string) at which the next attempt will be
@@ -111,7 +114,7 @@ bin/transcript	for returning communication transcript
 /usr/lib/sendmail	for delivering mail
 .fi
 .SH "SEE ALSO"
-.IR faxd (1M),
+.IR faxq (1M),
 .IR transcript (1M),
-.IR flexfax (4F),
+.IR hylafax (4F),
 .IR sendq (4F)

@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/faxrm.1,v 1.10 1994/06/24 01:17:01 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/faxrm.1,v 1.21 1995/04/08 21:35:49 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,9 +25,11 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.TH FAXRM 1 "January 15, 1993"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH FAXRM 1 "December 22, 1994"
 .SH NAME
-faxrm \- remove a facsimile job queued for transmission
+faxrm \- remove a \*(Fx job queued for transmission
 .SH SYNOPSIS
 .B faxrm
 [
@@ -35,43 +38,67 @@ faxrm \- remove a facsimile job queued for transmission
 .B \-h
 .I hostname
 ]
-.IR jobid ...
+.IR id ...
 .SH DESCRIPTION
-.I Faxrm
-removes one or more facsimile jobs that
+.I faxrm
+removes one or more \*(Fx jobs that
 are queued for transmission.
 If a job that is to be removed is being processed by a server,
 it is first aborted.
 .PP
-A 
-.I jobid
-is the number printed by
+An 
+.I id
+is a number that identifies a
+.I job
+(default) or
+.I "job group"
+submitted to \*(Fx; these numbers are printed by
 .IR sendfax (1)
-when a job is queued for transmission.
-This number can also be obtained from
+when jobs are queued for transmission.
+Job and job group identifiers can also be obtained from
 .IR faxstat (1).
 .PP
 Users can only remove jobs that they
 have queued;
 except the
 .I fax
-user who can remove any job.
-.PP
-By default,
-.I faxrm
-contacts the facsimile server on the host specified
-in the
-.B FAXSERVER
-environment variable.
-This can be overridden with the
+user and the super-user who can remove any job.
+.SH OPTIONS
+.TP 10
+.B \-g
+Interpret each
+.I id
+as a
+.IR "job group identifier" .
+A job group identifier is the number assigned by \*(Fx
+to each group of jobs submitted together.
+This number is printed by
+.I sendfax
+when jobs are submitted.
+.TP 10
+.BI \-h " host"
+Force the server to be contacted on a specific
+.IR host .
+The
+.I host
+may be either a symbolic name or a network address.
+If no
 .B \-h
-option.
-.PP
-By default jobs are removed and their contents are discarded.
-If the
+option is supplied,
+.I faxrm
+uses the
+.SM FAXSERVER
+environment variable to identify the \*(Fx server to
+which the jobs should be directed.
+If no server is specified then
+.I faxrm
+attempts to contact a server on the local host.
+.TP
 .B \-k
-option is specified the untransmitted portion of the job
-will be returned to the sender by electronic mail.
+Force any untransmitted portions of the jobs
+to be returned to the sender by electronic mail.
+By default,
+jobs that are removed have their contents discarded.
 .SH DIAGNOSTICS
 .B "Job %s removed." 
 A confirmation that the operation was completed successfully.
@@ -101,20 +128,27 @@ the server was unable to deduce the identity under which
 it was executing.  That is, there was no password file
 entry for the server's effective user id.
 This (usually) indicates that the entry in the file
-.I ${USRETC}/inetd.conf
+.I /usr/etc/inetd.conf
 on the remove machine is setup wrong; see
 .IR faxd.recv (1M)
 for more information.
 .PP
 .B "Job %s not removed: you neither own it nor are the fax user."
 A request was made to remove a job that the user does not own
-(and the user is not the ``fax'' user).
+(and the user is not the ``fax'' user or the super-user).
+.PP
+.B "Service refused; you do not have permission to use the fax server from %s."
+The client is not permitted to remove
+jobs on this server from the indicated host.
+Only those hosts and users listed in the file
+.B etc/hosts
+on the server machine are permitted to remove jobs.
 .SH BUGS
-.I Faxrm
+.I faxrm
 must be run on the same host on which the job was
 submitted.
 .SH "SEE ALSO"
-.IR flexfax (1),
+.IR hylafax (1),
 .IR sendfax (1),
 .IR faxalter (1),
 .IR faxstat (1),

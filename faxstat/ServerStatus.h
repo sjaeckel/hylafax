@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxstat/RCS/ServerStatus.h,v 1.8 1994/06/06 21:35:57 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxstat/RCS/ServerStatus.h,v 1.12 1995/04/08 21:34:48 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -35,6 +36,7 @@ struct FaxServerStatus : public fxObj {
     fxStr	modem;		// modem used by server
 
     FaxServerStatus();
+    FaxServerStatus(const FaxServerStatus& other);
     ~FaxServerStatus();
 
     int compare(const FaxServerStatus* other) const;

@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/mkcover.1m,v 1.4 1994/06/24 02:32:04 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/mkcover.1m,v 1.12 1995/04/08 21:35:59 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1994 Sam Leffler
-.\" Copyright (c) 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1994-1995 Sam Leffler
+.\" Copyright (c) 1994-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,8 +25,9 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.ds Ps P\s-1OST\s+1S\s-1CRIPT\s+1
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
 .TH MKCOVER 1M "June 20, 1994"
 .SH NAME
 mkcover \- \*(Fx continuation cover page generation command
@@ -41,23 +43,24 @@ is the command invoked by the facsimile server when a
 is required for an outbound job that is about to be retried.
 It generates a single \*(Ps\(tm page that is imaged according
 to the remote capabilities and transmitted as the cover page.
-The
-.I qfile
-is the job description file for the outbound job.
-The
-.I template
-argument is the cover page template file, as used by the
+The arguments are:
+.TP 10
+.B qfile
+the job description file for the outbound job.
+.TP
+.B template
+the cover page template file, as used by the
 .IR faxcover (1)
 program.
-The
-.I result
-argument is the filename where the resultant \*(Ps document
+.TP
+.B result
+the filename where the resultant \*(Ps document
 should be written.
 .PP
 The default
 .I mkcover
 command is a shell script that uses
-.I awk
+.IR awk (1)
 to parse the job description file and generate the cover page document.
 The
 .I template
@@ -69,6 +72,6 @@ or
 the filename suffix is used to decide whether or not the template
 file contains compressed data.
 .SH "SEE ALSO"
-.IR faxd (1M),
+.IR faxq (1M),
 .IR config (4F),
 .IR sendq (4F)

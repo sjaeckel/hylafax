@@ -1,0 +1,37 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: How do I force HylaFAX to set the tty device to mode 664?
+</TITLE></HEAD><BODY>
+<H1>Q31: How do I force HylaFAX to set the tty device to mode 664?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=How+do+I+force+HylaFAX+to+set+the+tty+device+to+mode+664%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>How do I force FlexFAX to set the tty device to mode 664? </I>
+<P>
+I'm running flexfax v2.1.0 on a Sun Sparc, and it works fine. 
+The only problem I'm having is that after I halt the faxd server using
+faxquit, my modem's tty, /dev/dialer0, has had it's file permissions
+changed to 600, so as tip won't work unless I su to root and chmod the
+file back to 664.  Not a big deal, but kind of weird...
+<P>
+<DT>A.
+<DD>Look at the
+<B>DeviceMode</B>
+configuration parameter in
+<A HREF="@CGIPATH@/manpage?4+config">config(4F)</A>;
+it can be used to control
+the protection mode that HylaFAX sets for the tty device
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

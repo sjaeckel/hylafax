@@ -1,0 +1,195 @@
+#	$Header: /usr/people/sam/fax/./html/RCS/Makefile.in,v 1.21 1995/04/08 21:45:37 sam Rel $
+#
+# @WARNING@
+#
+# HylaFAX Facsimile Software
+#
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+#
+# VERSION:	@VERSION@
+# DATE:		@DATE@
+# TARGET:	@TARGET@
+#
+COMMONPREF=html
+
+#
+# This directory contains online HTML documentation for HylaFAX.
+#
+DEPTH=..
+@MAKEINCLUDE@ @MAKELQUOTE@${DEPTH}/defs@MAKERQUOTE@
+
+SRCDIR	= ${DEPTH}/${TOPSRCDIR}/html
+
+HTML_SRCS=\
+    ${SRCDIR}/acknowledge.html			\
+    ${SRCDIR}/class1.html			\
+    ${SRCDIR}/class2.0.html			\
+    ${SRCDIR}/class2.html			\
+    ${SRCDIR}/contrib.html			\
+    ${SRCDIR}/copyright.html			\
+    ${SRCDIR}/faxgateway.html			\
+    ${SRCDIR}/hylafax.html			\
+    ${SRCDIR}/install-source.html		\
+    ${SRCDIR}/modems.html			\
+    ${SRCDIR}/namechange.html			\
+    ${SRCDIR}/survey-help.html			\
+    ${SRCDIR}/survey-query.html			\
+    ${SRCDIR}/version.html			\
+    ${SRCDIR}/ftpmail-help.html			\
+    ${SRCDIR}/v2.3beta036special.html		\
+    ${SRCDIR}/v3.0beta096.html			\
+    ${SRCDIR}/v3.0beta100.html			\
+    ${SRCDIR}/v3.0beta108.html			\
+    ${SRCDIR}/v3.0beta110.html			\
+    ${SRCDIR}/v3.0beta111.html			\
+    ${SRCDIR}/v3.0beta112.html			\
+    ${SRCDIR}/v3.0beta113.html			\
+    ${SRCDIR}/Modems/Supra/class2.html		\
+    ${SRCDIR}/Modems/Supra/class1.html		\
+    ${SRCDIR}/Modems/Hayes/hayes.html		\
+    ${NULL}
+HTML_CONFIGS=\
+    HOWTO.html					\
+    binary.html					\
+    building.html				\
+    documentation.html				\
+    ghostscript.html				\
+    index.html					\
+    install-binary.html				\
+    mailing-lists.html				\
+    operation.html				\
+    overview.html				\
+    sam.html					\
+    setup.html					\
+    setup-advanced.html				\
+    setup-client.html				\
+    source.html					\
+    survey.html					\
+    toc.html					\
+    troubleshooting.html			\
+    v2.3beta036.html				\
+    Majordomo/help.html				\
+    Modems/index.html				\
+    Modems/att-dataport.html			\
+    Modems/digicom-scout.html			\
+    Modems/everex-2496d.html			\
+    Modems/hayes-optima2400.html		\
+    Modems/multitech-1432.html			\
+    Modems/multitech-1932.html			\
+    Modems/nuvo-96424pfx.html			\
+    Modems/ppi-pm14400fxmt.html			\
+    Modems/supra-v32bis.html			\
+    Modems/telebit-t3000.html			\
+    Modems/twincom-144df.html			\
+    Modems/ucom-traveller96.html		\
+    Modems/usr-courier.html			\
+    Modems/usr-sportster.html			\
+    Modems/zyxel-1496.html			\
+    Modems/Telebit/faxcmds.html			\
+    Modems/ZyXEL/autodetect.html		\
+    Modems/ZyXEL/codes.html			\
+    Modems/ZyXEL/commands.html			\
+    Modems/ZyXEL/compression.html		\
+    Modems/ZyXEL/examples.html			\
+    Modems/ZyXEL/voice.html			\
+    ${NULL}
+HTML_DOCS=${HTML_SRCS} ${HTML_CONFIGS}
+ICONS_DOCS=\
+    ${SRCDIR}/icons/at_work_icon.gif		\
+    ${SRCDIR}/icons/ball_blue_icon.gif		\
+    ${SRCDIR}/icons/button.excl.gif		\
+    ${SRCDIR}/icons/back.gif			\
+    ${SRCDIR}/icons/improved.gif		\
+    ${SRCDIR}/icons/info_icon.gif		\
+    ${SRCDIR}/icons/new.gif			\
+    ${SRCDIR}/icons/next.gif			\
+    ${SRCDIR}/icons/smiley.gif			\
+    ${SRCDIR}/icons/warning_icon.gif		\
+    ${NULL}
+ICONS_FAQ=\
+    ${SRCDIR}/icons/faq.new.gif			\
+    ${SRCDIR}/icons/faq.old.gif			\
+    ${SRCDIR}/icons/faq.updated.gif		\
+    ${SRCDIR}/icons/faq-feedback.gif		\
+    ${SRCDIR}/icons/smiley.gif			\
+    ${SRCDIR}/icons/button.excl.gif		\
+    ${NULL}
+OTHER=\
+    ${SRCDIR}/Majordomo/flexfax.info		\
+    ${SRCDIR}/Majordomo/flexfax-announce.info	\
+    ${NULL}
+TARGETS	=
+
+default all::
+	@${MAKE} tools
+
+targets: ${TARGETS}
+
+@MAKEINCLUDE@ @MAKELQUOTE@${COMMONRULES}@MAKERQUOTE@
+
+tools::
+	@${ECHO} "= tools"; cd tools; ${MAKE}
+
+installDocs::
+	${INSTALL} -u ${SYSUSER} -g ${SYSGROUP} -m ${DIRMODE}		\
+	    -idb hylafax.html.docs -dir					\
+	    ${HTMLDIR}							\
+	    ${HTMLDIR}/icons 						\
+	    ${HTMLDIR}/Modems						\
+	    ${HTMLDIR}/Modems/Telebit					\
+	    ${HTMLDIR}/Modems/Supra					\
+	    ${HTMLDIR}/Modems/ZyXEL					\
+	    ${HTMLDIR}/Modems/Hayes 					\
+	    ${HTMLDIR}/Majordomo
+	@for i in ${HTML_DOCS} ${ICONS_DOCS} ${OTHER}; do		\
+	    f=`${ECHO} $$i | ${SED} 's;${SRCDIR}/;;'`;			\
+	    ${ECHO} "${INSTALL} -F ${HTMLDIR} -m 444 -idb ${PRODUCT}.html.docs -src $$i -O $$f";		\
+	    ${INSTALL} -F ${HTMLDIR} -m 444				\
+		-idb ${PRODUCT}.html.docs -src $$i -O $$f;		\
+	done
+installFAQ::
+	${INSTALL} -u ${SYSUSER} -g ${SYSGROUP} -m ${DIRMODE}		\
+	    -idb hylafax.html.faq -dir					\
+	    ${HTMLDIR}							\
+	    ${HTMLDIR}/FAQ						\
+	    ${HTMLDIR}/icons
+	@for i in FAQ/*.html ${ICONS_FAQ}; do				\
+	    f=`${ECHO} $$i | ${SED} 's;${SRCDIR}/;;'`;			\
+	    ${ECHO} "${INSTALL} -F ${HTMLDIR} -m 444 -idb ${PRODUCT}.html.faq -src $$i -O $$f";		\
+	    ${INSTALL} -F ${HTMLDIR} -m 444				\
+		-idb ${PRODUCT}.html.faq -src $$i -O $$f;		\
+	done
+
+install: default installDocs installFAQ
+	@${ECHO} "= tools"; cd tools; ${MAKE} install
+
+clean::
+	@${ECHO} "= tools"; cd tools; ${MAKE} clean
+
+clobber::
+	@${ECHO} "= tools"; cd tools; ${MAKE} clobber
+	-${RM} -f ${HTML_CONFIGS} FAQ/*.html
+	-${RM} -f Makefile ${MKDEPFILE} .*dependtime .*incdepend

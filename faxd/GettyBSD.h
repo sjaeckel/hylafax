@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/GettyBSD.h,v 1.18 1994/02/28 14:14:36 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/GettyBSD.h,v 1.24 1995/04/08 21:30:42 sam Rel $ */
 /*
- * Copyright (c) 1993, 1994 Sam Leffler
- * Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1995 Sam Leffler
+ * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -32,22 +33,22 @@
 
 struct utmp;
 
-class BSDGetty : public Getty {
-private:
-    fxStr	argbuf;		// argv values
-    const char** argv;		// getty argv array
-
-    void setupState(const char* args);
+class BSDSubProc : public Getty {
+protected:
     void setupSession(int modemFd);
+public:
+    BSDSubProc(const char* path, const fxStr& dev, const fxStr& speed);
+    ~BSDSubProc();
+};
+
+class BSDGetty : public BSDSubProc {
+private:
     void writeWtmp(utmp* ut);
     void logout(const char* line);
 public:
-    BSDGetty(const fxStr& dev, const fxStr& speed, u_int timeout = 60);
+    BSDGetty(const char* path, const fxStr& dev, const fxStr& speed);
     ~BSDGetty();
 
-    static fxBool isBSDGetty();
-
-    fxBool wait(int& status, fxBool block = FALSE);
     void hangup();
 };
 #endif /* _BSDGETTY_ */

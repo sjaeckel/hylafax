@@ -1,0 +1,94 @@
+<HTML>
+<HEAD>
+<TITLE>
+HylaFAX Mailing List and Other Final Words
+</TITLE>
+</HEAD>
+
+<BODY>
+
+<BASEFONT SIZE=4>
+<B><FONT SIZE=+3>H</FONT>YLA<FONT SIZE=+1>FAX</FONT> <FONT SIZE=+2>M</FONT>AILING <FONT SIZE=+2>L</FONT>IST AND <FONT SIZE=+2>O</FONT>THER <FONT SIZE=+2>F</FONT>INAL <FONT SIZE=+2>W</FONT>ORDS</B>
+<BASEFONT SIZE=3>
+
+<HR SIZE=4>
+
+There are two mailing lists for users of the HylaFAX software:
+<UL>
+<LI><A HREF="Majordomo/flexfax.info">flexfax@sgi.com</A>, a public list for all users of the HylaFAX software;
+<LI><A HREF="Majordomo/flexfax-announce.info">flexfax-announce@sgi.com</A>, a low volume list
+where announcements of new versions of HylaFAX are posted.
+</UL>
+
+Note that <KBD>flexfax@sgi.com</KBD> tends to have a
+fair amount of traffic about the server-side software;
+if you are not running a fax server it may not be worth joining.
+Beware also that this mailing list has many people on it.  Please take this
+into consideration when posting notes to it; i.e. <EM>avoid posting large
+trace logs and the such</EM>.  Also, when corresponding about this software
+please always specify:
+
+<UL>
+<LI>
+what version you have (check <A HREF="version.html">here</A>
+if you are unsure of your software version),
+<LI>
+what system you're running on, and,
+<LI>
+if the problem is modem-related, identify the modem and the firmware revision.
+</UL>
+
+For example: "HylaFAX v2.3.0alpha99 under Solaris 2.3 with gcc 2.5.7;
+ZyXEL 1496E with 6.11a firmware."
+
+<P>
+Note that there is no need to subscribe to both
+the <KBD>flexfax</KBD> and <KBD>flexfax-announce</KBD>
+mailing lists; postings to
+the announcement list are automatically fed to the normal
+<KBD>flexfax</KBD> list.
+
+All lists are maintained with the
+<A HREF="Majordomo/help.html">Majordomo</A>
+mailing list software.
+If you want to subscribe to any of these lists,
+you can use the form below, or
+send electronic mail to
+<A HREF="mailto:Majordomo@engr.sgi.com">Majordomo@engr.sgi.com</A>.
+
+<FORM  METHOD="query" ACTION="@CGIPATH@/majordomo">
+<UL>
+<HR WIDTH=85% ALIGN=left>
+Subscribe	<INPUT TYPE=checkbox NAME=req1 VALUE="subscribe flexfax" CHECKED>
+<KBD>flexfax@sgi.com</KBD>
+<BR>
+Subscribe     <INPUT TYPE=checkbox NAME=req2 VALUE="subscribe flexfax-announce">
+<KBD>flexfax-announce@sgi.com</KBD>
+<BR>
+EMail Address: <INPUT NAME="mailaddr" SIZE="45">
+<INPUT TYPE=hidden VALUE=3 NAME=nrequests>
+<INPUT TYPE=hidden VALUE=engr.sgi.com NAME=majordomo>
+<INPUT TYPE=submit VALUE="Submit to Majordomo@engr.sgi.com">
+<HR WIDTH=85% ALIGN=left>
+</UL>
+</FORM>
+
+<P>
+If you have not previously done so, please fill out and submit the
+<A HREF="survey.html">survey form</A>.
+The information provided in this form is purely for use in
+assisting users of HylaFAX.
+
+<P>
+<A HREF="toc.html"><IMG SRC="icons/back.gif"> HylaFAX table
+of contents</A>.<BR>
+
+<HR>
+
+<ADDRESS>
+<A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+Last updated $Date: 1995/02/20 01:21:22 $.
+</ADDRESS>
+
+</BODY>
+</HTML>

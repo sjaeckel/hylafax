@@ -1,0 +1,2529 @@
+#! @SCRIPT_SH@
+#	$Header: /usr/people/sam/fax/./etc/RCS/faxaddmodem.sh.in,v 1.155 1995/04/08 21:16:59 sam Rel $
+#
+# @WARNING@
+#
+# HylaFAX Facsimile Software
+#
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+#
+# VERSION:	@VERSION@
+# DATE:		@DATE@
+# TARGET:	@TARGET@
+#
+
+#
+# faxaddmodem [tty]
+#
+# This script interactively configures a HylaFAX server
+# from keyboard input on a standard terminal.  There may
+# be some system dependencies in here; hard to say with
+# this mountain of shell code!
+#
+PATH=/bin:/usr/bin:/etc
+test -d /usr/ucb  && PATH=$PATH:/usr/ucb		# Sun and others
+test -d /usr/bsd  && PATH=$PATH:/usr/bsd		# Silicon Graphics
+test -d /usr/5bin && PATH=/usr/5bin:$PATH:/usr/etc	# Sun and others
+test -d /usr/sbin && PATH=/usr/sbin:$PATH		# 4.4BSD-derived
+test -d /usr/local/bin && PATH=$PATH:/usr/local/bin	# for GNU tools
+
+AWK=@AWK@			# awk for use below
+SH=@SCRIPT_SH@			# shell for use below
+SED=@SED@			# sed for use below
+
+OS=`uname -s 2>/dev/null || echo unknown`		# system identification
+case "$OS" in
+# believable values...
+IRIX|*BSD*|*bsd*|Linux|ULTRIX|HP-UX) ;;
+*)  if [ -d /etc/saf ]; then
+	# uname -s is unreliable on svr4 as it can return the nodename
+	OS=svr4
+    fi
+    ;;
+esac
+SPEED=
+
+while [ x"$1" != x"" ] ; do
+    case $1 in
+    -os)    OS=$2; shift;;
+    -s)	    SPEED=$2; shift;;
+    -*)	    echo "Usage: $0 [-os OS] [-s SPEED] [ttyname]"; exit 1;;
+    *)	    TTY=$1;;
+    esac
+    shift
+done
+
+#
+# Deduce the effective user id:
+#   1. POSIX-style, the id program
+#   2. the old whoami program
+#   3. last gasp, check if we have write permission on /dev
+#
+euid=`id|$SED -e 's/.*uid=[0-9]*(\([^)]*\)).*/\1/'`
+test -z "$euid" && euid=`(whoami) 2>/dev/null`
+test -z "$euid" -a -w /dev && euid=root
+if [ "$euid" != "root" ]; then
+    echo "Sorry, but you must run this script as the super-user!"
+    exit 1
+fi
+
+#
+# Find the full pathname of a file
+# using the specified test operation.
+#
+findThing()
+{
+    t="$1"; app=$2; path=$3;
+    case $app in
+    /*) eval $t $app && { echo $app; return; };;
+    esac
+    IFS=:
+    for i in $path; do
+	eval $t $i/$app && { echo $i/$app; return; }
+    done
+}
+
+#
+# Find the full pathname of an executable.
+#
+findApp()
+{
+    findThing "test -x" $1 $2
+}
+
+SPOOL=@SPOOL@			# top of fax spooling tree
+CPATH=$SPOOL/etc/config		# prefix of configuration file
+LOCKDIR=@UUCP_LOCKDIR@		# UUCP locking directory
+OUT=/tmp/addmodem$$		# temp file in which modem output is recorded
+SVR4UULCKN=@LIBEXEC@/lockname	# SVR4 UUCP lock name construction program
+ONDELAY=@LIBEXEC@/ondelay	# prgm to open devices blocking on carrier
+CAT="@CAT@ -u"			# something to do unbuffered reads and writes
+FAX=fax				# identity of the fax user
+SERVICES=/etc/services		# location of services database
+INETDCONF=/usr/etc/inetd.conf	# default location of inetd configuration file
+ALIASES=/usr/lib/aliases	# default location of mail aliases database file
+SGIPASSWD=/etc/passwd.sgi	# for hiding fax user from pandor on SGI's
+PASSWD=/etc/passwd		# where to go for password entries
+PROTOUID=@FAXUID@		# user who's uid we use for FAX user
+defPROTOUID=3			# use this uid if PROTOUID doesn't exist
+GROUP=/etc/group		# where to go for group entries
+PROTOGID=@FAXGID@		# group who's gid we use for FAX user
+defPROTOGID=10			# use this gid if PROTOGID doesn't exist
+SERVERDIR=@LIBEXEC@		# directory where servers are located
+QUIT=$SPOOL/bin/faxquit		# cmd to terminate server
+MODEMCONFIG=$SPOOL/config	# location of prototype modem config files
+
+#
+# Deal with known alternate locations for system files.
+#
+PickFile()
+{
+    for i do
+	test -f $i && { echo $i; return; }
+    done
+    echo $1
+}
+INETDCONF=`PickFile	$INETDCONF /etc/inetd.conf /etc/inet/inetd.conf`
+ALIASES=`PickFile	$ALIASES   /etc/aliases`
+SERVICES=`PickFile	$SERVICES  /etc/inet/services`
+test -f /etc/master.passwd			&& PASSWD=/etc/master.passwd
+
+#
+# Setup the password file manipulation functions according
+# to whether we have System-V style support through the
+# passmgmt program, or BSD style support through the chpass
+# program.  If neither are found, we setup functions that
+# will cause us to abort if we need to munge the password file.
+#
+if [ -f /bin/passmgmt -o -f /usr/sbin/passmgmt ]; then
+    addPasswd()
+    {
+	passmgmt -o -a -c 'Facsimile Agent' -h $4 -u $2 -g $3 $1
+    }
+    deletePasswd()
+    {
+	passmgmt -d $1
+    }
+    modifyPasswd()
+    {
+	passmgmt -m -h $4 -u $2 -o -g $3 $1
+    }
+    lockPasswd()
+    {
+	passwd -l $1
+    }
+elif [ -f /usr/bin/chpass ]; then
+    addPasswd()
+    {
+	chpass -a "$1:*:$2:$3::0:0:Facsimile Agent:$4:"
+    }
+    modifyPasswd()
+    {
+	chpass -a "$1:*:$2:$3::0:0:Facsimile Agent:$4:"
+    }
+    lockPasswd()
+    {
+	return 0				# entries are always locked
+    }
+elif [ "$OS" = "Linux" -a -f /usr/sbin/useradd ]; then
+    addPasswd()
+    {
+	useradd -m -c 'Facsimile Agent' -d $4 -u $2 -o -g $3 $1
+    }
+    deletePasswd()
+    {
+	userdel -r $1
+    }
+    modifyPasswd()
+    {
+	usermod -m -d $4 -u $2 -o -g $3 $1
+    }
+    lockPasswd()
+    {
+	return 0
+    }
+elif [ -f /etc/useradd -o -f /usr/sbin/useradd ]; then
+    addPasswd()
+    {
+	useradd -c 'Facsimile Agent' -d $4 -u $2 -o -g $3 $1
+    }
+    deletePasswd()
+    {
+	userdel $1
+    }
+    modifyPasswd()
+    {
+	usermod -m -d $4 -u $2 -o -g $3 $1
+    }
+    lockPasswd()
+    {
+	passwd -l $1
+    }
+else
+    addPasswd()
+    {
+	cat<<EOF
+Help, I don't know how to add a passwd entry!
+
+You will have to create the password entry manually using the following info:
+
+Login Name: $1
+Password:   *
+Uid:        $2
+Gid:        $3
+Full Name:  Facsimile Agent
+Home Dir:   $4
+
+EOF
+        exit 1
+    }
+    modifyPasswd()
+    {
+	cat<<EOF
+Help, I don't know how to modify a passwd entry!
+
+You will have to update the password entry manually using the following info:
+
+Login Name: $1
+Password:   *
+Uid:        $2
+Gid:        $3
+Full Name:  Facsimile Agent
+Home Dir:   $4
+
+EOF
+        exit 1
+    }
+fi
+
+#
+# Figure out which brand of echo we have and define
+# prompt and printf shell functions accordingly.
+# Note that we assume that if the System V-style
+# echo is not present, then the BSD printf program
+# is available.
+#
+if [ `echo foo\\\c`@ = "foo@" ]; then
+    # System V-style echo supports \r
+    # and \c which is all that we need
+    prompt()
+    {
+       echo "$* \\c"
+    }
+    printf()
+    {
+       echo "$*\\c"
+    }
+elif [ "`echo -n foo`@" = "foo@" ]; then
+    # BSD-style echo; use echo -n to get
+    # a line without the trailing newline
+    prompt()
+    {
+       echo -n "$* "
+    }
+else
+    # something else; do without
+    prompt()
+    {
+	echo "$*"
+    }
+fi
+t=`(printf hello) 2>/dev/null`
+if [ "$t" != hello ]; then
+    echo "You don't seem to have a System V-style echo command"
+    echo "or a BSD-style printf command.  I'm bailing out..."
+    exit 1
+fi
+
+#
+# If the killall program is not present on the system
+# cobble together a shell function to emulate the
+# functionality that we need.
+#
+(killall -l >/dev/null) 2>/dev/null || {
+    killall()
+    {
+	# NB: ps ax should give an error on System V, so we try it first!
+	pid="`ps ax 2>/dev/null | grep $2 | grep -v grep | $AWK '{print $1;}'`"
+	test "$pid" ||
+	    pid="`ps -e | grep $2 | grep -v grep | $AWK '{print $2;}'`"
+	test "$pid" && kill $1 $pid; return
+    }
+}
+
+#
+# Prompt the user for a string that can not be null.
+#
+promptForNonNullStringParameter()
+{
+    x=""
+    while [ -z "$x" ]; do
+	prompt "$2 [$1]?"; read x
+	if [ "$x" ]; then
+	    # strip leading and trailing white space
+	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	else
+	    x="$1"
+	fi
+    done
+    param="$x"
+}
+
+#
+# Prompt the user for a string that can be null.
+#
+promptForStringParameter()
+{
+    prompt "$2 [$1]?"; read x
+    if [ "$x" ]; then
+	# strip leading and trailing white space
+	x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+    else
+	x="$1"
+    fi
+    param="$x"
+}
+
+#
+# Prompt the user for a numeric value.
+#
+promptForNumericParameter()
+{
+    x=""
+    while [ -z "$x" ]; do
+	prompt "$2 [$1]?"; read x
+	if [ "$x" ]; then
+	    # strip leading and trailing white space
+	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	    match=`expr "$x" : "\([0-9]*\)"`
+	    if [ "$match" != "$x" ]; then
+		echo ""
+		echo "This must be entirely numeric; please correct it."
+		echo ""
+		x="";
+	    fi
+	else
+	    x="$1"
+	fi
+    done
+    param="$x"
+}
+
+#
+# Prompt the user for a C-style numeric value.
+#
+promptForCStyleNumericParameter()
+{
+    x=""
+    while [ -z "$x" ]; do
+	prompt "$2 [$1]?"; read x
+	if [ "$x" ]; then
+	    # strip leading and trailing white space and C-style 0x prefix
+	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	    match=`expr "$x" : "\([0-9]*\)" \| "$x" : "\(0x[0-9a-fA-F]*\)"`
+	    if [ "$match" != "$x" ]; then
+		echo ""
+		echo "This must be entirely numeric; please correct it."
+		echo ""
+		x="";
+	    fi
+	else
+	    x="$1"
+	fi
+    done
+    param="$x"
+}
+
+#
+# Prompt the user for a boolean value.
+#
+promptForBooleanParameter()
+{
+    x=""
+    while [ -z "$x" ]; do
+	prompt "$2 [$1]?"; read x
+	if [ "$x" ]; then
+	    # strip leading and trailing white space
+	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	    case "$x" in
+	    n|no|off)	x=no;;
+	    y|yes|on)	x=yes;;
+	    *)
+cat <<EOF
+
+"$x" is not a valid boolean parameter setting;
+use one of: "yes", "on", "no", or "off".
+EOF
+		x="";;
+	    esac
+	else
+	    x="$1"
+	fi
+    done
+    param="$x"
+}
+
+#
+# Start of system-related setup checking.  All this stuff
+# should be done outside this script, but we check here
+# so that it's sure to be done before starting up a fax
+# server process.
+# 
+echo "Verifying that your system is setup properly for fax service..."
+
+faxUID=`grep "^$PROTOUID:" $PASSWD | cut -d: -f3`
+if [ -z "$faxUID" ]; then faxUID=$defPROTOUID; fi
+faxGID=`grep "^$PROTOGID:" $GROUP | cut -d: -f3`
+if [ -z "$faxGID" ]; then faxGID=$defPROTOGID; fi
+
+#
+# Change the password file entry for the fax user.
+#
+fixupFaxUser()
+{
+    emsg1=`modifyPasswd $FAX $faxUID $faxGID $SPOOL 2>&1`
+    case $? in
+    0)	echo "Done, the \"$FAX\" user should now have the right user id.";;
+    *) cat <<-EOF
+	Something went wrong; the command failed with:
+
+	"$emsg1"
+
+	The fax server will not work correctly until the proper uid
+	is setup for it in the password file.  Please fix this problem
+	and then rerun faxaddmodem.
+	EOF
+	exit 1
+	;;
+    esac
+}
+
+#
+# Add a fax user to the password file and lock the
+# entry so that noone can login as the user.
+#
+addFaxUser()
+{
+    emsg1=`addPasswd $FAX $faxUID $faxGID $SPOOL 2>&1`
+    case $? in
+    0)  emsg2=`lockPasswd $FAX 2>&1`
+	case $? in
+	0) echo "Added user \"$FAX\" to $PASSWD.";;
+	*) emsg3=`deletePasswd $FAX 2>&1`
+	   case $? in
+	   0|9) cat <<-EOF
+		Failed to add user "$FAX" to $PASSWD because the
+		attempt to lock the password failed with:
+
+		"$emsg2"
+
+		Please fix this problem and rerun this script."
+		EOF
+		exit 1
+		;;
+	   *)   cat <<-EOF
+		You will have to manually edit $PASSWD because
+		after successfully adding the new user "$FAX", the
+		attempt to lock its password failed with:
+
+		"$emsg2"
+
+		and the attempt to delete the insecure passwd entry failed with:
+
+		"$emsg3"
+
+		To close this security hole, you should add a password
+		to the "$FAX" entry in the file $PASSWD, or lock this
+		entry with an invalid password.
+		EOF
+		;;
+	    esac
+	    exit 1;;
+	esac;;
+    9)  # fax was already in $PASSWD, but not found with grep
+	;;
+    *)  cat <<-EOF
+	There was a problem adding user "$FAX" to $PASSWD;
+	the command failed with:
+
+	"$emsg1"
+
+	The fax server will not work until you have corrected this problem.
+	EOF
+	exit 1;;
+    esac
+}
+
+isOK()
+{
+    x="$1"
+    test -z "$x" -o "$x" = y -o "$x" = yes
+}
+isNotOK()
+{
+    x="$1"
+    test -n "$x" -a "$x" != y -a "$x" != yes
+}
+
+x=`grep "^$FAX:" $PASSWD | cut -d: -f3`
+if [ -z "$x" ]; then
+    echo ""
+    echo "You do not appear to have a "$FAX" user in the password file."
+    prompt "The fax software needs this to work properly, add it [yes]?"
+    read x
+    isOK $x && addFaxUser
+elif [ "$x" != "$faxUID" ]; then
+    echo ""
+    echo "It looks like you have a \"$FAX\" user in the password file,"
+    echo "but with a uid different than the uid for uucp.  You probably"
+    echo "have old fax software installed.  In order for this software"
+    echo "to work properly, the fax user uid must be the same as uucp."
+    prompt "Is it ok to change the password entry for \"$FAX\" [yes]?"
+    read x;
+    isOK $x && fixupFaxUser
+fi
+#
+# This should only have an effect on an SGI system...
+# hide the fax user from pandora & co.
+#
+if [ "$OS" = IRIX -a -f $SGIPASSWD ]; then
+    x=$FAX:noshow
+    grep $x $SGIPASSWD >/dev/null 2>&1 ||
+    (echo ""; echo "Adding fax user to \"$SGIPASSWD\"."; echo $x >>$SGIPASSWD)
+fi
+
+#
+# Make sure a service entry is present.
+#
+hasYP=`(ypcat services) 2>/dev/null | tail -1` 2>/dev/null
+x=
+if [ "$hasYP" ]; then
+    x=`ypcat services 2>/dev/null | egrep '^(flex)?fax[ 	]'` 2>/dev/null
+    if [ -z "$x" ]; then
+	echo ""
+	echo "There does not appear to be an entry for the fax service in the YP database;"
+	echo "the software will not work properly without one.  Contact your administrator"
+	echo "to get the folllowing entry added:"
+	echo ""
+	echo "fax	4557/tcp		# FAX transmission service"
+	echo ""
+	exit 1
+    fi
+else
+    x=`egrep '^(flex)?fax[ 	]' $SERVICES 2>/dev/null` 2>/dev/null
+    if [ -z "$x" ]; then
+	echo ""
+	echo "There does not appear to be an entry for the fax service in the $SERVICES file;"
+	prompt "should an entry be added to $SERVICES [yes]?"
+	read x
+	isOK $x && echo \
+"fax		4557/tcp		# FAX transmission service" >>$SERVICES
+    fi
+fi
+
+#
+# Check that inetd is setup to provide service.
+#
+if [ -f $INETDCONF ]; then
+    eval `egrep '^(flex)?fax[ 	]*stream[ 	]*tcp' $INETDCONF | \
+	$AWK -F'[ 	]+' '{ print "F=" $6 "; U=" $5 }' 2>/dev/null`
+    if [ -z "$F" -a -z "$U" ]; then
+	echo ""
+	echo "There is no entry for the fax service in \"$INETDCONF\";"
+	prompt "should one be added [yes]?"; read x
+	if isOK $x; then
+E="fax	stream	tcp	nowait	$FAX	$SERVERDIR/faxd.recv	faxd.recv"
+	    echo "$E" >>$INETDCONF;
+	    if killall -HUP inetd 2>/dev/null; then
+		echo "Poked inetd so that it re-reads the configuration file."
+	    else
+		echo "Beware, you may need to send a HUP signal to inetd."
+	    fi
+	fi
+    else
+	if [ "$F" != $SERVERDIR/faxd.recv ]; then
+	    echo ""
+	    echo "Warning, the $INETDCONF file is setup to start $F"
+	    echo "instead of $SERVERDIR/faxd.recv.  You may need to correct"
+	    echo "this before client requests to submit jobs will be properly serviced."
+	    echo ""
+	fi
+	if [ "$U" != $FAX ]; then
+	    echo ""
+	    echo "Warning, the $INETDCONF file is setup so that $F"
+	    echo "is run by the $U user instead of the $FAX user.  You may need to correct"
+	    echo "this before client requests to submit jobs will be properly serviced."
+	    echo ""
+	fi
+    fi
+else
+    echo ""
+    echo "Warning, no $INETDCONF file was found; the faxd.recv program may not"
+    echo "be started up automatically to service client requests to submit jobs."
+    echo ""
+fi
+
+#
+# Check for a FaxMaster entry for sending mail.
+#
+x=`(ypcat -k aliases) 2>/dev/null | grep -i '^faxmaster'` 2>/dev/null
+if [ -z "$x" -a -f $ALIASES ]; then
+    x=`grep -i '^faxmaster' $ALIASES`
+fi
+if [ -z "$x" ]; then
+    echo ""
+    echo "There does not appear to be an entry for the FaxMaster either in"
+    echo "the yellow pages database or in the $ALIASES file;"
+    prompt "should an entry be added to $ALIASES [yes]?"
+    read x
+    if isOK $x; then
+	promptForNonNullStringParameter "${USER:-root}" \
+	   "Users to receive fax-related mail"
+	(echo "# alias for notification messages from HylaFAX servers";
+	 echo "FaxMaster: $param") >>$ALIASES
+	if newaliases 2>/dev/null; then
+	    echo "Rebuilt $ALIASES database."
+	else
+	    echo "Can not find newaliases to rebuild $ALIASES;"
+	    echo "you will have to do it yourself."
+	fi
+    fi
+fi
+
+
+echo ""
+echo "Done verifying system setup."
+echo ""
+# End of system-related setup checking
+
+while [ -z "$TTY" -o ! -c /dev/$TTY ]; do
+    test "$TTY" != "" && echo "/dev/$TTY is not a terminal device."
+    prompt "Serial port that modem is connected to [$TTY]?"; read TTY
+done
+
+JUNK="$OUT"
+trap "rm -f \$JUNK; exit 1" 0 1 2 15
+
+if [ ! -d $LOCKDIR ]; then
+    prompt "Hmm, uucp lock files are not in \"$LOCKDIR\", where are they?"
+    read x
+    while [ ! -d $x ]; do
+	prompt "Nope, \"$x\" is not a directory; try again:"
+	read x
+    done
+    LOCKDIR=$x
+fi
+
+#
+# Try to deduce if the tty devices are named in the SGI
+# sense (ttyd<port>, ttym<port>, and ttyf<port>) or the
+# way that everyone else seems to do it--tty<port>
+#
+# (I'm sure that someone will tell me there is another way as well.)
+#
+case "$OS" in
+IRIX)
+    PORT=`expr $TTY : 'tty.\(.*\)'`
+    for x in f m d; do
+	LOCKX="$LOCKX $LOCKDIR/LCK..tty$x${PORT}"
+    done
+    DEVS="/dev/ttyd${PORT} /dev/ttym${PORT} /dev/ttyf${PORT}"
+    #
+    # NB: we use ttyd* device names in the following
+    # work so that we are not stopped by a need for DCD.
+    #
+    tdev=/dev/ttyd${PORT}
+    ;;
+BSDi|BSD/386|BSD/OS|386bsd|386BSD)
+    PORT=`expr $TTY : 'com\(.*\)'`
+    LOCKX="$LOCKDIR/LCK..$TTY"
+    DEVS=/dev/$TTY
+    tdev=/dev/$TTY
+    ;;
+SunOS|Linux|ULTRIX|HP-UX|FreeBSD|NetBSD)
+    PORT=`expr $TTY : 'tty\(.*\)'`
+    LOCKX="$LOCKDIR/LCK..$TTY"
+    DEVS=/dev/$TTY
+    tdev=/dev/$TTY
+    ;;
+svr4)
+    PORT=`expr $TTY : 'term\/\(.*\)' \| $TTY`	# Usual
+    PORT=`expr $PORT : 'cua\/\(.*\)' \| $PORT`	# Solaris
+    PORT=`expr $PORT : 'tty\(.*\)' \| $PORT`	# Old-style
+    DEVS=/dev/$TTY
+    tdev=/dev/$TTY
+    LOCKX="$LOCKDIR/`$SVR4UULCKN $DEVS`" || {
+	echo "Sorry, I cannot determine the UUCP lock file name for $DEVS"
+	exit 1
+    }
+    ;;
+*)
+    echo "Beware, I am guessing the tty naming conventions on your system:"
+    PORT=`expr $TTY : 'tty\(.*\)'`;	echo "Serial port: $PORT"
+    LOCKX="$LOCKDIR/LCK..$TTY";		echo "UUCP lock file: $LOCKX"
+    DEVS=/dev/$TTY; tdev=/dev/$TTY;	echo "TTY device: $DEVS"
+    ;;
+esac
+DEVID="`echo $TTY | tr '/' '_'`"
+CONFIG=$CPATH.$DEVID
+
+#
+# Check that device is not currently being used.
+#
+for x in $LOCKX; do
+    if [ -f $x ]; then
+	echo "Sorry, the device is currently in use by another program."
+	exit 1
+    fi
+done
+
+#
+# Look for conflicting configuration stuff.
+#
+OLDCONFIG=""
+
+checkPort()
+{
+    devID="`echo $1 | tr '/' '_'`"
+    if [ -f $CPATH.$devID -a -p $SPOOL/FIFO.$devID ]; then
+	echo "There appears to be a modem already setup on $devID,"
+	prompt "is this to be replaced [yes]?"
+	read x;
+	isOK $x || {
+	    echo "Sorry, but you can not configure multiple servers on"
+	    echo "the same serial port."
+	    exit 1
+
+	}
+	OLDFIFO=$SPOOL/FIFO.$devID; OLDCONFIG=$CPATH.$devID
+    fi
+}
+
+if [ "$OS" = IRIX ]; then
+    case $TTY in
+    ttym${PORT}) checkPort ttyd${PORT}; checkPort ttyf${PORT};;
+    ttyf${PORT}) checkPort ttym${PORT}; checkPort ttyd${PORT};;
+    ttyd${PORT}) checkPort ttym${PORT}; checkPort ttyf${PORT};;
+    esac
+fi
+$QUIT $DEVID >/dev/null 2>&1; sleep 1		# shutdown existing server
+
+#
+# Lock the device for later use when deducing the modem type.
+#
+JUNK="$JUNK $LOCKX"
+
+LOCKSTR=`expr "         $$" : '.*\(..........\)'`
+# lock the device by all of its names
+for x in $LOCKX; do
+    echo "$LOCKSTR" > $x
+done
+# zap any gettys or other users
+fuser -k $DEVS >/dev/null 2>&1 || {
+    cat<<EOF
+Hmm, there does not appear to be an fuser command on your machine.
+This means that I am unable to insure that all processes using the
+modem have been killed.  I will keep going, but beware that you may
+have competition for the modem.
+EOF
+}
+
+cat<<EOF
+
+Ok, time to setup a configuration file for the modem.  The manual
+page config(4F) may be useful during this process.  Also be aware
+that at any time you can safely interrupt this procedure.
+
+EOF
+
+#
+# Configuration parameters specific to server operation
+# (as opposed to that of the fax modem).  The required
+# parameters are *always* emitted in the final created
+# configuration file; otherwise parameters are emitted
+# only if the configured value differs from the default
+# value known to be used by the server.
+#
+# NB: the order of some parameters is important; e.g.
+#     FAXNumber must be after AreaCode and CountryCode.
+#
+RequiredServerParameters="
+    CountryCode
+    AreaCode
+    FAXNumber
+    LongDistancePrefix
+    InternationalPrefix
+    DialStringRules
+    ServerTracing
+    SessionTracing
+    RecvFileMode
+    LogFileMode
+    DeviceMode
+    RingsBeforeAnswer
+    SpeakerVolume
+    GettyArgs
+"
+#
+# Some of these things are also modem-dependent.  It's a
+# hard call whether to treat them as server-related and
+# propagate them to a new config file or to treat them as
+# modem-specific and taken them from the prototype modem
+# configuration file.
+#
+OptionalServerParameters="
+    LocalIdentifier
+    LogFacility
+    ClocalAsRoot
+    TagLineFont
+    TagLineFormat
+    QualifyCID
+    QualifyTSI
+
+    AdaptiveAnswer
+    AnswerRotary
+    AnswerBias
+    NoCarrierRetrys
+
+    PercentGoodLines
+    MaxConsecutiveBadLines
+
+    MaxRecvPages
+
+    JobReqBusy
+    JobReqNoCarrier
+    JobReqNoAnswer
+    JobReqNoFConn
+    JobReqDataConn
+    JobReqProto
+    JobReqOther
+    PollModemWait
+    PollLockWait
+    UUCPLockTimeout
+
+    FaxRcvdCmd
+    NotifyCmd
+    PollRcvdCmd
+
+    RingData
+    RingFax
+    RingVoice
+
+    UUCPLockDir
+    UUCPLockTimeout
+    UUCPLockType
+
+    PagerMaxMsgLength
+
+    IXOService
+    IXODeviceID
+    IXOMaxUnknown
+    IXOIDProbe
+    IXOIDTimeout
+    IXOLoginRetries
+    IXOLoginTimeout
+    IXOGATimeout
+    IXOXmitRetries
+    IXOXmitTimeout
+    IXOAckTimeout
+"
+ServerParameters="$RequiredServerParameters $OptionalServerParameters"
+#
+# Default values for server configuration parameters.
+#
+defaultFAXNumber=\"\"
+defaultLocalIdentifier=\"\"
+defaultAreaCode=\"\"
+defaultCountryCode=\"\"
+defaultLongDistancePrefix=\"\"
+defaultInternationalPrefix=\"\"
+defaultDialStringRules=\"\"
+defaultServerTracing=1
+defaultSessionTracing=1
+defaultRecvFileMode=0600
+defaultLogFileMode=0600
+defaultDeviceMode=0600
+defaultRingsBeforeAnswer=0
+defaultSpeakerVolume=quiet
+defaultGettyArgs=\"\"
+defaultQualifyTSI=\"\"
+defaultJobReqBusy=300
+defaultJobReqNoCarrier=900
+defaultJobReqNoAnswer=900
+defaultJobReqNoFConn=900
+defaultJobReqDataConn=900
+defaultJobReqProto=60
+defaultJobReqOther=900
+defaultUUCPLockTimeout=10800
+defaultPollModemWait=30
+defaultPollLockWait=30
+defaultTagLineFont=\"\"
+defaultTagLineFormat="\"From %%n|%c|Page %%p of %%t\""
+defaultPercentGoodLines=95
+defaultMaxConsecutiveBadLines=5
+defaultMaxRecvPages=1000
+defaultLogFacility=daemon
+defaultClocalAsRoot=\"\"
+defaultAdaptiveAnswer=\"\"
+defaultAnswerRotary=\"\"
+defaultAnswerBias=\"\"
+defaultFaxRcvdCmd=\"\"
+defaultNoCarrierRetrys=\"\"
+defaultNotifyCmd=\"bin/notify\"
+defaultPollRcvdCmd=\"\"
+defaultQualifyCID=\"\"
+defaultRingData=\"\"
+defaultRingFax=\"\"
+defaultRingVoice=\"\"
+defaultUUCPLockDir=\"@UUCP_LOCKDIR@\"
+defaultUUCPLockTimeout=30
+defaultUUCPLockType=\"@UUCP_LOCKTYPE@\"
+defaultPagerMaxMsgLength=\"\"
+defaultIXOService=\"\"
+defaultIXODeviceID=\"\"
+defaultIXOMaxUnknown=\"\"
+defaultIXOIDProbe=\"\"
+defaultIXOIDTimeout=\"\"
+defaultIXOLoginRetries=\"\"
+defaultIXOLoginTimeout=\"\"
+defaultIXOGATimeout=\"\"
+defaultIXOXmitRetries=\"\"
+defaultIXOXmitTimeout=\"\"
+defaultIXOAckTimeout=\"\"
+
+#
+# Initialize server parameters from the defaults.
+#
+setupServerParameters()
+{
+    for i in $ServerParameters; do
+	eval $i=\$default$i
+    done
+}
+
+#
+# Get server config values from an existing config file.
+#
+getServerParameters()
+{
+    eval `$SED -e 's/[ 	]*#.*$//' \
+	-e "s;\([^:]*\):[ 	]*\(.*\);\1='\2';" $1`
+}
+
+#
+# Echo the configuration lines for those server parameters
+# whose value is different from the default value.  Note
+# that we handle the case where there is embedded whitespace
+# by enclosing the parameter value in quotes.
+#
+echoServerSedCommands()
+{
+    (for i in $RequiredServerParameters; do
+	eval echo \"$i:\$$i:\"
+     done
+     for i in $OptionalServerParameters; do
+	eval echo \"$i:\$$i:\$default$i\"
+     done) | $AWK -F: '
+func p(tag, value)
+{
+    tabs = substr("\t\t\t", 1, 3-int((length(tag)+1)/8));
+    if (match(value, "^[^\"].*[ ]") == 0)
+	printf "%s:%s%s\\\n", tag, tabs, value
+    else
+	printf "%s:%s\"%s\"\\\n", tag, tabs, value
+}
+BEGIN	{ printf "/^#.*BEGIN-SERVER/,/^#.*END-SERVER/c\\\n" }
+$2 != $3{ p($1, $2) }
+END	{ printf "#\n" }'	# terminate input text to ``c'' command
+}
+
+#
+# Compile a table of configuration parameters prompts into
+# a shell program that can be ``eval'd'' to prompt the user
+# for changes to the current parameter settings.
+#
+compilePrompts()
+{
+    $AWK -F'[	]+' '
+func p(t)
+{
+    printf "promptFor%sParameter \"$%s\" \"%s\";%s=\"$param\"\n", t, $2, $3, $2
+}
+$1 == "#"	{ p("Numeric"); next }
+$1 == "C#"	{ p("CStyleNumeric"); next }
+$1 == "S"	{ p("String"); next }
+$1 == "NNS"	{ p("NonNullString"); next }
+$1 == "B"	{ p("Boolean"); next }
+		{ printf "promptFor%s\n", $1 }
+'
+}
+
+#
+# Prompt the user for volume setting.
+#
+promptForSpeakerVolume()
+{
+    x=""
+    while [ -z "$x" ]; do
+	prompt "Modem speaker volume [$SpeakerVolume]?"; read x
+	if [ "$x" != "" ]; then
+	    # strip leading and trailing white space
+	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	    case "$x" in
+	    [oO]*)	x=off;;
+	    [lL]*)	x=low;;
+	    [qQ]*)	x=quiet;;
+	    [mM]*)	x=medium;;
+	    [hH]*)	x=high;;
+	    *)
+cat <<EOF
+
+"$x" is not a valid speaker volume setting; use one
+of: "off", "low", "quiet", "medium", and "high".
+
+EOF
+		x="";;
+	    esac
+	else
+	    x="$SpeakerVolume"
+	fi
+    done
+    SpeakerVolume="$x"
+}
+
+#
+# Verify that the fax number, area code, and country
+# code jibe.  Perhaps this is too specific to the USA?
+#
+checkFaxNumber()
+{
+    pat="[\"]*\+$CountryCode[-. ]*$AreaCode[-. ]*[0-9][- .0-9]*[\"]*"
+    match=`expr "$FAXNumber" : "\($pat\)"`
+    if [ "$match" != "$FAXNumber" ]; then
+	cat<<EOF
+
+Your facsimile phone number ($FAXNumber) does not agree with your
+country code ($CountryCode) or area code ($AreaCode).  The number
+should be a fully qualified international dialing number of the form:
+
+    +$CountryCode $AreaCode <local phone number>
+
+Spaces, hyphens, and periods can be included for legibility.  For example,
+
+    +$CountryCode.$AreaCode.555.1212
+
+is a possible phone number (using your country and area codes).
+EOF
+	ok=no;
+    fi
+}
+
+#
+# Verify that a number is octal and if not, add a prefixing "0".
+#
+checkOctalNumber()
+{
+    param=$1
+    if [ "`expr "$param" : '\(.\)'`" != 0 ]; then
+	param="0${param}"
+	return 0
+    else
+	return 1
+    fi
+}
+
+checkForLocalFile()
+{
+    if [ ! -f $SPOOL/$1 ]; then
+	cat<<EOF
+
+Warning, the $2 file,
+
+    $SPOOL/$1
+
+does not exist, or is not a plain file.  This file must
+reside in the $SPOOL directory tree.
+EOF
+	ok=no;
+    fi
+}
+
+#
+# Print the current server configuration parameters.
+#
+printServerConfig()
+{
+    (for i in $ServerParameters; do
+	eval echo \"$i:\$$i:\$default$i\"
+    done) | $AWK -F: '
+func p(tag, value)
+{
+    tabs = substr("\t\t\t", 1, 3-int((length(tag)+1)/8));
+    printf "%s:%s%s\n", tag, tabs, value
+}
+BEGIN	{ printf "\nThe non-default server configuration parameters are:\n\n" }
+$2 != $3{ p($1, $2) }
+END	{ printf "\n" }'
+}
+
+setupServerParameters
+if [ -f $CONFIG -o -z "$OLDCONFIG" ]; then
+    OLDCONFIG=$CONFIG
+fi
+if [ -f $OLDCONFIG ]; then
+    echo "Hey, there is an existing config file "$OLDCONFIG"..."
+    getServerParameters $OLDCONFIG
+    ok="skip"				# skip prompting first time through
+else
+    echo "No existing configuration, let's do this from scratch."
+    echo ""
+    getServerParameters $MODEMCONFIG/skel # get from skeletal file
+    ok="prompt"				# prompt for parameters
+fi
+
+if [ -z "$FAXNumber" ]; then
+    FAXNumber="+$CountryCode $AreaCode 555-1212"
+fi
+#
+# Prompt user for server-related configuration parameters
+# and do consistency checking on what we get.
+#
+PROMPTS=/tmp/faxpr$$
+JUNK="$JUNK $PROMPTS"
+while isNotOK $ok; do
+    if [ "$ok" != skip ]; then
+	test -f $PROMPTS || compilePrompts>$PROMPTS<<EOF
+#	CountryCode		Country code
+#	AreaCode		Area code
+NNS	FAXNumber		Phone number of fax modem
+S	LocalIdentifier		Local identification string (for TSI/CIG)
+#	LongDistancePrefix	Long distance dialing prefix
+#	InternationalPrefix	International dialing prefix
+NNS	DialStringRules		Dial string rules file (relative to $SPOOL)
+C#	ServerTracing		Tracing during normal server operation
+C#	SessionTracing		Tracing during send and receive sessions
+#	RecvFileMode		Protection mode for received facsimile
+#	LogFileMode		Protection mode for session logs
+#	DeviceMode		Protection mode for $TTY
+#	RingsBeforeAnswer	Rings to wait before answering
+SpeakerVolume
+S	GettyArgs		Command line arguments to getty program
+S	QualifyTSI		\
+	Pathname of TSI access control list file (relative to $SPOOL)
+S	QualifyCID		\
+	Pathname of Caller-ID access control list file (relative to $SPOOL)
+S	TagLineFont		Tag line font file (relative to $SPOOL)
+S	TagLineFormat		Tag line format string
+C#	UUCPLockTimeout		\
+	Time before purging a stale UUCP lock file (secs)
+#	PercentGoodLines	\
+	Percent good lines to accept during copy quality checking
+#	MaxConsecutiveBadLines	\
+	Max consecutive bad lines to accept during copy quality checking
+#	MaxRecvPages		\
+	Max number of pages to accept in a received facsimile
+S	LogFacility		Syslog facility name for ServerTracing messages
+B	ClocalAsRoot		Set UID to 0 to manipulate CLOCAL
+EOF
+	. $PROMPTS
+    fi
+    checkOctalNumber $RecvFileMode &&	RecvFileMode=$param
+    checkOctalNumber $LogFileMode &&	LogFileMode=$param
+    checkOctalNumber $DeviceMode &&	DeviceMode=$param
+    checkForLocalFile $DialStringRules "dial string rules"
+    checkFaxNumber;
+    if [ "$TagLineFont" != "" -a "$TagLineFont" != '""' ]; then
+	checkForLocalFile $TagLineFont "tag line font";
+    fi
+    printServerConfig; prompt "Are these ok [yes]?"; read ok
+done
+
+#
+# We've got all the server-related parameters, now for the modem ones.
+#
+
+cat<<EOF
+
+Now we are going to probe the tty port to figure out the type
+of modem that is attached.  This takes a few seconds, so be patient.
+Note that if you do not have the modem cabled to the port, or the
+modem is turned off, this may hang (just go and cable up the modem
+or turn it on, or whatever).
+EOF
+
+if [ $OS = SunOS ]; then
+    #
+    # Sun systems have a command for manipulating software
+    # carrier on a terminal line.  Set or reset carrier
+    # according to the type of tty device being used.
+    #
+    case $TTY in
+    tty*) ttysoftcar -y $TTY >/dev/null 2>&1;;
+    cua*) ttysoftcar -n $TTY >/dev/null 2>&1;;
+    esac
+fi
+
+if [ -x ${ONDELAY} ]; then
+    onDev() {
+	if [ "$1" = -c ]; then
+	    shift; catpid=`${ONDELAY} $tdev $SH -c "$* >$OUT" & echo $!`
+	else
+	    ${ONDELAY} $tdev $SH -c "$*"
+	fi
+    }
+else
+cat<<'EOF'
+
+The "ondelay" program to open the device without blocking is not
+present.  We're going to try to continue without it; let's hope that
+the serial port won't block waiting for carrier...
+EOF
+    onDev() {
+	if [ "$1" = -c ]; then
+	    shift; catpid=`$SH <$tdev >$tdev -c "$* >$OUT" & echo $!`
+	else
+	    $SH <$tdev >$tdev -c "$*"
+	fi
+    }
+fi
+
+SPEEDS=
+case $OS in
+*bsd*|*BSD*)
+    STTY="`findApp stty $PATH` -f $tdev"
+    if [ -z "$SPEED" ]; then
+	for s in 38400 19200 9600 4800 2400 1200; do
+	    $STTY $s </dev/null >/dev/null 2>&1 && SPEEDS="$SPEEDS $s"
+	done
+    fi
+    ;;
+*)
+    STTY=`findApp stty $PATH`
+    if [ -z "$SPEED" ]; then
+	for s in 38400 19200 9600 4800 2400 1200; do
+	    $STTY $s <$tdev >/dev/null 2>&1 && SPEEDS="$SPEEDS $s"
+	done
+    fi
+    ;;
+esac
+
+#
+# Send each command in SendString to the modem and collect
+# the result in $OUT.  Read this very carefully.  It's got
+# a lot of magic in it!
+#
+SendToModem()
+{
+    COMMAND=$*
+    sleep 1					# wait for previous kill
+    onDev $STTY 0; sleep 1			# reset the modem (hopefully)
+						# start listening for output
+    onDev -c "$STTY clocal && exec $CAT $tdev"; sleep 2
+    #
+    # NB: eof is set to ^A so that only 1 character is needed
+    #     for a pending read on HPUX systems
+    #
+    onDev $STTY -echo -icrnl -ixon -ixoff -isig eof '"^A"' clocal $SPEED;
+	sleep 1
+    # NB: merging \r & ATQ0 causes some modems problems
+    printf "\r" >$tdev; sleep 1;		# force consistent state
+    printf "ATQ0V1E1\r" >$tdev; sleep 1;	# enable echo and result codes
+    for i in $COMMAND; do
+	printf "$i\r" >$tdev; sleep 1;
+    done
+    kill -9 $catpid; catpid=
+    # NB: [*&\\\\$] must have the "$" last for AIX (yech)
+    pat=`echo "$i"|$SED -e 's/[*&\\\\$]/\\\\&/g'` # escape regex metacharacters
+    RESPONSE=`tr -ds '\015' '\012' < $OUT | \
+	$SED -n "/$pat/{n;s/ *$//;p;q;}" | $SED 's/+F.*=//'`
+}
+
+echo ""
+if [ -z "$SPEED" ]; then
+    #
+    # Probe for the highest speed at which the modem
+    # responds to "AT" with "OK".
+    #
+    printf "Probing for best speed to talk to modem:"
+    for SPEED in $SPEEDS
+    do
+	printf " $SPEED"
+	SendToModem AT >/dev/null 2>&1
+	sleep 1
+	RESULT=`tr -ds '\015' '\012' < $OUT | tail -1`
+	test "$RESULT" = OK && break;
+    done
+    if [ "$RESULT" != OK ]; then
+	echo ""
+	echo "Unable to deduce DTE-DCE speed; check that you are using the"
+	echo "correct device and/or that your modem is setup properly.  If"
+	echo "all else fails, try the -s option to lock the speed."
+	exit 1
+    fi
+    echo " OK."
+else
+    echo "Using user-specified $SPEED to talk to modem."
+fi
+RESULT="";
+while [ -z "$RESULT" ]; do
+    #
+    # This goes in the background while we try to
+    # reset the modem.  If something goes wrong, it'll
+    # nag the user to check on the problem.
+    #
+    (trap 0 1 2 15;
+     while true; do
+	sleep 10;
+	echo ""
+	echo "Hmm, something seems to be hung, check your modem eh?"
+     done)& nagpid=$!
+    trap "rm -f \$JUNK; kill $nagpid \$catpid; exit 1" 0 1 2 15
+
+    SendToModem "AT+FCLASS=?" 			# ask for class support
+
+    kill $nagpid
+    trap "rm -f \$JUNK; test \"\$catpid\" && kill \$catpid; exit 1" 0 1 2 15
+    sleep 1
+
+    RESULT=`tr -ds '\015' '\012' < $OUT | tail -1`
+    if [ -z "$RESPONSE" ]; then
+	echo ""
+	echo "There was no response from the modem.  Perhaps the modem is"
+	echo "turned off or the cable between the modem and host is not"
+	echo "connected.  Please check the modem and hit a carriage return"
+	prompt "when you are ready to try again:"
+	read x
+    fi
+done
+
+ModemType="" Manufacturer="" Model="" ProtoType=skel
+
+#
+# Initialize desired flow control scheme
+# according to the device name (if it's
+# meaningful).  Otherwise, setup to use any
+# default flow control defined in the prototype
+# configuration file.
+#
+FlowControl=default
+if [ "$OS" = IRIX ]; then
+    case $TTY in
+    ttym${PORT}) FlowControl=xonxoff;;
+    ttyf${PORT}) FlowControl=rtscts;;
+    esac
+fi
+
+#
+# Prompt the user for a flow control scheme.
+#
+promptForFlowControlParameter()
+{
+    x=""
+    while [ -z "$x" ]; do
+	prompt "$2 [$1]?"; read x
+	if [ "$x" ]; then
+	    # strip leading and trailing white space
+	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	    case "$x" in
+	    xon*|XON*)	x=xonxoff;;
+	    rts*|RTS*)	x=rtscts;;
+	    def*|DEF*)	x=default;;
+	    *)
+cat <<EOF
+
+"$x" is not a valid flow control parameter setting; use one of:
+
+xonxoff		for software flow control
+rtscts		for hardware flow control
+default		for whatever is set in a prototype config file
+
+Note that this setting defines the scheme to use when sending
+and receiving facsimile.  Many modems do not support hardware
+flow control during fax operation though they do support it for
+data communication.
+
+EOF
+		x="";;
+	    esac
+	else
+	    x="$1"
+	fi
+    done
+    param="$x"
+}
+
+getFlowControlConfig()
+{
+    promptForFlowControlParameter "$FlowControl" "DTE-DCE flow control scheme"
+    case "$param" in
+    xon*|XON*) FlowControl=XONXOFF;;
+    rts*|RTS*) FlowControl=RTSCTS;;
+    def*|DEF*) FlowControl=DEFAULT;;
+    esac
+}
+
+#
+# Select a configuration file for a modem based on the
+# deduced modem type.  Each routine below sends a set
+# of commands to the modem to figure out the modem model
+# and manufacturer and then compares them against the
+# set of known values in associated config files.
+# Note that this is done with a tricky bit of shell
+# hacking--generating a case statement that is then
+# eval'd with the result being the setup of the
+# ProtoType shell variable.
+#
+configureClass2Modem()
+{
+    ModemType=Class2
+    echo "Hmm, this looks like a Class 2 modem."
+
+    SendToModem "AT+FCLASS=2" "AT+FMFR?"
+    Manufacturer=$RESPONSE
+    echo "Modem manufacturer is \"$Manufacturer\"."
+
+    SendToModem "AT+FCLASS=2" "AT+FMDL?"
+    Model=$RESPONSE
+    echo "Modem model is \"$Model\"."
+
+    getFlowControlConfig
+
+    eval `(cd $MODEMCONFIG; \
+	grep 'CONFIG:[ 	]*CLASS2' * |\
+	$AWK -F: '
+	    BEGIN { print "case \"$Manufacturer-$Model-$FlowControl\" in" }
+	    FILENAME ~ /^OLD/ { next }
+	    FILENAME ~ /^config\./ { next }
+	    { print $4 ") ProtoType=" $1 ";;" }
+	    END { print "*) ProtoType=class2;;"; print "esac" }
+	')`
+}
+
+#
+# As above, but for Class 2.0 modems.
+#
+configureClass2dot0Modem()
+{
+    ModemType=Class20
+    echo "Hmm, this looks like a Class 2.0 modem."
+    #
+    SendToModem "AT+FCLASS=2.0" "AT+FMI?"
+    Manufacturer=$RESPONSE
+    echo "Modem manufacturer is \"$Manufacturer\"."
+
+    SendToModem "AT+FCLASS=2.0" "AT+FMM?"
+    Model=$RESPONSE
+    echo "Modem model is \"$Model\"."
+
+    getFlowControlConfig
+
+    eval `(cd $MODEMCONFIG; \
+	grep 'CONFIG:[ 	]*CLASS2.0' * |\
+	$AWK -F: '
+	    BEGIN { print "case \"$Manufacturer-$Model-$FlowControl\" in" }
+	    FILENAME ~ /^OLD/ { next }
+	    FILENAME ~ /^config\./ { next }
+	    { print $4 ") ProtoType=" $1 ";;" }
+	    END { print "*) ProtoType=class2.0;;"; print "esac" }
+	')`
+}
+
+#
+# Class 1 modems are handled a bit differently as
+# there are no commands to obtain the manufacturer
+# and model.  Instead we use ATI0 to get the product
+# code and then compare it against the set of known
+# values in the config files.
+#
+configureClass1Modem()
+{
+    ModemType=Class1 Manufacturer=Unknown Model=Unknown
+    echo "Hmm, this looks like a Class 1 modem."
+
+    SendToModem "ATI0"; CODE="$RESPONSE"
+    echo "Product code (ATI0) is \"$CODE\"."
+    SendToModem "ATI3"; INFO="$RESPONSE"
+    echo "Other information (ATI3) is \"$INFO\"."
+
+    getFlowControlConfig
+
+    eval `(cd $MODEMCONFIG; grep 'CONFIG:[ 	]*CLASS1' *) |\
+	$SED 's/:[ 	]*/:/g' |\
+	$AWK -F: '
+BEGIN	{ proto = "" }
+FILENAME ~ /^OLD/ { next }
+FILENAME ~ /^config\./ { next }
+C == $4 && I ~ $5 && F ~ $6 {
+	  if (proto != "") {
+	      print "echo \"Warning, multiple configuration files exist for this modem,\";"
+	      print "echo \"   the file " $1 " is ignored.\";"
+	  } else
+	      proto = $1 " " $7;
+	}
+END	{ if (proto == "")
+	      proto = "class1"
+	  print "ProtoType=" proto
+	}
+	' C="$CODE" I="$INFO" F="$FlowControl" -`
+    echo "Modem manufacturer is \"$Manufacturer\"."
+    echo "Modem model is \"$Model\"."
+}
+
+configureClass1and2Modem()
+{
+    echo "This modem looks to have support for both Class 1 and 2;"
+    prompt "how should it be configured [2]?"
+    x=""
+    while [ "$x" != 1 -a "$x" != 2 ]; do
+	read x
+	case "$x" in
+	1|2)	;;
+	?*)	echo ""
+	        prompt "Configure as Class 1 or 2 [2]?";;
+	*)	x=2;;
+	esac
+    done
+    echo ""
+    case $x in
+    1) configureClass1Modem;;
+    2) configureClass2Modem;;
+    esac
+}
+
+configureClass1and2dot0Modem()
+{
+    echo "This modem looks to have support for both Class 1 and 2.0;"
+    prompt "how should it be configured [2.0]?"
+    x=""
+    while [ "$x" != 1 -a "$x" != 2.0 ]; do
+	read x
+	case "$x" in
+	1|2.0)	;;
+	?*)	echo ""
+	        prompt "Configure as Class 1 or 2.0 [2.0]?";;
+	*)	x=2.0;;
+	esac
+    done
+    echo ""
+    case $x in
+    1)   configureClass1Modem;;
+    2.0) configureClass2dot0Modem;;
+    esac
+}
+
+configureClass2and2dot0Modem()
+{
+    echo "This modem looks to have support for both Class 2 and 2.0;"
+    prompt "how should it be configured [2.0]?"
+    x=""
+    while [ "$x" != 2 -a "$x" != 2.0 ]; do
+	read x
+	case "$x" in
+	2|2.0)	;;
+	?*)	echo ""
+	        prompt "Configure as Class 2 or 2.0 [2.0]?";;
+	*)	x=2.0;;
+	esac
+    done
+    echo ""
+    case $x in
+    2)   configureClass2Modem;;
+    2.0) configureClass2dot0Modem;;
+    esac
+}
+
+configureClass1and2and2dot0Modem()
+{
+    echo "This modem looks to have support for both Class 1, 2 and 2.0;"
+    prompt "how should it be configured [2.0]?"
+    x=""
+    while [ "$x" != 1 -a "$x" != 2 -a "$x" != 2.0 ]; do
+	read x
+	case "$x" in
+	1|2|2.0)	;;
+	?*)	echo ""
+	        prompt "Configure as Class 1, 2 or 2.0 [2.0]?";;
+	*)	x=2.0;;
+	esac
+    done
+    echo ""
+    case $x in
+    1)   configureClass1Modem;;
+    2)   configureClass2Modem;;
+    2.0) configureClass2dot0Modem;;
+    esac
+}
+
+giveup()
+{
+    echo "The result of the AT+FCLASS=? command was:"
+    echo ""
+    cat $OUT
+    cat<<EOF
+
+We were unable to deduce what type of modem you have.  This means that
+it did not respond as a Class 1, Class 2, or Class 2.0 modem should.
+If you believe that your modem conforms to the Class 1, Class 2, or
+Class 2.0 interface specification, then check that the modem is
+operating properly and that you can communicate with the modem from the
+host.  If your modem is not one of the above types of modems, then this
+software does not support it and you will need to write a driver that
+supports it.
+
+EOF
+    exit 1
+}
+
+echo ""
+if [ "$RESULT" = "OK" ]; then
+    # Looks like a Class 1, 2, or 2.0 modem, get more information
+    case "`echo $RESPONSE | $SED -e 's/[()]//g'`" in
+    1)			configureClass1Modem;;
+    2)			configureClass2Modem;;
+    2.0)		configureClass2dot0Modem;;
+    0,1)		configureClass1Modem;;
+    0,2)		configureClass2Modem;;
+    0,2.0)		configureClass2dot0Modem;;
+    1,2)		configureClass1and2Modem;;
+    1,2.0)		configureClass1and2dot0Modem;;
+    2,2.0)		configureClass2and2dot0Modem;;
+    0,1,2)		configureClass1and2Modem;;
+    0,1,2.0)		configureClass1and2dot0Modem;;
+    0,2,2.0)		configureClass2and2dot0Modem;;
+    1,2,2.0)		configureClass1and2and2dot0Modem;;
+    0,1,2,2.0)		configureClass1and2and2dot0Modem;;
+    0,1,2,2.0,*)	configureClass1and2and2dot0Modem;;
+    1,2,2.0,*)		configureClass1and2and2dot0Modem;;
+    0,2,2.0,*)		configureClass2and2dot0Modem;;
+    0,1,2.0,*)		configureClass1and2dot0Modem;;
+    0,1,2,*)		configureClass1and2Modem;;
+    2,2.0,*)		configureClass2and2dot0Modem;;
+    1,2.0,*)		configureClass1and2dot0Modem;;
+    1,2,*)		configureClass1and2Modem;;
+    0,2.0,*)		configureClass2dot0Modem;;
+    0,2,*)		configureClass2Modem;;
+    0,1,*)		configureClass1Modem;;
+    2.0,*)		configureClass2dot0Modem;;
+    2,*)		configureClass2Modem;;
+    1,*)		configureClass1Modem;;
+    *)			giveup;;
+    esac
+else
+    giveup
+fi
+
+#
+# Given a modem type, manufacturer and model, select
+# a prototype configuration file to work from.
+#
+echo ""
+echo "Using prototype configuration file $ProtoType..."
+proto=$MODEMCONFIG/$ProtoType
+if [ ! -f $proto ]; then
+    echo "Uh oh, I can't find the prototype file"
+    echo ""
+    echo "\"$proto\""
+    echo ""
+    if [ "$ProtoType" != "skel" ]; then
+        prompt "Do you want to continue using the skeletal configuration file [yes]?"
+        read x
+	isOK $x || exit 1
+	ProtoType=skel;
+	proto=$MODEMCONFIG/$ProtoType;
+	if [ ! -f $proto ]; then
+	    cat<<EOF
+
+Sigh, the skeletal configuration file is not available either.  There
+is nothing that I can do without some kind of prototype config file;
+I'm bailing out...
+EOF
+	    exit 1
+	fi
+    else
+	echo "There is nothing more that I can do; I'm bailing out..."
+	exit 1
+    fi
+fi
+
+#
+# Prompt the user for an AT-style command.
+#
+promptForATCmdParameter()
+{
+    prompt "$2 [$1]?"; read x
+    if [ "$x" ]; then
+	# strip leading and trailing white space, quote marks;
+	# redouble any backslashes lost through shell processing
+	x=`echo "$x" | $SED \
+	    -e 's/^[ 	]*//' \
+	    -e 's/[ 	]*$//' \
+	    -e 's/\"//g' -e 's/\\\\/&&/g'`
+    else
+	x="$1"
+    fi
+    param="$x"
+}
+
+#
+# Prompt the user for a bit order.
+#
+promptForBitOrderParameter()
+{
+    x=""
+    while [ -z "$x" ]; do
+	prompt "$2 [$1]?"; read x
+	if [ "$x" ]; then
+	    # strip leading and trailing white space
+	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	    case "$x" in
+	    [lL]*)	x=LSB2MSB;;
+	    [mM]*)	x=MSB2LSB;;
+	    *)
+cat <<EOF
+
+"$x" is not a valid bit order parameter setting; use one of:
+
+lsb2msb		for x86-style machines
+msb2lsb		for other machines
+
+EOF
+		x="";;
+	    esac
+	else
+	    x="$1"
+	fi
+    done
+    param="$x"
+}
+
+ModemParameters="
+    ModemAnswerAnyCmd
+    ModemAnswerCmd
+    ModemAnswerDataBeginCmd
+    ModemAnswerDataCmd
+    ModemAnswerFaxBeginCmd
+    ModemAnswerFaxCmd
+    ModemAnswerResponseTimeout
+    ModemAnswerVoiceBeginCmd
+    ModemAnswerVoiceCmd
+    ModemBaudRateDelay
+    ModemClassQueryCmd
+    ModemCommaPauseTimeCmd
+    ModemDialCmd
+    ModemDialResponseTimeout
+    ModemEchoOffCmd
+    ModemFlowControl
+    ModemFrameFillOrder
+    ModemHardFlowCmd
+    ModemInterPacketDelay
+    ModemMaxPacketSize
+    ModemMfrQueryCmd
+    ModemModelQueryCmd
+    ModemNoAutoAnswerCmd
+    ModemNoFlowCmd
+    ModemOnHookCmd
+    ModemPageDoneTimeout
+    ModemPageStartTimeout
+    ModemRate
+    ModemRecvFillOrder
+    ModemResetCmds
+    ModemResetDelay
+    ModemResultCodesCmd
+    ModemRevQueryCmd
+    ModemSendBeginCmd
+    ModemSendFillOrder
+    ModemSetVolumeCmd
+    ModemSetupAACmd
+    ModemSetupDCDCmd
+    ModemSetupDTRCmd
+    ModemSoftFlowCmd
+    ModemSoftResetCmd
+    ModemVerboseResultsCmd
+    ModemWaitForConnect
+    ModemWaitTimeCmd
+
+    FaxT1Timer
+    FaxT2Timer
+    FaxT4Timer
+
+    Class0Cmd
+
+    PagerSetupCmds
+"
+Class1Parameters="
+    Class1Cmd
+    Class1NFLOCmd
+    Class1HFLOCmd
+    Class1SFLOCmd
+    Class1FrameOverhead
+    Class1RecvAbortOK
+    Class1RecvIdentTimer
+    Class1SendPPMDelay
+    Class1SendTCFDelay
+    Class1TCFMaxNonZero
+    Class1TCFMinRun
+    Class1TCFRecvTimeout
+    Class1TCFResponseDelay
+    Class1TrainingRecovery
+"
+Class2Parameters="
+    Class2AbortCmd
+    Class2BORCmd
+    Class2BUGCmd
+    Class2CIGCmd
+    Class2CQCmd
+    Class2CQQueryCmd
+    Class2CRCmd
+    Class2Cmd
+    Class2DCCCmd
+    Class2DCCQueryCmd
+    Class2DISCmd
+    Class2DDISCmd
+    Class2LIDCmd
+    Class2NRCmd
+    Class2PHCTOCmd
+    Class2PIECmd
+    Class2PTSCmd
+    Class2RecvDataTrigger
+    Class2RELCmd
+    Class2SendRTC
+    Class2SPLCmd
+    Class2TBCCmd
+    Class2XmitWaitForXON
+    Class2NFLOCmd
+    Class2HFLOCmd
+    Class2SFLOCmd
+"
+
+#
+# Get the default modem parameter values
+# from the prototype configuration file.
+#
+getModemProtoParameters()
+{
+    eval `$SED -e 's/[ 	]*#.*$//' \
+	 -e "s;\([^:]*\):[ 	]*\(.*\);proto\1='\2'\;\1='\2';" $1`
+}
+
+#
+# Setup the sed commands for crafting the configuration file:
+#
+echoModemSedCommands()
+{
+    ModemCmds=""
+
+    (for i in $ModemParameters; do
+	eval echo \"$i:\$$i:\$proto$i\"
+    done
+    case "$ModemType" in
+    Class1*)
+	for i in $Class1Parameters; do
+	    eval echo \"$i:\$$i:\$proto$i\"
+	done
+	;;
+    Class2*)
+	for i in $Class2Parameters; do
+	    eval echo \"$i:\$$i:\$proto$i\"
+	done
+	;;
+    esac) | $AWK -F: '
+func p(tag, value)
+{
+    if (match(value, "^[^\"].*[ ]") == 0)
+	printf "/^%s:/s/\\(:[ 	]*\\).*/\\1%s/\n", tag, value
+    else
+	printf "/^%s:/s/\\(:[ 	]*\\).*/\\1\"%s\"/\n", tag, value
+}
+$2 != $3{ p($1, $2) }
+END	{ printf "/CONFIG:/d\n" }'
+}
+
+#
+# Check if the configured flow control scheme is
+# consistent with the tty device being used.
+#
+checkFlowControlAgainstTTY()
+{
+    case "$ModemFlowControl" in
+    xonxoff|XONXOFF)
+	if [ "$TTY" = ttyf${PORT} -a -c /dev/ttym${PORT} ]; then
+	    echo ""
+	    echo "Warning, the modem is setup to use software flow control,"
+	    echo "but the \"$TTY\" device is used with hardware flow control"
+	    prompt "Do you want to use \"ttym${PORT}\" instead [yes]?"
+	    read x
+	    if isOK $x; then
+		TTY="ttym${PORT}"
+		DEVID="`echo $TTY | tr '/' '_'`"
+		CONFIG=$CPATH.$DEVID
+	    fi
+	fi
+	;;
+    rtscts|RTSCTS)
+	if [ "$TTY" = ttym${PORT} -a -c /dev/ttyf${PORT} ]; then
+	    echo ""
+	    echo "Warning, the modem is setup to use hardware flow control,"
+	    echo "but the \"$TTY\" device does not honor the RTS/CTS signals."
+	    prompt "Do you want to use \"ttyf${PORT}\" instead [yes]?"
+	    read x
+	    if isOK $x; then
+		TTY="ttyf${PORT}"
+		DEVID="`echo $TTY | tr '/' '_'`"
+		CONFIG=$CPATH.$DEVID
+	    fi
+	fi
+	;;
+    esac
+}
+
+#
+# Print the current modem-related parameters.
+#
+printModemConfig()
+{
+    (for i in $ModemParameters; do
+	eval echo \"$i:\$$i:\$proto$i\"
+    done
+    case "$ModemType" in
+    Class1*)
+	for i in $Class1Parameters; do
+	    eval echo \"$i:\$$i:\$proto$i\"
+	done
+	;;
+    Class2*)
+	for i in $Class2Parameters; do
+	    eval echo \"$i:\$$i:\$proto$i\"
+	done
+	;;
+    esac) | $AWK -F: '
+func p(tag, value)
+{
+    tabs = substr("\t\t\t", 1, 3-int((length(tag)+1)/8));
+    printf "%s:%s%s\n", tag, tabs, value
+}
+BEGIN	{ printf "\nThe modem configuration parameters are:\n\n" }
+$3 != ""{ p($1, $2) }
+END	{ printf "\n" }'
+}
+
+verifyModemRate()
+{
+    if [ "$ModemRate" != "$SPEED" ]; then
+	cat<<EOF
+
+Hmmm, the configured DTE-DCE communication rate ($ModemRate) is
+different than the rate that we are using to setup the modem ($SPEED).
+
+EOF
+	while [ "$ModemRate" != "$SPEED" ]; do
+	    prompt "Are you sure you want to use $ModemRate as the DTE-DCE baud rate [yes]?"; read x
+	    isOK $x && break
+	    # Next time prompt for the speed we established earlier.
+	    ModemRate=$SPEED
+	    promptFor Numeric ModemRate "DTE-DCE communication baud rate"
+	done
+    fi
+    if [ "$ModemRate" != "$protoModemRate" ]; then
+	cat<<EOF
+
+Warning, the prototype configuration for your modem uses a different
+DTE-DCE communication rate ($protoModemRate) than the rate that you have
+selected ($ModemRate).  Unless this prototype configuration file is setup
+to automatically switch baud rates for facsimile communication, $ModemRate
+may not work correctly for sending and receiving facsimile: check your
+modem manual to make sure that $ModemRate is acceptable.
+
+EOF
+    fi
+}
+
+promptFor()
+{
+    eval test \"\$proto$2\" && {
+	eval promptFor${1}Parameter \"\$$2\" \"$3\";
+	eval $2=\"\$param\";
+    }
+}
+
+#
+# Compile a table of configuration parameters prompts into
+# a shell program that can be ``eval'd'' to prompt the user
+# for changes to the current parameter settings.
+#
+compileModemPrompts()
+{
+    $AWK -F'[	]+' '
+func p(t)
+{
+    printf "test -n \"$proto%s\" && { promptFor%sParameter \"$%s\" \"%s\";%s=\"$param\"; }\n", $2, t, $2, $3, $2
+}
+$1 == "#"	{ p("Numeric"); next }
+$1 == "C#"	{ p("CStyleNumeric"); next }
+$1 == "S"	{ p("String"); next }
+$1 == "NNS"	{ p("NonNullString"); next }
+$1 == "BO"	{ p("BitOrder"); next }
+$1 == "FC"	{ p("FlowControl"); next }
+$1 == "B"	{ p("Boolean"); next }
+$1 == "AT"	{ p("ATCmd"); next }
+		{ print }
+'
+}
+
+#
+# Build the script that prompts the user to edit the current
+# modem configuration parameters.  Note that we can only edit
+# parameters that are in the prototype config file; thus all
+# the checks to see if the prototype value exists.
+#
+buildModemPrompts()
+{
+    compileModemPrompts<<EOF
+AT	ModemAnswerCmd		Command for answering the phone
+AT	ModemAnswerAnyCmd	Command for answering any type of call
+AT	ModemAnswerDataCmd	Command for answering a data call
+AT	ModemAnswerFaxCmd	Command for answering a fax call
+AT	ModemAnswerVoiceCmd	Command for answering a voice call
+AT	ModemAnswerDataBeginCmd	Command for start of a data call
+AT	ModemAnswerFaxBeginCmd	Command for start of a fax call
+AT	ModemAnswerVoiceBeginCmd	Command for start of a voice call
+#	ModemAnswerResponseTimeout	Answer command response timeout (ms)
+#	ModemBaudRateDelay	Delay after setting tty baud rate (ms)
+AT	ModemClassQueryCmd	Command to query modem services
+AT	ModemCommaPauseTimeCmd	\
+	Command for setting time to pause for \",\" in dialing string
+AT	ModemDialCmd		Command for dialing (%s for number to dial)
+#	ModemDialResponseTimeout	Dialing command response timeout (ms)
+AT	ModemEchoOffCmd		Command for disabling command echo
+FC	ModemFlowControl	DTE-DCE flow control scheme
+BO	ModemFrameFillOrder	Bit order for HDLC frames
+AT	ModemHardFlowCmd	\
+	Command for setting DCE-DTE hardware flow control
+#	ModemInterPacketDelay	Delay between modem writes (ms)
+#	ModemMaxPacketSize	\
+	Maximum data to write to the modem at once (bytes)
+AT	ModemMfrQueryCmd	Command for querying modem manufacture
+AT	ModemModelQueryCmd	Command for querying modem model
+AT	ModemNoAutoAnswerCmd	Command for disabling auto-answer
+AT	ModemNoFlowCmd		Command for disabling DCE-DTE flow control
+AT	ModemOnHookCmd		Command for placing phone \"on hook\" (hangup)
+#	ModemPageDoneTimeout	Page send/receive timeout (ms)
+#	ModemPageStartTimeout	Page send/receive timeout (ms)
+#	ModemRate		DTE-DCE communication baud rate
+	verifyModemRate
+BO	ModemRecvFillOrder	\
+	Bit order that modem sends received facsimile data
+AT	ModemResetCmds		Additional commands for resetting the modem
+#	ModemResetDelay		Delay after sending modem reset commands (ms)
+AT	ModemResultCodesCmd	Command for enabling result codes
+AT	ModemRevQueryCmd	Command for querying modem firmware revision
+BO	ModemSendFillOrder	\
+	Bit order that modem expects for transmitted facsimile data
+AT	ModemSetVolumeCmd	Commands for setting modem speaker volume levels
+AT	ModemSetupAACmd		Command for setting up adaptive-answer
+AT	ModemSetupDCDCmd	Command for setting up DCD handling
+AT	ModemSetupDTRCmd	Command for setting up DTR handling
+AT	ModemSoftFlowCmd	\
+	Command for setting DCE-DTE software flow control
+AT	ModemSoftResetCmd	Command for doing a soft reset
+AT	ModemVerboseResultsCmd	Command for enabling verbose result codes
+B	ModemWaitForConnect	\
+	Force server to wait for \"CONNECT\" response on answer
+AT	ModemWaitTimeCmd	\
+	Command for setting time to wait for carrier when dialing
+#	FaxT1Timer		CCITT T.30 T1 timer (ms)
+#	FaxT2Timer		CCITT T.30 T2 timer (ms)
+#	FaxT4Timer		CCITT T.30 T4 timer (ms)
+AT	Class0Cmd		Command to enter Class 0
+EOF
+    case "$ModemType" in
+    Class1*)
+	compileModemPrompts<<EOF
+AT	Class1Cmd		Command to enter Class 1
+AT	Class1NFLOCmd		\
+	Command to setup no flow control after switch to Class 1
+AT	Class1HFLOCmd		\
+	Command to setup hardware flow control after switch to Class 1
+AT	Class1SFLOCmd		\
+	Command to setup software flow control after switch to Class 1
+#	Class1FrameOverhead	Extra bytes in a received HDLC frame
+#	Class1RecvAbortOK	\
+	Maximum time to wait for OK after aborting a receive (ms)
+#	Class1RecvIdentTimer	\
+	Maximum wait for initial identification frame (ms)
+#	Class1SendPPMDelay	Delay before sending post-page message (ms)
+#	Class1SendTCFDelay	Delay between sending TCF and ack/nak (ms)
+#	Class1TCFRecvTimeout	Timeout for receiving TCF (ms)
+#	Class1TCFResponseDelay	Delay before sending DCS and TCF (ms)
+#	Class1TrainingRecovery	Delay after failed training (ms)
+EOF
+	;;
+    Class2*)
+	compileModemPrompts<<EOF
+AT	Class2Cmd		Command to enter $ModemType
+AT	Class2NFLOCmd	\
+	Command to setup no flow control after switch to $ModemType
+AT	Class2HFLOCmd	\
+	Command to setup hardware flow control after switch to $ModemType
+AT	Class2SFLOCmd	\
+	Command to setup software flow control after switch to $ModemType
+AT	Class2AbortCmd		Command to abort an active session
+AT	Class2BORCmd		Command to setup data bit order
+AT	Class2BUGCmd		Command to enable HDLC frame tracing
+AT	Class2CIGCmd		Command to set polling identifer
+AT	Class2CQCmd		Command to setup copy quality parameters
+AT	Class2CRCmd		Command to enable receive capability
+AT	Class2DCCCmd		Command to set/constrain modem capabilities
+AT	Class2DCCQueryCmd	Command to query modem capabilities
+AT	Class2DISCmd		Command to set session parameters
+AT	Class2LIDCmd		Command to set local identifier string
+AT	Class2NRCmd		Command to enable status reporting
+AT	Class2PHCTOCmd		Command to set Phase C timeout
+AT	Class2PIECmd		Command to disable procedure interrupt handling
+AT	Class2RELCmd		Command to receive byte-aligned EOL codes
+AT	Class2RecvDataTrigger	Character sent before receiving page data
+AT	Class2SPLCmd		Command to set polling request
+AT	Class2TBCCmd		Command to enable DTE-DCE stream comm. mode
+B	Class2XmitWaitForXON	Wait for XON before sending page data
+EOF
+	;;
+    esac
+}
+
+#
+# Construct the configuration file.
+#
+case $ProtoType in
+skel|class*)
+    # Go through each important parameter (sigh)
+    cat<<EOF
+
+There is no prototype configuration file for your modem, so we will
+have to fill in the appropriate parameters by hand.  You will need the
+manual for how to program your modem to do this task.  In case you are
+uncertain of the meaning of a configuration parameter you should
+consult the config(4F) manual page for an explanation.
+
+Note that modem commands must be specified exactly as they are to be
+sent to the modem.  Note also that quote marks (") will not be displayed
+and will automatically be deleted.  You can use this facility to supply
+null parameters as "".
+
+Finally, beware that the set of parameters is long.  If you prefer to
+use your favorite editor instead of this script you should fill things
+in here as best you can and then edit the configuration file
+
+"$CONFIG"
+
+after completing this procedure.
+
+EOF
+    ok=no;;
+*)  ok=skip;;
+esac
+
+getModemProtoParameters $proto
+#
+# Override any default flow control setting
+# in the prototype configuration file.
+#
+case $FlowControl in
+RTS*)	ModemFlowControl=rtscts;;
+XON*)	ModemFlowControl=xonxoff;;
+esac
+rm -f $PROMPTS
+while isNotOK $ok; do
+    if [ "$ok" != skip ]; then
+	test -f $PROMPTS || buildModemPrompts>$PROMPTS
+	. $PROMPTS
+    fi
+    printModemConfig
+    if [ "$OS" = IRIX ]; then
+	checkFlowControlAgainstTTY
+    fi
+    #
+    # XXX not sure what kind of consistency checking that can
+    # be done w/o knowing more about the modem...
+    #
+    prompt "Are these ok [yes]?"; read ok
+done
+verifyModemRate
+TMPSED=/tmp/faxsed$$; JUNK="$JUNK $TMPSED"
+(echoServerSedCommands; echoModemSedCommands)>$TMPSED
+
+#
+# All done with the prompting; edit up a config file!
+#
+echo ""
+echo "Creating new configuration file $CONFIG..."
+JUNK="$JUNK $CONFIG.new"
+if $SED -f $TMPSED $proto >$CONFIG.new; then
+    if cmp -s $CONFIG.new $CONFIG >/dev/null 2>&1; then
+	echo "...nothing appears to have changed; leaving the original file."
+	rm -f $CONFIG.new
+    else
+	if [ -f $CONFIG ]; then
+	    echo "...saving current file as $CONFIG.sav."
+	    mv $CONFIG $CONFIG.sav
+	fi
+	mv $CONFIG.new $CONFIG
+	chown $FAX $CONFIG
+	chgrp $faxGID $CONFIG
+	chmod 644 $CONFIG
+    fi
+else
+    echo ""
+    echo "*** Sorry, something went wrong building $CONFIG.new."
+    echo "*** The original config file is unchanged; I'm terminating before"
+    echo "***    I do something stupid."
+    echo ""
+    exit 1
+fi
+
+#
+# Create FIFO.<tty> special file and remove any old one.
+#
+FIFO=$SPOOL/FIFO.$DEVID
+test -p $FIFO || {
+    prompt "Creating fifo $FIFO for faxgetty..."
+    if (mkfifo $FIFO) >/dev/null 2>&1; then
+	echo "done."
+    elif (mknod $FIFO p) >/dev/null 2>&1; then
+	echo "done."
+    else
+	echo ""
+	echo "*** Unable to create fifo \"$FIFO\"; terminating."
+	exit 1
+    fi
+}
+chown $FAX $FIFO; chgrp $faxGID $FIFO; chmod 600 $FIFO
+if [ "$OLDFIFO" ]; then
+    echo "Removing old fifo $OLDFIFO.";
+    rm -f $OLDFIFO;
+fi
+
+echo "Done setting up the modem configuration."
+
+echo ""
+
+#
+# Configuration parameters specific to scheduler operation.
+# Required parameters are *always* emitted in the created
+# configuration file; optional parameters are emitted
+# only if the configured value differs from the default
+# value known to be used by the server.
+#
+# NB: the order of some parameters is important; e.g.
+#     DialStringRules must be after AreaCode and CountryCode.
+#
+RequiredSchedulerParameters="
+    LogFacility
+    CountryCode
+    AreaCode
+    LongDistancePrefix
+    InternationalPrefix
+    DialStringRules
+    ServerTracing
+"
+OptionalSchedulerParameters="
+    ContCoverPage
+    ContCoverCmd
+    DestControls
+    MaxConcurrentJobs
+    MaxDials
+    MaxSendPages
+    MaxTries
+    PostScriptTimeout
+    PS2FaxCmd
+    SendFaxCmd
+    SendPageCmd
+    SendUUCPCmd
+    SessionTracing
+    TimeOfDay
+    Use2D
+"
+defaultContCoverPage=
+defaultContCoverCmd=\"bin/mkcover\"
+defaultDestControls=
+defaultMaxConcurrentJobs=1
+defaultMaxDials=12
+defaultMaxSendPages=0xffffffff
+defaultMaxTries=3
+defaultPostScriptTimeout=180
+defaultPS2FaxCmd=\"bin/ps2fax\"
+defaultSendFaxCmd=\"bin/faxsend\"
+defaultSendPageCmd=\"bin/pagesend\"
+defaultSendUUCPCmd=\"bin/uucpsend\"
+defaultSessionTracing=0xffffffff
+defaultTimeOfDay=\"Any\"
+defaultUse2D=Yes
+#
+# NB: these defaults are set above
+#
+OptionalParameters="
+    $OptionalSchedulerParameters
+    JobReqOther
+    NotifyCmd
+    UUCPLockDir
+    UUCPLockTimeout
+    UUCPLockType
+"
+SchedulerParameters="
+    $RequiredSchedulerParameters
+    $OptionalParameters
+"
+#
+# The following parameters are checked to make sure
+# they have values consistent with what was just written
+# to the modem configuration file.  It is ok for some
+# of these to be different, but usually they should be
+# the same so if they disagree we prompt the user to
+# see if we should propagate the new values from the
+# modem config file to the scheduler config file.
+#
+CheckedParameters="
+    LogFacility
+    CountryCode
+    AreaCode
+    LongDistancePrefix
+    InternationalPrefix
+    DialStringRules
+    JobReqOther
+    NotifyCmd
+    UUCPLockDir
+    UUCPLockTimeout
+    UUCPLockType
+"
+
+#
+# Echo the configuration lines for those scheduler parameters
+# whose value is different from the default value.  Note
+# that we handle the case where there is embedded whitespace
+# by enclosing the parameter value in quotes.
+#
+echoSchedulerParameters()
+{
+    (for i in $RequiredSchedulerParameters; do
+	eval echo \"$i:\$$i:\"
+     done
+     for i in $OptionalSchedulerParameters; do
+	eval echo \"$i:\$$i:\$default$i\"
+     done) | $AWK -F: '
+func p(tag, value)
+{
+    tabs = substr("\t\t\t", 1, 3-int((length(tag)+1)/8));
+    if (match(value, "^[^\"].*[ ]") == 0)
+	printf "%s:%s%s\n", tag, tabs, value
+    else
+	printf "%s:%s\"%s\"\n", tag, tabs, value
+}
+$2 != $3{ p($1, $2) }'
+}
+
+#
+# Print the current server configuration parameters.
+#
+printSchedulerConfig()
+{
+    (for i in $SchedulerParameters; do
+	eval echo \"$i:\$$i:\$default$i\"
+    done) | $AWK -F: '
+func p(tag, value)
+{
+    tabs = substr("\t\t\t", 1, 3-int((length(tag)+1)/8));
+    printf "%s:%s%s\n", tag, tabs, value
+}
+BEGIN	{ printf "\nThe non-default scheduler parameters are:\n\n" }
+$2 != $3{ p($1, $2) }
+END	{ printf "\n" }'
+}
+
+#
+# Check the current contents of the scheduler configuration file
+# against that parameters just setup for the per-modem config file.
+# If anything has changed (e.g. phone number info), then prompt
+# the user to update the file.
+#
+CONFIG=$CPATH
+updateConfig=yes
+#
+# Initialize server parameters from the defaults.
+#
+for i in $OptionalSchedulerParameters; do
+    eval $i=\$default$i
+done
+if [ -f $CONFIG ]; then
+    echo "Checking $CONFIG for consistency..."
+    #
+    # Save current settings in variables with a ``modem'' prefix.
+    #
+    for i in $CheckedParameters; do
+	eval modem$i=\$$i
+    done
+    #
+    # Read old configuration file in as the ``current settings''.
+    #
+    eval `$SED -e 's/[ 	]*#.*$//' \
+	 -e "s;\([^:]*\):[ 	]*\(.*\);\1='\2';" $CONFIG`
+    #
+    # Check current parameter settings against ``modem settings''.
+    # If inconsistencies are detected in the parameters that should
+    # (by default) be kept consistent, then try to propagate the new
+    # parameter settings from the modem config file to the scheduler
+    # config file.
+    #
+    ok=yes
+    for i in $CheckedParameters; do
+	eval test \"\$$i\" != \"\$modem$i\" && { ok=skip; break; }
+    done
+    if [ $ok != yes ]; then
+	echo "...some parameters are different."
+	#
+	# Move the ``modem settings'' to the current settings
+	# and let the user ok them or change them to what they
+	# want.  We do this shuffle w/o touching the default
+	# settings so that optional parameter handling works
+	# (i.e. that only non-default values for optional params
+	# are displayed and/or written to the file).
+	#
+	for i in $CheckedParameters; do
+	    eval $i=\$modem$i
+	done
+    else
+	echo "...everything looks ok; leaving existing file unchanged."
+	updateConfig=no
+    fi
+else
+    echo "No scheduler configuration file exists, creating one from scratch."
+    ok=skip				# got important params above
+fi
+
+rm -f $PROMPTS
+while isNotOK $ok; do
+    if [ "$ok" != skip ]; then
+	test -f $PROMPTS || compilePrompts>$PROMPTS<<EOF
+#	CountryCode		Country code
+#	AreaCode		Area code
+#	LongDistancePrefix	Long distance dialing prefix
+#	InternationalPrefix	International dialing prefix
+NNS	DialStringRules		Dial string rules file (relative to $SPOOL)
+C#	ServerTracing		Tracing during normal server operation
+C#	SessionTracing		\
+	Default tracing during send and receive sessions
+S	ContCoverPage		Continuation cover page (relative to $SPOOL)
+C#	PostScriptTimeout	\
+	Timeout when converting PostScript documents (secs)
+C#	MaxConcurrentJobs	\
+	Maximum number of concurrent jobs to a destination
+S	TimeOfDay		Time of day restrictions for outbound jobs
+S	DestControls		\
+	Pathname of destination controls file (relative to $SPOOL)
+C#	UUCPLockTimeout		\
+	Timeout before purging a stale UUCP lock file (secs)
+C#	MaxSendPages		Max number of pages to permit in an outbound job
+S	LogFacility		Syslog facility name for ServerTracing messages
+EOF
+	. $PROMPTS
+    fi
+    checkForLocalFile $DialStringRules "dial string rules"
+    if [ "$DestControls" != "" -a "$DestControls" != '""' ]; then
+	checkForLocalFile $DestControls "destination controls";
+    fi
+    printSchedulerConfig; prompt "Are these ok [yes]?"; read ok
+done
+
+if [ $updateConfig = yes ]; then
+    #
+    # All done with the prompting; edit up a config file!
+    #
+    echo ""
+    echo "Creating new configuration file $CONFIG..."
+    JUNK="$JUNK $CONFIG.new"
+    echoSchedulerParameters >$CONFIG.new 2>/dev/null
+    if cmp -s $CONFIG.new $CONFIG >/dev/null 2>&1; then
+	echo "...nothing appears to have changed; leaving the original file."
+	rm -f $CONFIG.new
+    elif [ -s $CONFIG.new ]; then
+	if [ -f $CONFIG ]; then
+	    echo "...saving current file as $CONFIG.sav."
+	    mv $CONFIG $CONFIG.sav
+	fi
+	mv $CONFIG.new $CONFIG
+	chown $FAX $CONFIG
+	chgrp $faxGID $CONFIG
+	chmod 644 $CONFIG
+    else
+	echo ""
+	echo "*** Sorry, something went wrong building $CONFIG.new."
+	echo "*** The original config file is unchanged; check your disk space?"
+	echo ""
+	exit 1
+    fi
+fi
+
+echo ""
+echo "Don't forget to restart faxq with \"-m $DEVID\" or configure init"
+echo "to run faxgetty on $TTY (if faxq is already running)."
+
+exec >/dev/null 2>&1

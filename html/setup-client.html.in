@@ -1,0 +1,114 @@
+<HTML>
+<HEAD>
+<TITLE>
+Client Setup and Operation
+</TITLE>
+</HEAD>
+
+<BODY>
+
+<BASEFONT SIZE=4>
+<B><FONT SIZE=+3>C</FONT>LIENT <FONT SIZE=+2>S</FONT>ETUP AND <FONT SIZE=+2>O</FONT>PERATION</B>
+<BASEFONT SIZE=3>
+
+<HR SIZE=4>
+
+HylaFAX is based on a client-server architecture.  A
+single fax server machine with one or more fax modems may service a
+network of client machines that do not have fax modems.  
+Client and server machines typically communicate using a
+special HylaFAX client-server protocol that is transported on top of
+the TCP/IP protocols.
+Alternatively, clients can be setup to submit facsimile using
+other transport mechanisms such as electronic mail or a network
+printing service.
+This chapter discusses only the setup of a UNIX system as a
+client machine that uses the standard HylaFAX client applications
+to submit and manage outbound facsimile jobs.
+Building a mail-to-fax gateway is discussed in a separate
+<A HREF="faxgateway.html">chapter</A>.
+You are on your own if you want to use a printer protocol
+to hook clients
+up; though it is not much more complicated than the mail route
+(you should look at how the mail support is done).
+
+<P><A NAME="IRIX"><HR WIDTH=65% ALIGN=right><H2>From the IRIX Binary Distribution</H2></A>
+
+When installing HylaFAX from the IRIX binary distribution format, client
+machines can be setup simply by installing the <TT>hylafax.*.client</TT>
+images:
+
+<UL><PRE><TT>
+hyla# inst -f dist/hylafax		# must be done as super-user
+...
+inst> install hylafax.*.client
+inst> go
+</TT></PRE></UL>
+
+(actually, the default packages to install should be the ones needed to
+setup a client machine).
+If you do not have the font metric files installed on the client
+(they are part of the <B>dps_fonts</B> image) you will also want to
+install <TT>hylafax.sw.afm</TT>.
+
+<P><A NAME="Source"><HR WIDTH=65% ALIGN=right><H2>From the Source Distribution</H2></A>
+
+From the source distribution configure and build the software 
+as described in 
+<A HREF="building.html">Building HylaFAX From Source Code</A>
+(NB: this will build both client and server software).
+To install only the programs and files required on a client then do
+
+<UL><PRE><TT>
+hyla# make installClient
+</TT></PRE></UL>
+
+The set of files required for a HylaFAX client is specified in the
+<A HREF="@CGIPATH@/manpage?1+hylafax">hylafax(1)</A>
+manual page (see the FILES section).
+
+<P><A NAME="Service"><HR WIDTH=65% ALIGN=right><H2>Setting up the ``fax'' Service</H2></A>
+
+With the applications and data files available on a client machine,
+the only other task to perform on the client machine
+is to setup an entry in the
+<B>/etc/services</B> file or equivalent YP/NIS database for
+the ``fax'' service.
+This work is automatically done on the server machine by the faxaddmodem
+script using a line of the form:
+
+<UL><PRE><TT>
+fax     4557/tcp                # FAX transmission service
+</TT></PRE></UL>
+
+On the client machine however you will want to set this up by hand
+unless the the system is configured to use YP/NIS and the fax service
+is registered globally through YP/NIS.
+Note that if no service entry exists for the ``fax'' service then a
+default builtin port number is used.  If the HylaFAX client-server
+software is configured to communicate on a port other than the
+default port, then the server must be registered.
+
+<P><A NAME="Access"><HR WIDTH=65% ALIGN=right><H2>Setting up Server Access</H2></A>
+
+Once a client machine is setup for use the server machine may need to
+be configured to permit jobs to be submitted.  Specifically, the file
+<B>etc/hosts</B> in the spooling area on the server machine must be setup to
+permit each client machine access.
+Consult the
+<A HREF="@CGIPATH@/manpage?4+hosts">hosts(4F)</A> manual page
+for information on how this is done.
+
+<P>
+<A HREF="toc.html"><IMG SRC="icons/back.gif"> HylaFAX table
+of contents</A>.<BR>
+
+<HR>
+
+<ADDRESS>
+<A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+Last updated $Date: 1995/04/04 16:33:44 $.
+</ADDRESS>
+
+</BODY>
+</HTML>

@@ -1,0 +1,117 @@
+%%% $Header:$
+% Font designed by Bret D. Whissel, March 13-15, 1995.
+% Florida State University Department of Meteorology
+%
+% This file is for reference only.  fax2ps.c contains the
+% reduced version of this file.
+%%%
+/newfont 10 dict def 
+newfont begin 
+/FontType 3 def 
+/FontMatrix [1 0 0 1 0 0] def
+/FontBBox [0 0 512 1 ] def
+%%%
+% The encoding vector assigns the 64 6-pixel patterns in slots
+% 32-99, inclusive, excluding positions 37, 40, 41, and 92
+% (chars %, (, ), and \).  Whitespace characters are assigned
+% to 100-109, and Blackline characters are assigned to 110-119.
+% Everything else is given the label /255, which is interpreted
+% by the character-generating routines as a no-op.
+%%%
+/Encoding 256 array def 
+    0 1  31 { Encoding exch /255 put } for
+  120 1 255 { Encoding exch /255 put } for
+%
+% Do exceptions
+% 
+  Encoding 37 /255 put
+  Encoding 40 /255 put
+  Encoding 41 /255 put
+  Encoding 92 /255 put
+/count 0 def
+/ls { Encoding exch count 3 string cvs cvn put /count count 1 add def } def
+%
+% load labels into the encoding vector, skipping slots 37 40 41 92
+%
+32 1 36 { ls } for   38 1 39 { ls } for   
+42 1 91 { ls } for   93 1 99 { ls } for
+% Do "special character" entries
+/count 100 def
+  100 1 119 { ls } for  
+/CharDict 5 dict def CharDict begin
+%%%
+% Character drawing routines
+%%%
+% Use the label number to generate the appropriate
+% width whitespace character. (255 is a no-op.)
+%%%
+/white {
+  dup 255 eq { pop } {
+  1 dict begin
+  100 sub neg 512 exch bitshift /cw exch def
+  cw 0 0 0 cw 1 setcachedevice end } ifelse } def
+%%%
+% Use the label number to generate the appropriate
+% width blackline character. (255 is a no-op.)
+%%%
+/black {
+  dup 255 eq { pop } {
+  1 dict begin
+  110 sub neg 512 exch bitshift /cw exch def
+  cw 0 0 0 cw 1 setcachedevice
+  0 0 moveto cw 0 rlineto 0 1 rlineto cw neg 0 rlineto
+  closepath fill end } ifelse } def
+%%%
+% Translate the 6-bit label value into a 6-pixel B&W
+% pattern. (255 is a no-op.)
+%%%
+/numbuild {
+   dup 255 eq { pop } {
+   6 0 
+   0 0 6 1 setcachedevice
+   0 1 5 { 
+     0 moveto dup 32 and 32 eq {
+       1 0 rlineto 
+       0 1 rlineto
+      -1 0 rlineto closepath fill newpath } if
+     1 bitshift } for
+   pop
+  } ifelse
+} def
+%%%
+% Define /.notdef in case the font mechanism expects it.
+%%%
+/.notdef {} def
+/255 {} def
+end
+%%%
+% BuildChar chooses one of the three character-generating
+% routines above according to the character value.  Maybe
+% it should be according to the value returned by the 
+% encoding vector.  I don't really have an opinion.  People
+% who mess with this stuff should know what they're doing
+% anyway, so I guess it doesn't make much difference.
+%%%
+/BuildChar {
+  exch begin
+  dup 110 ge {
+      Encoding exch get
+      3 string cvs cvi CharDict /black get
+  } { dup 100 ge {
+      Encoding exch get
+      3 string cvs cvi CharDict /white get
+  } {
+      Encoding exch get
+      3 string cvs cvi CharDict /numbuild get
+    } ifelse
+  } ifelse
+  exec
+  end
+} def
+end
+%%%
+% Generate the font scaled to 1 (big) point (maximum width character
+% will then be 512 points).  The rest of the scaling will be left
+% to the fax converter program.
+%%%
+/Bitfont newfont definefont 1 scalefont setfont

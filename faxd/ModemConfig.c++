@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/ModemConfig.c++,v 1.50 1994/07/03 17:29:10 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/ModemConfig.c++,v 1.74 1995/04/08 21:30:55 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -23,143 +24,258 @@
  * OF THIS SOFTWARE.
  */
 #include "ModemConfig.h"
+
 #include "t.30.h"
 #include "config.h"
 
-#include <string.h>
-#include <syslog.h>
+#define	N(a)	(sizeof (a) / sizeof (a[0]))
 
 ModemConfig::ModemConfig()
-    : type("unknown")
-    , dialCmd("DT%s")			// %s = phone number
-    , noAutoAnswerCmd("S0=0")
-    , echoOffCmd("E0")
-    , verboseResultsCmd("V1")
-    , resultCodesCmd("Q0")
-    , onHookCmd("H0")
-    , softResetCmd("Z")
-    , waitTimeCmd("S7=30")		// wait time is 30 seconds
-    , pauseTimeCmd("S8=2")		// comma pause time is 2 seconds
-    , class1Cmd("+FCLASS=1")		// set class 1 (fax)
-    , class2CQQueryCmd("+FCQ=?")	// class 2 copy quality query
-    , tagLineFmt("From %%n|%c|Page %%p of %%t")
 {
-    class2XmitWaitForXON = TRUE;	// default suits most Class 2 modems
-
-    // default volume setting commands
-    setVolumeCmds("M0 L0M1 L1M1 L2M1 L3M1");
-
-    answerAnyCmd = "A";
-
-    flowControl = FaxModem::FLOW_NONE;	// no flow control
-    maxRate = FaxModem::BR19200;	// reasonable for most modems
-    sendFillOrder = FILLORDER_LSB2MSB;	// default to CCITT bit order
-    recvFillOrder = FILLORDER_LSB2MSB;	// default to CCITT bit order
-    frameFillOrder = FILLORDER_LSB2MSB;	// default to most common usage
-
-    resetDelay = 2600;			// 2.6 second delay after reset
-    baudRateDelay = 0;			// delay after setting baud rate
-
-    t1Timer = TIMER_T1;			// T.30 T1 timer (ms)
-    t2Timer = TIMER_T2;			// T.30 T2 timer (ms)
-    t4Timer = TIMER_T4;			// T.30 T4 timer (ms)
-    dialResponseTimeout = 3*60*1000;	// dialing command timeout (ms)
-    answerResponseTimeout = 3*60*1000;	// answer command timeout (ms)
-    pageStartTimeout = 3*60*1000;	// page send/receive timeout (ms)
-    pageDoneTimeout = 3*60*1000;	// page send/receive timeout (ms)
-
-    class1TCFResponseDelay = 75;	// 75ms delay between TCF and ack/nak
-    class1SendPPMDelay = 75;		// 75ms delay before sending PPM
-    class1SendTCFDelay = 75;		// 75ms delay between sending DCS & TCF
-    class1TrainingRecovery = 1500;	// 1.5sec delay after failed training
-    class1RecvAbortOK = 200;		// 200ms after abort before flushing OK
-    class1FrameOverhead = 4;		// flags + station id + 2-byte FCS
-    class1RecvIdentTimer = t1Timer;	// default to standard protocol
-    class1TCFMinRun = (2*TCF_DURATION)/3;// must be at least 2/3rds of expected
-    class1TCFMaxNonZero = 10;		// max 10% non-zero data in TCF burst
-
-    maxPacketSize = 16*1024;		// max write to modem
-    interPacketDelay = 0;		// delay between modem writes
-    waitForConnect = FALSE;		// unique answer response from modem
-
-    percentGoodLines = 95;		// require 95% good lines
-    maxConsecutiveBadLines = 5;		// 5 lines at 98 lpi
+    setupConfig();
 }
 
 ModemConfig::~ModemConfig()
 {
 }
 
-#ifdef streq
-#undef streq
-#endif
-#define	streq(a,b)	(strcasecmp(a,b)==0)
+const fxStr&
+ModemConfig::getFlowCmd(FlowControl f) const
+{
+    if (f == ClassModem::FLOW_RTSCTS)
+	return (hardFlowCmd);
+    else if (f == ClassModem::FLOW_XONXOFF)
+	return (softFlowCmd);
+    else if (f == ClassModem::FLOW_NONE)
+	return (noFlowCmd);
+    else
+	return (fxStr::null);
+}
 
-static fxBool getBoolean(const char* cp)
-    { return (streq(cp, "on") || streq(cp, "yes")); }
+/*
+ * The following tables map configuration parameter names to
+ * pointers to class ModemConfig members and provide default
+ * values that are forced when the configuration is reset
+ * prior to reading a configuration file.
+ */
 
-static BaudRate
-findRate(const char* cp)
+/*
+ * Note that all of the Class 2/2.0 parameters except
+ * Class2CQQueryCmd are initialized at the time the
+ * modem is setup based on whether the modem is Class 2
+ * or Class 2.0.
+ */
+static const struct {
+    const char*		 name;
+    fxStr ModemConfig::* p;
+    const char*		 def;		// NULL is shorthand for ""
+} atcmds[] = {
+{ "modemanswercmd",		&ModemConfig::answerAnyCmd,	"ATA" },
+{ "modemansweranycmd",		&ModemConfig::answerAnyCmd },
+{ "modemanswerfaxcmd",		&ModemConfig::answerFaxCmd },
+{ "modemanswerdatacmd",		&ModemConfig::answerDataCmd },
+{ "modemanswervoicecmd",	&ModemConfig::answerVoiceCmd },
+{ "modemanswerfaxbegincmd",	&ModemConfig::answerFaxBeginCmd },
+{ "modemanswerdatabegincmd",	&ModemConfig::answerDataBeginCmd },
+{ "modemanswervoicebegincmd",	&ModemConfig::answerVoiceBeginCmd },
+{ "modemresetcmds",		&ModemConfig::resetCmds },
+{ "modemresetcmd",		&ModemConfig::resetCmds },
+{ "modemdialcmd",		&ModemConfig::dialCmd,		"ATDT%s" },
+{ "modemnoflowcmd",		&ModemConfig::noFlowCmd },
+{ "modemsoftflowcmd",		&ModemConfig::softFlowCmd },
+{ "modemhardflowcmd",		&ModemConfig::hardFlowCmd },
+{ "modemsetupaacmd",		&ModemConfig::setupAACmd },
+{ "modemsetupdtrcmd",		&ModemConfig::setupDTRCmd },
+{ "modemsetupdcdcmd",		&ModemConfig::setupDCDCmd },
+{ "modemnoautoanswercmd",	&ModemConfig::noAutoAnswerCmd,	"ATS0=0" },
+{ "modemechooffcmd",		&ModemConfig::echoOffCmd,	"ATE0" },
+{ "modemverboseresultscmd",	&ModemConfig::verboseResultsCmd,"ATV1" },
+{ "modemresultcodescmd",	&ModemConfig::resultCodesCmd,	"ATQ0" },
+{ "modemonhookcmd",		&ModemConfig::onHookCmd,	"ATH0" },
+{ "modemsoftresetcmd",		&ModemConfig::softResetCmd,	"ATZ" },
+{ "modemwaittimecmd",		&ModemConfig::waitTimeCmd,	"ATS7=60" },
+{ "modemcommapausetimecmd",	&ModemConfig::pauseTimeCmd,	"ATS8=2" },
+{ "modemmfrquerycmd",		&ModemConfig::mfrQueryCmd },
+{ "modemmodelquerycmd",		&ModemConfig::modelQueryCmd },
+{ "modemrevquerycmd",		&ModemConfig::revQueryCmd },
+{ "modemsendbegincmd",		&ModemConfig::sendBeginCmd },
+{ "modemclassquerycmd",		&ModemConfig::classQueryCmd,	"AT+FCLASS=?" },
+{ "class0cmd",			&ModemConfig::class0Cmd,	"AT+FCLASS=0" },
+{ "class1cmd",			&ModemConfig::class1Cmd,	"AT+FCLASS=1" },
+{ "class1nflocmd",		&ModemConfig::class1NFLOCmd },
+{ "class1sflocmd",		&ModemConfig::class1SFLOCmd },
+{ "class1hflocmd",		&ModemConfig::class1HFLOCmd },
+{ "class2cmd",			&ModemConfig::class2Cmd },
+{ "class2borcmd",		&ModemConfig::class2BORCmd },
+{ "class2relcmd",		&ModemConfig::class2RELCmd },
+{ "class2cqcmd",		&ModemConfig::class2CQCmd },
+{ "class2abortcmd",		&ModemConfig::class2AbortCmd },
+{ "class2cqquerycmd",    	&ModemConfig::class2CQQueryCmd,	"AT+FCQ=?" },
+{ "class2dccquerycmd",		&ModemConfig::class2DCCQueryCmd },
+{ "class2tbccmd",		&ModemConfig::class2TBCCmd },
+{ "class2crcmd",		&ModemConfig::class2CRCmd },
+{ "class2phctocmd",		&ModemConfig::class2PHCTOCmd },
+{ "class2bugcmd",		&ModemConfig::class2BUGCmd },
+{ "class2lidcmd",		&ModemConfig::class2LIDCmd },
+{ "class2dcccmd",		&ModemConfig::class2DCCCmd },
+{ "class2discmd",		&ModemConfig::class2DISCmd },
+{ "class2ddiscmd",		&ModemConfig::class2DDISCmd },
+{ "class2cigcmd",		&ModemConfig::class2CIGCmd },
+{ "class2ptscmd",		&ModemConfig::class2PTSCmd },
+{ "class2splcmd",		&ModemConfig::class2SPLCmd },
+{ "class2piecmd",		&ModemConfig::class2PIECmd },
+{ "class2nrcmd",		&ModemConfig::class2NRCmd },
+{ "class2nflocmd",		&ModemConfig::class2NFLOCmd },
+{ "class2sflocmd",		&ModemConfig::class2SFLOCmd },
+{ "class2hflocmd",		&ModemConfig::class2HFLOCmd },
+};
+static const struct {
+    const char*		 name;
+    fxStr ModemConfig::* p;
+    const char*		 def;		// NULL is shorthand for ""
+} strcmds[] = {
+{ "modemtype",			&ModemConfig::type,		"unknown" },
+{ "taglinefont",		&ModemConfig::tagLineFontFile },
+{ "taglineformat",		&ModemConfig::tagLineFmt,
+  "From %%n|%c|Page %%p of %%t" },
+{ "class2recvdatatrigger",	&ModemConfig::class2RecvDataTrigger },
+{ "ringdata",			&ModemConfig::ringData },
+{ "ringfax",			&ModemConfig::ringFax },
+{ "ringvoice",			&ModemConfig::ringVoice },
+{ "cidname",			&ModemConfig::cidName },
+{ "cidnumber",			&ModemConfig::cidNumber },
+};
+static const struct {
+    const char*		 name;
+    u_int ModemConfig::* p;
+    u_int		 def;
+} fillorders[] = {
+{ "modemrecvfillorder",	 &ModemConfig::recvFillOrder,  FILLORDER_LSB2MSB },
+{ "modemsendfillorder",	 &ModemConfig::sendFillOrder,  FILLORDER_LSB2MSB },
+{ "modemframefillorder", &ModemConfig::frameFillOrder, FILLORDER_LSB2MSB },
+};
+static const struct {
+    const char*		 name;
+    u_int ModemConfig::* p;
+    u_int		 def;
+} numbers[] = {
+{ "percentgoodlines",		&ModemConfig::percentGoodLines,	     95 },
+{ "maxconsecutivebadlines",	&ModemConfig::maxConsecutiveBadLines,5 },
+{ "modemresetdelay",		&ModemConfig::resetDelay,	     2600 },
+{ "modembaudratedelay",		&ModemConfig::baudRateDelay,	     0 },
+{ "modemmaxpacketsize",		&ModemConfig::maxPacketSize,	     16*1024 },
+{ "modeminterpacketdelay",	&ModemConfig::interPacketDelay,	     0 },
+{ "faxt1timer",			&ModemConfig::t1Timer,		     TIMER_T1 },
+{ "faxt2timer",			&ModemConfig::t2Timer,		     TIMER_T2 },
+{ "faxt4timer",			&ModemConfig::t4Timer,		     TIMER_T4 },
+{ "modemdialresponsetimeout",	&ModemConfig::dialResponseTimeout,   3*60*1000},
+{ "modemanswerresponsetimeout",	&ModemConfig::answerResponseTimeout, 3*60*1000},
+{ "modempagestarttimeout",	&ModemConfig::pageStartTimeout,	     3*60*1000},
+{ "modempagedonetimeout",	&ModemConfig::pageDoneTimeout,	     3*60*1000},
+{ "class1tcfrecvtimeout",	&ModemConfig::class1TCFRecvTimeout,  4500 },
+{ "class1tcfresponsedelay",	&ModemConfig::class1TCFResponseDelay,75 },
+{ "class1sendppmdelay",		&ModemConfig::class1SendPPMDelay,    75 },
+{ "class1sendtcfdelay",		&ModemConfig::class1SendTCFDelay,    75 },
+{ "class1trainingrecovery",	&ModemConfig::class1TrainingRecovery,1500 },
+{ "class1recvabortok",		&ModemConfig::class1RecvAbortOK,     200 },
+{ "class1frameoverhead",	&ModemConfig::class1FrameOverhead,   4 },
+{ "class1recvIdentTimer",	&ModemConfig::class1RecvIdentTimer,  TIMER_T1 },
+{ "class1tcfmaxnonzero",	&ModemConfig::class1TCFMaxNonZero,   10 },
+{ "class1tcfminrun",		&ModemConfig::class1TCFMinRun,
+  (2*TCF_DURATION)/3 },
+};
+
+void
+ModemConfig::setupConfig()
+{
+    int i;
+
+    for (i = N(atcmds)-1; i >= 0; i--)
+	(*this).*atcmds[i].p = (atcmds[i].def ? atcmds[i].def : "");
+    for (i = N(strcmds)-1; i >= 0; i--)
+	(*this).*strcmds[i].p = (strcmds[i].def ? strcmds[i].def : "");
+    for (i = N(fillorders)-1; i >= 0; i--)
+	(*this).*fillorders[i].p = fillorders[i].def;
+    for (i = N(numbers)-1; i >= 0; i--)
+	(*this).*numbers[i].p = numbers[i].def;
+
+    flowControl		= ClassModem::FLOW_NONE;// no flow control
+    maxRate		= ClassModem::BR19200;	// reasonable for most modems
+    waitForConnect	= FALSE;		// unique modem answer response
+    class2XmitWaitForXON = TRUE;		// default per Class 2 spec
+    class2SendRTC	= FALSE;		// default per Class 2 spec
+    setVolumeCmds("ATM0 ATL0M1 ATL1M1 ATL2M1 ATL3M1");
+}
+
+void
+ModemConfig::resetConfig()
+{
+    FaxConfig::resetConfig();
+    setupConfig();
+}
+
+#define	valeq(a,b)	(::strcasecmp(a,b)==0)
+
+BaudRate
+ModemConfig::findRate(const char* cp)
 {
     static const struct {
 	const char* name;
 	BaudRate    br;
     } rates[] = {
-	{   "300", FaxModem::BR300 },
-	{  "1200", FaxModem::BR1200 },
-	{  "2400", FaxModem::BR2400 },
-	{  "4800", FaxModem::BR4800 },
-	{  "9600", FaxModem::BR9600 },
-	{ "19200", FaxModem::BR19200 },
-	{ "38400", FaxModem::BR38400 },
-	{ "57600", FaxModem::BR57600 },
-	{ "76800", FaxModem::BR76800 },
+	{    "300", ClassModem::BR300 },
+	{   "1200", ClassModem::BR1200 },
+	{   "2400", ClassModem::BR2400 },
+	{   "4800", ClassModem::BR4800 },
+	{   "9600", ClassModem::BR9600 },
+	{  "19200", ClassModem::BR19200 },
+	{  "38400", ClassModem::BR38400 },
+	{  "57600", ClassModem::BR57600 },
+	{  "76800", ClassModem::BR76800 },
+	{ "115200", ClassModem::BR115200 },
     };
-
-#define	N(a)	(sizeof (a) / sizeof (a[0]))
     for (int i = N(rates)-1; i >= 0; i--)
 	if (streq(cp, rates[i].name))
 	    return (rates[i].br);
-    return (FaxModem::BR0);
-#undef	N
+    return (ClassModem::BR0);
 }
 
-static BaudRate
-getRate(const char* cp)
+BaudRate
+ModemConfig::getRate(const char* cp)
 {
     BaudRate br = findRate(cp);
-    if (br == FaxModem::BR0) {
-	syslog(LOG_ERR, "Unknown baud rate \"%s\", using 19200", cp);
-	br = FaxModem::BR19200;			// default
+    if (br == ClassModem::BR0) {
+	configError("Unknown baud rate \"%s\", using 19200", cp);
+	br = ClassModem::BR19200;		// default
     }
     return (br);
 }
 
-static u_int
-getFill(const char* cp)
+u_int
+ModemConfig::getFill(const char* cp)
 {
-    if (streq(cp, "LSB2MSB"))
+    if (valeq(cp, "LSB2MSB"))
 	return (FILLORDER_LSB2MSB);
-    else if (streq(cp, "MSB2LSB"))
+    else if (valeq(cp, "MSB2LSB"))
 	return (FILLORDER_MSB2LSB);
     else {
-	syslog(LOG_ERR, "Unknown fill order \"%s\"", cp);
+	configError("Unknown fill order \"%s\"", cp);
         return ((u_int) -1);
     }
 }
 
-static FlowControl
-getFlow(const char* cp)
+FlowControl
+ModemConfig::getFlow(const char* cp)
 {
-    if (streq(cp, "xonxoff"))
-	return (FaxModem::FLOW_XONXOFF);
-    else if (streq(cp, "rtscts"))
-	return (FaxModem::FLOW_RTSCTS);
-    else if (streq(cp, "none"))
-	return (FaxModem::FLOW_NONE);
+    if (valeq(cp, "xonxoff"))
+	return (ClassModem::FLOW_XONXOFF);
+    else if (valeq(cp, "rtscts"))
+	return (ClassModem::FLOW_RTSCTS);
+    else if (valeq(cp, "none"))
+	return (ClassModem::FLOW_NONE);
     else {
-	syslog(LOG_ERR, "Unknown flow control \"%s\", using xonxoff", cp);
-	return (FaxModem::FLOW_XONXOFF);	// default
+	configError("Unknown flow control \"%s\", using xonxoff", cp);
+	return (ClassModem::FLOW_XONXOFF);	// default
     }
 }
 
@@ -167,16 +283,14 @@ void
 ModemConfig::setVolumeCmds(const fxStr& tag)
 {
     u_int l = 0;
-    for (int i = FaxModem::OFF; i <= FaxModem::HIGH; i++) {
-	fxStr tmp = tag.token(l, " \t");		// NB: for gcc
-	setVolumeCmd[i] = parseATCmd(tmp);
-    }
+    for (int i = ClassModem::OFF; i <= ClassModem::HIGH; i++)
+	setVolumeCmd[i] = parseATCmd(tag.token(l, " \t"));
 }
 
 /*
  * Scan AT command strings and convert <...> escape
  * commands into single-byte escape codes that are
- * interpreted by FaxModem::atCmd.  Note that the
+ * interpreted by ClassModem::atCmd.  Note that the
  * baud rate setting commands are carefully ordered
  * so that the desired baud rate can be extracted
  * from the low nibble.
@@ -191,19 +305,28 @@ ModemConfig::parseATCmd(const char* cp)
 	fxStr esc = cmd.token(epos, '>');
 	esc.lowercase();
 
-	char ecode;
+	u_char ecode;
+	u_int delay;
 	if (esc == "xon")
 	    ecode = ESC_XONFLOW;
 	else if (esc == "rts")
 	    ecode = ESC_RTSFLOW;
 	else if (esc == "none")
 	    ecode = ESC_NOFLOW;
-	else if (esc == "")		// NB: "<>" => <
+	else if (esc.length() > 5 && esc.head(5) == "delay") {
+	    delay = (u_int) ::atoi(&esc[5]);
+	    if (delay > 255) {
+		configError("Bad AT delay value \"%s\"", (char*) esc);
+		pos = epos;
+		continue;
+	    }
+	    ecode = ESC_DELAY;
+	} else if (esc == "")		// NB: "<>" => <
 	    ecode = '<';
 	else {
 	    BaudRate br = findRate(esc);
-	    if (br == FaxModem::BR0) {
-		syslog(LOG_ERR, "Unknown AT escape code \"%s\"", (char*) esc);
+	    if (br == ClassModem::BR0) {
+		configError("Unknown AT escape code \"%s\"", (char*) esc);
 		pos = epos;
 		continue;
 	    }
@@ -211,146 +334,48 @@ ModemConfig::parseATCmd(const char* cp)
 	}
 	cmd.remove(pos, epos-pos);
 	cmd.insert(ecode, pos);
+	if (ecode == ESC_DELAY)
+	    cmd.insert(delay, pos+1);
     }
     return (cmd);
 }
 
-/*
- * The following tables map configuration parameter names to
- * pointers to class ModemConfig members.
- */
-static const struct {
-    const char*		 name;
-    fxStr ModemConfig::* p;
-} atcmds[] = {
-    { "ModemAnswerCmd",			&ModemConfig::answerAnyCmd },
-    { "ModemAnswerAnyCmd",		&ModemConfig::answerAnyCmd },
-    { "ModemAnswerFaxCmd",		&ModemConfig::answerFaxCmd },
-    { "ModemAnswerDataCmd",		&ModemConfig::answerDataCmd },
-    { "ModemAnswerVoiceCmd",		&ModemConfig::answerVoiceCmd },
-    { "ModemAnswerFaxBeginCmd",		&ModemConfig::answerFaxBeginCmd },
-    { "ModemAnswerDataBeginCmd",	&ModemConfig::answerDataBeginCmd },
-    { "ModemAnswerVoiceBeginCmd",	&ModemConfig::answerVoiceBeginCmd },
-    { "ModemResetCmds",			&ModemConfig::resetCmds },
-    { "ModemResetCmd",			&ModemConfig::resetCmds },
-    { "ModemDialCmd",			&ModemConfig::dialCmd },
-    { "ModemFlowControlCmd",		&ModemConfig::flowControlCmd },
-    { "ModemSetupAACmd",		&ModemConfig::setupAACmd },
-    { "ModemSetupDTRCmd",		&ModemConfig::setupDTRCmd },
-    { "ModemSetupDCDCmd",		&ModemConfig::setupDCDCmd },
-    { "ModemNoAutoAnswerCmd",		&ModemConfig::noAutoAnswerCmd },
-    { "ModemEchoOffCmd",		&ModemConfig::echoOffCmd },
-    { "ModemVerboseResultsCmd",		&ModemConfig::verboseResultsCmd },
-    { "ModemResultCodesCmd",		&ModemConfig::resultCodesCmd },
-    { "ModemOnHookCmd",			&ModemConfig::onHookCmd },
-    { "ModemSoftResetCmd",		&ModemConfig::softResetCmd },
-    { "ModemWaitTimeCmd",		&ModemConfig::waitTimeCmd },
-    { "ModemCommaPauseTimeCmd",		&ModemConfig::pauseTimeCmd },
-    { "ModemMfrQueryCmd",		&ModemConfig::mfrQueryCmd },
-    { "ModemModelQueryCmd",		&ModemConfig::modelQueryCmd },
-    { "ModemRevQueryCmd",		&ModemConfig::revQueryCmd },
-    { "ModemSendBeginCmd",		&ModemConfig::sendBeginCmd },
-    { "Class1Cmd",			&ModemConfig::class1Cmd },
-    { "Class2Cmd",			&ModemConfig::class2Cmd },
-    { "Class2BORCmd",			&ModemConfig::class2BORCmd },
-    { "Class2RELCmd",			&ModemConfig::class2RELCmd },
-    { "Class2CQCmd",			&ModemConfig::class2CQCmd },
-    { "Class2AbortCmd",			&ModemConfig::class2AbortCmd },
-    { "Class2CQQueryCmd",		&ModemConfig::class2CQQueryCmd },
-    { "Class2DCCQueryCmd",		&ModemConfig::class2DCCQueryCmd },
-    { "Class2TBCCmd",			&ModemConfig::class2TBCCmd },
-    { "Class2CRCmd",			&ModemConfig::class2CRCmd },
-    { "Class2PHCTOCmd",			&ModemConfig::class2PHCTOCmd },
-    { "Class2BUGCmd",			&ModemConfig::class2BUGCmd },
-    { "Class2LIDCmd",			&ModemConfig::class2LIDCmd },
-    { "Class2DCCCmd",			&ModemConfig::class2DCCCmd },
-    { "Class2DISCmd",			&ModemConfig::class2DISCmd },
-    { "Class2DDISCmd",			&ModemConfig::class2DDISCmd },
-    { "Class2CIGCmd",			&ModemConfig::class2CIGCmd },
-    { "Class2PTSCmd",			&ModemConfig::class2PTSCmd },
-    { "Class2SPLCmd",			&ModemConfig::class2SPLCmd },
-    { "Class2PIECmd",			&ModemConfig::class2PIECmd },
-    { "Class2NRCmd",			&ModemConfig::class2NRCmd },
-    { "TagLineFont",			&ModemConfig::tagLineFontFile },
-    { "TagLineFormat",			&ModemConfig::tagLineFmt },
-};
-static const struct {
-    const char*		 name;
-    u_int ModemConfig::* p;
-} fillorders[] = {
-    { "ModemRecvFillOrder",		&ModemConfig::recvFillOrder },
-    { "ModemSendFillOrder",		&ModemConfig::sendFillOrder },
-    { "ModemFrameFillOrder",		&ModemConfig::frameFillOrder },
-};
-static const struct {
-    const char*		 name;
-    u_int ModemConfig::* p;
-} numbers[] = {
-    { "ModemResetDelay",		&ModemConfig::resetDelay },
-    { "ModemBaudRateDelay",		&ModemConfig::baudRateDelay },
-    { "ModemMaxPacketSize",		&ModemConfig::maxPacketSize },
-    { "ModemInterPacketDelay",		&ModemConfig::interPacketDelay },
-    { "FaxT1Timer",			&ModemConfig::t1Timer },
-    { "FaxT2Timer",			&ModemConfig::t2Timer },
-    { "FaxT4Timer",			&ModemConfig::t4Timer },
-    { "ModemDialResponseTimeout",	&ModemConfig::dialResponseTimeout },
-    { "ModemAnswerResponseTimeout",	&ModemConfig::answerResponseTimeout },
-    { "ModemPageStartTimeout",		&ModemConfig::pageStartTimeout },
-    { "ModemPageDoneTimeout",		&ModemConfig::pageDoneTimeout },
-    { "Class1TCFResponseDelay",		&ModemConfig::class1TCFResponseDelay },
-    { "Class1SendPPMDelay",		&ModemConfig::class1SendPPMDelay },
-    { "Class1SendTCFDelay",		&ModemConfig::class1SendTCFDelay },
-    { "Class1TrainingRecovery",		&ModemConfig::class1TrainingRecovery },
-    { "Class1RecvAbortOK",		&ModemConfig::class1RecvAbortOK },
-    { "Class1FrameOverhead",		&ModemConfig::class1FrameOverhead },
-    { "Class1RecvIdentTimer",		&ModemConfig::class1RecvIdentTimer },
-    { "Class1TCFMaxNonZero",		&ModemConfig::class1TCFMaxNonZero },
-    { "Class1TCFMinRun",		&ModemConfig::class1TCFMinRun },
-    { "PercentGoodLines",		&ModemConfig::percentGoodLines },
-    { "MaxConsecutiveBadLines",		&ModemConfig::maxConsecutiveBadLines },
-};
+void
+ModemConfig::parseCID(const char* rbuf, CallerID& cid) const
+{
+    if (strneq(rbuf, cidName, cidName.length()))
+	cid.name = rbuf+cidName.length();
+    else if (strneq(rbuf, cidNumber, cidNumber.length()))
+	cid.number = rbuf+cidNumber.length();
+}
 
 fxBool
-ModemConfig::parseItem(const char* tag, const char* value)
+ModemConfig::setConfigItem(const char* tag, const char* value)
 {
-    int i;
+    u_int ix;
+    if (findTag(tag, (const tags*)atcmds, N(atcmds), ix))
+	(*this).*atcmds[ix].p = parseATCmd(value);
+    else if (findTag(tag, (const tags*)strcmds, N(strcmds), ix))
+	(*this).*strcmds[ix].p = value;
+    else if (findTag(tag, (const tags*)fillorders, N(fillorders), ix))
+	(*this).*fillorders[ix].p = getFill(value);
+    else if (findTag(tag, (const tags*)numbers, N(numbers), ix))
+	(*this).*numbers[ix].p = ::atoi(value);
 
-#define	N(a)	(sizeof (a) / sizeof (a[0]))
-    for (i = N(atcmds)-1; i >= 0; i--)
-	if (streq(tag, atcmds[i].name)) {
-	    (*this).*atcmds[i].p = parseATCmd(value);
-	    return (TRUE);
-	}
-    for (i = N(fillorders)-1; i >= 0 ; i--)
-	if (streq(tag, fillorders[i].name)) {
-	    (*this).*fillorders[i].p = getFill(value);
-	    return (TRUE);
-	}
-    for (i = N(numbers)-1; i >= 0 ; i--)
-	if (streq(tag, numbers[i].name)) {
-	    (*this).*numbers[i].p = atoi(value);
-	    return (TRUE);
-	}
-#undef N
-    fxBool recognized = TRUE;
-    if (streq(tag, "ModemType"))
-	type = value;
-    else if (streq(tag, "ModemSetVolumeCmd"))
+    else if (streq(tag, "modemsetvolumecmd"))
 	setVolumeCmds(value);
-    else if (streq(tag, "ModemFlowControl"))
+    else if (streq(tag, "modemflowcontrol"))
 	flowControl = getFlow(value);
-    else if (streq(tag, "ModemMaxRate") || streq(tag, "ModemRate"))
+    else if (streq(tag, "modemrate"))
 	maxRate = getRate(value);
-    else if (streq(tag, "ModemWaitForConnect"))
+    else if (streq(tag, "modemwaitforconnect"))
 	waitForConnect = getBoolean(value);
-
-	// Class 2-specific configuration controls
-    else if (streq(tag, "Class2RecvDataTrigger"))
-	class2RecvDataTrigger = value;
-    else if (streq(tag, "Class2XmitWaitForXON"))
+    else if (streq(tag, "class2xmitwaitforxon"))
 	class2XmitWaitForXON = getBoolean(value);
-
+    else if (streq(tag, "class2sendrtc"))
+	class2SendRTC = getBoolean(value);
     else
-	recognized = FALSE;
-    return (recognized);
+	return (FALSE);
+    return (TRUE);
 }
+#undef N

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/HDLCFrame.c++,v 1.11 1994/02/28 14:15:26 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/HDLCFrame.c++,v 1.15 1995/04/08 21:30:46 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -49,13 +50,13 @@ HDLCFrame::HDLCFrame(const HDLCFrame& other)
     u_int size = other.end - other.base;
     u_int len = other.getLength();
     if (size > sizeof(buf)) {
-	base = (u_char*) malloc(size);
+	base = (u_char*) ::malloc(size);
     } else {
 	base = &buf[0];
     }
     end = base + size;
     next = base + len;
-    memcpy(base, other.base, len);
+    ::memcpy(base, other.base, len);
     ok = other.ok;
     frameOverhead = other.frameOverhead;
 }
@@ -79,10 +80,10 @@ HDLCFrame::grow(u_int amount)
     u_int len = getLength();
     u_int newSize = size + amount;
     if (base == buf) {
-	base = (u_char*) malloc(newSize);
-	memcpy(base, buf, sizeof(buf));
+	base = (u_char*) ::malloc(newSize);
+	::memcpy(base, buf, sizeof(buf));
     } else {
-	base = (u_char*) realloc(base, newSize);
+	base = (u_char*) ::realloc(base, newSize);
     }
 
     // update position pointers
@@ -96,7 +97,7 @@ HDLCFrame::put(const u_char* c, u_int len)
     u_int remainingSpace = end - next;
     if  (len > remainingSpace)
 	grow(len - remainingSpace);
-    memcpy(next, c, len);
+    ::memcpy(next, c, len);
     next += len;
 }
 

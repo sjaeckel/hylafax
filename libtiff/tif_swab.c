@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_swab.c,v 1.17 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_swab.c,v 1.19 1994/07/26 16:46:18 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -33,7 +33,7 @@
 
 #ifndef TIFFSwabShort
 void
-DECLARE1(TIFFSwabShort, u_short*, wp)
+TIFFSwabShort(uint16* wp)
 {
 	register u_char *cp = (u_char *)wp;
 	int t;
@@ -44,7 +44,7 @@ DECLARE1(TIFFSwabShort, u_short*, wp)
 
 #ifndef TIFFSwabLong
 void
-DECLARE1(TIFFSwabLong, u_long*, lp)
+TIFFSwabLong(uint32* lp)
 {
 	register u_char *cp = (u_char *)lp;
 	int t;
@@ -56,7 +56,7 @@ DECLARE1(TIFFSwabLong, u_long*, lp)
 
 #ifndef TIFFSwabArrayOfShort
 void
-DECLARE2(TIFFSwabArrayOfShort, u_short*, wp, register u_long, n)
+TIFFSwabArrayOfShort(uint16* wp, register u_long n)
 {
 	register u_char *cp;
 	register int t;
@@ -72,7 +72,7 @@ DECLARE2(TIFFSwabArrayOfShort, u_short*, wp, register u_long, n)
 
 #ifndef TIFFSwabArrayOfLong
 void
-DECLARE2(TIFFSwabArrayOfLong, register u_long*, lp, register u_long, n)
+TIFFSwabArrayOfLong(register uint32* lp, register u_long n)
 {
 	register unsigned char *cp;
 	register int t;
@@ -166,13 +166,13 @@ static const unsigned char TIFFNoBitRevTable[256] = {
 };
 
 const unsigned char*
-DECLARE1(TIFFGetBitRevTable, int, reversed)
+TIFFGetBitRevTable(int reversed)
 {
 	return (reversed ? TIFFBitRevTable : TIFFNoBitRevTable);
 }
 
 void
-DECLARE2(TIFFReverseBits, register u_char*, cp, register u_long, n)
+TIFFReverseBits(register u_char* cp, register u_long n)
 {
 	for (; n > 8; n -= 8) {
 		cp[0] = TIFFBitRevTable[cp[0]];

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/SendFaxClient.h,v 1.12 1994/07/20 00:19:32 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/SendFaxClient.h,v 1.16 1995/04/08 21:44:22 sam Rel $ */
 /*
- * Copyright (c) 1993, 1994 Sam Leffler
- * Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1995 Sam Leffler
+ * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -67,6 +68,8 @@ private:
     fxStr	pageSize;		// arg to pass to subprocesses
     int		totalPages;		// counted pages (for cover sheet)
     int		maxRetries;		// max number times to try send
+    int		maxDials;		// max number times to dial telephone
+    int		priority;		// scheduling priority
     FaxNotify	notify;
     fxBool	setup;			// if true, then ready to send
     fxStrArray	tempFiles;		// stuff to cleanup on abort
@@ -140,5 +143,9 @@ public:
     const fxStr& getMailbox() const;
     fxBool setPageSize(const char* name);
     void setMaxRetries(int);
+    void setMaxDials(int);
+
+    virtual void setPriority(int);	// NB: may want to apply policy here
+    int getPriority() const;
 };
 #endif /* _SendFaxClient_ */

@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/sendq.4f,v 1.14 1994/07/05 01:30:09 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/sendq.4f,v 1.27 1995/04/08 21:36:37 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,19 +25,22 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.ds Ps P\s-1OST\s+1S\s-1CRIPT\s+1
-.TH SENDQ 4F "July 3, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
+.TH SENDQ 4F "March 9, 1995"
 .SH NAME
-sendq/q* \- \*(Fx facsimile transmission job description
+sendq/q* \- \*(Fx transmission job description
 .SH DESCRIPTION
 Files in the
 .B sendq
-directory specify facsimile transmission job requests.
+directory specify transmission job requests.
 These files are usually created by
 .IR faxd.recv (1M),
 when submitting a job on behalf of
-.IR sendfax (1).
+.IR sendfax (1)
+or
+.IR sendpage (1).
 .PP
 Job description files are 
 .SM ASCII
@@ -59,50 +63,102 @@ Numeric values are decimal integers.
 The following table lists the possible tags and the required
 type of the associated value.
 .sp .5
-.in +0.5i
-.ta \w'pagelength    'u +\w'integer    'u
+.RS
+.ta \w'pagehandling    'u +\w'integer    'u
 .nf
 \fBTag	Type	Description\fP
 company	string	receiver's company
+client	string	host that submitted the job
+cover	string	continuation coverpage file
+data	string	unprocessed document of indeterminate type
+!data	string	processed document of indeterminate type
+dataformat	string	data format used to transmit a facsimile
+external	string	external form of dialstring
 fax	string	document ready for transmission
+groupid	integer	\*(Fx job group identifier
+jobid	integer	\*(Fx job identifier
 jobtag	string	user-specified job identifier
-killtime	integer	time to give up trying to send facsimile
+jobtype	string	job type identification string
+killtime	integer	time to give up trying to send job
+location	string	receiver's location
 mailaddr	string	email address of sender
 maxdials	integer	max number of times to dial
+maxtries	integer	max number of attempts to send job
 modem	string	outgoing modem to use
+ndials	integer	number of consecutive failed attempts to place call
 notify	string	email notification specification
 npages	integer	number of pages transmitted
 ntries	integer	number of attempts to send current page
-ndials	integer	number of consecutive failed attempts to place call
 number	string	dialstring to use in placing call
-external	string	external form of dialstring
-location	string	receiver's location
+page	string	PIN in a page operation
 pagehandling	string	page analysis information
 pagelength	integer	facsimile page length (millimeters)
 pagewidth	integer	facsimile page width (millimeters)
 poll	string	polling request
-postscript	string	unprocessed postscript document
-!postscript	string	processed postscript document
+postscript	string	unprocessed \*(Ps document
+!postscript	string	processed \*(Ps document
+priority	integer	user-specified scheduling priority
 receiver	string	receiver's identity
 resolution	integer	vertical resolution of facsimile
+schedpri	integer	current scheduling priority
 sender	string	identity of sender
+signalrate	string	signalling rate at which a facsimile was sent
 status	string	job status
-tiff	string	unprocessed \s-1TIFF\s0 document
-!tiff	string	processed \s-1TIFF\s0 document
+tiff	string	unprocessed \s-1TIFF/F\s0 document
+!tiff	string	processed \s-1TIFF/F\s0 document
 totdials	integer	total number of phone calls
 totpages	integer	total pages to transmit
-tts	integer	time to send facsimile
+tottries	integer	total number of attempts to send job
+tts	integer	time to send job
 .fi
-.in -0.5i
+.RE
 .SH "PARAMETERS"
-.TP 10
+Note that all files must be owned by the fax user.
+Pathnames must be relative to the top of the
+\*(Fx spooling directory and not include ``..''.
+.TP 14
+.B client
+The fully qualified hostname for the machine from which the
+job was submitted.
+If the hostname is unknown at the time the job is submitted, then
+the host address in Internet standard ``.'' (dot) notation is
+supplied instead.
+.TP 14
 .B company
 The receiver's company name as specified with the
 .B \-x
 option to
 .IR sendfax (1).
 This value is used only when creating continuation cover pages.
-.TP 10
+.TP 14
+.B cover
+The pathname of a \fIcontinuation cover page\fP to send.
+The file must be 
+.SM TIFF/F
+(i.e. it must already be prepared for transmission).
+This document will be transmitted before any other documents
+listed in the file.
+See
+.B ContCoverPage
+and
+.B ContCoverCmd
+in 
+.IR config (4F).
+.TP 14
+.B data
+The pathname of a document to send.
+Once a document has been processed, it is marked as
+.B !data
+so that subsequent retries do not reprocess the document. 
+.TP 14
+.B dataformat
+The format used to transmit facsimile data.
+This item is recorded by
+.IR faxsend (1M)
+so that
+.IR notify (1M)
+can return it in a notification message.
+.TP 14
 .B external
 The external form of the dialstring.
 This string is used instead of the dialstring in any status
@@ -110,48 +166,62 @@ and log messages.
 Clients can protect private information such as access codes
 that must be placed in dialstrings by supplying a
 ``cleansed'' version of the dialstring.
-.TP 10
+.TP 14
 .B fax
-The value is a pathname to a file containing a
-.SM TIFF
-Class F document that is ready for transmission.
-Files must be owned by the fax user.
-Pathnames must be relative to the top of the \*(Fx
-spooling directory and not include ``..''.
+The pathname of a
+.SM TIFF/F
+document that is ready for transmission.
 If the pathname string has a leading ``xx:'', then ``xx''
 is interpreted to be the index of the first directory in
 the file to transmit (directories are numbered starting
 at zero).
-.TP 10
+.TP 14
+.B groupid
+The job group identifier, an integer number in the range
+1 to 32000 assigned to each group of jobs by the \*(Fx software.
+Each job in a group of jobs submitted at the same time is
+assigned the same value by the \*(Fx software.
+.TP 14
+.B jobid
+The job identifier, a unique integer number in the range
+1 to 32000 assigned to each job by the \*(Fx software.
+.TP 14
 .B jobtag
 A user-specified string that is intended for identification purposes.
 If this string is defined, it is returned to the user in notification
-messages.
-.TP 10
+messages instead of the job identifier.
+.TP 14
 .B killtime
 The time to kill this job, expressed in seconds
 since 00:00:00 GMT, January 1, 1970.
+.TP 14
 .B location
 The receiver's location as specified with the
 .B \-y
 option to
 .IR sendfax (1).
 This value is used only when creating continuation cover pages.
-.TP 10
+.TP 14
 .B mailaddr
 The electronic mail address to which notification
 messages should be directed.
-.TP 10
+.TP 14
 .B maxdials
 The maximum number of times the server should dial the phone.
 If the job cannot be completed in this number of calls, it is terminated.
-.TP 10
+.TP 14
+.B maxtries
+The maximum number of times the server should attempt to send a job; where
+an attempt is defined to be a session that makes it past
+Phase A of the 
+.SM CCITT T.30
+protocol (for facsimile), or similar.
+If the job cannot be completed in this number of tries, it is terminated.
+.TP 14
 .B modem
-The outgoing modem to use to send the facsimile, or ``any''
-if 
-.I any
-modem can be used.
-.TP 10
+The outgoing modem to use to send the job, or ``any''
+if any available modem is acceptable.
+.TP 14
 .B notify
 A specification of whether the sender wants
 notification: whenever the job is requeued after
@@ -161,32 +231,40 @@ when the job is completed (``\c
 .IR "when done" ''),
 or not at all (``\c
 .IR "none" '').
-.TP 10
+.TP 14
 .B npages
 The number of pages in the facsimile, including
 the cover page, that have been successfully transmitted.
-.TP 10
+.TP 14
 .B ntries
-The number of unsucessful
-attempts that have been made to transmit
+The number of unsucessful attempts that have been made to transmit
 the current page.
-.TP 10
+.TP 14
 .B ndials
 The number of consecutive unsucessful
 attempts to establish carrier with the
-the destination facsimile machine.
-.TP 10
+the remote device.
+.TP 14
 .B number
-The dialstring to use to call the destination facsimile machine.
-.TP 10
+The dialstring to use to call the destination device.
+.TP 14
+.B page
+a string with
+.SM PIN
+and to use in processing a page transmit request.
+.TP 14
 .B pagehandling
-A string used by the facsimile server during transmission.
-The string has three character for each page to be transmitted.
-The first two characters of triplet are a hex-encoded specification
+A string used in the negotiation of session capabilities
+during facsimile transmission.
+The string has three character, say \fIxxc\fP,
+for each page to be transmitted.
+The \fIxx\fP characters are a hex-encoded specification
 of the session capabilities required to transmit the page.
-The third character is one of: ``M'', ``S'', and ``P''.
-``M'' indicates there is another page to follow and that the page
-requires different T.30 session parameters be negotiated (an
+The \fIc\fP character is one of ``M'', ``S'', and ``P'';
+where: ``M'' indicates there is another page to follow and
+that the page requires different
+.SM T.30
+session parameters be negotiated (an
 .SM EOM
 code is to be transmitted).
 ``S'' indicates there is another page to follow, but the page
@@ -196,76 +274,90 @@ code is to be transmitted).
 ``P'' indicates this is the last page to be transmitted (an
 .SM EOP
 code is to be transmitted).
-.TP 10
+.TP 14
 .B pagelength
 The desired page length in millimeters.
-.TP 10
+.TP 14
 .B pagewidth
 The desired page width in millimeters.
-.TP 10
+.TP 14
 .B poll
 The value is a Caller Identification String (\c
 .SM CIS\c
 ) to use in making a polling request.
 If no 
 .SM CIS
-is specified then the fax server will form one from the
+is specified then 
+.I faxsend
+will form one from the
 .B FAXNumber
 configuration parameter.
-.TP 10
+.TP 14
 .B postscript
-The value is a pathname to a file containing a
-\*(Ps\(tm document to send.
-Files must be owned by the fax user.
-Pathnames must be relative to the top of the \*(Fx
-spooling directory and not include ``..''.
+The pathname of a \*(Ps\(tm document to send.
 Once a \*(Ps
-document has been processed by the fax server, it is marked as
+document has been processed by 
+.IR faxsend ,
+it is marked as
 .B !postscript
 so that subsequent retries do not reprocess the document. 
-.TP
+.TP 14
 .B receiver
 The receiver's name.
 This value is used only when creating continuation cover pages.
-.TP 10
+.TP 14
 .B resolution
 The desired vertical resolution in lines per inch.
 This value should be either 98 or 196.
-.TP 10
+.TP 14
 .B sender
 The ``full name'' of the sender of the facsimile.
-.TP 10
+.TP 14
+.B signalrate
+The signalling rate used to transmit facsimile data.
+This item is recorded by
+.IR faxsend (1M)
+so that
+.IR notify (1M)
+can return it in a notification message.
+.TP 14
 .B status
 Status information about the current state of the job.
 Typically this is the reason why the last attempt to
 send the facsimile failed.
-.TP 10
+.TP 14
 .B tiff
-The value is a pathname to a file containing a
-.SM TIFF
-Class F document to send.
-Files must be owned by the fax user.
-Pathnames must be relative to the top of the \*(Fx
-spooling directory and not include ``..''.
+The pathname of a 
+.SM TIFF/F
+document to send.
 Once a
 .SM TIFF
-document has been processed by the fax server, it is marked as
+document has been processed by 
+.IR faxsend ,
+it is marked as
 .B !tiff
 so that subsequent retries do not reprocess the document. 
-.TP 10
+.TP 14
 .B totdials
-The total number of times the server has dialed the phone.
-.TP 10
+The total number of times the server has placed a call
+to the receiving phone number.
+.TP 14
 .B totpages
 The total number of pages to be transmitted.
-.TP 10
+.TP 14
+.B tottries
+The total number of attempts to transmit a job; see
+.B maxtries
+above.
+.TP 14
 .B tts
-The time to send the facsimile.
+The time to send the job.
 If this value is non-zero, it is number of seconds
 since 00:00:00 GMT, January 1, 1970.
 Otherwise, a value of 0 is interpreted to mean
-transmit immediately.
+process as soon as possible.
 .SH "SEE ALSO"
 .IR sendfax (1),
-.IR faxd (1M),
+.IR faxq (1M),
+.IR faxsend (1M),
 .IR faxd.recv (1M)

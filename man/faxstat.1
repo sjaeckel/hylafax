@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/faxstat.1,v 1.11 1994/06/06 21:37:23 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/faxstat.1,v 1.20 1995/04/08 21:35:51 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,119 +25,136 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.TH FAXSTAT 1 "June 6, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH FAXSTAT 1 "December 5, 1994"
 .SH NAME
-faxstat \- display facsimile server status
+faxstat \- display \*(Fx status
 .SH SYNOPSIS
 .B faxstat
 [
-.B \-h
-.I hostname
+.I options
 ] [
-.B \-u
-.I username
-] [
-.B \-a
-] [
-.B \-i
-] [
-.B \-r
-] [
-.B \-s
-] [
-.B \-v
-] [
-.B \-D
+.I jobs ...
 ]
 .SH DESCRIPTION
-.I Faxstat
-reports the status of a fascimile server, including (potentially)
+.I faxstat
+reports the status of \*(Fx servers, including (potentially)
 the status of the send and receive queues.
 Server status information indicates the state of the
 server (idle, sending, receiving, etc.)
 and the phone number that is associated with the fax modem.
 The send queue report gives the status of facsimile jobs
 queued for transmission:
-.IP \(bu
+.RS
+.IP \(bu 3
 the job identifier,
-.IP \(bu
+.IP \(bu 3
 the modem the job is bound to (or ``any'' if the job
 can be sent though any modem),
-.IP \(bu
+.IP \(bu 3
 the destination (phone number) of the job,
-.IP \(bu
+.IP \(bu 3
 the time to send the job, or a blank field if the job is being
 processed or is to be sent immediately,
-.IP \(bu
+.IP \(bu 3
 the senders' name,
-.IP \(bu
+.IP \(bu 3
 and status information about the job (typically the reason why
 a previous attempt failed).
+.RE
 .PP
 The receive queue report lists the facsimile documents
 that have been received and are awaiting delivery; it
 includes:
-.IP \(bu
+.RS
+.IP \(bu 3
 the phone number of the sender (if supplied),
-.IP \(bu
+.IP \(bu 3
 the date and time at which the job was received,
-.IP \(bu
+.IP \(bu 3
 the number of pages and their size,
-.IP \(bu
+.IP \(bu 3
 and the quality (resolution) at which the document was transmitted.
+.RE
 .PP
 When invoked without options,
 .I faxstat
 reports status of the server and the status of
-jobs queued by the user that ran the program.
-If the
-.B \-i
-option is specified, any additional server status information is
-also displayed.
-If the
-.B \-r
-option is specified, the receive queue status is also displayed.
-Status of jobs submitted by specific users can be obtained with the
-.B \-u
-option.
-Status of all jobs queued for transmission
-is reported if the
+jobs queued by the user that ran the program; the options
+described below can be used to override this behaviour.
+.PP
+The status of specific jobs may be
+requested by specifying the
+.I "job identifiers"
+on the command line.
+.SH OPTIONS
+.TP 10
 .B \-a
-option is supplied.
-The send queue status can also be suppressed by specifying the
-.B \-s
-option.
-.PP
-By default
-.I faxstat
-reports status for the facsimile servers located on
-the host specified in the
-.B FAXSERVER
-environment variable.
-Alternate hosts may be given with one or more uses of the
+Display the status of
+.I all
+jobs queued for transmission on the specified servers.
+.TP 10
+.BI \-h " host"
+Force the server to be contacted on a specific
+.IR host .
+The
+.I host
+may be either a symbolic name or a network address.
+If no
 .B \-h
-option.
-.PP
-The
-.B \-D
-option is used for debugging
-.IR faxstat ;
-it causes
+option is supplied,
 .I faxstat
-to obtain protocol information from the standard input,
-rather than from a server process.
-The
+uses the
+.SM FAXSERVER
+environment variable to identify the \*(Fx server to
+which the jobs should be directed.
+If no server is specified then
+.I faxstat
+attempts to contact a server on the local host.
+.IP
+Multiple servers' status may be displayed by specifying
+the
+.B \-h
+option multiple times.
+.TP 10
+.B \-i
+Display additional, informational, status
+information for each specified server.
+This status typically has information such as the \*(Fx
+version, the physical location of the server machine, and
+an administrative contact for the server.
+.TP 10
+.B \-r
+Display the receive queue status for each server.
+.TP 10
+.B \-s
+Supress the normal display of jobs in the send queue.
+.TP 10
+.BI \-u " user"
+Display status only for jobs submitted by
+.IR user .
+This option may be specified multiple times to get job
+status information for multiple users.
+.TP 10
 .B \-v
-option causes the protocol exchanges between
+Trace the protocol exchanges between
 .I faxstat
 and the
 .I faxd.recv
-server processes to be traced on the standard output.
+processes on the standard output.
+.TP 10
+.B \-D
+Force
+.I faxstat
+to obtain protocol information from the standard input,
+rather than from a server process.
+This option is used for debugging.
 .SH FILES
 .ta \w'${LIBDATA}/pagesizes    'u
 ${LIBDATA}/pagesizes	page size database
 .SH "SEE ALSO"
-.IR flexfax (1),
+.IR hylafax (1),
 .IR sendfax (1),
 .IR faxalter (1),
 .IR faxrm (1)

@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_unix.c,v 1.5 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_unix.c,v 1.10.1.1 1995/02/10 19:04:23 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -28,51 +28,58 @@
  * TIFF Library UNIX-specific Routines.
  */
 #include "tiffiop.h"
+#include <unistd.h>
+#include <stdlib.h>
 
-static int
-DECLARE3(_tiffReadProc, void*, fd, char*, buf, u_long, size)
+static tsize_t
+_tiffReadProc(thandle_t fd, tdata_t buf, tsize_t size)
 {
-	return (read((int) fd, buf, size));
+	return ((tsize_t) read((int) fd, buf, (size_t) size));
+}
+
+static tsize_t
+_tiffWriteProc(thandle_t fd, tdata_t buf, tsize_t size)
+{
+	return ((tsize_t) write((int) fd, buf, (size_t) size));
+}
+
+static toff_t
+_tiffSeekProc(thandle_t fd, toff_t off, int whence)
+{
+	return ((toff_t) lseek((int) fd, (off_t) off, whence));
 }
 
 static int
-DECLARE3(_tiffWriteProc, void*, fd, char*, buf, u_long, size)
-{
-	return (write((int) fd, buf, size));
-}
-
-static long
-DECLARE3(_tiffSeekProc, void*, fd, long, off, int, whence)
-{
-	return (lseek((int) fd, off, whence));
-}
-
-static int
-DECLARE1(_tiffCloseProc, void*, fd)
+_tiffCloseProc(thandle_t fd)
 {
 	return (close((int) fd));
 }
 
 #include <sys/stat.h>
 
-static long
-DECLARE1(_tiffSizeProc, void*, fd)
+static toff_t
+_tiffSizeProc(thandle_t fd)
 {
+#ifdef _AM29K
+	long fsize;
+	return ((fsize = lseek((int) fd, 0, SEEK_END)) < 0 ? 0 : fsize);
+#else
 	struct stat sb;
-	return (fstat((int) fd, &sb) < 0 ? 0 : sb.st_size);
+	return (toff_t) (fstat((int) fd, &sb) < 0 ? 0 : sb.st_size);
+#endif
 }
 
 #ifdef MMAP_SUPPORT
 #include <sys/mman.h>
 
 static int
-DECLARE3(_tiffMapProc, void*, fd, char**, pbase, long*, psize)
+_tiffMapProc(thandle_t fd, tdata_t* pbase, toff_t* psize)
 {
-	long size = _tiffSizeProc(fd);
-	if (size != -1) {
-		*pbase = (char*)
+	toff_t size = _tiffSizeProc(fd);
+	if (size != (toff_t) -1) {
+		*pbase = (tdata_t)
 		    mmap(0, size, PROT_READ, MAP_SHARED, (int) fd, 0);
-		if (*pbase != (char *)-1) {
+		if (*pbase != (tdata_t) -1) {
 			*psize = size;
 			return (1);
 		}
@@ -81,19 +88,20 @@ DECLARE3(_tiffMapProc, void*, fd, char**, pbase, long*, psize)
 }
 
 static void
-DECLARE3(_tiffUnmapProc, void*, fd, char*, base, long, size)
+_tiffUnmapProc(thandle_t fd, tdata_t base, toff_t size)
 {
-	(void) munmap(base, size);
+	(void) fd;
+	(void) munmap(base, (off_t) size);
 }
 #else /* !MMAP_SUPPORT */
 static int
-DECLARE3(_tiffMapProc, void*, fd, char**, pbase, long*, psize)
+_tiffMapProc(thandle_t fd, tdata_t* pbase, toff_t* psize)
 {
 	return (0);
 }
 
 static void
-DECLARE3(_tiffUnmapProc, void*, fd, char*, base, long, size)
+_tiffUnmapProc(thandle_t fd, tdata_t base, toff_t size)
 {
 }
 #endif /* !MMAP_SUPPORT */
@@ -102,12 +110,12 @@ DECLARE3(_tiffUnmapProc, void*, fd, char*, base, long, size)
  * Open a TIFF file descriptor for read/writing.
  */
 TIFF*
-DECLARE3(TIFFFdOpen, int, fd, const char*, name, const char*, mode)
+TIFFFdOpen(int fd, const char* name, const char* mode)
 {
-	TIFF *tif;
+	TIFF* tif;
 
 	tif = TIFFClientOpen(name, mode,
-	    (void*) fd,
+	    (thandle_t) fd,
 	    _tiffReadProc, _tiffWriteProc,
 	    _tiffSeekProc, _tiffCloseProc, _tiffSizeProc,
 	    _tiffMapProc, _tiffUnmapProc);
@@ -120,15 +128,19 @@ DECLARE3(TIFFFdOpen, int, fd, const char*, name, const char*, mode)
  * Open a TIFF file for read/writing.
  */
 TIFF*
-DECLARE2(TIFFOpen, const char*, name, const char*, mode)
+TIFFOpen(const char* name, const char* mode)
 {
 	static const char module[] = "TIFFOpen";
 	int m, fd;
 
 	m = _TIFFgetMode(mode, module);
 	if (m == -1)
-		return ((TIFF *)0);
+		return ((TIFF*)0);
+#ifdef _AM29K
+	fd = open(name, m);
+#else
 	fd = open(name, m, 0666);
+#endif
 	if (fd < 0) {
 		TIFFError(module, "%s: Cannot open", name);
 		return ((TIFF *)0);
@@ -136,32 +148,59 @@ DECLARE2(TIFFOpen, const char*, name, const char*, mode)
 	return (TIFFFdOpen(fd, name, mode));
 }
 
-#if defined(__MACH__) || defined(THINK_C)
-extern	void *malloc(size_t size);
-extern	void *realloc(void *ptr, size_t size);
-#else /* !__MACH__ && !THINK_C */
-#if defined(_IBMR2)
-#include <stdlib.h>
-#else /* !_IBMR2 */
-extern	char *malloc();
-extern	char *realloc();
-#endif /* _IBMR2 */
-#endif /* !__MACH__ */
-
-void *
-DECLARE1(_TIFFmalloc, size_t, s)
+void*
+_TIFFmalloc(size_t s)
 {
 	return (malloc(s));
 }
 
 void
-DECLARE1(_TIFFfree, void*, p)
+_TIFFfree(void* p)
 {
 	free(p);
 }
 
-void *
-DECLARE2(_TIFFrealloc, void*, p, size_t, s)
+void*
+_TIFFrealloc(void* p, size_t s)
 {
 	return (realloc(p, s));
 }
+
+void
+_TIFFmemset(void* p, int v, size_t c)
+{
+	memset(p, v, c);
+}
+
+void
+_TIFFmemcpy(void* d, const void* s, size_t c)
+{
+	memcpy(d, s, c);
+}
+
+int
+_TIFFmemcmp(const void* p1, const void* p2, size_t c)
+{
+	return (memcmp(p1, p2, c));
+}
+
+static void
+unixWarningHandler(const char* module, const char* fmt, va_list ap)
+{
+	if (module != NULL)
+		fprintf(stderr, "%s: ", module);
+	fprintf(stderr, "Warning, ");
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, ".\n");
+}
+TIFFErrorHandler _TIFFwarningHandler = unixWarningHandler;
+
+static void
+unixErrorHandler(const char* module, const char* fmt, va_list ap)
+{
+	if (module != NULL)
+		fprintf(stderr, "%s: ", module);
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, ".\n");
+}
+TIFFErrorHandler _TIFFerrorHandler = unixErrorHandler;

@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_open.c,v 1.40 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_open.c,v 1.47 1994/09/17 23:22:37 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -81,8 +81,8 @@ static const int litTypeshift[13] = {
  * swapping state according to the file
  * contents and the machine architecture.
  */
-static
-DECLARE3(TIFFInitOrder, register TIFF*, tif, int, magic, int, bigendian)
+static void
+TIFFInitOrder(register TIFF* tif, int magic, int bigendian)
 {
 	/* XXX how can we deduce this dynamically? */
 	tif->tif_fillorder = FILLORDER_MSB2LSB;
@@ -100,7 +100,7 @@ DECLARE3(TIFFInitOrder, register TIFF*, tif, int, magic, int, bigendian)
 }
 
 int
-DECLARE2(_TIFFgetMode, const char*, mode, const char*, module)
+_TIFFgetMode(const char* mode, const char* module)
 {
 	int m = -1;
 
@@ -124,10 +124,9 @@ DECLARE2(_TIFFgetMode, const char*, mode, const char*, module)
 }
 
 TIFF*
-#if USE_PROTOTYPES
 TIFFClientOpen(
 	const char* name, const char* mode,
-	void* clientdata,
+	thandle_t clientdata,
 	TIFFReadWriteProc readproc,
 	TIFFReadWriteProc writeproc,
 	TIFFSeekProc seekproc,
@@ -136,21 +135,6 @@ TIFFClientOpen(
 	TIFFMapFileProc mapproc,
 	TIFFUnmapFileProc unmapproc
 )
-#else
-TIFFClientOpen(name, mode,
-	clientdata, readproc, writeproc, seekproc, closeproc, sizeproc,
-	mapproc, unmapproc
-)
-	const char *name, *mode;
-	void *clientdata;
-	TIFFReadWriteProc readproc;
-	TIFFReadWriteProc writeproc;
-	TIFFSeekProc seekproc;
-	TIFFCloseProc closeproc;
-	TIFFSizeProc sizeproc;
-	TIFFMapFileProc mapproc;
-	TIFFUnmapFileProc unmapproc;
-#endif
 {
 	static const char module[] = "TIFFClientOpen";
 	TIFF *tif;
@@ -164,14 +148,14 @@ TIFFClientOpen(name, mode,
 		TIFFError(module, "%s: Out of memory (TIFF structure)", name);
 		goto bad2;
 	}
-	memset(tif, 0, sizeof (*tif));
+	_TIFFmemset(tif, 0, sizeof (*tif));
 	tif->tif_name = (char *)tif + sizeof (TIFF);
 	strcpy(tif->tif_name, name);
 	tif->tif_mode = m &~ (O_CREAT|O_TRUNC);
-	tif->tif_curdir = -1;		/* non-existent directory */
+	tif->tif_curdir = (tdir_t) -1;		/* non-existent directory */
 	tif->tif_curoff = 0;
-	tif->tif_curstrip = -1;		/* invalid strip */
-	tif->tif_row = -1;		/* read/write pre-increment */
+	tif->tif_curstrip = (tstrip_t) -1;	/* invalid strip */
+	tif->tif_row = (uint32)-1;		/* read/write pre-increment */
 	tif->tif_clientdata = clientdata;
 	tif->tif_readproc = readproc;
 	tif->tif_writeproc = writeproc;
@@ -252,7 +236,7 @@ TIFFClientOpen(name, mode,
 	switch (mode[0]) {
 	case 'r':
 		tif->tif_nextdiroff = tif->tif_header.tiff_diroff;
-		if (TIFFMapFileContents(tif, &tif->tif_base, &tif->tif_size))
+		if (TIFFMapFileContents(tif, (tdata_t*) &tif->tif_base, &tif->tif_size))
 			tif->tif_flags |= TIFF_MAPPED;
 		if (TIFFReadDirectory(tif)) {
 			tif->tif_rawcc = -1;
@@ -283,17 +267,17 @@ TIFFClientOpen(name, mode,
 bad:
 	tif->tif_mode = O_RDONLY;	/* XXX avoid flush */
 	TIFFClose(tif);
-	return ((TIFF *)0);
+	return ((TIFF*)0);
 bad2:
 	(void) (*closeproc)(clientdata);
-	return ((TIFF *)0);
+	return ((TIFF*)0);
 }
 
-u_long
-DECLARE1(TIFFScanlineSize, TIFF*, tif)
+tsize_t
+TIFFScanlineSize(TIFF* tif)
 {
 	TIFFDirectory *td = &tif->tif_dir;
-	u_long scanline;
+	tsize_t scanline;
 	
 	scanline = td->td_bitspersample * td->td_imagewidth;
 	if (td->td_planarconfig == PLANARCONFIG_CONTIG)
@@ -309,7 +293,7 @@ DECLARE1(TIFFScanlineSize, TIFF*, tif)
  * Return open file's name.
  */
 const char *
-DECLARE1(TIFFFileName, TIFF*, tif)
+TIFFFileName(TIFF* tif)
 {
 	return (tif->tif_name);
 }
@@ -318,7 +302,7 @@ DECLARE1(TIFFFileName, TIFF*, tif)
  * Return open file's I/O descriptor.
  */
 int
-DECLARE1(TIFFFileno, TIFF*, tif)
+TIFFFileno(TIFF* tif)
 {
 	return (tif->tif_fd);
 }
@@ -327,7 +311,7 @@ DECLARE1(TIFFFileno, TIFF*, tif)
  * Return read/write mode.
  */
 int
-DECLARE1(TIFFGetMode, TIFF*, tif)
+TIFFGetMode(TIFF* tif)
 {
 	return (tif->tif_mode);
 }
@@ -337,7 +321,7 @@ DECLARE1(TIFFGetMode, TIFF*, tif)
  * tiles; zero if organized as strips.
  */
 int
-DECLARE1(TIFFIsTiled, TIFF*, tif)
+TIFFIsTiled(TIFF* tif)
 {
 	return (isTiled(tif));
 }
@@ -345,8 +329,8 @@ DECLARE1(TIFFIsTiled, TIFF*, tif)
 /*
  * Return current row being read/written.
  */
-long
-DECLARE1(TIFFCurrentRow, TIFF*, tif)
+uint32
+TIFFCurrentRow(TIFF* tif)
 {
 	return (tif->tif_row);
 }
@@ -354,8 +338,8 @@ DECLARE1(TIFFCurrentRow, TIFF*, tif)
 /*
  * Return index of the current directory.
  */
-int
-DECLARE1(TIFFCurrentDirectory, TIFF*, tif)
+tdir_t
+TIFFCurrentDirectory(TIFF* tif)
 {
 	return (tif->tif_curdir);
 }
@@ -363,8 +347,8 @@ DECLARE1(TIFFCurrentDirectory, TIFF*, tif)
 /*
  * Return current strip.
  */
-int
-DECLARE1(TIFFCurrentStrip, TIFF*, tif)
+tstrip_t
+TIFFCurrentStrip(TIFF* tif)
 {
 	return (tif->tif_curstrip);
 }
@@ -372,8 +356,17 @@ DECLARE1(TIFFCurrentStrip, TIFF*, tif)
 /*
  * Return current tile.
  */
-int
-DECLARE1(TIFFCurrentTile, TIFF*, tif)
+ttile_t
+TIFFCurrentTile(TIFF* tif)
 {
 	return (tif->tif_curtile);
+}
+
+/*
+ * Return nonzero if the file has byte-swapped data.
+ */
+int
+TIFFIsByteSwapped(TIFF* tif)
+{
+	return ((tif->tif_flags & TIFF_SWAB) != 0);
 }

@@ -1,0 +1,132 @@
+<HTML>
+<HEAD>
+<TITLE>HylaFAX Table of Contents</TITLE>
+</HEAD>
+
+<BASEFONT SIZE=4>
+<B><FONT SIZE=+3>H</FONT>YLA<FONT SIZE=+1>FAX</FONT> <FONT SIZE=+2>T</FONT>ABLE OF <FONT SIZE=+2>C</FONT>ONTENTS</B>
+<BASEFONT SIZE=3>
+
+<HR SIZE=4>
+
+This is the table of contents for the documentation included with the
+HylaFAX software distribution.
+To get a single document with all the on-line HylaFAX documentation
+except for the supporting materials,
+click on the <B><I>Collect Pages</I></B> button below.
+
+<FORM METHOD=query ACTION="@CGIPATH@/cat-pages@HTMLPATH@">
+<INPUT TYPE=hidden NAME=IF VALUE="index.html">
+<INPUT TYPE=hidden NAME=OF1 VALUE="toc.html">
+<INPUT TYPE=hidden NAME=OF2 VALUE="overview.html">
+<INPUT TYPE=hidden NAME=OF3 VALUE="version.html">
+<INPUT TYPE=hidden NAME=OF4 VALUE="modems.html">
+<INPUT TYPE=hidden NAME=OF5 VALUE="class1.html">
+<INPUT TYPE=hidden NAME=OF6 VALUE="class2.html">
+<INPUT TYPE=hidden NAME=OF7 VALUE="class2.0.html">
+<INPUT TYPE=hidden NAME=OF8 VALUE="source.html">
+<INPUT TYPE=hidden NAME=OF9 VALUE="binary.html">
+<INPUT TYPE=hidden NAME=OF10 VALUE="building.html">
+<INPUT TYPE=hidden NAME=OF11 VALUE="ghostscript.html">
+<INPUT TYPE=hidden NAME=OF12 VALUE="install-binary.html">
+<INPUT TYPE=hidden NAME=OF13 VALUE="setup.html">
+<INPUT TYPE=hidden NAME=OF14 VALUE="setup-advanced.html">
+<INPUT TYPE=hidden NAME=OF15 VALUE="setup-client.html">
+<INPUT TYPE=hidden NAME=OF16 VALUE="operation.html">
+<INPUT TYPE=hidden NAME=OF17 VALUE="troubleshooting.html">
+<INPUT TYPE=hidden NAME=OF18 VALUE="faxgateway.html">
+<INPUT TYPE=hidden NAME=OF19 VALUE="contrib.html">
+<INPUT TYPE=hidden NAME=OF20 VALUE="acknowledge.html">
+<INPUT TYPE=hidden NAME=OF21 VALUE="documentation.html">
+<INPUT TYPE=hidden NAME=OF22 VALUE="mailing-lists.html">
+<INPUT TYPE=hidden NAME=OF23 VALUE="copyright.html">
+<INPUT TYPE=submit VALUE="Collect Pages">
+<B><I>Create a single document (suitable for printing or saving).</I></B>
+</FORM>
+
+Alternatively, a PostScript copy of a snapshot of
+this documentation is available by public ftp in the directory
+<A HREF="ftp://ftp.sgi.com/sgi/fax/doc">ftp://ftp.sgi.com/sgi/fax/doc</A>.
+
+<P>
+If you are looking for ancillary materials such as the FAQ or
+mailing list archives, consult the section on
+<A HREF="#Supporting">supporting materials</A>
+
+<P><HR WIDTH=65% ALIGN=right>
+
+<A NAME=Basic><B><FONT SIZE=+3>B</FONT>ASIC INFORMATION</B></A>
+
+<UL>
+<LI><A HREF="overview.html">HylaFAX overview</A>
+<LI><A HREF="version.html">How to tell which version of HylaFAX you have</A>
+<LI><A HREF="modems.html">Which modems can be used with HylaFAX</A>
+<LI><A HREF="class1.html">About the Class 1 modem support</A>
+<LI><A HREF="class2.html">About the Class 2 modem support</A>
+<LI><A HREF="class2.0.html">About the Class 2.0 modem support</A>
+<LI><A HREF="binary.html">About the binary distribution</A>
+<LI><A HREF="source.html">About the source distribution</A>
+</UL>
+
+<P><HR WIDTH=65% ALIGN=right>
+
+<A NAME=BuildSetup><B><FONT SIZE=+3>B</FONT>UILDING AND <FONT SIZE=+2>S</FONT>ETUP INFORMATION</B></A>
+
+<UL>
+<LI><A HREF="building.html">How to build the software from source code</A>
+<LI><A HREF="ghostscript.html">How to build Ghostscript with the TIFF driver</A>
+<LI><A HREF="install-binary.html">How to install from the binary distribution</A>
+<LI><A HREF="setup.html">How to setup a server: basic configuration</A>
+<LI><A HREF="setup-advanced.html">How to setup a server: advanced configuration</A>
+<LI><A HREF="setup-client.html">How to setup clients</A>
+<LI><A HREF="operation.html">About server operation</A>
+<LI><A HREF="troubleshooting.html">Troubleshooting problems</A>
+<LI><A HREF="faxgateway.html">How to setup a mail to fax gateway</A>
+</UL>
+
+<P><HR WIDTH=65% ALIGN=right>
+
+<A NAME=Supporting><B><FONT SIZE=+3>S</FONT>UPPORTING MATERIALS</B></A>
+
+<UL>
+<LI><A HREF="HOWTO.html">Where to get the HylaFAX distribution</A>
+<LI><A HREF="FAQ/index.html">HylaFAX Frequently Asked Questions (HylaFAQ)</A>
+<LI><A HREF="http://www.vix.com/cgi-bin/mlaform/hylafax/Archives/?">HylaFAX mailing list archives</A>
+<LI><A HREF="survey.html">HylaFAX user survey form</A>
+<P>
+<LI><A HREF="http://www.vix.com/hylafax/Bakeoff/paper.html">FlexFAX Modem Bakeoff report</A>
+<LI><A HREF="Modems/index.html">FlexFAX/HylaFAX modem information</A>
+<LI><A HREF="Modems/ZyXEL/voice.html">ZyXEL modem voice support information</A>
+<LI><A HREF="Modems/Supra/class1.html">Supra/Rockwell Class 1 documentation</A>
+<LI><A HREF="Modems/Supra/class2.html">Supra/Rockwell Class 2 documentation</A>
+<LI><A HREF="Modems/Telebit/faxcmds.html">Telebit T3000/WorldBlazer FAX commands</A>
+<LI><A HREF="Modems/Hayes/hayes.html">Hayes technical reference for modem users</A>
+<LI><A HREF="http://www.vix.com/hylafax/Modems-PeterChen/index.html">Peter Chen's "What you need to know about modems"</A>
+<LI><A HREF="http://www.vix.com/hylafax/Scorecard/scorecard.html">FAX modem command scorecard</A>
+</UL>
+
+<P><HR WIDTH=65% ALIGN=right>
+
+<A NAME=EndMatter><B><FONT SIZE=+3>E</FONT>ND MATTER</B></A>
+
+<UL>
+<LI><A HREF="contrib.html">About contributed software</A>
+<LI><A HREF="acknowledge.html">Acknowledgements</A>
+<LI><A HREF="documentation.html">Other documentation</A>
+<LI><A HREF="mailing-lists.html">HylaFAX mailing list and other final words</A>
+<LI><A HREF="copyright.html">Use and copyright</A>
+<LI><A HREF="file://sgi.com/graphics/interviews/FAQ">InterViews information</A>
+<LI><A HREF="file://sgi.com/graphics/tiff/HOWTO">TIFF information</A>
+</UL>
+
+<A HREF="overview.html"><IMG SRC="icons/next.gif"> HylaFAX overview</A>.
+
+<HR>
+
+<ADDRESS>
+<A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+Last updated $Date: 1995/04/04 17:23:54 $.
+</ADDRESS>
+
+</BODY>
+</HTML>

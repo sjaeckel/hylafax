@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2Recv.c++,v 1.66 1994/07/04 18:36:46 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Recv.c++,v 1.77 1995/04/08 21:29:50 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -27,7 +28,6 @@
 #include "ModemConfig.h"
 
 #include "t.30.h"
-#include <stdlib.h>
 #include <osfcn.h>
 
 /*
@@ -39,8 +39,6 @@ static const AnswerMsg answerMsgs[] = {
   FaxModem::AT_NOTHING, FaxModem::OK,	    FaxModem::CALLTYPE_FAX },
 { "+FDM",	4,
   FaxModem::AT_NOTHING, FaxModem::OK,	    FaxModem::CALLTYPE_DATA },
-{ "+FHNG:",	6,
-  FaxModem::AT_NOTHING, FaxModem::NOCARRIER,FaxModem::CALLTYPE_ERROR },
 { "VCON",	4,
   FaxModem::AT_NOTHING, FaxModem::OK,	    FaxModem::CALLTYPE_VOICE },
 };
@@ -63,6 +61,7 @@ Class2Modem::recvBegin(fxStr& emsg)
 {
     fxBool status = FALSE;
     hangupCode[0] = '\0';
+    hadHangup = FALSE;
     ATResponse r;
     do {
 	switch (r = atResponse(rbuf, 3*60*1000)) {
@@ -73,8 +72,8 @@ Class2Modem::recvBegin(fxStr& emsg)
 	case AT_TIMEOUT:
 	case AT_EMPTYLINE:
 	    processHangup("70");
-	    status = FALSE;
-	    break;
+	    emsg = hangupCause(hangupCode);
+	    return (FALSE);
 	case AT_FNSS:
 	    // XXX parse and pass on to server
 	    break;
@@ -82,14 +81,13 @@ Class2Modem::recvBegin(fxStr& emsg)
 	    recvCheckTSI(stripQuotes(skipStatus(rbuf)));
 	    break;
 	case AT_FDCS:
-	    if (recvDCS(rbuf))
-		status = TRUE;
+	    status = recvDCS(rbuf);
 	    break;
 	case AT_FHNG:
 	    status = FALSE;
 	    break;
 	}
-    } while (r != AT_TIMEOUT && r != AT_EMPTYLINE && r != AT_OK);
+    } while (r != AT_OK);
     if (!status)
 	emsg = hangupCause(hangupCode);
     return (status);
@@ -124,11 +122,17 @@ Class2Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
     do {
 	ppm = PPM_EOP;
 	hangupCode[0] = 0;
-	if (!vatFaxCmd(AT_NOTHING, "DR"))
+	if (!atCmd("AT+FDR", AT_NOTHING))
 	    goto bad;
+	/*
+	 * The spec says the modem is supposed to return CONNECT
+	 * in response, but some modems such as the PPI PM14400FXMT
+	 * PM28800FXMT return OK instead in between documents
+	 * (i.e. when the previous page was punctuated with EOM).
+	 */
 	ATResponse r;
-	while ((r = atResponse(rbuf, conf.pageStartTimeout)) != AT_CONNECT)
-	    switch (r) {
+	do {
+	    switch (r = atResponse(rbuf, conf.pageStartTimeout)) {
 	    case AT_FDCS:			// inter-page DCS
 		(void) recvDCS(rbuf);
 		break;
@@ -141,6 +145,7 @@ Class2Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	    case AT_FHNG:			// remote hangup
 		goto bad;
 	    }
+	} while (r != AT_CONNECT && r != AT_OK);
 	protoTrace("RECV: begin page");
 	/*
 	 * NB: always write data in LSB->MSB for folks that
@@ -148,6 +153,12 @@ Class2Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	 */
 	recvSetupPage(tif, group3opts, FILLORDER_LSB2MSB);
 	if (!recvPageData(tif, emsg) || !recvPPM(tif, ppr))
+	    goto bad;
+	if (!waitFor(AT_FET))		// post-page message status
+	    goto bad;
+	ppm = atoi(skipStatus(rbuf));
+	tracePPM("RECV recv", ppm);
+	if (!waitFor(AT_OK))		// synchronization from modem
 	    goto bad;
 	/*
 	 * T.30 says to process operator intervention requests
@@ -176,12 +187,6 @@ Class2Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	} else {
 	    recvResetPage(tif);		// reset to overwrite data
 	}
-	if (!waitFor(AT_FET))		// post-page message status
-	    goto bad;
-	ppm = atoi(skipStatus(rbuf));
-	if (!waitFor(AT_OK))		// synchronization from modem
-	    goto bad;
-	tracePPM("RECV recv", ppm);
 	tracePPR("RECV send", ppr);
 	if (ppr & 1)			// page good, work complete
 	    return (TRUE);
@@ -208,6 +213,7 @@ Class2Modem::recvPageData(TIFF* tif, fxStr& emsg)
 {
     if (flowControl == FLOW_XONXOFF)
 	(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_FLUSH);
+    protoTrace("RECV: send trigger 0%o", recvDataTrigger&0377);
     (void) putModem(&recvDataTrigger, 1);	// initiate data transfer
 
     /*
@@ -263,7 +269,7 @@ Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
     int blc = 0;
     int cblc = 0;
     ppr = 0;
-    if (sscanf(cp, "%d,%d,%d,%d", &ppr, &lc, &blc, &cblc) > 0) {
+    if (::sscanf(cp, "%d,%d,%d,%d", &ppr, &lc, &blc, &cblc) > 0) {
 	// NB: ignore modem line count, always use our own
 	TIFFSetField(tif, TIFFTAG_IMAGELENGTH, getRecvEOLCount());
 	TIFFSetField(tif, TIFFTAG_CLEANFAXDATA, blc ?
@@ -274,8 +280,8 @@ Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
 	}
 	return (TRUE);
     } else {
-	protoTrace("MODEM protocol botch: \"%s\"; "
-	    "can not parse line count", cp);
+	protoTrace("MODEM protocol botch: \"%s\"; can not parse line count",
+	    cp);
 	processHangup("100");		// "Unspecified Phase D error"
 	return (FALSE);
     }
@@ -287,10 +293,13 @@ Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
 fxBool
 Class2Modem::recvEnd(fxStr&)
 {
-    if (isNormalHangup())
-	(void) vatFaxCmd(AT_NOCARRIER, "DR");	// wait for DCN
-    else
-	(void) class2Cmd(abortCmd);		// abort session
+    if (!hadHangup) {
+	if (isNormalHangup()) {
+	    if (atCmd("AT+FDR", AT_NOTHING))	// wait for DCN
+		(void) atResponse(rbuf, conf.t1Timer);
+	} else
+	    (void) atCmd(abortCmd);		// abort session
+    }
     return (TRUE);
 }
 
@@ -300,5 +309,5 @@ Class2Modem::recvEnd(fxStr&)
 void
 Class2Modem::recvAbort()
 {
-    strcpy(hangupCode, "50");			// force abort in recvEnd
+    ::strcpy(hangupCode, "50");		// force abort in recvEnd
 }

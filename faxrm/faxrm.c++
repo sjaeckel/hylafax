@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxrm/RCS/faxrm.c++,v 1.20 1994/06/23 00:35:24 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxrm/RCS/faxrm.c++,v 1.25 1995/04/08 21:34:31 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -23,6 +24,7 @@
  * OF THIS SOFTWARE.
  */
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -60,17 +62,21 @@ faxRmApp::initialize(int argc, char** argv)
     extern int optind;
     extern char* optarg;
     int c;
+    fxBool groups = FALSE;
 
     appName = argv[0];
     u_int l = appName.length();
     appName = appName.tokenR(l, '/');
-    while ((c = getopt(argc, argv, "h:kv")) != -1)
+    while ((c = getopt(argc, argv, "h:gkv")) != -1)
 	switch (c) {
 	case 'h':			// server's host
 	    setHost(optarg);
 	    break;
 	case 'k':
 	    request = "kill";
+	    break;
+	case 'g':
+	    groups = TRUE;
 	    break;
 	case 'v':
 	    setVerbose(TRUE);
@@ -83,6 +89,8 @@ faxRmApp::initialize(int argc, char** argv)
     setupUserIdentity();
     for (; optind < argc; optind++)
 	jobids.append(argv[optind]);
+    if (groups)
+	request.append("Group");
 }
 
 void

@@ -1,10 +1,11 @@
 #!/bin/sh
-#	$Header: /usr/people/sam/fax/RCS/configure,v 1.170 1994/08/09 00:35:02 sam Exp $
+#	$Header: /usr/people/sam/fax/./RCS/configure,v 1.293 1995/04/08 21:12:11 sam Rel $
 #
-# FlexFAX Facsimile Software
+# HylaFAX Facsimile Software
 #
-# Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
-# Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+# Copyright (c) 1988-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
 # its documentation for any purpose is hereby granted without fee, provided
@@ -26,421 +27,1052 @@
 # OF THIS SOFTWARE.
 #
 
-# Configuration script for FlexFAX
+# Configuration script for HylaFAX (tm) (aka FlexFAX)
 
 #
 # Shell script to setup machine-dependent files in
-# preparation for building flexfax source.
+# preparation for building HylaFax source.
 #
-RM="rm -f"
-CP="cp"
 
+#
+# Setup general configuration parameters.
+#
+DIR_BIN=/usr/local/bin
+DIR_SBIN=/usr/local/sbin
+DIR_LIBDATA=/usr/local/lib/fax
+DIR_LIBEXEC=$DIR_SBIN
+DIR_SPOOL=/var/spool/fax
+DIR_HTML=/var/httpd/htdocs/hylafax
+DIR_CGI=/var/httpd/cgi-bin
+PATH_DPSRIP=$DIR_LIBEXEC/ps2fax.exe
+HTMLPATH=/hylafax
+CGIPATH=/cgi-bin
+DEFVRES=98
+PAGESIZE="North American Letter"
+FAXUID=uucp
+FAXGID=
+SYSUID=bin
+SYSGID=
+DSO=auto
+AFM=auto
+HTML=no
+SYSVINIT=auto
+SGI2FAX=auto
+PORT=auto
+LIBMALLOC=auto
+DPS=no
+GS=no
+
+: ${MAKE=make}				# make to use
+# screws up the test of `-f -'
+unset MAKEFLAGS
+RM="rm -f"
+
+#
+# We do this little dance with the search path to insure
+# that programs that we select for use by installed programs
+# (which may be run by the super-user) come from trusted
+# locations before they come from the user's private area.
+# This should help avoid accidentally configuring some
+# random version of a program in someone's personal bin.
+#
+OPATH=$PATH
 PATH=/bin:/usr/bin:/etc
 test -d /usr/ccs/bin && PATH=$PATH:/usr/ccs/bin		# SVR4/Solaris2
 test -d /usr/sbin && PATH=$PATH:/usr/sbin		# SGI and others
 test -d /usr/bsd && PATH=$PATH:/usr/bsd			# SGI
 test -d /usr/ucb && PATH=$PATH:/usr/ucb			# Sun and others
+test -d /usr/contrib/bin && PATH=$PATH:/usr/contrib/bin	# BSDi
 test -d /usr/5bin && PATH=/usr/5bin:$PATH:/usr/etc	# Sun and others
+test -d /usr/local/bin && PATH=/usr/local/bin:$PATH	# for GNU stuff
+PATH=$PATH:$OPATH
 
 POSIXLY_CORRECT=1; export POSIXLY_CORRECT		# disable GNU extensions
 
-applyEdits()
+#
+# Error diagnostics that should go to the terminal are
+# done with this interface (or cat).
+#
+bitch()
 {
-    file=$1; shift
-    (for i do
-	echo "$i";
-     done; echo w; echo q) | ed - $file >/dev/null
+    echo "configure: $@" 1>&2
 }
 
 #
-# Apply a set of ed commands to a file.  If the
-# file is initially setup read-only, then it is
-# made writeable, edited, and then read-only again.
+# This is the preferred interface for
+# configure to terminate abnormally.
 #
-editFile()
+boom()
 {
-    file=$1;
-    if [ ! -w $file ]; then
-	chmod +w $file
-	applyEdits "$@"
-	chmod -w $file
-    else
-	applyEdits "$@"
-    fi
+    bitch ""
+    bitch "Unrecoverable error!  Once you've corrected the problem rerun this script."
+    kill -1 $$				# use kill so trap handler is called
 }
 
-#
-# Like editFile, but first save the original
-# as file.orig, a la the patch program.
-#
-patchFile()
+usage()
 {
-    file=$1;
-    $RM $file.orig; $CP $file $file.orig
-    if [ ! -w $file ]; then
-	chmod +w $file
-	applyEdits "$@"
-	chmod -w $file
-    else
-	applyEdits "$@"
-    fi
+    cat<<'EOF'
+Usage: configure [options] [host]
+Options: [defaults in brackets after descriptions]
+  --help                  print this message
+  --quiet                 do not print `Using ...' messages
+  --verbose		  opposite of --quiet
+  --version               print the version of autoconf that created configure
+  --target=TARGET         configure for TARGET [TARGET=HOST]
+  --srcdir=DIR            find the sources in DIR [configure dir or ..]
+  --with-PARAM[=ARG]      set configuration PARAM [ARG=yes]
+EOF
 }
+
+QUIET=no
+SITE=
+TARGET=
+SRCDIR=
+#
+# Crack command line arguments.  We purposely
+# use syntax and options that are compatible
+# with GNU autoconf.
+#
+ac_prev=
+for ac_option
+do
+    if [ -n "$ac_prev" ]; then		# assign the argument to previous option
+	eval "$ac_prev=\$ac_option"
+	ac_prev=
+	continue
+    fi
+    case "$ac_option" in		# collect optional argument
+    -*=*)	ac_optarg=`echo "$ac_option" | sed 's/[-_a-zA-Z0-9]*=//'`;;
+    *)		ac_optarg=;;
+    esac
+    case "$ac_option" in
+    -with-*|--with-*)
+	ac_with=`echo $ac_option|sed -e 's/-*with-//' -e 's/=.*//'`
+	# Reject names that are not valid shell variable names.
+	if [ -n "`echo $ac_with| sed 's/[-_a-zA-Z0-9]//g'`" ]; then
+	    bitch "configure: $ac_with: invalid parameter name."
+	    kill -1 $$
+	fi
+	ac_with=`echo $ac_with| sed 's/-/_/g'`
+	case "$ac_option" in
+	*=*)	;;
+	*)	ac_optarg=yes;;
+	esac
+	eval "${ac_with}='$ac_optarg'"
+	;;
+    -quiet|--quiet)		QUIET=yes;;
+    -verbose|--verbose)		QUIET=no;;
+    -site|--site)		ac_prev=SITE;;
+    -site=*|--site=*)		SITE="$ac_optarg";;
+    -srcdir|--srcdir)		ac_prev=SRCDIR;;
+    -srcdir=*|--srcdir=*)	SRCDIR="$ac_optarg";;
+    -target|--target)		ac_prev=TARGET;;
+    -target=*|--target=*)	TARGET="$ac_optarg" ;;
+    -version|--version)
+	echo "This is HylaFAX configure $Revision: 1.293 $"
+	exit 0
+	;;
+    -help|--help)		usage; exit 0;;
+    -*)
+	bitch "configure: $ac_option: invalid option; use -help for usage."
+	kill -1 $$
+	;;
+    *)
+	if [ x"$TARGET" != x ]; then
+	    bitch "configure: Can only configure for one target at a time."
+	    kill -1 $$
+	fi
+	TARGET="$ac_option"
+	;;
+    esac
+done
+
+if [ -n "$ac_prev" ]; then
+    bitch "configure: missing argument to --`echo $ac_prev | sed 's/_/-/g'`"
+    kill -1 $$
+fi
+
+#
+# Locate source directory by looking for the VERSION file.
+# The directory must either be specified through the
+# environment or be located in the current directory or a
+# parent of the current directory.
+#
+test "$SRCDIR" || {
+    configure=$0
+    # NB: don't use dirname since it may not exist
+    SRCDIR=`echo $configure | sed 's;/[^/][^/]*$;;'`
+    if [ @"$SRCDIR" = @"$configure" ]; then
+        SRCDIR=.
+    fi
+    while [ ! -r $SRCDIR/VERSION ]; do
+	# strip last directory from pathname
+	newdir=`echo $SRCDIR | sed 's;/[^/]*$;;'`
+	if [ -z "$newdir" ] || [ "$newdir" = $SRCDIR ]; then
+	    break;
+	fi
+	SRCDIR=$newdir
+    done
+}
+if [ ! -r $SRCDIR/VERSION ]; then
+    bitch "Can not locate sources in $SRCDIR."
+    kill -1 $$
+fi
+SRCDIR=`echo "$SRCDIR" | sed 's;\([^/]\)/*$;\1;'`
+
+#
+# Descriptor usage:
+# 1: ???
+# 2: errors that should be seen even if we're in the background.
+# 3: [stdout from test runs]
+# 4: verbose-style messages (Using ...)
+# 5: compiler stderr when running tests
+#
+if [ $QUIET = yes ]; then
+    exec 4>/dev/null			# chuck messages
+else
+    exec 4>&1				# messages got to stdout
+fi
+exec 5>./config.log			# compiler messages and the like
+
+VERSION="v`cat $SRCDIR/VERSION``awk '{print $3}' $SRCDIR/dist/hylafax.alpha`"
+DATE=`date`
+
+Note()
+{
+    echo "$@" 1>&4
+}
+
+Note ""
+Note "Configuring HylaFAX (tm) (aka FlexFAX) $VERSION."
+Note ""
+
+#
+# Read site and local configuration parameters.
+#
+if [ -f $SITE/config.site ]; then
+    Note "Reading site-wide parameters from $SITE/config.site."
+    . $SITE/config.site
+elif [ -f $SRCDIR/config.site ]; then
+    Note "Reading site-wide parameters from $SRCDIR/config.site."
+    . $SRCDIR/config.site
+fi
+if [ -f config.local ]; then
+    Note "Reading local parameters from config.local."
+    . ./config.local
+elif [ -f $SRCDIR/config.local ]; then
+    Note "Reading local parameters from $SRCDIR/config.local."
+    . $SRCDIR/config.local
+fi
 
 identifyTarget()
 {
     random=`date | awk '{print $4}' | sed -e 's/.*://'` 2>/dev/null
     case "$random" in
-    1*)	echo "Wow, you've got a $1 system!";;
-    2*)	echo "Hmm, looks like a $1 system.";;
-    3*)	echo "Oh no, not another $1 system...";;
-    4*)	echo "Well I'll be, a $1 system.";;
-    5*)	echo "Fee, fie, foe, this smells like a $1 system.";;
-    *)	echo "Gosh, aren't you lucky to have a $1 system!";;
+    1*)	Note "Wow, you've got a $1 system!";;
+    2*)	Note "Hmm, looks like a $1 system.";;
+    3*)	Note "Oh no, not another $1 system...";;
+    4*)	Note "Well I'll be, a $1 system.";;
+    5*)	Note "Fee, fie, foe, this smells like a $1 system.";;
+    *)	Note "Gosh, aren't you lucky to have a $1 system!";;
     esac
-}
-
-checkStrings()
-{
-    f=$1; shift
-    strings $f | grep "$@" >/dev/null 2>&1
-    return
 }
 
 #
 # If no target is specified, try to deduce the system.
+# We use the GNU scripts for guessing and canonicalizing
+# the system identification, if available.
 #
-TARGET=$1
 if [ -z "$TARGET" ]; then
-    SYS=`uname -s` 2>/dev/null
-    case @"$SYS" in
-    @IRIX)	TARGET=sgi;;
-    @UNIX_SV)	TARGET=svr4;;
-    @Linux)	TARGET=linux;;
-    @SunOS)	if [ -d /etc/saf ]; then
-		    TARGET=solaris2 SYS="Solaris 2.x"
-		else
-		    TARGET=sun4
-		fi
-		;;
-    @BSD/386)	TARGET=bsdi;;
-    @386BSD)	TARGET=386bsd;;
-    @FreeBSD)	TARGET=freebsd;;
-    @NetBSD)	TARGET=netbsd;;
-    @HP-UX)	TARGET=hpux;;
-    @*-Reno)	TARGET=reno;;
-    @AIX)	TARGET=aix32;;
-    @ULTRIX)	TARGET=ultrix;;
-    @)		echo "Sorry, no target specified and no uname command!";exit 1;;
-    *)		if [ -d /etc/saf ]; then
-		    TARGET=svr4 SYS=SVR4
-		elif checkStrings /unix 'SCO UNIX'; then
-		    TARGET=sco SYS="SCO"
-		elif checkStrings /unix 'INTERACTIVE UNIX'; then
-		    TARGET=isc SYS="ISC"
-		else
-		    echo "Sorry, I don't grok a $SYS system."
-		    exit 1
-		fi
-		;;
+    test -f $SRCDIR/config.guess && TARGET=`sh $SRCDIR/config.guess` 2>/dev/null
+    if [ -z "$TARGET" ]; then
+	bitch "Sorry, no target specified on the command line and I don't seem"
+	bitch "to have the GNU config.guess script that is used to deduce your"
+	bitch "system type."
+	kill -1 $$
+    fi
+    identifyTarget $TARGET
+elif [ -f $SRCDIR/config.sub ]; then
+    TARGET=`sh $SRCDIR/config.sub "$TARGET"`
+else
+    Note "Warning, I don't seem to have the GNU config.sub script to canonicalize"
+    Note "your target specification; this may cause problems later on..."
+fi
+
+cat 1>&5 <<EOF
+This file contains any messages produced by compilers while
+running configure, to aid in debugging if configure makes a mistake.
+
+EOF
+
+#
+# Find the full pathname of a file
+# using the specified test operation.
+#
+findThing()
+{
+    t="$1"; app=$2; path=$3;
+    case $app in
+    /*) eval $t $app && { echo $app; return; };;
     esac
-    identifyTarget $SYS
+    IFS=:
+    for i in $path; do
+	eval $t $i/$app && { echo $i/$app; return 0; }
+    done
+    return 1
+}
+
+#
+# Find the full pathname of a plain file.
+#
+findFile()
+{
+    findThing "test -f" $1 $2
+}
+
+#
+# Find the full pathname of an executable.
+#
+findApp()
+{
+    findThing "test -x" $1 $2
+}
+
+#
+# Find the full pathname of an executable;
+# supply a default if nothing is found.
+#
+findAppDef()
+{
+    app=$1; path=$2; def=$3
+    case $app in
+    /*) test -x $app && { echo $app; return; };;
+    esac
+    IFS=:
+    for i in $path; do
+	test -x $i/$app && { echo $i/$app; return; }
+    done
+    echo $def
+}
+
+#
+# Locate a C and C++ compiler and verify they work and
+# satisfy our needs (using assorted heuristics).
+#
+JUNK="
+    a.out
+    conffifo
+    confsed
+    conftestmmap
+    confx confy
+    core
+    dummy
+    dummy.C
+    dummy.a
+    dummy.c
+    dummy.o
+    foo
+    so_locations
+    t.c
+    t.c++
+    t.o
+    t
+    xMakedepend
+    xdefs
+    xgnu.c
+    xmakeinc
+    xport.h
+    xtermios.h
+"
+trap "$RM \$JUNK; exit 1" 1 2 15
+
+$RM $JUNK
+
+#
+# Before we go too far, check some features required by the software
+#
+
+if [ -z "$MKFIFO" ]; then
+    MKFIFO=`findApp mkfifo $PATH`
+    if [ "$MKFIFO" ]; then
+	mkfifo()
+	{
+	    $MKFIFO $1
+	}
+    else
+	MKFIFO=`findApp mknod /sbin:$PATH`
+	if [ -z "$MKFIFO" ]; then
+	    cat <<EOF
+No support for FIFO special files.
+
+There does not appear to be a way to create FIFO special files.
+This facility is required for proper operation of this software.
+EOF
+	    boom
+	fi
+	mkfifo()
+	{
+	    $MKFIFO $1 p
+	}
+    fi
 fi
 
-warnUnfinished()
+cat>xgnu.c<<EOF
+#ifdef __GNUC__
+yes;
+#endif
+EOF
+
+#
+# Check if the specified compiler is from GNU 
+#
+isGNU()
 {
-    README=port/$1/README
-    if [ -f $README ]; then
-	echo "Warning, this port is incomplete; read $README for more information."
-    else
-	echo "Warning, This port is incomplete and there is no README file."
-    fi
+    $1 -E xgnu.c 2>&5 | egrep yes >/dev/null 2>&1
 }
 
-warnNoMakeDepend()
+checkGCCVersion()
 {
-    echo "Warning, no make dependency support for this compilation environment."
-}
-
-boom()
-{
-    echo "$@"
-    echo ""
-    echo "Unrecoverable error!  Once you've corrected the problem rerun this script."
-    exit 1
+    app=$1; shift
+    eval `$app -v 2>&1 | \
+	sed -n -e '/version/s/.* \([0-9]*\)\.\([0-9]*\).\([0-9]*\)/GCCdist=\1;GCCmajor=\2;GCCminor=\3/p'`
+    GCCversion="${GCCdist}.${GCCmajor}.${GCCminor}"; export GCCversion
+    test "$GCCdist" -ge $1 && test "$GCCmajor" -ge $2 && test "$GCCminor" -ge $3 >/dev/null 2>&1
 }
 
 #
-# splitTarget default-compiler [system-name]
+# NB: use ANSI C prototype to weed out non-ANSI compilers.
 #
-splitTarget()
-{
-    COMPILER=`expr "$TARGET" : '[^-]*-*\(.*\)'`	# strip leading ``system-''
-    test "$COMPILER" || COMPILER=$1		# default compiler
-    test $# -eq 2 && TARGET=$2			# override system name
-    TARGET=`expr "$TARGET" : '\([^-]*\).*'`	# strip any compiler spec
-}
+cat>dummy.c<<EOF
+main(int argc, char* argv) { exit(0); }
+EOF
 
-case $TARGET in
-solaris2-cc)	splitTarget; warnNoMakeDepend; warnUnfinished $TARGET;;
-sgi*)		splitTarget cc;;
-sun[34]*)	splitTarget gcc sun;;
-4.4bsd*)	splitTarget gcc; warnUnfinished $TARGET;;
-hpux*)		splitTarget gcc; warnUnfinished $TARGET;;
-reno*)		splitTarget gcc; warnUnfinished $TARGET;;
-ultrix*)	splitTarget gcc; warnUnfinished $TARGET;;
-*)		splitTarget gcc
-		if [ ! -d port/$TARGET ]; then
-		    echo "$TARGET: Unsupported system configuration."
-		    exit 1
-		fi
-		;;
-esac
-
-#
-# Random system-dependent fixups that have to be
-# done before we go too far.
-#
-case $TARGET in
-linux)
-    ed()
-    {
-        sed -e '/^w$/d' -e '/^q$/d' > /tmp/ed.$$
-        $CP $2 /tmp/file.$$
-        sed -f /tmp/ed.$$ /tmp/file.$$ > $2
-        $RM /tmp/ed.$$ /tmp/file.$$
+: ${ENVOPTS=}
+ISGCC=no; CCOMPILER=
+for i in $CC gcc cc ncc dcc xlc gcc2; do
+    $RM dummy dummy.o
+    ($i -o dummy $ENVOPTS dummy.c) >/dev/null 2>&5 && {
+	if isGNU $i; then
+	    checkGCCVersion $i 2 6 1 || continue;
+	    ISGCC=yes
+	    test -z "$CXX" && CXX=$i
+	fi
+	CC=$i;
+	CCOMPILER=`findApp $i $PATH`
+	break;
     }
-    ;;
-ultrix)
-    # must use GNU make 'cuz standard make doesn't hack it
-    echo "Warning, prepending /usr/local/bin to PATH for GNU make."
-    test -d /usr/local/bin && PATH=/usr/local/bin:$PATH
-    ;;
-esac
+done
+if [ -z "$CCOMPILER" ]; then
+    cat<<EOF
+Cannot locate a working ANSI C compiler.
+
+If the compiler is in a non-standard location, set the environment
+variable CC to the absolute pathname of the compiler that is to be used
+and rerun this script.
+
+If command line options are required for ANSI C compilation, set the
+variable ENVOPTS to these options and rerun this script.
+
+If you are trying to use GNU gcc, but you do not have version 2.6.1
+or newer, then you must update your compiler (and probably libg++ as
+well) before you can compile this software.  Consult the documentation
+for information about obtaining an up-to-date version of gcc.
+EOF
+    boom
+fi
+Note "Using $CCOMPILER for a C compiler (set CC to override)."
 
 #
-# Setup make-related files.
+# Guess special options needed to get an
+# ANSI C compiler and/or similar.  Should
+# probably be combined with above checks
+# so we only select an ANSI C compiler.
 #
-setupConfig()
-{
-    if [ -f port/$TARGET/Makefile.flexfax ]; then
-	M=port/$TARGET/Makefile.flexfax
-    elif [ -f port/$TARGET/Makefile ]; then
-	M=port/$TARGET/Makefile
-    else
-	boom "Help, no \"Makefile\" for building FlexFAX!"
-    fi
-    if [ -f port/$TARGET/defs.$COMPILER ]; then
-	D=port/$TARGET/defs.$COMPILER
-    elif [ -f port/$TARGET/defs ]; then
-	D=port/$TARGET/defs
-    else
-	boom "Help, no \"defs\" file for building FlexFAX!"
-    fi
-    echo "Installing $M as Makefile."
-    $RM Makefile; $CP $M Makefile
-    echo "Installing $D as defs."
-    $RM defs; $CP $D defs
-}
-getConfigTag()
-{
-    param=`grep "$1:" $2 | sed -e 's/.*:[ 	]*\([^ 	]*\).*/\1/'`
+if [ -z "$ENVOPTS" ]; then
+    case $ISGCC-$TARGET in
+    no-*-irix*)	ENVOPTS=-xansi;;
+    no-*-hp*)	ENVOPTS="-Aa -D_HPUX_SOURCE -Dhpux";;
+    *-sco*)	ENVOPTS="-Dsco";;
+    esac
+fi
+test "$ENVOPTS" && {
+    Note "Using $ENVOPTS to get the appropriate compilation environment."
 }
 
-echo "Setting up make-related files."
-if [ -f defs -a -f Makefile ]; then
-    getConfigTag TARGET defs;	target="$param"
-    getConfigTag COMPILER defs;	compiler="$param"
-    if [ "$target" != "$TARGET" -o "$compiler" != "$COMPILER" ]; then
-	echo "Replacing configuration for \"$target\" & \"$compiler\"."
-	setupConfig
-    else
-	#
-	# We should figure out if only localized changes were
-	# done to defs and/or Makefile and leave things unchanged;
-	# but for now that's too hard so we just clobber things
-	# under the assumption that folks don't configure very
-	# often and doing something simpleminded can lead to problems.
-	#
-	echo "Updating configuration for \"$target\" & \"$compiler\"."
-	setupConfig
+CheckForGandO()
+{
+   f=$1
+   if test -s $f; then
+	grep -i \(error\|warning\) $f 1>&5 2>&5 || return 1
+    fi
+    return 0
+}
+
+if [ -z "$GCOPTS" ]; then
+    $CCOMPILER $ENVOPTS -g -c dummy.c >/dev/null 2>&5 && {
+	Note "Looks like $CCOMPILER supports the -g option."
+	if $CCOMPILER $ENVOPTS $GCOPTS -c -g -O dummy.c >t 2>&1 && CheckForGandO t; then
+	    GCOPTS="$GCOPTS -g"
+	else
+	    Note "... but not together with the -O option, not using it."
+	fi
+    }
+fi
+if [ "$GCOPTS" ]; then
+    Note "Using \"$GCOPTS\" for C compiler options."
+fi
+
+# 
+# Figure out if there is an ANSI C-preprocessor and,
+# if __ANSI_CPP__ is not automatically set, configure
+# it to be set.
+#
+cat>dummy.c<<EOF
+#define ansiIDENT(a) a
+#define ansiCAT(a,b) a##b
+A=ansiCAT(ANSI,CPP);
+EOF
+if ($CCOMPILER $ENVOPTS -E dummy.c 2>&5 | grep ANSICPP)>/dev/null 2>&1; then
+    Note "Looks like an ANSI C preprocessor."
+    cat>dummy.c<<EOF
+#ifdef __ANSI_CPP__
+yes
+#else
+no
+#endif
+EOF
+    if ($CCOMPILER $ENVOPTS -E dummy.c 2>&5 | grep no)>/dev/null 2>&1; then
+	ANSICPP='-D__ANSI_CPP__'
+	Note "... but __ANSI_CPP__ is not automatically defined, will compensate."
     fi
 else
-    setupConfig
+    Note "Looks like a non-ANSI C preprocessor, will try to compensate."
 fi
 
 #
-# Verify that defs has correct C++ and C compiler definitions.
+# Figure out if the C compiler supports a -M option for generating
+# Make dependency information.
 #
-(echo DEPTH=.; cat defs; echo 'test: ${C++} ${CC}') | \
-  make -f - test >/dev/null 2>&1 || {
-    echo ""
-    echo "Something is wrong in the \"defs\" file, check the definitions of"
-    echo "the C++ and CC macros:"
-    echo ""
-    grep '^C++[ 	]*=' defs; grep '^CC[ 	]*=' defs
-    echo ""
-    boom "they do not appear to reflect the locations of your compilers."
-}
-
-NewFixed=""
-if [ $COMPILER = gcc ]; then
-    GCCversion=`(echo DEPTH=.; cat defs; echo 'version: ${C++}; ${C++} -v') |\
-	make -f - version 2>&1 | \
-	sed -n -e '/version/s/.* //p'`
-    if expr "$GCCversion" \< 2.3.3 >/dev/null 2>&1; then
-	echo ""
-	echo "You appear to have gcc version $GCCversion; beware that you"
-	echo "may need to apply the patch in port/sun/GCC-PATCH before you"
-	echo "compile this software."
-	echo ""
-    else
-	# NB: defined in port.h below
-	NewFixed="yes"
-    fi
-    if [ $GCCversion = 2.5.8 -a $TARGET = sgi ]; then
-	echo ""
-	echo "Beware that you must build this version of gcc according to the"
-	echo "information given in port/sgi/README in order to get a working"
-	echo "system."
-	echo ""
-    fi
-fi
-
-if [ $TARGET != "sgi" ]; then
-    echo "Setting up make dependency files."
-    #
-    # Setup null make dependency files so that we can include
-    # it w/o problem.  Some systems have conditional include
-    # support in their make, but others do not, so we use an
-    # unconditional include and setup everthing as null here
-    #
-    DEPEND="Makedepend		\
-	fax2ps/Makedepend	\
-	faxalter/Makedepend	\
-	faxcover/Makedepend	\
-	faxd/Makedepend		\
-	faxmail/Makedepend	\
-	faxrm/Makedepend	\
-	faxstat/Makedepend	\
-	recvfax/Makedepend	\
-	sendfax/Makedepend	\
-	sgi2fax/Makedepend	\
-	util/Makedepend		\
-	man/Makedepend		\
-	doc/Makedepend		\
-	etc/Makedepend		\
-	relnotes/Makedepend	\
-	libtiff/Makedepend	\
-	port/$TARGET/Makedepend	\
-	"
-    $RM $DEPEND; tee $DEPEND </dev/null
-    editFile rules '/^sinclude/s//include/'
-fi
-
-#
-# Install appropriate TIFF library Makefile: look first
-# in the port area, then for a Makefile that is part of
-# the standard TIFF distribution.  The priority is:
-#
-# port/<target>/Makefile.libtiff.<compiler>
-# port/<target>/Makefile.libtiff
-# port/generic/Makefile.libtiff.<compiler>
-# port/libtiff/Makefile.<target>-<compiler>
-# port/libtiff/Makefile.<target>
-# port/libtiff/Makefile.<compiler>
-#
-if [ -f port/$TARGET/Makefile.libtiff.$COMPILER ]; then
-    M=port/$TARGET/Makefile.libtiff.$COMPILER
-elif [ -f port/$TARGET/Makefile.libtiff ]; then
-    M=port/$TARGET/Makefile.libtiff
-elif [ -f port/generic/Makefile.libtiff.$COMPILER ]; then
-    M=port/generic/Makefile.libtiff.$COMPILER
-elif [ -f libtiff/Makefile.$TARGET-$COMPILER ]; then
-    M=libtiff/Makefile.$TARGET-$COMPILER
-elif [ -f libtiff/Makefile.$TARGET ]; then
-    M=libtiff/Makefile.$TARGET
-elif [ -f libtiff/Makefile.$COMPILER ]; then
-    M=libtiff/Makefile.$COMPILER
+cat>dummy.c<<EOF
+main(int argc, char* argv) { exit(0); }
+EOF
+if $CCOMPILER $ENVOPTS -c -M dummy.c 2>&5 | \
+    grep '^dummy.o[ 	]*:[ 	]*dummy.c' >/dev/null 2>&1; then
+    Note "Looks like $CCOMPILER supports the -M option for make dependencies."
+    MKDEPEND='\${SHELL} \${PORT}/mkdepend'
 else
-    boom "Can not locate Makefile for building the TIFF software."
-fi
-echo "Installing $M as libtiff/Makefile."
-$RM libtiff/Makefile; $CP $M libtiff/Makefile
-
-#
-# Some makes can not deal with certain types of
-# whitespace-filled lines that occasionally creep
-# in--so purge anything strange before compiling.
-#
-badMakefiles=`grep -l '^	$' Makefile */Makefile`
-if [ "$badMakefiles" ]; then
-    #
-    # This bizarre stuff is used instead of just doing
-    # editFile $m '^<tab>$/s///' because some shells
-    # appear to convert the tab to a blank!
-    #
-    echo '/^	$/s///' | tr ' ' '\011' >/tmp/$$ed
-    echo w >>/tmp/$$ed; echo q >>/tmp/$$ed
-    echo "Fixing up bad make files:"
-    for m in $badMakefiles; do
-	echo "  $m"
-	chmod +w $m; cat /tmp/$$ed | ed - $m >/dev/null; chmod -w $m
-    done
-    $RM /tmp/$$ed
+    Note "Looks like $CCOMPILER does not support the -M option for make dependencies."
+    Note "...will disable automatic make dependency building."
+    MKDEPEND=":"
 fi
 
-patchForBogusIncludeSyntax()
-{
-    echo "Warning, patching Makefile stuff to use bogus include syntax."
-    for i do
-	patchFile $i "g/^include/s/^include[  ]*\(.*\)$/.include <\1>/"
-    done
-}
+cat>dummy.C<<EOF
+class foo {
+public:
+    struct bar {
+	int a;
+	bar();
+    };
+    foo();
+};
+foo::bar::bar() { a = 0; }
+foo::foo() { bar x; }
+int main() { foo t; return 0; }
+EOF
 
-patchForBogusSunPro()
-{
-    echo "Warning, patching $1 to use SunPro file.c++=.C syntax."
-    patchFile $1 "$2"
-}
+ISGXX=no; CXXCOMPILER=
+for i in $CXX gcc g++ CC NCC DCC gcc2 xlC; do
+    $RM dummy dummy.o
+    ($i -o dummy dummy.C) >/dev/null 2>&5 && {
+	if isGNU $i; then
+	    checkGCCVersion $i 2 6 1 || continue;
+	    ISGXX=yes
+	fi
+	CXX=$i;
+	CXXCOMPILER=`findApp $i $PATH`
+	break;
+    }
+done
+if [ -z "$CXXCOMPILER" ]; then
+    cat<<EOF
+Cannot locate a suitable C++ compiler.
 
-patchShellScripts()
-{
-    shell=$1
-    for i in etc/faxaddmodem.sh etc/probemodem.sh util/notify.sh util/*stats.sh
-    do
-	echo "Warning, patching $i to use $shell"
-	patchFile $i "/^#! /s;/bin/sh;$shell;"
-    done
-}
+To build this software you need a C++ compiler that supports a
+reasonably modern version of C++.  In particular the compiler must
+support nested types and process temporary variables according to the
+ANSI Reference Manual (the ARM).
 
-case "$TARGET-$COMPILER" in
-386bsd*|freebsd*|ultrix*|bsdi*|netbsd*)
-    patchShellScripts /bin/bash
-    if [ "$TARGET-$COMPILER" = "bsdi-gcc" ]; then
-	#
-	# Workaround old BSDi include file problem
-	#
-	$RM port/$TARGET/stdio.h; $CP /usr/include/stdio.h port/$TARGET
-	editFile port/$TARGET/stdio.h '/static inline int/s//static int/'
+If such a compiler is in a non-standard location, you can specify its
+location in several ways:
+
+    o set the environment variable CXX
+    o create a config.local or config.site file that includes a
+      definition for CXX
+    o supply it on the command line using -with-CXX=<pathname>
+
+If you are trying to use GNU gcc, but you do not have version 2.6.1
+or newer, then you must update your compiler (and probably libg++ as
+well) before you can compile this software.  Consult the documentation
+for information about obtaining an up-to-date version of gcc.
+EOF
+    boom
+fi
+Note "Using $CXXCOMPILER for a C++ compiler (set CXX to override)."
+
+if [ -z "$GCXXOPTS" ]; then
+    case $CXX-$TARGET in
+    CC-*-irix*)		GCXXOPTS='+a1 +w +p';;		# cfront-based
+    [ND]CC-*-irix*)	GCXXOPTS='+a1 +w +p';;		# cfront-compatible
+    xlC-*-aix*)		GCXXOPTS='-qlanglvl=compat -I/usr/lpp/xlC/include -I/usr/include';;
+    *)			GCXXOPTS=;;
+    esac
+    $CCOMPILER $ENVOPTS -c -g dummy.C >/dev/null 2>&5 && {
+	Note "Looks like $CXXCOMPILER supports the -g option."
+	if $CXXCOMPILER $ENVOPTS -c -g -O dummy.C >t 2>&1 && CheckForGandO t; then
+	    GCXXOPTS="$GCXXOPTS -g"
+	else
+	    Note "... but not together with the -O option, not using it."
+	fi
+    }
+fi
+if [ "$GCXXOPTS" ]; then
+    Note "Using \"$GCXXOPTS\" for C++ compiler options."
+fi
+
+# 
+# Figure out if there is an ANSI preprocessor for the C++
+# compiler and, if __ANSI_CPP__ is not automatically set,
+# configure it to be set.
+#
+cat>dummy.C<<EOF
+#define ansiIDENT(a) a
+#define ansiCAT(a,b) a##b
+A=ansiCAT(ANSI,CPP);
+EOF
+if ($CXXCOMPILER $ENVOPTS -E dummy.C 2>&5 | grep ANSICPP)>/dev/null 2>&1; then
+    Note "Looks like an ANSI C++ preprocessor."
+    cat>dummy.C<<EOF
+#ifdef __ANSI_CPP__
+yes
+#else
+no
+#endif
+EOF
+    if ($CXXCOMPILER $ENVOPTS -E dummy.C 2>&5 | grep no)>/dev/null 2>&1; then
+	ANSICXXPP='-D__ANSI_CPP__'
+	Note "... but __ANSI_CPP__ is not automatically defined, will compensate."
     fi
-    ;;
-hpux*)
-    patchShellScripts /bin/ksh
-    ;;
-reno*|4.4bsd*)
-    patchForBogusIncludeSyntax Makefile rules */Makefile
-    ;;
-solaris2-cc)
+else
+    Note "Looks like a non-ANSI C++ preprocessor, will try to compensate."
+fi
+
+#
+# Verify that $MAKE is accessible
+#
+PATHMAKE=`findApp ${MAKE} $PATH`
+if [ "$PATHMAKE" ]; then
+    Note "Using $PATHMAKE to configure the software."
+    (echo 'all:') | ${MAKE} -f - all >/dev/null 2>&5 || {
+	cat<<EOF
+
+Something is wrong with "$MAKE" or $MAKE does not accept Makefiles
+from stdin with "-f -".  If you have MAKE set in your environment,
+verify it points to the right program you want to" use to build this
+software.  Otherwise, verify that you have the make program installed
+somewhere on your system and set the MAKE environment variable to the
+pathname of the program.
+EOF
+	boom
+    }
+else
+    cat<<EOF
+No $MAKE located in the search path.
+
+There was no $MAKE program in the restricted search used by this script
+If $MAKE is in a non-standard location set the MAKE environment variable
+to the pathname of the appropriate program.
+EOF
+    boom
+fi
+
+#
+# Deduce the include syntax supported by make.
+#
+CheckForMakeIncludeSyntax()
+{
+    (cat<<EOF
+$1
+all:
+EOF
+    ) | ${MAKE} -f - >/dev/null 2>&5
+}
+if [ -z "$MAKEINCLUDE" ] || [ -z "$MAKELQUOTE" ] || [ -z "$MAKERQUOTE" ]; then
+    INC=xmakeinc
+    $RM $INC; echo "" >$INC
+    if CheckForMakeIncludeSyntax "include $INC"; then
+	MAKEINCLUDE="include"
+	MAKELQUOTE=
+	MAKERQUOTE=
+    elif CheckForMakeIncludeSyntax ".include <$INC>"; then
+	MAKEINCLUDE=".include"
+	MAKELQUOTE="<"
+	MAKERQUOTE=">"
+    elif CheckForMakeIncludeSyntax "#include \"$INC\""; then
+	MAKEINCLUDE="#include"
+	MAKELQUOTE='"'
+	MAKERQUOTE='"'
+    else
+	bitch "$MAKE does not support a known include syntax."
+	boom
+    fi
+fi
+Note "Using \"${MAKEINCLUDE} ${MAKELQUOTE}file${MAKERQUOTE}\" syntax for Makefiles."
+
+if [ -z "$MAKEDEPINCLUDE" ]; then
+    if [ "$MKDEPEND" != ":" ]; then
+	$RM xMakedepend
+	if CheckForMakeIncludeSyntax "sinclude xMakedepend"; then
+	    Note "Looks like your make supports \"sinclude\" for conditional includes."
+	    MAKEDEPINCLUDE="sinclude"
+	else
+	    MAKEDEPINCLUDE="$MAKEINCLUDE"
+	fi
+    else
+	MAKEDEPINCLUDE='#'
+    fi
+fi
+
+#
+# Check whether or not $MAKE automatically sets MAKE
+# in the Makefiles.  If not, we add an explicit define
+# for places where recursive calls are made.
+#
+if [ -z "$SETMAKE" ]; then
+M=
+eval `(cat<<'EOF'
+all:
+	@echo M="${MAKE}"
+EOF
+) | $MAKE -f - 2>&5`
+    if [ "$M" ]; then
+	SETMAKE=
+    else
+	Note "Looks like $MAKE does not setup MAKE in Makefiles, will compensate."
+	SETMAKE="MAKE	= ${MAKE}"
+    fi
+fi
+
+if [ -z "$MAKECXXOVERRIDE" ]; then
+    case $ISGXX-$TARGET in
+    no-*-solaris*)				# SunPRO C++ compiler
+	#
+	# Yech, the SunPro C++ compiler has no option to force a source
+	# file w/ a .c++ suffix to be treated as C++ source code; instead one
+	# must specify file.c++=.C.  We patch the Makefiles with explicit
+	# construction rules to do this...
+	#
+	MAKECXXOVERRIDE="=.C"
+	;;
+    esac
+fi
+if [ -z "$CXXFILE" ]; then
+    case $CXX-$TARGET in
+    xlC-*-aix*)	CXXFILE="-+";;
+    gcc-*)	CXXFILE="-x c++";;
+    esac
+fi
+
+test "$AR" || AR=`findApp ar $PATH`
+if [ -z "$AR" ]; then
+    Note "*** Warning, could not locate a suitable ar command; using a default."
+    AR=ar
+fi
+test "$AROPTS" || AROPTS=rc
+test "$RANLIB" || RANLIB=`findApp ranlib $PATH`
+if [ -z "$RANLIB" ]; then
+    Note "Warning, no ranlib, assuming it's not needed."
+    RANLIB=":"
+    $RM dummy.a
+    if $AR rcs dummy.a; then
+       AROPTS=crs
+       Note "Looks like ar has an s option to build symbol tables."
+    fi
+fi
+
+cat>dummy.C<<EOF
+#include "new.h"
+struct foo {
+    int x;
+    foo();
+    ~foo();
+};
+foo::foo() {}
+foo::~foo() {}
+int main()
+{
+    foo* ptr = 0;
+    foo* a = new(ptr) foo;
+    a->x = 0;
+    delete a;
+    return 0;
+}
+EOF
+
+#
+# Look for appropriate C++ runtime support library.
+#
+CXXRUNTIME=
+$CXXCOMPILER $ENVOPTS -o dummy dummy.C >/dev/null 2>&5 || {
     #
-    # Yech, the SunPro C++ compiler has no option to force a source
-    # file w/ a .c++ suffix to be treated as C++ source code; instead one
-    # must specify file.c++=.C.  We patch the Makefiles with explicit
-    # construction rules to do this...
+    # Compiler does not provide it automatically, check known libraries.
     #
-    patchForBogusSunPro rules 'g/\\$</s//&=.C/'
-    patchForBogusSunPro util/Makefile '/^[ 	]*textfmt.c++$/s//&=.C/'
-    ;;
-esac
+    if [ "$ISGXX" = yes ]; then
+	$CXXCOMPILER $ENVOPTS -o dummy dummy.C -lg++ >/dev/null 2>&5 && \
+	    { CXXRUNTIME="-lg++"; }
+    else
+	$CXXCOMPILER $ENVOPTS -o dummy dummy.C -lC >/dev/null 2>&5 && \
+	    { CXXRUNTIME="-lC"; }
+    fi
+}
+test "$CXXRUNTIME" && {
+    Note "Using explicit $CXXRUNTIME reference for C++ runtime support."
+}
+
+#
+# Look for old versions of bash.
+#
+isOldBASH()
+{
+    SHdist=99; SHmajor=99
+    eval `cat /dev/null | $SCRIPT_SH -version 2>/dev/null | \
+	sed -n -e '/bash.*version/s/.*version[ ]*\([0-9]*\)\.\([0-9]*\).*/SHdist=\1;SHmajor=\2/p'`
+    test "$SHdist" -lt $1 -o "$SHmajor" -lt $2 >/dev/null 2>&1
+}
+
+#
+# XXX we should deduce the shell bugs that require us to use
+# bash and ksh instead of sh on certain platforms (notably the
+# BSD-crowd: Linux, BSDI, FreeBSD, NetBSD) but they are very
+# hard to isolate.  We choose bash over ksh over sh; though
+# this may be iffy (ksh appears to be just as busted some places).
+#
+test "$SCRIPT_SH" || {
+    SCRIPT_SH=`findApp bash $PATH`
+    if [ "$SCRIPT_SH" ] && isOldBASH 1 14; then
+	Note ""
+	Note "*** $SCRIPT_SH looks to be too old to correctly handle HylaFAX scripts;"
+	Note "*** looking for another shell..."
+	Note ""
+	SCRIPT_SH=
+    fi
+}
+test "$SCRIPT_SH" || SCRIPT_SH=`findApp ksh $PATH`
+test "$SCRIPT_SH" || SCRIPT_SH=`findApp sh $PATH`
+if [ -z "$SCRIPT_SH" ]; then
+    Note ""
+    Note "*** Warning, could not locate a suitable shell for processing the command"
+    Note "*** scripts included in this distribution; using a default value /bin/sh."
+    Note ""
+    SCRIPT_SH=/bin/sh
+else
+    Note "Using $SCRIPT_SH to process command scripts."
+fi
+
+$RM confsed
+# NB: these should be sorted alphabetically
+cat>confsed<<EOF
+/@ANSICPP@/s;;${ANSICPP};g
+/@ANSICXXPP@/s;;${ANSICXXPP};g
+/@AR@/s;;${AR};g
+/@AROPTS@/s;;${AROPTS};g
+/@CCOMPILER@/s;;${CCOMPILER};g
+/@CXXCOMPILER@/s;;${CXXCOMPILER};g
+/@CXXFILE@/s;;${CXXFILE};g
+/@DATE@/s;;${DATE};g
+/@ENVOPTS@/s;;${ENVOPTS};g
+/@GCOPTS@/s;;${GCOPTS};g
+/@GCXXOPTS@/s;;${GCXXOPTS};g
+/@MAKECXXOVERRIDE@/s;;${MAKECXXOVERRIDE};g
+/@MAKEDEPINCLUDE@/s;;${MAKEDEPINCLUDE};g
+/@MAKEINCLUDE@/s;;${MAKEINCLUDE};g
+/@MAKELQUOTE@/s;;${MAKELQUOTE};g
+/@MAKERQUOTE@/s;;${MAKERQUOTE};g
+/@PROTOTYPES@/s;;${PROTOTYPES};g
+/@RANLIB@/s;;${RANLIB};g
+/@SCRIPT_SH@/s;;${SCRIPT_SH};g
+/@SETMAKE@/s;;${SETMAKE};g
+/@SRCDIR@/s;;${SRCDIR};g
+/@TARGET@/s;;${TARGET};g
+/@VERSION@/s;;${VERSION};g
+/@WARNING@/s;;Warning, this file was automatically created by the HylaFAX configure script;g
+EOF
+$RM xdefs; sed -f confsed $SRCDIR/defs.in>xdefs
+
+#
+# runMake target rules ...
+#
+runMake()
+{
+    target="$1"; shift
+    $RM $target
+    (echo DEPTH=.; echo SRCDIR=.; cat xdefs;
+       for i in "$@"; do
+	  echo "$i";
+       done
+    ) | ${MAKE} -f - $target 2>&5
+}
+
+#
+# Verify everything is setup for the C++ runtime environment.
+#
+CheckForCXXRuntime()
+{
+cat>t.c++<<EOF
+#include "new.h"
+int main(){ int* a = new int; *a = 0; delete a; return 0;}
+EOF
+    runMake t "t:; \${C++F} \${C++FILE} t.c++${MAKECXXOVERRIDE}" >/dev/null
+}
+CheckForCXXRuntime || {
+    bitch ""
+    bitch "Missing C++ runtime support for $CXXCOMPILER."
+    bitch ""
+    if [ $ISGXX = yes ]; then
+	cat 1>& 2 <<EOF
+A simple test of the C++ runtime support indicates something is not
+properly configured for building C++ programs.  Usually this is because
+you do not have libg++ installed on your system or you have installed
+it in a non-standard location.  If you do not have libg++ installed,
+then you must install it.  If libg++ is installed in a non-standard
+location, then you should configure the compiler so that it will
+automatically be found.
+EOF
+    else
+	cat 1>& 2 <<EOF
+A simple test of the C++ runtime support indicates something is not
+properly configured for building C++ programs.  Usually this is because
+you do not have the library that provides these runtime routines.  It
+may also be caused by your runtime libraries being in a non-standard
+location that is not automatically searched for by your compiler.
+EOF
+    fi
+    boom
+}
+
+#
+# Look for a library using a known (unique) function.
+#
+CheckForLibrary()
+{
+    f=$1; shift
+    libs="$@";
+    cat>t.c<<EOF
+int t() { $f(); return 0; }
+int main(){ t(); return 0; }
+EOF
+    runMake t "t:; \${CCF} t.c $libs" >/dev/null
+}
+
+#
+# Look for an include file.
+#
+CheckForIncludeFile()
+{
+    (for i do
+	echo "#include \"$i\""
+     done)>t.c++
+    runMake t "t:; \${C++F} \${C++FILE} -E t.c++${MAKECXXOVERRIDE}" >/dev/null
+}
+
+if [ "$SGI2FAX" = auto ]; then
+    if CheckForLibrary iopen -limage && CheckForIncludeFile gl/image.h; then
+	Note "Looks like there is support for SGI RGB images."
+	SGI2FAX=yes
+    else
+	SGI2FAX=no
+    fi
+fi
+if [ "$LIBMALLOC" = auto ]; then
+    if CheckForLibrary mallopt -lmalloc; then
+	Note "Looks like -lmalloc is here, using it for memory allocation."
+	LIBMALLOC=yes
+    else
+	LIBMALLOC=no
+    fi
+fi
+if [ "$LIBSUN" = auto ]; then
+    if CheckForLibrary getpwnam -lsun; then
+	Note "Looks like -lsun is here, using it for NIS passwd & group stuff."
+	LIBSUN=yes
+    else
+	LIBSUN=no
+    fi
+fi
+CheckForLibrary strftime -lc || {
+    #
+    # SCO has strftime in -lintl.
+    #
+    if CheckForLibrary strftime -lintl; then
+	Note "Looks like -lintl is needed for strftime."
+	MACHDEPLIBS="$MACHDEPLIBS -lintl"
+    else
+	Note "*** Got a problem here, don't know what library has strftime."
+	Note "    The strftime routine is not present in the C library or the"
+	Note "    -lintl library.  Any build will probably fail."
+    fi
+}
+CheckForLibrary socket -lc || {
+    #
+    # Socket support is not in normal C library, check
+    # for SVR4-style networking w/ -lsocket & -lnsl
+    #
+    if CheckForLibrary socket -lsocket -lnsl; then
+	Note "Looks like -lsocket & -lnsl are needed for socket support."
+	MACHDEPLIBS="$MACHDEPLIBS -lsocket -lnsl"
+    elif CheckForLibrary socket -lsocket; then
+	Note "Looks like -lsocket is needed for socket support."
+	MACHDEPLIBS="$MACHDEPLIBS -lsocket"
+    else
+	Note "*** Got a problem here, don't know what to use for sockets."
+	Note "    The socket call is not present in the C library or the"
+	Note "    SVR4-style -lsocket library.  Any build will probably fail."
+    fi
+}
+if CheckForLibrary logwtmp -lutil; then
+    Note "Looks like -lutil is needed for wtmp file logging."
+    MACHDEPLIBS="$MACHDEPLIBS -lutil"
+    HAS_LOGWTMP=yes
+else
+    HAS_LOGWTMP=no
+fi
+CheckForLibrary chsize -lx && {
+    Note "Looks like -lx is needed for chsize (used to emulate ftruncate)."
+    MACHDEPLIBS="$MACHDEPLIBS -lx"
+}
+CheckForLibrary flock -lc || {
+    CheckForLibrary flock -lbsd && {
+	Note "Looks like -lbsd is needed for flock."
+	MACHDEPLIBS="$MACHDEPLIBS -lbsd"
+    }
+}
+if [ "$ISGXX" = yes -a -z "$CXXRUNTIME" ]; then
+    for f in memmove strdup; do
+	CheckForLibrary $f -lc || {
+	    CheckForLibrary $f -lg++ && {
+		Note "Looks like we need -lg++ for $f"
+		MACHDEPLIBS="$MACHDEPLIBS -lg++"
+		break;
+	    }
+	}
+    done
+fi
+CheckForLibrary floor -lm && {
+    Note "Looks like -lm is the library for math functions."
+    MACHDEPLIBS="$MACHDEPLIBS -lm"
+}
+MACHDEPLIBS="$MACHDEPLIBS $CXXRUNTIME"
+test "$LIBSUN" = yes && MACHDEPLIBS="$MACHDEPLIBS -lsun"
+test "$LIBMALLOC" = yes && MACHDEPLIBS="$MACHDEPLIBS -lmalloc"
 
 #
 # Figure out if certain system-specific interfaces are
@@ -453,16 +1085,23 @@ esac
 EmitCPlusPlusPrologue()
 {
     echo '/*'
-    echo ' * Warning, this file was automatically created by the configure script'
-    echo ' * DATE:	' `date`
+    echo ' * Warning, this file was automatically created by the HylaFAX configure script'
+    echo ' * VERSION:	' $VERSION
+    echo ' * DATE:	' $DATE
     echo ' * TARGET:	' $TARGET
-    if [ $COMPILER = gcc ]; then
-	echo ' * COMPILER:	' $COMPILER-$GCCversion
+    if [ $ISGCC = yes ]; then
+	echo ' * CCOMPILER:	' ${CCOMPILER}-${GCCversion}
     else
-	echo ' * COMPILER:	' $COMPILER
+	echo ' * CCOMPILER:	' $CCOMPILER
+    fi
+    if [ $ISGXX = yes ]; then
+	echo ' * CXXCOMPILER:	' ${CXXCOMPILER}-${GCCversion}
+    else
+	echo ' * CXXCOMPILER:	' $CXXCOMPILER
     fi
     echo ' */'
     echo "#ifndef $1"
+    echo "#define $1 1"
     echo '#ifdef __cplusplus'
     echo 'extern "C" {'
     echo '#endif'
@@ -482,54 +1121,127 @@ EmitCPlusPlusEpilogue()
 #
 EmitConfigurationDefinitions()
 {
-    test "$NewFixed" = "yes"	&& echo '#define NEW_FIXED'
-    fifoOpenMode="O_RDONLY"
-    case $TARGET in
-    solaris2)
-	echo "... enable Solaris 2.x workaround for FIFO select bug" 1>&2
-	echo '#define FIFOSELECTBUG'
-	;;
-    sgi)
-	# enable workarounds for IRIX 5.x kernel bugs
-	case "`uname -a | cut '-d ' -f3`" in
-	5.[012]*)
-	    echo "... enable IRIX 5.x workarounds for FIFO and select bugs" 1>&2
-	    echo '#define FIFOSELECTBUG'
-	    echo '#define SGISELECTBUG'
-	    ;;
+    #
+    # Select the mode to use when opening FIFO files
+    # in a server process.  One should be able to open
+    # them read-only, but on some systems, select will
+    # go into a loop when a client does a close.  This
+    # problem can sometimes be avoided by opening the FIFO
+    # read+write on the server side.  Otherwise, the
+    # FIFO must be closed after each incoming message
+    # which can lead to delays and/or lost messages
+    # (though we try to compensate by doing some sleeps).
+    #
+    test "$CONFIG_OPENFIFO" || {
+	case $TARGET in
+	*-irix5.[23]*)	CONFIG_OPENFIFO=O_RDWR;;
+	*-ultrix*)	CONFIG_OPENFIFO=O_RDWR;;
+	*-sco*|*-isc*)	CONFIG_OPENFIFO=O_RDWR;;
+	*-aix*|*-hpux*)	CONFIG_OPENFIFO=O_RDWR;;
+	alpha-dec*)     CONFIG_OPENFIFO=O_RDWR;;
+	*)		CONFIG_OPENFIFO=O_RDONLY;;
 	esac
-	;;
-    sco|isc)
-	echo "... enable additional include files for TIOCGWINSZ" 1>&2
-	echo "#define CONFIG_WINSZHACK"
-	fifoOpenMode="O_RDWR"
-	;;
-    aix32|hpux)
-	echo "... disable support for aborting sends & receives" 1>&2
-	echo '#define SERVERABORTBUG'
-	fifoOpenMode="O_RDWR"
-	;;
-    ultrix|hpux)
-	fifoOpenMode="O_RDWR"
-	;;
-    esac
-    if [ "$fifoOpenMode" = "O_RDWR" ]; then
-	echo "... open FIFO files read+write to avoid select bug" 1>&2
+    }
+    if [ "$CONFIG_OPENFIFO" = "O_RDWR" ]; then
+	Note "... open FIFO files read+write to avoid select bug"
     else
-	echo "... open FIFO files read-only" 1>&2
+	Note "... open FIFO files read-only"
     fi
-    echo "#define CONFIG_OPENFIFO $fifoOpenMode"
+    echo "#define CONFIG_OPENFIFO $CONFIG_OPENFIFO"
+    test "$CONFIG_FIFOBUG" || {
+	case $TARGET in
+	*-solaris*)	CONFIG_FIFOBUG=yes;;
+	*-irix5.[01]*)	CONFIG_FIFOBUG=yes;;
+	*)		CONFIG_FIFOBUG=no;;
+	esac
+    }
+    if [ "$CONFIG_FIFOBUG" = yes ]; then
+	Note "... enable workaround for FIFO select bug"
+	echo '#define FIFOSELECTBUG 1'
+    fi
+
+    #
+    # On some versions of IRIX 5.x, when FIFOs are
+    # opened read-only in the server, select will
+    # incorrectly return bits set in the select masks
+    # even if the bits were not set on entry.  This
+    # will cause the Dispatcher code to croak unless
+    # a workaround is enabled.
+    #
+    test "$CONFIG_SELECTBUG" || {
+	case $TARGET in
+	*-irix5.[01]*)	CONFIG_SELECTBUG=yes;;
+	*)		CONFIG_SELECTBUG=no;;
+	esac
+    }
+    if [ "$CONFIG_SELECTBUG" = yes ]; then
+	Note "... enable workaround for select bug"
+	echo '#define SGISELECTBUG 1'	# NB: select also breaks!
+    fi
+
+    #
+    # On some systems it's necessary to include
+    # <sys/stream.h> and <sys/ptem.h> to get the
+    # necessary definitions for TIOCWINSZ.  This
+    # should be deduced with a dynamic check.
+    #
+    test "$CONFIG_WINSZHACK" || {
+	case $TARGET in
+	*-sco*)		CONFIG_WINSZHACK=yes;;
+	*-isc*)		CONFIG_WINSZHACK=yes;;
+	*)		CONFIG_WINSZHACK=no;;
+	esac
+    }
+    if [ "$CONFIG_WINSZHACK" = yes ]; then
+	Note "... enable additional include files for TIOCGWINSZ"
+	echo "#define CONFIG_WINSZHACK"
+    fi
+
+    #
+    # On some systems the server does not work properly
+    # if a recursive call is made to the dispatcher to
+    # poll for an message on the FIFO file that says to
+    # abort an outbound or inbound job.   The only know
+    # workaround for this problem is to ignore messages
+    # while processing a job.
+    #
+    test "$CONFIG_ABORTBUG" || {
+	case $TARGET in
+	*-aix*)		CONFIG_ABORTBUG=yes;;
+	*-hpux*)	CONFIG_ABORTBUG=yes;;
+	*)		CONFIG_ABORTBUG=no;;
+	esac
+    }
+    if [ "$CONFIG_ABORTBUG" = yes ]; then
+	Note "... disable support for aborting sends & receives"
+	echo '#define SERVERABORTBUG'
+    fi
+
+    #
+    # On some systems redirecting stdout to the controlling
+    # tty causes stty to issue an annoying warning message.
+    # This should probably be deduced with a dynamic test.
+    #
+    test "$CONFIG_NOSTDINDUP" || {
+	case $TARGET in
+	*-freebsd*)	CONFIG_NOSTDINDUP=yes;;
+	*)		CONFIG_NOSTDINDUP=no;;
+	esac
+    }
+    if [ "$CONFIG_NOSTDINDUP" = yes ]; then
+	Note "... assuming stty bitches when stdout is set to stdin"
+	echo "#define ONDELAY_NOSTDINDUP"
+    fi
 }
 
 #
-# Look for a function in one of the standard libraries.
+# Look for a function in one of the standard libraries
+# or one of the machine-dependent libraries selected above.
 #
-CheckFunc()
+CheckForFunc()
 {
     echo "extern int $1(); main(){$1();exit(0);}" >t.c
-    (echo DEPTH=.; cat defs; echo 't:; ${CCF} t.c') |\
-     make -f - t >/dev/null 2>&1
-    return
+    runMake t "t:; \${CC} t.c ${MACHDEPLIBS}" >/dev/null
 }
 
 #
@@ -537,7 +1249,8 @@ CheckFunc()
 #
 AddFuncDecl()
 {
-    (echo "$2"; echo "... add function prototype for $1" 1>&2)
+    echo "$2";
+    Note "... add function prototype for $1"
 }
 CheckForFuncDecl()
 {
@@ -545,8 +1258,7 @@ CheckForFuncDecl()
     (for i do
 	echo "#include \"$i\""
      done)>t.c++
-    (echo DEPTH=.; cat defs; echo 't:; ${C++F} ${C++FILE} -E t.c++') |\
-     make -f - t 2>&1 |\
+    runMake t "t:; \${C++F} \${C++FILE} -E t.c++${MAKECXXOVERRIDE}" |\
      awk '{while($0~/[,(][ \t]*$/){printf"%s",$0;getline}print}' |\
      grep "$f[ ]*(.*)" >/dev/null
     return
@@ -561,17 +1273,22 @@ CheckFuncDecl()
 #
 # Look for a variable declaration in system include files.
 #
-CheckVarDecl()
+CheckForVarDecl()
 {
-    v=$1; shift
-    decl=$1; shift
+    v="$1"; shift
     (for i do
 	echo "#include \"$i\""
      done)>t.c++
-    (echo DEPTH=.; cat defs; echo 't:; ${C++F} ${C++FILE} -E t.c++') |\
-     make -f - t 2>&1 |\
-     grep "$v" >/dev/null ||\
-    (echo "$decl"; echo "... add declaration $decl" 1>&2)
+    runMake t "t:; \${C++F} \${C++FILE} -E t.c++${MAKECXXOVERRIDE}" | \
+	grep "$v" >/dev/null
+    return
+}
+CheckVarDecl()
+{
+    v="$1"; shift
+    decl="$1"; shift
+    CheckForVarDecl "$v" "$@" || \
+	(echo "$decl"; Note "... add declaration $decl")
 }
 
 #
@@ -582,7 +1299,7 @@ AddDefine()
    echo '#ifndef' $1
    echo '#define' "$2"
    echo '#endif'
-   echo '... add #define for' "$1" 1>&2
+   Note '... add #define for' "$1"
 }
 CheckForDefine()
 {
@@ -594,29 +1311,13 @@ CheckForDefine()
 	echo "$i"
      done
     )>t.c
-    (echo DEPTH=.; cat defs; echo 't:; ${CCF} -E t.c') |\
-     make -f - t 2>&1 |\
-     grep FOUND >/dev/null
-    return
+    runMake t 't:; ${CCF} -E t.c' | grep FOUND >/dev/null
 }
 CheckDefine()
 {
     def=$1; shift
     decl=$1; shift
     CheckForDefine "$def" "$@" || AddDefine "$def" "$decl"
-}
-
-#
-# Look for an include file.
-#
-CheckForIncludeFile()
-{
-    (for i do
-	echo "#include \"$i\""
-     done)>t.c++
-    (echo DEPTH=.; cat defs; echo 't:; ${C++F} ${C++FILE} -E t.c++') |\
-     make -f - t >/dev/null 2>&1
-    return
 }
 
 CheckTermioFuncDecls()
@@ -638,9 +1339,11 @@ BuildTermiosDotH()
 {
     CheckForIncludeFile termios.h || {
 	CheckForIncludeFile sys/termios.h || {
-	    boom "Cannot locate termios.h or sys/termios.h."
+	    bitch "Cannot locate termios.h or sys/termios.h."
+	    boom
 	}
-	echo "No termios.h found; creating one with necessary definitions."
+	Note ""
+	Note "No termios.h found; creating one with necessary definitions."
 	(EmitCPlusPlusPrologue _TERMIOS_
 	 echo '#include "sys/termios.h"'
 	 CheckTermioFuncDecls sys/termios.h
@@ -650,6 +1353,163 @@ BuildTermiosDotH()
     }
 }
 
+CheckSigvecHandler()
+{
+    cat>t.c++<<EOF
+#include <sys/types.h>
+#include <signal.h>
+void sigHUP(int) {}
+void f() {
+    struct sigvec sv;
+    sv.sv_handler = $1(sigHUP);
+    (void) sigvec(SIGHUP, &sv, (struct sigvec*) 0);
+}
+int main() { f(); return 0; }
+EOF
+    runMake t "t:; \${C++F} \${C++FILE} -c t.c++${MAKECXXOVERRIDE}" >/dev/null
+}
+CheckSigactionHandler()
+{
+    cat>t.c++<<EOF
+#include <sys/types.h>
+#include <signal.h>
+void sigHUP(int) {}
+void f() {
+    struct sigaction sa;
+    sa.sa_handler = $1(sigHUP);
+    (void) sigaction(SIGHUP, &sa, (struct sigaction*) 0);
+}
+int main() { f(); return 0; }
+EOF
+    runMake t "t:; \${C++F} \${C++FILE} -c t.c++${MAKECXXOVERRIDE}" >/dev/null
+}
+CheckSignalHandler()
+{
+    cat>t.c++<<EOF
+#include <sys/types.h>
+#include <signal.h>
+void sigHUP(int) {}
+void f() { (void) signal(SIGHUP, $1(sigHUP)); }
+int main() { f(); return 0; }
+EOF
+    runMake t "t:; \${C++F} \${C++FILE} -c t.c++${MAKECXXOVERRIDE}" >/dev/null
+}
+
+CheckForMMAP()
+{
+cat>t.c<<EOF
+/* this was lifted from GNU autoconf */
+/* Thanks to Mike Haertel and Jim Avera for this test. */
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
+#ifdef BSD
+# ifndef BSD4_1
+#  define HAVE_GETPAGESIZE
+# endif
+#endif
+
+#ifndef HAVE_GETPAGESIZE
+# include <sys/param.h>
+# ifdef EXEC_PAGESIZE
+#  define getpagesize() EXEC_PAGESIZE
+# else
+#  ifdef NBPG
+#   define getpagesize() NBPG * CLSIZE
+#   ifndef CLSIZE
+#    define CLSIZE 1
+#   endif
+#  else
+#   ifdef NBPC
+#    define getpagesize() NBPC
+#   else
+#    define getpagesize() PAGESIZE /* SVR4 */
+#   endif
+#  endif
+# endif
+#endif
+
+#ifdef __osf__
+# define valloc malloc
+#endif
+
+#ifdef __cplusplus
+extern "C" { void *valloc(unsigned), *malloc(unsigned); }
+#else
+char *valloc(), *malloc();
+#endif
+
+int
+main()
+{
+  char *buf1, *buf2, *buf3;
+  int i = getpagesize(), j;
+  int i2 = getpagesize()*2;
+  int fd;
+
+  buf1 = (char *)valloc(i2);
+  buf2 = (char *)valloc(i);
+  buf3 = (char *)malloc(i2);
+  for (j = 0; j < i2; ++j)
+    *(buf1 + j) = rand();
+  fd = open("conftestmmap", O_CREAT | O_RDWR, 0666);
+  write(fd, buf1, i2);
+  mmap(buf2, i, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE, fd, 0);
+  for (j = 0; j < i; ++j)
+    if (*(buf1 + j) != *(buf2 + j))
+      exit(1);
+  lseek(fd, (long)i, 0);
+  read(fd, buf2, i); /* read into mapped memory -- file should not change */
+  /* (it does in i386 SVR4.0 - Jim Avera, jima@netcom.com) */
+  lseek(fd, (long)0, 0);
+  read(fd, buf3, i2);
+  for (j = 0; j < i2; ++j)
+    if (*(buf1 + j) != *(buf3 + j))
+      exit(1);
+  exit(0);
+}
+EOF
+    runMake t 't:; ${CC} t.c' >/dev/null
+}
+
+CheckForStructExitStatus()
+{
+    decl=$1; shift
+    (echo '#include <utmp.h>'
+    for i do
+	echo "$i"
+    done
+    cat<<EOF
+main()
+{
+    struct $decl x;
+    x.ut_exit.e_exit = 0;
+    x.ut_exit.e_termination = 0;
+}
+EOF
+    )>t.c++
+    runMake t "t:; \${C++F} \${C++FILE} t.c++${MAKECXXOVERRIDE}" > /dev/null
+}
+
+CheckForTXCD()
+{
+    cat>t.c<<EOF
+#include <sys/ioctl.h>
+main()
+{
+    ioctl(0, TXADDCD, "rts");
+    ioctl(0, TXDELCD, "rts");
+}
+EOF
+    runMake t 't:; ${CC} t.c' >/dev/null
+}
+
+getConfigTag()
+{
+    param=`grep "$1:" $2 | sed -e 's/.*:[ 	]*\([^ 	]*\).*/\1/'`
+}
+
 #
 # Check an existing port.h to see if it was created
 # for the target and compiler we're using.
@@ -657,13 +1517,15 @@ BuildTermiosDotH()
 CheckPortDotH()
 {
     getConfigTag TARGET port.h; target="$param"
-    getConfigTag COMPILER port.h; compiler="$param"
-    if [ $COMPILER = gcc ]; then
-	test "$target" = "$TARGET" -a "$compiler" = "$COMPILER-$GCCversion"
-    else
-	test "$target" = "$TARGET" -a "$compiler" = "$COMPILER"
-    fi
-    return
+    getConfigTag CCOMPILER port.h; ccompiler="$param"
+    getConfigTag CXXCOMPILER port.h; cxxcompiler="$param"
+    CCOMP=$CCOMPILER;
+	test $ISGCC = yes && CCOMP="${CCOMP}-${GCCversion}"
+    CXXCOMP=$CXXCOMPILER;
+	test $ISGXX = yes && CXXCOMP="${CXXCOMP}-${GCCversion}"
+    test "$target" = "$TARGET" && \
+    test "$ccompiler" = "$CCOMP" && \
+    test "$cxxcompiler" = "$CXXCOMP"
 }
 
 #
@@ -672,11 +1534,70 @@ CheckPortDotH()
 #
 BuildPortDotH()
 {
-
-    echo "Creating port.h with necessary definitions."
+    Note ""
+    Note "Creating port.h with necessary definitions."
 
     (EmitCPlusPlusPrologue _PORT_
     EmitConfigurationDefinitions
+
+    echo '#include <sys/types.h>'
+    CheckVarDecl uid_t 'typedef int uid_t;' sys/types.h
+    CheckVarDecl gid_t 'typedef int gid_t;' sys/types.h
+    CheckVarDecl mode_t 'typedef int mode_t;' sys/types.h stdlib.h
+    CheckVarDecl off_t 'typedef long off_t;' sys/types.h stdlib.h
+    CheckVarDecl pid_t 'typedef int pid_t;' sys/types.h stdlib.h
+    CheckVarDecl size_t 'typedef unsigned size_t;' sys/types.h stdlib.h
+
+    #
+    # Select signal handler type casts.
+    #
+    if [ $ISGXX = yes ]; then
+	#
+	# Must use -pendantic-errors with gcc to insure (sig_t)(...)
+	# is treated as an error instead of a warning when searching
+	# for the proper signal handler types below.
+	#
+	OGCXXOPTS="$GCXXOPTS";
+	GCXXOPTS="$GCXXOPTS -pedantic-errors"
+    fi
+    SIGHANDLERTYPES="
+	$SIGHANDLERTYPES
+	(sig_t)
+	(SIG_PF)
+	(void(*)(int))
+	(void(*)())
+	int
+    "
+    for i in $SIGHANDLERTYPES; do
+	CheckSignalHandler "$i" && {
+	    echo "#define fxSIGHANDLER $i"
+	    Note "... use $i for signal handler type"
+	    break;
+	}
+    done
+    for i in $SIGHANDLERTYPES; do
+	CheckSigvecHandler "$i" && {
+	    echo "#define fxSIGVECHANDLER $i"
+	    Note "... use $i for sigvec handler type"
+	    break;
+	}
+    done
+    for i in $SIGHANDLERTYPES; do
+	CheckSigactionHandler "$i" && {
+	    echo "#define fxSIGACTIONHANDLER $i"
+	    Note "... use $i for sigaction handler type"
+	    break;
+	}
+    done
+    test $ISGXX = yes && GCXXOPTS="$OGCXXOPTS"
+
+    CheckForMMAP && {
+	echo '#define HAS_MMAP 1'
+	Note "... configure use of mmap for memory-mapped files"
+	CheckFuncDecl mmap \
+	    'extern void* mmap(void*, size_t, int, int, int, off_t);' sys/mman.h
+    }
+
     CheckFuncDecl mkstemp 'extern int mkstemp(char *);' stdio.h unistd.h
     CheckFuncDecl strerror 'extern char* strerror(int);' string.h
     CheckFuncDecl strncasecmp \
@@ -688,21 +1609,24 @@ BuildPortDotH()
     CheckFuncDecl random 'extern long random(void);' math.h stdlib.h
     CheckFuncDecl floor 'extern double floor(double);' math.h
     CheckFuncDecl waitpid 'extern pid_t waitpid(pid_t, int *, int);' sys/wait.h
-    CheckDefine _POSIX_OPEN_MAX '_POSIX_OPEN_MAX 16' limits.h
+    CheckForDefine _POSIX_OPEN_MAX limits.h || {
+	if CheckForFunc ulimit; then
+	    echo '#include <ulimit.h>'
+	    AddDefine _POSIX_OPEN_MAX '_POSIX_OPEN_MAX	ulimit(UL_GDESLIM,0)'
+	else
+	    AddDefine _POSIX_OPEN_MAX '_POSIX_OPEN_MAX 16'
+	fi
+    }
     CheckDefine howmany 'howmany(x, y)	(((x)+((y)-1))/(y))' sys/types.h
     CheckForFuncDecl sigvec signal.h || {
-	echo '#ifdef SV_INTERRUPT'
 	echo 'struct sigvec;'
 	AddFuncDecl sigvec \
 	    'extern int sigvec(int, const struct sigvec*, struct sigvec*);'
-	echo '#endif'
     }
     CheckForFuncDecl sigaction signal.h || {
-	echo '#ifdef SA_NOCLDSTOP'
 	echo 'struct sigaction;'
 	AddFuncDecl sigaction \
 	    'extern int sigaction(int, const struct sigaction*, struct sigaction*);'
-	echo '#endif'
     }
     CheckFuncDecl kill 'extern int kill(pid_t, int);' signal.h
     CheckFuncDecl close 'extern int close(int);' unistd.h
@@ -712,12 +1636,14 @@ BuildPortDotH()
     CheckFuncDecl setegid 'extern int setegid(gid_t);' unistd.h
     CheckFuncDecl ftruncate 'extern int ftruncate(int, off_t);' unistd.h
     CheckFuncDecl getdtablesize 'extern int getdtablesize(void);' unistd.h
+    CheckFuncDecl gethostname 'extern int gethostname(char*, int);' unistd.h
     #
     # unistd.h is where many people put it
     # sys/select.h is for USL-derived code
     # sys/time.h is for HP systems (sigh)
+    # sys/types.h is for yet other systems (sigh sigh)
     #
-    CheckForFuncDecl select unistd.h sys/select.h sys/time.h || {
+    CheckForFuncDecl select unistd.h sys/select.h sys/time.h sys/types.h || {
 	echo 'struct fd_set;'
 	echo 'struct timeval;'
 	AddFuncDecl select \
@@ -726,9 +1652,9 @@ BuildPortDotH()
     CheckFuncDecl unlink 'extern int unlink(const char*);' unistd.h
     CheckFuncDecl read 'extern int read(int, const void*, unsigned int);' unistd.h
     CheckFuncDecl ioctl 'extern int ioctl(int, int, ...);' unistd.h sys/ioctl.h
-    CheckFunc fchown && {
+    CheckForFunc fchown && {
 	echo '#define HAS_FCHOWN 1'
-	echo "... configure use of fchown" 1>&2
+	Note "... configure use of fchown"
 	CheckFuncDecl fchown 'extern int fchown(int, uid_t, gid_t);' unistd.h
     }
     CheckFuncDecl gethostname 'extern int gethostname(char*, int);' unistd.h osfcn.h
@@ -739,14 +1665,14 @@ BuildPortDotH()
 	'extern unsigned long strtoul(const char*, char**, int);' stdlib.h
     CheckFuncDecl cuserid 'extern char* cuserid(char*);' stdio.h
     #
-    # unistd.h is for sco3.2v4.[0-2]
+    # unistd.h is for sco3.2v4.[0-2] and GNU libc (yech!)
     #
     CheckFuncDecl getopt \
 	'extern int getopt(int, char* const*, const char*);' stdlib.h unistd.h
     CheckFuncDecl isatty 'extern int isatty(int);' stdlib.h unistd.h
-    CheckVarDecl 'char.*optarg' 'extern char* optarg;' stdlib.h
-    CheckVarDecl 'int.*opterr' 'extern int opterr;' stdlib.h
-    CheckVarDecl 'int.*optind' 'extern int optind;' stdlib.h
+    CheckVarDecl 'char.*optarg' 'extern char* optarg;' stdlib.h unistd.h
+    CheckVarDecl 'int.*opterr' 'extern int opterr;' stdlib.h unistd.h
+    CheckVarDecl 'int.*optind' 'extern int optind;' stdlib.h unistd.h
     CheckFuncDecl mktemp 'extern char* mktemp(char*);' stdio.h unistd.h
     CheckFuncDecl tempnam 'extern char* tempnam(const char*, const char*);' stdio.h
     CheckFuncDecl popen 'extern FILE* popen(const char *, const char *);' stdio.h
@@ -763,13 +1689,14 @@ BuildPortDotH()
     }
     CheckFuncDecl closelog 'extern void closelog(void);' syslog.h
     CheckFuncDecl openlog 'extern void openlog(const char*, int, int);' syslog.h
-    CheckFunc fchmod && {
+    CheckForFunc fchmod && {
 	echo '#define HAS_FCHMOD 1'
-	echo "... configure use of fchmod" 1>&2
+	Note "... configure use of fchmod"
 	CheckFuncDecl fchmod 'extern int fchmod(int, mode_t);' \
 	    unistd.h libc.h osfcn.h sys/stat.h
     }
-    if [ "$TARGET-$COMPILER" = "solaris2-cc" ]; then
+    case $ISGXX-$TARGET in
+    no-*solaris*)
 	#
 	# SunPro pre-processor leaves comments in!  This messes up
 	# the scheme used by CheckFuncDecl 'cuz time.h has a comment
@@ -777,14 +1704,15 @@ BuildPortDotH()
 	#
 	AddFuncDecl gettimeofday \
 	    'extern int gettimeofday(struct timeval*, struct timezone*);'
-    else
+	;;
+    *)
 	CheckForFuncDecl gettimeofday sys/time.h || {
 	    echo 'struct timezone;'
 	    echo 'struct timeval;'
 	    AddFuncDecl gettimeofday \
 		'extern int gettimeofday(struct timeval*, struct timezone*);'
 	}
-    fi
+    esac
     CheckForFuncDecl strftime time.h || {
 	echo 'struct tm;'
 	AddFuncDecl strftime \
@@ -801,16 +1729,33 @@ BuildPortDotH()
 	    'extern int setitimer(int,struct itimerval*,struct itimerval*);'
 	echo '#endif'
     }
+    CheckFuncDecl setpwent 'extern void setpwent(void);' pwd.h
     CheckFuncDecl endpwent 'extern void endpwent(void);' pwd.h
     CheckFuncDecl getpwnam 'extern struct passwd* getpwnam(const char*);' pwd.h
-    if [ "$TARGET" != "reno" ]; then
-	CheckFuncDecl toupper 'extern int toupper(int);' ctype.h
-	CheckFuncDecl tolower 'extern int tolower(int);' ctype.h
-    fi
+    case "$TARGET" in
+    *-reno*)
+	;;
+    *)
+	for i in toupper tolower; do
+	    CheckFuncDecl $i "extern int $i(int);" ctype.h
+	done
+	;;
+    esac
     CheckFuncDecl getpeername 'extern int getpeername(int,void*,int*);' sys/socket.h
     CheckFuncDecl getsockname 'extern int getsockname(int,void*,int*);' sys/socket.h
     CheckFuncDecl socket 'extern int socket(int, int, int);' sys/socket.h
     CheckFuncDecl connect 'extern int connect(int, const void*, int);' sys/socket.h
+    CheckFuncDecl setutent 'extern void setutent(void);' utmp.h
+    CheckFuncDecl endutent 'extern void endutent(void);' utmp.h
+    CheckForFuncDecl getutent utmp.h || {
+	echo 'struct utmp;'
+	AddFuncDecl getutent 'extern struct utmp* getutent(void);'
+    }
+    CheckForFuncDecl pututline utmp.h || {
+	echo 'struct utmp;'
+	AddFuncDecl pututline \
+	    'extern struct utmp* pututline(const struct utmp*);'
+    }
     CheckForFuncDecl gethostbyname netdb.h || {
 	echo 'struct hostent;'
 	AddFuncDecl gethostbyname \
@@ -845,21 +1790,750 @@ BuildPortDotH()
 	echo 'struct in_addr;'
 	AddFuncDecl inet_ntoa 'extern char* inet_ntoa(struct in_addr);'
     }
+    CheckForIncludeFile sys/mkdev.h && {
+	Note "... configure use of <sys/mkdev.h> (for SVR4-style lock files)"
+	echo '#define HAS_MKDEV 1'
+    }
+    CheckForIncludeFile locale.h && {
+	Note "... configure use of <locale.h> (internationalization support)"
+	echo '#define HAS_LOCALE 1'
+    }
+    CheckForIncludeFile paths.h && {
+	Note "... configure use of <paths.h>"
+	echo '#include <paths.h>'
+    }
+    CheckForIncludeFile sys/select.h && {
+	Note "... configure use of <sys/select.h>"
+	echo '#define HAS_SYSSELECT 1'
+    }
+    CheckForFunc flock || {
+	#
+	# Emit the necessary #defines for emulating flock
+	#
+	if CheckForFunc fcntl; then
+	    echo '#define HAS_FCNTL 1'
+	fi
+	if CheckForFunc lockf; then
+	    echo '#define HAS_LOCKF 1'
+	fi
+    }
+    # NB: logwtmp checked above when looking for -lutil
+    test $HAS_LOGWTMP = yes && {
+	#
+	# Configure use of logwtmp in the BSD getty support and
+	# verify that the accompanying logout function is present
+	# also.  Note that we put out proper declarations for the
+	# functions since they don't appear to be declared anywhere.
+	#
+	echo '#define HAS_LOGWTMP 1'
+	Note "... configure use of logwtmp (BSD-style wtmp logging)"
+	AddFuncDecl logwtmp \
+	    'int logwtmp(const char*, const char*, const char*);'
+	CheckForLibrary logout -lutil && {
+	    echo '#define HAS_LOGOUT 1'
+	    Note "... configure use of logout (BSD-style utmp support)"
+	    AddFuncDecl logout 'int logout(const char*);'
+	}
+    }
+    CheckDefine _PATH_DEV     '_PATH_DEV	"/dev/"'	paths.h
+    CheckDefine _PATH_DEVNULL '_PATH_DEVNULL	"/dev/null"'	paths.h
+    CheckDefine _PATH_TMP     '_PATH_TMP	"/tmp/"'	paths.h
+    if CheckForIncludeFile utmpx.h; then
+	Note "... configure use of <utmpx.h> (extended utmp interface)"
+	echo '#define HAS_UTMPX 1'
+	CheckForDefine _PATH_WTMPX paths.h utmp.h utmpx.h || {
+	    if CheckForDefine WTMPX_FILE utmpx.h; then
+		AddDefine _PATH_WTMPX '_PATH_WTMPX	WTMPX_FILE'
+	    else
+		PATHWTMPX=`findFile wtmpx /etc:/var/adm:/usr/adm`
+		test "$PATHWTMPX" && {
+		    AddDefine _PATH_WTMPX "_PATH_WTMPX	\"${PATHWTMPX}\""
+		}
+	    fi
+	}
+	#
+	# struct exit_status is defined for all systems with
+	# utmpx support, but SVR4.0.3 headers define the extended
+	# exit status structure *within* struct utmp and then reuse
+	# it within struct utmpx.  This does not work for all
+	# compilers so we must look for this case and, if present,
+	# enable a workaround declaration of struct exit_status (sigh).
+	#
+	if CheckForStructExitStatus utmpx '#include <utmpx.h>'; then
+	    echo '#define HAS_UTEXIT 1'
+	    echo '#define HAS_EXIT_STATUS 1'
+	elif CheckForStructExitStatus utmpx \
+	    'struct exit_status { short e_termination; short e_exit; };' \
+	    '#include <utmpx.h>'; then
+	    Note "... add declaration for struct exit_status"
+	    echo '#define HAS_UTEXIT 1'
+	    echo '#define HAS_EXIT_STATUS 0'
+	fi
+    else
+	CheckForDefine _PATH_UTMP paths.h utmp.h || {
+	    if CheckForDefine UTMP_FILE utmp.h; then
+		AddDefine _PATH_UTMP '_PATH_UTMP	UTMP_FILE'
+	    else
+		PATHUTMP=`findFile utmp /etc:/var/adm:/usr/adm`
+		test "$PATHUTMP" && {
+		    AddDefine _PATH_UTMP "_PATH_UTMP	\"${PATHUTMP}\""
+		}
+	    fi
+	}
+	CheckForStructExitStatus utmp && {
+	    Note "... configure use of extended exit status in utmp"
+	    echo '#define HAS_UTEXIT 1'
+	}
+	CheckForDefine _PATH_WTMP paths.h utmp.h || {
+	    if CheckForDefine WTMP_FILE utmp.h; then
+		AddDefine _PATH_WTMP '_PATH_WTMP	WTMP_FILE'
+	    else
+		PATHWTMP=`findFile wtmp /etc:/var/adm:/usr/adm`
+		test "$PATHWTMP" && {
+		    AddDefine _PATH_WTMP "_PATH_WTMP	\"${PATHWTMP}\""
+		}
+	    fi
+	}
+    fi
+    CheckForDefine RT_NOCHANGE sys/priocntl.h sys/rtpriocntl.h && \
+    CheckForDefine TS_NOCHANGE sys/priocntl.h sys/tspriocntl.h && {
+	Note "... configure use of SVR4 realtime process control interface"
+	echo '#define HAS_PRIOCNTL 1'
+    }
+    CheckForDefine NDPRI sys/schedctl.h && {
+	Note "... configure use of IRIX realtime process control interface"
+	echo '#define HAS_SCHEDCTL 1'
+    }
+    CheckForTXCD && {
+	Note "... configure use of TXADDCD and TXDELCD ioctls"
+	echo '#define HAS_TXCD 1'
+    }
     CheckTermioFuncDecls termios.h
     EmitCPlusPlusEpilogue
     )>xport.h
     mv xport.h port.h; chmod 444 port.h
+    Note "Done creating port.h."
 }
 
-JUNK="xport.h xtermios.h t.c t.c++ a.out"
-trap "$RM \$JUNK; exit 1" 1 2 15
-
-test -f port.h && CheckPortDotH || {
-    $RM xport.h port.h xtermios.h termios.h a.out t t.c t.c++
+if test -f port.h && CheckPortDotH; then
+    Note ""
+    Note "Using previously created port.h."
+else
+    $RM xport.h xtermios.h t.c t.c++ a.out port.h termios.h
     BuildTermiosDotH
     BuildPortDotH
+fi
+
+Note ""
+Note "Checking system libraries for functionality to emulate."
+
+FUNCS="
+    cuserid
+    flock
+    ftruncate
+    mkstemp
+    random
+    setegid
+    seteuid
+    setvbuf
+    strcasecmp
+    strtod
+    writev
+"
+
+for i in $FUNCS; do
+    CheckForFunc $i || {
+	Note "... emulate $i"
+	PORTFUNCS="$PORTFUNCS $i.c"
+    }
+done
+if CheckForFunc syslog; then
+    CheckForFunc vsyslog || {
+	Note "... emulate vsyslog"
+	PORTFUNCS="$PORTFUNCS vsyslog.c"
+    }
+else
+    Note "... emulate syslog&co."
+    PORTFUNCS="$PORTFUNCS syslog.c"
+fi
+if [ "$PORTFUNCS" ]; then
+    LIBPORT='${PORT}/libport.a'
+    PORT=yes
+else
+    PORT=no
+fi
+Note "Done checking system libraries."
+
+Note ""
+Note "Setting up libtiff configuration parameters."
+CheckForDefine HAS_MMAP port.h && {
+   Note "Using memory mapped file support in libtiff."
+   LIBTIFF_CONFIG="$LIBTIFF_CONFIG -DMMAP_SUPPORT"
 }
-$RM $JUNK
+Note "Done setting up libtiff."
+
+
+Note ""
+Note "Checking for Dynamic Shared Object (DSO) support."
+if [ "$DSO" = auto ]; then
+    case $TARGET in
+    *-irix5*)
+	if (findApp rld /lib:/usr/lib:$PATH) >/dev/null 2>&1; then
+	    DSOSUF=so
+	    DSOOPTS='-shared -rdata_shared -check_registry ${SRCDIR}/${PORT}/irix/so_locations -quickstart_info'
+	    DSODELAY=-delay_load
+	    LLDOPTS='-rpath ${LIBEXEC}'
+	fi
+	;;
+    *)  DSO=no;;
+    esac
+fi
+if [ "$DSO" != no ]; then
+    JUNK="$JUNK t.${DSOSUF}"
+    #
+    # Check to make sure the compilers process
+    # the DSO options in the expected way.
+    #
+    CheckCCDSO()
+    {
+    $RM t.c t.o t.${DSOSUF}
+    cat>t.c<<EOF
+int f() { return 0; }
+EOF
+    runMake t \
+	't.o:; ${CCF} -c t.c' \
+	"t: t.o; \${CCF} ${DSOOPTS} -o t.${DSOSUF} t.o" >/dev/null
+    }
+    CheckCXXDSO()
+    {
+    $RM t.c++ t.o t.${DSOSUF}
+    cat>t.c++<<EOF
+int f() { return 0; }
+EOF
+    runMake t \
+	"t.o:; \${C++F} -c \${C++FILE} t.c++${MAKECXXOVERRIDE}" \
+	"t:t.o; \${C++F} ${DSOOPTS} -o t.${DSOSUF} t.o" >/dev/null
+    }
+    if CheckCCDSO; then
+	if CheckCXXDSO; then
+	    Note "Looks like your system supports SVR4-style DSOs."
+	    DSO=yes
+	else
+	    cat 1>&4 <<EOF
+Looks like your system supports SVR4-style DSOs...
+... but $CXXCOMPILER does not support them in the expected way.
+EOF
+	    DSO=no
+	fi
+    else
+	cat 1>&4 <<EOF
+Looks like your system supports SVR4-style DSOs...
+... sigh, but $CCOMPILER does not support DSOs in the expected way.
+EOF
+	DSO=no
+    fi
+fi
+Note "Done checking for DSO support."
+
+if [ "$DSO" = no ]; then
+    MAKEDSOINCLUDE='#'
+    DSOSUF=a DSOOPTS= DSODELAY= LLDOPTS=
+else
+    MAKEDSOINCLUDE="$MAKEINCLUDE"
+fi
+
+Note ""
+Note "Selecting programs used during installation and operation."
+
+if [ -z "$AWK" ]; then
+    # we need an awk that supports functions and -v
+    CheckAwk()
+    {
+	$1 -v BAR=bar '
+func foo(x) {
+    print "GOT" x
+}
+BEGIN { foo(BAR) }
+' </dev/null | grep GOTbar >/dev/null 2>&1
+    }
+    #
+    # Sigh, all the awk scripts that use functions use the
+    # older, more common, System V-style declaration syntax
+    # that first appeared in nawk.  GNU awk disables backwards
+    # compatibility if POSIXLY_CORRECT is set to 1 which breaks
+    # the test done in CheckAwk.  Because we need to disable
+    # GNU extensions for other reasons (certain GNU extensions
+    # in the bin utils cause problems with otherwise acceptable
+    # arguments to programs like sed), we must temporarily enable
+    # it while we search for a working awk, otherwise we'll skip
+    # gawk as a candidate.  Life would be so much better if
+    # the GNU folks would just leave well enough alone sometimes...
+    #
+    unset POSIXLY_CORRECT
+    for i in mawk nawk gawk awk; do
+	x=`findApp $i $PATH`
+	if test "$x" && CheckAwk "$x"; then
+	    AWK=$x
+	    break
+	fi
+    done
+    # once again disable GNU extensions
+    POSIXLY_CORRECT=1; export POSIXLY_CORRECT
+fi
+if [ -z "$AWK" ]; then
+    Note ""
+    Note "*** Warning, could not locate a suitable AWK for processing the command"
+    Note "*** scripts included in this software distribution; using \"awk\""
+    AWK=awk
+else
+    Note "Looks like $AWK should be used to process command scripts."
+fi
+
+test "$SED" || SED=`findApp sed $PATH`
+if [ -z "$SED" ]; then
+    Note "*** Warning, could not locate a suitable sed command; using a default."
+    SED=sed
+fi
+
+test "$PATH_SENDMAIL" || \
+    PATH_SENDMAIL=`findApp sendmail $PATH:/usr/lib:/usr/ucblib`
+if [ -z "$PATH_SENDMAIL" ]; then
+    cat<<EOF
+*** Warning, could not locate sendmail on your system.
+
+Beware that the mail notification work done by this software uses
+sendmail-specific command line options.  If you do not have a
+sendmail-compatible mailer things will break.
+EOF
+    PATH_SENDMAIL=/usr/lib/sendmail
+    Note "Using $PATH_SENDMAIL to deliver mail."
+else
+    Note "Looks like $PATH_SENDMAIL should be used to deliver mail."
+fi
+
+#
+# Miscellaneous ``little'' programs.  We want absolute
+# pathnames so that work done by the super-user (e.g.
+# installation) is safer.
+#
+test "$CAT"	|| CAT=`findAppDef cat $PATH cat`
+test "$CHGRP"	|| CHGRP=`findAppDef chgrp $PATH chgrp`
+test "$CHMOD"	|| CHMOD=`findAppDef chmod $PATH chmod`
+test "$CHOWN"	|| CHOWN=`findAppDef chown $PATH chown`
+test "$CMP"	|| CMP=`findAppDef cmp $PATH cmp`
+test "$COL"	|| COL=`findAppDef col $PATH col`
+test "$CP"	|| CP=`findAppDef cp $PATH cp`
+test "$ECHO"	|| ECHO=`findAppDef echo $PATH echo`
+test "$GENDIST"	|| GENDIST=`findAppDef gendist $PATH gendist`
+test "$GREP"	|| GREP=`findAppDef grep $PATH grep`
+test "$LN"	|| LN=`findAppDef ln $PATH ln`
+test "$MAN"	|| MAN=`findAppDef man $PATH man`
+test "$MKDIR"	|| MKDIR=`findAppDef mkdir $PATH mkdir`
+test "$MV"	|| MV=`findAppDef mv $PATH mv`
+test "$RMCMD"	|| RMCMD=`findAppDef rm $PATH rm`
+test "$SORT"	|| SORT=`findAppDef sort $PATH sort`
+test "$STRIP"	|| STRIP=`findAppDef strip $PATH strip`
+# NB: can't test $PWD 'cuz it's a shell variable
+PWD=`findApp pwd $PATH`	   || PWD=pwd
+
+#
+# Test/verify we know how to create FIFO special files.
+#
+$RM conffifo;
+if mkfifo conffifo && test -p conffifo >/dev/null 2>&1; then
+    Note "Looks like $MKFIFO creates FIFO special files."
+elif test -f conffifo; then			# NB: not everyone has test -p
+    Note "Looks like $MKFIFO creates FIFO special files (unable to verify)."
+else
+    # NB: we can't be certain of this because on some systems
+    # only root can create a FIFO special file
+    Note "*** Warning, $MKFIFO may create FIFO special files, but testing failed."
+fi
+
+#
+# Check if mv -f is supported
+#
+if [ -z "$MV_F" ]; then
+    $RM t.c; echo "">t.c
+    if $MV -f t.c t.o; then
+	Note "Looks like $MV supports the -f option to force a move."
+	MV_F=-f
+    else
+	Note "Warning, looks like $MV has no -f option to force move operations;"
+	Note "... this may cause problems during installation."
+	MV_F=
+    fi
+fi
+
+#
+# Check if ln -s creates a symbolic link.
+#
+if [ -z "$LN_S" ]; then
+    $RM t.c; $LN -s foo t.c && LN_S=-s
+fi
+if [ -n "$LN_S" ]; then
+    Note "Looks like $LN supports the -s option to create a symbolic link."
+else
+    Note "Warning, looks like $LN has no -s option to create symbolic links;"
+    Note "... this may cause problems during installation."
+fi
+
+#
+# Pick install mechanism.
+#
+if [ -z "$INSTALL" ]; then
+    case $TARGET in
+    *-irix*)	INSTALL=`findApp install /sbin:$PATH`;;
+    *)		INSTALL='${SHELL} ${PORT}/install.sh';;
+    esac
+fi
+
+if [ "$SYSVINIT" = auto ]; then
+    if test -d /etc/rc0.d -a -d /etc/rc2.d -a -d /etc/init.d; then
+	SYSVINIT=yes
+	Note "Looks like a SysV-style init is used, enabling startup code."
+    else
+	SYSVINIT=no
+    fi
+fi
+
+Note "Done selecting programs."
+
+#
+# User-changable configuration parameters section.
+# Anything selected here is presented to the user
+# and may be interactively changed.
+#
+
+Note ""
+Note "Selecting default HylaFAX configuration parameters."
+Note ""
+
+#
+# Fill in any other configuration parameters not
+# setup in the site and local files.
+#
+
+#
+# Fax user GID
+#
+if [ -z "$FAXGID" ]; then
+    case $TARGET in
+    *-aix*)	FAXGID=uucp;;
+    *-bsdi*)	FAXGID=uucp;;
+    *bsd*)	FAXGID=dialer;;
+    *-hpux*)	FAXGID=sys;;
+    *-irix*)	FAXGID=nuucp;;
+    *-isc*)	FAXGID=uucp;;
+    *-linux*)	FAXGID=uucp;;
+    *-sco*)	FAXGID=uucp;;
+    *-solaris*)	FAXGID=uucp;;
+    *-sunos*)	FAXGID=uucp;;
+    *-sysv4*)	FAXGID=uucp;;
+    *-ultrix*)	FAXGID=uucp;;
+    *)	
+	FAXGID=uucp
+	for i in uucp dialer nuucp sys; do
+	    grep "^${i}:" /etc/group >/dev/null 2>&1 && { FAXGID=$i; break; }
+	done
+	;;
+    esac
+fi
+Note "Using uid $FAXUID and gid $FAXGID for controlling access to fax stuff."
+
+#
+# System installation group ID.
+#
+if [ -z "$SYSGID" ]; then
+    case $TARGET in
+    *-aix*)	SYSGID=sys;;
+    *bsd*)	SYSGID=bin;;
+    *-hpux*)	SYSGID=bin;;
+    *-irix*)	SYSGID=sys;;
+    *-isc*)	SYSGID=sys;;
+    *-linux*)	SYSGID=bin;;
+    *-sco*)	SYSGID=sys;;
+    *-solaris*)	SYSGID=sys;;
+    *-sunos*)	SYSGID=bin;;
+    *-sysv4*)	SYSGID=sys;;
+    *-ultrix*)	SYSGID=bin;;
+    *)	
+	SYSGID=sys
+	for i in sys bin; do
+	    grep "^${i}:" /etc/group >/dev/null 2>&1 && { SYSGID=$i; break; }
+	done
+	;;
+    esac
+fi
+Note "Using uid $SYSUID and gid $SYSGID for installing programs."
+
+if [ -z "$FILLORDER" ]; then
+    #
+    # Host bit order within a word.
+    #
+    case $TARGET in
+    mips-dec-*)	FILLORDER=LSB2MSB;;
+    i[34]86-*)	FILLORDER=LSB2MSB;;
+    *)		FILLORDER=MSB2LSB;;
+    esac
+fi
+CPU=`echo $TARGET | sed 's/-.*//'`
+Note "Using $FILLORDER bit order for your $CPU cpu."
+
+#
+# Style of getty support.
+#
+if [ -z "$GETTY" ]; then
+    case $TARGET in
+    *bsd*)	GETTY=BSD;;
+    *-sunos*)	GETTY=BSD;;
+    *-ultrix*)	GETTY=BSD;;
+    *)		GETTY=SysV;;
+    esac
+fi
+Note "Looks like you need $GETTY getty support."
+if [ -z "$PATH_GETTY" ]; then
+    if CheckForDefine _PATH_GETTY paths.h; then
+	Note "Using _PATH_GETTY from <paths.h> as the program to exec for a data call."
+    else
+	PATH_GETTY=`findApp ttymon /usr/lib/saf:/usr/libexec:/sbin:$PATH`
+	test -z "$PATH_GETTY" && \
+	    PATH_GETTY=`findApp getty /usr/libexec:/sbin:$PATH`
+	test -z "$PATH_GETTY" && \
+	    PATH_GETTY=`findApp agetty /usr/libexec:/sbin:$PATH`
+	test -z "$PATH_GETTY" && \
+	    PATH_GETTY=`findApp mgetty /usr/libexec:/sbin:$PATH`
+	if [ -z "$PATH_GETTY" ]; then
+	    Note ""
+	    Note "*** Warning, could not locate a suitable getty program to exec for a"
+	    Note "*** data call; using a default value /etc/getty."
+	    Note ""
+	    PATH_GETTY=/etc/getty
+	else
+	    Note "Looks like $PATH_GETTY is the program to exec for a data call."
+	fi
+    fi
+else
+    Note "Using $PATH_GETTY as the program to exec for a data call."
+fi
+
+#
+# UUCP lock file type and location.
+#
+if [ -z "$LOCKS" ]; then
+    case $TARGET in
+    *-aix*)	LOCKS=ascii;;
+    *-sco*)	LOCKS="-ascii";;
+    *-sysv2*)	LOCKS=binary;;
+    *-hpux*)	LOCKS=binary;;
+    *-sysv4*)	LOCKS="+ascii";;
+    *-solaris*)	LOCKS="+ascii";;
+    *-freebsd*)	LOCKS=ascii;;
+    *-netbsd*)	LOCKS=ascii;;
+    *bsd*)	LOCKS=binary;;
+    *)		LOCKS=ascii;;
+    esac
+fi
+Note "Looks like you use ${LOCKS}-style UUCP lock files."
+if [ -z "$DIR_LOCKS" ]; then
+    LOCKDIRS="
+	/var/spool/locks
+	/usr/spool/locks
+	/var/spool/lock
+	/usr/spool/lock
+	/var/spool/uucp
+	/usr/spool/uucp
+    "
+    case $TARGET in
+    *-aix*)		LOCKDIRS="/etc/locks $LOCKDIRS";;
+    esac
+    DIR_LOCKS=
+    for i in $LOCKDIRS; do
+	test -d $i && { DIR_LOCKS=$i; break; }
+    done
+    if [ -z "$DIR_LOCKS" ]; then
+	Note "*** Warning, could not locate a UUCP lock file directory; using a default."
+	DIR_LOCKS=/var/spool/uucp
+    fi
+fi
+Note "Looks like UUCP lock files go in $DIR_LOCKS."
+
+#
+# Location of Adobe Font Metric files.
+#
+if [ -z "$DIR_AFM" ]; then
+    DIR_AFMS="
+	/usr/lib/afm
+	/usr/local/lib/afm
+	/usr/local/lib/ghostscript/fonts
+	/usr/gnu/lib/ghostscript/fonts
+	/opt/gnu/lib/ghostscript/fonts
+    "
+    case $TARGET in
+    *-irix*)	DIR_AFMS="/usr/lib/DPS/AFM $DIR_AFMS";;
+    *-bsdi*)	DIR_AFMS="/usr/contrib/lib/flexfax/afm $DIR_AFMS";;
+    *-sunos*)	DIR_AFMS="/usr/openwin/lib/fonts/afm $DIR_AFMS";;
+    esac
+    DIR_AFM=
+    for i in $DIR_AFMS; do
+	test -d $i && { DIR_AFM=$i; break; }
+    done
+fi
+if [ -z "$DIR_AFM" ]; then
+    Note "Warning, could not locate a directory with font metric information,"
+    # put it where ghostscript normally puts things
+    DIR_AFM=/usr/local/lib/ghostscript/fonts
+    Note "Setting up font metric information in $DIR_AFM."
+else
+    Note "Looks like font metric information goes in $DIR_AFM."
+fi
+
+if [ "$AFM" = auto ]; then
+    if [ ! -f $DIR_AFM/Courier -a ! -f $DIR_AFM/Courier.afm ]; then
+	Note ""
+	Note "No font metric files appear to be installed on your system, enabling"
+	Note "installation of the default set of metric files included with this software."
+	Note ""
+	AFM=yes
+    else
+	AFM=no
+    fi
+fi
+
+bitchExecutable()
+{
+    echo ""
+    echo "Warning, $1 does not seem to be an executable program;"
+    echo "you'll need to correct this before starting up the fax server."
+    echo ""
+}
+
+#
+# PostScript package and RIP location.
+#
+PickRIP()
+{
+    if [ -z "$PATH_GSRIP" ]; then
+	GSLOCS="
+	    /usr/local/bin/gs
+	    /usr/contrib/bin/gs
+	    /usr/gnu/bin/gs
+	    /opt/gnu/bin/gs
+	"
+	for i in $GSLOCS; do
+	    # verify Ghostscript was linked with the tiffg3 device driver
+	    ($i -h | grep tiffg3) >/dev/null 2>&5 && { PATH_GSRIP=$i; break; }
+	done
+    fi
+    if [ $PS = dps ]; then
+	PATH_PSRIP=$PATH_DPSRIP
+    else
+	PATH_PSRIP=$PATH_GSRIP
+    fi
+}
+CheckRIP()
+{
+    if [ -x "$PATH_PSRIP" ]; then
+	if [ $PS = gs ]; then
+	    # verify Ghostscript was linked with the tiffg3 device driver
+	    ($PATH_PSRIP -h | grep tiffg3) >/dev/null 2>&5 || cat<<EOF
+
+*** Warning, no tiffg3 driver in $PATH_PSRIP.
+
+The PostScript imaging program $PATH_PSRIP does not appear to be
+to be configured with the tiffg3 device driver.  This is necessary for the
+fax software to operate correctly.  See the README file for information
+on building Ghostscript with the necessary TIFF driver.
+EOF
+	fi
+    elif [ -n "$PATH_PSRIP" ]; then
+	bitchExecutable $PATH_PSRIP
+    else
+	cat<<EOF
+
+Warning, no suitable PostScript imaging program was located on your system.
+This may be due to your not having Ghostscript installed or not having
+Ghostscript configured with the tiffg3 device driver.  A default pathname
+will be used for the moment.  You must correct this situation for the
+fax software to operate correctly.  See the WWW documentation for information
+on building Ghostscript with the necessary TIFF driver.
+
+EOF
+	PATH_PSRIP=/usr/local/bin/gs
+    fi
+}
+
+if [ -z "$PS" ]; then
+    case $TARGET in
+    *-irix*)	PS=dps;;
+    *)		PS=gs;;
+    esac
+fi
+Note "Looks like the $PS imager package should be used."
+PickRIP
+Note "Looks like $PATH_PSRIP is the PostScript RIP to use."
+CheckRIP
+
+#
+# Setup manual page-related stuff.
+#
+# Manual pages are processed according to:
+# 1. Section organization (BSD or System V)
+# 2. Pre-formatted (w/ nroff) or source.
+# 3. Compressed (compress, gzip, pack) or uncompressed.
+# 4. Whether or not the FlexFAX ``F'' suffix must be
+#    stripped for pages to be found (only for 4F pages).
+#
+if [ -z "$DIR_MAN" ]; then
+    MANPATH="
+	$MANPATH
+	/usr/local/man
+	/usr/contrib/man
+	/usr/catman/local
+    "
+    DIR_MAN=
+    for i in $MANPATH; do
+	test -d $i && { DIR_MAN=$i; break; }
+    done
+    test -z "$DIR_MAN" && DIR_MAN=/usr/local/man
+fi
+Note "Looks like manual pages go in $DIR_MAN."
+if [ -z "$MANSCHEME" ]; then
+    case $TARGET in
+    *-bsdi*|*-netbsd*)		MANSCHEME=bsd-nroff-gzip-0.gz;;
+    *-freebsd*)			MANSCHEME=bsd-source-cat;;
+    *-linux*)			MANSCHEME=bsd-source-cat;;
+    *-ultrix*)			MANSCHEME=bsd-source-cat;;
+    *-sunos*)			MANSCHEME=bsd-source-cat-strip;;
+    *-sysv[234]*)		MANSCHEME=sysv-source-cat-strip;;
+    *-hpux*)			MANSCHEME=sysv-source-cat-strip;;
+    *-solaris*)			MANSCHEME=sysv-source-cat-strip;;
+    *-aix*)			MANSCHEME=sysv-source-strip;;
+    *-isc*|*-sco*)		MANSCHEME=sysv-source-cat;;
+    *-irix*)			MANSCHEME=sysv-nroff-compress-Z;;
+    *)
+	#
+	# Try to deduce the setup from existing manual pages.
+	# XXX needs more work XXX
+	#
+	MANSCHEME=sysv-source-cat
+	if [ -d /usr/share/man ]; then
+	    if [ -d /usr/share/man/u_man ]; then
+	       MANSCHEME=sysv-source-cat
+	    elif [ -d /usr/share/man/man8 ]; then
+	       MANSCHEME=bsd-source-cat
+	    fi
+	elif [ -d /usr/share/catman ]; then
+	    if [ -d /usr/share/catman/u_man ]; then
+	       MANSCHEME=sysv-nroff-cat
+	    elif [ -d /usr/share/catman/man8 ]; then
+	       MANSCHEME=bsd-nroff-cat
+	    fi
+	fi
+	;;
+    esac
+fi
+Note "Looks like manual pages should be installed with $MANSCHEME."
 
 #
 # Figure out which brand of echo we have and define
@@ -868,12 +2542,12 @@ $RM $JUNK
 if [ `echo foo\\\c`@ = "foo@" ]; then
     prompt()
     {
-       echo "$* \\c"
+	echo "$* \\c"
     }
 elif [ "`echo -n foo`@" = "foo@" ]; then
     prompt()
     {
-       echo -n "$* "
+	echo -n "$* "
     }
 else
     prompt()
@@ -887,14 +2561,14 @@ fi
 #
 promptForNonNullStringParameter()
 {
-    x=""
+    x="" val="$1" desc="$2"
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$desc [$val]?"; read x
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
 	else
-	    x="$1"
+	    x="$val"
 	fi
     done
     param="$x"
@@ -905,9 +2579,9 @@ promptForNonNullStringParameter()
 #
 promptForNumericParameter()
 {
-    x=""
+    x="" val="$1" desc="$2"
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$desc [$val]?"; read x
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -919,41 +2593,17 @@ promptForNumericParameter()
 		x="";
 	    fi
 	else
-	    x="$1"
+	    x="$val"
 	fi
     done
     param="$x"
-}
-
-promptForLockType()
-{
-    x=""
-    while [ -z "$x" ]; do
-	prompt "Type of uucp lock files [$UUCP_LOCKTYPE]?"; read x
-	if [ "$x" ]; then
-	    # strip leading and trailing white space
-	    x=`echo "$x" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
-	    if [ "$x" != "ascii" -a "$x" != "binary" ]; then
-cat <<EOF
-
-"$x" is not a uucp lock type; choose either "ascii"
-for System V-style lock files with ascii contents or
-"binary" for BSD-style lock files with binary contents.
-EOF
-		x=""
-	    fi
-	else
-	    x="$UUCP_LOCKTYPE"
-	fi
-    done
-    UUCP_LOCKTYPE="$x"
 }
 
 promptForImagerPackage()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "PostScript imager package [$PSPACKAGE]?"; read x
+	prompt "PostScript imager package [$PS]?"; read x
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -966,26 +2616,27 @@ cat <<EOF
 "$x" is not a PostScript imager package; choose either "dps"
 for Display PostScript on a Silicon Graphics machine or "gs"
 for the freely available Ghostscript package.
+
 EOF
 		x="";;
 	    esac
 	else
-	    x="$PSPACKAGE"
+	    x="$PS"
 	fi
     done
-    PSPACKAGE="$x"
+    PS="$x"
 }
 
 promptForPageSize()
 {
-    x=""
+    file=$1 x=""
     while [ -z "$x" ]; do
 	prompt "Default page size [$PAGESIZE]?"; read x
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
 	    # search pagesizes file for an entry
-	    y=`sed -e '/^#/d' $1 | grep -i "$x" | sed -e 's/	.*//;q'`
+	    y=`sed -e '/^#/d' $file | grep -i "$x" | sed -e 's/	.*//;q'`
 	    if [ -z "$y" ]; then
 		cat<<EOF
 
@@ -993,7 +2644,7 @@ promptForPageSize()
 
 Name			Abbrev	Width	Height	Width	Height	Top	Left
 EOF
-		sed -e '/^#/d' -e '/^default/d' $1
+		sed -e '/^#/d' -e '/@DEFPAGESIZE@/d' $file
 		echo ""
 		x=""
 	    else
@@ -1013,7 +2664,7 @@ promptForVRes()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "Default vertical res (lpi) [$FAX_DEFVRES]?"; read x
+	prompt "Default vertical res (lpi) [$DEFVRES]?"; read x
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -1030,138 +2681,190 @@ EOF
 		x="";;
 	    esac
 	else
-	    x="$FAX_DEFVRES"
+	    x="$DEFVRES"
 	fi
     done
-    FAX_DEFVRES="$x"
+    DEFVRES="$x"
 }
 
-#
-# Prompt the user for a bit order.
-#
-promptForHostFillOrder()
+promptForUUCPLockScheme()
 {
     x=""
     while [ -z "$x" ]; do
-	fill=`echo $HOST_FILLORDER | sed 's/FILLORDER_//'`
-	prompt "Host bit order [$fill]?"; read x
+	prompt "UUCP lock file scheme [$LOCKS]?"; read x
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
 	    case "$x" in
-	    [lL]*)	x="FILLORDER_LSB2MSB";;
-	    [mM]*)	x="FILLORDER_MSB2LSB";;
+	    ascii|[-+]ascii)	;;
+	    binary|[-+]binary)	;;
 	    *)
 cat <<EOF
 
-"$x" is not a valid bit order parameter setting; use
-one of: "lsb2msb", "LSB2MSB", "msb2lsb", or "MSB2LSB".
+"$x" is not a valid UUCP lock file scheme; choose "ascii" or
+"binary" to get lock files with the process ID of the lock holder
+written as ASCII or binary values and optionally prefix this with
+"+" for SVR4-style lock file names (LK.xxx.yyy.zzz) or "-" for
+SCO-style lock file names (convert tty names from upper to lower
+case when forming the lock file name).
+
 EOF
 		x="";;
 	    esac
 	else
-	    x="$HOST_FILLORDER"
+	    x="$LOCKS"
 	fi
     done
-    HOST_FILLORDER="$x"
+    LOCKS="$x"
 }
 
-getParameter()
+promptForManPageScheme()
 {
-    param=`grep "^$1[ 	]*=" $2 | \
-	sed -e 's/#.*//' -e 's/.*=[ 	]*//' -e 's/[ 	]*$//'`
+    x=""
+    while [ -z "$x" ]; do
+	prompt "Manual page installation scheme [$MANSCHEME]?"; read x
+	if [ "$x" ]; then
+	    # strip leading and trailing white space
+	    x=`echo "$x" | sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	    # XXX do a better job of validating...
+	    case "$x" in
+	    bsd-nroff-cat*|sysv-nroff-cat*)	;;
+	    bsd-nroff-gzip*|sysv-nroff-gzip*)	;;
+	    bsd-nroff-comp*|sysv-nroff-comp*)	;;
+	    bsd-nroff-pack*|sysv-nroff-pack*)	;;
+	    bsd-source-cat*|sysv-source-cat*)	;;
+	    bsd-source-gzip*|sysv-source-gzip*)	;;
+	    bsd-source-comp*|sysv-source-comp*)	;;
+	    bsd-source-pack*|sysv-source-pack*)	;;
+	    *)
+cat <<EOF
+
+"$x" is not a valid manual page installation scheme.  Schemes are
+constructed according to:
+
+    <organization>-<formatting>-<compression>[-<suffix>]
+
+where:
+
+<organization>  is either "bsd" for BSD-style section organization (e.g.
+		file formats in section 5) or "sysv" for System V-style
+		organization (e.g. file formats in section 4).
+
+<formatting>    is either "nroff" to force installation of formatted
+                materials (using nroff) or "source" to get the nroff
+		source installed.
+
+<compression>   is either the name of a program to compress the manual
+                pages (gipz, compress, pack) or "cat" for uncompressed data.
+
+<suffix>        is either the file suffix to convert installed pages to
+                (e.g. 0.gz for gzip-compressed pages under BSD) or "strip"
+		to force the normal ".4f" suffix to be converted to ".4"
+		(or ".5" if using the BSD organization).  If no -<suffix>
+		is specified then filenames are not converted when they
+		are installed.
+
+Common schemes are:
+
+bsd-nroff-gzip-0.gz	compressed formatted pages for BSD 
+bsd-source-cat		nroff source w/ BSD organization
+sysv-source-cat-strip	nroff source for SysV w/o .4f suffix
+sysv-source-cat		nroff source for SysV as-is
+
+EOF
+		x="";;
+	    esac
+	else
+	    x="$MANSCHEME"
+	fi
+    done
+    MANSCHEME="$x"
 }
+
 getPageSizeInfo()
 {
     pat=`grep '^default' $1 | \
 	sed -e 's/default[	 ]*//' -e 's/[ 	][ 	]*/\[ 	\]*/g'`
     param=`grep "$pat" $1 | sed -e 's/	.*//;q'`
 }
-getUtilParameter()
-{
-    param=`grep "#define[ 	]*$1" $2 | \
-	sed -e "s/.*$1[ 	]*\([^	 ]*\).*/\1/"`
-}
-
-getProtoParameters()
-{
-    file=$1;
-    getParameter BIN $file; 			FAX_BINDIR="$param"
-    getParameter LIBDATA $file; 		FAX_LIBDATA="$param"
-    getParameter LIBEXEC $file; 		FAX_LIBEXEC="$param"
-    getParameter SPOOL $file; 			FAX_SPOOLDIR="$param"
-    getParameter USRETC $file;			USRETC="$param"
-    getParameter MAN $file; 			MAN="$param"
-    getParameter DOC $file; 			DOC="$param"
-    getParameter PSPACKAGE $file;		PSPACKAGE="$param"
-    getParameter AFMDIR $file;			AFMDIR="$param"
-    getParameter UUCP_LOCKTYPE $file;		UUCP_LOCKTYPE="$param"
-    getParameter UUCP_LOCKMODE $file;		UUCP_LOCKMODE="$param"
-    getParameter UUCP_LOCKDIR $file;		UUCP_LOCKDIR="$param"
-    getParameter PSIMAGER $file;		PSIMAGER="$param"
-    getParameter SENDMAIL $file;		SENDMAIL="$param"
-    getPageSizeInfo util/pagesizes;		PAGESIZE="$param"
-    getUtilParameter FAX_DEFVRES util/config.h;	FAX_DEFVRES="$param"
-    getParameter HOST_FILLORDER $file;		HOST_FILLORDER="$param"
-    getParameter LOG_FAX $file;			LOG_FAX="$param"
-}
-
-saveProtoParameters()
-{
-    protoFAX_BINDIR="$FAX_BINDIR"
-    protoFAX_LIBDATA="$FAX_LIBDATA"
-    protoFAX_LIBEXEC="$FAX_LIBEXEC"
-    protoFAX_LIBFILTER="$FAX_LIBFILTER"
-    protoFAX_SPOOLDIR="$FAX_SPOOLDIR"
-    protoUSRETC="$USRETC"
-    protoMAN="$MAN"
-    protoDOC="$DOC"
-    protoPSPACKAGE="$PSPACKAGE"
-    protoAFMDIR="$AFMDIR"
-    protoUUCP_LOCKTYPE="$UUCP_LOCKTYPE"
-    protoUUCP_LOCKMODE="$UUCP_LOCKMODE"
-    protoUUCP_LOCKDIR="$UUCP_LOCKDIR"
-    protoSENDMAIL="$SENDMAIL"
-    protoPAGESIZE="$PAGESIZE"
-    protoFAX_DEFVRES="$FAX_DEFVRES"
-    protoHOST_FILLORDER="$HOST_FILLORDER"
-    protoLOG_FAX="$LOG_FAX"
-}
 
 printConfig()
 {
-    fill=`echo $HOST_FILLORDER | sed 's/FILLORDER_//'`
     cat<<EOF
 
-FlexFAX configuration parameters are:
+HylaFAX configuration parameters are:
 
-Directory for applications:	$FAX_BINDIR
-Directory for lib data files:	$FAX_LIBDATA
-Directory for lib executables:	$FAX_LIBEXEC
-Directory for servers:		$USRETC
-Directory for manual pages:	$MAN
-Directory for documentation:	$DOC
-Directory for spooling:		$FAX_SPOOLDIR
-Type of uucp lock files:	$UUCP_LOCKTYPE
-Directory for uucp lock files:	$UUCP_LOCKDIR
-Mode for uucp lock files:	$UUCP_LOCKMODE
-PostScript imager package:	$PSPACKAGE
-PostScript imager program:	$PSIMAGER
-Default page size:		$PAGESIZE
-Default vertical res (lpi):	$FAX_DEFVRES
-Host bit order:			$fill
-Directory for font metrics:	$AFMDIR
-Location of sendmail program:	$SENDMAIL
-Server tracing syslog facility:	$LOG_FAX
+[ 1] Directory for applications:        $DIR_BIN
+[ 2] Directory for lib data files:      $DIR_LIBDATA
+[ 3] Directory for lib executables:     $DIR_LIBEXEC
+[ 4] Directory for system apps:  	$DIR_SBIN
+[ 5] Directory for manual pages:        $DIR_MAN
+[ 6] Directory for HTML documentation:  $DIR_HTML
+[ 7] Directory for spooling:            $DIR_SPOOL
+[ 8] Directory for font metrics:        $DIR_AFM
+[ 9] Directory for uucp lock files:     $DIR_LOCKS
+[10] Uucp lock file scheme:             $LOCKS
+[11] PostScript imager package:         $PS
+[12] PostScript imager program:         $PATH_PSRIP
+[13] Manual page installation scheme:   $MANSCHEME
+[14] Default page size:                 $PAGESIZE
+[15] Default vertical res (lpi):        $DEFVRES
+[16] Location of getty program:         $PATH_GETTY
+[17] Location of sendmail program:      $PATH_SENDMAIL
 
 EOF
 }
 
-bitchExecutable()
+promptForParameter()
 {
-    echo ""
-    echo "Warning, $1 does not seem to be an executable program;"
-    echo "you'll need to correct this before starting up the fax server."
+    case $1 in
+    1)	promptForNonNullStringParameter "$DIR_BIN" \
+	    "Directory to install applications";	DIR_BIN="$param"
+	;;
+    2)	promptForNonNullStringParameter "$DIR_LIBDATA" \
+	    "Directory to install library data files";	DIR_LIBDATA="$param"
+	;;
+    3)	promptForNonNullStringParameter "$DIR_LIBEXEC" \
+	    "Directory to install library executables";	DIR_LIBEXEC="$param"
+	;;
+    4)	promptForNonNullStringParameter "$DIR_SBIN" \
+	    "Directory to install system apps";		DIR_SBIN="$param"
+	;;
+    5)	promptForNonNullStringParameter "$DIR_MAN" \
+	    "Directory to install manual pages";	DIR_MAN="$param"
+	;;
+    6)	promptForNonNullStringParameter "$DIR_HTML" \
+	    "Directory to install HTML documentation";	DIR_HTML="$param"
+	;;
+    7)	promptForNonNullStringParameter "$DIR_SPOOL" \
+	    "Directory to setup server spooling area";	DIR_SPOOL="$param"
+	;;
+    8)	promptForNonNullStringParameter "$DIR_AFM" \
+	    "Directory to find Adobe font metrics";	DIR_AFM="$param"
+	;;
+    9)	promptForNonNullStringParameter "$DIR_LOCKS" \
+	    "Directory for uucp lock files";		DIR_LOCKS="$param"
+	;;
+    10)	promptForUUCPLockScheme;;
+    11)	promptForImagerPackage; PickRIP; CheckRIP;;
+    12)	promptForNonNullStringParameter "$PATH_PSRIP" \
+	    "PostScript imager program";		PATH_PSRIP="$param"
+	if [ "$PS" = dps ]; then
+	    PATH_DPSRIP=$PATH_PSRIP
+	else
+	    PATH_GSRIP=$PATH_PSRIP
+	fi
+	;;
+    13)	promptForManPageScheme;;
+    14)	promptForPageSize $SRCDIR/util/pagesizes.in;;
+    15)	promptForVRes;;
+    16)	promptForNonNullStringParameter "$PATH_GETTY" \
+	    "Location of getty program";		PATH_GETTY="$param"
+	;;
+    17)	promptForNonNullStringParameter "$PATH_SENDMAIL" \
+	    "Location of sendmail program";		PATH_SENDMAIL="$param"
+	;;
+    esac
 }
 
 checkForExecutable()
@@ -1169,274 +2872,255 @@ checkForExecutable()
     test -x $1 || bitchExecutable $1
 }
 
-bitchDirectory()
+if [ $QUIET = no ]; then
+    ok=skip
+    while [ "$ok" != y ] && [ "$ok" != yes ]; do
+	if [ "$ok" != skip ]; then
+	    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17; do
+		promptForParameter $i;
+	    done
+	fi
+	checkForExecutable $PATH_SENDMAIL
+	checkForExecutable $PATH_GETTY
+	printConfig; prompt "Are these ok [yes]?"; read ok
+	test -z "$ok" && ok=yes
+	case "$ok" in
+	[1-9]|1[0-7])	promptForParameter $ok;;
+	[yY]*|[nN]*)	continue;;
+	?*)
+	    echo ""
+	    echo "\"y\", \"yes\", or <RETURN> accepts the displayed parameters."
+	    echo "A number lets you change the numbered parameter."
+	    echo ""
+	    ;;
+	esac
+	ok=skip
+    done
+fi
+
+case $MANSCHEME in
+bsd-source-*)	MANAPPS=man1 MANSYS=man8 MANFILES=man5;;
+bsd-nroff-*)	MANAPPS=cat1 MANSYS=cat8 MANFILES=cat5;;
+sysv-source-*)	MANAPPS=man1 MANSYS=man1 MANFILES=man4;;
+sysv-nroff-*)	MANAPPS=cat1 MANSYS=cat1 MANFILES=cat4;;
+esac
+case $MANSCHEME in
+bsd-*-strip)	MANSEDLOCAL="-e s/4F/5/g -e s/1M/8/g";;
+bsd-*)		MANSEDLOCAL="-e s/4F/5F/g -e s/1M/8C/g";;
+sysv-*-strip)	MANSEDLOCAL="-e s/4F/4/g";;
+sysv-*)		MANSEDLOCAL=;;
+esac
+case $MANSCHEME in
+*-source-*)	MANCVT='${MANSED} $? >$@';;
+*-nroff-gzip-*)	MANCVT='${MANSED} $? | nroff -man | gzip > $@';;
+*-nroff-pack-*)	MANCVT='${MANSED} $? | nroff -man | pack > $@';;
+*-nroff-com*-*)	MANCVT='${MANSED} $? | nroff -man | compress > $@';;
+*-nroff-cat-*)	MANCVT='${MANSED} $? | nroff -man > $@';;
+esac
+case $MANSCHEME in
+*-0.gz|*-0.Z|*-gz|*-Z|*-z)
+    suf=`echo $MANSCHEME | sed 's/.*-/./'`
+    A='`echo $$i | sed' B='`'		# workaround shell bugs
+    MANCAPPNAME="$A s/\\\\.1\$\$/$suf/$B"
+    MANCFILENAME="$A s/\\\\.4f\$\$/$suf/$B"
+    MANSAPPNAME="$A s/\\\\.1m\$\$/$suf/$B"
+    MANSFILENAME="$A s/\\\\.4f\$\$/$suf/$B"
+    ;;
+bsd-*-strip)
+    MANCAPPNAME='$$i'
+    MANCFILENAME='`echo $$i | sed s/\\.4f$$/.5/`'
+    MANSAPPNAME='`echo $$i | sed s/\\.1m$$/.8/`'
+    MANSFILENAME='`echo $$i | sed s/\\.4f$$/.5/`'
+    ;;
+*-strip)
+    MANCAPPNAME='$$i'
+    MANCFILENAME='`echo $$i | sed s/\\.4f$$/.4/`'
+    MANSAPPNAME='`echo $$i | sed s/\\.1m$$/.1/`'
+    MANSFILENAME='`echo $$i | sed s/\\.4f$$/.4/`'
+    ;;
+bsd-*)
+    MANCAPPNAME='$$i'
+    MANCFILENAME='`echo $$i | sed s/\\.4f$$/.5f/`'
+    MANSAPPNAME='`echo $$i | sed s/\\.1m$$/.8c/`'
+    MANSFILENAME='`echo $$i | sed s/\\.4f$$/.5f/`'
+    ;;
+*)
+    MANCAPPNAME='$$i' MANCFILENAME='$$i'
+    MANSAPPNAME='$$i' MANSFILENAME='$$i'
+    ;;
+esac
+
+Note ""
+
+#
+# Convert default page size name to an entry that goes
+# in the pagesizes database file.
+#
+F=$SRCDIR/util/pagesizes
+test -f $F.in || {
+    bitch "$F.in is missing; this should be part of the distribution."
+    boom
+}
+DEFPAGESIZE=`grep "$PAGESIZE" $F.in | sed -e 's/[^	]*/default/;q'`
+
+# NB: these should be sorted alphabetically
+cat>>confsed<<EOF
+/@AFM@/s;;${AFM};g
+/@AFMDIR@/s;;${DIR_AFM};g
+/@AWK@/s;;${AWK};g
+/@BIN@/s;;${DIR_BIN};g
+/@CAT@/s;;${CAT};g
+/@CGIDIR@/s;;${DIR_CGI};g
+/@CGIPATH@/s;;${CGIPATH};g
+/@CHGRP@/s;;${CHGRP};g
+/@CHMOD@/s;;${CHMOD};g
+/@CHOWN@/s;;${CHOWN};g
+/@CP@/s;;${CP};g
+/@CMP@/s;;${CMP};g
+/@COL@/s;;${COL};g
+/@DEFPAGESIZE@/s;;${DEFPAGESIZE};g
+/@DEFVRES@/s;;${DEFVRES};g
+/@DPSRIP@/s;;${PATH_DPSRIP};g
+/@DSO@/s;;${DSO};g
+/@DSOSUF@/s;;${DSOSUF};g
+/@DSODELAY@/s;;${DSODELAY};g
+/@DSOOPTS@/s;;${DSOOPTS};g
+/@ECHO@/s;;${ECHO};g
+/@FAXGID@/s;;${FAXGID};g
+/@FAXUID@/s;;${FAXUID};g
+/@FILLORDER@/s;;${FILLORDER};g
+/@GETTY@/s;;${GETTY};g
+/@GREP@/s;;${GREP};g
+/@GSRIP@/s;;${PATH_GSRIP};g
+/@HTML@/s;;${HTML};g
+/@HTMLDIR@/s;;${DIR_HTML};g
+/@HTMLPATH@/s;;${HTMLPATH};g
+/@INSTALL@/s;;${INSTALL};g
+/@LIBDATA@/s;;${DIR_LIBDATA};g
+/@LIBEXEC@/s;;${DIR_LIBEXEC};g
+/@LIBPORT@/s;;${LIBPORT};g
+/@LIBTIFF_CONFIG@/s;;${LIBTIFF_CONFIG};g
+/@LLDOPTS@/s;;${LLDOPTS};g
+/@LN@/s;;${LN};g
+/@LN_S@/s;;${LN_S};g
+/@MACHDEPLIBS@/s;;${MACHDEPLIBS};g
+/@MAKEDSOINCLUDE@/s;;${MAKEDSOINCLUDE};g
+/@MAN@/s;;${MAN};g
+/@MANDIR@/s;;${DIR_MAN};g
+/@MANAPPS@/s;;${MANAPPS};g
+/@MANCAPPNAME@/s;;${MANCAPPNAME};g
+/@MANCFILENAME@/s;;${MANCFILENAME};g
+/@MANCVT@/s;;${MANCVT};g
+/@MANFILES@/s;;${MANFILES};g
+/@MANSAPPNAME@/s;;${MANSAPPNAME};g
+/@MANSEDLOCAL@/s;;${MANSEDLOCAL};g
+/@MANSFILENAME@/s;;${MANSFILENAME};g
+/@MANSYS@/s;;${MANSYS};g
+/@MKDEPEND@/s;;${MKDEPEND};g
+/@MKDIR@/s;;${MKDIR};g
+/@MKFIFO@/s;;${MKFIFO};g
+/@MV@/s;;${MV};g
+/@MV_F@/s;;${MV_F};g
+/@PATHGETTY@/s;;${PATH_GETTY};g
+/@PORT@/s;;${PORT};g
+/@PORTFUNCS@/s;;${PORTFUNCS};g
+/@PSPACKAGE@/s;;${PS};g
+/@RM@/s;;${RMCMD};g
+/@SBIN@/s;;${DIR_SBIN};g
+/@SED@/s;;${SED};g
+/@SENDMAIL@/s;;${PATH_SENDMAIL};g
+/@SGI2FAX@/s;;${SGI2FAX};g
+/@SHDLIBC@/s;;${SHDLIBC};g
+/@SPOOL@/s;;${DIR_SPOOL};g
+/@STRIP@/s;;${STRIP};g
+/@SYSGID@/s;;${SYSGID};g
+/@SYSUID@/s;;${SYSUID};g
+/@SYSVINIT@/s;;${SYSVINIT};g
+/@UUCP_LOCKDIR@/s;;${DIR_LOCKS};g
+/@UUCP_LOCKTYPE@/s;;${LOCKS};g
+EOF
+
+#
+# Yech!  Far too many sed commands have a limit of
+# 100 commands.  Putting everything that we want in
+# confsed takes us over this limit!  The following
+# definitions are only used on SGI IRIX systems to
+# build binary inst images.  We know that the IRIX
+# sed does not have this stupid limit so it's ok to
+# add them in.
+#
+case $TARGET in
+*-irix*)
+    cat>>confsed<<EOF
+/@DPS@/s;;${DPS};g
+/@GENDIST@/s;;${GENDIST};g
+/@GS@/s;;${GS};g
+/@PWD@/s;;${PWD};g
+/@SORT@/s;;${SORT};g
+EOF
+esac
+
+SedConfigFiles()
 {
-    echo ""
-    echo "Warning, $1 does not seem to be a directory;"; shift
-    for i do
-	echo "$i";
+    for F do
+	test -f $SRCDIR/$F.in || {
+	    bitch "$SRCDIR/$F.in is missing; this should be part of the distribution."
+	    boom
+	}
+	dir=`echo $F | $SED 's;/[^/]*$;;'`
+	if [ $dir != $F ] && [ ! -d $dir ]; then
+	    Note "Creating $dir directory"
+	    $MKDIR $dir
+	fi
+	suffix=`echo $F | $SED 's/.*\.//'`
+	if [ "$suffix" = h ]; then
+	    #
+	    # Compare old and new versions so that include files
+	    # are only updated when something has changed--this
+	    # saves time for subsequent makes.  Note we screen
+	    # out use of @DATE@ 'cuz otherwise that'll mess up
+	    # the comparison (this assumes dates are used in lines
+	    # of the form DATE: @DATE@).
+	    #
+	    $RM $F.new; $SED -f confsed $SRCDIR/$F.in > $F.new
+	    $RM confx; $SED '/DATE:/d' $F.new >confx
+	    $RM confy; $SED '/DATE:/d' $F >confy 2>/dev/null
+	    if cmp -s confx confy >/dev/null 2>&1; then
+		$RM $F.new
+	    else
+		Note "Creating $F from $SRCDIR/$F.in"
+		$RM $F; $MV $F.new $F; $CHMOD 444 $F
+	    fi
+	else
+	    Note "Creating $F from $SRCDIR/$F.in"
+	    if $SED -f confsed $SRCDIR/$F.in >$F.new; then
+		$RM $F; $MV $F.new $F; $CHMOD 444 $F
+	    else
+		cat 1>&2 <<EOF
+Help, there was a problem crafting $F from $F.in.
+The command:
+
+    $SED -f confsed $SRCDIR/$F.in >$F.new
+
+failed.  Aborting without cleaning up files so you can take a look...
+EOF
+		exit 1
+	    fi
+	fi
     done
 }
 
-checkDirectory()
-{
-    dir=$1; shift
-    test -d $dir || bitchDirectory $dir "$@"
-}
-
-checkFont()
-{
-    test -r $AFMDIR/$1 -o -r $AFMDIR/$1.afm
-    return
-}
-
-checkAFMSetup()
-{
-    if [ -d $AFMDIR ]; then
-	# check for minimal font metrics required by textfmt
-	checkFont Courier || cat<<EOF
-
-Warning, no font metric information was found for the Courier font
-in the directory $AFMDIR.  This means that text formatting
-will not look right.  You need either to correct the AFMDIR parameter
-in the defs file and/or install the font metrics for use with this
-software (see the README file).
-EOF
-	checkFont Courier-Bold || cat<<EOF
-
-Warning, no font metric information was found for the Courier-Bold font
-in the directory $AFMDIR.  This means that the default handling
-of ASCII text will fail because the typerules file converts text to
-PostScript using this font.  You need to either correct the AFMDIR
-definition in the defs file, install the font metrics for use with this
-software (see the README file), or alter the typerules file to use a font
-for which there are font metrics.
-EOF
-    else
-	bitchDirectory $AFMDIR \
-"this means that only a crummy builtin font will be available for imaging text."
-    fi
-}
-
-checkPSImagerSetup()
-{
-    if test -x $PSIMAGER; then
-	if [ "$PSPACKAGE" = "gs" ]; then
-	    # verify Ghostscript was linked with the tiffg3 device driver
-	    ($PSIMAGER -sDEVICE=tiffg3 </dev/null >/dev/null 2>&1) || cat<<EOF
-
-Warning, the PostScript imaging program $PSIMAGER does not appear to be
-to be configured with the tiffg3 device driver.  This is necessary for the
-fax software to operate correctly.  See the README file for information
-on building Ghostscript with the necessary TIFF driver.
-EOF
-	fi
-    else
-	bitchExecutable $PSIMAGER
-    fi
-}
-
 #
-# Setup general configuration parameters.
+# defs is the master configuration file for the source code.
+# config.h has definitions included by all source code.
+# rules has definitions for building the software.
+# port/install.sh is the SGI install program emulator script.
 #
-getProtoParameters defs
-saveProtoParameters
-
-# convert uucp lock type to something understandable
-case "$UUCP_LOCKTYPE" in
-1) UUCP_LOCKTYPE="binary";;
-*) UUCP_LOCKTYPE="ascii";;	# default
-esac
-
-ok=skip
-while [ "$ok" != "" -a "$ok" != "y" -a "$ok" != "yes" ]; do
-    if [ "$ok" != "skip" ]; then
-	promptForNonNullStringParameter "$FAX_BINDIR" \
-	    "Directory to install applications";	FAX_BINDIR="$param"
-	promptForNonNullStringParameter "$FAX_LIBDATA" \
-	    "Directory to install library data files";	FAX_LIBDATA="$param"
-	promptForNonNullStringParameter "$FAX_LIBEXEC" \
-	    "Directory to install library executables";	FAX_LIBEXEC="$param"
-	promptForNonNullStringParameter "$USRETC" \
-	    "Directory to install server programs";	USRETC="$param"
-	promptForNonNullStringParameter "$MAN" \
-	    "Directory to install manual pages";	MAN="$param"
-	promptForNonNullStringParameter "$DOC" \
-	    "Directory to install documentation";	DOC="$param"
-	promptForNonNullStringParameter "$FAX_SPOOLDIR" \
-	    "Directory to setup server spooling area";	FAX_SPOOLDIR="$param"
-	promptForLockType;
-	promptForNonNullStringParameter "$UUCP_LOCKDIR" \
-	    "Directory for uucp lock files";		UUCP_LOCKDIR="$param"
-	promptForNumericParameter "$UUCP_LOCKMODE" \
-	    "Protection mode for uucp lock files";	UUCP_LOCKMODE=$param;
-	promptForImagerPackage;
-	promptForNonNullStringParameter "$PSIMAGER" \
-	    "PostScript imager program";		PSIMAGER="$param"
-	promptForPageSize util/pagesizes;
-	promptForVRes;
-	promptForHostFillOrder;
-	promptForNonNullStringParameter "$AFMDIR" \
-	    "Directory to find Adobe font metrics";	AFMDIR="$param"
-	promptForNonNullStringParameter "$SENDMAIL" \
-	    "Location of sendmail program";		SENDMAIL="$param"
-	promptForNonNullStringParameter "$LOG_FAX" \
-	    "Server tracing syslog facility";		LOG_FAX="$param";
-    fi
-    checkDirectory $USRETC \
-"this must be fixed before doing a make install of faxd and faxd.recv."
-    checkAFMSetup
-    checkPSImagerSetup
-    checkForExecutable $SENDMAIL
-    # make sure UUCP_LOCKMODE is an octal number
-    if [ "`expr "$UUCP_LOCKMODE" : '\(.\)'`" != "0" ]; then
-	UUCP_LOCKMODE="0${UUCP_LOCKMODE}"
-    fi
-    printConfig; prompt "Are these ok [yes]?"; read ok
-done
-
-# convert uucp lock type back to a #define
-case "$UUCP_LOCKTYPE" in
-ascii)	UUCP_LOCKTYPE=0;;
-binary)	UUCP_LOCKTYPE=1;;
-*)	boom "Help, uucp lock type is \"$UUCP_LOCKTYPE\"; shouldn't happen!";;
-esac
-
-echo ""
-
-#
-# defs include file for all Makefiles
-#
-if [    "$FAX_BINDIR"	!= "$protoFAX_BINDIR"	\
-     -o "$FAX_LIBDATA"	!= "$protoFAX_LIBDATA"	\
-     -o "$FAX_LIBEXEC"	!= "$protoFAX_LIBEXEC"	\
-     -o "$FAX_SPOOLDIR"	!= "$protoFAX_SPOOLDIR"	\
-     -o "$USRETC"	!= "$protoUSRETC"	\
-     -o "$MAN"		!= "$protoMAN"		\
-     -o "$DOC"		!= "$protoDOC"		\
-     -o "$AFMDIR"	!= "$protoAFMDIR"	\
-     -o "$UUCP_LOCKTYPE" != "$protoUUCP_LOCKTYPE" \
-     -o "$UUCP_LOCKMODE" != "$protoUUCP_LOCKMODE" \
-     -o "$UUCP_LOCKDIR"	!= "$protoUUCP_LOCKDIR" \
-     -o "$SENDMAIL"	!= "$protoSENDMAIL"	\
-     -o "$LOG_FAX"	!= "$protoLOG_FAX"	\
-]; then
-    prompt "Set config parameters in the defs file [yes]?"; read x
-    if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	editFile defs \
-	    "/^BIN[ 	]*=/s;=[^#]*;=${FAX_BINDIR};" \
-	    "/^LIBDATA[ 	]*=/s;=[^#]*;=${FAX_LIBDATA};" \
-	    "/^LIBEXEC[ 	]*=/s;=[^#]*;=${FAX_LIBEXEC};" \
-	    "/^SPOOL[ 	]*=/s;=[^#]*;=${FAX_SPOOLDIR};" \
-	    "/^USRETC[ 	]*=/s;=[^#]*;=${USRETC};" \
-	    "/^MAN[ 	]*=/s;=[^#]*;=${MAN};" \
-	    "/^DOC[ 	]*=/s;=[^#]*;=${DOC};" \
-	    "/^AFMDIR[ 	]*=/s;=[^#]*;=${AFMDIR};" \
-	    "/^UUCP_LOCKTYPE[ 	]*=/s;=[^#]*;=${UUCP_LOCKTYPE};" \
-	    "/^UUCP_LOCKMODE[ 	]*=/s;=[^#]*;=${UUCP_LOCKMODE};" \
-	    "/^UUCP_LOCKDIR[ 	]*=/s;=[^#]*;=${UUCP_LOCKDIR};" \
-	    "/^SENDMAIL[ 	]*=/s;=[^#]*;=${SENDMAIL};"	\
-	    "/^LOG_FAX[ 	]*=/s;=[^#]*;=${LOG_FAX};"
-    fi
-fi
-
-#
-# util/config.h has definitions included by all source code.
-#
-getHParameter()
-{
-    param=`grep "$1" $2 | sed -e 's/.*"\(.*\)".*/\1/'`
-}
-f=util/config.h
-getHParameter FAX_SPOOLDIR $f;	protoFAX_SPOOLDIR="$param"
-getHParameter FAX_LIBDATA $f;	protoFAX_LIBDATA="$param"
-getHParameter FAX_LIBEXEC $f;	protoFAX_LIBEXEC="$param"
-getUtilParameter HOST_FILLORDER $f; protoHOST_FILLORDER="$param"
-getUtilParameter FAX_DEFVRES $f;protoFAX_DEFVRES="$param"
-getUtilParameter LOG_FAX $f;	protoLOG_FAX="$param"
-if [    "$FAX_LIBDATA"	!= "$protoFAX_LIBDATA"	\
-     -o "$FAX_LIBEXEC"	!= "$protoFAX_LIBEXEC"	\
-     -o "$FAX_SPOOLDIR"	!= "$protoFAX_SPOOLDIR"	\
-     -o "$HOST_FILLORDER" != "$protoHOST_FILLORDER"	\
-     -o "$LOG_FAX" != "$protoLOG_FAX"		\
-     -o "$FAX_DEFVRES"	!= "$protoFAX_DEFVRES"	\
-]; then
-    prompt "Set config parameters in $f [yes]?"; read x
-    if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	editFile $f \
-	    "/FAX_LIBDATA/s;${protoFAX_LIBDATA};${FAX_LIBDATA};" \
-	    "/FAX_LIBEXEC/s;${protoFAX_LIBEXEC};${FAX_LIBEXEC};" \
-	    "/FAX_SPOOLDIR/s;${protoFAX_SPOOLDIR};${FAX_SPOOLDIR};" \
-	    "/#define[ 	]*HOST_FILLORDER/s;${protoHOST_FILLORDER};${HOST_FILLORDER};" \
-	    "/#define[ 	]*LOG_FAX/s;${protoLOG_FAX};${LOG_FAX};" \
-	    "/FAX_DEFVRES/s;${protoFAX_DEFVRES};${FAX_DEFVRES};"
-    fi
-fi
-
-#
-# etc/faxaddmodem.sh is the modem installation and configuration
-# script; it has server-related definitions built into it.
-#
-f=etc/faxaddmodem.sh
-quit=$FAX_BINDIR/faxquit
-getParameter SPOOL $f;		protoFAX_SPOOLDIR="$param"
-getParameter SERVERDIR $f;	protoUSRETC="$param"
-getParameter LOCKDIR $f;	protoUUCP_LOCKDIR="$param"
-getParameter QUIT $f;		protoQUIT="$param"
-    getParameter FAXUSER defs;	PROTOUID="$param"
-getParameter PROTOUID $f;	protoPROTOUID="$param"
-    getParameter FAXGROUP defs;	PROTOGID="$param"
-getParameter PROTOGID $f;	protoPROTOGID="$param"
-if [    "$FAX_SPOOLDIR"	!= "$protoFAX_SPOOLDIR" \
-     -o "$PROTOUID"	!= "$protoPROTOUID" \
-     -o "$PROTOGID"	!= "$protoPROTOGID" \
-     -o "$USRETC"	!= "$protoUSRETC" \
-     -o "$UUCP_LOCKDIR"	!= "$protoUUCP_LOCKDIR" \
-     -o "$quit"		!= "$protoQUIT" \
-]; then
-    prompt "Set config parameters in $f [yes]?"; read x
-    if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	editFile $f \
-	    "/^SPOOL=/s;${protoFAX_SPOOLDIR};${FAX_SPOOLDIR};" \
-	    "/^PROTOUID=/s;${protoPROTOUID};${PROTOUID};" \
-	    "/^PROTOGID=/s;${protoPROTOGID};${PROTOGID};" \
-	    "/^SERVERDIR=/s;${protoUSRETC};${USRETC};" \
-	    "/^LOCKDIR=/s;${protoUUCP_LOCKDIR};${UUCP_LOCKDIR};" \
-	    "/^QUIT=/s;=.*/faxquit;=${FAX_BINDIR}/faxquit;"
-    fi
-fi
-
-#
-# etc/probemodem.sh is a modem debugging script;
-# it has server-related definitions built into it.
-#
-f=etc/probemodem.sh
-getParameter SPOOL $f;		protoFAX_SPOOLDIR="$param"
-getParameter LOCKDIR $f;	protoUUCP_LOCKDIR="$param"
-if [    "$FAX_SPOOLDIR"	!= "$protoFAX_SPOOLDIR" \
-     -o "$UUCP_LOCKDIR"	!= "$protoUUCP_LOCKDIR" \
-]; then
-    prompt "Set config parameters in $f [yes]?"; read x
-    if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	editFile $f \
-	    "/^SPOOL=/s;${protoFAX_SPOOLDIR};${FAX_SPOOLDIR};" \
-	    "/^LOCKDIR=/s;${protoUUCP_LOCKDIR};${UUCP_LOCKDIR};"
-    fi
-fi
-
+# etc/faxaddmodem.sh and etc/probemodem.sh are modem scripts that need
+# server-related definitions.
 #
 # util/ps2fax.*.sh is the shell script that invokes the
 # PostScript imager; it has the location of the imager
-#
-f=util/ps2fax.$PSPACKAGE.sh
-getParameter PS $f
-if [ "$PSIMAGER" != "$param" ]; then
-    prompt "Set config parameters in $f [yes]?"; read x
-    if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	editFile $f "/^PS=/s;${param};${PSIMAGER};"
-    fi
-fi
-
 #
 # Several scripts are aware of the location of the spooling
 # area and (possibly) of the mailer.
@@ -1448,53 +3132,124 @@ fi
 # util/recvstats.sh	for receive statistics
 # util/faxcron.sh	for cleaning up the spooling area
 #
-for f in util/faxrcvd.sh util/pollrcvd.sh
-do
-    getParameter SPOOL $f;	protoSPOOL="$param"
-    getParameter SENDMAIL $f;	protoSENDMAIL="$param"
-    if [   "$FAX_SPOOLDIR"	!= "$protoSPOOL" \
-	-o "$SENDMAIL"	!= "$protoSENDMAIL" \
-    ]; then
-	prompt "Set config parameters in $f [yes]? "; read x
-	if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	    editFile $f \
-		"/^SENDMAIL=/s;${protoSENDMAIL};${SENDMAIL};" \
-		"/^SPOOL=/s;${protoFAX_SPOOLDIR};${FAX_SPOOLDIR};"
-	fi
-    fi
-done
+CONF_FILES="
+    defs
+    config.h
+    rules
 
-for f in util/notify.sh
-do
-    getParameter SENDMAIL $f;	protoSENDMAIL="$param"
-    if [   "$SENDMAIL"	!= "$protoSENDMAIL" ]; then
-	prompt "Set config parameters in $f [yes]? "; read x
-	if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	    editFile $f \
-		"/^SENDMAIL=/s;${protoSENDMAIL};${SENDMAIL};"
-	fi
-    fi
-done
+    Makefile
+    config/Makefile
+    etc/Makefile
+    fax2ps/Makefile
+    faxalter/Makefile
+    faxcover/Makefile
+    faxd/Makefile
+    faxmail/Makefile
+    faxrm/Makefile
+    faxstat/Makefile
+    libtiff/Makefile
+    man/Makefile
+    recvfax/Makefile
+    sendfax/Makefile
+    sendpage/Makefile
+    util/Makefile
 
-for f in util/*stats.sh util/faxcron.sh
-do
-    getParameter SPOOL $f;	protoSPOOL="$param"
-    if [   "$FAX_SPOOLDIR"	!= "$protoSPOOL" ]; then
-	prompt "Set config parameters in $f [yes]? "; read x
-	if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	    editFile $f \
-		"/^SPOOL=/s;${protoFAX_SPOOLDIR};${FAX_SPOOLDIR};"
-	fi
-    fi
-done
+    port/install.sh
 
-f=util/pagesizes
-if [ "$PAGESIZE" != "$protoPAGESIZE" ]; then
-    prompt "Set config parameter in $f [yes]? "; read x
-    if [ -z "$x" -o "$x" = "y" -o "$x" = "yes" ]; then
-	newDefault=`grep "$PAGESIZE" $f | sed -e 's/[^	]*/default/;q'`
-	editFile $f "/^default/s/.*/$newDefault/"
-    fi
+    etc/faxaddmodem.sh
+    etc/probemodem.sh
+    etc/hylafax
+
+    util/ps2fax.dps.sh
+    util/ps2fax.gs.sh
+    util/faxrcvd.sh
+    util/pollrcvd.sh
+    util/notify.sh
+    util/xferstats.sh
+    util/recvstats.sh
+    util/faxcron.sh
+    util/transcript.sh
+    util/mkcover.sh
+
+    util/pagesizes
+"
+SedConfigFiles $CONF_FILES
+test $DPS = yes	&&		   SedConfigFiles dps/Makefile
+test $GS = yes &&		   SedConfigFiles gs/Makefile
+test "$MKDEPEND" != ":" &&	   SedConfigFiles port/mkdepend
+test $SGI2FAX = yes &&	   	   SedConfigFiles sgi2fax/Makefile
+test $PORT = yes &&		   SedConfigFiles port/Makefile
+test $AFM = yes &&		   SedConfigFiles afm/Makefile
+test -d $SRCDIR/faxview &&   	   SedConfigFiles faxview/Makefile
+if [ $HTML = yes ]; then
+    HTMLDIRS="
+	html
+	html/tools
+	html/FAQ
+	html/Majordomo
+        html/Modems
+	html/Modems/Telebit
+	html/Modems/ZyXEL
+    "
+    for i in $HTMLDIRS; do
+	#
+	# NB: GNU sed/sh breaks when using the more conventional
+	#     attack, so we resort to this silliness...
+	#
+	SedConfigFiles `(cd $SRCDIR/$i; echo *.in) | \
+	    $SED -e 's;\.in;;g' \
+	    -e "s;Makefile;$i/&;g" \
+	    -e "s;[^ ]*\.html;$i/&;g" \
+	    -e "s;[^ ]*\.sh;$i/&;g"`
+    done
+    test -d $SRCDIR/html/tools/MLA && SedConfigFiles html/tools/MLA/Makefile
 fi
-echo "Done."
+
+if [ "$MAKEDEPINCLUDE" != "sinclude" ]; then
+    Note "Setting up make dependency files."
+    #
+    # Setup null make dependency files so that we can include
+    # it w/o problem.  Some systems have conditional include
+    # support in their make, but others do not, so we use an
+    # unconditional include and setup everthing as null here
+    #
+    DEPEND=".
+	fax2ps
+	faxalter
+	faxcover
+	faxd
+	faxmail
+	faxrm
+	faxstat
+	recvfax
+	sendfax
+	sendpage
+	util
+	man
+	etc
+	config
+	libtiff
+	"
+    test $GS = yes	&& DEPEND="$DEPEND gs"
+    test $SGI2FAX = yes	&& DEPEND="$DEPEND sgi2fax"
+    test $PORT = yes	&& DEPEND="$DEPEND port"
+    test $AFM = yes	&& DEPEND="$DEPEND afm"
+    if [ $HTML = yes ]; then
+	DEPEND="$DEPEND html html/tools"
+	test -d $SRCDIR/html/tools/MLA && DEPEND="$DEPEND html/tools/MLA"
+    fi
+    test -d $SRCDIR/faxview && DEPEND="$DEPEND faxview"
+    for i in $DEPEND; do
+	test -f $i/Makedepend || cp /dev/null $i/Makedepend
+    done
+fi
+
+#
+# NB: the dist directory is needed only when building SGI inst images.
+#
+test -d dist || $MKDIR dist
+
+Note "Done."
+
+$RM $JUNK
 exit 0

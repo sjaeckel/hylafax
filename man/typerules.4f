@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/typerules.4f,v 1.11 1994/06/24 03:47:28 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/typerules.4f,v 1.18 1995/04/08 21:36:45 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993, 1994 Sam Leffler
-.\" Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1995 Sam Leffler
+.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,13 +25,15 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.ds Ps P\s-1OST\s+1S\s-1CRIPT\s+1
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
 .TH TYPERULES 4F "May 12, 1993"
 .SH NAME
 typerules \- \*(Fx file type identification and conversion rules
 .SH DESCRIPTION
-Only two types of files are accepted by the fax server for transmission:
+Only two types of files are accepted by the \*(Fx
+server for transmission as facsimile:
 \*(Ps\(tm files and 
 .SM TIFF
 Class F (bilevel Group 3-encoded) files.
@@ -58,7 +61,7 @@ There are two types of rules,
 .I "primary rules"
 and
 .IR "secondary rules" .
-Secondary rules specifying additional rules to apply
+Secondary rules specify additional rules to apply
 .I after
 a primary rule has been matched.
 When secondary rules are used, rule scanning
@@ -89,23 +92,23 @@ and compared to a matching string or value.
 .B datatype
 The type of data value to extract at the specified offset for
 comparison purposes; one of:
-.I byte
+``byte''
 (8 bit unsigned number),
-.I short
+``short''
 (16 bit unsigned number),
-.I long
+``long''
 (32 bit unsigned number),
-.I string
+``string''
 (an array of bytes), or
-.I ascii
+``ascii''
 (an array of \s-1ASCII\s+1-only bytes).
 .TP 10
 .B match
 The value and operation to use in matching; the value used is
 based on the datatype field.
-If value is ``\fIx\fP'', then
+If value is ``x'', then
 it is interpreted to mean 
-.I "match anything";
+.IR "match anything" ;
 otherwise the
 following operators are supported (where
 .I data
@@ -114,25 +117,25 @@ is the value extracted from the file and
 is specified in the match field):
 .nf
 .sp .5
+.RS
 .ta \w'>=    'u +\w'(data & value) == value    'u +\w'>=    'u
-.in +.5i
 =	data == value	!=	data != value
 >	data > value	<	data < value
 <=	data <= value	>=	data >= value
 &	(data & value) == value	!	(data & value) != value
 ^	(data ^ value) != 0
-.in -.5i
+.RE
 .sp .5
 .fi
 If no operation is specified then ``='' is used.
 .TP 10
 .B result
-One of ``\fIps\fP'', ``\fItiff\fP'', or ``\fIerror\fP'' (case insensitive).
+One of ``ps'', ``tiff'', or ``error'' (case insensitive).
 The first two results specify whether the
-rule generates a \*(Ps file or a Class F
-.SM TIFF
+rule generates a \*(Ps file or a
+.SM TIFF/F
 file (Group 3-encoded bilevel data), respectively.
-The ``\fIerror\fP'' result indicates that a
+The ``error'' result indicates that a
 file is unsuitable for transmission and, if supplied for transmission,
 should cause the job to be aborted with the
 .I command
@@ -146,7 +149,7 @@ Before the string is passed to the shell, it is scanned
 and the following ``%'' escape codes are substituted for:
 .nf
 .sp .5
-.in +.5i
+.RS
 .ta \w'%<x>    'u
 %i	input file name
 %o	output file name
@@ -162,7 +165,7 @@ and the following ``%'' escape codes are substituted for:
 %s	page size by name
 %F	the directry where \*(Fx filter programs reside
 %<x>	the <x> character (e.g. ``%%'' results in ``%''
-.in -.5i
+.RE
 .sp .5
 .fi
 See below for example uses of these codes.
@@ -214,4 +217,4 @@ This would allow, for example, command line options to be selected
 based on file type.
 .SH "SEE ALSO"
 .IR sendfax (1),
-.IR faxd (1M)
+.IR hylafax (1)

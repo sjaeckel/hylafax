@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxPoll.c++,v 1.12 1994/02/28 14:15:13 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxPoll.c++,v 1.17 1995/04/08 21:30:16 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -38,7 +39,7 @@ FaxServer::pollFaxPhaseB(const char* cig, FaxRecvInfoArray& docs, fxStr& emsg)
 {
     fxBool pollOK = FALSE;
     changeState(RECEIVING);
-    traceStatus(FAXTRACE_PROTOCOL, "POLL: begin");
+    traceProtocol("POLL FAX: begin");
     okToRecv = TRUE;			// we request receive, so it's ok
     recvTSI = cig;			// for writing polled file
     FaxRecvInfo info;
@@ -48,15 +49,15 @@ FaxServer::pollFaxPhaseB(const char* cig, FaxRecvInfoArray& docs, fxStr& emsg)
      * after recvBegin can cause part of the first page to
      * be lost.)
      */
-    TIFF* tif = setupForRecv("POLL", info, docs);
+    TIFF* tif = setupForRecv("POLL FAX", info, docs);
     if (tif) {
 	if (modem->pollBegin(cig, emsg)) {
-	    pollOK = recvDocuments("POLL", tif, info, docs, emsg);
+	    pollOK = recvDocuments("POLL FAX", tif, info, docs, emsg);
 	    if (!modem->recvEnd(emsg))
-		traceStatus(FAXTRACE_PROTOCOL, "POLL: %s (end)", (char*) emsg);
+		traceProtocol("POLL FAX: %s (end)", (char*) emsg);
 	} else
-	    traceStatus(FAXTRACE_PROTOCOL, "POLL: %s (begin)", (char*) emsg);
+	    traceProtocol("POLL FAX: %s (begin)", (char*) emsg);
     }
-    traceStatus(FAXTRACE_PROTOCOL, "POLL: end");
+    traceProtocol("POLL FAX: end");
     return (pollOK);
 }

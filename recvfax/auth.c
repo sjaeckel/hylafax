@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/recvfax/RCS/auth.c,v 1.13 1994/09/19 15:05:17 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./recvfax/RCS/auth.c,v 1.18 1995/04/08 21:43:06 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -173,8 +174,7 @@ checkPermission()
 		 */
 		if (strchr(line+0, '@') == NULL) {
 		    char line1[1024];
-		    strcpy(line1, ".*@");
-		    strcat(line1, line+0);
+		    sprintf(line1, "^.*@%s$", line+0);
 		    if (rexMatch(line1, dotform, dotlen, hostform, hostlen))
 			return;
 		} else if (rexMatch(line+0, dotform, dotlen, hostform, hostlen))
@@ -185,7 +185,7 @@ checkPermission()
     } else
 	sendError("The server does not have a permissions file.");
     syslog(LOG_ERR, "%s: Service refused", hostlen == 0 ? dotform : hostform);
-    sendError("You do not have permission to %s.",
-	"use the fax server from this host");
+    sendError("Service refused; %s to use the fax server from %s.",
+	"you do not have permission", hostlen == 0 ? dotform : hostform);
     done(-1, "EXIT");
 }

@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_dirread.c,v 1.40 1994/05/16 18:55:25 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_dirread.c,v 1.55 1994/09/28 00:54:41 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -28,11 +28,6 @@
  * TIFF Library.
  *
  * Directory Read Support Routines.
- *
- * NB: Beware of the varargs declarations for routines in
- *     this file.  The names and types of variables has been
- *     carefully chosen to make things work with compilers that
- *     are busted in one way or another (e.g. SGI/MIPS).
  */
 #include "tiffiop.h"
 
@@ -42,54 +37,31 @@
 #define	TIFFCvtIEEEFloatToNative(tif, n, fp)
 #endif
 
-#if USE_PROTOTYPES
-static	void EstimateStripByteCounts(TIFF *, TIFFDirEntry *, u_int);
-static	void MissingRequired(TIFF *, const char *);
-static	int CheckDirCount(TIFF *, TIFFDirEntry *, u_long);
-static	int TIFFFetchData(TIFF *, TIFFDirEntry *, char *);
-static	int TIFFFetchString(TIFF *, TIFFDirEntry *, char *);
-static	float TIFFFetchRational(TIFF *, TIFFDirEntry *);
-static	int TIFFFetchNormalTag(TIFF *, TIFFDirEntry *);
-static	int TIFFFetchPerSampleShorts(TIFF *, TIFFDirEntry *, long *);
-static	int TIFFFetchShortArray(TIFF *, TIFFDirEntry *, u_short []);
-static	int TIFFFetchStripThing(TIFF *, TIFFDirEntry *, long, u_long **);
-static	int TIFFFetchRefBlackWhite(TIFF *, TIFFDirEntry *);
-static	int TIFFFetchJPEGQTables(TIFF *, TIFFDirEntry *);
-static	int TIFFFetchJPEGCTables(TIFF *, TIFFDirEntry *, u_char ***);
-static	int TIFFFetchExtraSamples(TIFF *, TIFFDirEntry *);
-static	float TIFFFetchFloat(TIFF *, TIFFDirEntry *);
-static	int TIFFFetchFloatArray(TIFF *, TIFFDirEntry *, float *);
-static	int TIFFFetchShortPair(TIFF *, TIFFDirEntry *);
-#ifdef STRIPCHOP_SUPPORT
-static	void ChopUpSingleUncompressedStrip(TIFF *);
-#endif
-#else
-static	void EstimateStripByteCounts();
-static	void MissingRequired();
-static	int CheckDirCount();
-static	int TIFFFetchData();
-static	int TIFFFetchString();
-static	float TIFFFetchRational();
-static	int TIFFFetchNormalTag();
-static	int TIFFFetchPerSampleShorts();
-static	int TIFFFetchShortArray();
-static	int TIFFFetchStripThing();
-static	int TIFFFetchRefBlackWhite();
-static	int TIFFFetchJPEGQTables();
-static	int TIFFFetchJPEGCTables();
-static	int TIFFFetchExtraSamples();
-static	float TIFFFetchFloat();
-static	int TIFFFetchFloatArray();
-static	int TIFFFetchShortPair();
-#ifdef STRIPCHOP_SUPPORT
-static	void ChopUpSingleUncompressedStrip();
-#endif
+static	void EstimateStripByteCounts(TIFF*, TIFFDirEntry*, uint16);
+static	void MissingRequired(TIFF*, const char*);
+static	int CheckDirCount(TIFF*, TIFFDirEntry*, uint32);
+static	tsize_t TIFFFetchData(TIFF*, TIFFDirEntry*, char*);
+static	tsize_t TIFFFetchString(TIFF*, TIFFDirEntry*, char*);
+static	float TIFFFetchRational(TIFF*, TIFFDirEntry*);
+static	int TIFFFetchNormalTag(TIFF*, TIFFDirEntry*);
+static	int TIFFFetchPerSampleShorts(TIFF*, TIFFDirEntry*, int*);
+static	int TIFFFetchShortArray(TIFF*, TIFFDirEntry*, uint16*);
+static	int TIFFFetchStripThing(TIFF*, TIFFDirEntry*, long, uint32**);
+static	int TIFFFetchExtraSamples(TIFF*, TIFFDirEntry*);
+static	int TIFFFetchRefBlackWhite(TIFF*, TIFFDirEntry*);
+static	int TIFFFetchJPEGQTables(TIFF*, TIFFDirEntry*);
+static	int TIFFFetchJPEGCTables(TIFF*, TIFFDirEntry*, u_char***);
+static	float TIFFFetchFloat(TIFF*, TIFFDirEntry*);
+static	int TIFFFetchFloatArray(TIFF*, TIFFDirEntry*, float*);
+static	int TIFFFetchShortPair(TIFF*, TIFFDirEntry*);
+#if STRIPCHOP_SUPPORT
+static	void ChopUpSingleUncompressedStrip(TIFF*);
 #endif
 
 static char *
-DECLARE3(CheckMalloc, TIFF*, tif, int, n, char*, what)
+CheckMalloc(TIFF* tif, size_t n, const char* what)
 {
-	char *cp = _TIFFmalloc(n);
+	char *cp = (char*)_TIFFmalloc(n);
 	if (cp == NULL)
 		TIFFError(tif->tif_name, "No space %s", what);
 	return (cp);
@@ -101,15 +73,17 @@ DECLARE3(CheckMalloc, TIFF*, tif, int, n, char*, what)
  * We read directories sequentially.
  */
 int
-DECLARE1(TIFFReadDirectory, TIFF*, tif)
+TIFFReadDirectory(TIFF* tif)
 {
 	register TIFFDirEntry *dp;
 	register int n;
 	register TIFFDirectory *td;
 	TIFFDirEntry *dir;
+	int iv;
 	long v;
 	const TIFFFieldInfo *fip;
-	u_short dircount;
+	uint16 dircount;
+	uint32 nextdiroff;
 	char *cp;
 	int diroutoforderwarning = 0;
 
@@ -122,13 +96,14 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 	if (tif->tif_cleanup)
 		(*tif->tif_cleanup)(tif);
 	tif->tif_curdir++;
+	nextdiroff = 0;
 	if (!isMapped(tif)) {
 		if (!SeekOK(tif, tif->tif_diroff)) {
 			TIFFError(tif->tif_name,
 			    "Seek error accessing TIFF directory");
 			return (0);
 		}
-		if (!ReadOK(tif, &dircount, sizeof (short))) {
+		if (!ReadOK(tif, &dircount, sizeof (uint16))) {
 			TIFFError(tif->tif_name,
 			    "Can not read TIFF directory count");
 			return (0);
@@ -146,18 +121,17 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 		/*
 		 * Read offset to next directory for sequential scans.
 		 */
-		if (!ReadOK(tif, &tif->tif_nextdiroff, sizeof (long)))
-			tif->tif_nextdiroff = 0;
+		(void) ReadOK(tif, &nextdiroff, sizeof (uint32));
 	} else {
-		off_t off = tif->tif_diroff;
+		toff_t off = tif->tif_diroff;
 
 		if (off + sizeof (short) > tif->tif_size) {
 			TIFFError(tif->tif_name,
 			    "Can not read TIFF directory count");
 			return (0);
 		} else
-			memcpy(&dircount, tif->tif_base + off, sizeof (short));
-		off += sizeof (short);
+			_TIFFmemcpy(&dircount, tif->tif_base + off, sizeof (uint16));
+		off += sizeof (uint16);
 		if (tif->tif_flags & TIFF_SWAB)
 			TIFFSwabShort(&dircount);
 		dir = (TIFFDirEntry *)CheckMalloc(tif,
@@ -168,17 +142,15 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 			TIFFError(tif->tif_name, "Can not read TIFF directory");
 			goto bad;
 		} else
-			memcpy(dir, tif->tif_base + off,
+			_TIFFmemcpy(dir, tif->tif_base + off,
 			    dircount*sizeof (TIFFDirEntry));
 		off += dircount* sizeof (TIFFDirEntry);
-		if (off + sizeof (long) < tif->tif_size)
-			memcpy(&tif->tif_nextdiroff, tif->tif_base + off,
-			    sizeof (long));
-		else
-			tif->tif_nextdiroff = 0;
+		if (off + sizeof (uint32) < tif->tif_size)
+			_TIFFmemcpy(&nextdiroff, tif->tif_base+off, sizeof (uint32));
 	}
 	if (tif->tif_flags & TIFF_SWAB)
-		TIFFSwabLong((u_long *)&tif->tif_nextdiroff);
+		TIFFSwabLong(&nextdiroff);
+	tif->tif_nextdiroff = nextdiroff;
 
 	tif->tif_flags &= ~TIFF_BEENWRITING;	/* reset before new dir */
 	/*
@@ -192,6 +164,7 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 	/* free any old stuff and reinit */
 	TIFFFreeDirectory(tif);
 	TIFFDefaultDirectory(tif);
+	tif->tif_postdecode = TIFFNoPostDecode;
 	/*
 	 * Electronic Arts writes gray-scale TIFF files
 	 * without a PlanarConfiguration directory entry.
@@ -256,9 +229,9 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 		 * Check count if known in advance.
 		 */
 		if (fip->field_readcount != TIFF_VARIABLE) {
-			u_long expected = (fip->field_readcount == TIFF_SPP) ?
-			    (u_long) td->td_samplesperpixel :
-			    (u_long) fip->field_readcount;
+			uint32 expected = (fip->field_readcount == TIFF_SPP) ?
+			    (uint32) td->td_samplesperpixel :
+			    (uint32) fip->field_readcount;
 			if (!CheckDirCount(tif, dp, expected))
 				goto ignore;
 		}
@@ -305,7 +278,7 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
  	 * Setup appropriate structures (by strip or by tile)
 	 */
 	if (!TIFFFieldSet(tif, FIELD_TILEDIMENSIONS)) {
-		td->td_stripsperimage = (td->td_rowsperstrip == 0xffffffff ?
+		td->td_stripsperimage = (td->td_rowsperstrip == (uint32) -1 ?
 		     (td->td_imagelength != 0 ? 1 : 0) :
 		     howmany(td->td_imagelength, td->td_rowsperstrip));
 		td->td_tilewidth = td->td_imagewidth;
@@ -358,8 +331,8 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 			/* fall thru... */
 		case TIFFTAG_DATATYPE:
 		case TIFFTAG_SAMPLEFORMAT:
-			if (!TIFFFetchPerSampleShorts(tif, dp, &v) ||
-			    !TIFFSetField(tif, dp->tdir_tag, (int)v))
+			if (!TIFFFetchPerSampleShorts(tif, dp, &iv) ||
+			    !TIFFSetField(tif, dp->tdir_tag, iv))
 				goto bad;
 			break;
 		case TIFFTAG_STRIPOFFSETS:
@@ -382,13 +355,12 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 			 */
 			v = 1L<<td->td_bitspersample;
 			if (dp->tdir_tag == TIFFTAG_COLORMAP ||
-			    dp->tdir_count != v) {
-				if (!CheckDirCount(tif, dp, 3*v))
+			    dp->tdir_count != (uint32) v) {
+				if (!CheckDirCount(tif, dp, (uint32)(3*v)))
 					break;
 			}
-			v *= sizeof (u_short);
-			cp = CheckMalloc(tif,
-			    dp->tdir_count * sizeof (u_short),
+			v *= sizeof (uint16);
+			cp = CheckMalloc(tif, dp->tdir_count * sizeof (uint16),
 			    "to read \"TransferFunction\" tag");
 			if (cp != NULL) {
 				if (TIFFFetchData(tif, dp, cp)) {
@@ -396,7 +368,9 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 					 * This deals with there being only
 					 * one array to apply to all samples.
 					 */
-					if (dp->tdir_count == (1L<<td->td_bitspersample))
+					uint32 c =
+					    (uint32)1 << td->td_bitspersample;
+					if (dp->tdir_count == c)
 						v = 0;
 					TIFFSetField(tif, dp->tdir_tag,
 					    cp, cp+v, cp+2*v);
@@ -468,7 +442,10 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 		 * the size of the strips.  In this case, assume there
 		 * is one uncompressed strip of data.
 		 */
-		if (td->td_nstrips > 1) {
+		if ((td->td_planarconfig == PLANARCONFIG_CONTIG &&
+		    td->td_nstrips > 1) ||
+		    (td->td_planarconfig != PLANARCONFIG_SEPARATE &&
+		     td->td_nstrips != td->td_samplesperpixel)) {
 		    MissingRequired(tif, "StripByteCounts");
 		    goto bad;
 		}
@@ -496,13 +473,13 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 	if (dir)
 		_TIFFfree((char *)dir);
 	if (!TIFFFieldSet(tif, FIELD_MAXSAMPLEVALUE))
-		td->td_maxsamplevalue = (1L<<td->td_bitspersample)-1;
+		td->td_maxsamplevalue = (uint16)((1L<<td->td_bitspersample)-1);
 	/*
 	 * Setup default compression scheme.
 	 */
 	if (!TIFFFieldSet(tif, FIELD_COMPRESSION))
 		TIFFSetField(tif, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
-#ifdef STRIPCHOP_SUPPORT
+#if STRIPCHOP_SUPPORT
         /*
          * Some manufacturers make life difficult by writing
 	 * large amounts of uncompressed data as a single strip.
@@ -519,10 +496,10 @@ DECLARE1(TIFFReadDirectory, TIFF*, tif)
 	/*
 	 * Reinitialize i/o since we are starting on a new directory.
 	 */
-	tif->tif_row = -1;
-	tif->tif_curstrip = -1;
-	tif->tif_col = -1;
-	tif->tif_curtile = -1;
+	tif->tif_row = (uint32) -1;
+	tif->tif_curstrip = (tstrip_t) -1;
+	tif->tif_col = (uint32) -1;
+	tif->tif_curtile = (ttile_t) -1;
 	tif->tif_tilesize = TIFFTileSize(tif);
 	tif->tif_scanlinesize = TIFFScanlineSize(tif);
 	return (1);
@@ -533,41 +510,49 @@ bad:
 }
 
 static void
-DECLARE3(EstimateStripByteCounts, TIFF*, tif, TIFFDirEntry*, dir, u_int, dircount)
+EstimateStripByteCounts(TIFF* tif, TIFFDirEntry* dir, uint16 dircount)
 {
 	register TIFFDirEntry *dp;
 	register TIFFDirectory *td = &tif->tif_dir;
-	register int n;
+	int i;
 
-	td->td_stripbytecount = (u_long *)
-	    CheckMalloc(tif, sizeof (u_long), "for \"StripByteCounts\" array");
+	td->td_stripbytecount = (uint32*)
+	    CheckMalloc(tif, td->td_samplesperpixel * sizeof (uint32),
+		"for \"StripByteCounts\" array");
 	if (td->td_compression != COMPRESSION_NONE) {
-		u_long space = sizeof (TIFFHeader)
-		    + sizeof (short)
+		uint32 space = (uint32)(sizeof (TIFFHeader)
+		    + sizeof (uint16)
 		    + (dircount * sizeof (TIFFDirEntry))
-		    + sizeof (long);
-		long filesize = TIFFGetFileSize(tif);
+		    + sizeof (uint32));
+		toff_t filesize = TIFFGetFileSize(tif);
+		uint16 n;
+
 		/* calculate amount of space used by indirect values */
 		for (dp = dir, n = dircount; n > 0; n--, dp++) {
-			int cc = dp->tdir_count * tiffDataWidth[dp->tdir_type];
-			if (cc > sizeof (long))
+			uint32 cc = dp->tdir_count*tiffDataWidth[dp->tdir_type];
+			if (cc > sizeof (uint32))
 				space += cc;
 		}
-		td->td_stripbytecount[0] = filesize - space;
+		space = (filesize - space) / td->td_samplesperpixel;
+		for (i = 0; i < td->td_samplesperpixel; i++)
+			td->td_stripbytecount[i] = space;
 		/*
 		 * This gross hack handles the case were the offset to
-		 * the strip is past the place where we think the strip
+		 * the last strip is past the place where we think the strip
 		 * should begin.  Since a strip of data must be contiguous,
 		 * it's safe to assume that we've overestimated the amount
 		 * of data in the strip and trim this number back accordingly.
 		 */ 
-		if (td->td_stripoffset[0] + td->td_stripbytecount[0] > filesize)
-			td->td_stripbytecount[0] =
-			    filesize - td->td_stripoffset[0];
+		i--;
+		if (td->td_stripoffset[i] + td->td_stripbytecount[i] > filesize)
+			td->td_stripbytecount[i] =
+			    filesize - td->td_stripoffset[i];
 	} else {
-		u_long rowbytes = howmany(td->td_bitspersample *
+		uint32 rowbytes = howmany(td->td_bitspersample *
 		    td->td_samplesperpixel * td->td_imagewidth, 8);
-		td->td_stripbytecount[0] = td->td_imagelength * rowbytes;
+		for (i = 0; i < td->td_samplesperpixel; i++)
+			td->td_stripbytecount[i] =
+			    td->td_imagelength*rowbytes/td->td_samplesperpixel;
 	}
 	TIFFSetFieldBit(tif, FIELD_STRIPBYTECOUNTS);
 	if (!TIFFFieldSet(tif, FIELD_ROWSPERSTRIP))
@@ -575,7 +560,7 @@ DECLARE3(EstimateStripByteCounts, TIFF*, tif, TIFFDirEntry*, dir, u_int, dircoun
 }
 
 static void
-DECLARE2(MissingRequired, TIFF*, tif, const char*, tagname)
+MissingRequired(TIFF* tif, const char* tagname)
 {
 	TIFFError(tif->tif_name,
 	    "TIFF directory is missing required \"%s\" field", tagname);
@@ -588,7 +573,7 @@ DECLARE2(MissingRequired, TIFF*, tif, const char*, tagname)
  * there is a mismatch.
  */
 static int
-DECLARE3(CheckDirCount, TIFF*, tif, TIFFDirEntry*, dir, u_long, count)
+CheckDirCount(TIFF* tif, TIFFDirEntry* dir, uint32 count)
 {
 	if (count != dir->tdir_count) {
 		TIFFWarning(tif->tif_name,
@@ -603,13 +588,12 @@ DECLARE3(CheckDirCount, TIFF*, tif, TIFFDirEntry*, dir, u_long, count)
 /*
  * Fetch a contiguous directory item.
  */
-static int
-DECLARE3(TIFFFetchData, TIFF*, tif, TIFFDirEntry*, dir, char*, cp)
+static tsize_t
+TIFFFetchData(TIFF* tif, TIFFDirEntry* dir, char* cp)
 {
-	int cc, w;
+	int w = tiffDataWidth[dir->tdir_type];
+	tsize_t cc = dir->tdir_count * w;
 
-	w = tiffDataWidth[dir->tdir_type];
-	cc = dir->tdir_count * w;
 	if (!isMapped(tif)) {
 		if (!SeekOK(tif, dir->tdir_offset))
 			goto bad;
@@ -618,22 +602,22 @@ DECLARE3(TIFFFetchData, TIFF*, tif, TIFFDirEntry*, dir, char*, cp)
 	} else {
 		if (dir->tdir_offset + cc > tif->tif_size)
 			goto bad;
-		memcpy(cp, tif->tif_base + dir->tdir_offset, cc);
+		_TIFFmemcpy(cp, tif->tif_base + dir->tdir_offset, cc);
 	}
 	if (tif->tif_flags & TIFF_SWAB) {
 		switch (dir->tdir_type) {
 		case TIFF_SHORT:
 		case TIFF_SSHORT:
-			TIFFSwabArrayOfShort((u_short *)cp, dir->tdir_count);
+			TIFFSwabArrayOfShort((uint16*)cp, dir->tdir_count);
 			break;
 		case TIFF_LONG:
 		case TIFF_SLONG:
 		case TIFF_FLOAT:
-			TIFFSwabArrayOfLong((u_long *)cp, dir->tdir_count);
+			TIFFSwabArrayOfLong((uint32*)cp, dir->tdir_count);
 			break;
 		case TIFF_RATIONAL:
 		case TIFF_SRATIONAL:
-			TIFFSwabArrayOfLong((u_long *)cp, 2*dir->tdir_count);
+			TIFFSwabArrayOfLong((uint32*)cp, 2*dir->tdir_count);
 			break;
 		}
 	}
@@ -641,20 +625,20 @@ DECLARE3(TIFFFetchData, TIFF*, tif, TIFFDirEntry*, dir, char*, cp)
 bad:
 	TIFFError(tif->tif_name, "Error fetching data for field \"%s\"",
 	    TIFFFieldWithTag(dir->tdir_tag)->field_name);
-	return (0);
+	return ((tsize_t) 0);
 }
 
 /*
  * Fetch an ASCII item from the file.
  */
-static int
-DECLARE3(TIFFFetchString, TIFF*, tif, TIFFDirEntry*, dir, char*, cp)
+static tsize_t
+TIFFFetchString(TIFF* tif, TIFFDirEntry* dir, char* cp)
 {
 	if (dir->tdir_count <= 4) {
-		u_long l = dir->tdir_offset;
+		uint32 l = dir->tdir_offset;
 		if (tif->tif_flags & TIFF_SWAB)
 			TIFFSwabLong(&l);
-		memcpy(cp, &l, dir->tdir_count);
+		_TIFFmemcpy(cp, &l, dir->tdir_count);
 		return (1);
 	}
 	return (TIFFFetchData(tif, dir, cp));
@@ -664,7 +648,7 @@ DECLARE3(TIFFFetchString, TIFF*, tif, TIFFDirEntry*, dir, char*, cp)
  * Convert numerator+denominator to float.
  */
 static int
-DECLARE5(cvtRational, TIFF*, tif, TIFFDirEntry*, dir, u_long, num, u_long, denom, float*, rv)
+cvtRational(TIFF* tif, TIFFDirEntry* dir, uint32 num, uint32 denom, float* rv)
 {
 	if (denom == 0) {
 		TIFFError(tif->tif_name,
@@ -675,7 +659,7 @@ DECLARE5(cvtRational, TIFF*, tif, TIFFDirEntry*, dir, u_long, num, u_long, denom
 		if (dir->tdir_type == TIFF_RATIONAL)
 			*rv = ((float)num / (float)denom);
 		else
-			*rv = ((float)(long)num / (float)(long)denom);
+			*rv = ((float)(int32)num / (float)(int32)denom);
 		return (1);
 	}
 }
@@ -686,13 +670,13 @@ DECLARE5(cvtRational, TIFF*, tif, TIFFDirEntry*, dir, u_long, num, u_long, denom
  * as a floating point number.
  */
 static float
-DECLARE2(TIFFFetchRational, TIFF*, tif, TIFFDirEntry*, dir)
+TIFFFetchRational(TIFF* tif, TIFFDirEntry* dir)
 {
-	u_long l[2];
+	uint32 l[2];
 	float v;
 
 	return (!TIFFFetchData(tif, dir, (char *)l) ||
-	    !cvtRational(tif, dir, l[0], l[1], &v) ? 1. : v);
+	    !cvtRational(tif, dir, l[0], l[1], &v) ? 1.0f : v);
 }
 
 /*
@@ -701,7 +685,7 @@ DECLARE2(TIFFFetchRational, TIFF*, tif, TIFFDirEntry*, dir)
  * as a native float.
  */
 static float
-DECLARE2(TIFFFetchFloat, TIFF*, tif, TIFFDirEntry*, dir)
+TIFFFetchFloat(TIFF* tif, TIFFDirEntry* dir)
 {
 	float v = (float)
 	    TIFFExtractData(tif, dir->tdir_type, dir->tdir_offset);
@@ -713,9 +697,8 @@ DECLARE2(TIFFFetchFloat, TIFF*, tif, TIFFDirEntry*, dir)
  * Fetch an array of BYTE or SBYTE values.
  */
 static int
-DECLARE3(TIFFFetchByteArray, TIFF*, tif, TIFFDirEntry*, dir, u_short*, v)
+TIFFFetchByteArray(TIFF* tif, TIFFDirEntry* dir, uint16* v)
 {
-
 	if (dir->tdir_count <= 4) {
 		/*
 		 * Extract data from offset field.
@@ -737,14 +720,14 @@ DECLARE3(TIFFFetchByteArray, TIFF*, tif, TIFFDirEntry*, dir, u_short*, v)
 		}
 		return (1);
 	} else
-		return (TIFFFetchData(tif, dir, (char *)v));	/* XXX */
+		return (TIFFFetchData(tif, dir, (char *)v) != 0);	/* XXX */
 }
 
 /*
  * Fetch an array of SHORT or SSHORT values.
  */
 static int
-DECLARE3(TIFFFetchShortArray, TIFF*, tif, TIFFDirEntry*, dir, u_short*, v)
+TIFFFetchShortArray(TIFF* tif, TIFFDirEntry* dir, uint16* v)
 {
 	if (dir->tdir_count <= 2) {
 		if (tif->tif_header.tiff_magic == TIFF_BIGENDIAN) {
@@ -760,16 +743,16 @@ DECLARE3(TIFFFetchShortArray, TIFF*, tif, TIFFDirEntry*, dir, u_short*, v)
 		}
 		return (1);
 	} else
-		return (TIFFFetchData(tif, dir, (char *)v));
+		return (TIFFFetchData(tif, dir, (char *)v) != 0);
 }
 
 /*
  * Fetch a pair of SHORT or BYTE values.
  */
 static int
-DECLARE2(TIFFFetchShortPair, TIFF*, tif, TIFFDirEntry*, dir)
+TIFFFetchShortPair(TIFF* tif, TIFFDirEntry* dir)
 {
-	u_short v[2];
+	uint16 v[2];
 	int ok = 0;
 
 	switch (dir->tdir_type) {
@@ -791,30 +774,30 @@ DECLARE2(TIFFFetchShortPair, TIFF*, tif, TIFFDirEntry*, dir)
  * Fetch an array of LONG or SLONG values.
  */
 static int
-DECLARE3(TIFFFetchLongArray, TIFF*, tif, TIFFDirEntry*, dir, u_long*, v)
+TIFFFetchLongArray(TIFF* tif, TIFFDirEntry* dir, uint32* v)
 {
 	if (dir->tdir_count == 1) {
 		v[0] = dir->tdir_offset;
 		return (1);
 	} else
-		return (TIFFFetchData(tif, dir, (char *)v));
+		return (TIFFFetchData(tif, dir, (char *)v) != 0);
 }
 
 /*
  * Fetch an array of RATIONAL or SRATIONAL values.
  */
 static int
-DECLARE3(TIFFFetchRationalArray, TIFF*, tif, TIFFDirEntry*, dir, float*, v)
+TIFFFetchRationalArray(TIFF* tif, TIFFDirEntry* dir, float* v)
 {
 	int ok = 0;
-	u_long *l;
+	uint32 *l;
 
-	l = (u_long *)CheckMalloc(tif,
+	l = (uint32*)CheckMalloc(tif,
 	    dir->tdir_count*tiffDataWidth[dir->tdir_type],
 	    "to fetch array of rationals");
 	if (l) {
 		if (TIFFFetchData(tif, dir, (char *)l)) {
-			u_long i;
+			uint32 i;
 			for (i = 0; i < dir->tdir_count; i++) {
 				ok = cvtRational(tif, dir,
 				    l[2*i+0], l[2*i+1], &v[i]);
@@ -831,7 +814,7 @@ DECLARE3(TIFFFetchRationalArray, TIFF*, tif, TIFFDirEntry*, dir, float*, v)
  * Fetch an array of FLOAT values.
  */
 static int
-DECLARE3(TIFFFetchFloatArray, TIFF*, tif, TIFFDirEntry*, dir, float*, v)
+TIFFFetchFloatArray(TIFF* tif, TIFFDirEntry* dir, float* v)
 {
 	if (TIFFFetchData(tif, dir, (char *)v)) {
 		TIFFCvtIEEEFloatToNative(tif, dir->tdir_count, v);
@@ -846,33 +829,34 @@ DECLARE3(TIFFFetchFloatArray, TIFF*, tif, TIFFDirEntry*, dir, float*, v)
  * NB: DOUBLE and UNDEFINED types are not handled.
  */
 static int
-DECLARE2(TIFFFetchNormalTag, TIFF*, tif, TIFFDirEntry*, dp)
+TIFFFetchNormalTag(TIFF* tif, TIFFDirEntry* dp)
 {
 	static char mesg[] = "to fetch tag value";
 	int ok = 0;
+	const TIFFFieldInfo* fip = TIFFFieldWithTag(dp->tdir_tag);
 
 	if (dp->tdir_count > 1) {		/* array of values */
-		char *cp = NULL;
+		char* cp = NULL;
 
 		switch (dp->tdir_type) {
 		case TIFF_BYTE:
 		case TIFF_SBYTE:
 			/* NB: always expand BYTE values to shorts */
 			cp = CheckMalloc(tif,
-			    dp->tdir_count * sizeof (u_short), mesg);
-			ok = cp && TIFFFetchByteArray(tif, dp, (u_short *)cp);
+			    dp->tdir_count * sizeof (uint16), mesg);
+			ok = cp && TIFFFetchByteArray(tif, dp, (uint16*)cp);
 			break;
 		case TIFF_SHORT:
 		case TIFF_SSHORT:
 			cp = CheckMalloc(tif,
-			    dp->tdir_count * sizeof (u_short), mesg);
-			ok = cp && TIFFFetchShortArray(tif, dp, (u_short *)cp);
+			    dp->tdir_count * sizeof (uint16), mesg);
+			ok = cp && TIFFFetchShortArray(tif, dp, (uint16*)cp);
 			break;
 		case TIFF_LONG:
 		case TIFF_SLONG:
 			cp = CheckMalloc(tif,
-			    dp->tdir_count * sizeof (u_long), mesg);
-			ok = cp && TIFFFetchLongArray(tif, dp, (u_long *)cp);
+			    dp->tdir_count * sizeof (uint32), mesg);
+			ok = cp && TIFFFetchLongArray(tif, dp, (uint32*)cp);
 			break;
 		case TIFF_RATIONAL:
 		case TIFF_SRATIONAL:
@@ -895,13 +879,14 @@ DECLARE2(TIFFFetchNormalTag, TIFF*, tif, TIFFDirEntry*, dp)
 				cp[dp->tdir_count] = '\0';	/* XXX */
 			break;
 		}
-		if (ok)
-			ok = TIFFSetField(tif, dp->tdir_tag, cp);
+		if (ok) {
+			ok = (fip->field_passcount ?
+			    TIFFSetField(tif, dp->tdir_tag, dp->tdir_count, cp)
+			  : TIFFSetField(tif, dp->tdir_tag, cp));
+		}
 		if (cp != NULL)
 			_TIFFfree(cp);
 	} else if (CheckDirCount(tif, dp, 1)) {	/* singleton value */
-		char c[2];
-		TIFFDataType type;
 		switch (dp->tdir_type) {
 		case TIFF_BYTE:
 		case TIFF_SBYTE:
@@ -909,9 +894,9 @@ DECLARE2(TIFFFetchNormalTag, TIFF*, tif, TIFFDirEntry*, dp)
 		case TIFF_SSHORT:
 			/*
 			 * If the tag is also acceptable as a LONG or SLONG
-			 * then TIFFSetField will expect a long parameter
+			 * then TIFFSetField will expect an uint32 parameter
 			 * passed to it (through varargs).  Thus, for machines
-			 * where sizeof (int) != sizeof (long) we must do
+			 * where sizeof (int) != sizeof (uint32) we must do
 			 * a careful check here.  It's hard to say if this
 			 * is worth optimizing.
 			 *
@@ -920,31 +905,43 @@ DECLARE2(TIFFFetchNormalTag, TIFF*, tif, TIFFDirEntry*, dp)
 			 *     for the tag and that that entry is for the
 			 *     widest potential data type the tag may have.
 			 */
-			type = TIFFFieldWithTag(dp->tdir_tag)->field_type;
-			if (type != TIFF_LONG && type != TIFF_SLONG) {
-				ok = TIFFSetField(tif, dp->tdir_tag, (int)
-			  TIFFExtractData(tif, dp->tdir_type, dp->tdir_offset));
+			{ TIFFDataType type = fip->field_type;
+			  if (type != TIFF_LONG && type != TIFF_SLONG) {
+				uint16 v = (uint16)
+			   TIFFExtractData(tif, dp->tdir_type, dp->tdir_offset);
+				ok = (fip->field_passcount ?
+				    TIFFSetField(tif, dp->tdir_tag, 1, &v)
+				  : TIFFSetField(tif, dp->tdir_tag, v));
 				break;
+			  }
 			}
 			/* fall thru... */
 		case TIFF_LONG:
 		case TIFF_SLONG:
-			ok = TIFFSetField(tif, dp->tdir_tag, (u_long)
-		  TIFFExtractData(tif, dp->tdir_type, dp->tdir_offset));
+			{ uint32 v32 =
+		    TIFFExtractData(tif, dp->tdir_type, dp->tdir_offset);
+			  ok = (fip->field_passcount ? 
+			      TIFFSetField(tif, dp->tdir_tag, 1, &v32)
+			    : TIFFSetField(tif, dp->tdir_tag, v32));
+			}
 			break;
 		case TIFF_RATIONAL:
 		case TIFF_SRATIONAL:
-			ok = TIFFSetField(tif, dp->tdir_tag,
-			    TIFFFetchRational(tif, dp));
-			break;
 		case TIFF_FLOAT:
-			ok = TIFFSetField(tif, dp->tdir_tag,
-			    TIFFFetchFloat(tif, dp));
+			{ float v = (dp->tdir_type == TIFF_FLOAT ? 
+			      TIFFFetchFloat(tif, dp)
+			    : TIFFFetchRational(tif, dp));
+			  ok = (fip->field_passcount ?
+			      TIFFSetField(tif, dp->tdir_tag, 1, &v)
+			    : TIFFSetField(tif, dp->tdir_tag, v));
+			}
 			break;
 		case TIFF_ASCII:
-			if (ok = (TIFFFetchString(tif, dp, c))) {
+			{ char c[2];
+			  if (ok = (TIFFFetchString(tif, dp, c) != 0)) {
 				c[1] = '\0';		/* XXX paranoid */
 				ok = TIFFSetField(tif, dp->tdir_tag, c);
+			  }
 			}
 			break;
 		}
@@ -959,16 +956,17 @@ DECLARE2(TIFFFetchNormalTag, TIFF*, tif, TIFFDirEntry*, dp)
  * all values are the same.
  */
 static int
-DECLARE3(TIFFFetchPerSampleShorts, TIFF*, tif, TIFFDirEntry*, dir, long*, pl)
+TIFFFetchPerSampleShorts(TIFF* tif, TIFFDirEntry* dir, int* pl)
 {
 	int samples = tif->tif_dir.td_samplesperpixel;
 	int status = 0;
 
-	if (CheckDirCount(tif, dir, (u_long)samples)) {
-		u_short buf[10], *v = buf;
+	if (CheckDirCount(tif, dir, (uint32) samples)) {
+		uint16 buf[10];
+		uint16* v = buf;
 
 		if (samples > NITEMS(buf))
-			v = (u_short *)_TIFFmalloc(samples * sizeof (u_short));
+			v = (uint16*)_TIFFmalloc(samples * sizeof (uint16));
 		if (TIFFFetchShortArray(tif, dir, v)) {
 			int i;
 			for (i = 1; i < samples; i++)
@@ -995,31 +993,31 @@ DECLARE3(TIFFFetchPerSampleShorts, TIFF*, tif, TIFFDirEntry*, dir, long*, pl)
  * in fact it's also used for tiles.
  */
 static int
-DECLARE4(TIFFFetchStripThing, TIFF*, tif, TIFFDirEntry*, dir, long, nstrips, u_long**, lpp)
+TIFFFetchStripThing(TIFF* tif, TIFFDirEntry* dir, long nstrips, uint32** lpp)
 {
-	register u_long *lp;
+	register uint32 *lp;
 	int status;
 
-	if (!CheckDirCount(tif, dir, nstrips))
+	if (!CheckDirCount(tif, dir, (uint32) nstrips))
 		return (0);
 	/*
 	 * Allocate space for strip information.
 	 */
 	if (*lpp == NULL &&
-	    (*lpp = (u_long *)CheckMalloc(tif,
-	      nstrips * sizeof (u_long), "for strip array")) == NULL)
+	    (*lpp = (uint32 *)CheckMalloc(tif,
+	      nstrips * sizeof (uint32), "for strip array")) == NULL)
 		return (0);
 	lp = *lpp;
 	if (dir->tdir_type == (int)TIFF_SHORT) {
 		/*
-		 * Handle short->long expansion.
+		 * Handle uint16->uint32 expansion.
 		 */
-		u_short *dp = (u_short *)CheckMalloc(tif,
-		    dir->tdir_count* sizeof (u_short), "to fetch strip tag");
+		uint16 *dp = (uint16 *)CheckMalloc(tif,
+		    dir->tdir_count* sizeof (uint16), "to fetch strip tag");
 		if (dp == NULL)
 			return (0);
 		if (status = TIFFFetchShortArray(tif, dir, dp)) {
-			register u_short *wp = dp;
+			register uint16 *wp = dp;
 			while (nstrips-- > 0)
 				*lp++ = *wp++;
 		}
@@ -1029,12 +1027,39 @@ DECLARE4(TIFFFetchStripThing, TIFF*, tif, TIFFDirEntry*, dir, long, nstrips, u_l
 	return (status);
 }
 
-#ifdef COLORIMETRY_SUPPORT
+#define	NITEMS(x)	(sizeof (x) / sizeof (x[0]))
+/*
+ * Fetch and set the ExtraSamples tag.
+ */
 static int
-DECLARE2(TIFFFetchRefBlackWhite, TIFF*, tif, TIFFDirEntry*, dir)
+TIFFFetchExtraSamples(TIFF* tif, TIFFDirEntry* dir)
+{
+	uint16 buf[10], *v = buf;
+	int status;
+
+	if (dir->tdir_count > NITEMS(buf))
+		v = (uint16*)_TIFFmalloc(dir->tdir_count * sizeof (uint16));
+	if (dir->tdir_type == TIFF_BYTE)
+		status = TIFFFetchByteArray(tif, dir, v);
+	else
+		status = TIFFFetchShortArray(tif, dir, v);
+	if (status)
+		status = TIFFSetField(tif, dir->tdir_tag, dir->tdir_count, v);
+	if (v != buf)
+		_TIFFfree((char *)v);
+	return (status);
+}
+#undef NITEMS
+
+#ifdef COLORIMETRY_SUPPORT
+/*
+ * Fetch and set the RefBlackWhite tag.
+ */
+static int
+TIFFFetchRefBlackWhite(TIFF* tif, TIFFDirEntry* dir)
 {
 	static char mesg[] = "for \"ReferenceBlackWhite\" array";
-	char *cp;
+	char* cp;
 	int ok;
 
 	if (dir->tdir_type == TIFF_RATIONAL)
@@ -1042,14 +1067,14 @@ DECLARE2(TIFFFetchRefBlackWhite, TIFF*, tif, TIFFDirEntry*, dir)
 	/*
 	 * Handle LONG's for backward compatibility.
 	 */
-	cp = CheckMalloc(tif, dir->tdir_count * sizeof (u_long), mesg);
-	if (ok = (cp && TIFFFetchLongArray(tif, dir, (u_long *)cp))) {
+	cp = CheckMalloc(tif, dir->tdir_count * sizeof (uint32), mesg);
+	if (ok = (cp && TIFFFetchLongArray(tif, dir, (uint32*)cp))) {
 		float *fp = (float *)
 		    CheckMalloc(tif, dir->tdir_count * sizeof (float), mesg);
 		if (ok = (fp != NULL)) {
-			int i;
+			uint32 i;
 			for (i = 0; i < dir->tdir_count; i++)
-				fp[i] = (float)((u_long *)cp)[i];
+				fp[i] = (float)((uint32*)cp)[i];
 			ok = TIFFSetField(tif, dir->tdir_tag, fp);
 			_TIFFfree((char *)fp);
 		}
@@ -1068,11 +1093,10 @@ DECLARE2(TIFFFetchRefBlackWhite, TIFF*, tif, TIFFDirEntry*, dir)
  * allocated as a side effect.
  */
 static int
-DECLARE2(TIFFFetchJPEGQTables, TIFF*, tif, TIFFDirEntry*, dir)
+TIFFFetchJPEGQTables(TIFF* tif, TIFFDirEntry* dir)
 {
 	TIFFDirectory *td = &tif->tif_dir;
-	long off[4];
-	int i;
+	uint32 off[4], i;
 	TIFFDirEntry tdir;
 	char *qmat;
 
@@ -1111,10 +1135,10 @@ DECLARE2(TIFFFetchJPEGQTables, TIFF*, tif, TIFFDirEntry*, dir)
  * the tables are allocated as a side effect.
  */
 static int
-DECLARE3(TIFFFetchJPEGCTables, TIFF*, tif, TIFFDirEntry*, dir, u_char***, ptab)
+TIFFFetchJPEGCTables(TIFF* tif, TIFFDirEntry* dir, u_char*** ptab)
 {
-	long off[4];
-	int i, j, ncodes;
+	uint32 off[4], i;
+	int j, ncodes;
 	TIFFDirEntry tdir;
 	char *tab;
 
@@ -1173,29 +1197,7 @@ DECLARE3(TIFFFetchJPEGCTables, TIFF*, tif, TIFFDirEntry*, dir, u_char***, ptab)
 }
 #endif
 
-/*
- * Accept matteing-only ExtraSamples tag.
- */
-static int
-DECLARE2(TIFFFetchExtraSamples, TIFF*, tif, TIFFDirEntry*, dp)
-{
-	int type;
-	
-	if (dp->tdir_count != 1) {
-		TIFFError(tif->tif_name,
-		    "Can not handle more than 1 extra sample/pixel");
-		return (0);
-	}
-	type = TIFFExtractData(tif, dp->tdir_type, dp->tdir_offset);
-	if (type != EXTRASAMPLE_ASSOCALPHA) {
-		TIFFError(tif->tif_name,
-		    "Can only handle associated-alpha extra samples");
-		return (0);
-	}
-	return (TIFFSetField(tif, TIFFTAG_MATTEING, 1));
-}
-
-#ifdef STRIPCHOP_SUPPORT
+#if STRIPCHOP_SUPPORT
 /*
  * Replace a single strip (tile) of uncompressed data by
  * multiple strips (tiles), each approximately 8Kbytes.
@@ -1204,15 +1206,15 @@ DECLARE2(TIFFFetchExtraSamples, TIFF*, tif, TIFFDirEntry*, dp)
  * memory.
  */
 static void
-DECLARE1(ChopUpSingleUncompressedStrip, TIFF*, tif)
+ChopUpSingleUncompressedStrip(TIFF* tif)
 {
 	register TIFFDirectory *td = &tif->tif_dir;
-	u_long bytecount = td->td_stripbytecount[0];
-	u_long offset = td->td_stripoffset[0];
-	u_long rowbytes = TIFFVTileSize(tif, 1);
-	u_long strip, stripbytes;
-	u_long nstrips, rowsperstrip;
-	u_long *newcounts, *newoffsets;
+	uint32 bytecount = td->td_stripbytecount[0];
+	uint32 offset = td->td_stripoffset[0];
+	tsize_t rowbytes = TIFFVTileSize(tif, 1), stripbytes;
+	tstrip_t strip, nstrips, rowsperstrip;
+	uint32* newcounts;
+	uint32* newoffsets;
 
 	/*
 	 * Make the rows hold at least one
@@ -1225,10 +1227,13 @@ DECLARE1(ChopUpSingleUncompressedStrip, TIFF*, tif)
 		rowsperstrip = 8192 / rowbytes;
 		stripbytes = rowbytes * rowsperstrip;
 	}
-	nstrips = howmany(bytecount, stripbytes);
-	newcounts = (u_long *) CheckMalloc(tif, nstrips * sizeof (u_long),
+	/* never increase the number of strips in an image */
+	if (rowsperstrip >= td->td_rowsperstrip)
+		return;
+	nstrips = (tstrip_t) howmany(bytecount, stripbytes);
+	newcounts = (uint32*) CheckMalloc(tif, nstrips * sizeof (uint32),
 				"for chopped \"StripByteCounts\" array");
-	newoffsets = (u_long *) CheckMalloc(tif, nstrips * sizeof (u_long),
+	newoffsets = (uint32*) CheckMalloc(tif, nstrips * sizeof (uint32),
 				"for chopped \"StripOffsets\" array");
 	if (newcounts == NULL || newoffsets == NULL) {
 	        /*
@@ -1258,8 +1263,7 @@ DECLARE1(ChopUpSingleUncompressedStrip, TIFF*, tif)
 	 * Replace old single strip info with multi-strip info.
 	 */
 	td->td_stripsperimage = td->td_nstrips = nstrips;
-	td->td_rowsperstrip = rowsperstrip;
-	td->td_tilelength = rowsperstrip;
+	TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, rowsperstrip);
 
 	_TIFFfree(td->td_stripbytecount);
 	_TIFFfree(td->td_stripoffset);

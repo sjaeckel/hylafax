@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/recvfax/RCS/status.c,v 1.27 1994/06/17 01:16:50 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./recvfax/RCS/status.c,v 1.32 1995/04/08 21:43:12 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -42,12 +43,20 @@ sendServerStatus(const char* modem, char* tag)
     config deflt;
     char fifomatch[80];
     int fifomatchlen;
+    int fifo;
 
+    (void) tag;
     if (!(dirp = opendir("."))) {
 	syslog(LOG_ERR, "%s: opendir: %m", SPOOLDIR);
 	sendError("Problem accessing spool directory.");
 	done(-1, "EXIT");
     }
+    (void) close(fifo = openFIFO(FAX_FIFO));
+    if (version > 0)
+	sendClient("server", "all modems:FIFO:%s",
+	    (fifo == -1 ? "Not running" : "Running"));
+    else
+	sendClient("server", "all modems");
     /*
      * Setup a prefix for matching potential FIFO files.
      * We do this carefully and in a way that insures we
@@ -59,11 +68,9 @@ sendServerStatus(const char* modem, char* tag)
 	sizeof (fifomatch) - (sizeof (FAX_FIFO)+2), modem);
     fifomatchlen = strlen(fifomatch);
     while ((dentp = readdir(dirp)) != 0) {
-	int fifo;
-
 	if (strncmp(dentp->d_name, fifomatch, fifomatchlen) != 0)
 	    continue;
-	fifo = open(dentp->d_name, O_WRONLY|O_NDELAY);
+	fifo = openFIFO(dentp->d_name);
 	if (fifo != -1) {
 	    config configuration;
 	    char fileName[1024];
@@ -125,7 +132,7 @@ checkServerStatus(const char* modem)
 
 	if (strncmp(dentp->d_name, fifomatch, fifomatchlen) != 0)
 	    continue;
-	fifo = open(dentp->d_name, O_WRONLY|O_NDELAY);
+	fifo = openFIFO(dentp->d_name);
 	if (fifo != -1) {
 	    char fileName[1024];
 	    char* cp;
@@ -163,6 +170,7 @@ sendServerInfo(const char* modem, char* tag)
     struct dirent* dentp;
     char infoFile[80];
 
+    (void) tag;
     if (strcmp(modem, MODEM_ANY) == 0)
 	strcpy(infoFile, "");
     else
@@ -239,6 +247,7 @@ sendAllStatus(const char* modem, char* tag)
 {
     Job* job;
 
+    (void) tag;
     if (!jobList)
 	jobList = readJobs();
     for(job = jobList; job; job = job->next) {
@@ -390,6 +399,8 @@ void
 sendRecvStatus(const char* modem, char* tag)
 {
     DIR* dir = opendir(FAX_RECVDIR);
+
+    (void) modem; (void) tag;
     if (dir != NULL) {
 	struct dirent* dp;
 

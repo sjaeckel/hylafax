@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_compress.c,v 1.33 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_compress.c,v 1.35.1.1 1995/02/10 19:04:23 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -34,7 +34,7 @@
 typedef struct {
 	char*	name;
 	int	scheme;
-	TIFFVoidMethod	init;
+	TIFFBoolMethod	init;
 } cscheme_t;
 static const cscheme_t CompressionSchemes[] = {
     { "Null",		COMPRESSION_NONE,	TIFFInitDumpMode },
@@ -63,7 +63,7 @@ static const cscheme_t CompressionSchemes[] = {
 #define	NSCHEMES (sizeof (CompressionSchemes) / sizeof (CompressionSchemes[0]))
 
 static const cscheme_t *
-DECLARE1(findScheme, int, scheme)
+findScheme(int scheme)
 {
 	register const cscheme_t *c;
 
@@ -74,7 +74,7 @@ DECLARE1(findScheme, int, scheme)
 }
 
 static int
-DECLARE2(TIFFNoEncode, TIFF*, tif, char*, method)
+TIFFNoEncode(TIFF* tif, char* method)
 {
 	const cscheme_t *c = findScheme(tif->tif_dir.td_compression);
 	TIFFError(tif->tif_name,
@@ -83,25 +83,28 @@ DECLARE2(TIFFNoEncode, TIFF*, tif, char*, method)
 }
 
 int
-DECLARE4(TIFFNoRowEncode, TIFF*, tif, u_char*, pp, u_long, cc, u_int, s)
+TIFFNoRowEncode(TIFF* tif, tidata_t pp, tsize_t cc, tsample_t s)
 {
+	(void) pp; (void) cc; (void) s;
 	return (TIFFNoEncode(tif, "scanline"));
 }
 
 int
-DECLARE4(TIFFNoStripEncode, TIFF*, tif, u_char*, pp, u_long, cc, u_int, s)
+TIFFNoStripEncode(TIFF* tif, tidata_t pp, tsize_t cc, tsample_t s)
 {
+	(void) pp; (void) cc; (void) s;
 	return (TIFFNoEncode(tif, "strip"));
 }
 
 int
-DECLARE4(TIFFNoTileEncode, TIFF*, tif, u_char*, pp, u_long, cc, u_int, s)
+TIFFNoTileEncode(TIFF* tif, tidata_t pp, tsize_t cc, tsample_t s)
 {
+	(void) pp; (void) cc; (void) s;
 	return (TIFFNoEncode(tif, "tile"));
 }
 
 static int
-DECLARE2(TIFFNoDecode, TIFF*, tif, char*, method)
+TIFFNoDecode(TIFF* tif, char* method)
 {
 	const cscheme_t *c = findScheme(tif->tif_dir.td_compression);
 	TIFFError(tif->tif_name,
@@ -110,25 +113,28 @@ DECLARE2(TIFFNoDecode, TIFF*, tif, char*, method)
 }
 
 int
-DECLARE4(TIFFNoRowDecode, TIFF*, tif, u_char*, pp, u_long, cc, u_int, s)
+TIFFNoRowDecode(TIFF* tif, tidata_t pp, tsize_t cc, tsample_t s)
 {
+	(void) pp; (void) cc; (void) s;
 	return (TIFFNoDecode(tif, "scanline"));
 }
 
 int
-DECLARE4(TIFFNoStripDecode, TIFF*, tif, u_char*, pp, u_long, cc, u_int, s)
+TIFFNoStripDecode(TIFF* tif, tidata_t pp, tsize_t cc, tsample_t s)
 {
+	(void) pp; (void) cc; (void) s;
 	return (TIFFNoDecode(tif, "strip"));
 }
 
 int
-DECLARE4(TIFFNoTileDecode, TIFF*, tif, u_char*, pp, u_long, cc, u_int, s)
+TIFFNoTileDecode(TIFF* tif, tidata_t pp, tsize_t cc, tsample_t s)
 {
+	(void) pp; (void) cc; (void) s;
 	return (TIFFNoDecode(tif, "tile"));
 }
 
 int
-DECLARE2(TIFFSetCompressionScheme, TIFF*, tif, int, scheme)
+TIFFSetCompressionScheme(TIFF* tif, int scheme)
 {
 	const cscheme_t *c = findScheme(scheme);
 

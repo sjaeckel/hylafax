@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2Poll.c++,v 1.13 1994/02/28 14:14:58 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Poll.c++,v 1.17 1995/04/08 21:29:48 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -40,7 +41,7 @@ Class2Modem::requestToPoll()
 fxBool
 Class2Modem::pollBegin(const fxStr& pollID, fxStr& emsg)
 {
-    if (class2Cmd(cigCmd, (char*) pollID))	// set polling ID
+    if (class2Cmd(cigCmd, pollID))		// set polling ID
 	return (TRUE);
     emsg = "Unspecified Receive Phase B error";
     return (FALSE);

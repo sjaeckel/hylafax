@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/Dictionary.c++,v 1.10 1994/06/21 16:29:37 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/Dictionary.c++,v 1.14 1995/04/08 21:43:56 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -92,11 +93,7 @@ fxDictionary::operator=(const fxDictionary &a)
     assert(keysize == a.getKeySize());
     assert(valuesize == a.getValueSize());
     if (this == &a) return;
-#ifdef __GNUC__
-    cleanup();
-#else
     this->fxDictionary::~fxDictionary();	// NB: need this for HP C++ 3.4
-#endif
     for (int i = 0; i < a.buckets.length(); i++) {
 	const fxDictBucket* db = a.buckets[i];
 	while (db) {

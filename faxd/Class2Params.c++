@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2Params.c++,v 1.15 1994/06/02 16:34:27 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Params.c++,v 1.25 1995/04/08 21:29:46 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -23,57 +24,8 @@
  * OF THIS SOFTWARE.
  */
 #include "Class2Params.h"
+#include "Sys.h"
 #include "t.30.h"
-
-/*
- * Tables for printing some Class 2 capabilities.
- */
-const char* Class2Params::vresNames[2] = {
-    "3.85 line/mm",
-    "7.7 line/mm",
-};
-const char* Class2Params::bitRateNames[8] = {
-    "2400 bit/s",		// BR_2400
-    "4800 bit/s",		// BR_4800
-    "7200 bit/s",		// BR_7200
-    "9600 bit/s",		// BR_9600
-    "12000 bit/s",		// BR_12000
-    "14400 bit/s",		// BR_14400
-    "0 bit/s",			// 6 ???
-    "0 bit/s",			// 7 ???
-};
-const char* Class2Params::dataFormatNames[4] = {
-    "1-D MR",			// DF_1DMR
-    "2-D MR",			// DF_2DMR
-    "2-D Uncompressed Mode",	// DF_2DUNCOMP
-    "2-D MMR"			// DF_2DMMR
-};
-const char* Class2Params::pageWidthNames[8] = {
-    "page width 1728 pixels in 215 mm",
-    "page width 2048 pixels in 255 mm",
-    "page width 2432 pixels in 303 mm",
-    "page width 1216 pixels in 151 mm",
-    "page width 864 pixels in 107 mm",
-    "undefined page width (wd=5)",
-    "undefined page width (wd=6)",
-    "undefined page width (wd=7)",
-};
-const char* Class2Params::pageLengthNames[4] = {
-    "A4 page length (297 mm)",
-    "B4 page length (364 mm)",
-    "unlimited page length ",
-    "invalid page length (ln=3)",
-};
-const char* Class2Params::scanlineTimeNames[8] = {
-    "0 ms/scanline",
-    "5 ms/scanline",
-    "10 ms, 5 ms/scanline",
-    "10 ms/scanline",
-    "20 ms, 10 ms/scanline",
-    "20 ms/scanline",
-    "40 ms, 20 ms/scanline",
-    "40 ms/scanline",
-};
 
 Class2Params::Class2Params()
 {
@@ -110,7 +62,7 @@ static char*
 addParam(char* cp, u_int v)
 {
     if (v != (u_int)-1) {
-	sprintf(cp, ",%u", v);
+	::sprintf(cp, ",%u", v);
 	while (*cp != '\0') cp++;
     } else {
 	*cp++ = ',';
@@ -126,7 +78,7 @@ Class2Params::cmd() const
     char* cp = buf;
 
     if (vr != (u_int) -1) {
-	sprintf(cp, "%u", vr);
+	::sprintf(cp, "%u", vr);
 	while (*cp != '\0') cp++;
     }
     cp = addParam(cp, br);
@@ -402,14 +354,66 @@ u_int
 Class2Params::pageWidth() const
 {
     static const u_int widths[8] = {
-	1728,
-	2048,
-	2432,
-	1216,
-	864,
-	1728, 1728, 1728		// XXX: perhaps invalid values?
+	1728,	// 1728 in 215 mm line
+	2048,	// 2048 in 255 mm line
+	2432,	// 2432 in 303 mm line
+	1216,	// 1216 in 151 mm line
+	864,	// 864 in 107 mm line
+	1728,	// undefined
+	1728,	// undefined
+	1728,	// undefined
     };
     return (widths[wd&7]);
+}
+
+void
+Class2Params::setPageWidthInMM(u_int w)
+{
+    wd = (w == 255 ? WD_2048 : w == 303 ? WD_2432 : WD_1728);
+}
+
+void
+Class2Params::setPageWidthInPixels(u_int w)
+{
+    wd = (w == 1728 ? WD_1728 :
+	  w == 2048 ? WD_2048 :
+	  w == 2432 ? WD_2432 :
+	  w == 1216 ? WD_1216 :
+	  w ==  864 ? WD_864 :
+		      WD_1728);
+}
+
+u_int
+Class2Params::pageLength() const
+{
+    static const u_int lengths[4] = {
+	297,		// A4 paper
+	364,		// B4 paper
+	(u_int) -1,	// unlimited
+	280,		// US letter (used internally)
+    };
+    return (lengths[ln&3]);
+}
+
+void
+Class2Params::setPageLengthInMM(u_int l)
+{
+    ln = (l == (u_int) -1 ?  LN_INF :
+	  l <= 280 ?	     LN_LET :
+	  l <= 300 ?	     LN_A4 :
+			     LN_B4);
+}
+
+u_int
+Class2Params::verticalRes() const
+{
+    return (vr == VR_NORMAL ? 98 : vr == VR_FINE ? 196 : (u_int) -1);
+}
+
+void
+Class2Params::setVerticalRes(u_int res)
+{
+    vr = (res > 150 ? VR_FINE : VR_NORMAL);
 }
 
 fxStr
@@ -420,11 +424,109 @@ Class2Params::encode() const
 }
 
 void
-Class2Params::decode(const fxStr& s)
+Class2Params::decode(const char* s)
 {
-    u_long v = strtoul(s, NULL, 16);
+    u_int v = (u_int) ::strtoul(s, NULL, 16);
     vr = (v>>0) & 1;
     wd = (v>>1) & 7;
     ln = (v>>4) & 3;
+    if (ln == LN_LET)			// force protocol value
+	ln = LN_A4;
     df = (v>>6) & 3;
 }
+
+fxStr
+Class2Params::encodeCaps() const
+{
+    long v = (vr&VR_ALL)
+	   | ((br&BR_ALL)<<2)
+	   | ((wd&WD_ALL)<<8)
+	   | ((ln&LN_ALL)<<13)
+	   | ((df&DF_ALL)<<16)
+	   | ((ec&EC_ALL)<<18)
+	   | ((bf&BF_ALL)<<20)
+	   | ((st&ST_ALL)<<22)
+	   ;
+    return fxStr(v, "%04x");
+}
+
+void
+Class2Params::decodeCaps(const char* s)
+{
+    u_long v = ::strtoul(s, NULL, 16);
+    vr = (u_int) ((v>>0)  & VR_ALL);
+    br = (u_int) ((v>>2)  & BR_ALL);
+    wd = (u_int) ((v>>8)  & WD_ALL);
+    ln = (u_int) ((v>>13) & LN_ALL);
+    df = (u_int) ((v>>16) & DF_ALL);
+    ec = (u_int) ((v>>18) & EC_ALL);
+    bf = (u_int) ((v>>20) & BF_ALL);
+    st = (u_int) ((v>>22) & ST_ALL);
+}
+
+/*
+ * Routines for printing some Class 2 capabilities.
+ */
+const char* Class2Params::verticalResNames[2] = {
+    "3.85 line/mm",
+    "7.7 line/mm",
+};
+const char* Class2Params::verticalResName() const
+    { return (verticalResNames[vr&1]); }
+
+const char* Class2Params::bitRateNames[8] = {
+    "2400 bit/s",		// BR_2400
+    "4800 bit/s",		// BR_4800
+    "7200 bit/s",		// BR_7200
+    "9600 bit/s",		// BR_9600
+    "12000 bit/s",		// BR_12000
+    "14400 bit/s",		// BR_14400
+    "0 bit/s",		// 6 ???
+    "0 bit/s",		// 7 ???
+};
+const char* Class2Params::bitRateName() const
+    { return (bitRateNames[br&7]); }
+
+const char* Class2Params::dataFormatNames[4] = {
+    "1-D MR",			// DF_1DMR
+    "2-D MR",			// DF_2DMR
+    "2-D Uncompressed Mode",	// DF_2DUNCOMP
+    "2-D MMR"			// DF_2DMMR
+};
+const char* Class2Params::dataFormatName() const
+     { return (dataFormatNames[df&3]); }
+
+const char* Class2Params::pageWidthNames[8] = {
+    "page width 1728 pixels in 215 mm",
+    "page width 2048 pixels in 255 mm",
+    "page width 2432 pixels in 303 mm",
+    "page width 1216 pixels in 151 mm",
+    "page width 864 pixels in 107 mm",
+    "undefined page width (wd=5)",
+    "undefined page width (wd=6)",
+    "undefined page width (wd=7)",
+};
+const char* Class2Params::pageWidthName() const
+    { return (pageWidthNames[wd&7]); }
+
+const char* Class2Params::pageLengthNames[4] = {
+    "A4 page length (297 mm)",
+    "B4 page length (364 mm)",
+    "unlimited page length ",
+    "invalid page length (ln=3)",
+};
+const char* Class2Params::pageLengthName() const
+    { return (pageLengthNames[ln&3]); }
+
+const char* Class2Params::scanlineTimeNames[8] = {
+    "0 ms/scanline",
+    "5 ms/scanline",
+    "10 ms, 5 ms/scanline",
+    "10 ms/scanline",
+    "20 ms, 10 ms/scanline",
+    "20 ms/scanline",
+    "40 ms, 20 ms/scanline",
+    "40 ms/scanline",
+};
+const char* Class2Params::scanlineTimeName() const
+    { return (scanlineTimeNames[st&7]); }

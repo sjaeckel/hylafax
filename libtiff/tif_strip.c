@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_strip.c,v 1.10 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_strip.c,v 1.16 1994/09/17 23:22:37 sam Exp $ */
 
 /*
- * Copyright (c) 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -34,19 +34,19 @@
 /*
  * Compute which strip a (row,sample) value is in.
  */
-u_int
-DECLARE3(TIFFComputeStrip, TIFF*, tif, u_long, row, u_int, sample)
+tstrip_t
+TIFFComputeStrip(TIFF* tif, uint32 row, tsample_t sample)
 {
 	TIFFDirectory *td = &tif->tif_dir;
-	u_int strip;
+	tstrip_t strip;
 
 	strip = row / td->td_rowsperstrip;
 	if (td->td_planarconfig == PLANARCONFIG_SEPARATE) {
 		if (sample >= td->td_samplesperpixel) {
 			TIFFError(tif->tif_name,
-			    "%d: Sample out of range, max %d",
+			    "%u: Sample out of range, max %u",
 			    sample, td->td_samplesperpixel);
-			return (0);
+			return ((tstrip_t) 0);
 		}
 		strip += sample*td->td_stripsperimage;
 	}
@@ -56,25 +56,29 @@ DECLARE3(TIFFComputeStrip, TIFF*, tif, u_long, row, u_int, sample)
 /*
  * Compute how many strips are in an image.
  */
-u_int
-DECLARE1(TIFFNumberOfStrips, TIFF*, tif)
+tstrip_t
+TIFFNumberOfStrips(TIFF* tif)
 {
 	TIFFDirectory *td = &tif->tif_dir;
+	tstrip_t nstrips;
 
-	return (td->td_rowsperstrip == 0xffffffff ?
+	nstrips = (td->td_rowsperstrip == (uint32) -1 ?
 	     (td->td_imagelength != 0 ? 1 : 0) :
 	     howmany(td->td_imagelength, td->td_rowsperstrip));
+	if (td->td_planarconfig == PLANARCONFIG_SEPARATE)
+		nstrips *= td->td_samplesperpixel;
+	return (nstrips);
 }
 
 /*
  * Compute the # bytes in a variable height, row-aligned strip.
  */
-u_long
-DECLARE2(TIFFVStripSize, TIFF*, tif, u_long, nrows)
+tsize_t
+TIFFVStripSize(TIFF* tif, uint32 nrows)
 {
 	TIFFDirectory *td = &tif->tif_dir;
 
-	if (nrows == (u_long)-1)
+	if (nrows == (uint32) -1)
 		nrows = td->td_imagelength;
 #ifdef YCBCR_SUPPORT
 	if (td->td_planarconfig == PLANARCONFIG_CONTIG &&
@@ -87,10 +91,10 @@ DECLARE2(TIFFVStripSize, TIFF*, tif, u_long, nrows)
 		 * horizontal/vertical subsampling area include
 		 * YCbCr data for the extended image.
 		 */
-		u_long w =
+		tsize_t w =
 		    roundup(td->td_imagewidth, td->td_ycbcrsubsampling[0]);
-		u_long scanline = howmany(w*td->td_bitspersample, 8);
-		u_long samplingarea =
+		tsize_t scanline = howmany(w*td->td_bitspersample, 8);
+		tsize_t samplingarea =
 		    td->td_ycbcrsubsampling[0]*td->td_ycbcrsubsampling[1];
 		nrows = roundup(nrows, td->td_ycbcrsubsampling[1]);
 		/* NB: don't need howmany here 'cuz everything is rounded */
@@ -103,8 +107,8 @@ DECLARE2(TIFFVStripSize, TIFF*, tif, u_long, nrows)
 /*
  * Compute the # bytes in a (row-aligned) strip.
  */
-u_long
-DECLARE1(TIFFStripSize, TIFF*, tif)
+tsize_t
+TIFFStripSize(TIFF* tif)
 {
 	return (TIFFVStripSize(tif, tif->tif_dir.td_rowsperstrip));
 }

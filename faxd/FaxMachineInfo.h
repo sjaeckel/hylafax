@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxMachineInfo.h,v 1.16 1994/03/14 21:24:25 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxMachineInfo.h,v 1.26 1995/04/08 21:30:09 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -27,8 +28,9 @@
 /*
  * Fax Machine Information Database Support.
  */
-#include <stdio.h>
 #include "Str.h"
+#include "FaxConfig.h"
+#include <stdarg.h>
 
 /*
  * Each remote machine the server sends a facsimile to
@@ -41,90 +43,110 @@
  * required (by T.30) to support and then updated according
  * to the DIS/DTC messages received during send operations.
  */
-class FaxMachineCtlInfo {
+class FaxMachineInfo : public FaxConfig {
 private:
-    fxStr	rejectNotice;		// if set, reject w/ this notice
-    int		tracingLevel;		// destination-specific tracing
-    // XXX time-of-day restrictions
-
-    static const fxStr ctlDir;
-protected:
-    FaxMachineCtlInfo();
-
-    void restore(const fxStr& number);
-public:
-    virtual ~FaxMachineCtlInfo();
-
-    virtual const fxStr& getRejectNotice() const;
-    fxBool getTracingLevel(int&) const;
-};
-
-class FaxMachineInfo : public FaxMachineCtlInfo {
-private:
-    FILE*	fp;			// open file
+    fxStr	file;			// pathname to info file
     u_int	locked;			// bit vector of locked items
     fxBool	changed;		// changed since restore
     fxBool	supportsHighRes;	// capable of 7.7 line/mm vres
     fxBool	supports2DEncoding;	// handles Group 3 2D
     fxBool	supportsPostScript;	// handles Adobe NSF protocol
     fxBool	calledBefore;		// successfully called before
-    short	maxPageWidth;		// max capable page width
-    short	maxPageLength;		// max capable page length
-    short	maxSignallingRate;	// max capable signalling rate
-    short	minScanlineTime;	// min scanline time capable
+    int		maxPageWidth;		// max capable page width
+    int		maxPageLength;		// max capable page length
+    int		maxSignallingRate;	// max capable signalling rate
+    int		minScanlineTime;	// min scanline time capable
     fxStr	csi;			// last received CSI
-    fxStr	jobInProgress;		// jobid of send in progress
-    fxStr	rejectNotice;		// status of last completed call
     int		sendFailures;		// count of failed send attempts
     int		dialFailures;		// count of failed dial attempts
     fxStr	lastSendFailure;	// reason for last failed send attempt
     fxStr	lastDialFailure;	// reason for last failed dial attempt
+    u_int	pagerMaxMsgLength;	// max text message length for pages
+    fxStr	pagerPassword;		// pager service password string
 
     static const fxStr infoDir;
 
-    void restore();
-    void update();
+    void writeConfig(FILE*);
+
+    fxBool setConfigItem(const char* tag, const char* value);
+    void vconfigError(const char* fmt0, va_list ap);
+    void configError(const char* fmt0 ...);
+    void configTrace(const char* fmt0 ...);
+    void error(const char* fmt0 ...);
 public:
-    FaxMachineInfo(const fxStr& number, fxBool block);
-    ~FaxMachineInfo();
+    FaxMachineInfo();
+    FaxMachineInfo(const FaxMachineInfo& other);
+    virtual ~FaxMachineInfo();
 
-    int operator==(const FaxMachineInfo&) const;
-    int operator!=(const FaxMachineInfo&) const;
+    virtual fxBool updateConfig(const fxStr& filename);
+    virtual void writeConfig();
+    virtual void resetConfig();
 
-    fxBool isBusy() const		 	{ return fp == NULL; }
+    fxBool getSupportsHighRes() const;
+    fxBool getSupports2DEncoding() const;
+    fxBool getSupportsPostScript() const;
+    fxBool getCalledBefore() const;
+    int getMaxPageWidthInPixels() const;
+    int getMaxPageWidthInMM() const;
+    int getMaxPageLengthInMM() const;
+    int getMaxSignallingRate() const;
+    int getMinScanlineTime() const;
+    const fxStr& getCSI() const;
 
-    fxBool getSupportsHighRes() const	 	{ return supportsHighRes; }
-    fxBool getSupports2DEncoding() const 	{ return supports2DEncoding; }
-    fxBool getSupportsPostScript() const 	{ return supportsPostScript; }
-    fxBool getCalledBefore() const	 	{ return calledBefore; }
-    int getMaxPageWidth() const		 	{ return maxPageWidth; }
-    int getMaxPageLength() const	 	{ return maxPageLength; }
-    int getMaxSignallingRate() const	 	{ return maxSignallingRate; }
-    int getMinScanlineTime() const	 	{ return minScanlineTime; }
-    const fxStr& getCSI() const 	 	{ return csi; }
-
-    const fxStr& getJobInProgress() const	{ return jobInProgress; }
-    virtual const fxStr& getRejectNotice() const;
-    int getSendFailures() const			{ return sendFailures; }
-    int getDialFailures() const			{ return dialFailures; }
-    const fxStr& getLastSendFailure() const	{ return lastSendFailure; }
-    const fxStr& getLastDialFailure() const	{ return lastDialFailure; }
+    int getSendFailures() const;
+    int getDialFailures() const;
+    const fxStr& getLastSendFailure() const;
+    const fxStr& getLastDialFailure() const;
 
     void setSupportsHighRes(fxBool);
     void setSupports2DEncoding(fxBool);
     void setSupportsPostScript(fxBool);
     void setCalledBefore(fxBool);
-    void setMaxPageWidth(int);
-    void setMaxPageLength(int);
+    void setMaxPageWidthInPixels(int);
+    void setMaxPageLengthInMM(int);
     void setMaxSignallingRate(int);
     void setMinScanlineTime(int);
     void setCSI(const fxStr&);
 
-    void setJobInProgress(const fxStr&);
-    void setRejectNotice(const fxStr&);
     void setSendFailures(int);
     void setDialFailures(int);
     void setLastSendFailure(const fxStr&);
     void setLastDialFailure(const fxStr&);
+
+    u_int getPagerMaxMsgLength() const;
+    const fxStr& getPagerPassword() const;
 };
+
+inline fxBool FaxMachineInfo::getSupportsHighRes() const
+    { return supportsHighRes; }
+inline fxBool FaxMachineInfo::getSupports2DEncoding() const
+    { return supports2DEncoding; }
+inline fxBool FaxMachineInfo::getSupportsPostScript() const
+    { return supportsPostScript; }
+inline fxBool FaxMachineInfo::getCalledBefore() const	
+    { return calledBefore; }
+inline int FaxMachineInfo::getMaxPageWidthInPixels() const
+    { return maxPageWidth; }
+inline int FaxMachineInfo::getMaxPageLengthInMM() const
+    { return maxPageLength; }
+inline int FaxMachineInfo::getMaxSignallingRate() const
+    { return maxSignallingRate; }
+inline int FaxMachineInfo::getMinScanlineTime() const
+    { return minScanlineTime; }
+inline const fxStr& FaxMachineInfo::getCSI() const
+    { return csi; }
+
+inline int FaxMachineInfo::getSendFailures() const
+    { return sendFailures; }
+inline int FaxMachineInfo::getDialFailures() const
+    { return dialFailures; }
+inline const fxStr& FaxMachineInfo::getLastSendFailure() const
+    { return lastSendFailure; }
+inline const fxStr& FaxMachineInfo::getLastDialFailure() const
+    { return lastDialFailure; }
+
+inline u_int FaxMachineInfo::getPagerMaxMsgLength() const
+    { return pagerMaxMsgLength; }
+inline const fxStr& FaxMachineInfo::getPagerPassword() const
+    { return pagerPassword; }
 #endif /* _FaxMachineInfo_ */

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class1Poll.c++,v 1.8 1994/02/28 14:14:49 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1Poll.c++,v 1.12 1995/04/08 21:29:34 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -44,7 +45,7 @@ Class1Modem::pollBegin(const fxStr& pollID, fxStr& emsg)
     prevPage = FALSE;				// no previous page received
     pageGood = FALSE;				// quality of received page
 
-    return class1Cmd("TH", 3, AT_NOTHING) &&
+    return atCmd(thCmd, AT_NOTHING) &&
 	atResponse(rbuf, 2550) == AT_CONNECT &&
 	recvIdentification(FCF_CIG, cig, FCF_DTC, dtc, conf.t1Timer, emsg);
 }

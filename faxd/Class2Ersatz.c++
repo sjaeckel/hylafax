@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2Ersatz.c++,v 1.11 1994/05/30 18:31:00 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Ersatz.c++,v 1.25 1995/04/08 21:29:43 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -32,24 +33,28 @@ Class2ErsatzModem::Class2ErsatzModem(FaxServer& s, const ModemConfig& c)
     : Class2Modem(s,c)
 {
     serviceType = SERVICE_CLASS2;
-    setupDefault(classCmd,	conf.class2Cmd,		"+FCLASS=2");
-    setupDefault(mfrQueryCmd,	conf.mfrQueryCmd,	"+FMFR?");
-    setupDefault(modelQueryCmd,	conf.modelQueryCmd,	"+FMDL?");
-    setupDefault(revQueryCmd,	conf.revQueryCmd,	"+FREV?");
-    setupDefault(dccQueryCmd,	conf.class2DCCQueryCmd, "+FDCC=?");
-    setupDefault(abortCmd,	conf.class2AbortCmd,	"K");
+    setupDefault(classCmd,	conf.class2Cmd,		"AT+FCLASS=2");
+    setupDefault(mfrQueryCmd,	conf.mfrQueryCmd,	"AT+FMFR?");
+    setupDefault(modelQueryCmd,	conf.modelQueryCmd,	"AT+FMDL?");
+    setupDefault(revQueryCmd,	conf.revQueryCmd,	"AT+FREV?");
+    setupDefault(dccQueryCmd,	conf.class2DCCQueryCmd, "AT+FDCC=?");
+    setupDefault(abortCmd,	conf.class2AbortCmd,	"AT+FK");
 
-    setupDefault(borCmd,	conf.class2BORCmd,	"BOR=0");
-    setupDefault(tbcCmd,	conf.class2TBCCmd,	"TBC=0");
-    setupDefault(crCmd,		conf.class2CRCmd,	"CR=1");
-    setupDefault(phctoCmd,	conf.class2PHCTOCmd,	"PHCTO=30");
-    setupDefault(bugCmd,	conf.class2BUGCmd,	"BUG=1");
-    setupDefault(lidCmd,	conf.class2LIDCmd,	"LID");
-    setupDefault(dccCmd,	conf.class2DCCCmd,	"DCC");
-    setupDefault(disCmd,	conf.class2DISCmd,	"DIS");
-    setupDefault(cigCmd,	conf.class2CIGCmd,	"CIG");
-    setupDefault(splCmd,	conf.class2SPLCmd,	"SPL");
-    setupDefault(ptsCmd,	conf.class2PTSCmd,	"PTS");
+    setupDefault(borCmd,	conf.class2BORCmd,	"AT+FBOR=0");
+    setupDefault(tbcCmd,	conf.class2TBCCmd,	"AT+FTBC=0");
+    setupDefault(crCmd,		conf.class2CRCmd,	"AT+FCR=1");
+    setupDefault(phctoCmd,	conf.class2PHCTOCmd,	"AT+FPHCTO=30");
+    setupDefault(bugCmd,	conf.class2BUGCmd,	"AT+FBUG=1");
+    setupDefault(lidCmd,	conf.class2LIDCmd,	"AT+FLID");
+    setupDefault(dccCmd,	conf.class2DCCCmd,	"AT+FDCC");
+    setupDefault(disCmd,	conf.class2DISCmd,	"AT+FDIS");
+    setupDefault(cigCmd,	conf.class2CIGCmd,	"AT+FCIG");
+    setupDefault(splCmd,	conf.class2SPLCmd,	"AT+FSPL");
+    setupDefault(ptsCmd,	conf.class2PTSCmd,	"AT+FPTS");
+
+    setupDefault(noFlowCmd,	conf.class2NFLOCmd,	"");
+    setupDefault(softFlowCmd,	conf.class2SFLOCmd,	"");
+    setupDefault(hardFlowCmd,	conf.class2HFLOCmd,	"");
 }
 
 Class2ErsatzModem::~Class2ErsatzModem()
@@ -64,6 +69,7 @@ Class2ErsatzModem::atResponse(char* buf, long ms)
 	if (strneq(buf, "+FHNG:", 6)) {
 	    processHangup(buf+6);
 	    lastResponse = AT_FHNG;
+	    hadHangup = TRUE;
 	} else if (strneq(buf, "+FCON", 5))
 	    lastResponse = AT_FCON;
 	else if (strneq(buf, "+FPOLL", 6))
@@ -95,36 +101,46 @@ fxBool
 Class2ErsatzModem::pageDone(u_int ppm, u_int& ppr)
 {
     ppr = 0;			// something invalid
-    if (vatFaxCmd(AT_NOTHING, "ET=%u", ppm)) {
+    if (class2Cmd("AT+FET", ppm, AT_NOTHING)) {
 	for (;;) {
 	    switch (atResponse(rbuf, conf.pageDoneTimeout)) {
 	    case AT_FPTS:
-		if (sscanf(rbuf+6, "%u,", &ppr) != 1) {
+		if (::sscanf(rbuf+6, "%u", &ppr) != 1) {
 		    protoTrace("MODEM protocol botch (\"%s\"), %s",
 			rbuf, "can not parse PPR");
 		    return (FALSE);		// force termination
 		}
+		/*
+		 * (In some firmware revisions...) The ZyXEL modem
+		 * appears to drop DCD when the remote side drops
+		 * carrier, no matter whether DCD is configured to
+		 * follow carrier or not.  This results in a stream
+		 * of empty lines, sometimes* followed by the requisite
+		 * trailing OK.  As a hack workaround to deal with
+		 * the situation we accept the post page response if
+		 * this is the last page that we're sending and the
+		 * page is good (i.e. we would hang up immediately anyway).
+		 */
+		if (ppm == PPM_EOP && ppr == PPR_MCF)
+		    return (TRUE);
 		break;
 	    case AT_OK:				// normal result code
 	    case AT_ERROR:			// possible if page retransmit
 		return (TRUE);
 	    case AT_FHNG:
+		/*
+		 * Certain modems respond +FHNG:0 on the final page
+		 * w/o providing post-page status when sending to
+		 * broken fax machines.  We interpret this to be an
+		 * acknowledgement, even though it's really a violation
+		 * of the spec.
+		 */
+		if (ppm == PPM_EOP && ppr == 0 && isNormalHangup()) {
+		    ppr = PPR_MCF;
+		    return (TRUE);
+		}
 		return (isNormalHangup());
 	    case AT_EMPTYLINE:
-		/*
-		 * The ZyXEL modem appears to drop DCD when the
-		 * remote side drops carrier, no matter whether
-		 * DCD is configured to follow carrier or not.
-		 * This results in a stream of empty lines,
-		 * *sometimes* followed by the requisite trailing OK.
-		 * As a hack workaround to deal with the situation
-		 * we accept the post page response if this is the
-		 * last page that we're sending and the page is
-		 * good (i.e. we would hang up immediately anyway).
-		 */
-		if (ppm == PPM_EOP && ppr == PPR_MCF)
-		    return (TRUE);
-		/* fall thru... */
 	    case AT_TIMEOUT:
 	    case AT_NOCARRIER:
 	    case AT_NODIALTONE:
@@ -134,7 +150,7 @@ Class2ErsatzModem::pageDone(u_int ppm, u_int& ppr)
 	}
     }
 bad:
-    processHangup("50");		// Unspecified Phase D error
+    processHangup("50");			// Unspecified Phase D error
     return (FALSE);
 }
 
@@ -171,17 +187,17 @@ Class2ErsatzModem::sendPage(TIFF* tif)
     /*
      * Correct bit order of data if not what modem expects.
      */
-    u_short fillorder;
+    uint16 fillorder;
     TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
     const u_char* bitrev =
 	TIFFGetBitRevTable(fillorder != conf.sendFillOrder);
 
     fxBool firstStrip = setupTagLineSlop(params);
     u_int ts = getTagLineSlop();
-    u_long* stripbytecount;
+    uint32* stripbytecount;
     (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
-    for (u_int strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
-	u_int totbytes = (u_int) stripbytecount[strip];
+    for (tstrip_t strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
+	uint32 totbytes = stripbytecount[strip];
 	if (totbytes > 0) {
 	    u_char* data = new u_char[totbytes+ts];
 	    if (TIFFReadRawStrip(tif, strip, data+ts, totbytes) >= 0) {
@@ -200,13 +216,16 @@ Class2ErsatzModem::sendPage(TIFF* tif)
 		 * being careful not to get hung up.
 		 */
 		beginTimedTransfer();
-		rc = putModemDLEData(dp, totbytes, bitrev, getDataTimeout());
+		rc = putModemDLEData(dp, (u_int) totbytes, bitrev,
+		    getDataTimeout());
 		endTimedTransfer();
 		protoTrace("SENT %u bytes of data", totbytes);
 	    }
 	    delete data;
 	}
     }
+    if (rc && conf.class2SendRTC)
+	rc = sendRTC(params.is2D());
     if (rc)
 	rc = sendEOT();
     else
@@ -214,5 +233,6 @@ Class2ErsatzModem::sendPage(TIFF* tif)
     if (flowControl == FLOW_XONXOFF)
 	setXONXOFF(getInputFlow(), FLOW_XONXOFF, ACT_DRAIN);
     protoTrace("SEND end page");
-    return (rc ? (waitFor(AT_OK) && hangupCode[0] == '\0') : rc);
+    return (rc ?
+	(waitFor(AT_OK, conf.pageDoneTimeout) && hangupCode[0] == '\0') : rc);
 }

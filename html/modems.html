@@ -1,0 +1,127 @@
+<HTML>
+<HEAD>
+<TITLE>
+Which modems can be used with HylaFAX
+</TITLE>
+</HEAD>
+
+<BODY>
+
+<BASEFONT SIZE=4>
+<B><FONT SIZE=+3>W</FONT>HICH <FONT SIZE=+2>M</FONT>ODEMS CAN BE USED WITH <FONT SIZE=+2>H</FONT>YLA<FONT SIZE=+1>FAX</FONT></B>
+<BASEFONT SIZE=3>
+
+<HR SIZE=4>
+
+HylaFAX is intended to be used with
+<A HREF="Modems-PeterChen/05faxmodem.html">fax modems</A>.
+Fax modems are
+not the same as data modems though most contemporary data modems also
+include support for fax communication.
+HylaFAX should work with any
+Class 1, Class 2, or Class 2.0 fax modem.
+Wherever possible HylaFAX
+works around known modem problems or restricts modem usage in
+order to provide a functioning system.
+
+<P>
+The following is a list of modems that have been used with HylaFAX.
+There are likely others modems that have been tried and/or are being
+used with HylaFAX; this list shows only those that have
+some form of support in the software or that have been publicly
+reported as <I>functional</I> (though beware that what is functional
+to one person may not be functional to you).
+Consult the
+<A HREF="Modems/index.html">Modems section</A> of this documentation
+for known modem bugs and gotchas or follow the links in the table to
+find information for a particular modem.
+
+<P>
+Note that modems based on off-the-shelf parts (as opposed to custom
+DSP-based implementations) such as those
+produced by Rockwell are usually 
+plug compatible when it comes to fax usage.  HylaFAX includes
+configuration files for modems based on modem parts
+from Rockwell:
+RC96AC, RC144AC, RC144DP, RC32ACL, RC224A, and RC288DPI parts;
+Exar; and Cirrus Logic.  Writing a configuration file for a 
+modem that is not directly supported is straightforward.
+
+<P>
+<PRE>
+<B>Manufacturer	Model				Notes/Class</B>
+------------	-----				-----/-----
+AT&T Paradyne	<A HREF="Modems/att-dataport.html">DataPort 14.4</A>			 +	1,2
+Boca Research	M1440E					1,2
+Boca Research	M1440E/RC32ACL			 @	1,2
+CPI		ViVa 14.4/FAX				2
+Digicom		<A HREF="Modems/digicom-scout.html">Scout+</A>				 +	1
+Dynalink	Dynalink 1414VE				2
+E-Tech, Inc.	P1496MX 5.06-SWE			2
+Everex		<A HREF="Modems/everex-2496d.html">EverFax 24/96D</A>, 24/96E			2
+GVC		MaxTech 28800				1,2
+Hayes		Optima 144, Optima 28800 		1
+Hayes		<A HREF="Modems/hayes-optima2400.html">Optima 2400+Fax96</A>	   		2
+Intel		SatisFAXtion 400e			1
+Logicode	Quicktel Xeba 14.4			2
+Motorola	Lifestyle Series 28.8			1
+Multi-Tech	<A HREF="Modems/multitech-1432.html">MT1432BA</A>, MT224BA, MT2834BA	 +,*	2
+Multi-Tech	<A HREF="Modems/multitech-1432.html">MT1432BG</A>			 +	2
+Multi-Tech	<A HREF="Modems/multitech-1932.html">MT1932ZDX</A>, MT2834ZDX		 +	2
+Nuvo		<A HREF="Modems/nuvo-96424pfx.html">Voyager 96424PFX</A>			1
+Olitec France	Olicom Poche Fax Modem 2400		2
+PPI		<A HREF="Modems/ppi-pm14400fxmt.html">PM14400FXMT</A>, PM14400FXSA		2
+PPI		PM28800XFMT				2
+Supra		<A HREF="Modems/supra-v32bis.html">SupraFAX v.32bis</A>			1,2
+Supra		<A HREF="Modems/supra-v32bis.html">SupraFAX v.32bis/RC32ACL</A> 	 @	1,2
+Telebit		<A HREF="Modems/telebit-t3000.html">T3000, WorldBlazer</A>		 +	2
+Telebit		QBlazer					2
+Tricom		Tornado28/42				1
+Twincom		<A HREF="Modems/twincom-144df.html">144/DF</A>					1,2
+UDS		FasTalk Fax32				1
+USRobotics	<A HREF="Modems/usr-courier.html">Courier</A>					1,2.0
+USRobotics	<A HREF="Modems/usr-sportster.html">Sportster</A>				1,2.0
+Yocom		1414E					2
+Zoom		VFX					1,2
+Zero One Net.	<A HREF="Modems/zyxel-1496.html">ZyXEL U1496</A>			 +	2,2.0
+</PRE>
+
+<B><I>Legend</I></B>:
+<DL COMPACT>
+<DT>*
+<DD>There are apparently many variants of the MT1432BA, the following
+  models are known to work: MT1432BA, MT1432BA/A, MT1432MK, MT1432PCS.<BR>
+<DT>@
+<DD>/RC32ACL refers to second-generation products made with the Rockwell
+  RC32ACL part and different firmware.<BR>
+<DT>+
+<DD><EM>Modem is recommended for use with this software.</EM><BR>
+<DT>1
+<DD>Modem supports the TIA/EIA-578 "Class 1" specification
+(see <A HREF="class1.html">Class 1 Support</A>
+for <STRONG>important information on system requirements for this support</STRONG>).
+<DT>2
+<DD>Modem supports the TIA/EIA-592 draft SP-2388-A of
+August 30, 1991 (see <A HREF="class2.html">Class 2 Support</A>
+for caveats).
+<DT>2.0
+<DD>Modem supports the TIA/EIA-592 "Class 2.0" specification
+(see <A HREF="class2.0.html">Class 2.0 Support</A>).
+</DL>
+
+<A HREF="source.html"><IMG SRC="icons/next.gif">
+<EM>Source distributions</EM></A>.<BR>
+<A HREF="binary.html"><IMG SRC="icons/next.gif">
+<EM>Binary distributions</EM></A>.<BR>
+<A HREF="toc.html"><IMG SRC="icons/back.gif">
+HylaFAX table of contents</A>.<BR>
+
+<HR>
+
+<ADDRESS>
+<A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+Last updated $Date: 1995/04/04 16:33:44 $.
+</ADDRESS>
+
+</BODY>
+</HTML>

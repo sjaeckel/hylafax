@@ -1,0 +1,41 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Sendfax doesn't put the company name and location on my cover pages?
+</TITLE></HEAD><BODY>
+<H1>Q17: Sendfax doesn't put the company name and location on my cover pages?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Sendfax+doesn%27t+put+the+company+name+and+location+on+my+cover+pages%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Sendfax doesn't put the company name and location on my cover pages?</I>
+<P>
+I noticed yesterday that the parameter order for sendfax can make a
+difference in the cover sheet. If the "-x" is specified after the
+"-d", the company name gets dropped from the cover sheet.
+<LISTING>
+sendfax -c"aaa" -r"bbb" -D -d"Greg Rowe@482-4001" -x"Metaphase" file
+</LISTING>
+Since I always put the -d last in the command line, I never noticed
+it before.  Is this a known problem or do I have a problem with my
+cover sheet?(It's the SGI one with my logo) I'm running the new
+beta release on a SGI box.Thanks.
+<P>
+<DT>A.
+<DD>I prefer to call it a ``<CITE>feature</CITE>''
+<IMG SRC="@HTMLPATH@/icons/smiley.gif" ALT=":-)">.  The -d flag causes a new
+destination to be recorded using the current specifications for
+company and location (the -x and -y options).  You can see this in
+the code.  I'll see about clarifying this in the manual page.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,0 +1,82 @@
+<HTML>
+<HEAD>
+<TITLE>HylaFAX Home Page</TITLE>
+</HEAD>
+
+<BASEFONT SIZE=4>
+<B><FONT SIZE=+3>H</FONT>YLA<FONT SIZE=+1>FAX</FONT> <FONT SIZE=+2>H</FONT>OME <FONT SIZE=+2>P</FONT>AGE</B>
+<BASEFONT SIZE=3>
+
+<UL>
+<HR SIZE=4 WIDTH=65% ALIGN=left>
+<B>Latest Release</B>: <A HREF="v3.0beta113.html">v3.0pl0</A><BR>
+<B>Latest Software</B>: <A HREF="v3.0beta113.html">v3.0pl0</A><BR>
+<B>Master FTP Site</B>: <A HREF="ftp://sgi.com/sgi/fax">sgi.com (192.48.153.1), directory sgi/fax</A><BR>
+<B>Home Page</B>: <A HREF="http://www.vix.com/hylafax/">http://www.vix.com/hylafax/</A><BR>
+<B>FAQ Page</B>: <A HREF="http://www.vix.com/hylafax/FAQ/">http://www.vix.com/hylafax/FAQ/</A><BR>
+<HR SIZE=4 WIDTH=65% ALIGN=left>
+</UL>
+
+<P>
+This is the home page for the HylaFAX facsimile software system.
+
+<DL COMPACT>
+<DT><IMG SRC="icons/new.gif" ALT="-">
+Check here for news about the
+<A HREF="namechange.html">name change</A>
+and
+<A HREF="hylafax.html">major new distribution</A>.
+<BR>
+
+<DT><IMG SRC="icons/ball_blue_icon.gif" ALT="-">
+<EM>If you want to build the software and are impatient</EM>,
+<A HREF="install-source.html">try this synopsis</A>.
+
+<DT><IMG SRC="icons/ball_blue_icon.gif" ALT="-">
+If you have a question,
+consult the <A HREF="FAQ/index.html">HylaFAQ</A> or
+<A HREF="http://www.vix.com/cgi-bin/mlaform/hylafax/Archives/?">search the mailing list
+archives</A>.
+
+<DT><IMG SRC="icons/ball_blue_icon.gif" ALT="-">
+If you are looking for a source or binary distribution, read
+<A HREF="HOWTO.html">these instructions</A>.
+
+<DT><IMG SRC="icons/ball_blue_icon.gif" ALT="-">
+If you want to find out what HylaFAX is all about, begin with
+<A HREF="overview.html">the overview</A>.
+
+<DT><IMG SRC="icons/ball_blue_icon.gif" ALT="-">
+If you want a list of all online documentation, check out the
+<A HREF="toc.html">table of contents</A>.
+</DL>
+
+<P>
+If this is your first encounter with this software you should
+start with the overview section and
+follow the <IMG SRC="icons/next.gif" ALT="(Next)"></A> button
+at the bottom of each page to get a
+top to bottom reading of the most important information.
+You will also find that each part of this document includes a
+<IMG SRC="icons/back.gif" ALT="(TOC)"> button
+that can be used to take you to the table of contents
+for the HylaFAX documentation.
+Note that a number of
+pages are still under construction; these
+are expected to change soon.
+
+<P>
+<A HREF="overview.html"><IMG SRC="icons/next.gif" ALT="(Next)">
+HylaFAX overview</A> (<EM>first-time users start here</EM>).<BR>
+<A HREF="toc.html"><IMG SRC="icons/back.gif" ALT="(TOC)"> HylaFAX
+table of contents</A>.<BR>
+
+<HR>
+
+<ADDRESS>
+<A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+Last updated: $Date: 1995/04/08 23:01:25 $
+</ADDRESS>
+
+</BODY>
+</HTML>

@@ -1,0 +1,65 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: What do I need to do to share a tty line between fax and data calls?
+</TITLE></HEAD><BODY>
+<H1>Q49: What do I need to do to share a tty line between fax and data calls?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=What+do+I+need+to+do+to+share+a+tty+line+between+fax+and+data+calls%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>What needs to be done to share a tty line between fax and data calls?</I>
+<P>
+<DT>A.
+<DD>To use a line for outgoing fax and data calls the calling software
+must either setup the modem appropriately or HylaFAX must be configured
+to leave the modem in Class 0 (data mode) when it is not actively
+being used.
+To do this force the modem to Class 0 through the <B>ModemSetupAACmd</B>
+configuration parameter (this is known to be the last command sent
+to the modem during setup):
+<LISTING>
+ModemSetupAACmd:	AT+FCLASS=0
+</LISTING>
+HylaFAX will automatically switch the modem to the apprioriate Class
+when placing an outbound call.  Inbound calls are a bit more of a problem;
+you must insure the faxgetty process answers the phone in the appropriate
+state; for example, for a Class 2 modem:
+<LISTING>
+ModemAnswerCmd:	AT+FCLASS=2;A
+</LISTING>
+will switch the modem into Class 2 before answering an inbound call.
+<P>
+A more robust solution to this problem is to insure software other
+than HylaFAX always forces Class 0 when using the modem for data.
+This however may be problematic with some software packages.
+<P>
+For sharing the line for incoming calls the HylaFAX server must be
+configured to answer incoming calls using an
+<A HREF="@HTMLPATH@/adaptive-answer.html">adaptive answer scheme</A>
+that distinguishes fax from data calls.
+For Class 1 modems this can potentially be done by the server.
+For Class 2 and Class 2.0 modems it is best if the modem supports
+adaptive-answer in the modem (typically this is enabled with
+an <TT>AT+FAA=1</TT> command).
+It is also possible for Class 1,2 and 2.0 modems to use the adaptive
+answer support in the server to answer calls first as data and then
+as fax; see the descriptions of the
+<B>ModemSetupAAcmd</B>, <B>AnswerRotary</B>, and <B>AdaptiveAnswer</B>
+configuration parameters in the
+<A HREF="@CGIPATH@/manpage?4+config">config(4F)</A>
+manual page.
+See also the chapter on
+<A HREF="@HTMLPATH@/setup-advanced.html">Advanced Server Setup</A>.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

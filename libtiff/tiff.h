@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/tiff/libtiff/RCS/tiff.h,v 1.38 93/06/29 16:24:54 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tiff.h,v 1.44 1994/09/17 23:22:37 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -42,10 +42,28 @@
 #define	TIFF_BIGENDIAN		0x4d4d
 #define	TIFF_LITTLEENDIAN	0x4949
 
+/*
+ * Intrinsic data types required by the file format:
+ *
+ * 8-bit quantities	char/unsigned char
+ * 16-bit quantities	int16/uint16
+ * 32-bit quantities	int32/uint32
+ * strings		unsigned char*
+ */
+typedef	short int16;
+typedef	unsigned short uint16;	/* sizeof (uint16) must == 2 */
+#if defined(__alpha) || _MIPS_SZLONG == 64
+typedef	int int32;
+typedef	unsigned int uint32;	/* sizeof (uint32) must == 4 */
+#else
+typedef	long int32;
+typedef	unsigned long uint32;	/* sizeof (uint32) must == 4 */
+#endif
+
 typedef	struct {
-	unsigned short tiff_magic;	/* magic number (defines byte order) */
-	unsigned short tiff_version;	/* TIFF version number */
-	unsigned long  tiff_diroff;	/* byte offset to first directory */
+	uint16	tiff_magic;	/* magic number (defines byte order) */
+	uint16	tiff_version;	/* TIFF version number */
+	uint32	tiff_diroff;	/* byte offset to first directory */
 } TIFFHeader;
 
 /*
@@ -62,10 +80,10 @@ typedef	struct {
  * offset field.
  */
 typedef	struct {
-	unsigned short tdir_tag;	/* see below */
-	unsigned short tdir_type;	/* data type; see below */
-	unsigned long  tdir_count;	/* number of items; length in spec */
-	unsigned long  tdir_offset;	/* byte offset to field data */
+	uint16	tdir_tag;	/* see below */
+	uint16	tdir_type;	/* data type; see below */
+	uint32  tdir_count;	/* number of items; length in spec */
+	uint32  tdir_offset;	/* byte offset to field data */
 } TIFFDirEntry;
 
 /*
@@ -121,6 +139,8 @@ typedef	enum {
 #define	    COMPRESSION_CCITTRLEW	32771	/* #1 w/ word alignment */
 #define	    COMPRESSION_PACKBITS	32773	/* Macintosh RLE */
 #define	    COMPRESSION_THUNDERSCAN	32809	/* ThunderScan RLE */
+/* compression codes 32908-32911 are reserved for Pixar */
+#define     COMPRESSION_PIXARFILM       32908   /* Pixar companded 10bit LZW */
 #define	TIFFTAG_PHOTOMETRIC		262	/* photometric interpretation */
 #define	    PHOTOMETRIC_MINISWHITE	0	/* min value is white */
 #define	    PHOTOMETRIC_MINISBLACK	1	/* min value is black */
@@ -212,6 +232,7 @@ typedef	enum {
 #define	    CLEANFAXDATA_REGENERATED	1	/* receiver regenerated lines */
 #define	    CLEANFAXDATA_UNCLEAN	2	/* uncorrected errors exist */
 #define	TIFFTAG_CONSECUTIVEBADFAXLINES	328	/* max consecutive bad lines */
+#define	TIFFTAG_SUBIFD			330	/* subimage descriptors */
 #define	TIFFTAG_INKSET			332	/* !inks in separated image */
 #define	    INKSET_CMYK			1	/* !cyan-magenta-yellow-black */
 #define	TIFFTAG_INKNAMES		333	/* !ascii names of inks */
@@ -255,4 +276,14 @@ typedef	enum {
 #define	TIFFTAG_DATATYPE		32996	/* $use SampleFormat */
 #define	TIFFTAG_IMAGEDEPTH		32997	/* z depth of image */
 #define	TIFFTAG_TILEDEPTH		32998	/* z depth/data tile */
+/* tags 33300-33309 are private tags registered to Pixar */
+/*
+ * TIFFTAG_PIXAR_IMAGEFULLWIDTH and TIFFTAG_PIXAR_IMAGEFULLLENGTH
+ * are set when an image has been cropped out of a larger image.  
+ * They reflect the size of the original uncropped image.
+ * The TIFFTAG_XPOSITION and TIFFTAG_YPOSITION can be used
+ * to determine the position of the smaller image in the larger one.
+ */
+#define TIFFTAG_PIXAR_IMAGEFULLWIDTH    33300   /* full image size in x */
+#define TIFFTAG_PIXAR_IMAGEFULLLENGTH   33301   /* full image size in y */
 #endif /* _TIFF_ */

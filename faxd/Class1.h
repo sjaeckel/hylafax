@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class1.h,v 1.45 1994/06/06 22:54:36 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1.h,v 1.57 1995/04/08 21:29:33 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -35,7 +36,7 @@ class HDLCFrame;
  * Class 1 modem capability (for sending/receiving).
  */
 typedef struct {
-    u_char	value;	// Class 1 parameter value (e.g for +FRM)
+    int		value;	// Class 1 parameter value (e.g for +FRM)
     u_char	br;	// Class 2 bit rate parameter
     u_short	sr;	// T.30 DCS signalling rate
     u_char	mod;	// modulation technique
@@ -46,6 +47,8 @@ typedef struct {
 
 class Class1Modem : public FaxModem {
 protected:
+    fxStr	thCmd;			// command for transmitting a frame
+    fxStr	rhCmd;			// command for receiving a frame
     u_int	dis;			// current remote DIS
     Class2Params params;		// current params during send
     long	group3opts;		// for writing received TIFF
@@ -59,10 +62,13 @@ protected:
     fxBool	pageGood;		// quality of last page received
     fxBool	recvdDCN;		// received DCN frame
     fxBool	messageReceived;	// expect/don't expect message carrier
+    u_int	lastPPM;		// last PPM during receive
 
     static const u_int modemPFMCodes[8];// map T.30 FCF to Class 2 PFM
     static const u_int modemPPMCodes[8];// map T.30 FCF to Class 2 PPM
     static const Class1Cap basicCaps[15];
+    static const char* rmCmdFmt;
+    static const char* tmCmdFmt;
 
     enum {			// modulation techniques
 	V21   = 0,		// v.21, ch 2 300 bits/sec
@@ -70,13 +76,14 @@ protected:
 	V27   = 2,		// v.27ter, 4800, 2400
 	V29   = 3,		// v.29, 9600, 7200
 	V17   = 4,		// v.17, 14400, 12000, 9600, 7200
-	V33   = 5,		// v.33, 14400, 12000, 9600, 7200
+	V33   = 5 		// v.33, 14400, 12000, 9600, 7200
     };
     static const char* modulationNames[6];
 
 // modem setup stuff
     virtual fxBool setupModem();
     virtual fxBool setupClass1Parameters();
+    virtual fxBool setupFlowControl(FlowControl fc);
 // transmission support
     fxBool	sendPrologue(u_int dcs, const fxStr& tsi);
     fxBool	dropToNextBR(Class2Params&);
@@ -101,7 +108,7 @@ protected:
     void	abortPageRecv();
 // miscellaneous
     enum {			// Class 1-specific AT responses
-	AT_FCERROR	= 100,	// "+FCERROR"
+	AT_FCERROR	= 100 	// "+FCERROR"
     };
     virtual ATResponse atResponse(char* buf, long ms = 30*1000);
     virtual fxBool waitFor(ATResponse wanted, long ms = 30*1000);
@@ -127,8 +134,6 @@ protected:
     void	abortReceive();
     void	traceHDLCFrame(const char* direction, const HDLCFrame& frame);
 // class 1 command support routines
-    fxBool	class1Cmd(const char* cmd, ATResponse r);
-    fxBool	class1Cmd(const char* cmd, int a0, ATResponse r);
     fxBool	class1Query(const char* what, Class1Cap caps[]);
     fxBool	parseQuery(const char*, Class1Cap caps[]);
 public:
@@ -136,9 +141,9 @@ public:
     virtual ~Class1Modem();
 
 // send support
-    CallStatus	dial(const char* number, const Class2Params&, fxStr& emsg);
+    CallStatus	dialFax(const char* number, const Class2Params&, fxStr& emsg);
     CallStatus	dialResponse(fxStr& emsg);
-    fxBool	getPrologue(Class2Params&, u_int& nsf, fxStr&, fxBool& hasDoc);
+    FaxSendStatus getPrologue(Class2Params&, u_int&, fxStr&, fxBool&, fxStr&);
     void	sendBegin(const FaxRequest&);
     void	sendSetupPhaseB();
     FaxSendStatus sendPhaseB(TIFF* tif, Class2Params&, FaxMachineInfo&,
@@ -149,6 +154,7 @@ public:
 // receive support
     CallType	answerCall(AnswerType, fxStr& emsg);
     u_int	modemDIS() const;
+    fxBool	setupReceive();
     fxBool	recvBegin(fxStr& emsg);
     fxBool	recvPage(TIFF*, int& ppm, fxStr& emsg);
     fxBool	recvEnd(fxStr& emsg);
@@ -159,6 +165,7 @@ public:
     fxBool	pollBegin(const fxStr& pollID, fxStr& emsg);
 
 // miscellaneous
+    fxBool	faxService();			// switch to fax mode
     fxBool	reset(long ms);			// reset modem
     void	setLID(const fxStr& number);	// set local id string
     fxBool	supportsPolling() const;	// modem capability

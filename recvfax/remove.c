@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/recvfax/RCS/remove.c,v 1.16 1994/06/14 23:48:25 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./recvfax/RCS/remove.c,v 1.23 1995/04/08 21:43:11 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -61,9 +62,11 @@ reallyRemoveJob(const char* op, Job* job, const char* jobname)
 		*tag++ = '\0';
 	    while (isspace(*tag))
 		tag++;
+	    if (cp = strchr(tag, ':'))	/* skip optional directory index */
+		tag = cp+1;
 	    if (isCmd("tiff") || isCmd("!tiff") ||
 		isCmd("postscript") || isCmd("!postscript") ||
-		isCmd("fax")) {
+		isCmd("fax") || isCmd("data")) {
 		if (unlink(tag) < 0) {
 		    syslog(LOG_ERR, "%s: unlink %s failed (%m)", op, tag);
 		    sendClient("docUnlinkFailed", "%s", jobname);
@@ -84,24 +87,24 @@ reallyRemoveJob(const char* op, Job* job, const char* jobname)
     (void) fclose(fp);			/* implicit unlock */
 }
 
-static void
-doRemove(Job* job, const char* jobname, const char* arg)
-{
-    reallyRemoveJob("remove", job, jobname);
-}
-void
-removeJob(const char* modem, char* tag)
-{
-    applyToJob(modem, tag, "remove", doRemove);
-}
+#define	DEFINE_Op(op)						\
+void op##Job(const char* modem, char* tag)			\
+    { applyToJob(modem, tag, "##op##", do##op); }		\
+void op##JobGroup(const char* modem, char* tag)			\
+    { applyToJobGroup(modem, tag, "##op##", do##op); }
 
 static void
-doKill(Job* job, const char* jobname, const char* arg)
+doremove(Job* job, const char* jobname, const char* arg)
 {
+    (void) arg;
+    reallyRemoveJob("remove", job, jobname);
+}
+DEFINE_Op(remove)
+
+static void
+dokill(Job* job, const char* jobname, const char* arg)
+{
+    (void) arg;
     reallyRemoveJob("kill", job, jobname);
 }
-void
-killJob(const char* modem, char* tag)
-{
-    applyToJob(modem, tag, "kill", doKill);
-}
+DEFINE_Op(kill)

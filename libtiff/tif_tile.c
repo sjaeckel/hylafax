@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_tile.c,v 1.13 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_tile.c,v 1.18 1994/09/17 23:22:37 sam Exp $ */
 
 /*
- * Copyright (c) 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -34,27 +34,27 @@
 /*
  * Compute which tile an (x,y,z,s) value is in.
  */
-u_int
-DECLARE5(TIFFComputeTile, TIFF*, tif, u_long, x, u_long, y, u_long, z, u_int, s)
+ttile_t
+TIFFComputeTile(TIFF* tif, uint32 x, uint32 y, uint32 z, tsample_t s)
 {
 	TIFFDirectory *td = &tif->tif_dir;
-	u_long dx = td->td_tilewidth;
-	u_long dy = td->td_tilelength;
-	u_long dz = td->td_tiledepth;
-	u_int tile = 1;
+	uint32 dx = td->td_tilewidth;
+	uint32 dy = td->td_tilelength;
+	uint32 dz = td->td_tiledepth;
+	ttile_t tile = 1;
 
 	if (td->td_imagedepth == 1)
 		z = 0;
-	if (dx == (u_long) -1)
+	if (dx == (uint32) -1)
 		dx = td->td_imagewidth;
-	if (dy == (u_long) -1)
+	if (dy == (uint32) -1)
 		dy = td->td_imagelength;
-	if (dz == (u_long) -1)
+	if (dz == (uint32) -1)
 		dz = td->td_imagedepth;
 	if (dx != 0 && dy != 0 && dz != 0) {
-		u_int xpt = howmany(td->td_imagewidth, dx); 
-		u_int ypt = howmany(td->td_imagelength, dy); 
-		u_int zpt = howmany(td->td_imagedepth, dz); 
+		uint32 xpt = howmany(td->td_imagewidth, dx); 
+		uint32 ypt = howmany(td->td_imagelength, dy); 
+		uint32 zpt = howmany(td->td_imagedepth, dz); 
 
 		if (td->td_planarconfig == PLANARCONFIG_SEPARATE) 
 			tile = (xpt*ypt*zpt)*s +
@@ -71,29 +71,29 @@ DECLARE5(TIFFComputeTile, TIFF*, tif, u_long, x, u_long, y, u_long, z, u_int, s)
  * Check an (x,y,z,s) coordinate
  * against the image bounds.
  */
-DECLARE5(TIFFCheckTile, TIFF*, tif, u_long, x, u_long, y, u_long, z, u_int, s)
+TIFFCheckTile(TIFF* tif, uint32 x, uint32 y, uint32 z, tsample_t s)
 {
 	TIFFDirectory *td = &tif->tif_dir;
 
 	if (x >= td->td_imagewidth) {
-		TIFFError(tif->tif_name, "Col %d out of range, max %d",
-		    x, td->td_imagewidth);
+		TIFFError(tif->tif_name, "Col %ld out of range, max %lu",
+		    (long) x, (u_long) td->td_imagewidth);
 		return (0);
 	}
 	if (y >= td->td_imagelength) {
-		TIFFError(tif->tif_name, "Row %d out of range, max %d",
-		    y, td->td_imagelength);
+		TIFFError(tif->tif_name, "Row %ld out of range, max %lu",
+		    (long) y, (u_long) td->td_imagelength);
 		return (0);
 	}
 	if (z >= td->td_imagedepth) {
-		TIFFError(tif->tif_name, "Depth %d out of range, max %d",
-		    z, td->td_imagedepth);
+		TIFFError(tif->tif_name, "Depth %ld out of range, max %lu",
+		    (long) z, (u_long) td->td_imagedepth);
 		return (0);
 	}
 	if (td->td_planarconfig == PLANARCONFIG_SEPARATE &&
 	    s >= td->td_samplesperpixel) {
-		TIFFError(tif->tif_name, "Sample %d out of range, max %d",
-		    s, td->td_samplesperpixel);
+		TIFFError(tif->tif_name, "Sample %d out of range, max %u",
+		    (int) s, td->td_samplesperpixel);
 		return (0);
 	}
 	return (1);
@@ -102,39 +102,41 @@ DECLARE5(TIFFCheckTile, TIFF*, tif, u_long, x, u_long, y, u_long, z, u_int, s)
 /*
  * Compute how many tiles are in an image.
  */
-u_int
-DECLARE1(TIFFNumberOfTiles, TIFF*, tif)
+ttile_t
+TIFFNumberOfTiles(TIFF* tif)
 {
 	TIFFDirectory *td = &tif->tif_dir;
-	u_long dx = td->td_tilewidth;
-	u_long dy = td->td_tilelength;
-	u_long dz = td->td_tiledepth;
-	u_int ntiles;
+	uint32 dx = td->td_tilewidth;
+	uint32 dy = td->td_tilelength;
+	uint32 dz = td->td_tiledepth;
+	ttile_t ntiles;
 
-	if (dx == (u_long) -1)
+	if (dx == (uint32) -1)
 		dx = td->td_imagewidth;
-	if (dy == (u_long) -1)
+	if (dy == (uint32) -1)
 		dy = td->td_imagelength;
-	if (dz == (u_long) -1)
+	if (dz == (uint32) -1)
 		dz = td->td_imagedepth;
 	ntiles = (dx != 0 && dy != 0 && dz != 0) ?
 	    (howmany(td->td_imagewidth, dx) * howmany(td->td_imagelength, dy) *
 		howmany(td->td_imagedepth, dz)) :
 	    0;
+	if (td->td_planarconfig == PLANARCONFIG_SEPARATE)
+		ntiles *= td->td_samplesperpixel;
 	return (ntiles);
 }
 
 /*
  * Compute the # bytes in each row of a tile.
  */
-u_long
-DECLARE1(TIFFTileRowSize, TIFF*, tif)
+tsize_t
+TIFFTileRowSize(TIFF* tif)
 {
 	TIFFDirectory *td = &tif->tif_dir;
-	u_long rowsize;
+	tsize_t rowsize;
 	
 	if (td->td_tilelength == 0 || td->td_tilewidth == 0)
-		return (0);
+		return ((tsize_t) 0);
 	rowsize = td->td_bitspersample * td->td_tilewidth;
 	if (td->td_planarconfig == PLANARCONFIG_CONTIG)
 		rowsize *= td->td_samplesperpixel;
@@ -144,15 +146,15 @@ DECLARE1(TIFFTileRowSize, TIFF*, tif)
 /*
  * Compute the # bytes in a variable length, row-aligned tile.
  */
-u_long
-DECLARE2(TIFFVTileSize, TIFF*, tif, u_long, nrows)
+tsize_t
+TIFFVTileSize(TIFF* tif, uint32 nrows)
 {
 	TIFFDirectory *td = &tif->tif_dir;
-	u_long tilesize;
+	tsize_t tilesize;
 
 	if (td->td_tilelength == 0 || td->td_tilewidth == 0 ||
 	    td->td_tiledepth == 0)
-		return (0);
+		return ((tsize_t) 0);
 #ifdef YCBCR_SUPPORT
 	if (td->td_planarconfig == PLANARCONFIG_CONTIG &&
 	    td->td_photometric == PHOTOMETRIC_YCBCR) {
@@ -164,10 +166,10 @@ DECLARE2(TIFFVTileSize, TIFF*, tif, u_long, nrows)
 		 * horizontal/vertical subsampling area include
 		 * YCbCr data for the extended image.
 		 */
-		u_long w =
+		tsize_t w =
 		    roundup(td->td_tilewidth, td->td_ycbcrsubsampling[0]);
-		u_long rowsize = howmany(w*td->td_bitspersample, 8);
-		u_long samplingarea =
+		tsize_t rowsize = howmany(w*td->td_bitspersample, 8);
+		tsize_t samplingarea =
 		    td->td_ycbcrsubsampling[0]*td->td_ycbcrsubsampling[1];
 		nrows = roundup(nrows, td->td_ycbcrsubsampling[1]);
 		/* NB: don't need howmany here 'cuz everything is rounded */
@@ -181,8 +183,8 @@ DECLARE2(TIFFVTileSize, TIFF*, tif, u_long, nrows)
 /*
  * Compute the # bytes in a row-aligned tile.
  */
-u_long
-DECLARE1(TIFFTileSize, TIFF*, tif)
+tsize_t
+TIFFTileSize(TIFF* tif)
 {
 	return (TIFFVTileSize(tif, tif->tif_dir.td_tilelength));
 }

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/sendfax/RCS/sendfax.c++,v 1.66 1994/06/23 00:35:24 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./sendfax/RCS/sendfax.c++,v 1.79 1995/04/08 21:43:21 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -26,16 +27,15 @@
 #include "FaxDB.h"
 #include "Dispatcher.h"
 #include "config.h"
+#include "Sys.h"
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <paths.h>
 #include <pwd.h>
 #include <osfcn.h>
+#if HAS_LOCALE
 extern "C" {
 #include <locale.h>
 }
+#endif
 
 class sendFaxApp : public SendFaxClient {
 private:
@@ -62,6 +62,8 @@ public:
     ~sendFaxApp();
 
     fxBool initialize(int argc, char** argv);
+
+    void setPriority(const char*);
 };
 
 fxStr sendFaxApp::dbName("~/.faxdb");
@@ -75,7 +77,7 @@ sendFaxApp::sendFaxApp()
 sendFaxApp::~sendFaxApp()
 {
     if (stdinTemp != "")
-	unlink((char*) stdinTemp);
+	Sys::unlink(stdinTemp);
     delete db;
 }
 
@@ -91,7 +93,7 @@ sendFaxApp::initialize(int argc, char** argv)
     appName = appName.tokenR(l, '/');
 
     db = new FaxDB(tildeExpand(dbName));
-    while ((c = getopt(argc, argv, "a:c:d:f:h:i:k:r:s:t:x:y:lmnpvDR")) != -1)
+    while ((c = Sys::getopt(argc, argv, "a:c:d:f:h:i:k:P:r:s:t:T:x:y:lmnpvDNR")) != -1)
 	switch (c) {
 	case 'a':			// time at which to transmit job
 	    setSendTime(optarg);
@@ -126,8 +128,14 @@ sendFaxApp::initialize(int argc, char** argv)
 	case 'n':			// no cover sheet
 	    setCoverSheet(FALSE);
 	    break;
+	case 'N':			// no notification
+	    setNotification(SendFaxClient::no_notice);
+	    break;
 	case 'p':			// submit polling request
 	    setPollRequest(TRUE);
+	    break;
+	case 'P':			// set scheduling priority
+	    setPriority(optarg);
 	    break;
 	case 'r':			// cover sheet: regarding field
 	    setCoverRegarding(optarg);
@@ -140,6 +148,9 @@ sendFaxApp::initialize(int argc, char** argv)
 	    break;
 	case 't':			// times to retry sending
 	    setMaxRetries(atoi(optarg));
+	    break;
+	case 'T':			// times to dial telephone
+	    setMaxDials(atoi(optarg));
 	    break;
 	case 'v':			// verbose mode
 	    verbose++;
@@ -178,7 +189,6 @@ void
 sendFaxApp::usage()
 {
     fxFatal("usage: %s"
-	" [-d destination]"
 	" [-h host[:modem]]"
 	" [-k kill-time]\n"
 	"    "
@@ -188,13 +198,31 @@ sendFaxApp::usage()
 	" [-y location]"
 	" [-r regarding]\n"
 	"    "
+	" [-d destination]"
 	" [-f from]"
 	" [-i identifier]"
 	" [-s pagesize]"
 	" [-t max-tries]"
+	" [-P priority]"
 	" [-lmnpvDR]"
 	" [files]",
 	(char*) appName);
+}
+
+void
+sendFaxApp::setPriority(const char* pri)
+{
+    int priority;
+
+    if (streq(pri, "default") || streq(pri, "normal"))
+	priority = FAX_DEFPRIORITY;
+    else if (streq(pri, "bulk") || streq(pri, "junk"))
+	priority = FAX_DEFPRIORITY + 4*16;
+    else if (streq(pri, "high"))
+	priority = FAX_DEFPRIORITY - 4*16;
+    else
+	priority = atoi(pri);
+    SendFaxClient::setPriority(priority);
 }
 
 /*
@@ -254,21 +282,21 @@ void
 sendFaxApp::copyToTemporary(int fin, fxStr& tmpl)
 {
     tmpl = _PATH_TMP "sndfaxXXXXXX";
-    int fd = mkstemp((char*) tmpl);
+    int fd = Sys::mkstemp(tmpl);
     if (fd < 0)
 	fatal("%s: Can not create temporary file", (char*) tmpl);
     int cc, total = 0;
     char buf[16*1024];
-    while ((cc = read(fin, buf, sizeof (buf))) > 0) {
-	if (write(fd, buf, cc) != cc) {
-	    unlink((char*) tmpl);
+    while ((cc = Sys::read(fin, buf, sizeof (buf))) > 0) {
+	if (Sys::write(fd, buf, cc) != cc) {
+	    Sys::unlink(tmpl);
 	    fatal("%s: write error", (char*) tmpl);
 	}
 	total += cc;
     }
     ::close(fd);
     if (total == 0) {
-	unlink((char*) tmpl);
+	Sys::unlink(tmpl);
 	tmpl = "";
 	fatal("No input data; tranmission aborted");
     }
@@ -308,8 +336,15 @@ sendFaxApp::recvConf(const char* cmd, const char* tag)
 {
     if (isCmd("job")) {
 	u_int len = getNumberOfFiles();
-	printf("request id is %s for host %s (%u %s)\n",
-	    tag, (char*) getHost(), len, len > 1 ? "files" : "file");
+	const char* id = ::strchr(tag, ':');
+	if (id) {
+	    printf("request id is %.*s (group id %s) for host %s (%u %s)\n",
+		id-tag, tag, id+1,
+		(char*) getHost(),
+		len, len > 1 ? "files" : "file");
+	} else
+	    printf("request id is %s for host %s (%u %s)\n",
+		tag, (char*) getHost(), len, len > 1 ? "files" : "file");
     } else if (isCmd("error")) {
 	printf("%s\n", tag);
     } else
@@ -317,7 +352,6 @@ sendFaxApp::recvConf(const char* cmd, const char* tag)
 }
 
 #include <signal.h>
-#include <setjmp.h>
 
 static	sendFaxApp* app = NULL;
 
@@ -340,7 +374,10 @@ int
 main(int argc, char** argv)
 {
 #ifdef LC_CTYPE
-    setlocale(LC_CTYPE, "");
+    setlocale(LC_CTYPE, "");			// for <ctype.h> calls
+#endif
+#ifdef LC_TIME
+    setlocale(LC_TIME, "");			// for strftime calls
 #endif
     signal(SIGHUP, fxSIGHANDLER(sigDone));
     signal(SIGINT, fxSIGHANDLER(sigDone));

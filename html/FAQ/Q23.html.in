@@ -1,0 +1,34 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Do I have to restart a server after changing the modem config file?
+</TITLE></HEAD><BODY>
+<H1>Q23: Do I have to restart a server after changing the modem config file?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Do+I+have+to+restart+a+server+after+changing+the+modem+config+file%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Do I have to restart a server after changing the modem config file?</I>
+<P>
+On another note does one have to restart faxd in order for changes
+in the modem configuration file to take effect?
+<P>
+<DT>A.
+<DD>No.  The HylaFAX servers will re-read a config file (if needed)
+before each send and on any reset.  This means you only need to explicitly
+restart a server if you change it before doing a receive.  You
+can also avoid restarting it if you use cu/tip to talk to the modem
+since this will cause the server to wakeup and then reset itself
+when you exit from cu/tip.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

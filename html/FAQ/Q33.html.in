@@ -1,0 +1,40 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: No answer from remote (extending the connect time)?
+</TITLE></HEAD><BODY>
+<H1>Q33: No answer from remote (extending the connect time)?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=No+answer+from+remote+%28extending+the+connect+time%29%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>"No answer from remote" (extending the connect time)?</I>
+<P>
+I had a user attempt a fax to "01149364142xxxx" (Germany). It failed 
+numerous times, with "no answer from remote". I dialled the number
+myself, after 10-15 seconds, a modem answered, but without any rings 
+first. Is this what is confusing my fax modem? S7 is 60 seconds. We
+have successfully faxed to numerous places in Europe before.
+<P>
+<DT>A.
+<DD>That is not enough. It may take much longer for some connections
+overseas to get established.
+I'm using the following in the configuration file:
+<LISTING>
+ModemWaitTimeCmd:       S7=80           # Wait up to 80 seconds for a connect
+</LISTING>
+Consult
+<A HREF="@CGIPATH@/manpage?4+config">config(4F)</A>
+for more information.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

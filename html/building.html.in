@@ -1,0 +1,1151 @@
+<HTML>
+<HEAD>
+<TITLE>
+Building HylaFAX From Source Code
+</TITLE>
+</HEAD>
+
+<BODY>
+
+<BASEFONT SIZE=4>
+<B><FONT SIZE=+3>B</FONT>UILDING <FONT SIZE=+2>H</FONT>YLA<FONT SIZE=+1>FAX</FONT> FROM <FONT SIZE=+2>S</FONT>OURCE <FONT SIZE=+2>C</FONT>CODE</B>
+<BASEFONT SIZE=3>
+
+<HR SIZE=4>
+
+This chapter contains the information needed to configure
+and build HylaFAX from the source distribution.  The following sections
+are available here:
+<UL>
+<LI><A HREF="#Before">Before You Start</A>
+<LI><A HREF="#Building">The Build Procedure</A>
+<LI><A HREF="#BuildTrees">Build Trees</A>
+<LI><A HREF="#ConfigFiles">Configuration Files</A>
+<LI><A HREF="#Packages">Configuring Optional Packages</A>
+<LI><A HREF="#HTML">Configuring the HTML Documentation</A>
+<LI><A HREF="#Upgrading">Upgrading From FlexFAX</A>
+<LI><A HREF="#Sample">A Sample Configuration Session</A>
+<LI><A HREF="#Parameters">Configuration Parameters</A>
+</UL>
+
+<A NAME="Before"><HR WIDTH=65% ALIGN=right><H2>Before You Start</H2></A>
+
+Before you build the software you <STRONG>may
+need to obtain certain other
+software distributions</STRONG>.  All the software packages described here
+are available by public ftp from a variety of Internet hosts;
+consult the
+<A HREF="http://www.lerc.nasa.gov/Doc/archieplex-httpd.html">archie</A>
+resource location service to find copies
+close to your system.
+<P>
+
+<A NAME="Before.gcc"><H3>gcc</H3></A>
+
+You need a contemporary C++ compiler to build this system.
+<EM>gcc version 2.6.3 is the current recommended version to use.</EM>
+Versions of gcc prior to 2.6.1 will not work.
+When installing gcc beware of the make install step.  On some systems and/or
+with some versions of gcc, the fax software may not compile properly if
+the include files are wrong (function prototypes that would normally
+cause casts to be done may be missing).
+<P>
+
+<FORM ACTION="http://www.lerc.nasa.gov/cgi-bin/archieplexform.pl?query=gcc-2.6.3&type=Case+Sensitive+Substring+Match&nice=Nice">
+<INPUT TYPE=submit>: Click here to use Archie to locate gcc 2.6.3
+</FORM>
+<P>
+
+<A NAME="Before.libg++"><H3>C++ runtime libraries</H3></A>
+
+cfront-based compilers include everything that you need in the
+libC.a runtime library.  When using GNU gcc you may also need the
+libg++ distribution. 
+<EM>libg++2.6.2 is the current recommended version to use.</EM>
+Older versions may also work though it is recommended that you use
+the version appropriate for the compiler.
+<P>
+
+<FORM ACTION="http://www.lerc.nasa.gov/cgi-bin/archieplexform.pl?query=libg%2B%2B-2.6.2&type=Case+Sensitive+Substring+Match&nice=Nice">
+<INPUT TYPE=submit>: Click here to use Archie to locate libg++ 2.6.2
+</FORM>
+<P>
+
+<A NAME="Before.gs"><H3>ghostscript</H3></A>
+
+If you are not on a Silicon Graphics machine, then you will need the
+Ghostscript PostScript interpreter software to build a PostScript
+imaging engine
+for use by the facsimile server.  Version 2.6.1 and later
+are known to work.  If you use 2.6.1 however, be certain to apply
+patches 1-4.
+If you do not apply the patches you will encounter a bug in the clipping
+code that is tickled by the default cover page distributed with this
+software.
+Also beware that if you use a version prior to 3.12 (inclusive) that
+there is a tiffg32d driver that writes incorrect 2D-encoded facsimile
+data; either do not configure this driver for use or disable its
+use by editing the <B>ps2fax.gs.sh</B> script that invokes Ghostscript
+to image PostScript for outbound facsimile jobs.
+
+<P>
+<FORM ACTION="http://www.lerc.nasa.gov/cgi-bin/archieplexform.pl?query=ghostscript-2.6.1&type=Case+Sensitive+Substring+Match&nice=Nice">
+<INPUT TYPE=submit>: Click here to use Archie to locate Ghostscript 2.6.1
+</FORM>
+<P>
+
+<A NAME="Before.gmake"><H3>gmake</H3></A>
+
+The make files are extensive and work untouched with the system make
+under many systems.  If your make does not understand them, then you
+should be able to use the GNU make (gmake) instead.  If you decide to
+use gmake, be sure to get version 3.63 or newer; otherwise you may
+encounter problems (especially with the rules that automatically generate
+source code dependency information).
+<P>
+
+<FORM ACTION="http://www.lerc.nasa.gov/cgi-bin/archieplexform.pl?query=make&type=Case+Sensitive+Substring+Match&nice=Nice">
+<INPUT TYPE=submit>: Click here to use Archie to locate make
+</FORM>
+<P>
+
+<A NAME="Before.gawk"><H3>gawk</H3></A>
+
+Several of the shell scripts included in this software make use of
+awk.  These uses are reasonably simple, but will not work if your
+awk is old enough that it does not support functions or the <TT>-v</TT>
+command line option for setting variable values before the <TT>BEGIN</TT>
+action is executed.
+If you encounter problems using the standard awk on your system,
+try the GNU awk: gawk.
+
+<FORM ACTION="http://www.lerc.nasa.gov/cgi-bin/archieplexform.pl?query=gawk&type=Case+Sensitive+Substring+Match&nice=Nice">
+<INPUT TYPE=submit>: Click here to use Archie to locate gawk
+</FORM>
+<P>
+
+<A NAME="Before.sed"><H3>sed</H3></A>
+
+Many of the shell scripts included in this software make use of
+sed.  Certain systems are known to have versions of sed that do not
+handle the shell scripts.
+If you encounter problems, the latest GNU sed should be substituted.
+
+<H3>/bin/test</H3>
+
+The software configuration shell script (configure) and the modem
+configuration shell script (faxaddmodem) make heavy use of
+the
+<A HREF="@CGIPATH@/manpage?1+test">test</A>
+program.  On some systems the <B>/bin/test</B>
+program does not support options such as <TT>-c</TT>
+(test if a file is a character special
+device).  Source for a contemporary, public domain, test program
+is available by public ftp from
+<A HREF="file://ftp.uu.net/">ftp.uu.net</A>.
+<P>
+
+<A NAME="Before.ps2fax"><H3>ps2fax binary for IRIX systems</H3></A>
+
+The Display PostScript-based imager for Silicon Graphics
+systems is included in the
+binary distribution images provided on sgi.com.
+If you choose to work
+from the source code on an IRIX system you may want a copy of the
+ps2fax program: it is available separately on sgi.com in the
+<A HREF="ftp://sgi.com/sgi/fax/source">source distribution area</A>.
+Note that this is a binary executable for IRIX 4.x systems
+and requires that the IRIX <B>dps_eoe</B> package be installed for proper use.
+<P>
+
+<HR>
+
+<A NAME="Building"><H2>The Build Procedure</H2></A>
+
+To build the software you need to first run the configure shell script
+that is located in the top level of the source directory.
+This script probes the target system for necessary tools and functions
+and constructs a build environment in which the software may be
+compiled.
+Once configuration is done, you simply run <TT>make</TT>
+ to build the software
+and then <TT>make install</TT> to do the installation; for example:
+
+<UL><PRE>
+hyla% <B>cd hylafax-v3.0beta099</B>
+hyla% <B>./configure</B>
+    <I>...lots of messages...</I>
+hyla% <B>make</B>
+    <I>...lots of messages...</I>
+hyla% <B>su</B>		# NB: installation must be done by the super-user
+hyla# <B>make install</B>
+</PRE></UL>
+
+In general, the software is designed such that the following should
+be ``<I>make-able</I>'' in each directory:
+
+<UL><PRE>
+make [all]	build stuff
+make depend	build dependency information
+make install	build&install stuff
+make clean	remove .o files and cruft, but not executables
+make clobber	remove everything that can be recreated
+make distclean	remove <EM>absolutely everything</EM> that can be recreated
+</PRE></UL>
+
+Note that after running "<TT>make clobber</TT>" or
+"<TT>make distclean</TT>" the configure script must
+be run again to create the Makefiles and other make-related files.
+
+<A NAME="BuildTrees"><P><HR WIDTH=65% ALIGN=right><H3>Build Trees</H3></A>
+
+There are two schemes for configuring and building the software.
+If you intend to build the software for only one target system, you
+can configure the software so that it is built in the same directories
+as the source code. 
+
+<UL><PRE>
+hyla% <B>cd hylafax-v3.0beta099</B>
+hyla% <B>ls</B>
+Distfile      config        distrules     faxmail       rules.in
+HOWTO         config.guess  doc           faxrm         sendfax
+Makefile.in   config.h.in   dps           faxstat       sendpage
+RCS           config.site   etc           html          sgi2fax
+README        config.sub    fax2ps        libtiff       util
+TODO          configure     faxalter      man
+VERSION       defs.in       faxcover      port
+afm           dist          faxd          recvfax
+hyla% <B>./configure</B>
+</PRE></UL>
+
+<P>
+Otherwise, you can configure a build tree that 
+is parallel to the source tree hierarchy but which contains only
+configured files and files created during the build procedure.
+
+<UL><PRE>
+hyla% <B>cd hylafax-v3.0beta099</B>
+hyla% <B>mkdir obj obj/mycpu</B>
+hyla% <B>cd obj/mycpu</B>
+hyla% <B>../../configure</B>
+</PRE></UL>
+
+This second scheme is useful for:
+
+<UL>
+<LI>building multiple targets from a single source tree
+<LI>building from a read-only source tree (e.g. if you receive
+  the distribution on CD-ROM)
+</UL>
+
+Beware that if you choose to use the second scheme for configuring
+the software you must not use an absolute pathname when you run configure
+(i.e. a pathname that begins with ``/'') and the make that you use
+to build the software must correctly support the VPATH facility.
+
+<P>
+<IMG SRC="icons/warning_icon.gif" ALT="NOTE: " ALIGN=left HSPACE=8>
+<B>HPUX 9.05</B>:
+   <EM>The standard make incorrectly processes VPATH; either use gmake
+   or configure builds in the source tree.</EM>
+
+<P>
+<IMG SRC="icons/warning_icon.gif" ALT="NOTE: " ALIGN=left HSPACE=8 VSPACE=4>
+<B>Solaris 2.3</B>:
+   <EM>The standard make does VPATH processing incorrectly for files
+   passed to the make dependency generator script
+    (the last file in the list is not converted to
+   a pathname relative to the source directory); this causes lots of
+   messages that can be ignored.</EM>
+
+<A NAME="ConfigFiles"><P><HR WIDTH=65% ALIGN=right><H3>Configuration Files</H3></A>
+
+The configuration process is critical to the proper compilation,
+installation, and operation of the software.
+The configure script runs a series of tests to
+decide whether or not the target system
+supports required functionality and, if it does not, whether it
+can emulate or workaround the missing functions.
+This procedure is fairly complicated and, due to the nonstandard
+nature of most UNIX systems, prone to error.
+The first time that you configure the software for use you should
+check the output from the configure script and look for anything
+that does not make sense for your system.
+A sample configure run is shown below together with an explanation
+of some of the work that is done.
+
+<P>
+A second function of the configure script is to set the default
+configuration parameters for the software.
+Many of these parameters can be changed after configuration through
+files that programs read at runtime, but some parameters cannot
+be changed without rerunning the configure script.
+Of particular note are the directories where the software is to be
+installed.
+By default the software is installed in the <B>/usr/local</B> hierarchy.
+To change this behaviour the appropriate parameters can be
+specified either:
+<UL>
+<LI>on the command line to configure,
+<LI>in a site-wide configuration file, or
+<LI>in a target-specific configuration file.
+</UL>
+configure reads any site-wide configure file first, and
+then any target-specific configuration file.
+This permits target-specific definitions to override
+site-wide definitions.
+
+<P>
+Site-wide configuration files are named
+<B>config.site</B> and are automatically searched for first
+in any directory specified on the command line to configure
+(using the <TT>-site</TT> option), or if that fails, in
+the directory in in which the configure script is located.
+
+<P>
+Target-specific configuration files are named <B>config.local</B>
+and are looked for first in the top-level configuration directory,
+or, if that fails, in the directory in which the configure script
+is located.
+
+<P>
+Configuration files are just shell scripts that define
+shell variables that control the configuration process.
+For example, the following file might be used on a BSDI system to
+configure the software for installation in the <B>/usr/contrib</B>
+ area and to make use of the Adobe Font Metric files that are already
+distributed as part of the BSDI 1.1 distribution:
+
+<PRE>
+#
+# Parameters suitable for BSDI 1.1
+#
+DIR_AFM="/usr/contrib/lib/flexfax/afm"	# reuse existing files
+DIR_BIN="/usr/contrib/bin"		# directory for client apps
+DIR_SBIN="/usr/contrib/bin"		# directory for system apps
+DIR_LIBEXEC="/usr/contrib/bin"		# directory for libraries&hidden apps
+DIR_LIBDATA="/usr/contrib/lib/hylafax"	# directory for client data
+DIR_MAN="/usr/contrib/man"		# directory for manual pages
+DIR_SPOOL="/var/spool/hylafax"		# directory for spooling area
+DIR_HTML="/usr/contrib/html/hylafax"	# directory for HTML documentation
+DIR_CGI="/usr/contrib/html/cgi-bin"	# directory for CGI scripts
+</PRE>
+
+<P>
+For a complete list of the possible configuration parameters, look
+at the sample <B>config.site</B> file provided in the distribution
+or check the section below.
+
+<A NAME="Packages"><P><HR WIDTH=65% ALIGN=right><H3>Configuring Optional Packages</H3></A>
+
+HylaFAX comes with several packages that are installed only
+as needed, or only if specifically configured at the time
+the configure script is run.  Packages can be configured in a
+<B>config.site</B> or <B>config.local</B> file, or by using a
+<TT>-with-&lt;PACKAGE&gt;</TT> option when invoking configure;
+e.g. <TT>configure -with-AFM</TT>.
+
+<DL>
+<DT><I>AFM Package</I>
+<DD>The <TT>AFM</TT> package contains sample Adobe Font Metric files that
+came from the public dvips distribution.  AFM files are required
+by the
+<A HREF="@CGIPATH@/manpage?1+textfmt">textfmt(1)</A>
+and
+<A HREF="@CGIPATH@/manpage?1+faxmail">faxmail(1)</A>
+programs for proper formatting of
+ASCII text.
+The AFM files used should reflect the characteristics of the
+fonts that are used for imaging.
+However, if the PostScript RIP used to image text does not
+come with AFM files for its native fonts, this package can be
+installed with only minimal degradation in the quality of the
+imaged text.
+By default this package is configured for installation only if
+font metric files do not appear to be present (<TT>auto</TT>).
+
+<P>
+<DT><I>DSO Package</I>
+<DD>The <TT>DSO</TT> package controls whether or not to
+configure the software
+to build Dynamic Shared Objects for the TIFF library,
+for utility routines used by both client and server applications,
+and for a nucleus of common code used by server applications.
+Use of DSOs can significantly reduce the disk space needed for the
+HylaFAX software.
+If DSOs are not used then the code is statically linked into
+each application that uses it.
+By default this package is configured only if the system appears
+to suport DSOs in a way that fits into the normal build scheme
+(<TT>auto</TT>).
+If DSO support is <EM>explicitly enabled</EM> and there is no
+support for using DSOs in the expected way then DSOs are not used.
+
+<P>
+<DT><I>GETTY Package</I>
+<DD>The <TT>GETTY</TT> package controls whether or not to configure BSD-
+or System V-style getty support for handling incoming data
+connections.
+By default this package is configured according to the target
+environment.
+
+<P>
+<DT><I>HTML Package</I>
+<DD>The <TT>HTML</TT> package contains this HTML documentation about HylaFAX.
+By default this package is not configured for installation.
+Some HTML documentation can be viewed directly from
+the source directory;
+otherwise all the documentation can be viewed from the main WWW site
+at <A HREF="http://www.vix.com/hylafax/">http://www.vix.com/hylafax/</A>.
+You may want to configure the installation of the HTML materials
+if there is poor connectivity to the main WWW site.
+See the next section for more information about configuring the
+HTML materials.
+
+<P>
+<DT><I>PS Package</I>
+<DD>The <TT>PS</TT> package selects whether to configure use of
+Ghostscript (<TT>gs</TT>) or Display PostScript (<TT>dps</TT>)
+for imaging PostScript on the server.
+By default the DPS support is selected only for IRIX systems;
+otherwise Ghostscript is used.
+IRIX users may choose to use this control to select
+Ghostscript for use on their SGI systems.
+
+<P>
+<DT><I>SGI2FAX Package</I>
+<DD>The <TT>SGI2FAX</TT> package controls whether or not to configure the
+sgi2fax program that converts SGI RGB images to TIFF/F (for direct
+transmission as facsimile).
+By default this package is configured for installation only if the
+target system appears to have support for the SGI Image library that
+sgi2fax uses to read RGB images (<TT>auto</TT>).  If this package
+is not installed then SGI RGB images must be converted to a form
+suitable for transmission using some other mechanism.
+
+<P>
+<DT><I>SYSVINIT Package</I>
+<DD>The <TT>SYSVINIT</TT> package controls whether or not to configure the
+System V-style support for automatically starting the HylaFAX
+queuer process from
+<A HREF="@CGIPATH@/manpage?1+init">init(1)</A>.
+By default this support is configured for installation only if
+the target system appears to use a System V-style init (<TT>auto</TT>);
+i.e. the <B>/etc/rc0.d</B> and <B>/etc/rc2.d</B> directories exist.
+</DL>
+
+<A NAME="HTML"><P><HR WIDTH=65% ALIGN=right><H3>Configuring the HTML Documentation</H3></A>
+
+HylaFAX comes with extensive documentation written in HTML, the language
+used to author many documents found on the World Wide Web (WWW).
+These materials can be viewed at the main WWW site
+<A HREF="http://www.vix.com/hylafax/">http://www.vix.com/hylafax/</A>
+or they can be installed locally for better access.
+The HTML documentation can be configured for installation from
+the source distribution by specifying <TT>-with-HTML</TT> as an
+option to the configure script, or by setting <TT>HTML=yes</TT>
+in a <B>config.site</B> or <B>config.local</B> file.
+
+<P>
+When the HTML package is configured for installation there are
+four other parameters that should be setup according to local
+needs:
+
+<DL>
+<DT><TT>DIR_HTML</TT>
+<DD>The directory where the HTML materials should be installed.
+<DT><TT>DIR_CGI</TT>
+<DD>The directory where the supporting CGI scripts should be installed.
+<DT><TT>CGIPATH</TT>
+<DD>The virtual pathname to use in the HTML documents
+   to invoke CGI scripts installed in <TT>DIR_CGI</TT>.
+<DT><TT>HTMLPATH</TT>
+<DD>The virtual pathname to use in the HTML documents to
+   reference materials installed in the <TT>DIR_HTML</TT> directory.
+</DL>
+
+These parameters default to suitable values for the NCSA HTTP server:
+
+<UL><PRE><TT>
+DIR_HTML="/var/httpd/hylafax"
+HTMLPATH="/hylafax"
+DIR_CGI="/var/httpd/cgi-bin"
+CGIPATH="/cgi-bin"
+</TT></PRE></UL>
+
+If you are not running an HTTP server it may be better to
+configure the materials for local access; for example:
+
+<UL><PRE><TT>
+DIR_HTML="/usr/local/html/hylafax"
+HTMLPATH="/hylafax"
+DIR_CGI="/usr/local/html/cgi-bin"
+CGIPATH="/cgi-bin"
+</TT></PRE></UL>
+
+Note however that if the HTML materials are setup for local access
+then references ``<I>up the tree</I>'', will not work and CGI
+scripts will not be functional.
+For most of the materials provided with this distribution this
+will usually be acceptable.
+
+<P>
+There are a few other issues to consider when installing the CGI scripts:
+
+<UL>
+<LI>The <TT>manpage</TT> script that provides access to the UNIX
+   manual pages may require some tailoring if manual pages are installed
+   in non-standard locations or if the normal system
+   <A HREF="@CGIPATH@/manpage?1+man">man(1)</A>
+   command does not support the expected options.  If you have
+   problems consult the script.
+<LI>The <TT>cat-pages</TT> and <TT>cat-faq</TT> scripts will optionally
+   return a cached copy of concatenated documents; consult the scripts
+   for more information.
+<LI>If local support is to be provided, it may be worthwhile to alter
+   the electronic mail addresses embedded in several of the CGI scripts.
+</UL>
+
+[<CITE>Note that the CGI scripts are evolving; comments are welcome.</CITE>]
+
+
+<A NAME="Upgrading"><P><HR WIDTH=65% ALIGN=right><H3>Upgrading From FlexFAX</H3></A>
+
+If you were previously using FlexFAX beware that several
+things have changed in incompatible ways. 
+The following is a list of potential things you should be aware of
+when configuring the software:
+
+<UL>
+<LI>The default server operation parameters set in config.h have changed;
+   for example the default kill time for a fax job is now 3 hours
+   instead of 24 hours.  Verify the parameters in config.h are what
+   you want.
+<LI>Numerous pathnames may have changed.  The source-based
+   installation procedure does not remove previously installed
+   files unless they are to be overwritten; this can result in
+   multiple versions of applications such as faxaddmodem being
+   installed.  Verify the parameters used for installation; you may want to
+   tailor them to your environment by creating a <B>config.local</B>
+   file with local configuration parameters.
+<LI>HylaFAX includes an improved <B>install.sh</B> script that is
+   used to install files on non-IRIX systems.
+   Certain files in the distribution are treated as
+   <I>configuration-specific files</I> and are not overwritten
+   if they appear to have local modifications.
+   Instead the <B>install.sh</B> script will install the new
+   file with a <B>.N</B> suffix and print a warning message.
+   Be sure to reconcile these conflicts by comparing the old
+   and new file contents with a program like 
+   <A HREF="@CGIPATH@/manpage?1+diff">diff(1)</A>; in most cases
+   you should incorporate any local modifications into the new
+   file and install it for use.
+</UL>
+
+[<CITE>Ed: this list is expected to grow with experience.</CITE>]
+
+<P>
+There are other issues with upgrading from FlexFAX; they are
+discussed in the chapter that describes
+<A HREF="setup.html#FlexFAX">setting up the server</A>.
+
+<A NAME="Sample"><P><HR WIDTH=65% ALIGN=right><H3>A Sample Configuration Session</H3></A>
+
+This section shows a sample configuration session and describes
+the work done.  The session is shown indented in a <TT>fixed width
+font</TT> with user-supplied input in a <TT><B>bold font</B></TT>.
+Comments are shown in a normal or <I>italic</I> font.
+This session was collected on a 486 machine running BSDI 1.1.
+
+<UL><PRE><TT>
+wullbrandt% <B>mkdir fax</B>
+wullbrandt% <B>cd fax</B>
+wullbrandt% <B>ln -s /hosts/oxford/usr/people/sam/fax src</B>
+</TT></PRE></UL>
+
+A build tree separate from the source tree is used here.
+In fact, in this case the distribution is accessed from
+a read-only NFS-mounted filesystem.
+
+<UL><PRE><TT>
+wullbrandt% <B>src/configure</B>
+
+Configuring HylaFAX (tm) (aka FlexFAX) v3.0beta095.
+
+Reading site-wide parameters from src/config.site.
+Fee, fie, foe, this smells like a i386-unknown-bsdi1.1 system.
+</TT></PRE></UL>
+
+Note that configure announces the distribution version and the
+deduced target configuration (<TT>i386-unknown-bsdi1.1</TT> here).
+
+<UL><PRE><TT>
+Using /usr/local/bin/gcc for a C compiler (set CC to override).
+Looks like /usr/local/bin/gcc supports the -g option.
+Looks like an ANSI C preprocessor.
+... but __ANSI_CPP__ is not automatically defined, will compensate.
+Looks like /usr/local/bin/gcc supports the -M option for make dependencies.
+</TT></PRE></UL>
+
+configure checked the normal shell search path for potential
+ANSI C compilers.  The compiler is selected according to it properly
+compiling a small ANSI C test program.  A specific compiler may be requested
+by setting the <TT>CC</TT> environment variable to the appropriate
+pathname, by supplying the parameter on the command line, e.g.
+<TT>-with-CC=gcc</TT>, or by setting <TT>CC</TT> in a configuration
+file.
+
+<P>
+<IMG SRC="icons/info_icon.gif" ALIGN=left HSPACE=10>
+<EM>Note that an ANSI C compiler is required to build the software.
+If a C compiler requires options to enable ANSI C compilation, they
+can be specified with the <TT>ENVOPTS</TT> parameter.</EM>
+
+<P>
+Once a compiler is selected configure does several checks to see:
+<UL>
+<LI>if the compiler accepts a -g option to enable the generation
+    of debugging symbols,
+<LI>if the compiler includes an ANSI C preprocessor, and
+<LI>if the compiler will generate make dependency rules with
+    a <TT>-M</TT> option.
+</UL>
+
+By default the software automatically creates and maintains make
+dependency rules for all source code.
+
+<UL><PRE><TT>
+Using /usr/local/bin/gcc for a C++ compiler (set CXX to override).
+Looks like /usr/local/bin/gcc supports the -g option.
+Using " -g" for C++ compiler options.
+Looks like an ANSI C++ preprocessor.
+... but __ANSI_CPP__ is not automatically defined, will compensate.
+</TT></PRE></UL>
+
+A C++ compiler is selected using a scheme similar to
+the one used to find a C compiler.  Likewise there is a <TT>CXX</TT>
+parameter that can be set to explicitly select a C++ compiler.
+
+<UL><PRE><TT>
+Using /usr/bin/make to configure the software.
+Using ".include &lt;file&gt;" syntax for Makefiles.
+</TT></PRE></UL>
+
+The make selected must support include files.  configure can
+deduce several different syntaxes for specifying include files.
+Note that a large number of configuration parameters can be changed
+by editing the top-level <B>defs</B> file that is included by
+each Makefile in the distribution.
+A <TT>MAKE</TT> parameter can be used to control which make to use.
+
+<UL><PRE><TT>
+Using /bin/bash to process command scripts.
+</TT></PRE></UL>
+
+All the shell scripts included with this software are written using
+the Bourne Shell syntax.
+The standard shell on many systems is incapable of processing these
+scripts.  configure prefers <B>bash</B> to <B>ksh</B> to <B>sh</B>.
+
+<UL><PRE><TT>
+Looks like -lutil is needed for wtmp file logging.
+Looks like -lm is the library for math functions.
+</TT></PRE></UL>
+
+Various system-specific libraries that may or may not be needed
+are checked for.  If your system requires a library that is not
+automatically included it can be specified by setting the
+<TT>MACHDEPLIBS</TT> parameter.
+
+<P><I>Creating port.h.</I>
+The <B>port.h</B> file is included by all the C and C++ code
+in the system.  It includes definitions for functions and type
+definitions that are missing from system include files, <TT>#defines</TT>
+to enable or disable system-specific functionality, and other
+odds and ends.
+
+<UL><PRE><TT>
+Creating port.h with necessary definitions.
+... open FIFO files read-only
+... use (sig_t) for signal handler type
+... use (sig_t) for sigvec handler type
+... use (sig_t) for sigaction handler type
+... configure use of mmap for memory-mapped files
+... configure use of fchown
+... add function prototype for cuserid
+... configure use of fchmod
+... add function prototype for setutent
+... add function prototype for endutent
+... add function prototype for pututline
+... configure use of &ltlocale.h&gt; (internationalization support)
+... configure use of &ltpaths.h&gt;
+... configure use of &ltsys/select.h&gt;
+... configure use of logwtmp (BSD-style wtmp logging)
+... add function prototype for logwtmp
+... configure use of logout (BSD-style utmp support)
+... add function prototype for logout
+Done creating port.h.
+</TT></PRE></UL>
+
+This file can take a long time to create so configure
+generates the file only when it is needed, either because the
+file does not exist or because a different target or compiler
+is to be used.
+Note that running "<TT>make distclean</TT>" in the top-level directory
+of the build tree will remove the <B>port.h</B> file (along
+with all the other files generated by configure).
+
+<P><I>Selecting emulated library functions.</I>
+Certain functions used by the software are not present on all systems
+and can be emulated using other system functionality.
+configure checks for the presence of such functions and if they are
+missing, will configure emulation code from the <B>port</B> directory
+to use instead.  Building HylaFAX on unsupported systems may require
+adding to the code to the <B>port</B> directory.
+
+<UL><PRE><TT>
+Checking system libraries for functionality to emulate.
+... emulate cuserid
+Done checking system libraries.
+</TT></PRE></UL>
+
+If a routine must be emulated and configure does not automatically
+check for it, the routine name can be specified using the <TT>PORTFUNCS</TT>
+parameter.  To add emulation support for a new function <TT>foo</TT>,
+create a file <B>port/foo.c</B> that contains the emulation code
+and then set <TT>PORTFUNCS=foo</TT> in a configuration file or modify
+the configure script to automatically check for the missing function.
+
+<UL><PRE><TT>
+Setting up libtiff configuration parameters.
+Using memory mapped file support in libtiff.
+Done setting up libtiff.
+</TT></PRE></UL>
+
+HylaFAX uses the TIFF library extensively.  The only thing that
+should need to be configured for this software is whether or not
+to use memory-mapped files for reading TIFF images.
+
+<UL><PRE><TT>
+Checking for Dynamic Shared Object (DSO) support.
+Done checking for DSO support.
+</TT></PRE></UL>
+
+If the <TT>DSO</TT> package is enabled (<TT>DSO=auto</TT> or
+<TT>DSO=yes</TT>), then
+configure will verify the system and compiler are capable of
+constructing SVR4-style DSO's in the expected way.  Note that
+while a system may support DSO's the compiler may not be
+capable of generating the required position-independent
+code and/or the compiler may not pass the needed options
+through to the loader.
+
+<P><I>Selecting utility programs.</I>
+configure locates various system utility programs that are
+used by the software.
+Note that absolute pathnames are selected because several scripts
+and programs excute with super-user privileges.
+
+<UL><PRE><TT>
+Selecting programs used during installation and operation.
+Looks like /usr/bin/awk should be used to process command scripts.
+Looks like /usr/sbin/sendmail should be used to deliver mail.
+Looks like /usr/bin/mkfifo creates FIFO special files.
+Looks like /bin/mv supports the -f option to force a move.
+Looks like /bin/ln supports the -s option to create a symbolic link.
+Done selecting programs.
+</TT></PRE></UL>
+
+Several things to note:
+The awk program selected for use must support functions using
+the System V-style syntax (i.e. using <TT>func</TT> and not the
+POSIX-style <TT>function</TT>).
+configure will not select an awk program that does not support
+the syntax used by the awk scripts included in the distribution.
+Mail delivery is done using sendmail; a different mailer
+cannot be substituted without changing certain scripts
+because a number of sendmail-specific command line options are used.
+
+<P><I>Selecting default configuration parameters.</I>
+The remainder of the work done by configure involves setting up
+configuration parameters that are mainly used during the
+<EM>operation</EM> of the fax software.  These parameters can be set
+during configuration or, in most cases, they can be set through
+runtime configuration files.
+
+<UL><PRE><TT>
+Using uid uucp and gid dialer for controlling access to fax stuff.
+Using uid bin and gid bin for installing programs.
+Using LSB2MSB bit order for your i386 cpu.
+Looks like you need BSD getty support.
+Looks like /usr/libexec/getty is the program to exec for a data call.
+Looks like you use binary-style UUCP lock files.
+Looks like UUCP lock files go in /var/spool/uucp.
+Looks like font metric information goes in /usr/contrib/lib/flexfax/afm.
+Looks like the gs imager package should be used.
+Looks like /usr/contrib/bin/gs is the PostScript RIP to use.
+Looks like manual pages go in /usr/local/man.
+Looks like manual pages should be installed with bsd-nroff-gzip-0.gz.
+
+HylaFAX configuration parameters are:
+
+[ 1] Directory for applications:        /usr/local/bin
+[ 2] Directory for lib data files:      /usr/local/lib/fax
+[ 3] Directory for lib executables:     /usr/local/lib/fax
+[ 4] Directory for system apps:         /usr/local/bin
+[ 5] Directory for manual pages:        /usr/local/man
+[ 6] Directory for HTML documentation:  /usr/local/doc/fax
+[ 7] Directory for spooling:            /var/spool/fax
+[ 8] Directory for font metrics:        /usr/contrib/lib/flexfax/afm
+[ 9] Directory for uucp lock files:     /var/spool/uucp
+[10] Uucp lock file scheme:             binary
+[11] PostScript imager package:         gs
+[12] PostScript imager program:         /usr/contrib/bin/gs
+[13] Manual page installation scheme:   bsd-nroff-gzip-0.gz
+[14] Default page size:                 North American Letter
+[15] Default vertical res (lpi):        98
+[16] Location of getty program:         /usr/libexec/getty
+[17] Location of sendmail program:      /usr/sbin/sendmail
+
+Are these ok [yes]? 
+</TT></PRE></UL>
+
+At this point you can interactively modify any of the 
+displayed parameters.  Hitting a carriage return or typing
+<TT>yes</TT> will accept the current parameters.  Typing one
+of the number displayed along the left hand side causes
+configure to prompt for a new value of the specified parameter.
+Typing anything else causes configure to prompt for a new
+value <EM>for each parameter</EM>.
+In general hitting carriage return will accept the current
+value and typing anything that is unacceptable will cause a
+help message to be displayed.
+A description of each of the configuration parameters is given below.
+
+<P>
+Once acceptable parameters are setup configure will generate
+all the files that depend on these parameters.  Note that certain
+files may or may not be created based on the configuration of
+optional packages and/or the functions supported by target system.
+
+<UL><PRE><TT>
+Creating defs from src/defs.in
+Creating rules from src/rules.in
+Creating Makefile from src/Makefile.in
+    <I>...stuff deleted...</I>
+Setting up make dependency files.
+Done.
+</TT></PRE></UL>
+
+<A NAME="Parameters"><P><HR WIDTH=65% ALIGN=right><H3>Configuration Parameters</H3></A>
+
+This section gives a brief description of the less obvious
+configuration parameters.  Consult the distributed <B>config.site</B>
+for a <EM>complete</EM> list of parameters.
+The list here is sorted alphabetically.
+
+<P>
+<IMG SRC="icons/warning_icon.gif" ALT="NOTE: " ALIGN=left HSPACE=8 VSPACE=4>
+<EM>The default setting for most configurations parameters is usually
+correct.  Be especially careful about enabling or overriding parameters
+that control workarounds for system bugs; certain problems can cause
+server processes to go into infinite loops!</EM>
+
+<P>
+Note that HylaFAX is composed of <I>client</I> and <I>server</I>
+applications.
+Client applications are programs that normal users invoke to send
+facsimile, query the status of facsimile servers, etc.
+Server applications are programs that reside <EM>only on the machine
+where the fax modems are present</EM>.
+
+<DL>
+<DT><TT>AROPTS</TT>
+<DD>The options passed to ar when creating an archive.
+Note that configure will automatically check to see if ar
+supports an <TT>s</TT> to create a symbol table instead of
+using ranlib.
+<DT><TT>CONFIG_OPENFIFO</TT>
+<DD>The mode to use when opening a FIFO special file in a server
+process.  Normally this should be <TT>O_RDONLY</TT>, but on some
+systems this must be <TT>O_RDWR</TT> to avoid kernel bugs that
+cause select system calls to return prematurely after a process
+closes the ``client side'' of a FIFO.
+By default this parameter is set according to the target system.
+<DT><TT>CONFIG_FIFOBUG</TT>
+<DD>Whether or not to enable a workaround for a kernel bug that causes
+select system calls to return prematurely after a process
+closes the ``client side'' of a FIFO special file.
+Setting this parameter to <TT>yes</TT> causes server processes
+to close and reopen FIFO special files after each received message.
+Note that aside from the additional overhead incurred in the
+server processes, this problem can
+also cause client programs to be temporarily unable to reach
+a server process.
+To minimize this possibility, the client code tries 
+to reach a server process up to 5 times before giving up; this
+can introduce noticeable delays in applications such as faxstat.
+<DT><TT>CONFIG_SELECTBUG</TT>
+<DD>On some systems where the FIFO select bug (see above) exists the
+select system call may return bits set in the read, write, and exception
+masks even if they were not requested; this in turn can cause the
+Dispatcher code to abort.
+Setting this parameter to <TT>yes</TT> causes the Dispatcher to
+ignore any bits set in bit vectors returned by select if the
+bits were not requested.
+Enabling this workaround adds additional overhead to each server process.
+<DT><TT>CONFIG_WINSZHACK</TT>
+<DD>On some systems the <TT>TIOCWINSZ</TT> ioctl is defined, but
+its use requires the inclusion of two non-standard files.
+Setting this paramter to <TT>yes</TT> causes the inclusion of these
+files.
+<DT><TT>CONFIG_ABORTBUG</TT>
+<DD>On some systems the logic used by the sever processes to poll
+for messages on a FIFO special file while actively doing work can
+cause the process to go into an infinite loop.
+Setting this parameter to <TT>yes</TT> causes the server processes
+to <STRONG>not</STRONG> poll for messages.
+Enabling this workaround means that the faxgetty process will not
+recognize messages to abort a facsimile while it is being received.
+<DT><TT>CONFIG_NOSTDINDUP</TT>
+<DD>On some systems, if the standard output is redirected to be
+the same as the standard input, then the stty program will emit
+a warning message.
+This is necessary for some older systems because it is the only
+way to force stty to change parameters on a tty device that is
+not the controlling tty.
+Setting this parameter to <TT>yes</TT> causes the ondelay program
+to not set stdout to stdin.
+Enabling this workaround can break the faxaddmodem program; it should
+be used only on systems where stty supports the <TT>-f</TT> option
+to select a tty device other than the controlling tty.
+<DT><TT>CXXFILE</TT>
+<DD>The options to the C++ compiler required to get the compiler to
+process a file with a <B>.c++</B> suffix as C++ source code.
+configure automatically sets this parameter to
+<TT>"-x c++"</TT> for gcc and to <TT>"-+"</TT> for the IBM xlC 
+compiler under AIX.
+<DT><TT>DEFVRES</TT>
+<DD>The default vertical resolution in lines/inch that clients should use
+for submitted facsimile.  Choices are 98 and 196.
+<DT><TT>DIR_AFM</TT>
+<DD>The directory where client applications should find
+Adobe Font Metric (AFM) files.
+These files are used by various HylaFAX programs when
+converting text to PostScript.
+<DT><TT>DIR_BIN</TT>
+<DD>The directory where client applications should be installed; by
+default this is <B>/usr/local/bin</B>.
+<DT><TT>DIR_CGI</TT>
+<DD>The directory where CGI scripts used by the HTML-based
+HylaFAX documentation should be installed; by default this is
+<B>/var/httpd/cgi-bin</B> (usually appropriate for the
+NCSA HTTP server).
+<DT><TT>DIR_HTML</TT>
+<DD>The directory where HTML-based
+HylaFAX documentation should be installed; by default this is
+<B>/var/httpd/htdocs/hylafax</B> (usually appropriate for the
+NCSA HTTP server).
+<DT><TT>DIR_LIBDATA</TT>
+<DD>The directory to install data files that are required
+by client applications; by default this is <B>/usr/local/lib/fax</B>.
+<DT><TT>DIR_LIBEXEC</TT>
+<DD>The directory to install executable programs that are invoked by 
+other applications and not from the command line (e.g. the textfmt
+program invoked by sendfax
+to convert text to PostScript when submitting a fax job); by default
+this is the same as <TT>DIR_SBIN</TT>.
+<DT><TT>DIR_LOCKS</TT>
+<DD>The directory in which to create UUCP lock files.
+<DT><TT>DIR_MAN</TT>
+<DD>The top-most directory of the manual area where client/server manual
+pages should be installed.
+<DT><TT>DIR_BIN</TT>
+<DD>The directory where server-specific applications should be installed; by
+default this is <TT>DIR_SPOOL</TT><B>/bin</B>.
+<DT><TT>DIR_SBIN</TT>
+<DD>The directory where system applications such as servers should be
+installed; by default this is <B>/usr/local/sbin</B>.
+<DT><TT>DIR_SPOOL</TT>
+<DD>The directory in which the HylaFAX server spooling area should be setup;
+by default this is <B>/var/spool/fax</B>.
+<DT><TT>DSODELAY</TT>
+<DD>When DSO's are built, the option to specify to <TT>CC</TT>
+and/or <TT>CXX</TT> to note that a library should be loaded only
+as needed.
+This option is used to delay the loading of the TIFF library for
+applications that may use it infrequently.
+<DT><TT>DSOOPTS</TT>
+<DD>When DSO's are built, the options to specify to <TT>CC</TT>
+and/or <TT>CXX</TT> to create a DSO.
+<DT><TT>DSOSUF</TT>
+<DD>When DSO's are built, the filename suffix for a DSO.
+If this is set to <TT>"a"</TT> then  statically linked archives are used.
+<DT><TT>ENVOPTS</TT>
+<DD>Options to pass to <TT>CC</TT> and <TT>CXX</TT> to force ANSI C compilation.
+<DT><TT>FAXGID</TT>
+<DD>The group ID to use for the fax user; by default this is
+selected according to the target system.
+<DT><TT>FAXUID</TT>
+<DD>The user ID to use for the fax user; by default <TT>uucp</TT>.
+<DT><TT>FILLORDER</TT>
+<DD>The order of bits in a byte on the server machine;
+either LSB2MSB or MSB2LSB.
+This is normally selected according to the target system.
+<DT><TT>GCOPTS</TT>
+<DD>Special options to pass the C compiler.  If this parameter
+is set, then configure may append other options to this list.
+<DT><TT>GCXXOPTS</TT>
+<DD>Special options to pass the C++ compiler.  If this parameter
+is set, then configure may append other options to this list.
+<DT><TT>INSTALL</TT>
+<DD>The pathname of the install program to use.  Note that this program
+must emulate the command line interface used by the IRIX install program.
+<DT><TT>LIBMALLOC</TT>
+<DD>Whether or not to use <TT>-lmalloc</TT> in building the software.
+By default (<TT>auto</TT>) configure will probe the system to 
+see if the library is present; if it is then the software will
+be configured to use it when building.
+Other possible values are: <TT>yes</TT> and <TT>no</TT>
+to enable and disable use, respectively.
+On systems that support DSOs it may be important to disable the
+use of <TT>-lmalloc</TT> to avoid conflicts with the normal
+memory alocation routines present in the standard C library.
+<DT><TT>LIBPORT</TT>
+<DD>The pathname of the library that holds code to emulate missing
+system functionality.
+Normally this parameter is set by configure based on whether or
+not emulation code is required for the target.
+<DT><TT>LIBSUN</TT>
+<DD>Whether or not to use <TT>-lsun</TT> in building the software.
+By default (<TT>auto</TT>) configure will probe the system to 
+see if the library is present; if it is then the software will
+be configured to use it when building.
+Other possible values are: <TT>yes</TT> and <TT>no</TT>
+to enable and disable use, respectively.
+<DT><TT>LLDOPTS</TT>
+<DD>Extra command line options passed to <TT>CC</TT> and <TT>CXX</TT>
+when linking an executable.
+This option is usually set only when DSO support is enabled
+(to force the executable to search for the HylaFAX-specific DSO's
+in non-standard locations in the filesystem.)
+<DT><TT>LOCKS</TT>
+<DD>A specification of the default type of UUCP lock files to use.
+This parameter is usually one of <TT>ascii</TT>, <TT>binary</TT>, 
+<TT>-ascii</TT> or <TT>+ascii</TT>;
+consult the
+<A HREF="@CGIPATH@/manpage?4+config">config(4F)</A>
+manual page for a description of the <B>UUCPLockType</B>
+configuration parameter.
+<DT><TT>MACHDEPLIBS</TT>
+<DD>Target-dependent libraries that should be used when linking
+applications.
+Note that if this parameter is specified configure will append to
+the list of libraries.
+<DT><TT>MAKECXXOVERRIDE</TT>
+<DD>A special parameter used by configure when constructing Makefiles.
+This parameter is required when compiling the software with the
+SunPRO C++ compiler; it works around limitations in the SunPRO
+compilation environment.
+<DT><TT>MAKEDEPINCLUDE</TT>
+<DD>The keyword used to specify the inclusion of a
+make dependency file when constructing Makefiles.
+This parameter is set to <TT>MAKEINCLUDE</TT> if make dependendcies
+are to be constructed by the software; otherwise it is set to <TT>#</TT>
+so that no make dependency rules are included (and used).
+<DT><TT>MAKEDSOINCLUDE</TT>
+<DD>The keyword used to specify inclusion of a file
+containing rules for building DSO's.
+This parameter is set to <TT>MAKEINCLUDE</TT> if DSO's are to be built;
+otherwise it is set to <TT>#</TT> so that nothing is included.
+<DT><TT>MAKEINCLUDE</TT>, <TT>MAKELQUOTE</TT>, <TT>MAKERQUOTE</TT>
+<DD>The syntax used to specify an include file for make; e.g.
+<TT>@</TT><TT>MAKEINCLUDE@ @</TT><TT>MAKELQUOTE@</TT><I>file</I><TT>@MAKERQUOTE</TT><TT>@</TT>.
+These parameters are normally deduced by configure depending on
+the capabilities of the make program to use.
+<DT><TT>MANSCHEME</TT>
+<DD>The scheme to use when preparing and installing manual pages.
+Schemes are constructed according to:
+<UL>
+&lt;<I>organization</I>&gt;-&lt;<I>formatting</I>&gt;-&lt;<I>compression</I>&gt;[-&lt;<I>suffix</I>&gt;]
+</UL>
+where:
+&lt;<I>organization</I>&gt; is either <TT>bsd</TT>
+for BSD-style section organization (e.g.  file formats in
+section 5) or <TT>sysv</TT> for System V-style
+organization (e.g. file formats in section 4).
+&lt;<I>formatting</I>&gt; is either <TT>nroff</TT> to force
+installation of formatted materials (using nroff) or
+<TT>source</TT> to get the nroff source installed.
+&lt;<I>compression</I>&gt; is either the name of a program
+to compress the manual pages (gipz, compress, pack) or
+<TT>cat</TT> for uncompressed data.
+&lt;<I>suffix</I>&gt; is either the file suffix to convert
+installed pages to (e.g. 0.gz for gzip-compressed pages under BSD)
+or <TT>strip</TT> to force the normal ".4f" suffix to be converted to ".4"
+(or ".5" if using the BSD organization).  If no -&lt;suffix&gt;
+is specified then filenames are not converted when they are installed.
+<DT><TT>PAGESIZE</TT>
+<DD>The default page size that client applications will use for submitted
+facsimile.  Page sizes are specified by name and checked against the
+pagesizes database installed in the <TT>DIR_LIBDATA</TT> directory.
+See also <A HREF="@CGIPATH@/manpage?4+pagesizes">pagesizes(4F)</A>.
+<DT><TT>PATH_DPSRIP</TT>
+<DD>The absolute pathname of the Display PostScript-based imager program.
+<DT><TT>PATH_GETTY</TT>
+<DD>The absolute pathname of suitable getty program to exec to handle
+an inbound data call.
+Note that this parameter must be set correctly before the software
+is built; there is no mechanism for doing this through a runtime
+configuration file.
+<DT><TT>PATH_GSRIP</TT>
+<DD>The absolute pathname of the Ghostscript-based imager program.
+Beware that this must be a version of the
+<B>gs</B> program that includes the tiffg3 device driver.
+<DT><TT>PATH_SENDMAIL</TT>
+<DD>The absolute pathname of the sendmail program on the server machine;
+sendmail is used by HylaFAX to post mail messages for a variety of reasons.
+<DT><TT>PORTFUNCS</TT>
+<DD>A list of non-standard functions that should be emulated.
+Normally this list is constructed by configure based on checks it does.
+If this parameter is set, configure will append to the specified list.
+<DT><TT>PROTOTYPES</TT>
+<DD>Options that should be passed to the C compiler to force it
+to check for function prototype mismatches.
+This parameter should not be needed because ANSI C compilers
+should do this automatically.
+<DT><TT>SETMAKE</TT>
+<DD>If make does not automatically set <TT>$MAKE</TT> to
+the name of the make program to invoke for subdirectories, then
+configure will create an explicit definition.
+If this parameter is set, then it will be used instead.
+<DT><TT>SHDLIBC</TT>
+<DD>A special library to use in place of the standard <TT>-lc</TT>
+implicitly provided by <TT>CC</TT> and/or <TT>CXX</TT>.
+<DT><TT>SIGHANDLERTYPES</TT>
+<DD>The type signatures to use when checking for the correct
+type for a signal handler.
+If this parameter is set then configure will check these types
+before it checks a builtin list of well-known values.
+<DT><TT>SYSGID</TT>
+<DD>The group ID to use for installing non-setgid programs; by
+default this is chosen according to the target system.
+<DT><TT>SYSUID</TT>
+<DD>The group ID to use for installing non-setuid programs;
+by default <TT>bin</TT> is used.
+</DL>
+
+<P>
+<A HREF="setup.html"><IMG SRC="icons/next.gif">
+How to setup a HylaFAX server and prepare it for use</A>.<BR>
+<A HREF="toc.html"><IMG SRC="icons/back.gif"> HylaFAX table of contents.</A><BR>
+
+<HR>
+
+<ADDRESS>
+<A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+Last updated $Date: 1995/04/09 00:28:11 $.
+</ADDRESS>
+
+</BODY>
+</HTML>

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/Types.h,v 1.15 1994/07/01 23:51:44 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/Types.h,v 1.19 1995/04/08 21:44:40 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -85,16 +86,6 @@ extern "C" void _fxassert(const char*, const char*, int);
 #define fxCAT5(a,b,c,d,e) fxCAT4(a,b,c,d)e
 
 #define	fxQUOTE(a) "a"
-#endif
-
-//----------------------------------------------------------------------
-
-// Workaround for g++ new(where) incompatibility (yech)
-
-#if defined(__GNUC__) && !defined(NEW_FIXED)
-#define	fxNEW(where)	new{where}
-#else
-#define	fxNEW(where)	new(where)
 #endif
 
 //----------------------------------------------------------------------

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/RegEx.c++,v 1.1 1994/06/23 00:27:19 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/RegEx.c++,v 1.8 1995/04/08 21:44:17 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -28,27 +29,31 @@
  */
 #include <RegEx.h>
 
-RegEx::RegEx(const char* pat) : _pattern(pat)
+RegEx::RegEx(const char* pat, int len, int flags)
+    : _pattern(pat, len == 0 ? ::strlen(pat) : len)
 {
-    init();
+    init(flags);
 }
-
-RegEx::RegEx(const char* pat, int length) : _pattern(pat, length)
+RegEx::RegEx(const fxStr& pat, int flags) : _pattern(pat)
 {
-    init();
+    init(flags);
 }
-
+RegEx::RegEx(const RegEx& other, int flags) : _pattern(other._pattern)
+{
+    init(flags);
+    referenceCount = other.referenceCount;
+}
 RegEx::~RegEx()
 {
-    regfree(&c_pattern);
+    ::regfree(&c_pattern);
     delete matches;
 }
 
 void
-RegEx::init()
+RegEx::init(int flags)
 {
     referenceCount = 0;
-    compResult = regcomp(&c_pattern, _pattern, REG_EXTENDED);
+    compResult = ::regcomp(&c_pattern, _pattern, flags);
     if (compResult == 0) {
 	matches = new regmatch_t[c_pattern.re_nsub+1];
 	execResult = REG_NOMATCH;
@@ -58,21 +63,32 @@ RegEx::init()
     }
 }
 
-int
+fxBool
 RegEx::Find(const char* text, u_int length, u_int off)
 {
-    if (compResult != 0)
-	return (compResult);
-    /*
-     * These two checks are for compatibility with the old
-     * InterViews code; yech (but the DialRules logic needs it).
-     */
-    if (off >= length || (off != 0 && _pattern[0] == '^'))
-	return (execResult = REG_NOMATCH);
-    matches[0].rm_so = off;
-    matches[0].rm_eo = length;
-    return (execResult = regexec(&c_pattern, text,
-	c_pattern.re_nsub+1, matches, REG_STARTEND) == REG_NOMATCH);
+    if (compResult == 0) {
+	/*
+	 * These two checks are for compatibility with the old
+	 * InterViews code; yech (but the DialRules logic needs it).
+	 */
+	if (off >= length || (off != 0 && _pattern[0] == '^'))
+	    execResult = REG_NOMATCH;
+	else {
+	    matches[0].rm_so = off;
+	    matches[0].rm_eo = length;
+	    execResult = ::regexec(&c_pattern, text, c_pattern.re_nsub+1,
+			    matches, REG_STARTEND);
+	}
+    }
+    return (execResult == 0);
+}
+
+void
+RegEx::getError(fxStr& emsg) const
+{
+    char buf[1024];
+    (void) ::regerror(execResult, &c_pattern, buf, sizeof (buf));
+    emsg = buf;
 }
 
 int

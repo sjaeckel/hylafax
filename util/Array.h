@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/Array.h,v 1.10 1994/05/16 21:59:25 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/Array.h,v 1.14 1995/04/08 21:43:49 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -24,8 +25,8 @@
  */
 #ifndef _Array_
 #define _Array_
-// $Revision: 1.10 $
-// $Date: 1994/05/16 21:59:25 $
+// $Revision: 1.14 $
+// $Date: 1995/04/08 21:43:49 $
 #include "Obj.h"
 #include "Ptr.h"
 
@@ -279,7 +280,7 @@ __enddef__
 	for (;;) {							\
 	    if (numbytes == 0) break;					\
 	    numbytes -= elementsize;					\
-	    ITEM * obj = fxNEW(ptr) ITEM;				\
+	    ITEM * obj = new(ptr) ITEM;					\
 	    ptr++; 							\
 	}								\
     }									\
@@ -299,7 +300,7 @@ __enddef__
 	    const ITEM * p = (const ITEM *)src - 1;			\
 	    ITEM * q = (ITEM *)dst - 1;					\
 	    while (numbytes > 0) {					\
-		ITEM * obj = fxNEW(q) ITEM(*p);				\
+		ITEM * obj = new(q) ITEM(*p);				\
 		q--; p--;						\
 		numbytes -= elementsize;				\
 	    }								\
@@ -307,7 +308,7 @@ __enddef__
 	    const ITEM * p = (const ITEM *)src;				\
 	    ITEM * q = (ITEM *)dst;					\
 	    while (numbytes > 0) {					\
-		ITEM * obj = fxNEW(q) ITEM(*p);				\
+		ITEM * obj = new(q) ITEM(*p);				\
 		q++; p++;						\
 		numbytes -= elementsize;				\
 	    }								\

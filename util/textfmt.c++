@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/textfmt.c++,v 1.27 1994/05/16 19:32:45 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/textfmt.c++,v 1.35 1995/04/08 21:45:05 sam Rel $ */
 /*
- * Copyright (c) 1993, 1994 Sam Leffler
- * Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1995 Sam Leffler
+ * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -42,9 +43,11 @@
 #include "Types.h"
 #include "Array.h"
 #include "PageSize.h"
+#if HAS_LOCALE
 extern "C" {
 #include <locale.h>
 }
+#endif
 
 typedef long Coord;		// local coordinates
 #define LUNIT 	(72*20)		// local coord system is .05 scale
@@ -123,7 +126,10 @@ main(int argc, char* argv[])
     int c;
 
 #ifdef LC_CTYPE
-    setlocale(LC_CTYPE, "");
+    setlocale(LC_CTYPE, "");			// for <ctype.h> calls
+#endif
+#ifdef LC_TIME
+    setlocale(LC_TIME, "");			// for strftime calls
 #endif
     setDefaultFont();
     pageOff = new SizetArray;
@@ -152,7 +158,9 @@ main(int argc, char* argv[])
 	    break;
 	case 'f':		// body font
 	    if (!findFont(optarg)) {
-		fprintf(stderr, "%s: Unknown font \"%s\".\n", prog, optarg);
+		fprintf(stderr,
+		    "%s: No font metric information found for \"%s\".\n",
+		    prog, optarg);
 		usage();
 	    }
 	    font_name = optarg;
@@ -246,7 +254,8 @@ main(int argc, char* argv[])
 	    if (fp != NULL) {
 		struct stat sb;
 		if (fstat(fileno(fp), &sb) >= 0) {
-		    struct tm* tm = localtime(&sb.st_mtime);
+		    time_t mtime = (time_t) sb.st_mtime;
+		    struct tm* tm = localtime(&mtime);
 		    strftime(modTime, sizeof (modTime), "%X", tm);
 		    strftime(modDate, sizeof (modDate), "%D", tm);
 		}
@@ -326,7 +335,7 @@ Copy_Block(long b1,long b2)		/* copy bytes b1..b2 to stdout */
     char buf[16*1024];
 
     for (long k = b1; k <= b2; k += sizeof (buf)) {
-	size_t cc = fxmin(sizeof (buf), (u_int) (b2-k+1));
+	size_t cc = fxmin(sizeof (buf), (size_t) (b2-k+1));
 	fseek(tf, k, 0);		/* position to desired block */
 	if (fread(buf, 1, cc, tf) != cc)
 	    fatal("Input block length error on temporary file [%s]", tempfile);
@@ -336,51 +345,6 @@ Copy_Block(long b1,long b2)		/* copy bytes b1..b2 to stdout */
     fflush(stdout);
 }
 
-const char* ISOprologue1 = "\
-/ISOLatin1Encoding where{pop save true}{false}ifelse\n\
-/ISOLatin1Encoding[\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n\
- /.notdef /.notdef /space /exclam /quotedbl /numbersign\n\
- /dollar /percent /ampersand /quoteright /parenleft\n\
- /parenright /asterisk /plus /comma /minus /period\n\
- /slash /zero /one /two /three /four /five /six /seven\n\
- /eight /nine /colon /semicolon /less /equal /greater\n\
- /question /at /A /B /C /D /E /F /G /H /I /J /K /L /M\n\
- /N /O /P /Q /R /S /T /U /V /W /X /Y /Z /bracketleft\n\
- /backslash /bracketright /asciicircum /underscore\n\
- /quoteleft /a /b /c /d /e /f /g /h /i /j /k /l /m\n\
- /n /o /p /q /r /s /t /u /v /w /x /y /z /braceleft\n\
- /bar /braceright /asciitilde /guilsinglright /fraction\n\
- /florin /quotesingle /quotedblleft /guilsinglleft /fi\n\
- /fl /endash /dagger /daggerdbl /bullet /quotesinglbase\n\
- /quotedblbase /quotedblright /ellipsis /trademark\n\
- /perthousand /grave /scaron /circumflex /Scaron /tilde\n\
- /breve /zcaron /dotaccent /dotlessi /Zcaron /ring\n\
- /hungarumlaut /ogonek /caron /emdash /space /exclamdown\n\
- /cent /sterling /currency /yen /brokenbar /section\n\
- /dieresis /copyright /ordfeminine /guillemotleft\n\
- /logicalnot /hyphen /registered /macron /degree\n\
- /plusminus /twosuperior /threesuperior /acute /mu\n\
- /paragraph /periodcentered /cedilla /onesuperior\n\
- /ordmasculine /guillemotright /onequarter /onehalf\n\
- /threequarters /questiondown /Agrave /Aacute\n\
- /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla\n\
- /Egrave /Eacute /Ecircumflex /Edieresis /Igrave /Iacute\n\
- /Icircumflex /Idieresis /Eth /Ntilde /Ograve /Oacute\n\
- /Ocircumflex /Otilde /Odieresis /multiply /Oslash\n\
- /Ugrave /Uacute /Ucircumflex /Udieresis /Yacute /Thorn\n\
- /germandbls /agrave /aacute /acircumflex /atilde\n\
- /adieresis /aring /ae /ccedilla /egrave /eacute\n\
- /ecircumflex /edieresis /igrave /iacute /icircumflex\n\
- /idieresis /eth /ntilde /ograve /oacute /ocircumflex\n\
- /otilde /odieresis /divide /oslash /ugrave /uacute\n\
- /ucircumflex /udieresis /yacute /thorn /ydieresis\n\
-]def{restore}if\n\
-";
 const char* ISOprologue2 = "\
 /reencodeISO{\n\
   dup length dict begin\n\
@@ -399,6 +363,61 @@ const char* ISOprologue2 = "\
   }{false}ifelse\n\
 }def\n\
 ";
+
+/*
+ * Yech, instead of a single string that we fputs, we
+ * break things up into smaller chunks to satisfy braindead
+ * compilers...
+ */
+static void
+putISOPrologue(FILE* fd)
+{
+    fputs("/ISOLatin1Encoding where{pop save true}{false}ifelse\n", fd);
+    fputs("/ISOLatin1Encoding[\n", fd);
+    fputs(" /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n", fd);
+    fputs(" /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n", fd);
+    fputs(" /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n", fd);
+    fputs(" /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n", fd);
+    fputs(" /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef\n", fd);
+    fputs(" /.notdef /.notdef /space /exclam /quotedbl /numbersign\n", fd);
+    fputs(" /dollar /percent /ampersand /quoteright /parenleft\n", fd);
+    fputs(" /parenright /asterisk /plus /comma /minus /period\n", fd);
+    fputs(" /slash /zero /one /two /three /four /five /six /seven\n", fd);
+    fputs(" /eight /nine /colon /semicolon /less /equal /greater\n", fd);
+    fputs(" /question /at /A /B /C /D /E /F /G /H /I /J /K /L /M\n", fd);
+    fputs(" /N /O /P /Q /R /S /T /U /V /W /X /Y /Z /bracketleft\n", fd);
+    fputs(" /backslash /bracketright /asciicircum /underscore\n", fd);
+    fputs(" /quoteleft /a /b /c /d /e /f /g /h /i /j /k /l /m\n", fd);
+    fputs(" /n /o /p /q /r /s /t /u /v /w /x /y /z /braceleft\n", fd);
+    fputs(" /bar /braceright /asciitilde /guilsinglright /fraction\n", fd);
+    fputs(" /florin /quotesingle /quotedblleft /guilsinglleft /fi\n", fd);
+    fputs(" /fl /endash /dagger /daggerdbl /bullet /quotesinglbase\n", fd);
+    fputs(" /quotedblbase /quotedblright /ellipsis /trademark\n", fd);
+    fputs(" /perthousand /grave /scaron /circumflex /Scaron /tilde\n", fd);
+    fputs(" /breve /zcaron /dotaccent /dotlessi /Zcaron /ring\n", fd);
+    fputs(" /hungarumlaut /ogonek /caron /emdash /space /exclamdown\n", fd);
+    fputs(" /cent /sterling /currency /yen /brokenbar /section\n", fd);
+    fputs(" /dieresis /copyright /ordfeminine /guillemotleft\n", fd);
+    fputs(" /logicalnot /hyphen /registered /macron /degree\n", fd);
+    fputs(" /plusminus /twosuperior /threesuperior /acute /mu\n", fd);
+    fputs(" /paragraph /periodcentered /cedilla /onesuperior\n", fd);
+    fputs(" /ordmasculine /guillemotright /onequarter /onehalf\n", fd);
+    fputs(" /threequarters /questiondown /Agrave /Aacute\n", fd);
+    fputs(" /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla\n", fd);
+    fputs(" /Egrave /Eacute /Ecircumflex /Edieresis /Igrave /Iacute\n", fd);
+    fputs(" /Icircumflex /Idieresis /Eth /Ntilde /Ograve /Oacute\n", fd);
+    fputs(" /Ocircumflex /Otilde /Odieresis /multiply /Oslash\n", fd);
+    fputs(" /Ugrave /Uacute /Ucircumflex /Udieresis /Yacute /Thorn\n", fd);
+    fputs(" /germandbls /agrave /aacute /acircumflex /atilde\n", fd);
+    fputs(" /adieresis /aring /ae /ccedilla /egrave /eacute\n", fd);
+    fputs(" /ecircumflex /edieresis /igrave /iacute /icircumflex\n", fd);
+    fputs(" /idieresis /eth /ntilde /ograve /oacute /ocircumflex\n", fd);
+    fputs(" /otilde /odieresis /divide /oslash /ugrave /uacute\n", fd);
+    fputs(" /ucircumflex /udieresis /yacute /thorn /ydieresis\n", fd);
+    fputs("]def{restore}if\n", fd);
+    fputs(ISOprologue2, fd);
+}
+
 const char* normalISOFont = "\
 /N{/%s findfont\
   findISO{reencodeISO /%s-ISO exch definefont}if\
@@ -421,7 +440,7 @@ const char* defPrologue = "\
 /S{show grestore 0 -%d rmoveto}def\n\
 ";
 
-const char* headerPrologue = "\
+const char* headerPrologue1 = "\
 /InitGaudyHeaders{\n\
   /Columns exch def /HeaderY exch def /BarLength exch def\n\
   /ftD /Times-Bold findfont 12 UP scalefont def\n\
@@ -460,6 +479,8 @@ const char* headerPrologue = "\
     }for\n\
   }def\n\
 }def\n\
+";
+const char* headerPrologue2 = "\
 /InitNormalHeaders{\n\
   /Columns exch def /HeaderY exch def /BarLength exch def\n\
   /ftF /Times-Roman findfont 14 UP scalefont def\n\
@@ -520,18 +541,17 @@ emitPrologue(FILE* fd, int argc, char* argv[])
 
     fprintf(fd, "%%%%BeginProlog\n");
     fputs("/$printdict 50 dict def $printdict begin\n", fd);
-    if (useISO8859) {
-	fputs(ISOprologue1, fd);
-	fputs(ISOprologue2, fd);
-    }
+    if (useISO8859)
+	putISOPrologue(fd);
     fprintf(fd, defPrologue, lineHeight, pageHeight, LUNIT, lineHeight);
     if (useISO8859)
-	fprintf(tf, normalISOFont,
+	fprintf(fd, normalISOFont,
 	    font_name, font_name, pointSize/20, pointSize/20); 
     else
-	fprintf(tf, normalFont, font_name, pointSize/20);
-    fputs(headerPrologue, tf);
-    fprintf(tf, "%.2f %.2f %d Init%sHeaders\n"
+	fprintf(fd, normalFont, font_name, pointSize/20);
+    fputs(headerPrologue1, fd);
+    fputs(headerPrologue2, fd);
+    fprintf(fd, "%.2f %.2f %d Init%sHeaders\n"
 	, CVTI(pageWidth - (lm+rm))
 	, CVTI(pageHeight - tm)
 	, numcol

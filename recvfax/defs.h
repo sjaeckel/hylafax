@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/recvfax/RCS/defs.h,v 1.22 1994/06/06 22:01:19 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./recvfax/RCS/defs.h,v 1.33 1995/04/08 21:43:07 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -49,6 +50,8 @@ typedef struct _job {
     struct _job* next;
     unsigned int flags;
     char*	qfile;		/* associated q file name */
+    u_int	jobid;		/* job identifier */
+    u_int	groupid;	/* job group identifier */
     time_t	tts;		/* time to send */
     char*	killtime;	/* time to kill job */
     char*	sender;		/* sender's name */
@@ -59,12 +62,12 @@ typedef struct _job {
     char*	modem;		/* requested outgoing modem */
 } Job;
 
-#define	TYPE_TIFF	1
-#define	TYPE_POSTSCRIPT	2
+#define	TYPE_TIFF	1	/* TIFF/F document */
+#define	TYPE_POSTSCRIPT	2	/* postscript document */
+#define	TYPE_OPAQUE	3	/* untyped data */
 
 #define	isTag(a)	(strcasecmp(tag,a) == 0)
 #define	isCmd(a)	(strcasecmp(line,a) == 0)
-#define	MIN(a,b)	((a)<(b)?(a):(b))
 
 extern	char* SPOOLDIR;
 
@@ -77,12 +80,12 @@ extern	char line[1024];		/* current input line */
 extern	char* tag;			/* keyword: tag */
 extern	int debug;
 extern	Job* jobList;
-extern	int seqnum;
 extern	int version;			/* protocol version */
 extern	char userID[1024];		/* user identity */
 extern	struct tm now;			/* ``current'' time of day */
 
 extern	int getCommandLine();
+extern	const char* getClientIdentity();
 extern	void newDataFile(char* filename, int type);
 extern	Job* readJobs();
 extern	void checkPermission();
@@ -96,14 +99,20 @@ extern	void sendAndLogError(char* fmt, ...);
 extern	void protocolBotch(char* fmt, ...);
 extern	void vsendClient(char* tag, char* fmt, va_list ap);
 extern	void done(int status, char* how);
+extern	int openFIFO(const char* fifoname);
 
 extern	int modemMatch(const char*, const char*);
 typedef	void jobFunc(Job*, const char*, const char* arg);
 extern	void applyToJob(const char* modem, char* tag, const char* op, jobFunc*);
+extern	void applyToJobGroup(const char* modem,
+		char* tag, const char* op, jobFunc*);
 
 extern	void newPollID(const char* modem, char* pid);
 extern	void getTIFFData(const char* modem, char* tag);
 extern	void getPostScriptData(const char* modem, char* tag);
+extern	void getOpaqueData(const char* modem, char* tag);
+extern	void getZPostScriptData(const char* modem, char* tag);
+extern	void getZOpaqueData(const char* modem, char* tag);
 extern	void getDataOldWay(const char* modem, char* tag);
 extern	void submitJob(const char* modem, char* tag);
 extern	void sendRecvStatus(const char* modem, char* tag);
@@ -118,4 +127,14 @@ extern	void alterJobTTS(const char* modem, char* tag);
 extern	void alterJobKillTime(const char* modem, char* tag);
 extern	void alterJobMaxDials(const char* modem, char* tag);
 extern	void alterJobNotification(const char* modem, char* tag);
+extern	void alterJobModem(const char* modem, char* tag);
+extern	void alterJobPriority(const char* modem, char* tag);
+extern	void removeJobGroup(const char* modem, char* tag);
+extern	void killJobGroup(const char* modem, char* tag);
+extern	void alterJobGroupTTS(const char* modem, char* tag);
+extern	void alterJobGroupKillTime(const char* modem, char* tag);
+extern	void alterJobGroupMaxDials(const char* modem, char* tag);
+extern	void alterJobGroupNotification(const char* modem, char* tag);
+extern	void alterJobGroupModem(const char* modem, char* tag);
+extern	void alterJobGroupPriority(const char* modem, char* tag);
 #endif /* _DEFS_ */

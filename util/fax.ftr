@@ -1,9 +1,10 @@
-#	$Header: /usr/people/sam/fax/util/RCS/fax.ftr,v 1.7 1993/04/18 18:05:53 sam Exp $
+#	$Header: /usr/people/sam/fax/./util/RCS/fax.ftr,v 1.10 1995/04/08 21:44:48 sam Rel $
 #
-# FlexFAX Facsimile Software
+# HylaFAX Facsimile Software
 #
-# Copyright (c) 1990, 1991, 1992, 1993 Sam Leffler
-# Copyright (c) 1991, 1992, 1993 Silicon Graphics, Inc.
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
 # its documentation for any purpose is hereby granted without fee, provided
@@ -24,6 +25,7 @@
 # LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 # OF THIS SOFTWARE.
 #
+
 TYPE FAXImageFile
     MATCH       (short(0) == 0x4d4d) || (short(0) == 0x4949);
 #    MATCH      (short(0) == 0x4d4d && short(1) == 0x002a) ||

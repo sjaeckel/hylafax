@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class20.c++,v 1.17 1994/09/23 00:59:30 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class20.c++,v 1.24 1995/04/08 21:29:41 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,31 +32,33 @@
 Class20Modem::Class20Modem(FaxServer& s, const ModemConfig& c) : Class2Modem(s,c)
 {
     serviceType = SERVICE_CLASS20;
-    setupDefault(classCmd,	conf.class2Cmd,		"+FCLASS=2.0");
-    setupDefault(mfrQueryCmd,	conf.mfrQueryCmd,	"+FMI?");
-    setupDefault(modelQueryCmd,	conf.modelQueryCmd,	"+FMM?");
-    setupDefault(revQueryCmd,	conf.revQueryCmd,	"+FMR?");
-    setupDefault(dccQueryCmd,	conf.class2DCCQueryCmd, "+FCC=?");
-    setupDefault(abortCmd,	conf.class2AbortCmd,	"KS");
+    setupDefault(classCmd,	conf.class2Cmd,		"AT+FCLASS=2.0");
+    setupDefault(mfrQueryCmd,	conf.mfrQueryCmd,	"AT+FMI?");
+    setupDefault(modelQueryCmd,	conf.modelQueryCmd,	"AT+FMM?");
+    setupDefault(revQueryCmd,	conf.revQueryCmd,	"AT+FMR?");
+    setupDefault(dccQueryCmd,	conf.class2DCCQueryCmd, "AT+FCC=?");
+    setupDefault(abortCmd,	conf.class2AbortCmd,	"AT+FKS");
 
-    setupDefault(borCmd,	conf.class2BORCmd,	"BO=0");
-    setupDefault(tbcCmd,	conf.class2TBCCmd,	"PP=0");
-    setupDefault(crCmd,		conf.class2CRCmd,	"CR=1");
-    setupDefault(phctoCmd,	conf.class2PHCTOCmd,	"CT=30");
-    setupDefault(bugCmd,	conf.class2BUGCmd,	"BU=1");
-    setupDefault(lidCmd,	conf.class2LIDCmd,	"LI");
-    setupDefault(dccCmd,	conf.class2DCCCmd,	"CC");
-    setupDefault(disCmd,	conf.class2DISCmd,	"IS");
-    setupDefault(cigCmd,	conf.class2CIGCmd,	"PI");
-    setupDefault(splCmd,	conf.class2SPLCmd,	"SP");
-    setupDefault(ptsCmd,	conf.class2PTSCmd,	"PS");
+    setupDefault(borCmd,	conf.class2BORCmd,	"AT+FBO=0");
+    setupDefault(tbcCmd,	conf.class2TBCCmd,	"AT+FPP=0");
+    setupDefault(crCmd,		conf.class2CRCmd,	"AT+FCR=1");
+    setupDefault(phctoCmd,	conf.class2PHCTOCmd,	"AT+FCT=30");
+    setupDefault(bugCmd,	conf.class2BUGCmd,	"AT+FBU=1");
+    setupDefault(lidCmd,	conf.class2LIDCmd,	"AT+FLI");
+    setupDefault(dccCmd,	conf.class2DCCCmd,	"AT+FCC");
+    setupDefault(disCmd,	conf.class2DISCmd,	"AT+FIS");
+    setupDefault(cigCmd,	conf.class2CIGCmd,	"AT+FPI");
+    setupDefault(splCmd,	conf.class2SPLCmd,	"AT+FSP");
+    setupDefault(ptsCmd,	conf.class2PTSCmd,	"AT+FPS");
+
+    setupDefault(noFlowCmd,	conf.class2NFLOCmd,	"AT+FLO=0");
+    setupDefault(softFlowCmd,	conf.class2SFLOCmd,	"AT+FLO=1");
+    setupDefault(hardFlowCmd,	conf.class2HFLOCmd,	"AT+FLO=2");
 
     // ignore procedure interrupts
-    setupDefault(pieCmd,	conf.class2PIECmd,	"IE=0");
+    setupDefault(pieCmd,	conf.class2PIECmd,	"AT+FIE=0");
     // enable reporting of everything
-    setupDefault(nrCmd,		conf.class2NRCmd,	"NR=1,1,1,1");
-
-    rtcRev = TIFFGetBitRevTable(conf.sendFillOrder == FILLORDER_LSB2MSB);
+    setupDefault(nrCmd,		conf.class2NRCmd,	"AT+FNR=1,1,1,1");
 }
 
 Class20Modem::~Class20Modem()
@@ -70,6 +73,7 @@ Class20Modem::atResponse(char* buf, long ms)
 	if (strneq(buf, "+FHS:", 5)) {
 	    processHangup(buf+5);
 	    lastResponse = AT_FHNG;
+	    hadHangup = TRUE;
 	} else if (strneq(buf, "+FCO", 4))
 	    lastResponse = AT_FCON;
 	else if (strneq(buf, "+FPO", 4))
@@ -119,16 +123,16 @@ Class20Modem::sendPage(TIFF* tif)
     /*
      * Correct bit order of data if not what modem expects.
      */
-    u_short fillorder;
+    uint16 fillorder;
     TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
     const u_char* bitrev = TIFFGetBitRevTable(fillorder != conf.sendFillOrder);
 
     fxBool firstStrip = setupTagLineSlop(params);
     u_int ts = getTagLineSlop();
-    u_long* stripbytecount;
+    uint32* stripbytecount;
     (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
-    for (u_int strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
-	u_int totbytes = (u_int) stripbytecount[strip];
+    for (tstrip_t strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
+	uint32 totbytes = stripbytecount[strip];
 	if (totbytes > 0) {
 	    u_char* data = new u_char[totbytes+ts];
 	    if (TIFFReadRawStrip(tif, strip, data+ts, totbytes) >= 0) {
@@ -147,39 +151,22 @@ Class20Modem::sendPage(TIFF* tif)
 		 * being careful not to get hung up.
 		 */
 		beginTimedTransfer();
-		rc = putModemDLEData(dp, totbytes, bitrev, getDataTimeout());
+		rc = putModemDLEData(dp, (u_int) totbytes, bitrev,
+		    getDataTimeout());
 		endTimedTransfer();
 		protoTrace("SENT %u bytes of data", totbytes);
 	    }
 	    delete data;
 	}
     }
-    if (!rc) {
+    if (!rc)
 	abortDataTransfer();
-	(void) sendRTC(params.is2D());
-    } else
+    else
 	rc = sendRTC(params.is2D());
     if (flowControl == FLOW_XONXOFF)
 	setXONXOFF(getInputFlow(), FLOW_XONXOFF, ACT_DRAIN);
     protoTrace("SEND end page");
     return (rc);
-}
-
-/*
- * Send RTC to terminate a page.
- */
-fxBool
-Class20Modem::sendRTC(fxBool is2D)
-{
-    static const u_char RTC1D[9] =
-	{ 0x00,0x10,0x01,0x00,0x10,0x01,0x00,0x10,0x01 };
-    static const u_char RTC2D[10] =
-	{ 0x00,0x18,0x00,0xC0,0x06,0x00,0x30,0x01,0x80,0x0C };
-    protoTrace("SEND %s RTC", is2D ? "2D" : "1D");
-    if (is2D)
-	return putModemDLEData(RTC2D, sizeof (RTC2D), rtcRev, getDataTimeout());
-    else
-	return putModemDLEData(RTC1D, sizeof (RTC1D), rtcRev, getDataTimeout());
 }
 
 /*

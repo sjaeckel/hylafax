@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/Str.h,v 1.8 1994/05/28 00:06:29 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/Str.h,v 1.14 1995/04/08 21:44:27 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -91,6 +92,8 @@ public:
     fxStr(const fxTempStr&);
     ~fxStr();
 
+    static fxStr format(const char* fmt ...);	// sprintf sort of
+    static fxStr null;				// null string for general use
     /////////////////////////////////////////////////////
     u_long hash() const;
 
@@ -193,7 +196,15 @@ public:
     u_int nextR(u_int posn, char const*, u_int len=0) const;
     u_int nextR(u_int posn, fxStr const& delimiters) const
 	{ return nextR(posn, (char*)delimiters, delimiters.slength-1); }
-					  
+
+    u_int find(u_int posn, char const* str, u_int len=0) const;
+    u_int find(u_int posn, fxStr const& str) const
+	{ return find(posn, str, str.slength-1); }
+
+    u_int findR(u_int posn, char const* str, u_int len=0) const;
+    u_int findR(u_int posn, fxStr const& str) const
+	{ return findR(posn, str, str.slength-1); }
+
     u_int skip(u_int posn, char a) const; 
     u_int skip(u_int posn, char const *, u_int len=0) const;
     u_int skip(u_int posn, fxStr const& delimiters) const
@@ -230,7 +241,7 @@ protected:
     // zero-length string support
     // resizeInternal doesn't update slength or handle null termination
     static char emptyString;
-    void fxStr::resizeInternal(u_int);
+    void resizeInternal(u_int);
 
     int findEndBuffer(const char *, u_int buflen) const;
     int findBuffer(const char *buf, u_int buflen) const;

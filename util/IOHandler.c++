@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1987, 1988, 1989, 1990, 1991 Stanford University
  * Copyright (c) 1991 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided

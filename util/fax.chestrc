@@ -13,12 +13,12 @@
 #     no-label           f.separator
 #    "Hosts"             f.menu Hosts
 #     no-label           f.separator
-#    "FlexFAX"           f.menu FlexFAX
+#    "HylaFAX"           f.menu HylaFAX
 #}
 
-Menu FlexFAX
+Menu HylaFAX
 {
-    "FlexFAX"           f.title
+    "HylaFAX"           f.title
     "View Receive Queue" f.exec "/usr/sbin/dirview /usr/spool/fax/recvq"
     no-label            f.separator
     "Answer Phone"      f.exec "/usr/local/bin/faxanswer ttym2"

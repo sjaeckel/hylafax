@@ -1,24 +1,86 @@
-B fix line regeneration for modems that return EOLs not byte-aligned
-B fix tag line imaging for 2D-encoded source with EOLs not byte-aligned
-B slip login aborts 'cuz of uucp lock file problem
-B faxmail multi-page output loses pages
-B aborted receives get an extra page written to the file 'cuz there's no
-  way to force TIFF directory to be unlinked
-H rewrite queue management to better utilize modems and to minimize
-  document conversion
-H permit call type deduction logic used when answering an inbound call to
-  be user-configurable (useful for distinctive ring)
-M bound transmit page count on a per-user basis
-M time-of-day restrictions on dialing
-M polled transmission of documents (can already poll to receive)
-M fix race condition between remove and dial failure
-M redo client-server protocol along the lines of ftp et. al.
-M complete api for integration with applications
-  (perhaps should wait new client-server protocol)
-M calculate filled region of each page and transmit only the imaged
-  area if the receiver is capable
-L faxmove program, analogous to lpmove
-L support for new T.30 routing stuff
+#	$Header: /usr/people/sam/fax/./RCS/TODO,v 1.113 1995/04/08 21:12:08 sam Rel $
+#
+# HylaFAX Facsimile Software
+#
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics, Inc.
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+B  job queue tracing in faxq gets disabled after a while
+B  replace DEV_PREFIX usage with _PATH_DEV
+B  polling bug in Class 1 driver (reset FCF sndr/rcvr bit at start of Phase B)
+?  should max send pages truncate job or terminate w/o sending?
+B  ps2fax should limit the #pages generated according to maxsendpages;
+   otherwise a large file can be created only to be rejected by the queuer
+   (hard, requires mod to ghostscript et. al.)
+B  no timeout in Class 1 receive if data is received when waiting for OK
+   after transmit of TSI (happens easily if wrong receive baud rate setup)
+B  not processing +FHNG: response to AT+FDT properly (extra read+timeout)
+B? verify send_reformat processing done correctly
+B? wtmp not updated on AIX after termination of data connection
+   Steve Williams <steve@geniers.cuug.ab.ca>
+B? bad UUCP lockfile permissions on AIX
+   Steve Williams <steve@geniers.cuug.ab.ca>
+B? DataPort<->MicroPorte wedges when retraining after EOM
+H  faxq should automatically reread the config file
+H  send notification when fax receive fails due to a protocol error
+   with 0 pages received
+H  accept parameters for programs specified in the config file so, for
+   example, you can pass a -p option to faxsend
+H  per-destination modem parameters such as ModemWaitForCarrier (pass from
+   DestControls file down to send apps?)
+H  per-destination capabilities restrictions made easier (restrict signalling
+   rate to 9600 for overseas calls)
+H  add jobid to xferlog file for charge back use
+H  why does 2D decoder leave a0 set past EOL?
+H  recv protocol additions from ctb; redo client-server protocol
+   along the lines of ftp et. al.; complete api for integration
+   with applications
+H  replace IXO/TAP client-server protocol with SNPP per RFC1645
+H  voice support integration
+H  VOICE/ANSWER button support for ZyXEL
+BM aborted receives get an extra page written to the
+   file (use TIFFUnlinkDirectory)
+BM race in queuer/Dispatcher collecting child process status (hack sleep
+   in child for now)
+BM fix line regeneration for modems that return EOLs not byte-aligned
+BM fix tag line imaging for 2D-encoded source with EOLs not byte-aligned
+M  batch multiple jobs to the same destination
+M  redo accounting to be page-based so we can see per-page transfer
+   characteristics and track errors better
+M  bound transmit page count on a per-user basis
+M  polled transmission of documents (can already poll to receive)
+M  add TOD control to TSI+CID access control lists?
+M  add type of call control for CID access control list?
+M  calculate filled region of each page and transmit only the imaged
+   area if the receiver is capable
+M  restructure modem classes to support multi-class modems (e.g. class 1+2)
+L  changing max send pages dynamically has no effect if job is already prepared
+L  faxmove program, analogous to lpmove
+L  support for new T.30 routing stuff
+L  permit call type deduction logic used when answering an inbound call to
+   be user-configurable (useful for distinctive ring)--not so important now
+   with configurable distinctive ring support builtin
 
 B = outright bug
 H = high priority

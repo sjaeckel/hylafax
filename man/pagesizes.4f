@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/pagesizes.4f,v 1.3 1994/06/24 02:32:04 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/pagesizes.4f,v 1.10 1995/04/08 21:36:02 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993, 1994 Sam Leffler
-.\" Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1995 Sam Leffler
+.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,14 +25,15 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.TH PAGESIZES 4F "May 12, 1993"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH PAGESIZES 4F "December 5, 1994"
 .SH NAME
 pagesizes \- \*(Fx page size definitions
 .SH DESCRIPTION
 The
 .I pagesizes
-database defines the page dimensions and guaranteed reproduceable
+database defines the page dimensions and guaranteed reproducible
 areas (\s-1GRA\s+1) for well-known page sizes.
 The 
 .SM GRA
@@ -61,38 +63,38 @@ file with the following format.
 Each entry consists of whitespace-separated fields:
 .nf
 .sp .5
-.ta \w'name    'u +\w'abbreviation    'u +\w'width    'u +\w'height    'u +\w'gra-width    'u +\w'gra-height    'u +\w'top-margin    'u 
-name	abbreviation	width	height	gra-width	gra-height	top-margin	left-margin
+\fCname  abbrev  width  height  gra-width  gra-height  top-margin  left-margin\fP
 .sp .5
 .fi
-.TP 15
-.I name
+Fields have the following interpretation:
+.TP 12
+.B name
 the full name for the page size; e.g. \s-1ISO A4\s+1;
-.TP 15
-.I abbreviation
+.TP
+.B abbrev
 an abbreviated version of the full name for use in compact listings such
 as the receive queue listing printed by
 .IR faxstat (1);
-.TP 15
-.I width
+.TP
+.B width
 the full width of the page;
-.TP 15
-.I height
+.TP
+.B height
 the full height of the page;
-.TP 15
-.I gra-width
+.TP
+.B gra-width
 the width of the
 .SM GRA;
-.TP 15
-.I gra-height
+.TP
+.B gra-height
 the height of the
 .SM GRA;
-.TP 15
-.I top-margin
+.TP
+.B top-margin
 the margin between the top of the full page and the top of the
 .SM GRA;
-.TP 15
-.I left-margin
+.TP
+.B left-margin
 the margin between the left side of the full page the left side of the
 .SM GRA.
 .PP
@@ -110,9 +112,9 @@ to the end the line.
 .PP
 Page size database lookups are either by name or by page dimensions.
 Lookups by name are done by sequentially scanning the entries in
-the database for the first entry that has a matching substring
-on the page size name field.
-The string comparison ignores case so,
+the database for the first entry that has a matching 
+abbreviation or substring of the page size name field.
+The string comparisons ignore case so,
 for example, ``a4'' would match a full name of ``\s-1ISO A4\s+1''.
 Lookups by dimension scan the entire database and return the
 page with the closest dimensions using a straightforward distance metric.
@@ -120,5 +122,9 @@ If the difference in dimensions of the closest match is greater than
 1/2 inch on each side, then no page entry is returned for a lookup by
 dimension.
 .SH "SEE ALSO"
+.IR hylafax (1),
+.IR faxmail (1),
+.IR faxstat (1),
 .IR sendfax (1),
-.IR faxd (1M)
+.IR sgi2fax (1),
+.IR textfmt (1).

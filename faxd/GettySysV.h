@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/GettySysV.h,v 1.13 1994/02/28 14:14:37 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/GettySysV.h,v 1.18 1995/04/08 21:30:45 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -32,7 +33,15 @@
 
 struct utmp;
 
-class SysVGetty : public Getty {
+class SysVSubProc : public Getty {
+protected:
+    void setupSession(int modemFd);
+public:
+    SysVSubProc(const char* path, const fxStr& dev, const fxStr& speed);
+    ~SysVSubProc();
+};
+
+class SysVGetty : public SysVSubProc {
 private:
     int		exitStatus;	// login's exit status
 
@@ -41,12 +50,10 @@ private:
     void loginAccount();
     void writeWtmp(utmp* ut);
 public:
-    SysVGetty(const fxStr& dev, const fxStr& speed, u_int timeout = 60);
+    SysVGetty(const char* path, const fxStr& dev, const fxStr& speed);
     ~SysVGetty();
 
-    static fxBool isSysVGetty();
-
-    fxBool wait(int& status, fxBool block = FALSE);
     void hangup();
+    fxBool wait(int& status, fxBool block = FALSE);
 };
 #endif /* _SYSVGETTY_ */

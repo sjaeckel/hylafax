@@ -1,0 +1,110 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: [PC] Why can't I get HylaFAX to use RTS/CTS on a Digiboard port?
+</TITLE></HEAD><BODY>
+<H1>Q29: [PC] Why can't I get HylaFAX to use RTS/CTS on a Digiboard port?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=%5BPC%5D+Why+can%27t+I+get+HylaFAX+to+use+RTS%2FCTS+on+a+Digiboard+port%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Why can't I get FlexFAX to use RTS/CTS on a Digiboard port?</I>
+<P>
+Has anyone got any experience of using FlexFAX with Digiboards and
+Hardware Flow Control ? Under System V.4?
+<P>
+<DT>A.
+<DD>Yes, I have it working with Dell SysVr4, an eisa Digiboard, and a
+recent Boca modem.  Using the CCON/16 where the connector box
+doubles as an RS232 breakout box it is easy to see that h/w flow
+control is working.  I understand that it might not work with other
+fax modems, though.
+<P>
+<DT>Q.<DD><I>
+I've been using FlexFAX on a "normal" sas driven com port on Esix
+4.0.4 with no problem.  I expected to be able to simply switch it
+and the same modem over to a digiboard port. I use /dev/ttyi1a
+hard-linked to /dev/term/i1a. My problem is that I can't get the
+port to hold on to RTS/CTS flow control when using flexfax. Neither
+uucp nor ppp have any trouble with the Digiboard, but FlexFAX does.
+I can put hw flow control on the port with ditty, but as soon as
+FlexFAX runs its gone.
+<P>
+I have to admit I'm out of my depth with how the port knows what
+its supposed to be (I can read man pages, but that's not the same
+as knowing:-)). I've tried fiddling around with all sorts of things
+including ttymon, but had no luck so far.
+<P>
+Any tips would be most appreciated.
+</I>
+<P>
+<DT>A.
+<DD><LISTING>
+> Digiboard uses two device naming schemes with their drivers.
+> On SVR4, these are:
+> 
+> 	/dev/term/i#x
+> 	    and
+> 	/dev/term/i#X
+> Where:
+> 	"/dev/term/i" is the root name of all ports
+> 	"#" is the board number (ie. 1 for the first board, 2 for the second)
+> 	"x" or "X" is a letter a-z or A-Z (a for the first port, etc)
+> 	An upper case letter is used to denote the hardware flow control
+> 	port (or modem control port).  This port blocks on open until
+> 	carrier is raised and enables RTS/CTS flow control.  To use the
+> 	port without carrier, you need to open it with O_NDELAY set.
+> 	A lower case letter denotes a software flow control port that
+> 	does not need carrier for the open to succeed.
+</LISTING>
+The CX drivers use
+<LISTING>
+ /dev/term/a##s and /dev/term/a##m
+
+where: a is a letter corresponding to which of the 16-port boxes you want
+       ## is the port number (01-16) on that unit
+       m indicates hardware modem control, s indicates software.
+</LISTING>
+<LISTING>
+> SVR4 added a an easy way to enable hardware flow control with the
+> termiox(7) extensions to termio(7), but some serial board makers haven't
+> seen the light yet. 
+</LISTING>
+I thought these worked, but now it occurs to me that I have not had
+any occasion where I wanted to turn off h/w flow control if the
+connected device used it.  
+<LISTING>
+> I have had to modify several programs to enable hardware flow control
+> for both SVR4 and Digiboard drivers.  I wish I could just use the SVR4
+> termiox(7) method.
+</LISTING>
+I've just used the modem control device in the first place and if
+necessary, modified the software to use O_NDELAY in the open().  In
+my opinion, software that talks to modems should be aware that carrier
+detect is not going to be present before dialing.
+<LISTING>
+> So, you could add some code to FlexFax to enable RTS/CTS flow control,
+> but it will only work for Digiboards or you can try to use the modem
+> control devices.
+</LISTING>
+FlexFAX will open the modem control device without any changes.  However
+you may need to use the device without modem control for the faxaddmodem
+script and change the name afterwards.  Version 5A of kermit has a "set
+carrier off" command so you can easily chat with off-line modems.
+I used it to send an "AT&C0&D0" command to the modem so it would
+temporarily hold carrier detect up for the faxaddmodem and probemodem
+scripts.  I recommend keeping a copy around if you need a handy way to
+set up modems. 
+
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

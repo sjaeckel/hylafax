@@ -1,0 +1,31 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: [SunOS] Utmp/motd not updated on SunOS-4.1.3_U1?
+</TITLE></HEAD><BODY>
+<H1>Q38: [SunOS] Utmp/motd not updated on SunOS-4.1.3_U1?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=%5BSunOS%5D+Utmp%2Fmotd+not+updated+on+SunOS%2D4%2E1%2E3%5FU1%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>[SunOS] Utmp/motd not updated on SunOS-4.1.3_U1?</I>
+<P>
+I'm finding that login(1) only updates lastlog,
+leaving utmp and wtmp alone.
+<P>
+<DT>A.
+<DD>This happens when you don't have a ttytab entry for the dial-in device,
+or if a device has multiple links and the reference in ttytab is not the
+first one in /dev.  See also ttyslot(3V).
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/recvfax/RCS/alter.c,v 1.15 1994/05/16 19:19:56 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./recvfax/RCS/alter.c,v 1.20 1995/04/08 21:43:05 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -77,6 +78,12 @@ cvtTimeToAscii(const char* spec, char* buf, const char* what)
     sprintf(buf, "%lu", when);
 }
 
+#define	DEFINE_Alter(param)						\
+void alterJob##param(const char* modem, char* tag)			\
+    { applyToJob(modem, tag, "alter", reallyAlterJob##param); }		\
+void alterJobGroup##param(const char* modem, char* tag)			\
+    { applyToJobGroup(modem, tag, "alter", reallyAlterJob##param); }
+
 static void
 reallyAlterJobTTS(Job* job, const char* jobname, const char* spec)
 {
@@ -85,43 +92,44 @@ reallyAlterJobTTS(Job* job, const char* jobname, const char* spec)
     if (reallyAlterJob(job, jobname, "tts", tts))
 	notifyServer(job->modem, "JT%s %s", job->qfile, tts);
 }
-void
-alterJobTTS(const char* modem, char* tag)
-{
-    applyToJob(modem, tag, "alter", reallyAlterJobTTS);
-}
+DEFINE_Alter(TTS)
 
 static void
-reallyAlterJobKilltime(Job* job, const char* jobname, const char* spec)
+reallyAlterJobKillTime(Job* job, const char* jobname, const char* spec)
 {
     char killtime[20];
     cvtTimeToAscii(spec, killtime, "kill-time");
-    (void) reallyAlterJob(job, jobname, "killtime", killtime);
+    if (reallyAlterJob(job, jobname, "killtime", killtime))
+	notifyServer(job->modem, "JK%s %s", job->qfile, killtime);
 }
-void
-alterJobKillTime(const char* modem, char* tag)
+DEFINE_Alter(KillTime)
+
+static void
+reallyAlterJobModem(Job* job, const char* jobname, const char* device)
 {
-    applyToJob(modem, tag, "alter", reallyAlterJobKilltime);
+    if (reallyAlterJob(job, jobname, "modem", device))
+	notifyServer(job->modem, "JM%s %s", job->qfile, device);
 }
+DEFINE_Alter(Modem)
+
+static void
+reallyAlterJobPriority(Job* job, const char* jobname, const char* priority)
+{
+    if (reallyAlterJob(job, jobname, "priority", priority))
+	notifyServer(job->modem, "JP%s %s", job->qfile, priority);
+}
+DEFINE_Alter(Priority)
 
 static void
 reallyAlterJobMaxDials(Job* job, const char* jobname, const char* max)
 {
     (void) reallyAlterJob(job, jobname, "maxdials", max);
 }
-void
-alterJobMaxDials(const char* modem, char* tag)
-{
-    applyToJob(modem, tag, "alter", reallyAlterJobMaxDials);
-}
+DEFINE_Alter(MaxDials)
 
 static void
 reallyAlterJobNotification(Job* job, const char* jobname, const char* note)
 {
     (void) reallyAlterJob(job, jobname, "notify", note);
 }
-void
-alterJobNotification(const char* modem, char* tag)
-{
-    applyToJob(modem, tag, "alter", reallyAlterJobNotification);
-}
+DEFINE_Alter(Notification)

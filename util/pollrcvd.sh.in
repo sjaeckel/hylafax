@@ -1,0 +1,82 @@
+#! @SCRIPT_SH@
+#	$Header: /usr/people/sam/fax/./util/RCS/pollrcvd.sh.in,v 1.13 1995/04/08 21:44:59 sam Rel $
+#
+# @WARNING@
+#
+# HylaFAX Facsimile Software
+#
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+#
+# VERSION:	@VERSION@
+# TARGET:	@TARGET@
+#
+
+SENDMAIL=@SENDMAIL@
+ENCODE=uuencode
+DECODE=uudecode
+#
+# pollrcvd mailaddr faxfile time protocol sigrate error-msg [devID]
+#
+if test $# != 6 -a $# != 7
+then
+    echo "Usage: $0 mailaddr faxfile time sigrate protocol error-msg [devID]"
+    exit 1
+fi
+mailaddr=$1; shift
+
+PATH=/bin:/usr/bin:
+test -d /usr/ucb  && PATH=$PATH:/usr/ucb		# Sun and others
+test -d /usr/bsd  && PATH=$PATH:/usr/bsd		# Silicon Graphics
+test -d /usr/5bin && PATH=/usr/5bin:$PATH:/usr/etc	# Sun and others
+test -d /usr/sbin && PATH=/usr/sbin:$PATH		# 4.4BSD-derived
+
+(
+echo "Subject: document received by polling request";
+echo "";
+@SBIN@/faxinfo $1
+cat<<EOF
+TimeToRecv: $2 minutes
+SignalRate: $3
+DataFormat: $4
+ReceivedOn: ${6:-Unspecified Device}
+EOF
+if [ "$5" ]; then
+    echo ""
+    echo "The full document was not received because:"
+    echo ""
+    echo "    $5"
+fi
+cat<<EOF
+
+    ---- Encoded facsimile file ----
+
+The data enclosed below is encoded by $ENCODE.  The binary facsimile
+data can be recovered by passing this message through the $DECODE
+command to generate the file fax.tif.
+
+EOF
+cat $1 | $ENCODE fax.tif
+) | 2>&1 $SENDMAIL -ffax -oi $mailaddr

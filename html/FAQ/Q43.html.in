@@ -1,0 +1,29 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Windows 3.1 client for FlexFAX/HylaFAX
+</TITLE></HEAD><BODY>
+<H1>Q43: Windows 3.1 client for FlexFAX/HylaFAX</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Windows+3%2E1+client+for+FlexFAX%2FHylaFAX">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Windows client for FlexFAX/HylaFAX?</I>
+<P>
+<DT>A.
+<DD>WinFlex is a WinSock based client for FlexFAX (and HylaFAX)
+from Peter Bentley <A HREF="mailto:pete@tecc.co.uk"><pete@tecc.co.uk></A>.
+WinFlex 0.4 is only available in binary and from
+<A HREF="ftp://ftp.tecc.co.uk/pub/winflex">ftp.tecc.co.uk:/pub/winflex</A>.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,0 +1,82 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Document file is not valid TIFF ...?
+</TITLE></HEAD><BODY>
+<H1>Q20: Document file is not valid TIFF ...?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Document+file+is+not+valid+TIFF+%2E%2E%2E%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>"Document file is not valid TIFF ..."?</I>
+<P>
+I have compiled v2.2.2beta043, but still no go! Can only receive
+fax but sending results in errors.
+I use 
+<LISTING>
+    sendfax -d xxxxxx -lm -p -v plot.ps
+</LISTING>
+to submit a fax (plot.ps genterated by gnuplot, checked wtih gs)
+and I get this error
+<LISTING>
+    "Document file is not valid TIFF (check for PostScript conversion problems)"
+</LISTING>
+in the server trace log.
+I don't know why the PostrScript file is not valid.
+What other debug commands can I use?  Your help is really appreciated.
+<P>
+<DT>A.
+<DD>This diagnostic means that the server invoked the PostScript interpreter
+to image a submitted PostScript document but the resultant document
+file was invalid (TIFF is the file format used for imaged facsimile).
+If the server machine is setup correctly this should never happen.
+(Incorrect PostScript documents should be returned to the user with
+a different diagnostic.)
+<P>
+The problem must be debugged on the server machine.
+The following step-by-step procedure might be used:
+<OL>
+<LI>
+Run 
+<A HREF="@CGIPATH@/manpage?1+faxquit">faxquit</A>
+to stop the fax server.
+<LI>
+Submit the problematic job using the
+<A HREF="@CGIPATH@/manpage?1+sendfax">sendfax</A>
+program or similar.
+<LI>
+Position yourself at the top of the server spooling area;
+<LISTING>
+    cd /usr/spool/fax
+</LISTING>
+<LI>
+Invoke the PostScript interpreter script as done by the fax server:
+<LISTING>
+    bin/ps2fax -o t.tif docq/doc*.cover
+</LISTING>
+and look for problems.
+(Actually the above command line is a simplified version of the one
+used by the fax server; you can find the exact command line
+used by the fax server in the server trace log.)
+</OL>
+<P>
+From this you should see exactly why the PostScript interpreter
+is not functioning as expected.  Once
+you've done that you can backtrack to figure out the step in the
+installation procedure that was not done correctly.  If step 4 generates
+a valid TIFF file in
+the output file <B>t.tif</B>, then there is some problem associated with
+the environment the server runs in (e.g. the environment variable that
+specifies where to search for dynamically loaded libraries).
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/class2.h,v 1.14 1994/02/28 14:14:42 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/class2.h,v 1.18 1995/04/08 21:31:11 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -69,6 +70,8 @@ const int LN_A4		= 0;		// A4, 297 mm
 const int LN_B4		= 1;		// B4, 364 mm
 const int LN_INF	= 2;		// Unlimited length
 const int LN_ALL	= BIT(LN_INF+1)-1;
+
+const int LN_LET	= 3;		// XXX US Letter size (used internally)
 
 const int DF_1DMR	= 0;		// 1-D Modified Huffman
 const int DF_2DMR	= 1;		// 2-D Modified Huffman

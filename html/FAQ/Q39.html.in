@@ -1,0 +1,45 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: terminal-based sendfax interface available
+</TITLE></HEAD><BODY>
+<H1>Q39: terminal-based sendfax interface available</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=terminal%2Dbased+sendfax+interface+available">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>terminal-based sendfax interface available</I>
+<P>
+<DT>A.
+<DD><B>Date</B>: <I>Thu, 11 Aug 1994 17:02:15 -0400</I><BR>
+<B>From</B>: <A HREF="mailto:kenh@wrl.EPI.COM"><I>Ken Hornstein &lt;kenh@wrl.EPI.COM&gt;</I></A><BR>
+<P>
+I've written a simple, terminal based interface to "sendfax".  It pops up a
+little form with various fields for you to fill in (FaxNumber, FaxCompany,
+etc), lets you select files to include, and optionally e-mail a copy of your
+message to someone.  It's nothing wonderful, but it works and it's proven
+useful to people here who are daunted by all the arguments to sendfax.
+<P>
+It's called "sfax", and it's written in Perl.  It is available in the
+FlexFAX contrib area, so you can find it on
+<A HREF="ftp://sgi.com/sgi/fax/contrib/sfax/sfax.tar.gz">sgi.com</A>
+in the contrib area.
+<P>
+There isn't a man page, but a
+<A HREF="ftp://sgi.com/sgi/fax/contrib/sfax/README.sfax">README</A>
+ file that explains how you use it and a
+sample form file is provided.
+<P>
+Suggestions and bug reports welcome.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

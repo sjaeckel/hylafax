@@ -1,7 +1,9 @@
-/*	$Header: /usr/people/sam/fax/sgi2fax/RCS/izoom.h,v 1.7 1994/05/16 19:27:59 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./sgi2fax/RCS/izoom.h,v 1.11 1995/04/08 21:43:34 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided

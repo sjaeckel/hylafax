@@ -1,0 +1,122 @@
+$Header: /usr/people/sam/fax/./RCS/README.ultrix,v 1.1 1995/04/08 21:04:01 sam Rel $
+
+Ultrix 4.4 Guidance
+-------------------
+This information comes from Tom Lislegaard <tl@cmr.no>.
+
+Here are the relavant notes on both building and running the current
+HylaFAX release on ultrix-4.4 with gcc-2.6.3/libg++-2.6.2.
+
+* Header files.
+Two files cause problems. 'termios.h' defines tcsetattr, tcgetattr, etc in
+terms of macros that map to ioctl's. As the real functions are present in libc,
+it's just a matter of bringing this file up to date.
+(The file is in
+'/usr/local/lib/gcc-lib/mips-dec-ultrix4.4/2.6.3/include/sys' or similar):
+123,125d122
+< #if !defined(_POSIX_SOURCE)
+< #define tcsetattr(fildes,action,termios_p) 	\
+< 	ioctl(fildes,action,termios_p)
+127,133d123
+< #define tcgetattr(fildes,termios_p) 	\
+< 	ioctl(fildes,TCGETP,termios_p)
+< #else
+< extern	int tcsetattr();
+< extern	int tcgetattr();
+< #endif
+< 
+147,152d136
+< #if !defined(_POSIX_SOURCE) 
+< #define tcdrain(fildes)		\
+< 	ioctl(fildes,TCSBRK,-1)
+< #else
+< extern	int tcdrain();
+< #endif
+161,166d144
+< #if !defined(_POSIX_SOURCE)
+< #define tcflush(fildes,queue)	\
+< 	ioctl(fildes,TCFLSH,queue)
+< #else
+< extern	int tcflush();
+< #endif
+176,181d153
+< #if !defined(_POSIX_SOURCE)
+< #define tcflow(fildes,action)	\
+< 	ioctl(fildes,TCXONC,action)
+< #else 
+< extern 	int tcflow();
+< #endif
+183,189d154
+< /*
+<  * Get input and output baud rates.
+<  */
+< #if !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)
+< #define OBAUD (CBAUD << 16)
+< #define cfgetospeed(termios_p)		\
+< 	(((termios_p)->c_cflag & OBAUD) >> 16)
+191,198c156,160
+< #define cfgetispeed(termios_p)		\
+< 	((termios_p)->c_cflag & CBAUD)
+< #else
+< extern	speed_t cfgetospeed();
+< extern	speed_t cfgetispeed();
+< extern 	int 	cfsetispeed();
+< extern	int 	cfsetospeed();
+< #endif
+---
+> extern int tcsetattr(int, int, const struct termios*);
+> extern int tcgetattr(int, struct termios*);
+> extern int tcdrain(int);
+> extern int tcflush(int, int);
+> extern int tcflow(int, int);
+199a162
+> extern  int tcsendbreak _PARAMS((int, int));
+
+'/usr/include/sys/socket.h' needs to be protected against multiple inclusion:
+2a3,4
+> #ifndef _SOCKET_
+> #define       _SOCKET_
+237a240
+> #endif /* _SOCKET_ */
+
+
+* Building HylaFAX
+
+Many of the tools provided with ultrix are outdated, functionally crippled,
+or just buggy. Affected here are sh, make, expr, and sed.
+
+ - configuration must be done by 'ksh configure'. There's no hope for 
+'/bin/sh',
+it doesn't even understand functions(). The good news is that the current
+/bin/ksh handles all the scripts as well, so there's no need for bash
+anymore.
+
+ - a recent version of gnu make must be used (I've used 3.67).
+
+ - a replacement 'expr' is found in the gnu 'shellutils' package. As for 'sed'
+I've used gnu v2.05
+
+
+* Running HylaFAX
+ (No, we're not finished yet...)
+
+'syslogd' and 'printf' are not available on ultrix. On a host running
+only client software (no local modem) these may be ignored. On a faxserver
+you can't live without them.
+
+ - Ultrix' 'syslog' program can not handle the HylaFAX daemons.
+(or any other modern software for that matter). It should be replaced with
+a newer 'syslogd'. Several alternatives are available, the stuff I've used
+can be found at
+	gatekeeper.dec.com:/pub/DEC/jtkohl-syslog-complete.tar.Z
+
+(A note here: on my system I've done a complete replacement, including
+putting new syslog functions in my libc.a. This means that I
+haven't tried to build with the 'port/syslog*' stuff, though it should
+be equivalent).
+
+ - the 'printf' program can be obtained from the gnu shellutils. Many of the
+scripts wants this.
+
+
+-tom

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxFont.h,v 1.1 1994/05/27 23:16:14 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxFont.h,v 1.4 1995/04/08 21:30:07 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided

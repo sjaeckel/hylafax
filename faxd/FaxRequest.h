@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxRequest.h,v 1.39 1994/07/05 01:40:41 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxRequest.h,v 1.59 1995/04/08 21:30:23 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -25,41 +26,58 @@
 #ifndef _FaxRequest_
 #define	_FaxRequest_
 /*
- * Fax Send/Poll Request Structure.
+ * HylaFAX Job Request Structure.
  */
-#include "StrArray.h"
 #include "FaxSendStatus.h"
-#include "RegEx.h"
+#include "faxRequest.h"
+#include "StrDict.h"
 #include <time.h>
 #include <stdio.h>
 
-enum FaxSendOp {
-    send_fax,			// send prepared file
-    send_tiff,			// send tiff file
-    send_tiff_saved,		// saved tiff file (converted)
-    send_postscript,		// send postscript file
-    send_postscript_saved,	// saved postscript file (convert to tiff)
-    send_poll,			// make poll request
-};
-fxDECLARE_PrimArray(FaxSendOpArray, FaxSendOp);
-fxDECLARE_PrimArray(DirnumArray, u_short);
-
 /*
- * This structure is passed from the queue manager (faxServerApp)
- * to the fax modem+protocol service (FaxServer) for each send/poll
- * operation to be done.  This class also supports the read and
- * writing of this information to an external file.
+ * This structure is passed from the queue manager
+ * to the fax modem+protocol service for each job
+ * to be processed.  This class also supports the
+ * reading and writing of this information to an
+ * external file.
  */
 class FaxRequest {
+private:
+    fxBool isStrCmd(const fxStr& cmd, const fxStr& tag);
+    fxBool isShortCmd(const fxStr& cmd, const fxStr& tag);
+    fxBool isTimeCmd(const fxStr& cmd, const fxStr& tag);
+    fxBool isDocCmd(const fxStr& cmd, const fxStr& tag, fxBool& fileOK);
+    void checkNotifyValue(const fxStr& tag);
+    fxBool checkDocument(const char* pathname);
+    void error(const char* fmt, ...);
+
+    static fxStrDict pendingDocs;
+
+    void recordPendingDoc(const fxStr& file);
+    void expungePendingDocs(const fxStr& file);
 public:
+    enum {
+	send_fax,		// send prepared file via fax
+	send_tiff,		// send tiff file via fax
+	send_tiff_saved,	// saved tiff file (converted)
+	send_postscript,	// send postscript file via fax
+	send_postscript_saved,	// saved postscript file (convert to tiff)
+	send_data,		// send untyped data file
+	send_data_saved,	// send untyped data file (converted)
+	send_poll,		// make fax poll request
+	send_page,		// send pager message (converted)
+	send_page_saved,	// send pager message
+	send_uucp		// send file via uucp
+    };
     enum FaxNotify {		// notification control
 	no_notice = 0,		// no notifications
 	when_done = 1,		// notify when send completed
-	when_requeued = 2,	// notify if job requeued
+	when_requeued = 2	// notify if job requeued
     };
 
     fxStr	qfile;		// associated queue file name
     fxStr	jobid;		// job identifier
+    fxStr	groupid;	// group identifier
     FILE*	fp;		// open+locked queue file
     u_int	lineno;		// line number when reading queue file
     FaxSendStatus status;	// request status indicator
@@ -68,10 +86,14 @@ public:
     u_short	ntries;		// # tries to send current page
     u_short	ndials;		// # consecutive failed tries to call dest
     u_short	totdials;	// total # calls to dest
-    u_short	maxdials;	// max # calls to make
+    u_short	maxdials;	// max # times to dial the phone
+    u_short	tottries;	// total # attempts to deliver
+    u_short	maxtries;	// max # attempts to deliver (answered calls)
     u_short	pagewidth;	// desired output page width (mm)
     u_short	pagelength;	// desired output page length (mm)
     u_short	resolution;	// desired vertical resolution (lpi)
+    u_short	usrpri;		// user-requested scheduling priority
+    u_short	pri;		// current scheduling priority
     time_t	tts;		// time to send
     time_t	killtime;	// time to kill job
     fxStr	sender;		// sender's name
@@ -79,9 +101,6 @@ public:
     fxStr	jobtag;		// user-specified job tag
     fxStr	number;		// dialstring for fax machine
     fxStr	external;	// displayable phone number for fax machine
-    FaxSendOpArray ops;		// send-related ops to do
-    fxStrArray	files;		// associated files to transmit or polling id's
-    DirnumArray	dirnums;	// directory of next page in file to send
     FaxNotify	notify;		// email notification indicator
     fxStr	notice;		// message to send for notification
     fxStr	modem;		// outgoing modem to use
@@ -90,28 +109,19 @@ public:
     fxStr	company;	// receiver's company for cover page generation
     fxStr	location;	// receiver's location for cover page generation
     fxStr	cover;		// continuation cover page filename
+    fxStr	client;		// identity of machine that submitted job
+    fxStr	sigrate;	// negotiated signalling rate
+    fxStr	df;		// negotiated data format
+    fxStr	jobtype;	// job type for selecting send command
+    faxRequestArray requests;	// set of requests
 
     FaxRequest(const fxStr& qf);
     ~FaxRequest();
-    fxBool readQFile(int fd);
+    fxBool readQFile(int fd, fxBool& rejectJob);
     void writeQFile();
+    u_int findRequest(FaxSendOp, u_int start = 0) const;
 
-    static fxBool isSavedOp(const FaxSendOp&);
-
-    void insertItem(u_int ix, const fxStr& file, u_short dir, FaxSendOp op);
-    void appendItem(const fxStr& file, u_short dir, FaxSendOp op);
+    void insertFax(u_int ix, const fxStr& file);
     void removeItems(u_int ix, u_int n = 1);
-private:
-    static RegEx jobidPat;
-
-    fxBool isStrCmd(const fxStr& cmd, const fxStr& tag);
-    fxBool isShortCmd(const fxStr& cmd, const fxStr& tag);
-    fxBool isTimeCmd(const fxStr& cmd, const fxStr& tag);
-    fxBool isDocCmd(const fxStr& cmd, const fxStr& tag, fxBool& fileOK);
-    void checkNotifyValue(const fxStr& tag);
-    fxBool checkDocument(const char* pathname);
-    void error(const char* fmt, ...);
 };
-inline fxBool FaxRequest::isSavedOp(const FaxSendOp& op)
-    { return (op == send_tiff_saved || op == send_postscript_saved); }
 #endif /* _FaxRequest_ */

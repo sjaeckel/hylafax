@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/DSmacros.h,v 1.5 1994/02/28 14:23:44 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/DSmacros.h,v 1.9 1995/04/08 21:43:53 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -24,8 +25,8 @@
  */
 #ifndef _DSmacros_
 #define	_DSmacros_
-// $Revision: 1.5 $
-// $Date: 1994/02/28 14:23:44 $
+// $Revision: 1.9 $
+// $Date: 1995/04/08 21:43:53 $
 #include "Types.h"
 
 // ----------------- copy macros ---------------------------------------------
@@ -36,7 +37,7 @@ __enddef__
 
 #define fxIMPLEMENT_copyObj(CLASS,FIELD,TYPE)				\
 void CLASS::fxCAT(copy,FIELD)(void const *s, void *d) const		\
-{   fxNEW(d) TYPE(*(TYPE const *)s); }					\
+{   new(d) TYPE(*(TYPE const *)s); }					\
 __enddef__
 
 #define fxIMPLEMENT_copyPtr(CLASS,FIELD,TYPE)				\
@@ -48,7 +49,7 @@ __enddef__
 
 // ----------------- create macros -------------------------------------------
 #define fxIMPLEMENT_createObj(CLASS,FIELD,TYPE)				\
-void CLASS::fxCAT(create,FIELD)(void *d) const { fxNEW(d) TYPE; }	\
+void CLASS::fxCAT(create,FIELD)(void *d) const { new(d) TYPE; }		\
 __enddef__
 
 #define fxIMPLEMENT_createPtr(CLASS,FIELD,TYPE)				\

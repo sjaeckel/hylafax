@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/G3Decoder.c++,v 1.7 1994/06/04 22:17:41 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Decoder.c++,v 1.14 1995/04/08 21:30:34 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -46,6 +47,8 @@ G3Decoder::setupDecoder(u_int recvFillOrder, fxBool is2d)
      * appropriate byte-wide bit-reversal table.
      */
     setup(TIFFGetBitRevTable(recvFillOrder != FILLORDER_MSB2LSB), is2d);
+    data = 0;					// not needed
+    bit = 0;					// force initial read
     bytePending = 0;				// clear state
     refline = NULL;
     recvBuf = NULL;
@@ -62,18 +65,18 @@ void G3Decoder::raiseRTC()	{ siglongjmp(jmpRTC, 1); }
 void
 G3Decoder::decode(void* raster, u_int w, u_int h)
 {
-    u_char reflinebuf[howmany(2432,8)];		// reference line for decoder
+    u_char reflinebuf[1+howmany(2432,8)];	// reference line for decoder
     u_int rowbytes = howmany(w, 8);
 
-    setRefLine(reflinebuf);
-    memset(reflinebuf, 0, rowbytes);
-    memset(raster, 0, h*rowbytes);
+    setRefLine(reflinebuf+1);
+    ::memset(reflinebuf, 0, rowbytes+1);
+    ::memset(raster, 0, h*rowbytes);
     if (prevByte == -1)
 	skipLeader();
     while (h-- > 0) {
 	(void) decodeRow(raster, w);
 	if (is2D)				// copy to refline for 2d rows
-	    memcpy(reflinebuf, raster, rowbytes);
+	    ::memcpy(reflinebuf+1, raster, rowbytes);
 	raster = (u_char*)raster + rowbytes;
     }
 }
@@ -145,6 +148,9 @@ G3Decoder::skipLeader()
 	ungetBit();
 }
 
+#define	decodeWhiteRun()	decodeRun(TIFFFax1DFSM+0)
+#define	decodeBlackRun()	decodeRun(TIFFFax1DFSM+8)
+
 /*
  * Decode a row of 1d data.
  */
@@ -152,31 +158,29 @@ fxBool
 G3Decoder::decode1DRow(u_char* buf, u_int npels)
 {
     int x = 0;
-    int color = 0;
+    int runlen;
 
     for (;;) {
-	int runlen;
-        if (color == 0)
-            runlen = decodeWhiteRun();
-        else
-            runlen = decodeBlackRun();
-        if (runlen > 0) {
-            if (color)
-		fillspan(buf, x, x+runlen > npels ? npels-x : runlen);
-            if ((x += runlen) >= npels)
-		break;
-        } else {
-	    if (runlen == G3CODE_INVALID) {
-		invalidCode("1D", x);
-		break;
-	    }
-	    if (runlen == G3CODE_EOL) {
-		prematureEOL("1D", x);
-		return (FALSE);
-	    }
+	if ((runlen = decodeWhiteRun()) < 0)
+	    goto exception;
+	if (runlen > 0 && (x += runlen) >= npels)
+	    goto done;
+	if ((runlen = decodeBlackRun()) < 0)
+	    goto exception;
+	if (runlen > 0) {
+	    fillspan(buf, x, x+runlen > npels ? npels-x : runlen);
+	    if ((x += runlen) >= npels)
+		goto done;
 	}
-        color = ~color;
     }
+exception:
+    if (runlen == G3CODE_EOL) {
+	prematureEOL("1D", x);
+	return (FALSE);
+    }
+    if (runlen == G3CODE_INVALID)
+	invalidCode("1D", x);
+done:
     skipToEOL(0);
     if (x != npels)
 	badPixelCount("1D", x);
@@ -184,66 +188,31 @@ G3Decoder::decode1DRow(u_char* buf, u_int npels)
 }
 
 /*
- * Decode a run of white.
+ * Decode a code and return the associated run length.
  */
 int
-G3Decoder::decodeWhiteRun()
+G3Decoder::decodeRun(const u_short fsm[][256])
 {
-    short state = bit;
-    short action;
+    int state = bit;
+    int action;
     int runlen = 0;
 
     for (;;) {
-        if (bit == 0) {
+	if (state == 0) {
     nextbyte:
-            data = nextByte();
-        }
-        action = TIFFFax1DAction[state][data];
-        state = TIFFFax1DNextState[state][data];
-        if (action == ACT_INCOMP)
-            goto nextbyte;
-        if (action == ACT_INVALID)
-            return (G3CODE_INVALID);
-        if (action == ACT_EOL)
-            return (G3CODE_EOL);
-        bit = state;
-        action = RUNLENGTH(action - ACT_WRUNT);
-        runlen += action;
-        if (action < 64)
-            return (runlen);
-    }
-    /*NOTREACHED*/
-}
-
-/*
- * Decode a run of black.
- */
-int
-G3Decoder::decodeBlackRun()
-{
-    short state = bit + 8;
-    short action;
-    int runlen = 0;
-
-    for (;;) {
-        if (bit == 0) {
-    nextbyte:
-            data = nextByte();
-        }
-        action = TIFFFax1DAction[state][data];
-        state = TIFFFax1DNextState[state][data];
-        if (action == ACT_INCOMP)
-            goto nextbyte;
-        if (action == ACT_INVALID)
-            return (G3CODE_INVALID);
-        if (action == ACT_EOL)
-            return (G3CODE_EOL);
-        bit = state;
-        action = RUNLENGTH(action - ACT_BRUNT);
-        runlen += action;
-        if (action < 64)
-            return (runlen);
-        state += 8;
+	    data = nextByte();
+	}
+	state = fsm[state][data];
+	action = state >> 8; state &= 0xff;
+	if (action == ACT_INCOMP)
+	    goto nextbyte;
+	bit = state;
+	action -= ACT_RUNT;
+	if (action < 0)			/* ACT_INVALID or ACT_EOL */
+	    return (action);
+	if (action < 64)
+	    return (runlen + action);
+	runlen += 64*(action-64);
     }
     /*NOTREACHED*/
 }
@@ -259,32 +228,30 @@ fxBool
 G3Decoder::decode2DRow(u_char* buf, u_int npels)
 {
 #define	PIXEL(buf,ix)    ((((buf)[(ix)>>3]) >> (7-((ix)&7))) & 1)
-    int a0 = 0;
-    int b1 = 0;
-    int b2 = 0;
+    int a0 = -1;
+    int b1, b2;
     int run1, run2;        /* for horizontal mode */
-    short mode;
-    short color = 0;
+    int mode;
+    int color = 0;
 
     do {
-        if (bit == 0 || bit > 7)
-            data = nextByte();
-        mode = TIFFFax2DMode[bit][data];
-        bit = TIFFFax2DNextState[bit][data];
+	do {
+	    if (bit == 0 || bit > 7)
+		data = nextByte();
+	    mode = TIFFFax2DFSM[bit][data];
+	    bit = mode & 0xff; mode >>= 8;
+	} while (mode == MODE_NULL);
         switch (mode) {
-        case MODE_NULL:
-            break;
         case MODE_PASS:
-            if (a0 || PIXEL(refline, 0) == color) {
-                b1 = finddiff(refline, a0, npels);
-                if (color == PIXEL(refline, b1))
-                    b1 = finddiff(refline, b1, npels);
-            } else
-                b1 = 0;
-            b2 = finddiff(refline, b1, npels);
-            if (color)
+	    b2 = finddiff(refline, a0, npels);
+	    b1 = finddiff(refline, b2, npels);
+	    b2 = finddiff(refline, b1, npels);
+            if (color) {
+		if (a0 < 0)
+		    a0 = 0;
                 fillspan(buf, a0, b2 - a0);
-            a0 += b2 - a0;
+	    }
+            a0 = b2;
             break;
         case MODE_HORIZ:
             if (color == 0) {
@@ -308,6 +275,8 @@ G3Decoder::decode2DRow(u_char* buf, u_int npels)
 		invalidCode("1D", a0);
 		goto bad2;
 	    }
+	    if (a0 < 0)
+		a0 = 0;
 	    if (a0 + run1 > npels)
 		run1 = npels - a0;
 	    if (color)
@@ -334,34 +303,23 @@ G3Decoder::decode2DRow(u_char* buf, u_int npels)
         case MODE_VERT_VL1:
         case MODE_VERT_VL2:
         case MODE_VERT_VL3:
-            /*
-             * Calculate b1 as the "first changing element
-             * on the reference line to right of a0 and of
-             * opposite color to a0".  In addition, "the
-             * first starting picture element a0 of each
-             * coding line is imaginarily set at a position
-             * just before the first picture element, and
-             * is regarded as a white element".  For us,
-             * the condition (a0 == 0 && color == sp->b.white)
-             * describes this initial condition. 
-             */
-            if (!(a0 == 0 && color == 0 && PIXEL(refline, 0) != 0)) {
-                b1 = finddiff(refline, a0, npels);
-                if (color == PIXEL(refline, b1))
-                    b1 = finddiff(refline, b1, npels);
-            } else
-                b1 = 0;
-            b1 += mode - MODE_VERT_V0;
+	    b2 = finddiff(refline, a0, npels);
+	    b1 = finddiff(refline, b2, npels);
+	    b1 += mode - MODE_VERT_V0;
+	    if (a0 < 0)
+		a0 = 0;
             if (color)
                 fillspan(buf, a0, b1 - a0);
             color = !color;
-            a0 += b1 - a0;
+            a0 = b1;
             break;
 	case MODE_UNCOMP:
             /*
              * Uncompressed mode: select from the
              * special set of code words.
              */
+	    if (a0 < 0)
+		a0 = 0;
             do {
                 mode = decodeUncompCode();
                 switch (mode) {
@@ -416,12 +374,12 @@ bad2:
 int
 G3Decoder::decodeUncompCode()
 {
-    short code;
+    int code;
     do {
         if (bit == 0 || bit > 7)
             data = nextByte();
-        code = TIFFFaxUncompAction[bit][data];
-        bit = TIFFFaxUncompNextState[bit][data];
+        code = TIFFFaxUncompFSM[bit][data];
+        bit = code & 0xff; code >>= 8;
     } while (code == ACT_INCOMP);
     return (code);
 }

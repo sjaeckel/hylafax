@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/tagtest.1m,v 1.2 1994/06/24 02:32:04 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/tagtest.1m,v 1.11 1995/04/08 21:36:40 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1994 Sam Leffler
-.\" Copyright (c) 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1994-1995 Sam Leffler
+.\" Copyright (c) 1994-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,37 +25,62 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.TH TAGTEST 1M "June 20, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH TAGTEST 1M "March 3, 1995"
 .SH NAME
 tagtest \- \*(Fx tag line testing program
 .SH SYNOPSIS
-.B bin/tagtest
+.B ${SBIN}/tagtest
 [
-.B \-f
-.I fontfile
-] [
-.B \-m
-.I format
-] [
-.B \-o
-.I output
+.I options
 ] input.tif
-.I aclfile
 .SH DESCRIPTION
 .I tagtest
-is a program for testing the ``tag line'' support in the facsimile server.
-It takes as input a
+is a program for testing the ``tag line'' support in the \*(Fx server.
+.I tagtest
+takes a
 .SM TIFF/F
 (\c
 .SM TIFF
-Class F) file, a tag line format string, and a tag line font file and
+Class F) file and
 generates a new
 .SM TIFF/F
 file that is a copy of the input file, but with sample tag lines imaged
 across the top of each page.
-This permits users to test out tag line format strings and fonts before
-they are configured for use in the facsimile server.
+Options are provided for specifying 
+a tag line format string and a tag line font file.
+If neither are specified, then
+.I tagtest
+will use builtin defaults.
+.I tagtest
+is designed for testing tag line format strings
+and fonts before they are configured for use by the
+facsimile server.
+.SH OPTIONS
+.TP 10
+.BI \-f " file"
+Image the tag line format string using the
+Portable Compiled Font (\s-1PCF\s+1) in
+.IR file .
+By default
+.I tagtest
+looks for the font file
+.BR fixed.pcf .
+.TP
+.BI \-m " format"
+Use
+.I format
+when imaging tag lines.
+If this option is not specified, then
+.I tagtest
+uses the format string ``From %%n|%c|Page %%p of %%t''.
+.TP
+.BI \-o " file"
+Write output to
+.IR file .
+By default output is written to the file
+.BR t.tif .
 .SH "SEE ALSO"
-.IR faxd (1M),
+.IR faxsend (1M),
 .IR config (4F)

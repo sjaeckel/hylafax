@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/typetest.c++,v 1.1 1994/03/18 02:46:05 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/typetest.c++,v 1.5 1995/04/08 21:45:09 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -84,7 +85,6 @@ fileType(const char* filename)
     return tr;   
 }
 
-const	fxStr TypeRulesFile(FAX_TYPERULES);
 char*	appName;
 
 void
@@ -103,7 +103,7 @@ main(int argc, char* argv[])
     fxStr file;
 
     appName = argv[0];
-    file = fxStr(FAX_LIBDATA) | "/" | TypeRulesFile;
+    file = FAX_LIBDATA "/" FAX_TYPERULES;
     while ((c = getopt(argc, argv, "f:")) != -1)
 	switch (c) {
 	case 'f':

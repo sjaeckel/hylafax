@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/PCFFont.c++,v 1.3 1994/06/27 15:32:54 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/PCFFont.c++,v 1.9 1995/04/08 21:31:00 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,6 +32,7 @@
  * This code is specifically written to handle just enough
  * of the format to image text for outgoing facsimile.
  */
+#include <unistd.h>
 #include "PCFFont.h"
 #include "tiffio.h"
 
@@ -106,7 +108,7 @@ void
 PCFFont::cleanup()
 {
     if (file != NULL)
-	fclose(file), file = NULL;
+	::fclose(file), file = NULL;
     ready = FALSE;
     delete toc, toc = NULL;
     delete encoding, encoding = NULL;
@@ -124,7 +126,7 @@ fxBool
 PCFFont::read(const char* filename)
 {
     cleanup();
-    file = fopen(filename, "r");
+    file = ::fopen(filename, "r");
     if (file == NULL) {
 	error("%s: Can not open file", filename);
 	return (FALSE);
@@ -196,10 +198,10 @@ PCFFont::read(const char* filename)
 	if (byteOrder() != bitOrder()) {
 	    switch (scanUnit()) {
 	    case 2:
-		TIFFSwabArrayOfShort((u_short*) bitmaps, sizebitmaps/2);
+		TIFFSwabArrayOfShort((uint16*) bitmaps, sizebitmaps/2);
 		break;
 	    case 4:
-		TIFFSwabArrayOfLong((u_long*) bitmaps, sizebitmaps/4);
+		TIFFSwabArrayOfLong((uint32*) bitmaps, sizebitmaps/4);
 		break;
 	    default:
 		error("Unknown scan unit format %d\n", scanUnit());
@@ -288,7 +290,7 @@ PCFFont::read(const char* filename)
 	    error("Bad BDF accelerator format 0x%lx", format);
 	    return (FALSE);
 	}
-	fseek(file, 8, SEEK_CUR);	// skip a bunch of junk
+	::fseek(file, 8, SEEK_CUR);	// skip a bunch of junk
 	fontAscent = (short) getINT32();
 	fontDescent = (short) getINT32();
 	// more stuff...
@@ -296,7 +298,7 @@ PCFFont::read(const char* filename)
 	error("Can not seek to BDF accelerator information");
 	return (FALSE);
     }
-    fclose(file), file = NULL;
+    ::fclose(file), file = NULL;
     return (ready = TRUE);
 }
 
@@ -379,7 +381,7 @@ PCFFont::seekToTable(u_long type)
 {
     for (int i = 0; i < tocSize; i++)
 	if (toc[i].type == type) {
-	    if (fseek(file, toc[i].offset, SEEK_SET) == -1) {
+	    if (::fseek(file, toc[i].offset, SEEK_SET) == -1) {
 		error("Can not seek; fseek failed");
 		return (FALSE);
 	    }
@@ -588,35 +590,36 @@ void
 PCFFont::print(FILE* fd) const
 {
     if (ready) {
-	fprintf(fd, "Font Ascent: %d Descent: %d\n", fontAscent, fontDescent);
-	fprintf(fd, "FirstCol: %u LastCol: %u\n", firstCol, lastCol);
-	fprintf(fd, "%lu glyphs:\n", numGlyphs);
+	::fprintf(fd, "Font Ascent: %d Descent: %d\n", fontAscent, fontDescent);
+	::fprintf(fd, "FirstCol: %u LastCol: %u\n", firstCol, lastCol);
+	::fprintf(fd, "%lu glyphs:\n", numGlyphs);
 	for (u_int c = firstCol; c <= lastCol; c++) {
 	    charInfo* ci = encoding[c - firstCol];
 	    if (!ci)
 		continue;
 	    if (isprint(c))
-		fprintf(fd,
+		::fprintf(fd,
 		    "'%c': lsb %2d rsb %2d cw %2d ascent %2d descent %d\n",
 		    c, ci->lsb, ci->rsb, ci->cw, ci->ascent, ci->descent);
 	    else
-		fprintf(fd,
+		::fprintf(fd,
 		    "%3d: lsb %2d rsb %2d cw %2d ascent %2d descent %d\n",
 		    c, ci->lsb, ci->rsb, ci->cw, ci->ascent, ci->descent);
 	}
     }
 }
 
-#include <stdarg.h>
+#include "Str.h"
+
+extern void vlogError(const char* fmt, va_list ap);
 
 void
-PCFFont::error(const char* fmt, ...)
+PCFFont::error(const char* fmt ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    fprintf(stderr, "PCFFont: ");
-    vfprintf(stderr, fmt, ap);
-    fprintf(stderr, ".\n");
+    static const fxStr font("PCFFont: ");
+    vlogError(font | fmt, ap);
     va_end(ap);
 }
 

@@ -1,0 +1,50 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: What should I do if I have a problem?
+</TITLE></HEAD><BODY>
+<H1>Q9: What should I do if I have a problem?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=What+should+I+do+if+I+have+a+problem%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>What should I do if I have problems?</I>
+<P>
+<DT>A.
+<DD>Read (again) the <B>README</B> file and the HTML-based
+documentation included in the HylaFAX distribution
+(this information is provided online through the
+<A HREF="@HTMLPATH@/">HylaFAX Home Page</A>.)
+In particular, read the
+<A HREF="@HTMLPATH@/troubleshooting.html">Troubleshooting section</A>
+in the documentation. 
+<P>
+Check <A HREF="@HTMLPATH@/FAQ/">this FAQ</A>.
+<P>
+See if a similar problem is listed in the HylaFAX mailing list
+archives.  Summary lists of articles sent to the mailing list
+are posted periodically and there is an
+<A HREF="http://www.vix.com/cgi-bin/mlaform/hylafax/Archives/?">on-line
+interface to the mailing list archives</A> that supports searching.
+<P>
+As a last resort: submit your problems to other users:
+<UL>
+<LI>To the <A HREF="@HTMLPATH@/mailing-lists.html">HylaFAX mailing list</A>;
+see <A HREF="Q11.html">Q11</A> for information
+on submitting bug reports.
+<LI>To the USENET newsgroup <A HREF="news:comp.dcom.modems">comp.dcom.modems</A>
+or <A HREF="news:comp.dcom.fax">comp.dcom.fax</A>,
+but only if it a problem with the modem or a fax machine.
+</UL>
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>
