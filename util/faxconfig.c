@@ -1,4 +1,4 @@
-/*	$Id: faxconfig.c,v 1.6 1996/09/25 00:55:15 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -51,7 +51,7 @@ fatal(char* fmt, ...)
 
 extern	int cvtFacility(const char*, int*);
 
-void
+int
 main(int argc, char** argv)
 {
     extern int optind;
@@ -123,5 +123,5 @@ main(int argc, char** argv)
 	} while ((optind += 2) < argc);
 	(void) close(fifo);
     }
-    exit(0);
+   return 0;
 }

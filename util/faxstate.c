@@ -1,4 +1,4 @@
-/*	$Id: faxstate.c,v 1.4 1996/08/05 17:27:44 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -72,7 +72,7 @@ modemstate(const char* arg)
     return (NULL);
 }
 
-void
+int
 main(int argc, char** argv)
 {
     extern int optind;
@@ -140,5 +140,5 @@ main(int argc, char** argv)
 	    fatal("FIFO write failed for command (%s)", strerror(errno));
     }
     (void) close(fifo);
-    exit(0);
+    return 0;
 }

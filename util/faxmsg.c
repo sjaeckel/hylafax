@@ -1,4 +1,4 @@
-/*	$Id: faxmsg.c,v 1.30 1996/07/23 23:21:39 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -50,7 +50,7 @@ fatal(char* fmt, ...)
 
 extern	int cvtFacility(const char*, int*);
 
-void
+int
 main(int argc, char** argv)
 {
     extern int optind;
@@ -127,5 +127,5 @@ main(int argc, char** argv)
     if (write(fifo, cmd, strlen(cmd)) != strlen(cmd))
 	fatal("FIFO write failed for command (%s)", strerror(errno));
     (void) close(fifo);
-    exit(0);
+    return 0;
 }
