@@ -1,4 +1,4 @@
-#	$Id: hylafax.spec,v 1.43 1996/08/27 23:16:10 sam Rel $
+#	$Id: hylafax.spec,v 1.44 1996/12/03 20:01:57 sam Exp $
 #
 # HylaFAX Facsimile Software
 #
@@ -26,7 +26,7 @@
 # OF THIS SOFTWARE.
 #
 define CUR_MAJ_VERS	1006		# Major Version number
-define CUR_MIN_VERS	009		# Minor Version number
+define CUR_MIN_VERS	010		# Minor Version number
 define CUR_VERS		${CUR_MAJ_VERS}${CUR_MIN_VERS}${ALPHA}
 define FAX_NAME		"HylaFAX"
 

@@ -1,4 +1,4 @@
-$Id: README,v 1.140 1996/08/27 23:21:50 sam Rel $
+$Id: README,v 1.141 1996/10/31 19:10:46 sam Rel $
 
 HylaFAX, Version 4.0 (release)
 ------------------------------
@@ -140,11 +140,12 @@ fixes and/or improvements:
   Chris Munonye	     Rob Newberry	  Dag Nygren
   Jonas Olsson       Dave Packer	  Damon Permezel
   David Pike         Amir Plivatsky       Andy Rabagliati
-  Eric Rescorla      Marshall Rose        Daniel Rosenblatt
-  Joel Rosi-Schwartz Tim Rylance	  Joseph E. Sacco
-  Thomas A. Szybist  Brent Townshend      Peter White
-  Steve Williams     Scott Woodard        David Vrona
-  Paul Vixie         Christian Zahl
+  Eric Rescorla      Matthew Rice         Tim Rice
+  Marshall Rose      Daniel Rosenblatt    Joel Rosi-Schwartz
+  Tim Rylance        Joseph E. Sacco      Thomas A. Szybist
+  Brent Townshend    Peter White          Steve Williams
+  Scott Woodard      David Vrona          Paul Vixie
+  Christian Zahl
 
 (and surely others).  Also, a special thanks to Ed McCreight for
 helping me understand the stuff "between the lines" that's necessary to

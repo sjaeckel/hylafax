@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++,v 1.31 1996/08/29 19:04:28 sam Rel $ */
+/*	$Id: ClassModem.c++,v 1.32 1996/11/20 03:20:11 sam Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -218,6 +218,8 @@ static const AnswerMsg answerMsgs[] = {
 { "ERROR",       5,
    ClassModem::AT_NOTHING, ClassModem::ERROR,     ClassModem::CALLTYPE_ERROR },
 { "+FHNG:",	6,
+   ClassModem::AT_NOTHING, ClassModem::NOCARRIER, ClassModem::CALLTYPE_ERROR },
+{ "+FHS:",	5,
    ClassModem::AT_NOTHING, ClassModem::NOCARRIER, ClassModem::CALLTYPE_ERROR },
 { "FAX",	 3,
    ClassModem::AT_CONNECT, ClassModem::OK,	  ClassModem::CALLTYPE_FAX },

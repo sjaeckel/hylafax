@@ -1,4 +1,4 @@
-/*	$Id: HDLCFrame.h,v 1.16 1996/06/24 03:00:35 sam Rel $ */
+/*	$Id: HDLCFrame.h,v 1.17 1996/09/25 17:23:05 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -43,6 +43,7 @@ public:
 
     operator u_char*();			// Return base of buffer
     u_char& operator[](u_int i) const;	// NB: no bounds checking
+    u_char& operator[](int i) const;	// NB: no bounds checking
 
     fxBool moreFrames() const;		// more frames follow
     fxBool isOK() const;		// frame has good FCS
@@ -74,6 +75,7 @@ inline u_int HDLCFrame::getLength() const	    { return next - base; }
 
 inline HDLCFrame::operator u_char*()		    { return base; }
 inline u_char& HDLCFrame::operator[](u_int i) const { return base[i]; }
+inline u_char& HDLCFrame::operator[](int i) const   { return base[i]; }
 
 inline fxBool HDLCFrame::moreFrames() const
     { return ((*this)[1]&0x08) == 0; }

@@ -1,4 +1,4 @@
-/*	$Id: PageSize.c++,v 1.22 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: PageSize.c++,v 1.23 1996/09/30 21:03:43 sam Rel $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -148,10 +148,10 @@ PageSizeInfo::getPageInfoByName(const char* name)
     size_t len = strlen(name);
     for (int i = 0, n = pageInfo->length(); i < n; i++) {
 	const PageInfo& pi = (*pageInfo)[i];
-	if (::strncasecmp(pi.abbr, name, len) == 0)
+	if (strncasecmp(pi.abbr, name, len) == 0)
 	    return &pi;
 	for (const char* cp = pi.name; *cp != '\0'; cp++)
-	    if (tolower(*cp) == c && ::strncasecmp(cp, name, len) == 0)
+	    if (tolower(*cp) == c && strncasecmp(cp, name, len) == 0)
 		return &pi;
     }
     return (NULL);

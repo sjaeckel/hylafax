@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.h,v 1.24 1996/06/24 03:06:01 sam Rel $ */
+/*	$Id: SendFaxClient.h,v 1.25 1996/11/14 19:56:33 sam Rel $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -61,6 +61,7 @@ private:
     fxStr	senderName;		// sender's full name
     fxStr	coverCmd;		// cover page program name
     u_int	totalPages;		// total pages in submitted documents
+    fxStr	dateFormat;		// date format string for cover page
 
     static const SF_stringtag strings[];
 protected:

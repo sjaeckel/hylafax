@@ -1,4 +1,4 @@
-/*	$Id: faxcover.c++,v 1.41 1996/07/31 17:40:35 sam Rel $ */
+/*	$Id: faxcover.c++,v 1.43 1996/11/14 19:55:58 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -38,6 +38,7 @@ class faxCoverApp {
 private:
     fxStr	appName;	// for error messages
     fxStr	cover;		// prototype cover sheet
+    fxStr	dbName;		// .faxdb filename
     FaxDB*	db;		// fax machine database
     fxStr	toName;		// to person's name
     fxStr	toFaxNumber;	// to's fax number
@@ -48,11 +49,11 @@ private:
     fxStr	comments;	// general comments
     fxStr	sender;		// sender's identity
     fxStr	pageCount;	// # pages, not counting cover page
+    fxStr	dateFmt;	// strftime format string
     float	pageWidth;	// page width (mm)
     float	pageLength;	// page length (mm)
     int		maxcomments;	// max # of comment lines
 
-    static fxStr dbName;
     static const char* prologue;
 
     fxStr tildeExpand(const fxStr& filename);
@@ -73,9 +74,10 @@ public:
     void open();
 };
 
-fxStr faxCoverApp::dbName("~/.faxdb");
-
-faxCoverApp::faxCoverApp() : cover(FAX_COVER)
+faxCoverApp::faxCoverApp()
+    : cover(FAX_COVER)
+    , dbName("~/.faxdb")
+    , dateFmt("%a %b %d %Y, %H:%M %Z")
 {
     db = 0;
     maxcomments = 20;
@@ -101,13 +103,16 @@ faxCoverApp::initialize(int argc, char** argv)
 	cover = cp;
 
     setupPageSize("default");
-    while ((c = getopt(argc, argv, "C:n:t:f:c:p:l:m:r:s:v:x:")) != -1)
+    while ((c = getopt(argc, argv, "C:D:n:t:f:c:p:l:m:r:s:v:x:")) != -1)
 	switch (c) {
 	case 's':			// page size
 	    setupPageSize(optarg);
 	    break;
 	case 'C':			// cover sheet
 	    cover = optarg;
+	    break;
+	case 'D':			// date format string
+	    dateFmt = optarg;
 	    break;
 	case 'm':			// max # comment lines
 	    maxcomments = atoi(optarg);
@@ -180,6 +185,7 @@ faxCoverApp::usage()
 	" [-v to-voice-number]"
 	" [-x to-company]"
 	" [-C template-file]"
+	" [-D date-format]"
 	" [-s pagesize]"
 	" -f from"
 	" -n fax-number"
@@ -227,14 +233,14 @@ faxCoverApp::makeCoverSheet()
 {
     int fd;
     if (cover.length() > 0 && cover[0] != '/') {
-	fd = ::open((char*) tildeExpand("~/" | cover), O_RDONLY);
+	fd = Sys::open(tildeExpand("~/" | cover), O_RDONLY);
 	if (fd < 0)
-	    fd = ::open((char*) (fxStr(FAX_LIBDATA) | "/" | cover), O_RDONLY);
+	    fd = Sys::open(fxStr(FAX_LIBDATA) | "/" | cover, O_RDONLY);
     } else
-	fd = ::open((char*) cover, O_RDONLY);
+	fd = Sys::open(cover, O_RDONLY);
     if (fd < 0) {
 	printError( "Could not locate prototype cover sheet \"%s\"",
-	    (char*) cover);
+	    (const char*) cover);
 	return;
     }
     printf("%%!PS-Adobe-2.0 EPSF-2.0\n");
@@ -265,7 +271,7 @@ faxCoverApp::makeCoverSheet()
     int n;
     while ((n = read(fd, buf, sizeof (buf))) > 0) 
 	fwrite(buf, n, 1, stdout);
-    ::close(fd);
+    Sys::close(fd);
     printf("end\n");
 }
 
@@ -358,7 +364,7 @@ faxCoverApp::emitDateDefs()
 {
     time_t t = time(0);
     char date[128];
-    strftime(date, sizeof (date), "%a %b %d %Y, %H:%M %Z", localtime(&t));
+    strftime(date, sizeof (date), dateFmt, localtime(&t));
     coverDef("todays-date", date);
 }
 

@@ -12,7 +12,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
+extern "C" {
 #include <netinet/in.h>
+}
 
 #include "config.h"
 

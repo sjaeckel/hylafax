@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++,v 1.32 1996/08/08 19:20:34 sam Rel $ */
+/*	$Id: Class2Params.c++,v 1.33 1996/09/30 21:03:43 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -62,7 +62,7 @@ static char*
 addParam(char* cp, u_int v)
 {
     if (v != (u_int)-1) {
-	::sprintf(cp, ",%u", v);
+	sprintf(cp, ",%u", v);
 	while (*cp != '\0') cp++;
     } else {
 	*cp++ = ',';
@@ -78,7 +78,7 @@ Class2Params::cmd() const
     char* cp = buf;
 
     if (vr != (u_int) -1) {
-	::sprintf(cp, "%u", vr);
+	sprintf(cp, "%u", vr);
 	while (*cp != '\0') cp++;
     }
     cp = addParam(cp, br);
@@ -418,7 +418,7 @@ Class2Params::encodePage() const
 void
 Class2Params::decodePage(const char* s)
 {
-    u_int v = (u_int) ::strtoul(s, NULL, 16);
+    u_int v = (u_int) strtoul(s, NULL, 16);
     vr = (v>>0) & 1;
     wd = (v>>1) & 7;
     ln = (v>>4) & 3;

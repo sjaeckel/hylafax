@@ -1,4 +1,4 @@
-/*	$Id: RegEx.c++,v 1.12 1996/06/24 03:05:57 sam Rel $ */
+/*	$Id: RegEx.c++,v 1.13 1996/09/30 21:03:43 sam Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -30,7 +30,7 @@
 #include <RegEx.h>
 
 RegEx::RegEx(const char* pat, int len, int flags)
-    : _pattern(pat, len == 0 ? ::strlen(pat) : len)
+    : _pattern(pat, len == 0 ? strlen(pat) : len)
 {
     init(flags);
 }

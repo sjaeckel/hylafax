@@ -1,4 +1,4 @@
-/*	$Id: Timeout.c++,v 1.8 1996/06/24 03:06:10 sam Rel $ */
+/*	$Id: Timeout.c++,v 1.9 1996/09/30 21:03:43 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -52,15 +52,15 @@ Timeout::startTimeout(long ms)
     static struct sigvec sv;
     sv.sv_handler = fxSIGVECHANDLER(Timeout::sigAlarm);
     sv.sv_flags = SV_INTERRUPT;
-    ::sigvec(SIGALRM, &sv, (struct sigvec*) 0);
+    sigvec(SIGALRM, &sv, (struct sigvec*) 0);
 #else
 #ifdef SA_NOCLDSTOP			/* POSIX */
     static struct sigaction sa;
     sa.sa_handler = fxSIGACTIONHANDLER(Timeout::sigAlarm);
     sa.sa_flags = SA_INTERRUPT;
-    ::sigaction(SIGALRM, &sa, (struct sigaction*) 0);
+    sigaction(SIGALRM, &sa, (struct sigaction*) 0);
 #else					/* System V-style */
-    ::signal(SIGALRM, fxSIGHANDLER(sigAlarm));
+    signal(SIGALRM, fxSIGHANDLER(sigAlarm));
 #endif
 #endif
 #ifdef ITIMER_REAL
@@ -68,12 +68,12 @@ Timeout::startTimeout(long ms)
     itv.it_value.tv_sec = ms / 1000;
     itv.it_value.tv_usec = (ms % 1000) * 1000;
     timerclear(&itv.it_interval);
-    (void) ::setitimer(ITIMER_REAL, &itv, (itimerval*) 0);
+    (void) setitimer(ITIMER_REAL, &itv, (itimerval*) 0);
     traceTimer("START %ld.%02ld second timeout",
 	itv.it_value.tv_sec, itv.it_value.tv_usec / 10000);
 #else
     long secs = howmany(ms, 1000);
-    (void) ::alarm(secs);
+    (void) alarm(secs);
     traceTimer("START %ld second timeout", secs);
 #endif
 }
@@ -83,9 +83,9 @@ Timeout::stopTimeout()
 {
 #ifdef ITIMER_REAL
     static itimerval itv = { 0, 0, 0, 0 };
-    (void) ::setitimer(ITIMER_REAL, &itv, (itimerval*) 0);
+    (void) setitimer(ITIMER_REAL, &itv, (itimerval*) 0);
 #else
-    (void) ::alarm(0);
+    (void) alarm(0);
 #endif
     traceTimer("STOP timeout%s", timerExpired ? ", timer expired" : "");
 }

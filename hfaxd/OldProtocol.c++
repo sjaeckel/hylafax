@@ -1,4 +1,4 @@
-/*	$Id: OldProtocol.c++,v 1.32 1996/08/21 21:03:44 sam Rel $ */
+/*	$Id: OldProtocol.c++,v 1.35 1996/11/21 23:59:41 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -46,10 +46,12 @@
 #include <netdb.h>
 #include <ctype.h>
 
+extern "C" {
 #include <arpa/inet.h>
 
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
+}
 
 #define	FAX_OSERVICE	"fax"		// old protocol service name
 #define	FAX_ODEFPORT	4557		// old protocol default port
@@ -606,21 +608,46 @@ void OldProtocolServer::alterJob##param(const char* tag)		\
 void OldProtocolServer::alterJobGroup##param(const char* tag)		\
     { applyToJobGroup(tag, "alter", OldProtocolServer::reallyAlterJob##param); }
 
+fxBool
+OldProtocolServer::alterSuspend(Job& job)
+{
+    if (job.state == FaxRequest::state_active) {
+	sendClient("jobLocked", job.jobid);	// NB: maintain old semantics
+	return (FALSE);
+    }
+    fxStr emsg;
+    if (!sendQueuerACK(emsg, "X%s", (const char*) job.jobid)) {
+	sendError("Unable to suspend job: %s", (const char*) emsg);
+	return (FALSE);
+    }
+    return (TRUE);
+}
+
+void
+OldProtocolServer::alterResubmit(Job& job)
+{
+    fxStr emsg;
+    const char* jobid = job.jobid;
+    if (updateJobOnDisk(job, emsg)) {		// update q file
+	if (sendQueuerACK(emsg, "S%s", jobid))	// resubmit job
+	    sendClient("altered", jobid);
+	else
+	    sendError("Could not resubmit job: %s", (const char*) emsg);
+    } else {
+	sendError("Could not update job state: %s", (const char*) emsg);
+	(void) sendQueuer(emsg, "S%s", jobid);
+    }
+}
+
 void
 OldProtocolServer::reallyAlterJobTTS(Job& job, const char* spec)
 {
     time_t now = Sys::now();
     time_t t = cvtTime(spec, localtime(&now), "time-to-send");
-    fxStr emsg;
-    if (sendQueuerACK(emsg, "JT%s %lu", (const char*) job.jobid, (u_long) t)) {
-	sendClient("altered", job.jobid);
-    } else if (lockJob(job, LOCK_EX|LOCK_NB, emsg)) {
+    if (alterSuspend(job)) {
 	job.tts = t;
-	job.writeQFile();
-	unlockJob(job);
-	sendClient("altered", job.jobid);
-    } else
-	sendClient("jobLocked", job.jobid);
+	alterResubmit(job);
+    }
 }
 DEFINE_Alter(TTS)
 
@@ -629,75 +656,50 @@ OldProtocolServer::reallyAlterJobKillTime(Job& job, const char* spec)
 {
     time_t now = Sys::now();
     time_t t = cvtTime(spec, localtime(&now), "kill-time");
-    fxStr emsg;
-    if (sendQueuerACK(emsg, "JK%s %lu", (const char*) job.jobid, (u_long) t)) {
-	sendClient("altered", job.jobid);
-    } else if (lockJob(job, LOCK_EX|LOCK_NB, emsg)) {
+    if (alterSuspend(job)) {
 	job.killtime = t;
-	job.writeQFile();
-	unlockJob(job);
-	sendClient("altered", job.jobid);
-    } else
-	sendClient("jobLocked", job.jobid);
+	alterResubmit(job);
+    }
 }
 DEFINE_Alter(KillTime)
 
 void
 OldProtocolServer::reallyAlterJobModem(Job& job, const char* device)
 {
-    fxStr emsg;
-    if (sendQueuerACK(emsg, "JM%s %s", (const char*) job.jobid, device)) {
-	sendClient("altered", job.jobid);
-    } else if (lockJob(job, LOCK_EX|LOCK_NB, emsg)) {
+    if (alterSuspend(job)) {
 	job.modem = device;
-	job.writeQFile();
-	unlockJob(job);
-	sendClient("altered", job.jobid);
-    } else
-	sendClient("jobLocked", job.jobid);
+	alterResubmit(job);
+    }
 }
 DEFINE_Alter(Modem)
 
 void
 OldProtocolServer::reallyAlterJobPriority(Job& job, const char* priority)
 {
-    fxStr emsg;
-    if (sendQueuerACK(emsg, "JP%s %s", (const char*) job.jobid, priority)) {
-	sendClient("altered", job.jobid);
-    } else if (lockJob(job, LOCK_EX|LOCK_NB, emsg)) {
+    if (alterSuspend(job)) {
 	job.usrpri = atoi(priority);
-	job.writeQFile();
-	unlockJob(job);
-	sendClient("altered", job.jobid);
-    } else
-	sendClient("jobLocked", job.jobid);
+	alterResubmit(job);
+    }
 }
 DEFINE_Alter(Priority)
 
 void
 OldProtocolServer::reallyAlterJobMaxDials(Job& job, const char* max)
 {
-    fxStr emsg;
-    if (lockJob(job, LOCK_EX|LOCK_NB, emsg)) {
+    if (alterSuspend(job)) {
 	job.maxdials = atoi(max);
-	job.writeQFile();
-	unlockJob(job);
-	sendClient("altered", job.jobid);
-    } else
-	sendClient("jobLocked", job.jobid);
+	alterResubmit(job);
+    }
 }
 DEFINE_Alter(MaxDials)
 
 void
 OldProtocolServer::reallyAlterJobNotification(Job& job, const char* note)
 {
-    fxStr emsg;
-    if (lockJob(job, LOCK_EX|LOCK_NB, emsg)) {
+    if (alterSuspend(job)) {
 	job.checkNotifyValue(note);
-	unlockJob(job);
-	sendClient("altered", job.jobid);
-    } else
-	sendClient("jobLocked", job.jobid);
+	alterResubmit(job);
+    }
 }
 DEFINE_Alter(Notification)
 
@@ -750,9 +752,9 @@ OldProtocolServer::reallyRemoveJob(const char* op, Job& job)
 
 #define	DEFINE_Op(op)						\
 void OldProtocolServer::##op##Job(const char* tag)		\
-    { applyToJob(tag, "##op##", OldProtocolServer::do##op); }	\
+    { applyToJob(tag, fxQUOTE(op), OldProtocolServer::do##op); }\
 void OldProtocolServer::##op##JobGroup(const char* tag)		\
-    { applyToJobGroup(tag, "##op##", OldProtocolServer::do##op); }
+    { applyToJobGroup(tag, fxQUOTE(op), OldProtocolServer::do##op); }
 void
 OldProtocolServer::doremove(Job& job, const char*)
 {

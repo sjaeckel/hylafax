@@ -1,4 +1,4 @@
-/*	$Id: tagtest.c++,v 1.24 1996/06/24 03:00:54 sam Rel $ */
+/*	$Id: tagtest.c++,v 1.25 1996/11/20 01:58:10 sam Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -335,6 +335,17 @@ vlogError(const char* fmt, va_list ap)
 {
     vfprintf(stderr, fmt, ap);
     fputs(".\n", stderr);
+}
+
+// NB: must duplicate this to avoid pulling faxApp&co.
+
+extern "C" void
+_fxassert(const char* msg, const char* file, int line)
+{
+    fprintf(stderr, "Assertion failed \"%s\", file \"%s\" line %d.\n", 
+	msg, file, line);
+    abort();
+    /*NOTREACHED*/
 }
 
 const char* appName;

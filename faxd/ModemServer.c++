@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++,v 1.37 1996/08/02 18:09:09 sam Rel $ */
+/*	$Id: ModemServer.c++,v 1.38 1996/11/22 00:05:04 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -171,7 +171,7 @@ ModemServer::close()
     }
 }
 
-const char* ModemServer::stateNames[8] = {
+const char* ModemServer::stateNames[9] = {
     "BASE",
     "RUNNING",
     "MODEMWAIT",
@@ -179,9 +179,10 @@ const char* ModemServer::stateNames[8] = {
     "GETTYWAIT",
     "SENDING",
     "ANSWERING",
-    "RECEIVING"
+    "RECEIVING",
+    "LISTENING"
 };
-const char* ModemServer::stateStatus[8] = {
+const char* ModemServer::stateStatus[9] = {
     "Initializing server and modem",		// BASE
     "Running and idle",				// RUNNING
     "Waiting for modem to come ready",		// MODEMWAIT
@@ -190,6 +191,7 @@ const char* ModemServer::stateStatus[8] = {
     "Sending facsimile",			// SENDING
     "Answering the phone",			// ANSWERING
     "Receiving facsimile",			// RECEIVING
+    "Listening to rings from modem",		// LISTENING
 };
 
 /*
@@ -241,7 +243,7 @@ ModemServer::changeState(ModemServerState s, long timeout)
  * incoming call spawns a getty process that the priority will
  * be reset in the child before the getty is exec'd.
  */
-static const int schedCtlParams[8][2] = {
+static const int schedCtlParams[9][2] = {
     { NDPRI, 0 },		// BASE
     { NDPRI, 0 },		// RUNNING
     { NDPRI, 0 },		// MODEMWAIT
@@ -250,6 +252,7 @@ static const int schedCtlParams[8][2] = {
     { NDPRI, NDPHIMIN },	// SENDING
     { NDPRI, NDPHIMIN },	// ANSWERING
     { NDPRI, NDPHIMIN },	// RECEIVING
+    { NDPRI, 0 },		// LISTENING
 };
 #elif HAS_PRIOCNTL
 extern "C" {
@@ -260,7 +263,7 @@ extern "C" {
 static struct SchedInfo {
     const char*	clname;		// scheduling class name
     int		params[3];	// scheduling class parameters
-} schedInfo[8] = {
+} schedInfo[9] = {
     { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// BASE
     { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// RUNNING
     { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// MODEMWAIT
@@ -269,6 +272,7 @@ static struct SchedInfo {
     { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// SENDING
     { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// ANSWERING
     { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// RECEIVING
+    { "TS", { TS_NOCHANGE, TS_NOCHANGE } },		// LISTENING
 };
 #elif HAS_RTPRIO
 /*
@@ -280,7 +284,7 @@ static struct SchedInfo {
 #define RTPRIO_HIGH	120
 #endif
 
-static const int rtprioParams[8] = {
+static const int rtprioParams[9] = {
     RTPRIO_RTOFF,		// BASE
     RTPRIO_RTOFF,		// RUNNING
     RTPRIO_RTOFF,		// MODEMWAIT
@@ -289,6 +293,7 @@ static const int rtprioParams[8] = {
     RTPRIO_HIGH,		// SENDING
     RTPRIO_HIGH,		// ANSWERING
     RTPRIO_HIGH,		// RECEIVING
+    RTPRIO_RTOFF,		// LISTENING
 };
 #endif
 

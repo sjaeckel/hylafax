@@ -1,4 +1,4 @@
-/*	$Id: TextFmt.c++,v 1.17 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: TextFmt.c++,v 1.18 1996/09/20 16:00:52 sam Rel $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -833,7 +833,7 @@ TextFmt::format(FILE* fp)
 			fputc('\\',tf);
 		    fputc(c,tf);
 		} else
-		    fprintf(tf, "\\%03o", c);
+		    fprintf(tf, "\\%03o", c & 0xff);
 		xoff += hm;
 	    }
 	    break;
@@ -923,7 +923,7 @@ TextFmt::format(const char* cp, u_int cc)
 			fputc('\\',tf);
 		    fputc(c,tf);
 		} else
-		    fprintf(tf, "\\%03o", c);
+		    fprintf(tf, "\\%03o", c & 0xff);
 	    }
 	    xoff += hm;
 	    break;

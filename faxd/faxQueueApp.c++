@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++,v 1.131 1996/08/21 21:02:47 sam Rel $ */
+/*	$Id: faxQueueApp.c++,v 1.134 1996/11/22 00:00:49 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1548,7 +1548,6 @@ void
 faxQueueApp::setSuspend(Job& job)
 {
     job.state = FaxRequest::state_suspended;
-    job.stopKillTimer();			// no kill timer while suspended
     traceJob(job, "SUSPEND");
     Trigger::post(Trigger::JOB_SUSPEND, job);
     job.insert(*suspendq.next);
@@ -1660,6 +1659,7 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, fxBool checkState)
 	job.startKillTimer(req.killtime);
 	setReadyToRun(job);
     }
+    updateRequest(req, job);
     return (TRUE);
 }
 
@@ -1680,7 +1680,7 @@ faxQueueApp::rejectSubmission(Job& job, FaxRequest& req, const fxStr& reason)
 /*
  * Suspend a job by removing it from whatever
  * queue it's currently on and/or stopping any
- * timer.  If the job has an active subprocess
+ * timers.  If the job has an active subprocess
  * then the process is optionally sent a signal
  * and we wait for the process to stop before
  * returning to the caller.
@@ -1731,6 +1731,7 @@ faxQueueApp::suspendJob(Job& job, fxBool abortActive)
 	break;
     }
     job.remove();				// remove from old queue
+    job.stopKillTimer();			// clear kill timer
     return (TRUE);
 }
 
@@ -1887,28 +1888,21 @@ faxQueueApp::submitJob(const fxStr& jobid, fxBool checkState)
 {
     Job* job = Job::getJobByID(jobid);
     if (job) {
-	switch (job->state) {
-	case FaxRequest::state_done:		// done, cannot reschedule
-	    jobError(*job, "Cannot resubmit a completed job");
-	    return (FALSE);
-	case FaxRequest::state_suspended:	// resubmit to the scheduler
+	fxBool ok = FALSE;
+	if (job->state == FaxRequest::state_suspended) {
 	    job->remove();			// remove from suspend queue
-	    // XXX need better mechanism
-	    FaxRequest* req; req = readRequest(*job);// XXX for __GNUC__
-	    if (!req) {
+	    FaxRequest* req = readRequest(*job);// XXX need better mechanism
+	    if (req) {
+		job->update(*req);		// update job state from file
+		ok = submitJob(*job, *req);	// resubmit to scheduler
+		delete req;			// NB: unlock qfile
+	    } else
 		setDead(*job);			// XXX???
-		return (FALSE);
-	    }
-	    job->update(*req);			// update job state from file
-	    fxBool ok; ok = submitJob(*job, *req);// XXX for __GNUC__
-	    if (ok)
-		updateRequest(*req, *job);	// update state for clients
-	    delete req;				// NB: unlock qfile
-	    return (ok);
-	default:				// other, nothing to do
-	    return (TRUE);
-	}
-	/*NOTREACHED*/
+	} else if (job->state == FaxRequest::state_done)
+	    jobError(*job, "Cannot resubmit a completed job");
+	else
+	    ok = TRUE;				// other, nothing to do
+	return (ok);
     }
     /*
      * Create a job from a queue file and add it
@@ -1961,60 +1955,6 @@ faxQueueApp::submitJob(const fxStr& jobid, fxBool checkState)
 	Sys::close(fd);
     } else
 	logError("JOB %s: Could not open job file; %m.", (const char*) jobid);
-    return (status);
-}
-
-/*
- * Alter parameters of a job queued for execution.
- * Note that it is not possible to alter the parameters
- * of jobs that are actively being processed.
- *
- * XXX This interface is used only for temporarily 
- * XXX supporting the old client-server protocol.
- */
-fxBool
-faxQueueApp::alterJob(const char* s)
-{
-    const char cmd = *s++;
-    const char* cp = strchr(s, ' ');
-    if (!cp) {
-	traceServer("ALTER JOB: Malformed request \"%s\", no jobid.", s);
-	return (FALSE);
-    }
-    fxStr jobid(s, cp-s);
-    Job* job = Job::getJobByID(jobid);
-    if (!job) {
-	traceServer("ALTER JOB: JOB " | jobid | " not found.");
-	return (FALSE);
-    }
-    // NB: cannot process active jobs though this interface (XXX)
-    if (job->state == FaxRequest::state_active || !suspendJob(*job, FALSE)) {
-	jobError(*job, "Cannot alter job in active or done state.");
-	return (FALSE);
-    }
-    while (isspace(*cp))
-	cp++;
-    fxBool status = TRUE;
-    switch (cmd) {
-    case 'K':			// kill time
-	job->killtime = atoi(cp);
-	break;
-    case 'M':			// modem device to use
-	job->device = cp;
-	break;
-    case 'P':			// change priority
-	job->pri = atoi(cp);
-	break;
-    case 'T':			// time-to-send
-	job->tts = atoi(cp);
-	break;
-				// page dimensions/document contents XXX???
-    default:
-	traceServer("ALTER JOB: Unknown request \"%s\".", s);
-	status = FALSE;
-	break;
-    }
-    submitJob(jobid);		// return to scheduler
     return (status);
 }
 
@@ -2482,11 +2422,6 @@ faxQueueApp::FIFOMessage(char cmd, const fxStr& id, const char* args)
     case 'D':				// cancel an existing trigger
 	traceServer("DELETE %s", args);
 	status = Trigger::cancel(args);
-	break;
-    case 'J':				// alter job parameter(s)
-	traceServer("ALTER JOB %s", args);
-	if (status = alterJob(args))
-	    pokeScheduler();
 	break;
     case 'R':				// remove job
 	traceServer("REMOVE JOB %s", args);

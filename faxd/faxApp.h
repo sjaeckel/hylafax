@@ -1,4 +1,4 @@
-/*	$Id: faxApp.h,v 1.18 1996/06/24 03:00:48 sam Rel $ */
+/*	$Id: faxApp.h,v 1.19 1996/11/22 01:33:16 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -41,7 +41,6 @@ private:
 protected:
     int		openFIFO(const char* fifoName, int mode,
 		    fxBool okToExist = FALSE);
-    void	setRealIDs();
 public:
     faxApp();
     virtual ~faxApp();
@@ -49,6 +48,7 @@ public:
     static const fxStr fifoName;
 
     static void setupPermissions(void);
+    static void setRealIDs();
     static void detachFromTTY(void);
     static void fatal(const char* fmt ...);
 

@@ -1,4 +1,4 @@
-/*	$Id: TimeOfDay.c++,v 1.11 1996/06/24 03:06:09 sam Rel $ */
+/*	$Id: TimeOfDay.c++,v 1.12 1996/09/30 21:03:43 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -145,7 +145,7 @@ TimeOfDay::parse(const char* cp)
 	while (*cp && *cp != ',' && !isdigit(*cp))
 	    cp++;
 	time_t start, end;
-	if (::sscanf(cp, "%u-%u", &start, &end) == 2) {
+	if (sscanf(cp, "%u-%u", &start, &end) == 2) {
 	    // convert from military time to seconds
 	    start = (start/100)*60 + (start%100);
 	    end = (end/100)*60 + (end%100);

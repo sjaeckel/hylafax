@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in,v 1.28 1996/08/28 19:22:52 sam Rel $
+#	$Id: faxsetup.sh.in,v 1.32 1996/11/26 23:18:54 sam Rel $
 #
 # @WARNING@
 #
@@ -382,7 +382,8 @@ if onServer; then
     # Setup the password file manipulation functions according
     # to whether we have System-V style support through the
     # passmgmt program, or BSD style support through the chpass
-    # program.  If neither are found, we setup functions that
+    # program, or for SCO boxes through pwconv, or SVR4 style support
+    # through useradd. If none are found, we setup functions that
     # will cause us to abort if we need to munge the password file.
     #
     # NB: some systems override these function definitions through
@@ -413,6 +414,16 @@ if onServer; then
 	modifyPasswd()
 	{
 	    chpass -a "$1:*:$2:$3::0:0:Facsimile Agent:$4:"
+	}
+	lockPasswd()
+	{
+	    return 0				# entries are always locked
+	}
+    elif [ -f /etc/pwconv ]; then	# could be a SCO box
+	addPasswd()
+	{
+	    echo "${1}:NOLOGIN:${2}:${3}:Facsimile Agent:${4}:" >> ${PASSWD}
+	    /etc/pwconv
 	}
 	lockPasswd()
 	{
@@ -1254,7 +1265,7 @@ PickFile()
 }
 
 INETDCONF=`PickFile	$INETDCONF /etc/inetd.conf /etc/inet/inetd.conf`
-ALIASES=`PickFile	$ALIASES   /etc/aliases`
+ALIASES=`PickFile	$ALIASES   /etc/aliases /etc/ucbmail/aliases /usr/mmdf/table/alias.user /usr/mmdf/table/alias.n`
 SERVICES=`PickFile	$SERVICES  /etc/inet/services`
 test -f /etc/master.passwd	&& PASSWD=/etc/master.passwd
 
@@ -1541,6 +1552,34 @@ if onServer; then
 	isOK $x && fixupFaxUser
     fi
     machdepPasswdWork
+
+    #
+    # Verify existence, permission and ownership of sensitive files.
+    # XXX there are other files too 
+    #
+    HOSTS=$DIR_SPOOL/etc/hosts
+    test -f $HOSTS || {
+	cat<<EOF
+
+Warning: $1 does not exist!
+
+The file $1 does not exist or is not a regular file.
+This file specifies which clients are permitted to use the HylaFAX
+server.  The file will be initialized so that local clients are
+provided service.  Consult the HTML documentation and the manual
+page hosts(4F) for more information on setting up this file.
+
+EOF
+	$RM $HOSTS
+	echo "localhost" >$HOSTS
+	echo "127.0.0.1" >>$HOSTS
+    }
+    #
+    # Too complicated to check contents:
+    # simply force correct protection and ownership
+    #
+    $CHOWN $faxUID $HOSTS; $CHGRP $faxGID $HOSTS
+    $CHMOD 600 $HOSTS
 fi
 
 #
@@ -1737,8 +1776,13 @@ if onServer; then
 	    if newaliases 2>/dev/null; then
 		echo "Rebuilt $ALIASES database."
 	    else
-		echo "Can not find newaliases to rebuild $ALIASES;"
-		echo "you will have to do it yourself."
+		# could be a SCO machine running mmdf
+		if test -x /usr/mmdf/table/dbmbuild ; then
+		    su mmdf -c "/usr/mmdf/table/dbmbuild"
+		else
+		    echo "Can not find newaliases to rebuild $ALIASES;"
+		    echo "you will have to do it yourself."
+		fi
 	    fi
 	fi
     fi
@@ -1881,7 +1925,7 @@ EOF
 isNotOK()
 {
     x="$1"
-    test -n "$x" -a "$x" != y -a "$x" != yes
+    test "$x" != y -a "$x" != yes
 }
 
 CONFIG=$DIR_SPOOL/etc/config		# faxq config file
@@ -1898,7 +1942,7 @@ if onServer; then
 	JUNK="$JUNK $PROMPTS"
 	$RM $PROMPTS
 
-	while isNotOK $ok; do
+	while true; do
 	    if [ "$ok" != skip ]; then
 		test -f $PROMPTS || compilePrompts>$PROMPTS<<EOF
 #	CountryCode		Country code
@@ -1930,6 +1974,7 @@ EOF
 		checkForLocalFile $DestControls "destination controls";
 	    fi
 	    printSchedulerConfig; prompt "Are these ok [yes]?"; read ok
+	    isOK "$ok" && break
 	done
 
 	#

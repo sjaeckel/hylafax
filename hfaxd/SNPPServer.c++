@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++,v 1.24 1996/07/23 23:20:09 sam Rel $ */
+/*	$Id: SNPPServer.c++,v 1.25 1996/10/29 21:30:42 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -40,11 +40,13 @@
 #include <crypt.h>
 #endif
 
+extern "C" {
 #include <netdb.h>
 #include <arpa/inet.h>
 
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
+}
 
 SNPPSuperServer::SNPPSuperServer(const char* p, int bl)
     : SuperServer("SNPP", bl)

@@ -1,4 +1,4 @@
-/*	$Id: faxconfig.c,v 1.5 1996/08/26 19:15:08 sam Rel $ */
+/*	$Id: faxconfig.c,v 1.6 1996/09/25 00:55:15 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -92,6 +92,7 @@ main(int argc, char** argv)
     if (chdir(spooldir) < 0)
 	fatal("%s: chdir: %s", spooldir, strerror(errno));
     if (optind < argc) {
+	int isQueuer = (strcmp(fifoname, FAX_FIFO) == 0);
 	int fifo = open(fifoname, O_WRONLY|O_NDELAY);
 	if (fifo < 0)
 	    fatal("%s: open: %s", fifoname, strerror(errno));
@@ -110,9 +111,11 @@ main(int argc, char** argv)
 		quote = 1;
 	    cmd = malloc(strlen(argv[optind])+strlen(argv[optind+1])+10);
 	    if (quote)
-		sprintf(cmd, "C%s:\"%s\"", argv[optind], argv[optind+1]);
+		sprintf(cmd, "C%s%s:\"%s\"",
+		    isQueuer ? ":" : "", argv[optind], argv[optind+1]);
 	    else
-		sprintf(cmd, "C%s:%s", argv[optind], argv[optind+1]);
+		sprintf(cmd, "C%s%s:%s",
+		    isQueuer ? ":" : "", argv[optind], argv[optind+1]);
 	    if (write(fifo, cmd, strlen(cmd)) != strlen(cmd))
 		fatal("%s: FIFO write failed for command (%s)",
 		    argv[0], strerror(errno));

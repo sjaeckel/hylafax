@@ -1,4 +1,4 @@
-#	$Id: Makefile.IRIXdso,v 1.12 1996/06/24 03:00:36 sam Rel $
+#	$Id: Makefile.IRIXdso,v 1.13 1996/10/05 00:01:56 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -29,12 +29,6 @@
 #
 # DSO-specific rules for the faxd directory.
 #
-# Force the path used by rld to resolve DSO's.  If we don't
-# force this here for faxgetty, then we'll have to install
-# the DSO's in a public location so that it'll be found at
-# runtime (when faxgetty is spawned by init).
-#
-LLDOPTS	= -rpath ${SPOOL}/bin:${LIBEXEC}
 LDIRT	+= libfaxserver.a
 
 libfaxserver.${DSO}: ${SERVER_OBJS} ${MODEM_OBJS}

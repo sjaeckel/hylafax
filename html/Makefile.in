@@ -1,4 +1,4 @@
-#	$Id: Makefile.in,v 1.46 1996/08/26 19:40:48 sam Rel $
+#	$Id: Makefile.in,v 1.47 1996/09/30 22:27:57 sam Rel $
 #
 # @WARNING@
 #
@@ -100,6 +100,7 @@ HTML_DOCS=${SRCDIR}/acknowledge.html		\
     ${SRCDIR}/v4.0beta018.html			\
     ${SRCDIR}/v4.0beta020.html			\
     ${SRCDIR}/v4.0beta021.html			\
+    ${SRCDIR}/v4.0beta022.html			\
     ${SRCDIR}/version.html			\
     ${SRCDIR}/Majordomo/help.html		\
     ${SRCDIR}/Modems/Hayes/hayes.html		\

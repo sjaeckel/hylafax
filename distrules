@@ -1,4 +1,4 @@
-#	$Id: distrules,v 1.314 1996/08/26 19:40:57 sam Rel $
+#	$Id: distrules,v 1.315 1996/09/30 22:28:09 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
@@ -143,6 +143,7 @@ HTMLFILES=\
     html/v4.0beta018.html			\
     html/v4.0beta020.html			\
     html/v4.0beta021.html			\
+    html/v4.0beta022.html			\
     html/Modems/Supra/class2.html		\
     html/Modems/Supra/class1.html		\
     html/Modems/Hayes/hayes.html		\

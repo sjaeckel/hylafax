@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++,v 1.33 1996/07/25 20:52:57 sam Rel $ */
+/*	$Id: HylaFAXServer.c++,v 1.35 1996/11/21 23:58:25 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -79,15 +79,15 @@ HylaFAXServer::HylaFAXServer()
      */
     time_t now = Sys::now();
     struct tm gmt = *gmtime(&now);
-    struct tm* tm = localtime(&now);
-    gmt.tm_isdst = tm->tm_isdst;
-    gmtoff = mktime(&gmt) - mktime(tm);
+    struct tm tm = *localtime(&now);
+    gmt.tm_isdst = tm.tm_isdst;
+    gmtoff = mktime(&gmt) - mktime(&tm);
 #if HAS_TM_ZONE
     /*
      * BSD/OS doesn't support the global timezone
      * information so setup substitutes here.
      */
-    tzname[0] = tm->tm_zone;
+    tzname[0] = tm.tm_zone;
     tzname[1] = NULL;
 #endif
 
@@ -281,6 +281,7 @@ HylaFAXServer::readShutdownFile(void)
     if (fd != NULL) {
 	struct tm tm;
 	int deny, disc;
+	memset(&tm, 0, sizeof (tm));
 	int n = fscanf(fd, "%d %d %d %d %d %d %d\n",
 	    &tm.tm_year, &tm.tm_mon, &tm.tm_mday, &tm.tm_hour, &tm.tm_min,
 	    &deny, &disc);
@@ -288,14 +289,25 @@ HylaFAXServer::readShutdownFile(void)
 	    tm.tm_year -= 1900;
 	    tm.tm_isdst = -1;
 	    time_t shut = mktime(&tm);
-	    denyTime = shut - 3600 * (deny / 100) + 60 * (deny % 100);
-	    discTime = shut - 3600 * (disc / 100) + 60 * (disc % 100);
+	    if (shut != (time_t) -1) {
+		denyTime = shut - 3600 * (deny / 100) + 60 * (deny % 100);
+		discTime = shut - 3600 * (disc / 100) + 60 * (disc % 100);
 
-	    shutdownMsg = "";
-	    char buf[1024];
-	    while (fgets(buf, sizeof (buf), fd))
-		shutdownMsg.append(buf);
-	    ok = TRUE;
+		shutdownMsg = "";
+		char buf[1024];
+		while (fgets(buf, sizeof (buf), fd))
+		    shutdownMsg.append(buf);
+		ok = TRUE;
+	    } else
+		logError("%s: Invalid shutdown time, mktime conversion failed;"
+		    "Year=%d Mon=%d Day=%d Hour=%d Min=%d"
+		    , (const char*) shutdownFile
+		    , tm.tm_year+1900
+		    , tm.tm_mon
+		    , tm.tm_mday
+		    , tm.tm_hour
+		    , tm.tm_min
+		);
 	} else
 	    logError("%s: shutdown file format error",
 		(const char*) shutdownFile);

@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.h,v 1.10 1996/06/24 03:01:42 sam Rel $ */
+/*	$Id: InetFaxServer.h,v 1.11 1996/10/31 19:07:16 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -27,8 +27,9 @@
 #define	_InetFaxServer_
 
 #include "HylaFAXServer.h"
-
+extern "C" {
 #include <netinet/in.h>
+}
 
 struct hostent;
 

@@ -1,4 +1,4 @@
-/*	$Id: faxinfo.c++,v 1.29 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: faxinfo.c++,v 1.30 1996/11/15 20:18:26 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -67,11 +67,19 @@ sanitize(fxStr& s)
 int
 main(int argc, char** argv)
 {
+    fxBool showFilename = TRUE;
+    const char* appName = argv[0];
+
+    if (argc > 2 && streq(argv[1], "-n")) {
+	showFilename = FALSE;
+	argc--, argv++;
+    }
     if (argc != 2) {
-	fprintf(stderr, "usage: %s file.tif\n", argv[0]);
+	fprintf(stderr, "usage: %s [-n] file.tif\n", appName);
 	return (-1);
     }
-    printf("%s:\n", argv[1]);
+    if (showFilename)
+	printf("%s:\n", argv[1]);
     TIFFSetErrorHandler(NULL);
     TIFFSetWarningHandler(NULL);
     TIFF* tif = TIFFOpen(argv[1], "r");

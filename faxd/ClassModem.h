@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h,v 1.12 1996/06/24 03:00:19 sam Rel $ */
+/*	$Id: ClassModem.h,v 1.13 1996/10/02 04:24:31 sam Rel $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -71,6 +71,10 @@ typedef struct {
 #define	ESC_DELAY	(0x80|0x04)	// delay period of time
 #define	ESC_WAITFOR	(0x80|0x08)	// wait for modem response
 #define	ESC_FLUSH	(0x80|0x10)	// flush input queue
+
+#ifdef OFF
+#undef OFF			// workaround for SCO
+#endif
 
 /*
  * This is an abstract class that defines the interface to

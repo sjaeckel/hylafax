@@ -1,4 +1,4 @@
-/*	$Id: Str.c++,v 1.29 1996/08/22 18:12:02 sam Rel $ */
+/*	$Id: Str.c++,v 1.32 1996/10/04 02:05:37 sam Rel $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -36,17 +36,17 @@ fxStr::fxStr(u_int l)
 {
     slength = l+1;
     if (l>0) {
-	data = new char[slength];
+	data = (char*) malloc(slength);
+	memset(data,0,slength);
     } else
 	data = &emptyString;
-    memset(data,0,slength);
 }
 
 fxStr::fxStr(const char *s)
 {
     u_int l = strlen(s)+1;
     if (l>1) {
-	data = new char[l];
+	data = (char*) malloc(l);
 	memcpy(data,s,l);
     } else {
 	data = &emptyString;
@@ -57,19 +57,19 @@ fxStr::fxStr(const char *s)
 fxStr::fxStr(const char *s, u_int len)
 {
     if (len>0) {
-	data = new char[len+1];
+	data = (char*) malloc(len+1);
 	memcpy(data,s,len);
+	data[len] = 0;
     } else
 	data = &emptyString;
     slength = len+1;
-    data[len] = 0;
 }
 
 fxStr::fxStr(const fxStr&s)
 {
     slength = s.slength;
     if (slength > 1) {
-	data = new char[slength];
+	data = (char*) malloc(slength);
 	memcpy(data,s.data,slength);
     } else {
 	data = &emptyString;
@@ -80,7 +80,7 @@ fxStr::fxStr(const fxTempStr &t)
 {
     slength = t.slength;
     if (t.slength>1) {
-	data = new char[slength];
+	data = (char*) malloc(slength);
 	memcpy(data,t.data,slength);
     } else {
 	data = &emptyString;
@@ -93,7 +93,7 @@ fxStr::fxStr(int a, const char * format)
     if (!format) format = "%d";
     sprintf(buffer,format,a);
     slength = strlen(buffer) + 1;
-    data = new char[slength];
+    data = (char*) malloc(slength);
     memcpy(data,buffer,slength);
 }
 
@@ -103,7 +103,7 @@ fxStr::fxStr(long a, const char * format)
     if (!format) format = "%ld";
     sprintf(buffer,format,a);
     slength = strlen(buffer) + 1;
-    data = new char[slength];
+    data = (char*) malloc(slength);
     memcpy(data,buffer,slength);
 }
 
@@ -114,7 +114,7 @@ fxStr::fxStr(float a, const char * format)
     sprintf(buffer,format,a);
     slength = strlen(buffer) + 1;
     fxAssert(slength>1, "Str::Str(float): bogus conversion");
-    data = new char[slength];
+    data = (char*) malloc(slength);
     memcpy(data,buffer,slength);
 }
 
@@ -125,14 +125,14 @@ fxStr::fxStr(double a, const char * format)
     sprintf(buffer,format,a);
     slength = strlen(buffer) + 1;
     fxAssert(slength>1, "Str::Str(double): bogus conversion");
-    data = new char[slength]; // XXX assume slength>1
+    data = (char*) malloc(slength); // XXX assume slength>1
     memcpy(data,buffer,slength);
 }
 
 fxStr::~fxStr()
 {
     assert(data);
-    if (data != &emptyString) delete data;
+    if (data != &emptyString) free(data);
 }
 
 fxStr
@@ -141,7 +141,7 @@ fxStr::format(const char* fmt ...)
     char buf[4096];
     va_list ap;
     va_start(ap, fmt);
-    ::vsprintf(buf, fmt, ap);
+    vsprintf(buf, fmt, ap);
     va_end(ap);
     return fxStr(buf);
 }
@@ -150,7 +150,7 @@ fxStr
 fxStr::vformat(const char* fmt, va_list ap)
 {
     char buf[4096];
-    ::vsprintf(buf, fmt, ap);
+    vsprintf(buf, fmt, ap);
     return fxStr(buf);
 }
 
@@ -293,7 +293,7 @@ void fxStr::resizeInternal(u_int chars)
     if (slength > 1) {
 	if (chars > 0) {
 	    if (chars >= slength)
-		data = (char *)realloc(data,chars+1);
+		data = (char*) realloc(data,chars+1);
 	} else {
 	    assert(data != &emptyString);
 	    free(data);
@@ -302,7 +302,7 @@ void fxStr::resizeInternal(u_int chars)
     } else {
 	assert(data == &emptyString);
 	if (chars)
-	    data = new char[chars+1];
+	    data = (char*) malloc(chars+1);
     }
 }
 
@@ -310,10 +310,18 @@ void fxStr::resizeInternal(u_int chars)
 void fxStr::resize(u_int chars, fxBool)
 {
     resizeInternal(chars);
-    if (chars>=slength)
-	memset(data+slength, 0, chars+1-slength);
+    if (chars != 0) {
+	if (slength == 1)		// NB: special case for emptyString
+	    memset(data, 0, chars+1);
+	else {
+	    if (chars >= slength)	// zero expanded data segment
+		memset(data+slength, 0, chars+1-slength);
+	    else			// null terminate shortened string
+		data[chars] = 0;
+	}
+    } else
+	;				// now points to emptyString
     slength = chars+1;
-    data[chars] = 0;
 }
 
 void fxStr::setMaxLength(u_int len)
@@ -671,7 +679,7 @@ fxTempStr::fxTempStr(const char *d1, u_int l1, const char *d2, u_int l2)
     if (slength <= sizeof(indata)) {
 	data = &indata[0];
     } else {
-	data = new char[slength];
+	data = (char*) malloc(slength);
     }
     memcpy(data,d1,l1);
     memcpy(data+l1,d2,l2);
@@ -684,7 +692,7 @@ fxTempStr::fxTempStr(fxTempStr const &other)
     if (slength <= sizeof (indata)) {
 	data = &indata[0];
     } else {
-	data = new char[slength];
+	data = (char*) malloc(slength);
     }
     memcpy(data, other.data, slength);
     data[slength] = 0;
@@ -692,7 +700,7 @@ fxTempStr::fxTempStr(fxTempStr const &other)
 
 fxTempStr::~fxTempStr()
 {
-    if (data != indata) delete data;
+    if (data != indata) free(data);
 }
 
 fxTempStr& operator|(const fxTempStr& ts, const fxStr &b)

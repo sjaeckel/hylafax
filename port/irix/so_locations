@@ -1,20 +1,22 @@
-# $Id: so_locations,v 1.6 1996/06/24 03:04:55 sam Rel $
+# $Id: so_locations,v 1.7 1996/11/15 00:00:52 sam Rel $
 #
 # Layout for HylaFAX DSO's.
 #
-# These values were calculated under IRIX 5.3 with patches
-# 894 and 1116; you may need to update them for a different
-# system (make this file writable and rebuild the software).
+# These values were calculated under IRIX 6.2; you may need
+# to update them for a different system (to do that make this
+# file writable and rebuild the software with -update_registry
+# instead of -check_registry when building the DSO's).
 #
-libfaxserver.so \
-		:st = .text 0x5ff20000, 0x00040000:\
-		:st = .data 0x5ff60000, 0x00010000:\
-
+# NB: padding was added to the text segments of libfaxutil.so
+#     and libfaxserver.so so that purify can add its code w/o
+#     overflowing into the following data segment
+#
 libz.so \
-		:st = .text 0x5ff70000, 0x00010000:\
-		:st = .data 0x5ff80000, 0x00010000:\
-
+		:st = .text 0x5ffe0000, 0x00010000:\
+		:st = .data 0x5fff0000, 0x00010000:
 libfaxutil.so \
-		:st = .text 0x5ff90000, 0x00060000:\
-		:st = .data 0x5fff0000, 0x00010000:\
-
+		:st = .text 0x5ff60000, 0x00070000:\
+		:st = .data 0x5ffd0000, 0x00010000:
+libfaxserver.so \
+		:st = .text 0x5ff00000, 0x00050000:\
+		:st = .data 0x5ff50000, 0x00010000:

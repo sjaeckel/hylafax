@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++,v 1.30 1996/08/21 22:52:04 sam Rel $ */
+/*	$Id: FileSystem.c++,v 1.32 1996/11/15 20:17:37 sam Rel $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -29,7 +29,7 @@
  */
 #include "HylaFAXServer.h"
 #include "Sys.h"
-#include "tiff.h"
+#include "tiffio.h"
 
 #include <limits.h>
 #include <ctype.h>
@@ -157,15 +157,15 @@ SpoolDir HylaFAXServer::dirs[] = {
   HylaFAXServer::isVisibleTRUE,
   HylaFAXServer::listDirectory,	HylaFAXServer::listUnixFile,
   HylaFAXServer::nlstDirectory,	HylaFAXServer::nlstUnixFile, },
+{ "/log/",	FALSE, FALSE, FALSE, 0,
+  HylaFAXServer::isVisibleTRUE,
+  HylaFAXServer::listDirectory,	HylaFAXServer::listUnixFile,
+  HylaFAXServer::nlstDirectory,	HylaFAXServer::nlstUnixFile, },
 { "/recvq/",	FALSE, FALSE,  TRUE, 0,
   HylaFAXServer::isVisibleRecvQFile,
   HylaFAXServer::listRecvQ,	HylaFAXServer::listRecvQFile,
   HylaFAXServer::nlstDirectory,	HylaFAXServer::nlstUnixFile, },
 { "/archive/",	FALSE, FALSE, FALSE, 0,
-  HylaFAXServer::isVisibleTRUE,
-  HylaFAXServer::listDirectory,	HylaFAXServer::listUnixFile,
-  HylaFAXServer::nlstDirectory,	HylaFAXServer::nlstUnixFile, },
-{ "/log/",	 TRUE, FALSE, FALSE, 0,
   HylaFAXServer::isVisibleTRUE,
   HylaFAXServer::listDirectory,	HylaFAXServer::listUnixFile,
   HylaFAXServer::nlstDirectory,	HylaFAXServer::nlstUnixFile, },
@@ -721,6 +721,23 @@ HylaFAXServer::nlstUnixFile(FILE* fd, const SpoolDir&,
     fprintf(fd, "%s", filename);
 }
 
+static fxBool
+isTIFF(const TIFFHeader& h)
+{
+    if (h.tiff_magic != TIFF_BIGENDIAN && h.tiff_magic != TIFF_LITTLEENDIAN)
+	return (FALSE);
+    union {
+	int32	i;
+	char	c[4];
+    } u;
+    u.i = 1;
+    uint16 version = h.tiff_version;
+    // byte swap version stamp if opposite byte order
+    if ((u.c[0] == 0) ^ (h.tiff_magic == TIFF_BIGENDIAN))
+	TIFFSwabShort(&version);
+    return (version == TIFF_VERSION);
+}
+
 fxBool
 HylaFAXServer::docType(const char* docname, FaxSendOp& op)
 {
@@ -736,9 +753,7 @@ HylaFAXServer::docType(const char* docname, FaxSendOp& op)
 	    int cc = Sys::read(fd, (char*) &b, sizeof (b));
 	    if (cc > 2 && b.buf[0] == '%' && b.buf[1] == '!')
 		op = FaxRequest::send_postscript;
-	    else if (cc > sizeof (b.h) && b.h.tiff_version == TIFF_VERSION &&
-	      (b.h.tiff_magic == TIFF_BIGENDIAN ||
-	       b.h.tiff_magic == TIFF_LITTLEENDIAN))
+	    else if (cc > sizeof (b.h) && isTIFF(b.h))
 		op = FaxRequest::send_tiff;
 	    else
 		op = FaxRequest::send_data;
