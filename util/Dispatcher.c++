@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 1987, 1988, 1989, 1990, 1991 Stanford University
- * Copyright (c) 1991 Silicon Graphics, Inc.
+ * Copyright (c) 1987-1991 Stanford University
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -24,23 +24,16 @@
  */
 
 // Dispatcher provides an interface to the "select" system call.
-#include "port.h"
+#include "Sys.h"			// NB: must be first
 
 #include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
-#undef NULL
 #include <sys/param.h>
-#if HAS_SYSSELECT
+#if HAS_SELECT_H
 #include <sys/select.h>
 #endif
 #include <sys/time.h>
-#include <time.h>
-#include <sys/wait.h>
-#include <signal.h>
 #include <limits.h>
 
-#include "Types.h"
 #include "Dispatcher.h"
 #include "IOHandler.h"
 
@@ -309,17 +302,21 @@ inline fxBool ChildQueue::isEmpty() const { return _first == NULL; }
 inline fxBool ChildQueue::isReady() const { return _ready; }
 
 void ChildQueue::insert(pid_t p, IOHandler* handler) {
-    if (isEmpty()) {
-	_first = new Child(p, handler, _first);
-    } else {
-	Child* before = _first;
-	Child* after = _first->next;
-	while (after != NULL && p > after->pid) {
-	    before = after;
-	    after = after->next;
-	}
-	before->next = new Child(p, handler, after);
-    }
+    /*
+     * Place the entry at the end.  This is intentional
+     * so that the work done in the notify method below
+     * functions correctly when entries are added by
+     * childStatus handlers.  On busy systems it may pay
+     * to use a doubly linked list or to otherwise sort
+     * the list to reduce searching, but since there
+     * should never be more than 2x entries where x is
+     * the number of ready modems on the system a singly
+     * linked list should be ok.
+     */
+    Child** prev = &_first;
+    while (*prev != NULL)
+	prev = &(*prev)->next;
+    *prev = new Child(p, handler, NULL);
 }
 
 void ChildQueue::remove(IOHandler* handler) {
@@ -354,8 +351,8 @@ void ChildQueue::notify() {
 
     while ((c = *prev) != NULL) {
 	if (c->status != -1) {
-	    c->handler->childStatus(c->pid, c->status);
 	    *prev = c->next;
+	    c->handler->childStatus(c->pid, c->status);
 	    delete c;
 	} else
 	    prev = &c->next;
@@ -371,12 +368,13 @@ Dispatcher::Dispatcher() {
     _rmaskready = new FdMask;
     _wmaskready = new FdMask;
     _emaskready = new FdMask;
-    _rtable = new IOHandler*[_POSIX_OPEN_MAX];
-    _wtable = new IOHandler*[_POSIX_OPEN_MAX];
-    _etable = new IOHandler*[_POSIX_OPEN_MAX];
+    _max_fds = Sys::getOpenMax();
+    _rtable = new IOHandler*[_max_fds];
+    _wtable = new IOHandler*[_max_fds];
+    _etable = new IOHandler*[_max_fds];
     _queue = new TimerQueue;
     _cqueue = new ChildQueue;
-    for (int i = 0; i < _POSIX_OPEN_MAX; i++) {
+    for (int i = 0; i < _max_fds; i++) {
 	_rtable[i] = NULL;
 	_wtable[i] = NULL;
 	_etable[i] = NULL;
@@ -407,7 +405,7 @@ Dispatcher& Dispatcher::instance() {
 void Dispatcher::instance(Dispatcher* d) { _instance = d; }
 
 IOHandler* Dispatcher::handler(int fd, DispatcherMask mask) const {
-    if (fd < 0 || fd >= _POSIX_OPEN_MAX) {
+    if ((unsigned) fd >= _max_fds) {
 	abort();
     }
     IOHandler* cur = NULL;
@@ -424,14 +422,14 @@ IOHandler* Dispatcher::handler(int fd, DispatcherMask mask) const {
 }
 
 void Dispatcher::link(int fd, DispatcherMask mask, IOHandler* handler) {
-    if (fd < 0 || fd >= _POSIX_OPEN_MAX) {
+    if ((unsigned) fd >= _max_fds) {
 	abort();
     }
     attach(fd, mask, handler);
 }
 
 void Dispatcher::unlink(int fd) {
-    if (fd < 0 || fd >= _POSIX_OPEN_MAX) {
+    if ((unsigned) fd >= _max_fds) {
 	abort();
     }
     detach(fd);
@@ -551,8 +549,12 @@ fxBool Dispatcher::dispatch(timeval* howlong) {
 }
 
 fxBool Dispatcher::anyReady() const {
+    if (!_cqueue->isEmpty()) {
+	Dispatcher::sigCLD(0);		// poll for pending children
+	return _cqueue->isReady();
+    }
     return
-       _rmaskready->anySet() || _wmaskready->anySet() || _emaskready->anySet();
+	_rmaskready->anySet() || _wmaskready->anySet() || _emaskready->anySet();
 }
 
 int Dispatcher::fillInReady(
@@ -572,11 +574,7 @@ void Dispatcher::sigCLD(int)
     pid_t pid;
     int status;
 
-#ifdef ibmrt
-    while ((pid = wait(&status)) > 0)
-#else
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
-#endif
 	Dispatcher::instance()._cqueue->setStatus(pid, status);
 }
 
@@ -588,73 +586,74 @@ int Dispatcher::waitFor(
     FdMask& rmaskret, FdMask& wmaskret, FdMask& emaskret, timeval* howlong
 ) {
     int nfound;
-#ifdef SV_INTERRUPT			/* BSD-style */
+#if defined(SV_INTERRUPT)		// BSD-style
     static struct sigvec sv, osv;
-#else
-#ifdef SA_NOCLDSTOP			/* POSIX */
+#elif defined(SA_NOCLDSTOP)		// POSIX
     static struct sigaction sa, osa;
-#else					/* System V-style */
+#else					// System V-style
     void (*osig)();
-#endif
 #endif
 
     if (!_cqueue->isEmpty()) {
-#ifdef SV_INTERRUPT			/* BSD-style */
+#if defined(SV_INTERRUPT)		// BSD-style
 	sv.sv_handler = fxSIGVECHANDLER(&Dispatcher::sigCLD);
 	sv.sv_flags = SV_INTERRUPT;
 	sigvec(SIGCHLD, &sv, &osv);
-#else
-#ifdef SA_NOCLDSTOP			/* POSIX */
+#elif defined(SA_NOCLDSTOP)		// POSIX
 	sa.sa_handler = fxSIGACTIONHANDLER(&Dispatcher::sigCLD);
 	sa.sa_flags = SA_INTERRUPT;
 	sigaction(SIGCLD, &sa, &osa);
-#else					/* System V-style */
+#else					// System V-style
 	osig = (void (*)())signal(SIGCLD, fxSIGHANDLER(&Dispatcher::sigCLD));
 #endif
-#endif
     }
-    do {
-	rmaskret = *_rmask;
-	wmaskret = *_wmask;
-	emaskret = *_emask;
-	howlong = calculateTimeout(howlong);
+    /*
+     * If SIGCLD is pending then it may be delivered on
+     * exiting from the kernel after the above sig* call;
+     * if so then we don't want to block in the select.
+     */
+    if (!_cqueue->isReady()) {
+	do {
+	    rmaskret = *_rmask;
+	    wmaskret = *_wmask;
+	    emaskret = *_emask;
+	    howlong = calculateTimeout(howlong);
 
-#if defined(hpux)
-      nfound = select(
-          _nfds, (int*)&rmaskret, (int*)&wmaskret, (int*)&emaskret, howlong
-      );
+#if CONFIG_BADSELECTPROTO
+	    nfound = select(_nfds,
+		(int*) &rmaskret, (int*) &wmaskret, (int*) &emaskret, howlong);
 #else
- 	nfound = select(_nfds, &rmaskret, &wmaskret, &emaskret, howlong);
+	    nfound = select(_nfds, &rmaskret, &wmaskret, &emaskret, howlong);
 #endif
 #ifdef SGISELECTBUG
-        // XXX hack to deal with IRIX 5.2 FIFO+select bug
-        if (wmaskret.anySet()) {
-	    for (int i = 0; i < _nfds; i++)
-		if (wmaskret.isSet(i) && !_wmask->isSet(i)) {
-		    wmaskret.clrBit(i);
-		}
-        }
-        if (emaskret.anySet()) {
-	    for (int i = 0; i < _nfds; i++)
-		if (emaskret.isSet(i) && !_emask->isSet(i)) {
-		    emaskret.clrBit(i);
-		}
-        }
+	    // XXX hack to deal with IRIX 5.2 FIFO+select bug
+	    if (wmaskret.anySet()) {
+		for (int i = 0; i < _nfds; i++)
+		    if (wmaskret.isSet(i) && !_wmask->isSet(i)) {
+			wmaskret.clrBit(i);
+		    }
+	    }
+	    if (emaskret.anySet()) {
+		for (int i = 0; i < _nfds; i++)
+		    if (emaskret.isSet(i) && !_emask->isSet(i)) {
+			emaskret.clrBit(i);
+		    }
+	    }
 #endif
-    } while (nfound < 0 && !handleError());
+	    howlong = calculateTimeout(howlong);
+	} while (nfound < 0 && !handleError());
+    }
     if (!_cqueue->isEmpty()) {
-#ifdef SV_INTERRUPT			/* BSD-style */
+#if defined(SV_INTERRUPT)		// BSD-style
 	sigvec(SIGCHLD, &osv, (struct sigvec*) 0);
-#else
-#ifdef SA_NOCLDSTOP			/* POSIX */
+#elif defined(SA_NOCLDSTOP)		// POSIX
 	sigaction(SIGCLD, &osa, (struct sigaction*) 0);
-#else					/* System V-style */
+#else					// System V-style
 	(void) signal(SIGCLD, fxSIGHANDLER(osig));
-#endif
 #endif
     }
 
-    return nfound;		/* Timed out or input available */
+    return nfound;			// timed out or input available
 }
 
 void Dispatcher::notify(
@@ -718,6 +717,8 @@ timeval* Dispatcher::calculateTimeout(timeval* howlong) const {
     return howlong;
 }
 
+extern void fxFatal(const char* fmt, ...);
+
 fxBool Dispatcher::handleError() {
     switch (errno) {
     case EBADF:
@@ -728,8 +729,7 @@ fxBool Dispatcher::handleError() {
 	    return TRUE;
 	break;
     default:
-	perror("Dispatcher: select");
-	exit(1);
+	fxFatal("Dispatcher: select: %s", strerror(errno));
 	/*NOTREACHED*/
     }
     return FALSE;			// retry select
@@ -742,7 +742,7 @@ void Dispatcher::checkConnections() {
     for (int fd = 0; fd < _nfds; fd++) {
 	if (_rtable[fd] != NULL) {
 	    rmask.setBit(fd);
-#if defined(hpux)
+#if CONFIG_BADSELECTPROTO
           if (select(fd+1, (int*)&rmask, NULL, NULL, &poll) < 0) {
 #else
 	    if (select(fd+1, &rmask, NULL, NULL, &poll) < 0) {

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2.c++,v 1.99 1995/04/08 21:29:38 sam Rel $ */
+/*	$Id: Class2.c++,v 1.105 1996/08/08 21:39:30 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -31,7 +31,6 @@
 Class2Modem::Class2Modem(FaxServer& s, const ModemConfig& c) : FaxModem(s,c)
 {
     hangupCode[0] = '\0';
-    group3opts = 0;
     serviceType = 0;			// must be set in derived class
     rtcRev = TIFFGetBitRevTable(conf.sendFillOrder == FILLORDER_LSB2MSB);
 }
@@ -125,9 +124,34 @@ Class2Modem::setupModem()
     } else
 	modemCQ = 0;
     static const char* whatCQ[4] = { "no", "1D", "2D", "1D+2D" };
-    modemSupports("%s copy quality checking", whatCQ[modemCQ&3]);
-    if (modemCQ && cqCmds == "")
-	serverTrace("Warning, modem copy quality checking disabled");
+    modemSupports("%s copy quality checking%s", whatCQ[modemCQ&3],
+	(modemCQ && cqCmds == "" ? " (but not enabled)" : ""));
+    /*
+     * Deduce if modem supports T.class2-defined suport for
+     * subaddress, selective polling address, and passwords.
+     */
+    int sub = 0;
+    int sep = 0;
+    int pwd = 0;
+    if (doQuery(conf.class2APQueryCmd, s))
+	(void) vparseRange(s, 3, &sub, &sep, &pwd);
+    if (sub & BIT(1)) {
+	saCmd = conf.class2SACmd;
+	modemSupports("subaddressing");
+    } else
+	saCmd = "";
+    if (sep & BIT(1)) {
+	paCmd = conf.class2PACmd;
+	modemSupports("selective polling");
+    } else
+	paCmd = "";
+    if (pwd & BIT(1)) {
+	pwCmd = conf.class2PWCmd;
+	modemSupports("passwords");
+    } else
+	pwCmd = "";
+    if ((sub|sep|pwd) & BIT(1))
+	apCmd = conf.class2APCmd;
     /*
      * Check if the modem supports polled reception of documents.
      */
@@ -193,6 +217,7 @@ Class2Modem::setupClass2Parameters()
 
 	(void) atCmd(cqCmds);			// copy quality checking
 	(void) atCmd(nrCmd);			// negotiation reporting
+	(void) atCmd(apCmd);			// address&polling reporting
 	(void) atCmd(pieCmd);			// program interrupt enable
 	if (getHDLCTracing())			// HDLC frame tracing
 	    atCmd(bugCmd);
@@ -267,7 +292,7 @@ Class2Modem::setupDCC()
     params.wd = getBestPageWidth();
     params.ln = getBestPageLength();
     params.df = getBestDataFormat();
-    params.ec = EC_DISABLE;		// XXX
+    params.ec = getBestECM();
     params.bf = BF_DISABLE;
     params.st = getBestScanlineTime();
     return class2Cmd(dccCmd, params);
@@ -280,7 +305,7 @@ Class2Modem::setupDCC()
 fxBool
 Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params)
 {
-    int n = ::sscanf(cap, "%d,%d,%d,%d,%d,%d,%d,%d",
+    int n = sscanf(cap, "%d,%d,%d,%d,%d,%d,%d,%d",
 	&params.vr, &params.br, &params.wd, &params.ln,
 	&params.df, &params.ec, &params.bf, &params.st);
     if (n == 8) {
@@ -293,7 +318,7 @@ Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params)
 	params.wd = fxmin(params.wd, (u_int) WD_864);
 	params.ln = fxmin(params.ln, (u_int) LN_INF);
 	params.df = fxmin(params.df, (u_int) DF_2DMMR);
-	if (params.ec > EC_ENABLE)
+	if (params.ec > EC_ECLFULL)		// unknown, disable use
 	    params.ec = EC_DISABLE;
 	if (params.bf > BF_ENABLE)
 	    params.bf = BF_DISABLE;
@@ -617,7 +642,7 @@ Class2Modem::processHangup(const char* cp)
 	cp++;
     while (*cp == '0' && cp[1] != '\0')		// strip leading 0's
 	cp++;
-    ::strncpy(hangupCode, cp, sizeof (hangupCode));
+    strncpy(hangupCode, cp, sizeof (hangupCode));
     protoTrace("REMOTE HANGUP: %s (code %s)",
 	hangupCause(hangupCode), hangupCode);
 }

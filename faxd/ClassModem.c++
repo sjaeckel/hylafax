@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ClassModem.c++,v 1.14 1995/04/08 21:29:53 sam Rel $ */
+/*	$Id: ClassModem.c++,v 1.31 1996/08/29 19:04:28 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -169,7 +169,7 @@ ClassModem::dial(const char* number, fxStr& emsg)
 {
     protoTrace("DIAL %s", number);
     char buf[256];
-    ::sprintf(buf, (const char*) conf.dialCmd, number);
+    sprintf(buf, (const char*) conf.dialCmd, number);
     emsg = "";
     CallStatus cs = (atCmd(buf, AT_NOTHING) ? dialResponse(emsg) : FAILURE);
     if (cs != OK && emsg == "")
@@ -311,30 +311,37 @@ ClassModem::answerCall(AnswerType atype, fxStr& emsg)
 	     * of the answer request.
 	     */
 	    static CallType unknownCall[] = {
-		CALLTYPE_FAX,	// ANSTYPE_ANY (default)
-		CALLTYPE_DATA,	// ANSTYPE_DATA
-		CALLTYPE_FAX,	// ANSTYPE_FAX
-		CALLTYPE_VOICE,	// ANSTYPE_VOICE
+		CALLTYPE_FAX,		// ANSTYPE_ANY (default)
+		CALLTYPE_DATA,		// ANSTYPE_DATA
+		CALLTYPE_FAX,		// ANSTYPE_FAX
+		CALLTYPE_VOICE,		// ANSTYPE_VOICE
+		CALLTYPE_UNKNOWN,	// ANSTYPE_EXTERN
 	    };
 	    ctype = unknownCall[atype];
 	}
-	/*
-	 * Send any configured commands to the modem once the
-	 * type of the call has been established.  These commands
-	 * normally configure flow control and buad rate for
-	 * modems that, for example, require a fixed baud rate
-	 * and flow control scheme when receiving fax.
-	 */ 
-	fxStr beginCmd;
-	switch (ctype) {
-	case CALLTYPE_FAX:	beginCmd = conf.answerFaxBeginCmd; break;
-	case CALLTYPE_DATA:	beginCmd = conf.answerDataBeginCmd; break;
-	case CALLTYPE_VOICE:	beginCmd = conf.answerVoiceBeginCmd; break;
-	}
-	if (beginCmd != "")
-	    (void) atCmd(beginCmd);
+	answerCallCmd(ctype);
     }
     return (ctype);
+} 
+
+/*
+ * Send any configured commands to the modem once the
+ * type of the call has been established.  These commands
+ * normally configure flow control and buad rate for
+ * modems that, for example, require a fixed baud rate
+ * and flow control scheme when receiving fax.
+ */ 
+void
+ClassModem::answerCallCmd(CallType ctype)
+{
+    fxStr beginCmd;
+    switch (ctype) {
+    case CALLTYPE_FAX:	beginCmd = conf.answerFaxBeginCmd; break;
+    case CALLTYPE_DATA:	beginCmd = conf.answerDataBeginCmd; break;
+    case CALLTYPE_VOICE:beginCmd = conf.answerVoiceBeginCmd; break;
+    }
+    if (beginCmd != "")
+	(void) atCmd(beginCmd);
 }
 
 /*
@@ -464,8 +471,7 @@ ClassModem::putModemDLEData(const u_char* data, u_int cc, const u_char* bitrev, 
 	 * Copy to temp buffer, doubling DLE's.
 	 */
 	u_int i, j;
-	u_int n = fxmin(cc, conf.maxPacketSize);
-	n = fxmin((size_t) n, sizeof (dlebuf)/2);
+	u_int n = fxmin((size_t) cc, sizeof (dlebuf)/2);
 	for (i = 0, j = 0; i < n; i++, j++) {
 	    dlebuf[j] = bitrev[data[i]];
 	    if (dlebuf[j] == DLE)
@@ -475,8 +481,6 @@ ClassModem::putModemDLEData(const u_char* data, u_int cc, const u_char* bitrev, 
 	    return (FALSE);
 	data += n;
 	cc -= n;
-	if (cc > 0 && conf.interPacketDelay)
-	    pause(conf.interPacketDelay);
     }
     return (TRUE);
 }
@@ -492,19 +496,9 @@ fxBool
 ClassModem::putModemLine(const char* cp)
 {
     u_int cc = strlen(cp);
-    server.traceStatus(FAXTRACE_MODEMCOM, "<-- [%u:%s]", cc, cp);
-    while (cc > 0) {
-	u_int n = fxmin(cc, conf.maxPacketSize);
-	if (!server.putModem1(cp, n))
-	    return (FALSE);
-	cp += n;
-	cc -= n;
-	if (conf.interPacketDelay)
-	    pause(conf.interPacketDelay);
-    }
+    server.traceStatus(FAXTRACE_MODEMCOM, "<-- [%u:%s\\r]", cc+1, cp);
     static const char CR = '\r';
-    server.putModem1(&CR, 1);
-    return (TRUE);
+    return (server.putModem1(cp, cc) && server.putModem1(&CR, 1));
 }
 
 void ClassModem::startTimeout(long ms) { server.startTimeout(ms); }
@@ -512,9 +506,8 @@ void ClassModem::stopTimeout(const char* w){ server.stopTimeout(w); }
 
 const u_int MSEC_PER_SEC = 1000;
 
-#include <osfcn.h>
 #include <sys/time.h>
-#if HAS_SYSSELECT
+#if HAS_SELECT_H
 #include <sys/select.h>
 #endif
 
@@ -527,7 +520,7 @@ ClassModem::pause(u_int ms)
     struct timeval tv;
     tv.tv_sec = ms / MSEC_PER_SEC;
     tv.tv_usec = (ms % MSEC_PER_SEC) * 1000;
-    (void) ::select(0, 0, 0, 0, &tv);
+    (void) select(0, 0, 0, 0, &tv);
 }
 
 /*
@@ -539,10 +532,7 @@ ClassModem::selectBaudRate(BaudRate br, FlowControl i, FlowControl o)
     rate = br;
     iFlow = i;
     oFlow = o;
-    for (u_int n = 3; n != 0; n--)
-	if (reset(5*1000))
-	    return (TRUE);
-    return (FALSE);
+    return (reset(5*1000) || reset(5*1000));	// NB: try at most twice
 }
 
 fxBool ClassModem::sendBreak(fxBool pause)
@@ -647,12 +637,14 @@ ClassModem::reset(long ms)
     setDTR(FALSE);
     pause(conf.resetDelay);		// pause so modem can do reset
     setDTR(TRUE);
+#ifndef CONFIG_NOREOPEN
     /*
      * On some systems lowering and raising DTR is not done
      * properly (DTR is not raised when requested); thus we
      * reopen the device to insure that DTR is reasserted.
      */
     server.reopenDevice();
+#endif
     if (!setBaudRate(rate, iFlow, oFlow))
 	return (FALSE);
     flushModemInput();
@@ -674,29 +666,48 @@ ClassModem::atResponse(char* buf, long ms)
 	lastResponse = AT_TIMEOUT;
     else if (n <= 0)
 	lastResponse = AT_EMPTYLINE;
-    else if (strneq(buf, "OK", 2))
-	lastResponse = AT_OK;
-    else if (strneq(buf, "NO CARRIER", 10))
-	lastResponse = AT_NOCARRIER;
-    else if (strneq(buf, "NO DIAL", 7))		// NO DIALTONE or NO DIAL TONE
-	lastResponse = AT_NODIALTONE;
-    else if (strneq(buf, "NO ANSWER", 9))
-	lastResponse = AT_NOANSWER;
-    else if (strneq(buf, "ERROR", 5))
-	lastResponse = AT_ERROR;
-    else if (strneq(buf, "CONNECT", 7))
-	lastResponse = AT_CONNECT;
-    else if (streq(buf, "RING"))		// NB: avoid match of RINGING
-	lastResponse = AT_RING;
-    else if (strneq(buf, "BUSY", 4))
-	lastResponse = AT_BUSY;
-    else if (strneq(buf, "PHONE OFF-HOOK", 14))
-	lastResponse = AT_OFFHOOK;
-    else
+    else {
 	lastResponse = AT_OTHER;
+	switch (buf[0]) {
+	case 'B':
+	    if (strneq(buf, "BUSY", 4))
+		lastResponse = AT_BUSY;
+	    break;
+	case 'C':
+	    if (strneq(buf, "CONNECT", 7))
+		lastResponse = AT_CONNECT;
+	    break;
+	case 'E':
+	    if (strneq(buf, "ERROR", 5))
+		lastResponse = AT_ERROR;
+	    break;
+	case 'N':
+	    if (strneq(buf, "NO CARRIER", 10))
+		lastResponse = AT_NOCARRIER;
+	    else if (strneq(buf, "NO DIAL", 7))	// NO DIALTONE or NO DIAL TONE
+		lastResponse = AT_NODIALTONE;
+	    else if (strneq(buf, "NO ANSWER", 9))
+		lastResponse = AT_NOANSWER;
+	    break;
+	case 'O':
+	    if (strneq(buf, "OK", 2))
+		lastResponse = AT_OK;
+	    break;
+	case 'P':
+	    if (strneq(buf, "PHONE OFF-HOOK", 14))
+		lastResponse = AT_OFFHOOK;
+	    break;
+	case 'R':
+	    if (streq(buf, "RING"))		// NB: avoid match of RINGING
+		lastResponse = AT_RING;
+	    break;
+	}
+    }
     return lastResponse;
 }
 
+#define	isLineBreak(c)	((c) == '\n' || (c) == '\r')
+#define	isEscape(c)	((c) & 0x80)
 /*
  * Send an AT command string to the modem and, optionally
  * wait for status responses.  This routine breaks multi-line
@@ -713,23 +724,25 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
     fxBool respPending = FALSE;
 
     /*
-     * Scan string for \n's and escape codes (byte w/ 0x80 set).
-     * A \n causes the current string to be sent to the modem and
-     * a return status string parsed (and possibly compared to an
+     * Scan string for line breaks and escape codes (byte w/ 0x80 set).
+     * A line break causes the current string to be sent to the modem
+     * and a return status string parsed (and possibly compared to an
      * expected response).  An escape code terminates scanning,
      * with any pending string flushed to the modem before the
      * associated commands are carried out.
      */
     u_int i = 0;
     while (i < cmdlen) {
-	if (cmd[i] == '\n' || cmd[i] == '\r') {
+	if (isLineBreak(cmd[i]) && !(i+1 < cmdlen && isEscape(cmd[i+1]))) {
 	    /*
-	     * Send partial string to modem and await
-	     * status string if necessary.
+	     * No escape code follows, send partial string
+	     * to modem and await status string if necessary.
 	     */
+	    if (conf.atCmdDelay)
+		pause(conf.atCmdDelay);
 	    if (!putModemLine(cmd.extract(pos, i-pos)))
 		return (FALSE);
-	    pos = ++i;			// next segment starts after \n
+	    pos = ++i;			// next segment starts after line break
 	    if (r != AT_NOTHING) {
 		if (!waitFor(r, ms))
 		    return (FALSE);
@@ -738,38 +751,96 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
 		    return (FALSE);
 	    }
 	    respPending = FALSE;
-	} else if (cmd[i] & 0x80) {
+	} else if (isEscape(cmd[i])) {
 	    /*
 	     * Escape code; flush any partial line, process
-	     * escape codes and carry out the associated
-	     * actions.  Note that assume there is no benefit
-	     * to set flow control independently of baud rate.
+	     * escape codes and carry out their actions.
 	     */
+	    ATResponse resp = AT_NOTHING;
 	    if (i > pos) {
-		if (!putModemLine(cmd.extract(pos, i-pos)))
-		    return (FALSE);
+		if (conf.atCmdDelay)
+		    pause(conf.atCmdDelay);
+		if (isLineBreak(cmd[i-1])) {
+		    /*
+		     * Send data with a line break and arrange to
+		     * collect the expected response (possibly
+		     * specified through a <waitfor> escape processed
+		     * below).  Note that we use putModemLine, as
+		     * above, so that the same line break is sent
+		     * to the modem for all segments (i.e. \n is
+		     * translated to \r).
+		     */
+		    if (!putModemLine(cmd.extract(pos, i-1-pos)))
+			return (FALSE);
+		    // setup for expected response
+		    resp = (r != AT_NOTHING ? r : AT_OK);
+		} else {
+		    /*
+		     * Flush any data as-is, w/o adding a line
+		     * break or expecting a response.  This is
+		     * important for sending, for example, a
+		     * command escape sequence such as "+++".
+		     */
+		    u_int cc = i-pos;
+		    const char* cp = &cmd[pos];
+		    server.traceStatus(FAXTRACE_MODEMCOM, "<-- [%u:%s]", cc,cp);
+		    if (!server.putModem1(cp, cc))
+			return (FALSE);
+		}
 		respPending = TRUE;
 	    }
+	    /*
+	     * Process escape codes.
+	     */
 	    BaudRate br = rate;
 	    FlowControl flow = flowControl;
 	    u_int delay = 0;
 	    do {
 		switch (cmd[i] & 0xff) {
-		case ESC_XONFLOW:	flow = FLOW_XONXOFF; break;
-		case ESC_RTSFLOW:	flow = FLOW_RTSCTS; break;
-		case ESC_NOFLOW:	flow = FLOW_NONE; break;
-		case ESC_DELAY:		delay = cmd[++i]; break;
-		default:		br = cmd[i] & 0xf; break;
+		case ESC_SETBR:			// set host baud rate
+		    br = (u_char) cmd[++i];
+		    if (br != rate) {
+			setBaudRate(br);
+			rate = br;
+		    }
+		    break;
+		case ESC_SETFLOW:		// set host flow control
+		    flow = (u_char) cmd[++i];
+		    if (flow != flowControl) {
+			setBaudRate(br, flow, flow);
+			flowControl = flow;
+		    }
+		    break;
+		case ESC_DELAY:			// host delay
+		    delay = (u_char) cmd[++i];
+		    if (delay != 0)
+			pause(delay*10);	// 10 ms granularity
+		    break;
+		case ESC_WAITFOR:		// wait for response
+		    resp = (u_char) cmd[++i];
+		    if (resp != AT_NOTHING) {
+			// XXX check return?
+			(void) waitFor(resp, ms);	// XXX ms
+			respPending = FALSE;
+		    }
+		    break;
+		case ESC_FLUSH:			// flush input
+		    flushModemInput();
+		    break;
 		}
-	    } while (++i < cmdlen && (cmd[i] & 0x80) && delay == 0);
-	    pos = i;			// next segment starts here
-	    if (flow != flowControl)
-		setBaudRate(br, flow, flow);
-	    else
-		setBaudRate(br);
-	    rate = br; flowControl = flow;
-	    if (delay != 0)
-		pause(delay*100);
+	    } while (++i < cmdlen && isEscape(cmd[i]));
+	    pos = i;				// next segment starts here
+	    if (respPending) {
+		/*
+		 * If a segment with a line break was flushed
+		 * but no explicit <waitfor> escape followed
+		 * then collect the response here so that it
+		 * does not get lost.
+		 */
+		if (resp != AT_NOTHING && !waitFor(resp, ms))
+		    return (FALSE);
+		respPending = FALSE;
+	    }
 	} else
 	    i++;
     }
@@ -777,6 +848,8 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
      * Flush any pending string to modem.
      */
     if (i > pos) {
+	if (conf.atCmdDelay)
+	    pause(conf.atCmdDelay);
 	if (!putModemLine(cmd.extract(pos, i-pos)))
 	    return (FALSE);
 	respPending = TRUE;
@@ -790,6 +863,8 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
     }
     return (TRUE);
 }
+#undef	isEscape
+#undef	isLineBreak
 
 /*
  * Wait (carefully) for some response from the modem.
@@ -910,6 +985,10 @@ const char SPACE = ' ';
  * the syntax specified in the "standard".  Try looking
  * at some of the responses given by rev ~4.04 of the
  * ZyXEL firmware (for example)!
+ *
+ * NB: We accept alphanumeric items but don't return them
+ *     in the parsed range so that modems like the ZyXEL 2864
+ *     that indicate they support ``Class Z'' are handled.
  */
 fxBool
 ClassModem::vparseRange(const char* cp, int nargs ... )
@@ -926,10 +1005,10 @@ ClassModem::vparseRange(const char* cp, int nargs ... )
 	    matchc = CPAREN;
 	    acceptList = TRUE;
 	    cp++;
-	} else if (isdigit(cp[0])) {			// <item>
+	} else if (isalnum(cp[0])) {			// <item>
 	    matchc = COMMA;
 	    acceptList = (nargs == 0);
-	} else {
+	} else {					// skip to comma
 	    b = FALSE;
 	    break;
 	}
@@ -939,14 +1018,21 @@ ClassModem::vparseRange(const char* cp, int nargs ... )
 		cp++;
 		continue;
 	    }
-	    if (!isdigit(cp[0])) {
+	    if (!isalnum(cp[0])) {
 		b = FALSE;
 		goto done;
 	    }
-	    int v = 0;
-	    do {
-		v = v*10 + (cp[0] - '0');
-	    } while (isdigit((++cp)[0]));
+	    int v;
+	    if (isdigit(cp[0])) {
+		v = 0;
+		do {
+		    v = v*10 + (cp[0] - '0');
+		} while (isdigit((++cp)[0]));
+	    } else {
+		v = -1;					// XXX skip item below
+		while (isalnum((++cp)[0]))
+		    ;
+	    }
 	    int r = v;
 	    if (cp[0] == '-') {				// <low>-<high>
 		cp++;
@@ -964,9 +1050,11 @@ ClassModem::vparseRange(const char* cp, int nargs ... )
 		    cp++;
 		v++, r++;				// XXX 2.0 -> 3
 	    }
-	    // expand range or list
-	    for (; v <= r; v++)
-		mask |= 1<<v;
+	    if (v != -1) {				// expand range or list
+		r = fxmin(r, 31);			// clamp to valid range
+		for (; v <= r; v++)
+		    mask |= 1<<v;
+	    }
 	    if (acceptList && cp[0] == COMMA)		// (<item>,<item>...)
 		cp++;
 	}

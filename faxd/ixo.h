@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ixo.h,v 1.4 1995/04/08 21:31:25 sam Rel $ */
+/*	$Id: ixo.h,v 1.7 1996/08/16 21:02:29 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -49,5 +49,8 @@
 #define ACK	06
 #define NAK	025
 #define ESC	033
+#ifdef RS
+#undef	RS				// for HPUX at least
+#endif
 #define RS	036
 #endif /* _ixo_ */

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/DestInfo.h,v 1.5 1995/04/08 21:30:00 sam Rel $ */
+/*	$Id: DestInfo.h,v 1.9 1996/08/21 22:31:43 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -67,7 +67,7 @@ public:
     void done(Job&);			// remove job from active set
     void block(Job&);			// add job to blocked queue
     Job* nextBlocked();			// remove and return first blocked job
-    Job* unblock(const fxStr& filename);// remove blocked job by qfile name
+    void unblock(const Job& job);	// remove blocked job by reference
 
     FaxMachineInfo& getInfo(const fxStr& number);
     void updateConfig();		// write info file if necessary
@@ -78,5 +78,5 @@ inline u_int DestInfo::getCount() const
     { return activeCount + blockedCount; }
 inline fxBool DestInfo::isEmpty() const		{ return getCount() == 0; }
 
-fxDECLARE_StrKeyDictionary(DestInfoDict, DestInfo);
+fxDECLARE_StrKeyDictionary(DestInfoDict, DestInfo)
 #endif /* _DestInfo_ */

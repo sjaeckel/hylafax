@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ModemServer.c++,v 1.17 1995/04/08 21:30:58 sam Rel $ */
+/*	$Id: ModemServer.c++,v 1.37 1996/08/02 18:09:09 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -23,17 +23,22 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include <osfcn.h>
+#include "Sys.h"
+
 #include <ctype.h>
 #include <termios.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <sys/param.h>
 #include <sys/time.h>
+#if HAS_MODEM_H
+#include <sys/modem.h>
+#else
 #include <sys/ioctl.h>
+#endif
+#if HAS_TERMIOX
+#include <sys/termiox.h>
+#endif
 #include <sys/file.h>
-
-#include "Sys.h"
 
 #include "Dispatcher.h"
 #include "FaxTrace.h"
@@ -82,6 +87,10 @@ ModemServer::ModemServer(const fxStr& devName, const fxStr& devID)
     modemFd = -1;
     modem = NULL;
     curRate = ClassModem::BR0;		// unspecified baud rate
+    curParity = NONE;			// default is 8-bit/no parity
+    curVMin = 127;			// buffer input by default
+    curVTime = 1;			// ditto
+    setupAttempts = 0;
 
     rcvCC = rcvNext = 0;
     timeout = FALSE;
@@ -118,13 +127,13 @@ ModemServer::initialize(int argc, char** argv)
     statusFile = Sys::fopen(FAX_STATUSDIR "/" | modemDevID, "w");
     if (statusFile != NULL) {
 #if HAS_FCHMOD
-	::fchmod(fileno(statusFile), 0644);
+	fchmod(fileno(statusFile), 0644);
 #else
 	Sys::chmod(FAX_STATUSDIR "/" | modemDevID, 0644);
 #endif
 	setServerStatus("Initializing server");
     }
-    ::umask(077);			// keep all temp files private
+    umask(077);				// keep all temp files private
 
     updateConfig(configFile);		// read config file
 }
@@ -201,9 +210,22 @@ ModemServer::changeState(ModemServerState s, long timeout)
 	state = s;
 	if (changePriority)
 	    setProcessPriority(state);
+	if (modemFd >= 0)
+	    setInputBuffering(state != RUNNING);
 	setServerStatus(stateStatus[state]);
-	if (s == RUNNING)
+	switch (state) {
+	case RUNNING:
 	    notifyModemReady();			// notify surrogate
+	    break;
+	case MODEMWAIT:
+	    setupAttempts = 0;
+	    break;
+	}
+    } else if (s == MODEMWAIT && ++setupAttempts >= maxSetupAttempts) {
+	traceStatus(FAXTRACE_SERVER,
+	    "Unable to setup modem on %s; giving up after %d attempts",
+	    (const char*) modemDevice, setupAttempts);
+	notifyModemWedged();
     }
     if (timeout)
 	Dispatcher::instance().startTimer(timeout, 0, this);
@@ -248,27 +270,47 @@ static struct SchedInfo {
     { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// ANSWERING
     { "RT", { RT_NOCHANGE, RT_NOCHANGE, RT_NOCHANGE } },// RECEIVING
 };
+#elif HAS_RTPRIO
+/*
+ * On HP-UX, a real-time priority is between 0 (high)
+ * and 127 (low);  for now we use 120.
+ */
+#include <sys/rtprio.h>
+#ifndef RTPRIO_HIGH
+#define RTPRIO_HIGH	120
+#endif
+
+static const int rtprioParams[8] = {
+    RTPRIO_RTOFF,		// BASE
+    RTPRIO_RTOFF,		// RUNNING
+    RTPRIO_RTOFF,		// MODEMWAIT
+    RTPRIO_RTOFF,		// LOCKWAIT
+    RTPRIO_RTOFF,		// GETTYWAIT
+    RTPRIO_HIGH,		// SENDING
+    RTPRIO_HIGH,		// ANSWERING
+    RTPRIO_HIGH,		// RECEIVING
+};
 #endif
 
 void
 ModemServer::setProcessPriority(ModemServerState s)
 {
 #if HAS_SCHEDCTL
-    uid_t euid = ::geteuid();
-    if (::seteuid(0) >= 0) {		// must be done as root
-	if (::schedctl(schedCtlParams[s][0], 0, schedCtlParams[s][1]) < 0)
+    uid_t euid = geteuid();
+    if (seteuid(0) >= 0) {		// must be done as root
+	if (schedctl(schedCtlParams[s][0], 0, schedCtlParams[s][1]) < 0)
 	    traceServer("schedctl: %m");
-	if (::seteuid(euid) < 0)	// restore previous effective uid
+	if (seteuid(euid) < 0)		// restore previous effective uid
 	    traceServer("seteuid(%d): %m", euid);
     } else
 	traceServer("seteuid(root): %m");
 #elif HAS_PRIOCNTL
-    uid_t euid = ::geteuid();
-    if (::seteuid(0) >= 0) {		// must be done as root
+    uid_t euid = geteuid();
+    if (seteuid(0) >= 0) {		// must be done as root
 	const SchedInfo& si = schedInfo[s];
 	pcinfo_t pcinfo;
-	::strcpy(pcinfo.pc_clname, si.clname);
-	if (::priocntl((idtype_t)0, 0, PC_GETCID, (caddr_t)&pcinfo) >= 0) {
+	strcpy(pcinfo.pc_clname, si.clname);
+	if (priocntl((idtype_t)0, 0, PC_GETCID, (caddr_t)&pcinfo) >= 0) {
 	    pcparms_t pcparms;
 	    pcparms.pc_cid = pcinfo.pc_cid;
 	    if (streq(si.clname, "RT")) {
@@ -281,15 +323,24 @@ ModemServer::setProcessPriority(ModemServerState s)
 		tsp->ts_uprilim	= si.params[0];
 		tsp->ts_upri	= si.params[1];
 	    }
-	    if (::priocntl(P_PID, P_MYID, PC_SETPARMS, (caddr_t)&pcparms) < 0)
+	    if (priocntl(P_PID, P_MYID, PC_SETPARMS, (caddr_t)&pcparms) < 0)
 		traceServer("Unable to set %s scheduling parameters: %m",
 		    si.clname);
 	} else
 	    traceServer("priocntl(%s): %m", si.clname);
-	if (::seteuid(euid) < 0)	// restore previous effective uid
+	if (seteuid(euid) < 0)		// restore previous effective uid
 	    traceServer("setreuid(%d): %m", euid);
     } else
 	traceServer("setreuid(root): %m");
+#elif HAS_RTPRIO
+    uid_t euid = geteuid();
+    if (seteuid(0) >= 0) {		// must be done as root
+        if(rtprio((pid_t) 0, rtprioParams[s]) < 0)
+           traceServer("rtprio: %m");
+	if (seteuid(euid) < 0)		// restore previous effective uid
+	    traceServer("seteuid(%d): %m", euid);
+    } else
+	traceServer("seteuid(root): %m");
 #endif
 }
 
@@ -301,15 +352,16 @@ ModemServer::setServerStatus(const char* fmt, ...)
 {
     if (statusFile == NULL)
 	return;
-    ::flock(fileno(statusFile), LOCK_EX);
-    ::rewind(statusFile);
+    flock(fileno(statusFile), LOCK_EX);
+    rewind(statusFile);
     va_list ap;
     va_start(ap, fmt);
-    ::vfprintf(statusFile, fmt, ap);
-    ::fprintf(statusFile, "\n");
-    ::fflush(statusFile);
-    ::ftruncate(fileno(statusFile), ::ftell(statusFile));
-    ::flock(fileno(statusFile), LOCK_UN);
+    vfprintf(statusFile, fmt, ap);
+    va_end(ap);
+    fprintf(statusFile, "\n");
+    fflush(statusFile);
+    ftruncate(fileno(statusFile), ftell(statusFile));
+    flock(fileno(statusFile), LOCK_UN);
 }
 
 void
@@ -341,7 +393,7 @@ ModemServer::setupModem()
 	if (!modem) {
 	    discardModem(TRUE);
 	    if (deduceComplain) {
-		traceServer("%s: Can not deduce modem type.", dev);
+		traceServer("%s: Can not initialize modem.", dev);
 		deduceComplain = FALSE;
 	    }
 	    return (FALSE);
@@ -405,8 +457,8 @@ ModemServer::openDevice(const char* dev)
      * Routines that call setupModem *must* first
      * lock the device with the usual effective uid.
      */
-    uid_t euid = ::geteuid();
-    if (::seteuid(0) < 0) {
+    uid_t euid = geteuid();
+    if (seteuid(0) < 0) {
 	 traceServer("%s: seteuid root failed (%m)", dev);
 	 return (FALSE);
     }
@@ -417,14 +469,14 @@ ModemServer::openDevice(const char* dev)
      */
     modemFd = Sys::open(dev, O_RDWR|O_NDELAY|O_NOCTTY);
     if (modemFd < 0) {
-	::seteuid(euid);
+	seteuid(euid);
 	traceServer("%s: Can not open modem (%m)", dev);
 	return (FALSE);
     }
-    int flags = ::fcntl(modemFd, F_GETFL, 0);
-    if (::fcntl(modemFd, F_SETFL, flags &~ O_NDELAY) < 0) {
+    int flags = fcntl(modemFd, F_GETFL, 0);
+    if (fcntl(modemFd, F_SETFL, flags &~ O_NDELAY) < 0) {
 	 traceServer("%s: fcntl: %m", dev);
-	 ::close(modemFd), modemFd = -1;
+	 Sys::close(modemFd), modemFd = -1;
 	 return (FALSE);
     }
 #else
@@ -432,7 +484,7 @@ ModemServer::openDevice(const char* dev)
     modemFd = Sys::open(dev, O_RDWR);
     stopTimeout("opening modem");
     if (modemFd < 0) {
-	::seteuid(euid);
+	seteuid(euid);
 	traceServer((timeout ?
 		"%s: Can not open modem (timed out)." :
 		"%s: Can not open modem (%m)."),
@@ -448,18 +500,18 @@ ModemServer::openDevice(const char* dev)
     struct stat sb;
     (void) Sys::fstat(modemFd, sb);
 #if HAS_FCHOWN
-    if (::fchown(modemFd, UUCPLock::getUUCPUid(), sb.st_gid) < 0)
+    if (fchown(modemFd, UUCPLock::getUUCPUid(), sb.st_gid) < 0)
 #else
     if (Sys::chown(dev, UUCPLock::getUUCPUid(), sb.st_gid) < 0)
 #endif
 	traceServer("%s: chown: %m", dev);
 #if HAS_FCHMOD
-    if (::fchmod(modemFd, deviceMode) < 0)
+    if (fchmod(modemFd, deviceMode) < 0)
 #else
     if (Sys::chmod(dev, deviceMode) < 0)
 #endif
 	traceServer("%s: chmod: %m", dev);
-    ::seteuid(euid);
+    seteuid(euid);
     return (TRUE);
 }
 
@@ -467,7 +519,7 @@ fxBool
 ModemServer::reopenDevice()
 {
     if (modemFd >= 0)
-	::close(modemFd), modemFd = -1;
+	Sys::close(modemFd), modemFd = -1;
     return openDevice(modemDevice);
 }
 
@@ -480,10 +532,13 @@ ModemServer::discardModem(fxBool dropDTR)
     if (modemFd >= 0) {
 	if (dropDTR)
 	    (void) setDTR(FALSE);			// force hangup
-	::close(modemFd), modemFd = -1;			// discard open file
+	Sys::close(modemFd), modemFd = -1;		// discard open file
     }
     delete modem, modem = NULL;
 }
+
+#define	MAXSEQNUM	99999999
+#define	NEXTSEQNUM(x)	((x)+1 >= MAXSEQNUM ? 1 : (x)+1)
 
 /*
  * Start a session: a period of time during which
@@ -492,8 +547,56 @@ ModemServer::discardModem(fxBool dropDTR)
 void
 ModemServer::beginSession(const fxStr& number)
 {
-    log = new FaxMachineLog(canonicalizePhoneNumber(number), logMode);
+    /*
+     * Obtain the next communication identifier by reading
+     * and updating the sequence number file.  If a problem
+     * occurs then session logging will not be done.
+     */
+    const char* seqFile = FAX_LOGDIR "/" FAX_SEQF;
+    int fseqf = Sys::open(seqFile, O_CREAT|O_RDWR, 0644);
+    if (fseqf >= 0) {
+	flock(fseqf, LOCK_EX);
+	u_int seqnum = 1;
+	char line[1024];
+	int n = read(fseqf, line, sizeof (line));
+	line[n < 0 ? 0 : n] = '\0';
+	if (n > 0)
+	    seqnum = atoi(line);
+	if (seqnum < 1 || seqnum >= MAXSEQNUM) {
+	    logWarning("Invalid commid sequence number \"%s\", resetting to 1",
+		line);
+	    seqnum = 1;
+	}
+	/*
+	 * Probe to find a valid filename.
+	 */
+	mode_t omask = umask(022);
+	int ftmp;
+	int ntry = 1000;			// that should be a lot!
+	do {
+	    seqnum = NEXTSEQNUM(seqnum);
+	    commid = fxStr::format("%08u", seqnum);
+	    fxStr file = FAX_LOGDIR "/c" | commid;
+	    ftmp = Sys::open(file, O_RDWR|O_CREAT|O_EXCL, logMode);
+	} while (ftmp < 0 && errno == EEXIST && --ntry >= 0);
+	umask(omask);
+	if (ftmp >= 0) {
+	    sprintf(line, "%u", seqnum);
+	    (void) lseek(fseqf, 0, SEEK_SET);
+	    if (Sys::write(fseqf, line, strlen(line)) != strlen(line))
+		logError("Error writing commid sequence number file");
+	    Sys::close(fseqf);			// NB: implicit unlock
+	    log = new
+		FaxMachineLog(ftmp, canonicalizePhoneNumber(number), commid);
+	} else
+	    logError("Failed to find free commid (seqnum=%u)", seqnum);
+	Sys::close(fseqf);			// NB: implicit unlock
+    } else
+	logError("Unable to allocate commid: open(%s): %s",
+	    seqFile, strerror(errno));
 }
+#undef NEXTSEQNUM
+#undef MAXSEQNUM
 
 /*
  * Terminate a session.
@@ -583,6 +686,8 @@ fxBool ModemServer::modemWaitForRings(u_int rings, CallType& type, CallerID& cid
     { return modem->waitForRings(rings, type, cid); }
 CallType ModemServer::modemAnswerCall(AnswerType atype, fxStr& emsg)
     { return modem->answerCall(atype, emsg); }
+void ModemServer::modemAnswerCallCmd(CallType ctype)
+    { modem->answerCallCmd(ctype); }
 void ModemServer::modemHangup()			{ modem->hangup(); }
 
 BaudRate ModemServer::getModemRate() const	{ return baudRates[curRate]; }
@@ -612,27 +717,12 @@ ModemServer::readConfig(const fxStr& filename)
 	setLocalIdentifier(canonicalizePhoneNumber(FAXNumber));
 }
 
-void
-ModemServer::configError(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vtraceStatus(FAXTRACE_SERVER, fmt, ap);
-    va_end(ap);
-}
-
-void
-ModemServer::configTrace(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vtraceStatus(FAXTRACE_CONFIG, fmt, ap);
-    va_end(ap);
-}
-
-const fxStr& ModemServer::getModemDevice() const	{ return modemDevice; }
-const fxStr& ModemServer::getModemDeviceID() const	{ return modemDevID; }
-const fxStr& ModemServer::getModemNumber() const	{ return FAXNumber; }
+void ModemServer::vconfigError(const char* fmt, va_list ap)
+    { vtraceStatus(FAXTRACE_SERVER, fmt, ap); }
+void ModemServer::vconfigTrace(const char* fmt, va_list ap)
+    { vtraceStatus(FAXTRACE_CONFIG, fmt, ap); }
+void ModemServer::vdialrulesTrace(const char* fmt, va_list ap)
+    { vtraceStatus(FAXTRACE_DIALRULES, fmt, ap); }
 
 /*
  * Setup the dial string rules.  Note that if we're
@@ -650,9 +740,6 @@ ModemServer::setDialRules(const char* name)
     else
 	ServerConfig::setDialRules(name);
 }
-
-int ModemServer::getServerTracing() const		{ return (tracingLevel); }
-int ModemServer::getSessionTracing() const	{ return (logTracingLevel); }
 
 /*
  * Set the modem speaker volume and if a modem
@@ -686,6 +773,17 @@ ModemServer::traceProtocol(const char* fmt ...)
     va_list ap;
     va_start(ap, fmt);
     vtraceStatus(FAXTRACE_PROTOCOL, fmt, ap);
+    va_end(ap);
+}
+
+void
+ModemServer::traceModemOp(const char* fmt0 ...)
+{
+    va_list ap;
+    va_start(ap, fmt0);
+    char fmt[256];
+    sprintf(fmt, "MODEM %s", fmt0);
+    vtraceStatus(FAXTRACE_MODEMOPS, fmt, ap);
     va_end(ap);
 }
 
@@ -787,8 +885,8 @@ static const char* parityNames[] = {
 #define	CRTSCTS	0
 #endif
 
-static void
-setFlow(termios& term, FlowControl iflow, FlowControl oflow)
+void
+ModemServer::setFlow(termios& term, FlowControl iflow, FlowControl oflow)
 {
     switch (iflow) {
     case ClassModem::FLOW_NONE:
@@ -820,25 +918,60 @@ setFlow(termios& term, FlowControl iflow, FlowControl oflow)
     }
 }
 
+void
+ModemServer::setParity(termios& term, Parity parity)
+{
+    switch (parity) {
+    case NONE: 
+	term.c_cflag &= ~(CSIZE | PARENB);
+	term.c_cflag |= CS8;
+	term.c_iflag &= ~(IGNPAR | ISTRIP);
+	break;
+    case EVEN:
+	term.c_cflag &= ~(CSIZE | PARODD);
+	term.c_cflag |= CS7 | PARENB;
+	term.c_iflag |= IGNPAR | ISTRIP;
+	break;
+    case ODD:
+	term.c_cflag &= ~CSIZE;
+	term.c_cflag |= CS7 | PARENB | PARODD;
+	term.c_iflag |= IGNPAR | ISTRIP;
+	break;
+    }
+}
+
 fxBool
 ModemServer::tcsetattr(int op, struct termios& term)
 {
+    fxBool ok;
     if (clocalAsRoot) {
 	/*
 	 * Gag, IRIX 5.2 and beyond permit only the super-user to
 	 * change the CLOCAL bit on a tty device with modem control.
-	 * However, since there appear to be strange side effects
-	 * when doing this with some modems, for now we enable this
-	 * from the configuration file so that IRIX users can still
-	 * disable it.
+	 * However, since some versions have a bug in the UART driver
+	 * that causes RTS/CTS flow control to be silently turned off
+	 * when CLOCAL is set, for now we enable this from the
+	 * configuration file so that IRIX users can still disable it.
 	 */
-	uid_t euid = ::geteuid();
-	(void) ::seteuid(0);
-	fxBool ok = (::tcsetattr(modemFd, op, &term) == 0);
-	::seteuid(euid);
-	return ok;
+	uid_t euid = geteuid();
+	(void) seteuid(0);
+	ok = (::tcsetattr(modemFd, op, &term) == 0);
+	seteuid(euid);
     } else
-	return (::tcsetattr(modemFd, op, &term) == 0);
+	ok = (::tcsetattr(modemFd, op, &term) == 0);
+    if (!ok)
+	traceModemOp("tcsetattr: %m");
+    return ok;
+}
+
+fxBool
+ModemServer::tcgetattr(const char* method, struct termios& term)
+{
+    if (::tcgetattr(modemFd, &term) != 0) {
+	traceModemOp("%s::tcgetattr: %m", method);
+	return (FALSE);
+    } else
+	return (TRUE);
 }
 
 /*
@@ -847,52 +980,64 @@ ModemServer::tcsetattr(int op, struct termios& term)
 fxBool
 ModemServer::setBaudRate(BaudRate rate, FlowControl iFlow, FlowControl oFlow)
 {
+    if (rate >= NBAUDS)
+	rate = NBAUDS-1;
+    traceModemOp("set baud rate: %d baud, input flow %s, output flow %s",
+	baudRates[rate], flowNames[iFlow], flowNames[oFlow]);
     struct termios term;
-    if (::tcgetattr(modemFd, &term) == 0) {
-	if (rate >= NBAUDS)
-	    rate = NBAUDS-1;
-	curRate = rate;				// NB: for use elsewhere
-	term.c_oflag = 0;
-	term.c_lflag = 0;
-	term.c_iflag &= IXON|IXOFF;		// keep these bits
-	term.c_cflag &= CRTSCTS;		// and these bits
-	setFlow(term, iFlow, oFlow);
-	term.c_cflag |= CLOCAL | CS8 | CREAD;
-	::cfsetospeed(&term, termioBaud[rate]);
-	::cfsetispeed(&term, termioBaud[rate]);
-	term.c_cc[VMIN] = 127;			// buffer input by default
-	term.c_cc[VTIME] = 1;
-	traceStatus(FAXTRACE_MODEMOPS,
-	    "MODEM set baud rate: %d baud, input flow %s, output flow %s",
-	    baudRates[rate], flowNames[iFlow], flowNames[oFlow]);
-	flushModemInput();
-#if HAS_TXCD
-	/* 
-	 * From: Steve Williams <steve@geniers.cuug.ab.ca>
-	 *
-  	 * Under AIX there is no easy way to determine if hardware
-	 * handshaking is already on the terminal Control Discipline
-	 * stack.  This is necessary to properly condition the tty
-	 * device for RTS/CTS flow control.  Rather than determine
-	 * the state of the device we just add/remove the Control
-	 * Discipline and ignore any errors.  Note that this is the
-	 * only place this must be done because it is the only
-	 * method through which the modem drivers enable/disable
-	 * RTS/CTS flow control.
-	 */
-	if (iFlow == FaxModem::FLOW_RTSCTS) {
-	    traceStatus(FAXTRACE_MODEMOPS,
-		"MODEM add rts control discipline");
-	    (void) ::ioctl(modemFd, TXADDCD, "rts");
-	} else {
-	    traceStatus(FAXTRACE_MODEMOPS,
-		"MODEM remove rts control discipline");
-	    (void) ::ioctl(modemFd, TXDELCD, "rts");
-	}
-#endif
-	return (tcsetattr(TCSAFLUSH, term));
-    } else
+    if (!tcgetattr("setBaudRate", term))
 	return (FALSE);
+    curRate = rate;				// NB: for use elsewhere
+    term.c_oflag = 0;
+    term.c_lflag = 0;
+    term.c_iflag &= IXON|IXOFF;			// keep these bits
+    term.c_cflag &= CRTSCTS;			// and these bits
+    setParity(term, curParity);
+    term.c_cflag |= CLOCAL | CREAD;
+    setFlow(term, iFlow, oFlow);
+    cfsetospeed(&term, termioBaud[rate]);
+    cfsetispeed(&term, termioBaud[rate]);
+    term.c_cc[VMIN] = (cc_t) curVMin;
+    term.c_cc[VTIME] = (cc_t) curVTime;
+    flushModemInput();
+#if HAS_TXCD
+    /* 
+     * From: Steve Williams <steve@geniers.cuug.ab.ca>
+     *
+     * Under AIX there is no easy way to determine if hardware
+     * handshaking is already on the terminal Control Discipline
+     * stack.  This is necessary to properly condition the tty
+     * device for RTS/CTS flow control.  Rather than determine
+     * the state of the device we just add/remove the Control
+     * Discipline and ignore any errors.  Note that this is the
+     * only place this must be done because it is the only
+     * method through which the modem drivers enable/disable
+     * RTS/CTS flow control.
+     */
+    if (iFlow == FaxModem::FLOW_RTSCTS) {
+	traceModemOp("add rts control discipline");
+	(void) ioctl(modemFd, TXADDCD, "rts");	// XXX check return
+    } else {
+	traceModemOp("remove rts control discipline");
+	(void) ioctl(modemFd, TXDELCD, "rts");	// XXX check return
+    }
+#endif
+#if HAS_TERMIOX
+    /*
+     * Some SVR4.2 systems require use of termiox
+     * to setup hardware handshaking on a port.
+     */
+    struct termiox termx;
+    if (ioctl(modemFd, TCGETX, &termx) >= 0) {
+	if (iFlow == FaxModem::FLOW_RTSCTS)
+	    termx.x_hflag |= RTSXOFF|CTSXON;
+	else
+	    termx.x_hflag &= ~(RTSXOFF|CTSXON);
+	if (ioctl(modemFd, TCSETX, &termx) < 0)
+	    traceModemOp("ioctl(TCSETX): %m");
+    }
+#endif
+    return (tcsetattr(TCSANOW, term));
 }
 
 /*
@@ -901,27 +1046,26 @@ ModemServer::setBaudRate(BaudRate rate, FlowControl iFlow, FlowControl oFlow)
 fxBool
 ModemServer::setBaudRate(BaudRate rate)
 {
+    if (rate >= NBAUDS)
+	rate = NBAUDS-1;
+    traceModemOp("set baud rate: %d baud (flow control unchanged)",
+	baudRates[rate]);
     struct termios term;
-    if (::tcgetattr(modemFd, &term) == 0) {
-	if (rate >= NBAUDS)
-	    rate = NBAUDS-1;
-	curRate = rate;				// NB: for use elsewhere
-	term.c_oflag = 0;
-	term.c_lflag = 0;
-	term.c_iflag &= IXON|IXOFF;		// keep these bits
-	term.c_cflag &= CRTSCTS;		// and these bits
-	term.c_cflag |= CLOCAL | CS8 | CREAD;
-	::cfsetospeed(&term, termioBaud[rate]);
-	::cfsetispeed(&term, termioBaud[rate]);
-	term.c_cc[VMIN] = 127;			// buffer input by default
-	term.c_cc[VTIME] = 1;
-	traceStatus(FAXTRACE_MODEMOPS,
-	    "MODEM set baud rate: %d baud (flow control unchanged)",
-	    baudRates[rate]);
-	flushModemInput();
-	return (tcsetattr(TCSAFLUSH, term));
-    } else
+    if (!tcgetattr("setBaudRate", term))
 	return (FALSE);
+    curRate = rate;				// NB: for use elsewhere
+    term.c_oflag = 0;
+    term.c_lflag = 0;
+    term.c_iflag &= IXON|IXOFF;			// keep these bits
+    term.c_cflag &= CRTSCTS;			// and these bits
+    setParity(term, curParity);
+    term.c_cflag |= CLOCAL | CREAD;
+    cfsetospeed(&term, termioBaud[rate]);
+    cfsetispeed(&term, termioBaud[rate]);
+    term.c_cc[VMIN] = (cc_t) curVMin;
+    term.c_cc[VTIME] = (cc_t) curVTime;
+    flushModemInput();
+    return (tcsetattr(TCSANOW, term));
 }
 
 /*
@@ -930,31 +1074,14 @@ ModemServer::setBaudRate(BaudRate rate)
 fxBool
 ModemServer::setParity(Parity parity)
 {
+    traceModemOp("set parity: %s", parityNames[parity]);
     struct termios term;
-    if (::tcgetattr(modemFd, &term) == 0) {
-	switch(parity) {
-	case NONE: 
-            term.c_cflag &= ~(CSIZE | PARENB);
-            term.c_cflag |= CS8;
-	    term.c_iflag &= ~(IGNPAR | ISTRIP);
-            break;
-        case EVEN:
-            term.c_cflag &= ~(CSIZE | PARODD);
-            term.c_cflag |= CS7 | PARENB;
-            term.c_iflag |= IGNPAR | ISTRIP;
-            break;
-        case ODD:
-            term.c_cflag &= ~CSIZE;
-            term.c_cflag |= CS7 | PARENB | PARODD;
-            term.c_iflag |= IGNPAR | ISTRIP;
-            break;
-        }
-        traceStatus(FAXTRACE_MODEMOPS, "MODEM set parity: %s",
-	    parityNames[parity]);
-        flushModemInput();
-        return (tcsetattr(TCSANOW, term));
-    } else
-        return (FALSE);
+    if (!tcgetattr("setParity", term))
+	return (FALSE);
+    setParity(term, parity);
+    curParity = parity;				// used above
+    flushModemInput();
+    return (tcsetattr(TCSANOW, term));
 }
 
 /*
@@ -972,17 +1099,30 @@ ModemServer::setParity(Parity parity)
 fxBool
 ModemServer::setDTR(fxBool onoff)
 {
-    traceStatus(FAXTRACE_MODEMOPS, "MODEM set DTR %s", onoff ? "ON" : "OFF");
-#ifdef TIOCMBIS
-    int mctl = TIOCM_DTR;
-#if defined(sun) || defined(linux)
+    traceModemOp("set DTR %s", onoff ? "ON" : "OFF");
+#if defined(MCGETA) && defined(MCSETAF) && defined(MDTR)
     /*
-     * Happy days! SVR4 passes the arg by value, while
-     * SunOS 4.x passes it by reference; is this progress?
+     * HP-UX has a special way to manipulate DTR.
      */
-    if (::ioctl(modemFd, onoff ? TIOCMBIS : TIOCMBIC, (char *)&mctl) == 0)
+    int mstat;
+    if (ioctl(modemFd, MCGETA, &mstat) >= 0) {
+	if (onoff)
+	    mstat |= MDTR;
+	else
+	    mstat &= ~MDTR;
+	if (ioctl(modemFd, MCSETAF, &mstat) >= 0)
+	    return (TRUE);
+    }
+#elif defined(TIOCMBIS)
+    int mctl = TIOCM_DTR;
+    /*
+     * Happy days! Some systems passes the arg by value, while
+     * others passes it by reference; is this progress?
+     */
+#ifdef CONFIG_TIOCMBISBYREF
+    if (ioctl(modemFd, onoff ? TIOCMBIS : TIOCMBIC, (char *)&mctl) >= 0)
 #else
-    if (::ioctl(modemFd, onoff ? TIOCMBIS : TIOCMBIC, (char *)mctl) == 0)
+    if (ioctl(modemFd, onoff ? TIOCMBIS : TIOCMBIC, (char *)mctl) >= 0)
 #endif
 	return (TRUE);
     /*
@@ -991,7 +1131,7 @@ ModemServer::setDTR(fxBool onoff)
      * so if the ioctl that should work fails, we fallback
      * on the usual way of doing things...
      */
-#endif
+#endif /* TIOCMBIS */
     return (onoff ? TRUE : setBaudRate(ClassModem::BR0));
 }
 
@@ -1012,20 +1152,18 @@ static u_int actCode[] = { TCSANOW, TCSADRAIN, TCSAFLUSH };
 fxBool
 ModemServer::setXONXOFF(FlowControl iFlow, FlowControl oFlow, SetAction act)
 {
+    traceModemOp("set XON/XOFF/%s: input %s, output %s",
+	actNames[act],
+	iFlow == ClassModem::FLOW_NONE ? "ignored" : "interpreted",
+	oFlow == ClassModem::FLOW_NONE ? "disabled" : "generated"
+    );
     struct termios term;
-    if (::tcgetattr(modemFd, &term) == 0) {
-	setFlow(term, iFlow, oFlow);
-	traceStatus(FAXTRACE_MODEMOPS,
-	    "MODEM set XON/XOFF/%s: input %s, output %s",
-	    actNames[act],
-	    iFlow == ClassModem::FLOW_NONE ? "ignored" : "interpreted",
-	    oFlow == ClassModem::FLOW_NONE ? "disabled" : "generated"
-	);
-	if (act == ClassModem::ACT_FLUSH)
-	    flushModemInput();
-	return (tcsetattr(actCode[act], term));
-    }
-    return (FALSE);
+    if (!tcgetattr("setXONXOFF", term))
+	return (FALSE);
+    setFlow(term, iFlow, oFlow);
+    if (act == ClassModem::ACT_FLUSH)
+	flushModemInput();
+    return (tcsetattr(actCode[act], term));
 }
 
 #ifdef sgi
@@ -1046,8 +1184,7 @@ ModemServer::setXONXOFF(FlowControl iFlow, FlowControl oFlow, SetAction act)
 fxBool
 ModemServer::setInputBuffering(fxBool on)
 {
-    traceStatus(FAXTRACE_MODEMOPS, "MODEM input buffering %s",
-	on ? "enabled" : "disabled");
+    traceModemOp("input buffering %s", on ? "enabled" : "disabled");
 #ifdef SIOC_ITIMER
     /*
      * Silicon Graphics systems have a settable timer
@@ -1062,8 +1199,8 @@ ModemServer::setInputBuffering(fxBool on)
     str.ic_len = 4;
     int arg = 0;
     str.ic_dp = (char*)&arg;
-    if (::ioctl(modemFd, I_STR, &str) < 0)
-	traceStatus(FAXTRACE_MODEMOPS, "MODEM ioctl(SIOC_ITIMER): %m");
+    if (ioctl(modemFd, I_STR, &str) < 0)
+	traceModemOp("setInputBuffer::ioctl(SIOC_ITIMER): %m");
 #endif
 #ifdef sun
     /*
@@ -1088,48 +1225,54 @@ ModemServer::setInputBuffering(fxBool on)
     static fxBool zsunbuf_push_ok = FALSE;
     if (on) {			// pop zsunbuf if present to turn on buffering
 	char topmodule[FMNAMESZ+1];
-        if (zsunbuf_push_ok && ::ioctl(modemFd, I_LOOK, topmodule) >= 0 &&
+        if (zsunbuf_push_ok && ioctl(modemFd, I_LOOK, topmodule) >= 0 &&
 	  streq(topmodule, "zsunbuf")) {
-	    if (::ioctl(modemFd, I_POP, 0) < 0)
-		traceStatus(FAXTRACE_MODEMOPS, "MODEM pop zsunbuf failed %m");
+	    if (ioctl(modemFd, I_POP, 0) < 0)
+		traceModemOp("pop zsunbuf failed: %m");
 	}
     } else {			// push zsunbuf to turn off buffering
         if (!zsunbuf_push_tried) {
-            zsunbuf_push_ok = (::ioctl(modemFd, I_PUSH, "zsunbuf") >= 0);
-            traceStatus(FAXTRACE_MODEMOPS, "MODEM initial push zsunbuf %s",
+            zsunbuf_push_ok = (ioctl(modemFd, I_PUSH, "zsunbuf") >= 0);
+            traceModemOp("initial push zsunbuf %s",
                 zsunbuf_push_ok ? "succeeded" : "failed");
             zsunbuf_push_tried = TRUE;
         } else if (zsunbuf_push_ok) {
-            if (::ioctl(modemFd, I_PUSH, "zsunbuf") < 0)
-                traceStatus(FAXTRACE_MODEMOPS, "MODEM push zsunbuf failed %m");
+            if (ioctl(modemFd, I_PUSH, "zsunbuf") < 0)
+                traceModemOp("push zsunbuf failed: %m");
         }
     }
 #endif
     struct termios term;
-    (void) ::tcgetattr(modemFd, &term);
+    (void) tcgetattr("setInputBuffering", term);
     if (on) {
-	term.c_cc[VMIN] = 127;
-	term.c_cc[VTIME] = 1;
+	curVMin = 127;
+	curVTime = 1;
     } else {
-	term.c_cc[VMIN] = 1;
-	term.c_cc[VTIME] = 0;
+	curVMin = 1;
+	curVTime = 0;
     }
+    term.c_cc[VMIN] = (cc_t) curVMin;
+    term.c_cc[VTIME] = (cc_t) curVTime;
     return (tcsetattr(TCSANOW, term));
 }
 
 fxBool
 ModemServer::sendBreak(fxBool pause)
 {
-    traceStatus(FAXTRACE_MODEMOPS, "MODEM send break");
+    traceModemOp("send break%s", pause ? " (pause)" : "");
     flushModemInput();
     if (pause) {
 	/*
 	 * NB: TCSBRK is supposed to wait for output to drain,
-	 * but modems appear to lose data if we don't do this.
+	 * but some modems appear to lose data if we don't do this.
 	 */
-	(void) ::tcdrain(modemFd);
+	(void) tcdrain(modemFd);
     }
-    return (::tcsendbreak(modemFd, 0) == 0);
+    if (tcsendbreak(modemFd, 0) != 0) {
+	traceModemOp("tcsendbreak: %m");
+	return (FALSE);
+    } else
+	return (TRUE);
 }
 
 void
@@ -1144,7 +1287,7 @@ ModemServer::stopTimeout(const char* whichdir)
 {
     timer.stopTimeout();
     if (timeout = timer.wasTimeout())
-	traceStatus(FAXTRACE_MODEMOPS, "TIMEOUT: %s", whichdir);
+	traceModemOp("TIMEOUT: %s", whichdir);
 }
 
 int
@@ -1192,15 +1335,20 @@ ModemServer::getModemChar(long ms)
 void
 ModemServer::modemFlushInput()
 {
+    traceModemOp("flush i/o");
     flushModemInput();
-    (void) ::tcflush(modemFd, TCIFLUSH);
-    traceStatus(FAXTRACE_MODEMOPS, "MODEM flush i/o");
+    if (tcflush(modemFd, TCIFLUSH) != 0)
+	traceModemOp("tcflush: %m");
 }
 
 fxBool
 ModemServer::modemStopOutput()
 {
-    return (::tcflow(modemFd, TCOOFF) == 0);
+    if (tcflow(modemFd, TCOOFF) != 0) {
+	traceModemOp("tcflow: %m");
+	return (FALSE);
+    } else
+	return (TRUE);
 }
 
 void

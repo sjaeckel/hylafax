@@ -1,7 +1,7 @@
 #include "Str.h"
 #include <time.h>
 
-extern "C" int parseAtSyntax(const char*, const struct tm&, struct tm&, char* emsg);
+extern int parseAtSyntax(const char*, const struct tm&, struct tm&, fxStr& emsg);
 
 static const char* days[] = {
     "Sunday", "Monday", "Tuesday", "Wednesday",
@@ -30,11 +30,11 @@ doit(const char* s)
     time_t t = time(0);
     struct tm now = *localtime(&t);
     struct tm at;
-    char emsg[1024];
+    fxStr emsg;
     if (parseAtSyntax(s, now, at, emsg))
 	print(s, at);
     else
-	printf("%-24s: %s.\n", s, emsg);
+	printf("%-24s: %s.\n", s, (const char*) emsg);
 }
 
 int
@@ -83,6 +83,7 @@ main(int argc, char* argv[])
 	doit("now + 1 week");
 	doit("now + 1 month");
 	doit("now + 1 year");
+	doit("now + 120 minutes");
     } else {
 	fxStr s;
 	for (int i = 1; i < argc; i++)

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/StackBuffer.c++,v 1.11 1995/04/08 21:44:23 sam Rel $ */
+/*	$Id: StackBuffer.c++,v 1.15 1996/06/24 03:06:03 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -99,4 +99,21 @@ void
 fxStackBuffer::put(const fxStr& s)
 {
     put(s, s.length());
+}
+
+void
+fxStackBuffer::vput(const char* fmt, va_list ap)
+{
+    char buf[8*1024];
+    vsprintf(buf, fmt, ap);
+    put(buf);
+}
+
+void
+fxStackBuffer::fput(const char* fmt ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vput(fmt, ap);
+    va_end(ap);
 }

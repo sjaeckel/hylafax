@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxSendStatus.h,v 1.6 1995/04/08 21:30:26 sam Rel $ */
+/*	$Id: FaxSendStatus.h,v 1.8 1996/06/24 03:00:28 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/pageSendApp.h,v 1.8 1995/04/08 21:32:27 sam Rel $ */
+/*	$Id: pageSendApp.h,v 1.14 1996/06/24 03:00:53 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -51,8 +51,10 @@ private:
 // runtime state
     fxBool	ready;			// modem ready for use
     UUCPLock*	modemLock;		// uucp lockfile handle
+    time_t	connTime;		// time connected to peer
 
     fxStr	pagerSetupCmds;		// pager-specific modem setup commands
+    fxStr	pagerTTYParity;		// parity setting for tty
     u_int	pagerMaxMsgLength;	// default max message text length
 
     fxStr	ixoService;		// IXO protocol service string
@@ -77,6 +79,7 @@ private:
     void	setupConfig();
     void	resetConfig();
     fxBool	setConfigItem(const char* tag, const char* value);
+    u_int	getConfigParity(const char* value) const;
 // IXO transmission support
     void	sendPage(FaxRequest&, FaxMachineInfo&);
     void	sendPage(FaxRequest&, FaxMachineInfo&, const fxStr&,
@@ -89,12 +92,14 @@ private:
     fxBool	pageEpilogue(FaxRequest&, const FaxMachineInfo&, fxStr&);
     void	sendFailed(FaxRequest&, FaxSendStatus, const char*, u_int = 0);
     void	notifyPageSent(FaxRequest& req, u_int fi);
+    time_t	getConnectTime() const;
 // modem handling
     fxBool	lockModem();
     void	unlockModem();
     fxBool	setupModem();
 // notification interfaces used by ModemServer
     void	notifyModemReady();
+    void	notifyModemWedged();
 // miscellaneous
     fxBool	putModem(const void* data, int n, long ms = 0);
     void	traceResponse(const fxStackBuffer& buf);

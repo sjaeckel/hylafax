@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Ersatz.c++,v 1.25 1995/04/08 21:29:43 sam Rel $ */
+/*	$Id: Class2Ersatz.c++,v 1.34 1996/07/31 00:14:00 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -51,6 +51,7 @@ Class2ErsatzModem::Class2ErsatzModem(FaxServer& s, const ModemConfig& c)
     setupDefault(cigCmd,	conf.class2CIGCmd,	"AT+FCIG");
     setupDefault(splCmd,	conf.class2SPLCmd,	"AT+FSPL");
     setupDefault(ptsCmd,	conf.class2PTSCmd,	"AT+FPTS");
+    setupDefault(minspCmd,	conf.class2MINSPCmd,	"AT+FMINSP");
 
     setupDefault(noFlowCmd,	conf.class2NFLOCmd,	"");
     setupDefault(softFlowCmd,	conf.class2SFLOCmd,	"");
@@ -90,6 +91,12 @@ Class2ErsatzModem::atResponse(char* buf, long ms)
 	    lastResponse = AT_FTSI;
 	else if (strneq(buf, "+FET:", 5))
 	    lastResponse = AT_FET;
+	else if (strneq(buf, "+FPA:", 5))
+	    lastResponse = AT_FPA;
+	else if (strneq(buf, "+FSA:", 5))
+	    lastResponse = AT_FSA;
+	else if (strneq(buf, "+FPW:", 5))
+	    lastResponse = AT_FPW;
     }
     return (lastResponse);
 }
@@ -105,7 +112,7 @@ Class2ErsatzModem::pageDone(u_int ppm, u_int& ppr)
 	for (;;) {
 	    switch (atResponse(rbuf, conf.pageDoneTimeout)) {
 	    case AT_FPTS:
-		if (::sscanf(rbuf+6, "%u", &ppr) != 1) {
+		if (sscanf(rbuf+6, "%u", &ppr) != 1) {
 		    protoTrace("MODEM protocol botch (\"%s\"), %s",
 			rbuf, "can not parse PPR");
 		    return (FALSE);		// force termination
@@ -160,6 +167,7 @@ bad:
 void
 Class2ErsatzModem::abortDataTransfer()
 {
+    protoTrace("SEND abort data transfer");
     char c = CAN;
     putModemData(&c, 1);
 }
@@ -178,52 +186,12 @@ Class2ErsatzModem::sendEOT()
  * Send a page of data using the ``stream interface''.
  */
 fxBool
-Class2ErsatzModem::sendPage(TIFF* tif)
+Class2ErsatzModem::sendPage(TIFF* tif, u_int pageChop)
 {
     protoTrace("SEND begin page");
-    fxBool rc = TRUE;
     if (flowControl == FLOW_XONXOFF)
 	setXONXOFF(FLOW_XONXOFF, FLOW_NONE, ACT_FLUSH);
-    /*
-     * Correct bit order of data if not what modem expects.
-     */
-    uint16 fillorder;
-    TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
-    const u_char* bitrev =
-	TIFFGetBitRevTable(fillorder != conf.sendFillOrder);
-
-    fxBool firstStrip = setupTagLineSlop(params);
-    u_int ts = getTagLineSlop();
-    uint32* stripbytecount;
-    (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
-    for (tstrip_t strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
-	uint32 totbytes = stripbytecount[strip];
-	if (totbytes > 0) {
-	    u_char* data = new u_char[totbytes+ts];
-	    if (TIFFReadRawStrip(tif, strip, data+ts, totbytes) >= 0) {
-		u_char* dp;
-		if (firstStrip) {
-		    /*
-		     * Generate tag line at the top of the page.
-		     */
-		    dp = imageTagLine(data, fillorder, params);
-		    totbytes = totbytes+ts - (dp-data);
-		    firstStrip = FALSE;
-		} else
-		    dp = data;
-		/*
-		 * Pass data to modem, filtering DLE's and
-		 * being careful not to get hung up.
-		 */
-		beginTimedTransfer();
-		rc = putModemDLEData(dp, (u_int) totbytes, bitrev,
-		    getDataTimeout());
-		endTimedTransfer();
-		protoTrace("SENT %u bytes of data", totbytes);
-	    }
-	    delete data;
-	}
-    }
+    fxBool rc = sendPageData(tif, pageChop);
     if (rc && conf.class2SendRTC)
 	rc = sendRTC(params.is2D());
     if (rc)

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxServer.c++,v 1.191 1995/04/08 21:30:28 sam Rel $ */
+/*	$Id: FaxServer.c++,v 1.202 1996/08/21 21:53:43 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -38,6 +38,8 @@
 #define	MAXHOSTNAMELEN	64
 #endif
 
+fxIMPLEMENT_ObjArray(FaxRecvInfoArray, FaxRecvInfo)
+
 /*
  * HylaFAX Fax Modem Server.
  */
@@ -46,7 +48,6 @@ FaxServer::FaxServer(const fxStr& devName, const fxStr& devID)
     : ModemServer(devName, devID)
 {
     modem = NULL;
-    okToRecv = FALSE;
 }
 
 FaxServer::~FaxServer()
@@ -61,6 +62,18 @@ FaxServer::initialize(int argc, char** argv)
     if (Sys::gethostname(hostname, hostname.length()) == 0)
 	hostname.resize(strlen(hostname));
 }
+
+time_t FaxServer::getConnectTime() const
+    { return (connTime); }
+time_t FaxServer::getFileTransferTime() const
+    { return (Sys::now() - fileStart); }
+time_t FaxServer::getPageTransferTime() const
+    { return (Sys::now() - pageStart); }
+const Class2Params& FaxServer::getClientParams() const
+    { return (clientParams); }
+
+void FaxServer::notifyCallPlaced(const FaxRequest&) {}
+void FaxServer::notifyConnected(const FaxRequest&) {}
 
 /*
  * Setup the modem; if needed.  Note that we reread
@@ -129,7 +142,7 @@ FaxServer::deduceModem()
 	    delete modem;
 	}
     }
-    return (ModemServer::deduceModem());
+    return (NULL);
 }
 
 /*
@@ -155,8 +168,10 @@ fxBool FaxServer::modemSupportsPolling() const
 fxStr
 FaxServer::getModemCapabilities() const
 {
-    return (modem->supportsPolling() ? "P" : "p") |
-	modem->getCapabilities();
+    return fxStr::format("%c%08x"
+	, modem->supportsPolling() ? 'P' : 'p'
+	, modem->getCapabilities()
+    );
 }
 
 /*

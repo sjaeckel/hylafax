@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/TypeRules.c++,v 1.21 1995/04/08 21:44:38 sam Rel $ */
+/*	$Id: TypeRules.c++,v 1.25 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -97,7 +97,7 @@ TypeRule::match(const void* data, u_int size, fxBool verbose) const
 	    fxmin((u_int) strlen(value.s), (u_int)(size-off))) == 0);
 	goto done;
     case ADDR:
-	v = off;
+	v = (u_long) off;
 	break;
     case BYTE:
 	v = *cp;
@@ -140,7 +140,7 @@ done:
     if (verbose) {
 	if (ok)
 	    printf("success (result %s, rule \"%s\")\n",
-		resultNames[result], (char*) cmd);
+		resultNames[result], (const char*) cmd);
 	else
 	    printf("failed (comparison)\n");
     }
@@ -202,8 +202,8 @@ TypeRule::getFmtdCmd(
     return fmtd;
 }
 
-fxDECLARE_ObjArray(TypeRuleArray, TypeRule);
-fxIMPLEMENT_ObjArray(TypeRuleArray, TypeRule);
+fxDECLARE_ObjArray(TypeRuleArray, TypeRule)
+fxIMPLEMENT_ObjArray(TypeRuleArray, TypeRule)
 
 TypeRules::TypeRules()
 {
@@ -268,7 +268,8 @@ TypeRules::read(const fxStr& file)
 
     fp = fopen(file, "r");
     if (fp == NULL) {
-	fprintf(stderr, "%s: Can not open type rules file.\n", (char*) file);
+	fprintf(stderr, "%s: Can not open type rules file.\n",
+	    (const char*) file);
 	return NULL;
     }
     TypeRules* tr = new TypeRules;
@@ -347,7 +348,7 @@ TypeRules::read(const fxStr& file)
 	    }
 	    if (rule.op != TypeRule::ANY) {
 		const char* vp = cp;
-		rule.value.v = strtoul(vp, &cp, 0);
+		rule.value.v = strtol(vp, &cp, 0);
 		if (vp == cp) {
 		    parseError(file, lineno, "Missing match value");
 		    continue;

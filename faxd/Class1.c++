@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1.c++,v 1.69 1995/04/08 21:29:31 sam Rel $ */
+/*	$Id: Class1.c++,v 1.78 1996/07/19 23:05:08 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -54,21 +54,21 @@ const char* Class1Modem::modulationNames[6] = {
  *     least at 12000 and 14400.
  */
 const Class1Cap Class1Modem::basicCaps[15] = {
-    {  3,  0,	 	0,		     V21, FALSE }, // v.21
-    {  24, BR_2400,	DCSSIGRATE_2400V27,  V27, FALSE }, // v.27 ter
-    {  48, BR_4800,	DCSSIGRATE_4800V27,  V27, FALSE }, // v.27 ter
-    {  72, BR_7200,	DCSSIGRATE_7200V29,  V29, FALSE }, // v.29
-    {  73, BR_7200,	DCSSIGRATE_7200V17,  V17, FALSE }, // v.17
-    {  74, BR_7200,	DCSSIGRATE_7200V17,  V17, FALSE }, // v.17 w/st
-    {  96, BR_9600,	DCSSIGRATE_9600V29,  V29, FALSE }, // v.29
-    {  97, BR_9600,	DCSSIGRATE_9600V17,  V17, FALSE }, // v.17
-    {  98, BR_9600,	DCSSIGRATE_9600V17,  V17, FALSE }, // v.17 w/st
-    { 121, BR_12000,	DCSSIGRATE_12000V33, V33, FALSE }, // v.33
-    { 121, BR_12000,	DCSSIGRATE_12000V17, V17, FALSE }, // v.17
-    { 122, BR_12000,	DCSSIGRATE_12000V17, V17, FALSE }, // v.17 w/st
-    { 145, BR_14400,	DCSSIGRATE_14400V33, V33, FALSE }, // v.33
-    { 145, BR_14400,	DCSSIGRATE_14400V17, V17, FALSE }, // v.17
-    { 146, BR_14400,	DCSSIGRATE_14400V17, V17, FALSE }, // v.17 w/st
+    {  3,  0,	 	0,		     V21,   FALSE }, // v.21
+    {  24, BR_2400,	DCSSIGRATE_2400V27,  V27FB, FALSE }, // v.27 ter
+    {  48, BR_4800,	DCSSIGRATE_4800V27,  V27,   FALSE }, // v.27 ter
+    {  72, BR_7200,	DCSSIGRATE_7200V29,  V29,   FALSE }, // v.29
+    {  73, BR_7200,	DCSSIGRATE_7200V17,  V17,   FALSE }, // v.17
+    {  74, BR_7200,	DCSSIGRATE_7200V17,  V17,   FALSE }, // v.17 w/st
+    {  96, BR_9600,	DCSSIGRATE_9600V29,  V29,   FALSE }, // v.29
+    {  97, BR_9600,	DCSSIGRATE_9600V17,  V17,   FALSE }, // v.17
+    {  98, BR_9600,	DCSSIGRATE_9600V17,  V17,   FALSE }, // v.17 w/st
+    { 121, BR_12000,	DCSSIGRATE_12000V33, V33,   FALSE }, // v.33
+    { 121, BR_12000,	DCSSIGRATE_12000V17, V17,   FALSE }, // v.17
+    { 122, BR_12000,	DCSSIGRATE_12000V17, V17,   FALSE }, // v.17 w/st
+    { 145, BR_14400,	DCSSIGRATE_14400V33, V33,   FALSE }, // v.33
+    { 145, BR_14400,	DCSSIGRATE_14400V17, V17,   FALSE }, // v.17
+    { 146, BR_14400,	DCSSIGRATE_14400V17, V17,   FALSE }, // v.17 w/st
 };
 #define	NCAPS	(sizeof (basicCaps) / sizeof (basicCaps[0]))
 
@@ -80,9 +80,8 @@ Class1Modem::Class1Modem(FaxServer& s, const ModemConfig& c)
     , thCmd("AT+FTH=3")
     , rhCmd("AT+FRH=3")
 {
-    group3opts = 0;
-    ::memcpy(xmitCaps, basicCaps, sizeof (basicCaps));
-    ::memcpy(recvCaps, basicCaps, sizeof (basicCaps));
+    memcpy(xmitCaps, basicCaps, sizeof (basicCaps));
+    memcpy(recvCaps, basicCaps, sizeof (basicCaps));
 }
 
 Class1Modem::~Class1Modem()
@@ -161,20 +160,20 @@ Class1Modem::setupModem()
     case BIT(V27FB):
 	discap = DISSIGRATE_V27FB;
 	break;
-    case BIT(V27):
+    case BIT(V27FB)|BIT(V27):
 	discap = DISSIGRATE_V27;
 	break;
     case BIT(V29):
 	discap = DISSIGRATE_V29;
 	break;
-    case BIT(V27)|BIT(V29):
-	discap = DISSIGRATE_V27|DISSIGRATE_V29;
+    case BIT(V27FB)|BIT(V27)|BIT(V29):
+	discap = DISSIGRATE_V2729;
 	break;
-    case BIT(V27)|BIT(V29)|BIT(V33):
-	discap = 0xE;
+    case BIT(V27FB)|BIT(V27)|BIT(V29)|BIT(V33):
+	discap = DISSIGRATE_V33;
 	break;
-    case BIT(V27)|BIT(V29)|BIT(V33)|BIT(V17):
-	discap = 0xD;
+    case BIT(V27FB)|BIT(V27)|BIT(V29)|BIT(V33)|BIT(V17):
+	discap = DISSIGRATE_V17;
 	break;
     }
     /*
@@ -270,9 +269,10 @@ Class1Modem::supportsPolling() const
 void
 Class1Modem::encodeTSI(fxStr& binary, const fxStr& ascii)
 {
+    u_int i, j;
     u_char buf[20];
     u_int n = fxmin(ascii.length(),(u_int) 20);
-    for (u_int i = 0, j = 0; i < n; i++) {
+    for (i = 0, j = 0; i < n; i++) {
 	char c = ascii[i];
 	if (isprint(c) || c == ' ')
 	    buf[j++] = frameRev[c];
@@ -295,7 +295,7 @@ Class1Modem::encodeTSI(fxStr& binary, const fxStr& ascii)
  * then reversed on receipt according to the host bit
  * order.
  */
-void
+const fxStr&
 Class1Modem::decodeTSI(fxStr& ascii, const HDLCFrame& binary)
 {
     int n = binary.getFrameDataLength();
@@ -317,6 +317,37 @@ Class1Modem::decodeTSI(fxStr& ascii, const HDLCFrame& binary)
 	}
     }
     ascii.resize(d);
+    return ascii;
+}
+
+/*
+ * Construct a binary PWD/SUB/SEP string for transmission.
+ */
+void
+Class1Modem::encodePWD(fxStr& binary, const fxStr& ascii)
+{
+    u_int n = fxmin(ascii.length(), (u_int) 20);
+    binary.resize(n);
+    for (u_int i = 0, j = n-1; i < n; i++, j--)
+	binary[j] = frameRev[ascii[i]];
+}
+
+/*
+ * Do the inverse of encodePWD; i.e. convert a binary
+ * string of encoded digits into the equivalent ascii.
+ */
+const fxStr&
+Class1Modem::decodePWD(fxStr& ascii, const HDLCFrame& binary)
+{
+    u_int n = fxmin(binary.getFrameDataLength(), (u_int) 20);
+    ascii.resize(n);
+    u_int d = 0;
+    for (const u_char* cp = binary.getFrameData() + n-1; n > 0; cp--, n--) {
+	u_char c = frameRev[*cp];
+	if (isprint(c) || c == ' ')	// XXX accept only printable ascii
+	    ascii[d++] = c;
+    }
+    return ascii;
 }
 
 /*
@@ -497,22 +528,31 @@ Class1Modem::sendFrame(u_char fcf, fxBool lastFrame)
  * Send a frame with DCS/DIS.
  */
 fxBool
-Class1Modem::sendFrame(u_char fcf, u_int dcs, fxBool lastFrame)
+Class1Modem::sendFrame(u_char fcf, u_int dcs, u_int xinfo, fxBool lastFrame)
 {
     HDLCFrame frame(conf.class1FrameOverhead);
     frame.put(0xff);
     frame.put(lastFrame ? 0xc8 : 0xc0);
     frame.put(fcf);
-    frame.put(dcs>>24);
     frame.put(dcs>>16);
     frame.put(dcs>>8);
-    if (dcs&(DCS_XTNDFIELD<<8))
-	frame.put(dcs);
+    frame.put(dcs);
+    if (dcs&(1<<0)) {			// send any optional bytes
+	frame.put(xinfo>>24);
+	if (xinfo&(1<<24)) {
+	    frame.put(xinfo>>16);
+	    if (xinfo&(1<<16)) {
+		frame.put(xinfo>>8);
+		if (xinfo&(1<<8))
+		    frame.put(xinfo);
+	    }
+	}
+    }
     return (sendRawFrame(frame));
 }
 
 /*
- * Send a frame with TSI/CSI.
+ * Send a frame with TSI/CSI/PWD/SUB/SEP.
  */
 fxBool
 Class1Modem::sendFrame(u_char fcf, const fxStr& tsi, fxBool lastFrame)
@@ -521,7 +561,7 @@ Class1Modem::sendFrame(u_char fcf, const fxStr& tsi, fxBool lastFrame)
     frame.put(0xff);
     frame.put(lastFrame ? 0xc8 : 0xc0);
     frame.put(fcf);
-    frame.put((u_char*)(char*)tsi, tsi.length());
+    frame.put((const u_char*)(const char*)tsi, tsi.length());
     return (sendRawFrame(frame));
 }
 
@@ -538,7 +578,7 @@ Class1Modem::transmitFrame(u_char fcf, fxBool lastFrame)
 }
 
 fxBool
-Class1Modem::transmitFrame(u_char fcf, u_int dcs, fxBool lastFrame)
+Class1Modem::transmitFrame(u_char fcf, u_int dcs, u_int xinfo, fxBool lastFrame)
 {
     /*
      * The T.30 spec says no frame can take more than 3 seconds
@@ -549,7 +589,7 @@ Class1Modem::transmitFrame(u_char fcf, u_int dcs, fxBool lastFrame)
     fxBool frameSent =
 	atCmd(thCmd, AT_NOTHING) &&
 	atResponse(rbuf, 0) == AT_CONNECT &&
-	sendFrame(fcf, dcs, lastFrame);
+	sendFrame(fcf, dcs, xinfo, lastFrame);
     stopTimeout("sending HDLC frame");
     return (frameSent);
 }
@@ -771,8 +811,33 @@ Class1Modem::findBRCapability(u_short br, const Class1Cap caps[])
 u_int
 Class1Modem::modemDIS() const
 {
-    // NB: DIS is in 32-bit format
-    return (FaxModem::modemDIS() &~ (DIS_SIGRATE<<8)) | (discap<<18);
+    // NB: DIS is in 24-bit format
+    return (FaxModem::modemDIS() &~ DIS_SIGRATE) | (discap<<10) | DIS_XTNDFIELD;
+}
+
+/*
+ * Return the 32-bit extended capabilities for the
+ * modem for setting up the initial T.30 DIS when
+ * receiving data.
+ */
+u_int
+Class1Modem::modemXINFO() const
+{
+    return FaxModem::modemXINFO()
+	| (1<<24) | (1<<16) | (1<<8)	// extension flags for 3 more bytes
+	| DIS_SEP			// support for selected polling frame
+	| DIS_SUB			// support for subaddressing frame
+	| DIS_PWD			// support for pwd frames
+	| DIS_1216			// additional page widths
+	| DIS_864
+	| DIS_1728H
+	| DIS_1728L
+#ifdef notdef
+	| DIS_200X400			// additional resolutions
+	| DIS_300X300
+	| DIS_400X400
+#endif
+	;
 }
 
 const char COMMA = ',';

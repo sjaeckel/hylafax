@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/pollrcvd.1m,v 1.15 1995/04/08 21:36:03 sam Rel $
+.\"	$Id: pollrcvd.1m,v 1.19 1996/06/24 03:04:19 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993-1995 Sam Leffler
-.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1996 Sam Leffler
+.\" Copyright (c) 1993-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,20 +27,16 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH POLLRCVD 1M "March 3, 1995"
+.TH POLLRCVD 1M "May 12, 1996"
 .SH NAME
 pollrcvd \- \*(Fx script for delivering facsimile received by polling
 .SH SYNOPSIS
-.B bin/pollrcvd
+.B ${SPOOL}/bin/pollrcvd
 .I mailaddr
 .I faxfile
-.I time
-.I protocol
-.I sigrate
-.I error-msg
-[
 .I devid
-]
+.I commid
+.I error-msg
 .SH DESCRIPTION
 .B bin/pollrcvd
 is the command script invoked by the \*(Fx server whenever
@@ -58,30 +54,24 @@ the pathname of the received
 .SM TIFF
 file relative to the root of the spooling hierarchy.
 .TP
-.B time
-the time spent receiving the facsimile document.
+.B commid
+The communication identifier associated with the call (used
+to include a transcript when an error occurs).
 .TP
-.B protocol
-the data format that was used to transfer the facsimile; one
-of ``1-D MR'', ``2-D MR'', ``2-D Uncompressed Mode'', and ``2-D MMR''.
-.TP 
-.B sigrate
-the bit rate at which the transfer took place.
+.B devid
+the modem device on which the document was received.
 .TP
 .B error-msg
 an error message that is non-null if an error was encountered
 during the receive operation.
-.TP
-.B devid
-the modem device on which the document was received.
 .SH NOTES
-The default script delivers facsimile using
-.IR uuencode (1).
+The default script delivers facsimile as PostScript wrapped in \s-1MIME\s+1.
 .SH FILES
 .nf
 .ta \w'${SBIN}/faxinfo    'u
 ${SPOOL}	spooling area
 ${SBIN}/faxinfo	for printing information about the facsimile
+${TIFFBIN}/fax2ps	for converting \s-1TIFF\s+1 to PostScript
 /usr/lib/sendmail	for delivering mail
 .fi
 .SH "SEE ALSO"

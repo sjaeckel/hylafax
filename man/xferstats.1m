@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/xferstats.1m,v 1.14 1995/04/08 21:36:47 sam Rel $
+.\"	$Id: xferstats.1m,v 1.17 1996/06/24 03:04:27 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993-1995 Sam Leffler
-.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1996 Sam Leffler
+.\" Copyright (c) 1993-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,7 +27,7 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH XFERSTATS 1M "March 3, 1995"
+.TH XFERSTATS 1M "May 12, 1996"
 .SH NAME
 xferstats \- summarize \*(Fx transmission accounting
 .SH SYNOPSIS
@@ -43,8 +43,10 @@ is a command script that prints a summary of the \*(Fx
 accounting statistics for transmitted jobs.
 The statistics can be sorted using one of several keys:
 the sender's account name (default),
+the job tag (useful when used for accounting purposes),
 the remote party's \s-1CSI\s+1,
 the called phone number,
+the output device used for the call,
 the communication speed, and
 the communication data format.
 Statistics are read from the file
@@ -133,8 +135,14 @@ Sort output by the remote party's
 .B \-dest*
 Sort output by the phone number called.
 .TP
+.B \-dev*
+Sort output by the output device (i.e. modem) used.
+.TP
 .B \-format
 Sort output by the negotiated data format.
+.TP
+.B \-job*
+Sort output by client-specified job tag identifiers.
 .TP
 .B \-nomap
 Supress the normal account name mapping by which

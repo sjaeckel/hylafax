@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Decoder.c++,v 1.14 1995/04/08 21:30:34 sam Rel $ */
+/*	$Id: G3Decoder.c++,v 1.22 1996/06/24 03:00:30 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,11 +28,66 @@
  * Group 3 Facsimile Reader Support.
  */
 #include "G3Decoder.h"
-#include "StackBuffer.h"
-#include "tiffio.h"
 
-#include "t4.h"
-#include "g3states.h"
+/*
+ * These macros glue the G3Decoder state to
+ * the state expected by Frank Cringle's decoder.
+ */
+#define	DECLARE_STATE_EOL()						\
+    uint32 BitAcc;			/* bit accumulator */		\
+    int BitsAvail;			/* # valid bits in BitAcc */	\
+    int EOLcnt				/* # EOL codes recognized */
+#define	DECLARE_STATE()							\
+    DECLARE_STATE_EOL();						\
+    int a0;				/* reference element */		\
+    int RunLength;			/* length of current run */	\
+    uint16* pa;				/* place to stuff next run */	\
+    uint16* thisrun;			/* current row's run array */	\
+    const TIFFFaxTabEnt* TabEnt
+#define	DECLARE_STATE_2D()						\
+    DECLARE_STATE();							\
+    int b1;				/* next change on prev line */	\
+    uint16* pb				/* next run in reference line */
+/*
+ * Load any state that may be changed during decoding.
+ */
+#define	CACHE_STATE() do {						\
+    BitAcc = data;							\
+    BitsAvail = bit;							\
+    EOLcnt = this->EOLcnt;						\
+} while (0)
+/*
+ * Save state possibly changed during decoding.
+ */
+#define	UNCACHE_STATE() do {						\
+    bit = BitsAvail;							\
+    data = BitAcc;							\
+    this->EOLcnt = EOLcnt;						\
+} while (0)
+
+/*
+ * Override default definitions for the TIFF library.
+ * We redirect the logic to call nextByte for each
+ * input byte we need.  Note that we don't need to check
+ * for EOF because the input decoder does a longjmp.
+ */
+#define NeedBits8(n,eoflab) do {					\
+    if (BitsAvail < (n)) {						\
+	BitAcc |= nextByte()<<BitsAvail;				\
+	BitsAvail += 8;							\
+    }									\
+} while (0)
+#define NeedBits16(n,eoflab) do {					\
+    if (BitsAvail < (n)) {						\
+	BitAcc |= nextByte()<<BitsAvail;				\
+	if ((BitsAvail += 8) < (n)) {					\
+	    BitAcc |= nextByte()<<BitsAvail;				\
+	    BitsAvail += 8;						\
+	}								\
+    }									\
+} while (0)
+
+#include "tif_fax3.h"
 
 G3Decoder::G3Decoder() {}
 G3Decoder::~G3Decoder() {}
@@ -42,17 +97,29 @@ G3Decoder::setupDecoder(u_int recvFillOrder, fxBool is2d)
 {
     /*
      * The G3 decoding state tables are constructed for
-     * data in MSB2LSB bit order.  Received data that
+     * data in LSB2MSB bit order.  Received data that
      * is not in this order is reversed using the
      * appropriate byte-wide bit-reversal table.
      */
-    setup(TIFFGetBitRevTable(recvFillOrder != FILLORDER_MSB2LSB), is2d);
+    is2D = is2d;
+    bitmap = TIFFGetBitRevTable(recvFillOrder != FILLORDER_LSB2MSB);
     data = 0;					// not needed
     bit = 0;					// force initial read
-    bytePending = 0;				// clear state
-    refline = NULL;
-    recvBuf = NULL;
-    prevByte = -1;
+    EOLcnt = 0;					// no initial EOL
+    RTCrun = 0;					// reset run count
+    RTCrow = -1;				// reset RTC row number
+    rowref = 0;					// reset row count
+    curruns = refruns = NULL;
+}
+
+void
+G3Decoder::setRuns(uint16* cr, uint16* rr, int w)
+{
+    curruns = cr;
+    if (refruns = rr) {
+	refruns[0] = w;
+	refruns[1] = 0;
+    }
 }
 
 void G3Decoder::raiseEOF()	{ siglongjmp(jmpEOF, 1); }
@@ -65,463 +132,134 @@ void G3Decoder::raiseRTC()	{ siglongjmp(jmpRTC, 1); }
 void
 G3Decoder::decode(void* raster, u_int w, u_int h)
 {
-    u_char reflinebuf[1+howmany(2432,8)];	// reference line for decoder
     u_int rowbytes = howmany(w, 8);
-
-    setRefLine(reflinebuf+1);
-    ::memset(reflinebuf, 0, rowbytes+1);
-    ::memset(raster, 0, h*rowbytes);
-    if (prevByte == -1)
-	skipLeader();
-    while (h-- > 0) {
-	(void) decodeRow(raster, w);
-	if (is2D)				// copy to refline for 2d rows
-	    ::memcpy(reflinebuf+1, raster, rowbytes);
-	raster = (u_char*)raster + rowbytes;
+    if (curruns == NULL) {
+	uint16 runs[2*2432];		// run arrays for cur+ref rows
+	setRuns(runs, runs+2432, w);
+	while (h-- > 0) {
+	    decodeRow(raster, w);
+	    if (raster)
+		raster = (u_char*) raster + rowbytes;
+	}
+    } else {
+	while (h-- > 0) {
+	    decodeRow(raster, w);
+	    if (raster)
+		raster = (u_char*) raster + rowbytes;
+	}
     }
 }
 
-/*
- * Skip h of data.  This is done without decoding
- * the pixels--we just scan for EOL codes.
- */
-void
-G3Decoder::skip(u_int h)
+fxBool
+G3Decoder::isNextRow1D()
 {
-    if (prevByte == -1)
-	skipLeader();
-    while (h-- > 0)
-	skipRow();
+    DECLARE_STATE_EOL();
+
+    CACHE_STATE();
+    SYNC_EOL(Nop);
+    fxBool is1D;
+    if (is2D) {
+	NeedBits8(1, Nop);
+	is1D = (GetBits(1) != 0);	// 1D/2D-encoding tag bit
+	// NB: we don't clear the tag bit
+    } else {
+	is1D = TRUE;
+    }
+    // now reset state for next decoded row
+    BitAcc = (BitAcc<<1)|1;		// EOL bit
+    BitsAvail++;
+    EOLcnt = 1;				// mark state to indicate EOL recognized
+    UNCACHE_STATE();
+    return (is1D);
 }
+
+#define	unexpected(table, a0) do {		\
+    invalidCode(table, a0);			\
+    rowgood = FALSE;				\
+} while (0)
+#define	extension(a0) do {			\
+    invalidCode("2D", a0);			\
+    rowgood = FALSE;				\
+} while (0)
+#define	prematureEOF(a0)	// never happens 'cuz of longjmp
+#define	SWAP(t,a,b)	{ t x; x = (a); (a) = (b); (b) = x; }
 
 /*
  * Decode a single row of pixels and return
  * the decoded data in the scanline buffer.
  */
 fxBool
-G3Decoder::decodeRow(void* scanline, u_int w)
+G3Decoder::decodeRow(void* scanline, u_int lastx)
 {
-    if (is2D)
-	tag = nextBit() ? G3_1D : G3_2D;
-    return (tag == G3_1D) ?
-	decode1DRow((u_char*)scanline, w) :
-	decode2DRow((u_char*)scanline, w);
-}
+    DECLARE_STATE_2D();
+    fxBool rowgood = TRUE;
+    fxBool nullrow = FALSE;
 
-/*
- * Skip a single row of data by scanning for EOL.
- */
-void
-G3Decoder::skipRow()
-{
-    if (is2D)
-	tag = nextBit() ? G3_1D : G3_2D;
-    skipToEOL(0);
-}
-
-/* 
- * Return an indication of whether or not the next
- * row of data is 1D- or 2D-encoded.
- */
-fxBool
-G3Decoder::isNextRow1D()
-{
+    CACHE_STATE();
+    a0 = 0;
+    RunLength = 0;
+    pa = thisrun = curruns;
+    SYNC_EOL(Nop);
+    fxBool is1D;
     if (is2D) {
-	fxBool is1D = (nextBit() != 0);
-	ungetBit();
-	return (is1D);
+	NeedBits8(1, Nop);
+	is1D = (GetBits(1) != 0);	// 1D/2D-encoding tag bit
+	ClrBits(1);
     } else
-	return (TRUE);
-}
-
-/*
- * Scan page data for initial EOL, optionally followed
- * by a tag bit that indicates a 1d-encoded line.
- */ 
-void
-G3Decoder::skipLeader()
-{
-    do {
-	skipToEOL(0);
-    } while (is2D && nextBit() == 0);
-    if (is2D)
-	ungetBit();
-}
-
-#define	decodeWhiteRun()	decodeRun(TIFFFax1DFSM+0)
-#define	decodeBlackRun()	decodeRun(TIFFFax1DFSM+8)
-
-/*
- * Decode a row of 1d data.
- */
-fxBool
-G3Decoder::decode1DRow(u_char* buf, u_int npels)
-{
-    int x = 0;
-    int runlen;
-
-    for (;;) {
-	if ((runlen = decodeWhiteRun()) < 0)
-	    goto exception;
-	if (runlen > 0 && (x += runlen) >= npels)
-	    goto done;
-	if ((runlen = decodeBlackRun()) < 0)
-	    goto exception;
-	if (runlen > 0) {
-	    fillspan(buf, x, x+runlen > npels ? npels-x : runlen);
-	    if ((x += runlen) >= npels)
-		goto done;
-	}
-    }
-exception:
-    if (runlen == G3CODE_EOL) {
-	prematureEOL("1D", x);
-	return (FALSE);
-    }
-    if (runlen == G3CODE_INVALID)
-	invalidCode("1D", x);
-done:
-    skipToEOL(0);
-    if (x != npels)
-	badPixelCount("1D", x);
-    return (x == npels);
-}
-
-/*
- * Decode a code and return the associated run length.
- */
-int
-G3Decoder::decodeRun(const u_short fsm[][256])
-{
-    int state = bit;
-    int action;
-    int runlen = 0;
-
-    for (;;) {
-	if (state == 0) {
-    nextbyte:
-	    data = nextByte();
-	}
-	state = fsm[state][data];
-	action = state >> 8; state &= 0xff;
-	if (action == ACT_INCOMP)
-	    goto nextbyte;
-	bit = state;
-	action -= ACT_RUNT;
-	if (action < 0)			/* ACT_INVALID or ACT_EOL */
-	    return (action);
-	if (action < 64)
-	    return (runlen + action);
-	runlen += 64*(action-64);
-    }
-    /*NOTREACHED*/
-}
-
-/*
- * Group 3 2d Decoding support.
- */
-
-/*
- * Decode one row of 2d data.
- */
-fxBool
-G3Decoder::decode2DRow(u_char* buf, u_int npels)
-{
-#define	PIXEL(buf,ix)    ((((buf)[(ix)>>3]) >> (7-((ix)&7))) & 1)
-    int a0 = -1;
-    int b1, b2;
-    int run1, run2;        /* for horizontal mode */
-    int mode;
-    int color = 0;
-
-    do {
-	do {
-	    if (bit == 0 || bit > 7)
-		data = nextByte();
-	    mode = TIFFFax2DFSM[bit][data];
-	    bit = mode & 0xff; mode >>= 8;
-	} while (mode == MODE_NULL);
-        switch (mode) {
-        case MODE_PASS:
-	    b2 = finddiff(refline, a0, npels);
-	    b1 = finddiff(refline, b2, npels);
-	    b2 = finddiff(refline, b1, npels);
-            if (color) {
-		if (a0 < 0)
-		    a0 = 0;
-                fillspan(buf, a0, b2 - a0);
-	    }
-            a0 = b2;
-            break;
-        case MODE_HORIZ:
-            if (color == 0) {
-                run1 = decodeWhiteRun();
-                run2 = decodeBlackRun();
-            } else {
-                run1 = decodeBlackRun();
-                run2 = decodeWhiteRun();
-            }
-	    /*
-	     * Do the appropriate fill.  Note that we exit
-	     * this logic with the same color that we enter
-	     * with since we do 2 fills.  This explains the
-	     * somewhat obscure logic below.
-	     */
-	    if (run1 < 0) {
-		if (run1 == G3CODE_EOL) {
-		   prematureEOL("2D", a0);
-		   return (FALSE);
-		}
-		invalidCode("1D", a0);
-		goto bad2;
-	    }
-	    if (a0 < 0)
-		a0 = 0;
-	    if (a0 + run1 > npels)
-		run1 = npels - a0;
-	    if (color)
-		fillspan(buf, a0, run1);
-	    a0 += run1;
-	    if (run2 < 0) {
-		if (run2 == G3CODE_EOL) {
-		   prematureEOL("2D", a0);
-		   return (FALSE);
-		}
-		invalidCode("1D", a0);
-		goto bad2;
-	    }
-	    if (a0 + run2 > npels)
-		run2 = npels - a0;
-	    if (!color)
-		fillspan(buf, a0, run2);
-	    a0 += run2;
-            break;
-        case MODE_VERT_V0:
-        case MODE_VERT_VR1:
-        case MODE_VERT_VR2:
-        case MODE_VERT_VR3:
-        case MODE_VERT_VL1:
-        case MODE_VERT_VL2:
-        case MODE_VERT_VL3:
-	    b2 = finddiff(refline, a0, npels);
-	    b1 = finddiff(refline, b2, npels);
-	    b1 += mode - MODE_VERT_V0;
-	    if (a0 < 0)
-		a0 = 0;
-            if (color)
-                fillspan(buf, a0, b1 - a0);
-            color = !color;
-            a0 = b1;
-            break;
-	case MODE_UNCOMP:
-            /*
-             * Uncompressed mode: select from the
-             * special set of code words.
-             */
-	    if (a0 < 0)
-		a0 = 0;
-            do {
-                mode = decodeUncompCode();
-                switch (mode) {
-                case UNCOMP_RUN1:
-                case UNCOMP_RUN2:
-                case UNCOMP_RUN3:
-                case UNCOMP_RUN4:
-                case UNCOMP_RUN5:
-                    run1 = mode - UNCOMP_RUN0;
-                    fillspan(buf, a0+run1-1, 1);
-                    a0 += run1;
-                    break;
-                case UNCOMP_RUN6:
-                    a0 += 5;
-                    break;
-                case UNCOMP_TRUN0:
-                case UNCOMP_TRUN1:
-                case UNCOMP_TRUN2:
-                case UNCOMP_TRUN3:
-                case UNCOMP_TRUN4:
-                    run1 = mode - UNCOMP_TRUN0;
-                    a0 += run1;
-                    color = (nextBit() != 0);
-                    break;
-                case UNCOMP_INVALID:
-		    invalidCode("uncompressed", a0);
-                    goto bad2;
-                }
-            } while (mode < UNCOMP_EXIT);
-            break;
-	case MODE_ERROR_1:
-	    prematureEOL("2D", a0);
-	    skipToEOL(7);	// seen 7 0's already
-	    return (0);
-	case MODE_ERROR:
-	    invalidCode("2D", a0);
-            goto bad2;
-	default:
-	    badDecodingState("2D", a0);
-	    goto bad2;
-        }
-    } while (a0 < npels);
-bad2:
-    skipToEOL(0);
-    return (a0 >= npels);			// XXX a0 == npels
-#undef	PIXEL
-}
-
-/*
- * Return the next uncompressed mode code word.
- */
-int
-G3Decoder::decodeUncompCode()
-{
-    int code;
-    do {
-        if (bit == 0 || bit > 7)
-            data = nextByte();
-        code = TIFFFaxUncompFSM[bit][data];
-        bit = code & 0xff; code >>= 8;
-    } while (code == ACT_INCOMP);
-    return (code);
-}
-
-/*
- * Miscellaneous stuff.
- */
-#define	BITCASE(B)			\
-    case B:				\
-    code <<= 1;				\
-    if (d & (1<<(7-B))) code |= 1;	\
-    len++;				\
-    if (code > 0) { b = B+1; break; }
-
-/*
- * Skip over input until an EOL code is found.  The
- * value of len is passed as 0 except during error
- * recovery when decoding 2D data.  Note also that
- * we don't use the optimized state tables to locate
- * an EOL because we can't assume much of anything
- * about our state (e.g. bit position).
- */
-void
-G3Decoder::skipToEOL(int len)
-{
-    register int b = bit;
-    register int d = data;
-    int code = 0;
-
-    /*
-     * Our handling of ``bit'' is painful because
-     * the rest of the code does not maintain it as
-     * exactly the bit offset in the current data
-     * byte (bit == 0 means refill the data byte).
-     * Thus we have to be careful on entry and
-     * exit to insure that we maintain a value that's
-     * understandable elsewhere in the decoding logic.
-     */
-    if (b == 0)			// force refill
-        b = 8;
-    for (;;) {
-        switch (b) {
-again:  BITCASE(0);
-        BITCASE(1);
-        BITCASE(2);
-        BITCASE(3);
-        BITCASE(4);
-        BITCASE(5);
-        BITCASE(6);
-        BITCASE(7);
-        default:
-            d = nextByte();
-            goto again;
-        }
-        if (len >= 12 && code == EOL)
-            break;
-        code = len = 0;
-    }
-    bit = b > 7 ? 0 : b;	// force refill
-    data = d;
-}
-#undef BITCASE
-
-/*
- * Return the next bit in the input stream.  This is
- * used to extract 2D tag values and the color tag
- * at the end of a terminating uncompressed data code.
- */
-int
-G3Decoder::nextBit()
-{
-    if (bit != 0) {
-	static const short bitMask[8] =
-	    { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-	int b = data & bitMask[bit];
-	bit = (bit+1) & 7;
-	return (b);
+	is1D = TRUE;
+    if (!is1D) {
+	pb = refruns;
+	b1 = *pb++;
+#define	badlength(a0,lastx) do {			\
+    badPixelCount("2D", a0, lastx);			\
+    rowgood = FALSE;					\
+} while (0)
+	EXPAND2D(Nop2d);
+    Nop2d:;
+#undef	badlength
     } else {
-        data = nextByte();
-	bit = 1;
-	return (data & 0x80);
+#define	badlength(a0,lastx) do {			\
+    nullrow = (a0 == 0);				\
+    if (nullrow && ++RTCrun == 6 && RTCrow == -1)	\
+	RTCrow = rowref-6;				\
+    badPixelCount("1D", a0, lastx);			\
+    rowgood = FALSE;					\
+} while (0)
+	EXPAND1D(Nop1d);
+    Nop1d:;
+#undef	badlength
     }
+    if (!nullrow)
+	RTCrun = 0;
+    if (scanline)
+	_TIFFFax3fillruns((u_char*) scanline, thisrun, pa, lastx);
+    if (is2D) {
+	SETVAL(0);			// imaginary change for reference
+	SWAP(uint16*, curruns, refruns);
+    }
+    rowref++;
+    UNCACHE_STATE();
+    return (rowgood);
 }
 
-/*
- * Push back a single bit from the raw data stream.
- * Note that this routine assumes it is always called
- * to push back a bit returned by nextBit().
- */
-void
-G3Decoder::ungetBit()
-{
-    if (bit == 1) {
-	setPendingByte(data);
-	bit = 0;
-    } else
-	bit = (bit-1) & 7;
-}
-
-fxBool G3Decoder::isByteAligned()	{ return (bit == 0 || bit > 7); }
-
-void
-G3Decoder::flushRecvBuf()
-{
-    if (bit != 0 && recvBuf)
-	recvBuf->put(EOL);
-}
-
-/*
- * Push back a byte from the input stream so
- * that it will be used in the next call to
- * nextByte.
- */
-void
-G3Decoder::setPendingByte(u_char b)
-{
-    bytePending = b | 0x100;
-}
+#undef	SWAP
+#undef	prematureEOF
+#undef	extension
+#undef	unexpected
 
 /*
  * Return the next decoded byte of page data from
  * the input stream.  The byte is returned in the
- * bit order required by the G3 decoder and it is
- * also stashed in the receive buffer for writing
- * to the receive file.
+ * bit order required by the G3 decoder.
  */
 int
 G3Decoder::nextByte()
 {
-    int b;
-    if (bytePending & 0x100) {		// return any pushback
-	b = bytePending & 0xff;
-	bytePending = 0;
-    } else {				// decode from input stream
-	if (recvBuf && prevByte != -1)
-	    recvBuf->put(prevByte);	// record in raw input buffer
-	b = prevByte = decodeNextByte();
-    }
-    return (bitmap[b]);			// return with proper bit order
+    return bitmap[decodeNextByte()];
 }
 
+int G3Decoder::decodeNextByte() { raiseEOF(); return (0); }
+
 void G3Decoder::invalidCode(const char*, int) {}
-void G3Decoder::prematureEOL(const char*, int) {}
-void G3Decoder::badPixelCount(const char*, int) {}
+void G3Decoder::badPixelCount(const char*, int, int) {}
 void G3Decoder::badDecodingState(const char*, int) {}

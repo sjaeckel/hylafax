@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/log.4f,v 1.17 1995/04/08 21:35:58 sam Rel $
+.\"	$Id: log.4f,v 1.21 1996/06/24 03:04:17 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990-1995 Sam Leffler
-.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1996 Sam Leffler
+.\" Copyright (c) 1991-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,24 +28,21 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH LOG 4F "December 5, 1994"
+.TH LOG 4F "May 12, 1996"
 .SH NAME
 log/* \- session log files
 .SH DESCRIPTION
 Files in the
-.B etc/log
+.B log
 directory in the \*(Fx
 spooling area contain logging/tracing information about
 transmit and receive sessions.
-One file exists for each machine, with the filename
-created from the remote machine's fully-qualified
-phone number.
-Transmit session tracing is placed in the file named by
-the destination phone number.
-Receive session tracing is placed in the file whose name
-is the local phone number.
+One file exists for each inbound or outbound call,
+with the filename of the form ``cXXXXXXXX'' where XXXXXXXX
+is a decimal sequence number termed a 
+.IR "communication identifier" .
 The amount and kind of tracing information that is recorded
-is defined by the
+for a call is defined by the
 .B SessionTracing
 parameter specified in the modem configuration file; see
 .IR config (4F).
@@ -58,6 +55,8 @@ service and is controlled by the
 and
 .B ServerTracing
 parameters specified in the modem configuration file.
+.PP
+[\fBNB: The remainder of this manual page is out of date.\fP]
 .SH "SERVER OPERATION"
 The following messages may appear when server operation tracing
 (bit 1) is enabled:

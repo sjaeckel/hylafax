@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/QLink.h,v 1.6 1995/04/08 21:31:03 sam Rel $ */
+/*	$Id: QLink.h,v 1.10 1996/06/24 03:00:41 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -36,7 +36,12 @@ struct QLink {
     QLink(const QLink& other);
     virtual ~QLink();
 
-    void remove();
+    void remove(void);
     void insert(QLink& after);
+
+    int isEmpty(void) const;		// TRUE if list is empty (used on head)
+    int isOnList(void) const;		// TRUE if item is on list
 };
+inline int QLink::isEmpty(void) const	{ return next == this; }
+inline int QLink::isOnList(void) const	{ return next != this; }
 #endif /* _QLink_ */

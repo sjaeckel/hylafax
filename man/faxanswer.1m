@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/faxanswer.1m,v 1.21 1995/04/08 21:35:39 sam Rel $
+.\"	$Id: faxanswer.1m,v 1.26 1996/06/24 03:04:07 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990-1995 Sam Leffler
-.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1996 Sam Leffler
+.\" Copyright (c) 1991-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,7 +27,7 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH FAXANSWER 1M "March 3, 1995"
+.TH FAXANSWER 1M "May 23, 1996"
 .SH NAME
 faxanswer \- tell a \*(Fx server to answer the telephone
 .SH SYNOPSIS
@@ -48,7 +48,8 @@ process servicing
 .I modem
 telling it to answer the telephone.
 This is useful, for example, when a modem is used on a
-shared phone line and configured to not normally answer the phone.
+shared phone line and the server is
+configured to not normally answer the phone.
 .PP
 The specified
 .I modem
@@ -65,7 +66,9 @@ Use a spooling area other than
 .IR ${SPOOL} .
 .TP 10
 .B \-h
-Specify exactly ``how'' the phone should
+Specify exactly
+.I how
+the phone should
 be answered.
 By default, the server process is instructed
 to answer the phone and
@@ -79,9 +82,21 @@ option can be used to force the server to answer the
 phone for particular type of call: one of
 .IR fax ,
 .IR data ,
+.IR voice ,
+.IR any ,
 or
-.IR voice .
+.I extern
+(to force
+.I faxgetty
+to invoke an external application to
+to handle the call).
 .SH FILES
+.nf
+.ta \w'${SPOOL}/FIFO.<devid>    'u
+${SPOOL}	default spooling area
+${SPOOL}/FIFO	fifo for contacting \fIfaxq\fP
+.fi
+.PP
 Consult
 .IR hylafax (4F)
 for a complete discussion of the structure and

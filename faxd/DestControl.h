@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/DestControl.h,v 1.9 1995/04/08 21:29:58 sam Rel $ */
+/*	$Id: DestControl.h,v 1.13 1996/08/21 22:31:43 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -42,13 +42,13 @@ class DestControlInfo {
 private:
     RegEx	pattern;		// destination pattern
     u_long	defined;		// parameters that were defined
-    u_int	tracingLevel;		// destination-specific tracing
     u_int	maxConcurrentJobs;	// max number of parallel calls
     u_int	maxSendPages;		// max pages in a send job
     u_int	maxDials;		// max times to dial the phone
     u_int	maxTries;		// max transmit attempts
     fxStr	rejectNotice;		// if set, reject w/ this notice
     TimeOfDay	tod;			// time of day restrictions
+    fxStr	args;			// arguments for subprocesses
 
     // default returned on no match
     static const DestControlInfo defControlInfo;
@@ -61,17 +61,19 @@ public:
     ~DestControlInfo();
 
     int compare(const DestControlInfo*) const;
-    fxBool parseEntry(const char* tag, const char* value);
+    void parseEntry(const char* tag, const char* value);
 
-    u_int getTracingLevel() const;
     u_int getMaxConcurrentJobs() const;
     u_int getMaxSendPages() const;
     u_int getMaxDials() const;
     u_int getMaxTries() const;
     const fxStr& getRejectNotice() const;
     time_t nextTimeToSend(time_t) const;
+    const fxStr& getArgs() const;
 };
-fxDECLARE_ObjArray(DestControlInfoArray, DestControlInfo);
+inline const fxStr& DestControlInfo::getArgs() const	{ return args; }
+
+fxDECLARE_ObjArray(DestControlInfoArray, DestControlInfo)
 
 /*
  * Destination control information database.

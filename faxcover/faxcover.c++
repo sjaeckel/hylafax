@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxcover/RCS/faxcover.c++,v 1.37 1995/04/08 21:29:17 sam Rel $ */
+/*	$Id: faxcover.c++,v 1.41 1996/07/31 17:40:35 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,18 +27,12 @@
 #include "FaxDB.h"
 #include "config.h"
 #include "PageSize.h"
+#include "Sys.h"
 
 #include <stdarg.h>
 #include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <osfcn.h>
 #include <pwd.h>
-#include <fcntl.h>
 #include <sys/file.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 class faxCoverApp {
 private:
@@ -373,7 +367,7 @@ faxCoverApp::coverDef(const char* tag, const char* value)
 {
     printf("/%s (", tag);
     for (const char* cp = value; *cp; cp++) {
-	if (*cp == '(' || *cp == ')')
+	if (*cp == '(' || *cp == ')' || *cp == '\\')
 	    putchar('\\');
 	putchar(*cp);
     }

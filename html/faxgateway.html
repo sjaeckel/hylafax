@@ -1,5 +1,6 @@
 <HTML>
 <HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
 <TITLE>
 Mail to Fax Gateway
 </TITLE>
@@ -32,37 +33,40 @@ configuration hack.)
 Voila!  Now mail to <I>user@dest.fax</I>
 will get formatted and submitted as a
 facsimile job to <I>user</I> at the specified <I>dest</I>.
-By writing a more
-involved mailfax script you can add things like different resolutions
-by parsing the <I>user</I> string.  For example, an X.400-style scheme might
-use:
-<PRE>
-    user/R=low/N=done@host.fax
-</PRE>
-where ``R=low'' specifies a low res facsimile and ``N=done'' requests
-notification when the job is done.  If you want symbolic destinations,
-then you can provide a host to phone number mapping facility.
 
 <P>
-<IMG SRC="icons/warning_icon.gif" ALT="NOTE: " ALIGN=left HSPACE=10>
-<EM>The normal access control mechansims on submitting a facsimile
+Mail submitted through this gateway can include header lines in the
+envelope that control the various aspects of the transmission.
+For example, to have the facsimile sent at 196 lines/inch the header line:
+
+<UL><TT>
+<PRE>X-FAX-Resolution: 196</PRE>
+</TT></UL>
+
+would be used.
+Headers exist not only to control aspects of the transmission
+but also the formatting work that is done in preparing the mail text
+for transmission; consult the
+<A HREF="@CGIPATH@/manpage?1+faxmail">faxmail(1)</A>
+manual page for complete information.
+
+<P>
+<TABLE BORDER=0>
+<TR>
+<TD><IMG SRC="icons/warning_icon.gif" ALT="NOTE: " HSPACE=8></TD>
+<TD><EM>The normal access control mechansims on submitting a facsimile
 for transmission are enforced; you may need to use them if you setup
-a fax gateway on your system!</EM>
+a fax gateway on your system!</EM></TD>
+</TR>
+</TABLE>
 
 <P>
-<IMG SRC="icons/info_icon.gif" ALT="NOTE: " ALIGN=left HSPACE=14>
-<A HREF="mailto:Dirk.Husemann@informatik.uni-erlangen.de">Dirk Husemann</A>
-has contributed a more elaborate scheme that supports
-the transmission of MIME-encoded documents; check the
-<A HREF="file://sgi.com/sgi/fax/contrib/dirks-faxmailer/README">FAQ</A>.
+Dirk Husemann has contributed a more elaborate system; the
+<A HREF="ftp://ftp.sgi.com/sgi/fax/contrib/dirks-faxmailer/README">README</A>
+file is accessible in the user contributed software area on the master
+FTP server.
 
-<P>
-There is also the "Remote Printing Experiment" being conducted by folks
-on the Internet.  This provides a distributed fax delivery service that
-uses email to relay facsimile to a local site for delivery.  For info
-about that stuff send mail to
-<A HREF="mailto:tpc-faq@town.hall.org">tpc-faq@town.hall.org</A> or
-visit their <A HREF="http://town.hall.org/fax/faxsend-short.html">WWW site</A>.
+<!--FOOTER-->
 
 <P>
 <A HREF="toc.html"><IMG SRC="icons/back.gif"> HylaFAX table
@@ -72,7 +76,7 @@ of contents</A>.<BR>
 
 <ADDRESS>
 <A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
-Last updated $Date: 1995/02/20 01:21:22 $.
+Last updated $Date: 1996/08/16 21:03:37 $.
 </ADDRESS>
 
 </BODY>

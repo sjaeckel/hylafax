@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxAcctInfo.h,v 1.5 1995/04/08 21:30:02 sam Rel $ */
+/*	$Id: FaxAcctInfo.h,v 1.10 1996/06/24 03:00:22 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -30,19 +30,20 @@
 #include <time.h>
 
 struct FaxAcctInfo {
-    const char* jobid;		// user-specified job tag (optional)
+    const char* jobid;		// system-assigned job identifier
+    const char* jobtag;		// user-specified job tag (optional)
     const char*	user;		// sender/receiver identity
     time_t	start;		// starting time
-    time_t	duration;	// job duration (minutes)
+    time_t	duration;	// job duration (seconds)
+    time_t	conntime;	// connect time (seconds)
+    const char*	commid;		// communication identifer
     const char*	device;		// modem device
     const char*	dest;		// receiver phone number
     const char*	csi;		// remote csi
     u_int	npages;		// pages successfully sent/rcvd
-    u_int	sigrate;	// negotiated signalling rate
-    const char*	df;		// negotiated data format
+    u_int	params;		// encoded transfer parameters
     const char*	status;		// status info (optional)
 
     fxBool record(const char* cmd) const;
-    void writeRecord(FILE*, const char* cmd) const;
 };
 #endif /* _FaxAcctInfo_ */

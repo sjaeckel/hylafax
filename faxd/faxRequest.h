@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/faxRequest.h,v 1.5 1995/04/08 21:31:21 sam Rel $ */
+/*	$Id: faxRequest.h,v 1.9 1996/08/21 22:31:43 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -42,10 +42,11 @@ typedef unsigned short FaxSendOp;
 struct faxRequest {
     FaxSendOp	op;		// send operation type
     u_short	dirnum;		// directory index for TIFF images
-    fxStr	item;		// filename or CIG for poll operation
+    fxStr	addr;		// SUB/SEP for transmit/poll
+    fxStr	item;		// filename/password for transmit/poll
 
     faxRequest();
-    faxRequest(FaxSendOp, u_short, const fxStr&);
+    faxRequest(FaxSendOp, u_short dirnum, const fxStr& addr, const fxStr& item);
     faxRequest(const faxRequest& other);
     ~faxRequest();
 
@@ -53,5 +54,5 @@ struct faxRequest {
 
     fxBool isSavedOp() const;
 };
-fxDECLARE_ObjArray(faxRequestArray, faxRequest);
+fxDECLARE_ObjArray(faxRequestArray, faxRequest)
 #endif /* _faxRequest_ */

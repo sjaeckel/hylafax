@@ -1,11 +1,11 @@
-# $Header: /usr/people/sam/fax/./RCS/defs.in,v 1.14 1995/04/08 21:12:02 sam Rel $
+# $Id: defs.in,v 1.19 1996/06/24 02:57:39 sam Rel $
 #
 # @WARNING@
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1988-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1988-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -129,8 +129,8 @@ CVERSION	= @ENVOPTS@
 C++FILE		= @CXXFILE@
 
 # default definitions for programs--overide them as desired
-LIBS		= ${LIBUTIL} ${LIBTIFF} ${LIBPORT}
-LLDLIBS		= ${LIBS} ${MACHDEPLIBS}
+LIBS		= ${LIBUTIL} ${LIBPORT}
+LLDLIBS		= ${LIBS} ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${MACHDEPLIBS}
 #
 # Override this definition to eliminate shared library use.
 #
@@ -142,8 +142,38 @@ SHDLIBC		= @SHDLIBC@
 #
 MACHDEPLIBS	= @MACHDEPLIBS@
 
-TIFF		= ${DEPTH}/libtiff
-LIBTIFF		= ${TIFF}/libtiff.${DSO}
+#
+# TIFF-related definitions.  The source for the TIFF library
+# is not required to build this software, but you must have
+# the TIFF library installed somewhere on your system to link
+# against.  If the default "-L /usr/local/lib -ltiff" is
+# insufficient to locate the library you can setup a config.local
+# file that defines LIBTIFF and/or TIFFINC (used to find tiffio.h)
+#
+TIFFINC		= @TIFFINC@
+LIBTIFF		= @LIBTIFF@
+TIFFBIN		= @TIFFBIN@
+#
+# zlib-related definitions.  The source for the zlib library
+# is not required to build this software, but you must have
+# the zlib library installed somewhere on your system to link
+# against.  If the default "-L /usr/local/lib -lz" is
+# insufficient to locate the library you can setup a config.local
+# file that defines LIBZ and/or ZINC (used to find zlib.h)
+#
+ZLIBINC		= @ZLIBINC@
+LIBZ		= @LIBZ@
+#
+# regex-related definitions.  The source for the POSIX regular
+# expression package is not required to build this software,
+# but you must have the resulting library installed somewhere
+# on your system to link against.  If the default value
+# "-L /usr/local/lib -lregex" is insufficient to locate the
+# library you can setup a config.local file that defines LIBREGEX
+# and/or REGEXINC
+#
+REGEXINC	= @REGEXINC@
+LIBREGEX	= @LIBREGEX@
 # random utility functions and classes
 UTIL		= ${DEPTH}/util
 LIBUTIL		= ${UTIL}/libfaxutil.${DSO}
@@ -175,8 +205,7 @@ CINCS		= ${VCINCS} ${LCINCS} ${GCINCS}
 GCOPTS		= @GCOPTS@ ${OPTIMIZER} @PROTOTYPES@
 GCDEFS		= @ANSICPP@
 GCINCS		= -I. -I${DEPTH} -I${SRCDIR} \
-		  -I${DEPTH}/${TOPSRCDIR}/util \
-		  -I${TIFF} -I${DEPTH}/${TOPSRCDIR}/libtiff
+		    -I${DEPTH}/${TOPSRCDIR}/util -I${TIFFINC} -I${REGEXINC}
 #
 # C++ flags are decomposed using the same hierarchy as C flags.
 #
@@ -192,8 +221,7 @@ C++INCS		= ${VC++INCS} ${LC++INCS} ${GC++INCS}
 
 GC++OPTS	= @GCXXOPTS@ ${OPTIMIZER}
 GC++INCS	= -I. -I${DEPTH} -I${SRCDIR} \
-		  -I${DEPTH}/${TOPSRCDIR}/util \
-		  -I${TIFF} -I${DEPTH}/${TOPSRCDIR}/libtiff
+		    -I${DEPTH}/${TOPSRCDIR}/util -I${TIFFINC} -I${REGEXINC}
 GC++DEFS	= @ANSICXXPP@
 
 #

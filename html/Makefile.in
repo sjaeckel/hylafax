@@ -1,11 +1,11 @@
-#	$Header: /usr/people/sam/fax/./html/RCS/Makefile.in,v 1.21 1995/04/08 21:45:37 sam Rel $
+#	$Id: Makefile.in,v 1.46 1996/08/26 19:40:48 sam Rel $
 #
 # @WARNING@
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -43,22 +43,40 @@ DEPTH=..
 
 SRCDIR	= ${DEPTH}/${TOPSRCDIR}/html
 
-HTML_SRCS=\
-    ${SRCDIR}/acknowledge.html			\
+HTML_DOCS=${SRCDIR}/acknowledge.html		\
+    ${SRCDIR}/binary.html			\
+    ${SRCDIR}/building.html			\
     ${SRCDIR}/class1.html			\
     ${SRCDIR}/class2.0.html			\
     ${SRCDIR}/class2.html			\
     ${SRCDIR}/contrib.html			\
     ${SRCDIR}/copyright.html			\
+    ${SRCDIR}/documentation.html		\
     ${SRCDIR}/faxgateway.html			\
-    ${SRCDIR}/hylafax.html			\
+    ${SRCDIR}/ftpmail-help.html			\
+    ${SRCDIR}/ghostscript.html			\
+    ${SRCDIR}/hylafax3.0.html			\
+    ${SRCDIR}/hylafax4.0.html			\
+    ${SRCDIR}/index.html			\
     ${SRCDIR}/install-source.html		\
+    ${SRCDIR}/ixotap.html			\
+    ${SRCDIR}/mailing-lists.html		\
     ${SRCDIR}/modems.html			\
     ${SRCDIR}/namechange.html			\
+    ${SRCDIR}/operation.html			\
+    ${SRCDIR}/overview.html			\
+    ${SRCDIR}/sam.html				\
+    ${SRCDIR}/setup-advanced.html		\
+    ${SRCDIR}/setup-client.html			\
+    ${SRCDIR}/setup.html			\
+    ${SRCDIR}/source.html			\
     ${SRCDIR}/survey-help.html			\
     ${SRCDIR}/survey-query.html			\
-    ${SRCDIR}/version.html			\
-    ${SRCDIR}/ftpmail-help.html			\
+    ${SRCDIR}/survey.html			\
+    ${SRCDIR}/toc.html				\
+    ${SRCDIR}/troubleshooting.html		\
+    ${SRCDIR}/upgrade4.0.html			\
+    ${SRCDIR}/v2.3beta036.html			\
     ${SRCDIR}/v2.3beta036special.html		\
     ${SRCDIR}/v3.0beta096.html			\
     ${SRCDIR}/v3.0beta100.html			\
@@ -67,79 +85,63 @@ HTML_SRCS=\
     ${SRCDIR}/v3.0beta111.html			\
     ${SRCDIR}/v3.0beta112.html			\
     ${SRCDIR}/v3.0beta113.html			\
-    ${SRCDIR}/Modems/Supra/class2.html		\
-    ${SRCDIR}/Modems/Supra/class1.html		\
+    ${SRCDIR}/v3.0beta114.html			\
+    ${SRCDIR}/v4.0beta005.html			\
+    ${SRCDIR}/v4.0beta006.html			\
+    ${SRCDIR}/v4.0beta007.html			\
+    ${SRCDIR}/v4.0beta008.html			\
+    ${SRCDIR}/v4.0beta009.html			\
+    ${SRCDIR}/v4.0beta010.html			\
+    ${SRCDIR}/v4.0beta011.html			\
+    ${SRCDIR}/v4.0beta012.html			\
+    ${SRCDIR}/v4.0beta013.html			\
+    ${SRCDIR}/v4.0beta014.html			\
+    ${SRCDIR}/v4.0beta015.html			\
+    ${SRCDIR}/v4.0beta018.html			\
+    ${SRCDIR}/v4.0beta020.html			\
+    ${SRCDIR}/v4.0beta021.html			\
+    ${SRCDIR}/version.html			\
+    ${SRCDIR}/Majordomo/help.html		\
     ${SRCDIR}/Modems/Hayes/hayes.html		\
+    ${SRCDIR}/Modems/Supra/class1.html		\
+    ${SRCDIR}/Modems/Supra/class2.html		\
+    ${SRCDIR}/Modems/Telebit/faxcmds.html	\
+    ${SRCDIR}/Modems/ZyXEL/autodetect.html	\
+    ${SRCDIR}/Modems/ZyXEL/codes.html		\
+    ${SRCDIR}/Modems/ZyXEL/commands.html	\
+    ${SRCDIR}/Modems/ZyXEL/compression.html	\
+    ${SRCDIR}/Modems/ZyXEL/examples.html	\
+    ${SRCDIR}/Modems/ZyXEL/voice.html		\
+    ${SRCDIR}/Modems/att-dataport.html		\
+    ${SRCDIR}/Modems/digicom-scout.html		\
+    ${SRCDIR}/Modems/everex-2496d.html		\
+    ${SRCDIR}/Modems/hayes-optima2400.html	\
+    ${SRCDIR}/Modems/index.html			\
+    ${SRCDIR}/Modems/multitech-1432.html	\
+    ${SRCDIR}/Modems/multitech-1932.html	\
+    ${SRCDIR}/Modems/nuvo-96424pfx.html		\
+    ${SRCDIR}/Modems/ppi-pm14400fxmt.html	\
+    ${SRCDIR}/Modems/supra-v32bis.html		\
+    ${SRCDIR}/Modems/telebit-t3000.html		\
+    ${SRCDIR}/Modems/twincom-144df.html		\
+    ${SRCDIR}/Modems/ucom-traveller96.html	\
+    ${SRCDIR}/Modems/usr-courier.html		\
+    ${SRCDIR}/Modems/usr-sportster.html		\
+    ${SRCDIR}/Modems/zyxel-1496.html		\
     ${NULL}
-HTML_CONFIGS=\
-    HOWTO.html					\
-    binary.html					\
-    building.html				\
-    documentation.html				\
-    ghostscript.html				\
-    index.html					\
-    install-binary.html				\
-    mailing-lists.html				\
-    operation.html				\
-    overview.html				\
-    sam.html					\
-    setup.html					\
-    setup-advanced.html				\
-    setup-client.html				\
-    source.html					\
-    survey.html					\
-    toc.html					\
-    troubleshooting.html			\
-    v2.3beta036.html				\
-    Majordomo/help.html				\
-    Modems/index.html				\
-    Modems/att-dataport.html			\
-    Modems/digicom-scout.html			\
-    Modems/everex-2496d.html			\
-    Modems/hayes-optima2400.html		\
-    Modems/multitech-1432.html			\
-    Modems/multitech-1932.html			\
-    Modems/nuvo-96424pfx.html			\
-    Modems/ppi-pm14400fxmt.html			\
-    Modems/supra-v32bis.html			\
-    Modems/telebit-t3000.html			\
-    Modems/twincom-144df.html			\
-    Modems/ucom-traveller96.html		\
-    Modems/usr-courier.html			\
-    Modems/usr-sportster.html			\
-    Modems/zyxel-1496.html			\
-    Modems/Telebit/faxcmds.html			\
-    Modems/ZyXEL/autodetect.html		\
-    Modems/ZyXEL/codes.html			\
-    Modems/ZyXEL/commands.html			\
-    Modems/ZyXEL/compression.html		\
-    Modems/ZyXEL/examples.html			\
-    Modems/ZyXEL/voice.html			\
-    ${NULL}
-HTML_DOCS=${HTML_SRCS} ${HTML_CONFIGS}
-ICONS_DOCS=\
-    ${SRCDIR}/icons/at_work_icon.gif		\
+ICONS_DOCS=${SRCDIR}/icons/at_work_icon.gif	\
     ${SRCDIR}/icons/ball_blue_icon.gif		\
     ${SRCDIR}/icons/button.excl.gif		\
     ${SRCDIR}/icons/back.gif			\
+    ${SRCDIR}/icons/frog.gif			\
     ${SRCDIR}/icons/improved.gif		\
     ${SRCDIR}/icons/info_icon.gif		\
     ${SRCDIR}/icons/new.gif			\
     ${SRCDIR}/icons/next.gif			\
     ${SRCDIR}/icons/smiley.gif			\
     ${SRCDIR}/icons/warning_icon.gif		\
-    ${NULL}
-ICONS_FAQ=\
-    ${SRCDIR}/icons/faq.new.gif			\
-    ${SRCDIR}/icons/faq.old.gif			\
-    ${SRCDIR}/icons/faq.updated.gif		\
-    ${SRCDIR}/icons/faq-feedback.gif		\
-    ${SRCDIR}/icons/smiley.gif			\
-    ${SRCDIR}/icons/button.excl.gif		\
-    ${NULL}
-OTHER=\
-    ${SRCDIR}/Majordomo/flexfax.info		\
-    ${SRCDIR}/Majordomo/flexfax-announce.info	\
+    ${SRCDIR}/sam.gif				\
+    ${SRCDIR}/hylafax.gif			\
     ${NULL}
 TARGETS	=
 
@@ -164,26 +166,52 @@ installDocs::
 	    ${HTMLDIR}/Modems/ZyXEL					\
 	    ${HTMLDIR}/Modems/Hayes 					\
 	    ${HTMLDIR}/Majordomo
-	@for i in ${HTML_DOCS} ${ICONS_DOCS} ${OTHER}; do		\
+	@for i in ${HTML_DOCS} ${ICONS_DOCS}; do			\
 	    f=`${ECHO} $$i | ${SED} 's;${SRCDIR}/;;'`;			\
 	    ${ECHO} "${INSTALL} -F ${HTMLDIR} -m 444 -idb ${PRODUCT}.html.docs -src $$i -O $$f";		\
 	    ${INSTALL} -F ${HTMLDIR} -m 444				\
 		-idb ${PRODUCT}.html.docs -src $$i -O $$f;		\
 	done
-installFAQ::
-	${INSTALL} -u ${SYSUSER} -g ${SYSGROUP} -m ${DIRMODE}		\
-	    -idb hylafax.html.faq -dir					\
-	    ${HTMLDIR}							\
-	    ${HTMLDIR}/FAQ						\
-	    ${HTMLDIR}/icons
-	@for i in FAQ/*.html ${ICONS_FAQ}; do				\
-	    f=`${ECHO} $$i | ${SED} 's;${SRCDIR}/;;'`;			\
-	    ${ECHO} "${INSTALL} -F ${HTMLDIR} -m 444 -idb ${PRODUCT}.html.faq -src $$i -O $$f";		\
-	    ${INSTALL} -F ${HTMLDIR} -m 444				\
-		-idb ${PRODUCT}.html.faq -src $$i -O $$f;		\
-	done
 
-install: default installDocs installFAQ
+CATPAGES=${SRCDIR}/index.html \
+	${SRCDIR}/toc.html \
+	${SRCDIR}/overview.html \
+	${SRCDIR}/HOWTO.html \
+	${SRCDIR}/version.html \
+	${SRCDIR}/modems.html \
+	${SRCDIR}/class1.html \
+	${SRCDIR}/class2.html \
+	${SRCDIR}/class2.0.html \
+	${SRCDIR}/source.html \
+	${SRCDIR}/binary.html \
+	${SRCDIR}/upgrade4.0.html \
+	${SRCDIR}/building.html \
+	${SRCDIR}/ghostscript.html \
+	${SRCDIR}/setup.html \
+	${SRCDIR}/setup-advanced.html \
+	${SRCDIR}/ixotap.html \
+	${SRCDIR}/setup-client.html \
+	${SRCDIR}/operation.html \
+	${SRCDIR}/faxgateway.html \
+	${SRCDIR}/troubleshooting.html \
+	${SRCDIR}/contrib.html \
+	${SRCDIR}/mailing-lists.html \
+	${SRCDIR}/acknowledge.html \
+	${SRCDIR}/copyright.html \
+	${NULL}
+
+pages.html: ${CATPAGES}
+	${RM} -f pages.html
+	(echo '<HTML><HEAD>'; \
+	echo '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">';\
+	echo '<TITLE>HylaFAX Documentation</TITLE></HEAD></BODY>';\
+	for i in ${CATPAGES}; do \
+	    ${SED} -e '1,/<BODY>/d' -e '/<!--FOOTER-->/,/<[\/]HTML>/d' $$i; \
+	    echo '<P><HR WIDTH=65% ALIGN=center>'; \
+	done; \
+	echo '</BODY></HTML>') > pages.html
+
+install: default installDocs
 	@${ECHO} "= tools"; cd tools; ${MAKE} install
 
 clean::
@@ -191,5 +219,4 @@ clean::
 
 clobber::
 	@${ECHO} "= tools"; cd tools; ${MAKE} clobber
-	-${RM} -f ${HTML_CONFIGS} FAQ/*.html
 	-${RM} -f Makefile ${MKDEPFILE} .*dependtime .*incdepend

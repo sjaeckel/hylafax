@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/fxassert.c,v 1.7 1995/04/08 21:44:54 sam Rel $ */
+/*	$Id: fxassert.c,v 1.9 1996/06/24 03:06:21 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided

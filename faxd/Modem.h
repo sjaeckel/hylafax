@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Modem.h,v 1.14 1995/04/08 21:30:54 sam Rel $ */
+/*	$Id: Modem.h,v 1.28 1996/06/24 03:00:38 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -32,8 +32,35 @@
 #include "Str.h"
 #include "faxQueueApp.h"
 
-class UUCPLock;
 typedef	unsigned int ModemState;
+
+class UUCPLock;
+class RegEx;
+class RegExDict;
+class fxStackBuffer;
+class Modem;
+
+class ModemClass {
+private:
+    static RegExDict* classes;	// registered modem classes
+public:
+    static void reset();
+    static void set(const fxStr& name, RegEx* re);
+    static RegEx* find(const char* name);
+};
+
+/*
+ * NB: This should be a private nested class but various
+ *     C++ compilers cannot grok it.
+ */
+class ModemLockWaitHandler : public IOHandler {
+private:
+    Modem& modem;
+public:
+    ModemLockWaitHandler(Modem&);
+    ~ModemLockWaitHandler();
+    void timerExpired(long, long);
+};
 
 /*
  * Each modem server process that has identified itself has
@@ -46,39 +73,56 @@ typedef	unsigned int ModemState;
 class Modem : public QLink {
 public:
     enum {
-	DOWN,			// modem identified, but offline
-	READY,			// modem ready for use
-	BUSY			// modem in use
+	DOWN  = 0,		// modem identified, but offline
+	READY = 1,		// modem ready for use
+	BUSY  = 2		// modem in use
     };
 private:
     int		fd;		// cached open FIFO file
-    fxStr	fifoName;	// mode FIFO filename
+    fxStr	fifoName;	// modem FIFO filename
     fxStr	devID;		// modem device identifier
+    fxStr	number;		// modem phone number
+    fxStr	commid;		// communication identifier
     ModemState	state;		// modem state
     fxBool	canpoll;	// modem is capable of polling
+    u_short	priority;	// modem priority
     Class2Params caps;		// modem capabilities
     UUCPLock*	lock;		// UUCP lockfile support
+    QLink	triggers;	// waiting specifically on this modem
+				// Dispatcher handler for lock wait thread
+    ModemLockWaitHandler lockHandler;
 
     static QLink list;		// list of all modems
-    friend void faxQueueApp::runScheduler();
 
-    void traceState(const char* state);
+    void setCapabilities(const char*);	// specify modem capabilities
+    void setNumber(const char*);	// specify modem phone number
+    void setCommID(const char*);	// specify modem commid
+    void setState(ModemState);		// specify modem state
+
+    friend class faxQueueApp;
+    friend class Trigger;		// for triggers
 public:
     Modem(const fxStr& devid);
     virtual ~Modem();
 
     static Modem& getModemByID(const fxStr& id);
-    static fxBool modemExists(const fxStr& id);
+    static Modem* modemExists(const fxStr& id);
+    static Modem* findModem(const Job& job);
 
     fxBool assign(Job&);		// assign modem
     void release();			// release modem
 
+    void startLockPolling(long sec);	// initiate polling thread
+    void stopLockPolling();		// terminate any active thread
+
     const fxStr& getDeviceID() const;	// return modem device ID
+    const fxStr& getNumber() const;	// return modem phone number
     ModemState getState() const;	// return modem state
+    const Class2Params& getCapabilities() const;
+    u_int getPriority() const;		// return modem scheduling priority
+    const fxStr& getCommID() const;	// return communication ID
 
-    void setCapabilities(const char*);	// specify modem capabilities
-    void FIFOMessage(const char*);	// process FIFO message from modem app
-
+    fxBool isCapable(const Job& job) const;
     fxBool supports2D() const;		// modem supports 2D-encoded fax
     fxBool supportsVRes(float) const;	// modem supports vertical resolution
     // modem support fax page width
@@ -88,12 +132,19 @@ public:
     fxBool supportsPageLengthInMM(u_int) const;
     fxBool supportsPolling() const;	// modem supports fax polling
 
-    fxBool send(const fxStr& msg);	// send message to modem FIFO
-    static void broadcast(const fxStr&);// broadcast message to all FIFOs
+    // send message to modem FIFO
+    fxBool send(const char* msg, u_int len, fxBool cacheFd = TRUE);
+    static void broadcast(const fxStr&);	// broadcast msg to all FIFOs
+
+    void encode(fxStackBuffer&) const;	// encode for ModemExt
 };
 inline fxBool Modem::supportsPolling() const	{ return canpoll; }
 inline const fxStr& Modem::getDeviceID() const	{ return devID; }
+inline const fxStr& Modem::getNumber() const	{ return number; }
 inline ModemState Modem::getState() const	{ return state; }
+inline const Class2Params& Modem::getCapabilities() const { return caps; }
+inline u_int Modem::getPriority() const		{ return priority; }
+inline const fxStr& Modem::getCommID() const	{ return commid; }
 
 /*
  * Modem iterator class; for iterating

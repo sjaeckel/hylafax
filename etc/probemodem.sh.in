@@ -1,12 +1,12 @@
 #! @SCRIPT_SH@
-#	$Header: /usr/people/sam/fax/./etc/RCS/probemodem.sh.in,v 1.29 1995/04/08 21:17:02 sam Rel $
+#	$Id: probemodem.sh.in,v 1.35 1996/06/24 02:59:37 sam Rel $
 #
 # @WARNING@
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1993-1995 Sam Leffler
-# Copyright (c) 1993-1995 Silicon Graphics, Inc.
+# Copyright (c) 1993-1996 Sam Leffler
+# Copyright (c) 1993-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -41,27 +41,8 @@
 # This script probes a modem attached to a serial line and
 # reports the results of certain commands.
 #
-PATH=/bin:/usr/bin:/etc
-test -d /usr/ucb  && PATH=$PATH:/usr/ucb		# Sun and others
-test -d /usr/bsd  && PATH=$PATH:/usr/bsd		# Silicon Graphics
-test -d /usr/5bin && PATH=/usr/5bin:$PATH:/usr/etc	# Sun and others
-test -d /usr/sbin && PATH=/usr/sbin:$PATH		# 4.4BSD-derived
-test -d /usr/local/bin && PATH=$PATH:/usr/local/bin	# for GNU tools
-
-AWK=@AWK@			# awk for use below
-SH=@SCRIPT_SH@			# shell for use below
-SED=@SED@			# sed for use below
-
-OS=`uname -s 2>/dev/null || echo unknown`		# system identification
-case "$OS" in
-# believable values...
-IRIX|*BSD*|*bsd*|Linux|ULTRIX|HP-UX) ;;
-*)  if [ -d /etc/saf ]; then
-	# uname -s is unreliable on svr4 as it can return the nodename
-	OS=svr4
-    fi
-    ;;
-esac
+SPOOL=@SPOOL@
+SBIN=@SBIN@
 
 SPEED=
 while [ x"$1" != x"" ] ; do
@@ -75,90 +56,26 @@ while [ x"$1" != x"" ] ; do
 done
 
 #
-# Find the full pathname of a file
-# using the specified test operation.
+# Run faxsetup to setup & verify the target machine if
+# never done before.  We then source the output that has
+# all the target-specific configuration information.
 #
-findThing()
-{
-    t="$1"; app=$2; path=$3;
-    case $app in
-    /*) eval $t $app && { echo $app; return; };;
-    esac
-    IFS=:
-    for i in $path; do
-	eval $t $i/$app && { echo $i/$app; return; }
-    done
+test -f $SPOOL/etc/setup.cache || {
+    echo ""
+    echo "Running faxsetup to setup your system for fax service.  This will"
+    echo "only happen once; though you may also run faxsetup independently."
+    echo ""
+
+    $SBIN/faxsetup -server
 }
+. $SPOOL/etc/setup.cache	# common configuration stuff
+. $SPOOL/etc/setup.modem	# modem-specific stuff
 
-#
-# Find the full pathname of an executable.
-#
-findApp()
-{
-    findThing "test -x" $1 $2
-}
-
-OUT=/tmp/addmodem$$		# temp file in which modem output is recorded
-LOCKDIR=@UUCP_LOCKDIR@		# UUCP locking directory
-SPOOL=@SPOOL@			# top of fax spooling tree
-SVR4UULCKN=@LIBEXEC@/lockname	# SVR4 UUCP lock name construction program
-ONDELAY=@LIBEXEC@/ondelay	# prgm to open devices blocking on carrier
-CAT="@CAT@ -u"			# something to do unbuffered reads and writes
-
-#
-# Figure out which brand of echo we have and define
-# prompt and printf shell functions accordingly.
-# Note that we assume that if the System V-style
-# echo is not present, then the BSD printf program
-# is available.
-#
-if [ `echo foo\\\c`@ = "foo@" ]; then
-    # System V-style echo supports \r
-    # and \c which is all that we need
-    prompt()
-    {
-       echo "$* \\c"
-    }
-    printf()
-    {
-       echo "$*\\c"
-    }
-elif [ "`echo -n foo`@" = "foo@" ]; then
-    # BSD-style echo; use echo -n to get
-    # a line without the trailing newline
-    prompt()
-    {
-       echo -n "$* "
-    }
-else
-    # something else; do without
-    prompt()
-    {
-	echo "$*"
-    }
-fi
-t=`(printf hello) 2>/dev/null`
-if [ "$t" != hello ]; then
-    echo "You don't seem to have a System V-style echo command"
-    echo "or a BSD-style printf command.  I'm bailing out..."
-    exit 1
-fi
-
-#
-# If the killall program is not present on the system
-# cobble together a shell function to emulate the
-# functionality that we need.
-#
-(killall -l >/dev/null) 2>/dev/null || {
-    killall()
-    {
-	# NB: ps ax should give an error on System V, so we try it first!
-	pid="`ps ax 2>/dev/null | grep $2 | grep -v grep | $AWK '{print $1;}'`"
-	test "$pid" ||
-	    pid="`ps -e | grep $2 | grep -v grep | $AWK '{print $2;}'`"
-	test "$pid" && kill $1 $pid; return
-    }
-}
+SH=$SCRIPT_SH			# shell for use below
+OUT=/tmp/probemodem$$		# temp file in which modem output is recorded
+SVR4UULCKN=$LIBEXEC/lockname	# SVR4 UUCP lock name construction program
+ONDELAY=$LIBEXEC/ondelay	# prgm to open devices blocking on carrier
+CAT="$CAT -u"			# something to do unbuffered reads and writes
 
 while [ -z "$TTY" -o ! -c /dev/$TTY ]; do
     if [ "$TTY" != "" ]; then
@@ -167,68 +84,21 @@ while [ -z "$TTY" -o ! -c /dev/$TTY ]; do
     prompt "Serial port that modem is connected to [$TTY]?"; read TTY
 done
 
-if [ ! -d $LOCKDIR ]; then
-    prompt "Hmm, uucp lock files are not in \"$LOCKDIR\", where are they?"
-    read x
-    while [ ! -d $x ]; do
-	prompt "Nope, \"$x\" is not a directory; try again:"
-	read x
-    done
-    LOCKDIR=$x
+if [ ! -d $UUCP_LOCKDIR ]; then
+    cat<<EOF
+
+The UUCP lock file directory, $UUCP_LOCKDIR, does not appear
+to exist or be a directory.  This must be corrected before you
+can use this script to setup a modem for use.  Rerun the faxsetup
+command to correct this problem.
+
+EOF
+    exit 1
 fi
 
-#
-# Try to deduce if the tty devices are named in the SGI
-# sense (ttyd<port>, ttym<port>, and ttyf<port>) or the
-# way that everyone else seems to do it--tty<port>
-#
-# (I'm sure that someone will tell me there is another way as well.)
-#
-case "$OS" in
-IRIX)
-    PORT=`expr $TTY : 'tty.\(.*\)'`
-    for x in f m d; do
-	LOCKX="$LOCKX $LOCKDIR/LCK..tty$x${PORT}"
-    done
-    DEVS="/dev/ttyd${PORT} /dev/ttym${PORT} /dev/ttyf${PORT}"
-    #
-    # NB: we use ttyd* device names in the following
-    # work so that we are not stopped by a need for DCD.
-    #
-    tdev=/dev/ttyd${PORT}
-    ;;
-BSDi|BSD/386|BSD/OS|386bsd|386BSD)
-    PORT=`expr $TTY : 'com\(.*\)'`
-    LOCKX="$LOCKDIR/LCK..$TTY"
-    DEVS=/dev/$TTY
-    tdev=/dev/$TTY
-    ;;
-SunOS|Linux|ULTRIX|HP-UX|FreeBSD|NetBSD)
-    PORT=`expr $TTY : 'tty\(.*\)'`
-    LOCKX="$LOCKDIR/LCK..$TTY"
-    DEVS=/dev/$TTY
-    tdev=/dev/$TTY
-    ;;
-svr4)
-    PORT=`expr $TTY : 'term\/\(.*\)' \| $TTY`	# Usual
-    PORT=`expr $PORT : 'cua\/\(.*\)' \| $PORT`	# Solaris
-    PORT=`expr $PORT : 'tty\(.*\)' \| $PORT`	# Old-style
-    DEVS=/dev/$TTY
-    tdev=/dev/$TTY
-    LOCKX="$LOCKDIR/`$SVR4UULCKN $DEVS`" || {
-	echo "Sorry, I cannot determine the UUCP lock file name for $DEVS"
-	exit 1
-    }
-    ;;
-*)
-    echo "Beware, I am guessing the tty naming conventions on your system:"
-    PORT=`expr $TTY : 'tty\(.*\)'`;	echo "Serial port: $PORT"
-    LOCKX="$LOCKDIR/LCK..$TTY";		echo "UUCP lock file: $LOCKX"
-    DEVS=/dev/$TTY; tdev=/dev/$TTY;	echo "TTY device: $DEVS"
-    ;;
-esac
-DEVID="`echo $TTY | tr '/' '_'`"
-CONFIG=$CPATH.$DEVID
+LOCKX=`ttyLocks $TTY`			# UUCP lock file names
+DEVS=`ttyAliases $TTY`			# all TTY aliases
+tdev=`ttyDev $TTY`			# TTY device to use for communication
 
 #
 # Check that device is not currently being used.
@@ -261,26 +131,6 @@ have competition for the modem.
 EOF
 }
 
-SPEEDS=
-case $OS in
-*bsd*|*BSD*)
-    STTY="`findApp stty $PATH` -f $tdev"
-    if [ -z "$SPEED" ]; then
-	for s in 38400 19200 9600 4800 2400 1200; do
-	    $STTY $s </dev/null >/dev/null 2>&1 && SPEEDS="$SPEEDS $s"
-	done
-    fi
-    ;;
-*)
-    STTY=`findApp stty $PATH`
-    if [ -z "$SPEED" ]; then
-	for s in 38400 19200 9600 4800 2400 1200; do
-	    $STTY $s <$tdev >/dev/null 2>&1 && SPEEDS="$SPEEDS $s"
-	done
-    fi
-    ;;
-esac
-
 cat<<EOF
 
 Now we are going to probe the tty port.  This takes a few seconds,
@@ -289,7 +139,8 @@ the port, or the modem is turned off, this may hang (just go and
 cable up the modem or turn it on, or whatever).
 EOF
 
-if [ $OS = "SunOS" ]; then
+case $TARGET in
+*-sunos*)
     #
     # Sun systems have a command for manipulating software
     # carrier on a terminal line.  Set or reset carrier
@@ -299,7 +150,7 @@ if [ $OS = "SunOS" ]; then
     tty*) ttysoftcar -y $TTY >/dev/null 2>&1;;
     cua*) ttysoftcar -n $TTY >/dev/null 2>&1;;
     esac
-fi
+esac
 
 if [ -x ${ONDELAY} ]; then
     onDev() {
@@ -324,6 +175,8 @@ EOF
 	fi
     }
 fi
+
+STTY=`ttyStty $tdev`				# appropriate stty cmd
 
 #
 # Send each command in SendString to the modem and collect
@@ -363,6 +216,7 @@ if [ -z "$SPEED" ]; then
     # responds to "AT" with "OK".
     #
     printf "Probing for best speed to talk to modem:"
+    SPEEDS=`ttySpeeds $tdev`			# set of speeds for auto-bauding
     for SPEED in $SPEEDS
     do
 	printf " $SPEED"

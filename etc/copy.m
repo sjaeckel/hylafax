@@ -1,9 +1,9 @@
-#	$Header: /usr/people/sam/fax/./etc/RCS/copy.m,v 1.9 1995/04/08 21:19:11 sam Rel $
+#	$Id: copy.m,v 1.11 1996/06/24 02:59:31 sam Rel $
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/tagtest.c++,v 1.13 1995/04/08 21:31:30 sam Rel $ */
+/*	$Id: tagtest.c++,v 1.24 1996/06/24 03:00:54 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -79,9 +79,9 @@ setupTagLine()
 	(void) tagLineFont->read(tagLineFontFile);
 
     time_t t = Sys::now();
-    tm* tm = ::localtime(&t);
+    tm* tm = localtime(&t);
     char line[1024];
-    ::strftime(line, sizeof (line), tagLineFmt, tm);
+    strftime(line, sizeof (line), tagLineFmt, tm);
     tagLine = line;
     u_int l = 0;
     while (l < tagLine.length()) {
@@ -127,15 +127,44 @@ setupTagLineSlop(const Class2Params& params)
 class MemoryDecoder : public G3Decoder {
 private:
     const u_char* bp;
-    int decodeNextByte();
+    int		row;
+
+    int		decodeNextByte();
+
+    void	invalidCode(const char* type, int x);
+    void	badPixelCount(const char* type, int got, int expected);
+    void	badDecodingState(const char* type, int x);
 public:
     MemoryDecoder(const u_char* data);
     ~MemoryDecoder();
     const u_char* current()				{ return bp; }
+
+    void setRowNum(int r)				{ row = r; }
 };
 MemoryDecoder::MemoryDecoder(const u_char* data)	{ bp = data; }
 MemoryDecoder::~MemoryDecoder()				{}
 int MemoryDecoder::decodeNextByte()			{ return *bp++; }
+void
+MemoryDecoder::invalidCode(const char* type, int x)
+{
+    printf("Invalid %s code word, row %lu, x %d\n", type, row, x);
+}
+void
+MemoryDecoder::badPixelCount(const char* type, int got, int expected)
+{
+    printf("Bad %s pixel count, row %lu, got %d, expected %d\n",
+	type, row, got, expected);
+}
+void
+MemoryDecoder::badDecodingState(const char* type, int x)
+{
+    printf("Panic, bad %s decoding state, row %lu, x %d\n", type, row, x);
+}
+
+#ifdef roundup
+#undef roundup
+#endif
+#define	roundup(a,b)	((((a)+((b)-1))/(b))*(b))
 
 /*
  * Image the tag line in place of the top few lines of the page
@@ -205,9 +234,42 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
      * the strip of raw data has enough scanlines in it
      * to satisfy our needs (caller is responsible).
      */
-    MemoryDecoder dec(buf+tagLineSlop);
+    MemoryDecoder dec(buf);
     dec.setupDecoder(fillorder,  params.is2D());
-    dec.skip(th);
+    uint16 runs[2*2432];		// run arrays for cur+ref rows
+    dec.setRuns(runs, runs+2432, w);
+
+    u_int row;
+    for (row = 0; row < th; row++) {
+	dec.setRowNum(row);
+	dec.decodeRow(NULL, w);
+    }
+    /*
+     * If the source is 2D-encoded and the decoding done
+     * above leaves us at a row that is 2D-encoded, then
+     * our re-encoding below will generate a decoding
+     * error if we don't fix things up.  Thus we discard
+     * up to the next 1D-encoded scanline.  (We could
+     * instead decode the rows and re-encoded them below
+     * but to do that would require decoding above instead
+     * of skipping so that the reference line for the
+     * 2D-encoded rows is available.)
+     */
+    for (; row < th+4 && !dec.isNextRow1D(); row++) {
+	dec.setRowNum(row);
+	dec.decodeRow(NULL, w);
+    }
+    th = row;				// add in discarded rows
+    /*
+     * Things get tricky trying to identify the last byte in
+     * the decoded data that we want to replace.  The decoder
+     * must potentially look ahead to see the zeros that
+     * makeup the EOL that marks the end of the data we want
+     * to skip over.  Consequently dec.current() must be
+     * adjusted by the look ahead, a factor of the number of
+     * bits pending in the G3 decoder's bit accumulator.
+     */
+    u_int decoded = dec.current() - roundup(dec.getPendingBits(),8) - buf;
     if (params.vr == VR_NORMAL) {
 	/*
 	 * Scale text vertically before encoding.  Note the
@@ -225,21 +287,6 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
 	memset(l3, 0, MARGIN_BOT*lpr*sizeof (u_long));
     }
     /*
-     * If the source is 2D-encoded and the decoding done
-     * above leaves us at a row that is 2D-encoded, then
-     * our re-encoding below will generate a decoding
-     * error if we don't fix things up.  Thus we discard
-     * up to the next 1D-encoded scanline.  (We could
-     * instead decode the rows and re-encoded them below
-     * but to do that would require decoding above instead
-     * of skipping so that the reference line for the
-     * 2D-encoded rows is available.)
-     */
-    for (u_int n = 0; n < 4 && !dec.isNextRow1D(); n++)
-	dec.skipRow();
-    th += n;				// compensate for discarded rows
-    u_int decoded = dec.current() - (buf+tagLineSlop);
-    /*
      * Encode the result according to the parameters of
      * the outgoing page.  Note that the encoded data is
      * written in the bit order of the page data since
@@ -251,18 +298,18 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
     enc.encode(raster, w, th);
     delete raster;
     /*
-     * The decoder terminates after an EOL code.  The
-     * encoder generates rows with a leading EOL code.
-     * Thus, in order to paste encoded data in front of
-     * decoded data we need to insert an EOL code.  We
-     * backup the decoded data by one byte to insure that
-     * the non-zero bit of the EOL code is included (as
-     * well as anything else in the byte that's part of
-     * the next row) and then force sufficient zero-fill
-     * to insure an EOL will be decoded.
+     * To properly join the newly encoded data and the previous
+     * data we need to insert two bytes of zero-fill prior to
+     * the start of the old data to ensure 11 bits of zero exist
+     * prior to the EOL code in the first line of data that
+     * follows what we skipped over above.  Note that this
+     * assumes the G3 decoder always stops decoding prior to
+     * an EOL code and that we've adjusted the byte count to the
+     * start of the old data so that the leading bitstring is
+     * some number of zeros followed by a 1.
      */
-    decoded--;
-    result.put('\0'); result.put('\0');
+    result.put((char) 0);
+    result.put((char) 0);
     /*
      * Copy the encoded raster with the tag line back to
      * the front of the buffer that was passed in.  The
@@ -277,7 +324,7 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
     u_int encoded = result.getLength();
     if (encoded > tagLineSlop + decoded)
 	encoded = tagLineSlop + decoded;
-    u_char* dst = buf + tagLineSlop + (int)(decoded-encoded);
+    u_char* dst = buf + (int)(decoded-encoded);
     u_char* src = result;
     memcpy(dst, src, encoded);
     return (dst);
@@ -286,7 +333,8 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
 void
 vlogError(const char* fmt, va_list ap)
 {
-    ::vfprintf(stderr, fmt, ap);
+    vfprintf(stderr, fmt, ap);
+    fputs(".\n", stderr);
 }
 
 const char* appName;
@@ -295,8 +343,20 @@ void
 usage()
 {
     fprintf(stderr,
-	"usage: %s [-m format] [-o out.tif] [-f font.pcf] input.tif\n",
+	"usage: %s [-m format] [-o t.tif] [-f font.pcf] input.tif\n",
 	appName);
+    exit(-1);
+}
+
+void
+fatal(const char* fmt ...)
+{
+    fprintf(stderr, "%s: ", appName);
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fputs(".\n", stderr);
     exit(-1);
 }
 
@@ -333,21 +393,19 @@ main(int argc, char* argv[])
     if (argc - optind != 1)
 	usage();
     TIFF* tif = TIFFOpen(argv[optind], "r");
-    if (!tif) {
-	fprintf(stderr, "%s: Cannot open, or not a TIFF file\n", argv[optind]);
-	return (-1);
-    }
+    if (!tif)
+	fatal("%s: Cannot open, or not a TIFF file", argv[optind]);
+    uint16 comp;
+    TIFFGetField(tif, TIFFTAG_COMPRESSION, &comp);
+    if (comp != COMPRESSION_CCITTFAX3)
+	fatal("%s: Not a Group 3-encoded TIFF file", argv[optind]);
     setupTagLine();
-    if (!tagLineFont->isReady()) {
-	fprintf(stderr, "%s: Problem reading font\n", (char*) tagLineFontFile);
-	return (-1);
-    }
+    if (!tagLineFont->isReady())
+	fatal("%s: Problem reading font", (char*) tagLineFontFile);
 
     TIFF* otif = TIFFOpen(output, "w");
-    if (!otif) {
-	fprintf(stderr, "%s: Cannot create\n", output);
-	return (-1);
-    }
+    if (!otif)
+	fatal("%s: Cannot create output file", output);
     for (totalPages = 1; TIFFReadDirectory(tif); totalPages++)
 	;
     TIFFSetDirectory(tif, 0);
@@ -362,29 +420,36 @@ main(int argc, char* argv[])
 
     setupTagLine();
     do {
+	TIFFSetField(otif, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
 	TIFFSetField(otif, TIFFTAG_IMAGEWIDTH, 1728);
-	u_long l;
+	uint32 l;
 	TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &l);
 	params.vr = (l < 1500 ? VR_NORMAL : VR_FINE);
+	TIFFSetField(otif, TIFFTAG_XRESOLUTION, 204.);
+	TIFFSetField(otif, TIFFTAG_YRESOLUTION, (float) params.verticalRes());
+	TIFFSetField(otif, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH);
 	TIFFSetField(otif, TIFFTAG_IMAGELENGTH, l);
 	TIFFSetField(otif, TIFFTAG_BITSPERSAMPLE, 1);
 	TIFFSetField(otif, TIFFTAG_SAMPLESPERPIXEL, 1);
 	TIFFSetField(otif, TIFFTAG_FILLORDER, FILLORDER_LSB2MSB);
 	TIFFSetField(otif, TIFFTAG_COMPRESSION, COMPRESSION_CCITTFAX3);
 	TIFFSetField(otif, TIFFTAG_FILLORDER, FILLORDER_LSB2MSB);
-	u_long r;
+	uint32 r;
 	TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &r);
 	TIFFSetField(otif, TIFFTAG_ROWSPERSTRIP, r);
 	TIFFSetField(otif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
 	TIFFSetField(otif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISWHITE);
-	u_long opts = 0;
+	uint32 opts = 0;
 	TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &opts);
 	params.df = (opts & GROUP3OPT_2DENCODING) ? DF_2DMR : DF_1DMR;
 	TIFFSetField(otif, TIFFTAG_GROUP3OPTIONS, opts);
+	uint16 o;
+	if (TIFFGetField(otif, TIFFTAG_ORIENTATION, &o))
+	    TIFFSetField(tif, TIFFTAG_ORIENTATION, o);
 
-	u_short fillorder;
+	uint16 fillorder;
 	TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
-	u_long* stripbytecount;
+	uint32* stripbytecount;
 	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
 
 	fxBool firstStrip = setupTagLineSlop(params);
@@ -399,14 +464,16 @@ main(int argc, char* argv[])
 			/*
 			 * Generate tag line at the top of the page.
 			 */
-			dp = imageTagLine(data, fillorder, params);
+			dp = imageTagLine(data+ts, fillorder, params);
 			totbytes = totbytes+ts - (dp-data);
 			firstStrip = FALSE;
 		    } else
 			dp = data;
 		    if (fillorder != FILLORDER_LSB2MSB)
 			TIFFReverseBits(dp, totbytes);
-		    TIFFWriteRawStrip(otif, strip, dp, totbytes);
+		    if (TIFFWriteRawStrip(otif, strip, dp, totbytes) == -1)
+			fatal("%s: Write error at strip %u, writing %lu bytes", 
+			    output, strip, (u_long) totbytes);
 		}
 		delete data;
 	    }

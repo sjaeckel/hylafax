@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/info.4f,v 1.22 1995/04/08 21:35:56 sam Rel $
+.\"	$Id: info.4f,v 1.26 1996/06/24 03:04:16 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990-1995 Sam Leffler
-.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1996 Sam Leffler
+.\" Copyright (c) 1991-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH INFO 4F "February 8, 1995"
+.TH INFO 4F "February 10, 1996"
 .SH NAME
 info \- remote device capability database
 .SH DESCRIPTION
@@ -74,6 +74,7 @@ maxSignallingRate	string	maximum signalling rate (bits/sec) to use
 minScanlineTime	string	minimum scanline time
 pagerMaxMsgLength	number	length of longest allowed text message
 pagerPassword	string	password string send to service provider
+pagerTTYParity	string	parity & # bits configuration for IXO/TAP communication
 remoteCSI	string	remote device Called Subscriber Identification
 sendFailures	number	count of consecutive failed send attempts
 supportsHighRes	boolean	accepts 196 line/inch images
@@ -128,14 +129,29 @@ for 98 lpi images and
 for 196 lpi images.)
 .PP
 The
-.I pagerMaxMsgLength
+.I pagerTTYParity
+item specifies the communication parameters to use when communicating
+with the
+.SM IXO/TAP
+service provider.
+Acceptable values are:
+``even'' (7 bits, even parity),
+``odd'' (7 bits, odd parity),
 and
-.I pagerPassword
+``none'' (8 bits, no parity).
+If nothing is specified then ``even'' is used per the standard.
+.PP
+The
+.IR pagerMaxMsgLength ,
+.IR pagerPassword ,
+and
+.I pagerTTYParity
 items can be setup according to the requirements of a pager
 service provider; they typically are locked down so that their
 values are not lost during updates.
 .SH NOTES
-.I faxsend
+.IR faxsend ,
+.IR pagesend ,
 and
 .I faxq
 automatically create and update entries in the
@@ -154,4 +170,5 @@ directory that have not been accessed in 30 days.
 .IR faxcron (1M),
 .IR faxq (1M),
 .IR faxsend (1M),
+.IR pagesend (1M),
 .IR cinfo (4F)

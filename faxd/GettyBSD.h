@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/GettyBSD.h,v 1.24 1995/04/08 21:30:42 sam Rel $ */
+/*	$Id: GettyBSD.h,v 1.26 1996/06/24 03:00:33 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Decoder.h,v 1.12 1995/04/08 21:30:36 sam Rel $ */
+/*	$Id: G3Decoder.h,v 1.20 1996/06/24 03:00:31 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,45 +28,37 @@
 /*
  * Group 3 Facsimile Decoder Support.
  */
-#include "G3Base.h"
+#include "Types.h"
 extern "C" {
 #include <setjmp.h>
 }
+#include "tiffio.h"
 
-class fxStackBuffer;
-
-class G3Decoder : private G3Base {
+class G3Decoder {
 private:
-    short	data;		// current input/output byte
-    short	bit;		// current bit in input/output byte
-    short	bytePending;	// pending byte on recv
-    short	prevByte;	// previous decoded byte
-    u_char*	refline;	// reference line for 2d decoding
-    fxStackBuffer* recvBuf;	// raw input for current row recvd
-
-    fxBool	decode1DRow(u_char*, u_int);
-    fxBool	decode2DRow(u_char*, u_int);
-    int		nextBit();
-    void	ungetBit();
-    int		nextByte();
-    int		decodeRun(const u_short fsm[][256]);
-    int		decodeUncompCode();
-    void	skipToEOL(int len);
+    fxBool	is2D;		// whether or not data is 2d-encoded
+    uint32	data;		// current input/output byte
+    int		bit;		// current bit in input/output byte
+    int		EOLcnt;		// EOL code recognized during decoding (1/0)
+    int		RTCrun;		// count of consecutive zero-length rows
+    int		rowref;		// reference count of rows decoded
+    int		RTCrow;		// row number of start of RTC
+    uint16*	refruns;	// runs for reference line
+    uint16*	curruns;	// runs for current line
+    const u_char* bitmap;	// bit reversal table
 protected:
     G3Decoder();
 
     void	raiseEOF();
     void	raiseRTC();
 
-    void	setPendingByte(u_char);
-    virtual int decodeNextByte() = 0;
+    const u_char* getBitmap();
 
-    void	setRefLine(u_char*);
-    u_char*	getRefLine();
+    virtual int nextByte();
+    virtual int decodeNextByte();
 
     virtual void invalidCode(const char* type, int x);
-    virtual void prematureEOL(const char* type, int x);
-    virtual void badPixelCount(const char* type, int x);
+    virtual void badPixelCount(const char* type, int got, int expected);
     virtual void badDecodingState(const char* type, int x);
 public:
     // XXX these should be private; see below for why they're public
@@ -75,22 +67,19 @@ public:
 
     virtual ~G3Decoder();
 
-    void	setupDecoder(u_int, fxBool is2D);
+    void	setupDecoder(u_int fillorder, fxBool is2D);
+    void	setRuns(uint16*, uint16*, int);
+    uint16*	lastRuns();
 
     void	decode(void* raster, u_int w, u_int h);
-    void	skip(u_int h);
-
-    void	skipLeader();
     fxBool	decodeRow(void* scanline, u_int w);
-    void	skipRow();
-
-    fxBool	isLastRow1D();
     fxBool	isNextRow1D();
-    fxBool	isByteAligned();
 
-    void	setRecvBuf(fxStackBuffer&);
-    fxStackBuffer* getRecvBuf();
-    void	flushRecvBuf();
+    int		getPendingBits() const;
+
+    fxBool	seenRTC() const;
+    int		getRTCRow() const;
+    int		getReferenceRow() const;
 };
 
 /*
@@ -103,9 +92,10 @@ public:
 #define	EOFraised()		(sigsetjmp(jmpEOF, 0) != 0)
 #define	RTCraised()		(sigsetjmp(jmpRTC, 0) != 0)
 
-inline void G3Decoder::setRecvBuf(fxStackBuffer& b){ recvBuf = &b; }
-inline fxStackBuffer* G3Decoder::getRecvBuf()	{ return recvBuf; }
-inline void G3Decoder::setRefLine(u_char* b)	{ refline = b; }
-inline u_char* G3Decoder::getRefLine()		{ return refline; }
-inline fxBool G3Decoder::isLastRow1D()		{ return tag == G3_1D; }
+inline uint16* G3Decoder::lastRuns()	{ return is2D ? refruns : curruns; }
+inline const u_char* G3Decoder::getBitmap()	{ return bitmap; }
+inline int G3Decoder::getPendingBits() const	{ return bit; }
+inline fxBool G3Decoder::seenRTC() const	{ return (RTCrow != -1); }
+inline int G3Decoder::getRTCRow() const		{ return RTCrow; }
+inline int G3Decoder::getReferenceRow() const	{ return rowref; }
 #endif /* _G3Decoder_ */

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class20.h,v 1.9 1995/04/08 21:29:42 sam Rel $ */
+/*	$Id: Class20.h,v 1.13 1996/06/24 03:00:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -33,12 +33,12 @@
 class Class20Modem : public Class2Modem {
 protected:
 // transmission support
-    fxBool	sendPage(TIFF* tif);
+    fxBool	sendPage(TIFF* tif, u_int pageChop);
     fxBool	pageDone(u_int ppm, u_int& ppr);
 
     void	abortDataTransfer();
 // reception support
-    int		decodeNextByte();
+    int		nextByte();
 // miscellaneous
     virtual ATResponse atResponse(char* buf, long ms = 30*1000);
 public:

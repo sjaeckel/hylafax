@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./etc/RCS/ondelay.c,v 1.8 1995/04/08 21:18:03 sam Rel $ */
+/*	$Id: ondelay.c,v 1.10 1996/06/24 02:59:37 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided

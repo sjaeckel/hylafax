@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxMachineInfo.c++,v 1.43 1995/04/08 21:30:08 sam Rel $ */
+/*	$Id: FaxMachineInfo.c++,v 1.55 1996/08/02 18:09:09 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -23,12 +23,13 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include <osfcn.h>
-#include <sys/file.h>
-
 #include "Sys.h"
 
+#include <sys/file.h>
+#include <errno.h>
+
 #include "FaxMachineInfo.h"
+#include "StackBuffer.h"
 #include "class2.h"
 #include "config.h"
 
@@ -46,6 +47,7 @@ FaxMachineInfo::FaxMachineInfo(const FaxMachineInfo& other)
     , lastSendFailure(other.lastSendFailure)
     , lastDialFailure(other.lastDialFailure)
     , pagerPassword(other.pagerPassword)
+    , pagerTTYParity(other.pagerTTYParity)
 {
     locked = other.locked;
 
@@ -78,9 +80,13 @@ fxBool
 FaxMachineInfo::updateConfig(const fxStr& number)
 {
     fxStr canon(number);
-    for (u_int i = 0; i < canon.length(); i++)
+    u_int i = 0;
+    while (i < canon.length()) {
 	if (!isdigit(canon[i]))
 	    canon.remove(i);
+	else
+	    i++;
+    }
     if (file == "")
 	file = infoDir | "/" | canon;
     return FaxConfig::updateConfig(file);
@@ -102,6 +108,7 @@ FaxMachineInfo::resetConfig()
 
     pagerMaxMsgLength = (u_int) -1;	// unlimited length
     pagerPassword = "";			// no password string
+    pagerTTYParity = "";		// unspecified
 
     locked = 0;
 }
@@ -134,14 +141,7 @@ FaxMachineInfo::configError(const char* fmt0 ...)
     vconfigError(fmt0, ap);
     va_end(ap);
 }
-void
-FaxMachineInfo::configTrace(const char* fmt0 ...)
-{
-    va_list ap;
-    va_start(ap, fmt0);
-    vconfigError(fmt0, ap);
-    va_end(ap);
-}
+void FaxMachineInfo::configTrace(const char* ...) {}
 
 #define	N(a)		(sizeof (a) / sizeof (a[0]))
 
@@ -211,6 +211,8 @@ FaxMachineInfo::setConfigItem(const char* tag, const char* value)
 	pagerMaxMsgLength = getNumber(value);
     } else if (streq(tag, "pagerpassword")) {
 	pagerPassword = value;
+    } else if (streq(tag, "pagerttyparity")) {
+	pagerTTYParity = value;
     } else
 	return (FALSE);
     return (TRUE);
@@ -270,19 +272,20 @@ void
 FaxMachineInfo::writeConfig()
 {
     if (changed) {
-	mode_t omask = ::umask(022);
+	mode_t omask = umask(022);
 	int fd = Sys::open(file, O_WRONLY|O_CREAT, 0644);
-	(void) ::umask(omask);
+	(void) umask(omask);
 	if (fd >= 0) {
-	    FILE* fp = ::fdopen(fd, "w");
-	    if (fp != NULL) {
-		writeConfig(fp);
-		::ftruncate(fd, ::ftell(fp));
-		::fclose(fp);		// XXX check for write error
+	    fxStackBuffer buf;
+	    writeConfig(buf);
+	    u_int cc = buf.getLength();
+	    if (Sys::write(fd, buf, cc) != cc) {
+		error("write error: %s", strerror(errno));
+		Sys::close(fd);
 		return;
-	    } else
-		error("fdopen: %m");
-	    ::close(fd);
+	    }
+	    ftruncate(fd, cc);
+	    Sys::close(fd);
 	} else
 	    error("open: %m");
 	changed = FALSE;
@@ -290,46 +293,50 @@ FaxMachineInfo::writeConfig()
 }
 
 static void
-putBoolean(FILE* fp, const char* tag, fxBool locked, fxBool b)
+putBoolean(fxStackBuffer& buf, const char* tag, fxBool locked, fxBool b)
 {
-    ::fprintf(fp, "%s%s:%s\n", locked ? "&" : "", tag, b ? "yes" : "no");
+    buf.fput("%s%s:%s\n", locked ? "&" : "", tag, b ? "yes" : "no");
 }
 
 static void
-putDecimal(FILE* fp, const char* tag, fxBool locked, int v)
+putDecimal(fxStackBuffer& buf, const char* tag, fxBool locked, int v)
 {
-    ::fprintf(fp, "%s%s:%d\n", locked ? "&" : "", tag, v);
+    buf.fput("%s%s:%d\n", locked ? "&" : "", tag, v);
 }
 
 static void
-putString(FILE* fp, const char* tag, fxBool locked, const char* v)
+putString(fxStackBuffer& buf, const char* tag, fxBool locked, const char* v)
 {
-    ::fprintf(fp, "%s%s:\"%s\"\n", locked ? "&" : "", tag, v);
+    buf.fput("%s%s:\"%s\"\n", locked ? "&" : "", tag, v);
 }
 
 static void
-putIfString(FILE* fp, const char* tag, fxBool locked, const char* v)
+putIfString(fxStackBuffer& buf, const char* tag, fxBool locked, const char* v)
 {
     if (*v != '\0')
-	::fprintf(fp, "%s%s:\"%s\"\n", locked ? "&" : "", tag, v);
+	buf.fput("%s%s:\"%s\"\n", locked ? "&" : "", tag, v);
 }
 
 void
-FaxMachineInfo::writeConfig(FILE* fp)
+FaxMachineInfo::writeConfig(fxStackBuffer& buf)
 {
-    putBoolean(fp, "supportsHighRes", isLocked(HIRES), supportsHighRes);
-    putBoolean(fp, "supports2DEncoding", isLocked(G32D),supports2DEncoding);
-    putBoolean(fp, "supportsPostScript", isLocked(PS), supportsPostScript);
-    putBoolean(fp, "calledBefore", FALSE, calledBefore);
-    putDecimal(fp, "maxPageWidth", isLocked(WD), maxPageWidth);
-    putDecimal(fp, "maxPageLength", isLocked(LN), maxPageLength);
-    putString(fp, "maxSignallingRate", isLocked(BR),
+    putBoolean(buf, "supportsHighRes", isLocked(HIRES), supportsHighRes);
+    putBoolean(buf, "supports2DEncoding", isLocked(G32D),supports2DEncoding);
+    putBoolean(buf, "supportsPostScript", isLocked(PS), supportsPostScript);
+    putBoolean(buf, "calledBefore", FALSE, calledBefore);
+    putDecimal(buf, "maxPageWidth", isLocked(WD), maxPageWidth);
+    putDecimal(buf, "maxPageLength", isLocked(LN), maxPageLength);
+    putString(buf, "maxSignallingRate", isLocked(BR),
 	brnames[fxmin(maxSignallingRate, BR_14400)]);
-    putString(fp, "minScanlineTime", isLocked(ST),
+    putString(buf, "minScanlineTime", isLocked(ST),
 	stnames[fxmin(minScanlineTime, ST_40MS)]);
-    putString(fp, "remoteCSI", FALSE, csi);
-    putDecimal(fp, "sendFailures", FALSE, sendFailures);
-    putIfString(fp, "lastSendFailure", FALSE, lastSendFailure);
-    putDecimal(fp, "dialFailures", FALSE, dialFailures);
-    putIfString(fp, "lastDialFailure", FALSE, lastDialFailure);
+    putString(buf, "remoteCSI", FALSE, csi);
+    putDecimal(buf, "sendFailures", FALSE, sendFailures);
+    putIfString(buf, "lastSendFailure", FALSE, lastSendFailure);
+    putDecimal(buf, "dialFailures", FALSE, dialFailures);
+    putIfString(buf, "lastDialFailure", FALSE, lastDialFailure);
+    if (pagerMaxMsgLength != (u_int) -1)
+	putDecimal(buf, "pagerMaxMsgLength", TRUE, pagerMaxMsgLength);
+    putIfString(buf, "pagerPassword", TRUE, pagerPassword);
+    putIfString(buf, "pagerTTYParity", TRUE, pagerTTYParity);
 }

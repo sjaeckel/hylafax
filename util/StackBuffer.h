@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/StackBuffer.h,v 1.10 1995/04/08 21:44:24 sam Rel $ */
+/*	$Id: StackBuffer.h,v 1.14 1996/06/24 03:06:04 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,6 +27,7 @@
 #define	_StackBuffer_
 
 #include "Types.h"
+#include <stdarg.h>
 
 class fxStr;
 
@@ -46,6 +47,8 @@ public:
     void put(char const* c, u_int len);	// Put bunch of bytes in the buffer
     void put(char const* c);
     void put(const fxStr&);
+    void fput(const char* fmt ...);
+    void vput(const char* fmt, va_list ap);
     void set(char c);			// Stick in char w/o extending length
     void reset();			// Reset buffer to empty
     u_int getLength() const;		// Return number of bytes in buffer

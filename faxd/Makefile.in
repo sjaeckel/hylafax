@@ -1,12 +1,12 @@
 #! smake
-#	$Header: /usr/people/sam/fax/./faxd/RCS/Makefile.in,v 1.108 1995/04/08 21:30:51 sam Rel $
+#	$Id: Makefile.in,v 1.137 1996/08/21 23:30:42 sam Rel $
 #
 # @WARNING@
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -42,9 +42,7 @@ DEPTH=..
 SRCDIR	= ${DEPTH}/${TOPSRCDIR}/faxd
 VPATH	= ../@SRCDIR@/faxd
 
-CFILES	= tif_compress.c
-C++FILES=\
-	ClassModem.c++ \
+C++FILES=ClassModem.c++ \
 	FaxModem.c++ \
 	Class0.c++ \
 	Class1.c++ \
@@ -54,7 +52,6 @@ C++FILES=\
 	Class2.c++ \
 	Class20.c++ \
 	Class2Ersatz.c++ \
-	Class2Params.c++ \
 	Class2Poll.c++ \
 	Class2Recv.c++ \
 	Class2Send.c++ \
@@ -62,18 +59,16 @@ C++FILES=\
 	DestControl.c++ \
 	DestInfo.c++ \
 	FaxAcctInfo.c++ \
-	FaxConfig.c++ \
 	FaxFont.c++ \
 	FaxMachineInfo.c++ \
 	FaxMachineLog.c++ \
 	FaxPoll.c++ \
 	FaxRecv.c++ \
-	FaxRecvInfo.c++ \
 	FaxRequest.c++ \
 	FaxSend.c++ \
+	HylaClient.c++ \
 	ModemServer.c++ \
 	FaxServer.c++ \
-	G3Base.c++ \
 	G3Decoder.c++ \
 	G3Encoder.c++ \
 	Getty.c++ \
@@ -86,6 +81,8 @@ C++FILES=\
 	QLink.c++ \
 	ServerConfig.c++ \
 	TagLine.c++ \
+	Trigger.c++ \
+	TriggerRef.c++ \
 	UUCPLock.c++ \
 	faxApp.c++ \
 	faxGettyApp.c++ \
@@ -95,8 +92,7 @@ C++FILES=\
 	tagtest.c++ \
 	tsitest.c++ \
 	pageSendApp.c++
-MODEM_OBJS=\
-	ClassModem.o \
+MODEM_OBJS=ClassModem.o \
 	FaxModem.o \
 	Class0.o \
 	Class1.o \
@@ -109,9 +105,7 @@ MODEM_OBJS=\
 	Class2Poll.o \
 	Class2Recv.o \
 	Class2Send.o \
-	Class2Params.o \
 	CopyQuality.o \
-	G3Base.o \
 	G3Decoder.o \
 	G3Encoder.o \
 	HDLCFrame.o \
@@ -119,42 +113,37 @@ MODEM_OBJS=\
 	FaxFont.o \
 	PCFFont.o \
 	TagLine.o
-SERVER_OBJS=\
-	faxApp.o \
+SERVER_OBJS=faxApp.o \
 	\
 	faxRequest.o \
 	FaxRequest.o \
 	\
 	FaxAcctInfo.o \
-	FaxConfig.o \
 	FaxMachineInfo.o \
 	FaxMachineLog.o \
 	FaxPoll.o \
 	FaxRecv.o \
-	FaxRecvInfo.o \
 	FaxSend.o \
 	ModemServer.o \
 	FaxServer.o \
 	UUCPLock.o \
 	ServerConfig.o
-FAXQOBJS=\
-	DestControl.o \
+FAXQOBJS=DestControl.o \
 	DestInfo.o \
 	Job.o \
+	HylaClient.o \
 	Modem.o \
 	QLink.o \
+	Trigger.o \
+	TriggerRef.o \
 	\
 	faxQueueApp.o
-FAXSENDOBJS=\
-	faxSendApp.o
-FAXGETTYOBJS=\
-	Getty.o \
-	Getty@GETTY@.o \
-	\
-	faxGettyApp.o
-TARGETS=libfaxserver.${DSO} faxq faxsend faxgetty tsitest tagtest pagesend
-
-LLDLIBS=${LIBS} ${MACHDEPLIBS} -lm
+FAXSENDOBJS=  faxSendApp.o
+FAXQCLEANOBJS=faxQCleanApp.o
+FAXGETTYOBJS= Getty.o Getty@GETTY@.o faxGettyApp.o
+TARGETS=libfaxserver.${DSO} \
+	faxq faxsend faxgetty pagesend faxqclean \
+	tsitest tagtest cqtest choptest
 
 default all::
 	@${MAKE} incdepend
@@ -164,24 +153,28 @@ targets: $(TARGETS)
 
 @MAKEINCLUDE@ @MAKELQUOTE@${COMMONRULES}@MAKERQUOTE@
 
-libfaxserver.a: ${SERVER_OBJS} ${MODEM_OBJS} tif_compress.o
+libfaxserver.a: ${SERVER_OBJS} ${MODEM_OBJS}
 	${AR} ${AROPTS} libfaxserver.a $?
 	${RANLIB} libfaxserver.a
 
-@MAKEDSOINCLUDE@ @MAKELQUOTE@${SRCDIR}/Makefile.dso@MAKERQUOTE@
+@MAKEDSOINCLUDE@ @MAKELQUOTE@${SRCDIR}/Makefile.@DSO@dso@MAKERQUOTE@
 
-ALPHA	= ${DEPTH}/${TOPSRCDIR}/dist/hylafax.alpha
-VERSION	= ${DEPTH}/${TOPSRCDIR}/VERSION
+LDIRT	= hash.h version.h mkhash
 
-LDIRT	= version.h
+hash.h:	mkhash
+	rm -f hash.h; ./mkhash > hash.h
+mkhash:	${SRCDIR}/mkhash.c
+	${CCF} -o mkhash ${SRCDIR}/mkhash.c
 
-version.h: ${VERSION} ${ALPHA}
-	VERSION=`cat ${VERSION}`; \
-	VERSION="$${VERSION}`${NAWK} '{print $$3}' ${ALPHA}`"; \
+version.h:
+	VERSION="@DIST_MAJOR@.@DIST_MINOR@@DIST_TYPE@";\
+	if [ @DIST_TYPE@ = beta ]; then \
+	    VERSION="$${VERSION}@DIST_ALPHA@"; \
+	fi; \
 	rm -f version.h; \
 	echo "#define VERSION \"HylaFAX (tm) Version $$VERSION\"">version.h
 faxQueueApp.o FaxRecv.o: version.h
-incdepend: version.h
+incdepend: version.h hash.h
 
 faxq:	${FAXQOBJS} libfaxserver.${DSO} ${LIBS}
 	${C++F} -o $@ ${FAXQOBJS} libfaxserver.${DSO} ${LDFLAGS}
@@ -189,6 +182,8 @@ faxsend: ${FAXSENDOBJS} libfaxserver.${DSO} ${LIBS}
 	${C++F} -o $@ ${FAXSENDOBJS} libfaxserver.${DSO} ${LDFLAGS}
 faxgetty: ${FAXGETTYOBJS} libfaxserver.${DSO} ${LIBS}
 	${C++F} -o $@ ${FAXGETTYOBJS} libfaxserver.${DSO} ${LDFLAGS}
+faxqclean: ${FAXQCLEANOBJS} libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ ${FAXQCLEANOBJS} libfaxserver.${DSO} ${LDFLAGS}
 
 PAGESENDOBJS=\
 	pageSendApp.o
@@ -197,13 +192,18 @@ pagesend:${PAGESENDOBJS} libfaxserver.${DSO} ${LIBS}
 
 tagtest: tagtest.o libfaxserver.${DSO} ${LIBS}
 	${C++F} -o $@ tagtest.o libfaxserver.${DSO} ${LDFLAGS}
+cqtest:	cqtest.o libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ cqtest.o libfaxserver.${DSO} ${LDFLAGS}
+choptest: choptest.o libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ choptest.o libfaxserver.${DSO} ${LDFLAGS}
 tsitest: tsitest.o libfaxserver.${DSO} ${LIBS}
 	${C++F} -o $@ tsitest.o libfaxserver.${DSO} ${LDFLAGS}
+trigtest: trigtest.o libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ trigtest.o libfaxserver.${DSO} ${LDFLAGS}
 
 PUTSERV=${INSTALL} -idb ${PRODUCT}.sw.server
 
 install: default
-	${PUTSERV} -F ${SBIN} -u ${FAXUSER} -m 4755 -O faxq
-	${PUTSERV} -F ${LIBEXEC} -u ${FAXUSER} -m 4755 -O faxgetty
-	${PUTSERV} -F ${LIBEXEC} -m 755 -O faxsend pagesend
-	${PUTSERV} -F ${SBIN} -m 755 -O tsitest tagtest 
+	${PUTSERV} -F ${SBIN} -m 755 -O faxq faxqclean
+	${PUTSERV} -F ${LIBEXEC} -m 755 -O faxgetty faxsend pagesend
+	${PUTSERV} -F ${SBIN} -m 755 -O tsitest tagtest cqtest choptest

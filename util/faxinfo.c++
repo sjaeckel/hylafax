@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/faxinfo.c++,v 1.22 1995/04/08 21:44:51 sam Rel $ */
+/*	$Id: faxinfo.c++,v 1.29 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -22,7 +22,6 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include "tiffio.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -31,47 +30,43 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include "tiffio.h"
+
 #include "PageSize.h"
+#include "Class2Params.h"
 
 #include "port.h"
 
-static int
+extern	const char* fmtTime(time_t t);
+
+static fxBool
 isFAXImage(TIFF* tif)
 {
-    u_short w;
+    uint16 w;
     if (TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &w) && w != 1)
-	return (0);
+	return (FALSE);
     if (TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &w) && w != 1)
-	return (0);
+	return (FALSE);
     if (!TIFFGetField(tif, TIFFTAG_COMPRESSION, &w) ||
       (w != COMPRESSION_CCITTFAX3 && w != COMPRESSION_CCITTFAX4))
-	return (0);
+	return (FALSE);
     if (!TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &w) ||
       (w != PHOTOMETRIC_MINISWHITE && w != PHOTOMETRIC_MINISBLACK))
-	return (0);
-    return (1);
+	return (FALSE);
+    return (TRUE);
 }
 
 static void
-sanitize(char* dst, const char* src, u_int maxlen)
+sanitize(fxStr& s)
 {
-    u_int i;
-    for (i = 0; i < maxlen-1 && src[i] != '\0'; i++)
-	dst[i] = (isascii(src[i]) && isprint(src[i]) ? src[i] : '?');
-    dst[i] = '\0';
+    for (char* cp = s; *cp; cp++)
+	if (!isascii(*cp) || !isprint(*cp))
+	    *cp = '?';
 }
 
 int
 main(int argc, char** argv)
 {
-    char* cp;
-    int npages, ok;
-    TIFF* tif;
-    float vres, w, h;
-    long pageWidth, pageLength;
-    char sender[80];
-    char date[80];
-
     if (argc != 2) {
 	fprintf(stderr, "usage: %s file.tif\n", argv[0]);
 	return (-1);
@@ -79,56 +74,97 @@ main(int argc, char** argv)
     printf("%s:\n", argv[1]);
     TIFFSetErrorHandler(NULL);
     TIFFSetWarningHandler(NULL);
-    tif = TIFFOpen(argv[1], "r");
+    TIFF* tif = TIFFOpen(argv[1], "r");
     if (tif == NULL) {
-	printf("Could not open (%s).\n", strerror(errno));
+	printf("Could not open %s; either not TIFF or corrupted.\n", argv[1]);
 	return (0);
     }
-    ok = isFAXImage(tif);
+    fxBool ok = isFAXImage(tif);
     if (!ok) {
 	printf("Does not look like a facsimile?\n");
 	return (0);
     }
-    if (TIFFGetField(tif, TIFFTAG_IMAGEDESCRIPTION, &cp))
-	sanitize(sender, cp, sizeof (sender));
-    else
-	strcpy(sender, "<unknown>");
-    printf("%11s %s\n", "Sender:", sender);
-    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &pageWidth);
-    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &pageLength);
+
+    Class2Params params;
+    uint32 v;
+#ifdef TIFFTAG_FAXRECVPARAMS
+    if (TIFFGetField(tif, TIFFTAG_FAXRECVPARAMS, &v))
+	params.decode((u_int) v);			// page transfer params
+    else {
+#endif
+    float vres = 3.85;					// XXX default
     if (TIFFGetField(tif, TIFFTAG_YRESOLUTION, &vres)) {
-	short resunit = RESUNIT_NONE;
+	uint16 resunit = RESUNIT_NONE;
 	TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
-	if (resunit == RESUNIT_CENTIMETER)
-	    vres *= 25.4;
+	if (resunit == RESUNIT_INCH)
+	    vres /= 25.4;
+    }
+    params.setVerticalRes((u_int) vres);		// resolution
+    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &v);
+    params.setPageWidthInPixels((u_int) v);		// page width
+    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &v);
+    params.setPageLengthInMM((u_int)(v / vres));	// page length
+#ifdef TIFFTAG_FAXRECVPARAMS
+    }
+#endif
+    fxStr sender;
+    char* cp;
+    if (TIFFGetField(tif, TIFFTAG_IMAGEDESCRIPTION, &cp)) {
+	sender = cp;
+	sanitize(sender);
     } else
-	vres = 98;
-    npages = 0;
+	sender = "<unknown>";
+    printf("%11s %s\n", "Sender:", (const char*) sender);
+#ifdef TIFFTAG_FAXSUBADDRESS
+    if (TIFFGetField(tif, TIFFTAG_FAXSUBADDRESS, &cp)) {
+	fxStr subaddr(cp);
+	sanitize(subaddr);
+	printf("%11s %s\n", "SubAddr:", (const char*) subaddr);
+    }
+#endif
+    fxStr date;
+    if (TIFFGetField(tif, TIFFTAG_DATETIME, &cp)) {	// time received
+	date = cp;
+	sanitize(date);
+    } else {
+	struct stat sb;
+	fstat(TIFFFileno(tif), &sb);
+	char buf[80];
+	strftime(buf, sizeof (buf),
+	    "%Y:%m:%d %H:%M:%S %Z", localtime(&sb.st_mtime));
+	date = buf;
+    }
+    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &v);
+    float h = v / (params.verticalRes() < 100 ? 3.85 : 7.7);
+    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &v);
+    float w = (v / 204.) * 25.4;
+    time_t time = 0;
+    u_int npages = 0;					// page count
     do {
 	npages++;
+#ifdef TIFFTAG_FAXRECVTIME
+	if (TIFFGetField(tif, TIFFTAG_FAXRECVTIME, &v))
+	    time += v;
+#endif
     } while (TIFFReadDirectory(tif));
+    TIFFClose(tif);
+
     printf("%11s %u\n", "Pages:", npages);
-    if (vres == 98)
+    if (params.verticalRes() == 98)
 	printf("%11s Normal\n", "Quality:");
-    else if (vres == 196)
+    else if (params.verticalRes() == 196)
 	printf("%11s Fine\n", "Quality:");
     else
-	printf("%11s %.2f lines/inch\n", "Quality:", vres);
-    h = pageLength / (vres < 100 ? 3.85 : 7.7);
-    w = (pageWidth / 204.) * 25.4;
+	printf("%11s %u lines/inch\n", "Quality:", params.verticalRes());
     PageSizeInfo* info = PageSizeInfo::getPageSizeBySize(w, h);
     if (info)
 	printf("%11s %s\n", "Page:", info->name());
     else
-	printf("%11s %lu by %lu\n", "Page:", pageWidth, pageLength);
+	printf("%11s %u by %u\n", "Page:", params.pageWidth(), (u_int) h);
     delete info;
-    if (!TIFFGetField(tif, TIFFTAG_DATETIME, &cp)) {
-	struct stat sb;
-	fstat(TIFFFileno(tif), &sb);
-	strftime(date, sizeof (date),
-	    "%Y:%m:%d %H:%M:%S %Z", localtime(&sb.st_mtime));
-    } else
-	sanitize(date, cp, sizeof (date));
-    printf("%11s %s\n", "Received:", date);
+    printf("%11s %s\n", "Received:", (const char*) date);
+    printf("%11s %s\n", "TimeToRecv:", time == 0 ? "<unknown>" : fmtTime(time));
+    printf("%11s %s\n", "SignalRate:", params.bitRateName());
+    printf("%11s %s\n", "DataFormat:", params.dataFormatName());
     return (0);
 }

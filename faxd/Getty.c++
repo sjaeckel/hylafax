@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Getty.c++,v 1.40 1995/04/08 21:30:39 sam Rel $ */
+/*	$Id: Getty.c++,v 1.45 1996/07/31 17:38:39 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -27,11 +27,7 @@
 #include "UUCPLock.h"
 
 #include <termios.h>
-#include <osfcn.h>
 #include <sys/param.h>
-extern "C" {
-#include <syslog.h>
-}
 
 #include "Sys.h"
 
@@ -62,11 +58,11 @@ const char* Getty::getLine() const	{ return line; }
 static void
 sigHUP(int)
 {
-    ::close(STDIN_FILENO);
-    ::close(STDOUT_FILENO);
-    ::close(STDERR_FILENO);
-    ::sleep(5);
-    ::_exit(1);
+    Sys::close(STDIN_FILENO);
+    Sys::close(STDOUT_FILENO);
+    Sys::close(STDERR_FILENO);
+    sleep(5);
+    _exit(1);
 }
 
 /*
@@ -140,7 +136,7 @@ Getty::getCmdLine() const
 void
 Getty::addEnvVar(int& envc, char* env[], fxStr& var)
 {
-    const char* val = ::getenv(var);
+    const char* val = getenv(var);
     if (val) {
 	var.append(fxStr::format("=%s", val));
 	env[envc++] = var;
@@ -161,8 +157,8 @@ Getty::run(int fd, fxBool parentIsInit)
      * Reset signals known to be handled
      * by the current process (XXX).
      */
-    ::signal(SIGTERM, fxSIGHANDLER(SIG_DFL));
-    ::signal(SIGHUP, fxSIGHANDLER(sigHUP));
+    signal(SIGTERM, fxSIGHANDLER(SIG_DFL));
+    signal(SIGHUP, fxSIGHANDLER(sigHUP));
     /*
      * After the session is properly setup, the
      * stdio streams should be hooked to the tty
@@ -183,7 +179,7 @@ Getty::run(int fd, fxBool parentIsInit)
 	Sys::execve(getty, argv, env);	
     } else
 	Sys::execv(getty, argv);
-    ::_exit(127);
+    _exit(127);
 }
 
 /*
@@ -195,18 +191,18 @@ Getty::setupSession(int fd)
     struct stat sb;
     Sys::fstat(fd, sb);
 #if HAS_FCHOWN
-    ::fchown(fd, 0, sb.st_gid);
+    fchown(fd, 0, sb.st_gid);
 #else
     Sys::chown(getLine(), 0, sb.st_gid);
 #endif
 #if HAS_FCHMOD
-    ::fchmod(fd, 0622);
+    fchmod(fd, 0622);
 #else
     Sys::chmod(getLine(), 0622);
 #endif
-    if (::dup2(fd, STDOUT_FILENO) < 0)
+    if (dup2(fd, STDOUT_FILENO) < 0)
 	fatal("Unable to dup stdin to stdout: %m");
-    if (::dup2(fd, STDERR_FILENO) < 0)
+    if (dup2(fd, STDERR_FILENO) < 0)
 	fatal("Unable to dup stdin to stderr: %m");
 }
 

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxModem.c++,v 1.128 1995/04/08 21:30:13 sam Rel $ */
+/*	$Id: FaxModem.c++,v 1.140 1996/08/08 21:39:30 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -38,6 +38,9 @@ FaxModem::FaxModem(FaxServer& s, const ModemConfig& c)
     , server(s)
 {
     tagLineFont = NULL;
+    minsp = BR_2400;
+    curreq = NULL;
+    group3opts = 0;
 }
 
 FaxModem::~FaxModem()
@@ -49,24 +52,177 @@ FaxModem::~FaxModem()
  * Default methods for modem driver interface.
  */
 
-CallStatus
-FaxModem::dialFax(const char* number, const Class2Params&, fxStr& emsg)
-{
-    return ClassModem::dial(number, emsg);
-}
-
 u_int FaxModem::getTagLineSlop() const		{ return tagLineSlop; }
 
+/*
+ * Do setup work prior to placing the call.
+ */
+fxBool
+FaxModem::sendSetup(FaxRequest& req, const Class2Params&, fxStr&)
+{
+    minsp = fxmax((u_int) req.minsp, conf.minSpeed);
+    pageNumber = 1;
+    if (req.desiredtl == 0)
+	setupTagLine(req, conf.tagLineFmt);
+    else
+	setupTagLine(req, req.tagline);
+    curreq = &req;
+    return (TRUE);
+}
+/*
+ * Do work at the beginning of a send operation;
+ * after a call has been established.
+ */
 void
-FaxModem::sendBegin(const FaxRequest& req)
+FaxModem::sendBegin()
 {
     if (conf.sendBeginCmd != "")
 	atCmd(conf.sendBeginCmd);
-    pageNumber = 1;
-    setupTagLine(req);
+    optFrames = 0;
 }
-void FaxModem::sendSetupPhaseB(){}
+void FaxModem::sendSetupPhaseB(const fxStr&, const fxStr&){}
 void FaxModem::sendEnd()	{}
+
+fxBool
+FaxModem::recvBegin(fxStr&)
+{
+    optFrames = 0;
+    return (TRUE);
+}
+
+fxBool
+FaxModem::pollBegin(const fxStr&, const fxStr&, const fxStr&, fxStr&)
+{
+    optFrames = 0;
+    return (TRUE);
+}
+
+static void
+stripBlanks(fxStr& d, const fxStr& s)
+{
+    d = s;
+    d.remove(0, d.skip(0,' '));		// strip leading white space
+    u_int pos = d.skipR(d.length(),' ');
+    d.remove(pos, d.length() - pos);	// and trailing white space
+}
+
+void
+FaxModem::recvTSI(const fxStr& s)
+{
+    stripBlanks(tsi, s);
+    protoTrace("REMOTE TSI \"%s\"", (const char*) tsi);
+    optFrames |= 0x1;
+}
+void
+FaxModem::recvCSI(const fxStr& s)
+{
+    stripBlanks(tsi, s);
+    protoTrace("REMOTE CSI \"%s\"", (const char*) tsi);
+    optFrames |= 0x1;
+}
+fxBool
+FaxModem::getRecvTSI(fxStr& s)
+{
+    if (optFrames & 0x1) {
+	s = tsi;
+	return (TRUE);
+    } else
+	return (FALSE);
+}
+fxBool FaxModem::getSendCSI(fxStr& s)	{ return getRecvTSI(s); }
+
+void
+FaxModem::recvPWD(const fxStr& s)
+{
+    stripBlanks(pwd, s);
+    protoTrace("REMOTE PWD \"%s\"", (const char*) pwd);
+    optFrames |= 0x2;
+}
+fxBool
+FaxModem::getRecvPWD(fxStr& s)
+{
+    if (optFrames & 0x2) {
+	s = pwd;
+	return (TRUE);
+    } else
+	return (FALSE);
+}
+void
+FaxModem::recvSUB(const fxStr& s)
+{
+    stripBlanks(sub, s);
+    protoTrace("REMOTE SUB \"%s\"", (const char*) sub);
+    optFrames |= 0x4;
+}
+fxBool
+FaxModem::getRecvSUB(fxStr& s)
+{
+    if (optFrames & 0x4) {
+	s = sub;
+	return (TRUE);
+    } else
+	return (FALSE);
+}
+void
+FaxModem::recvNSF(const fxStr& s)
+{
+    nsf = s;
+    protoTrace("REMOTE NSF \"%s\"", (const char*) nsf);
+}
+fxBool
+FaxModem::getSendNSF(fxStr& s)
+{
+    if (optFrames & 0x8) {
+	s = nsf;
+	return (TRUE);
+    } else
+	return (FALSE);
+}
+
+void
+FaxModem::recvDCS(const Class2Params& params)
+{
+    protoTrace("REMOTE wants %s", params.bitRateName());
+    protoTrace("REMOTE wants %s", params.pageWidthName());
+    protoTrace("REMOTE wants %s", params.pageLengthName());
+    protoTrace("REMOTE wants %s", params.verticalResName());
+    protoTrace("REMOTE wants %s", params.dataFormatName());
+    if (params.ec != EC_DISABLE)
+	protoTrace("REMOTE wants %s", params.ecmName());
+}
+const Class2Params& FaxModem::getRecvParams() const	{ return params; }
+
+/*
+ * Decode the post-page-handling string to get page
+ * chopping information for the current page.  The
+ * page chop information is optional and always
+ * precedes the page-handling information, so at least
+ * 2+5+1 characters must be present.  The format of the
+ * information is:
+ *
+ *   xxZcccxM
+ *
+ * xx is the hex-encoded session parameters (see below),
+ * M is a post-page message, and cccc is an optional 4-digit
+ * hex encoding of the number of bytes to chop from the
+ * encoded page data.  Note also that we only return the
+ * chop count if the negotiated session parameters permit
+ * us to send a variable-length page.
+ */ 
+u_int
+FaxModem::decodePageChop(const fxStr& pph, const Class2Params& params)
+{
+    if (params.ln == LN_INF && pph.length() >= 2+5+1 && pph[2] == 'Z') {
+	char buf[5];
+	buf[0] = pph[2+1];
+	buf[1] = pph[2+2];
+	buf[2] = pph[2+3];
+	buf[3] = pph[2+4];
+	buf[4] = '\0';
+	return ((u_int) strtoul(buf, NULL, 16));
+    } else
+	return (0);
+}
 
 /*
  * Decode the post-page-handling string to get the next
@@ -84,15 +240,18 @@ void FaxModem::sendEnd()	{}
 fxBool
 FaxModem::decodePPM(const fxStr& pph, u_int& ppm, fxStr& emsg)
 {
-    if (pph.length() >= 3) {
-	switch (pph[2]) {
+    const char* what;
+    if (pph.length() >= 3 && (pph[2] != 'Z' || pph.length() >= 2+5+1)) {
+	switch (pph[pph[2] == 'Z' ? 2+5 : 2+0]) {
 	case 'P': ppm = PPM_EOP; return (TRUE);
 	case 'M': ppm = PPM_EOM; return (TRUE);
 	case 'S': ppm = PPM_MPS; return (TRUE);
 	}
-    }
-    emsg = fxStr::format("Internal botch; %s post-page handling string \"%s\"",
-	pph.length() > 3 ? "unknown" : "bad", (const char*) pph);
+	what = "unknown";
+    } else
+	what = "bad";
+    emsg = fxStr::format( "Internal botch; %s post-page handling string \"%s\"",
+	what, (const char*) pph);
     return (FALSE);
 }
 
@@ -100,7 +259,7 @@ FaxModem::decodePPM(const fxStr& pph, u_int& ppm, fxStr& emsg)
  * Modem capability (and related) query interfaces.
  */
 
-fxStr
+u_int
 FaxModem::getCapabilities() const
 {
     return modemParams.encodeCaps();
@@ -201,6 +360,15 @@ FaxModem::getBestDataFormat() const
 }
 
 /*
+ * Return the best ECM functionality the modem supports.
+ */
+u_int
+FaxModem::getBestECM() const
+{
+    return bestBit(modemParams.ec, EC_DISABLE, EC_ECLFULL);
+}
+
+/*
  * Return whether or not the modem supports 2DMR.
  */
 fxBool
@@ -234,7 +402,7 @@ FaxModem::supportsPolling() const
 fxBool
 FaxModem::supportsECM() const
 {
-    return (modemParams.ec & BIT(EC_ENABLE)) != 0;
+    return (modemParams.ec &~ BIT(EC_DISABLE)) != 0;
 }
 
 /*
@@ -247,10 +415,10 @@ FaxModem::supportsECM() const
 fxBool
 FaxModem::supportsVRes(float res) const
 {
-    if (75 <= res && res < 120)
-	return modemParams.vr & BIT(VR_NORMAL);
-    else if (150 <= res && res < 250)
-	return modemParams.vr & BIT(VR_FINE);
+    if (3.0 <= res && res < 4.75)
+	return (modemParams.vr & BIT(VR_NORMAL)) != 0;
+    else if (5.9 <= res && res < 9.8)
+	return (modemParams.vr & BIT(VR_FINE)) != 0;
     else
 	return FALSE;
 }
@@ -263,11 +431,11 @@ fxBool
 FaxModem::supportsPageWidth(u_int w) const
 {
     switch (w) {
-    case 1728:	return modemParams.wd & BIT(WD_1728);
-    case 2048:	return modemParams.wd & BIT(WD_2048);
-    case 2432:	return modemParams.wd & BIT(WD_2432);
-    case 1216:	return modemParams.wd & BIT(WD_1216);
-    case 864:	return modemParams.wd & BIT(WD_864);
+    case 1728:	return (modemParams.wd & BIT(WD_1728)) != 0;
+    case 2048:	return (modemParams.wd & BIT(WD_2048)) != 0;
+    case 2432:	return (modemParams.wd & BIT(WD_2432)) != 0;
+    case 1216:	return (modemParams.wd & BIT(WD_1216)) != 0;
+    case 864:	return (modemParams.wd & BIT(WD_864)) != 0;
     }
     return FALSE;
 }
@@ -282,11 +450,11 @@ FaxModem::supportsPageLength(u_int l) const
 {
     // XXX probably need to be more forgiving with values
     if (270 < l && l <= 330)
-	return modemParams.ln & (BIT(LN_A4)|BIT(LN_INF));
+	return (modemParams.ln & (BIT(LN_A4)|BIT(LN_INF))) != 0;
     else if (330 < l && l <= 390)
-	return modemParams.ln & (BIT(LN_B4)|BIT(LN_INF));
+	return (modemParams.ln & (BIT(LN_B4)|BIT(LN_INF))) != 0;
     else
-	return modemParams.ln & BIT(LN_INF);
+	return (modemParams.ln & BIT(LN_INF)) != 0;
 }
 
 /*
@@ -296,21 +464,28 @@ FaxModem::supportsPageLength(u_int l) const
 u_int
 FaxModem::modemDIS() const
 {
-    u_int DIS = DIS_T4RCVR
-	      | Class2Params::vrDISTab[getBestVRes()]
-	      | Class2Params::brDISTab[getBestSignallingRate()]
-	      | Class2Params::wdDISTab[getBestPageWidth()]
-	      | Class2Params::lnDISTab[getBestPageWidth()]
-	      | Class2Params::dfDISTab[getBestDataFormat()]
-	      | Class2Params::stDISTab[getBestScanlineTime()]
-	      ;
-    // tack on one extension byte
-    DIS = (DIS | DIS_XTNDFIELD) << 8;
-    if (modemParams.df >= DF_2DMRUNCOMP)
-	DIS |= DIS_2DUNCOMP;
-    if (modemParams.df >= DF_2DMMR)
-	DIS |= DIS_G4COMP;
-    return (DIS);
+    return DIS_T4RCVR
+	  | Class2Params::vrDISTab[getBestVRes()]
+	  | Class2Params::brDISTab[getBestSignallingRate()]
+	  | Class2Params::wdDISTab[getBestPageWidth()]
+	  | Class2Params::lnDISTab[getBestPageWidth()]
+	  | Class2Params::dfDISTab[getBestDataFormat()]
+	  | Class2Params::stDISTab[getBestScanlineTime()]
+	  ;
+}
+
+/*
+ * Return the 32-bit extended capabilities for the
+ * modem for setting up the initial T.30 DIS when
+ * receiving data.
+ */
+u_int
+FaxModem::modemXINFO() const
+{
+    return
+	  ((modemParams.df & BIT(DF_2DMRUNCOMP)) ? DIS_2DUNCOMP : 0)
+	| ((modemParams.df & BIT(DF_2DMMR)) ? DIS_G4COMP : 0)
+	;
 }
 
 /*
@@ -328,8 +503,8 @@ FaxModem::traceModemParams()
     traceBits(modemParams.wd, Class2Params::pageWidthNames);
     traceBits(modemParams.ln, Class2Params::pageLengthNames);
     traceBits(modemParams.df, Class2Params::dataFormatNames);
-    if (modemParams.ec & (BIT(EC_ENABLE)))
-	modemSupports("error correction");
+    if (supportsECM())
+	traceBits(modemParams.ec, Class2Params::ecmNames);
     if (modemParams.bf & BIT(BF_ENABLE))
 	modemSupports("binary file transfer");
     traceBits(modemParams.st, Class2Params::scanlineTimeNames);
@@ -401,38 +576,16 @@ FaxModem::sendSetupParams(TIFF* tif, Class2Params& params,
     return server.sendSetupParams(tif, params, info, emsg);
 }
 
-fxBool
-FaxModem::recvCheckTSI(const fxStr& tsi)
-{
-    fxStr s(tsi);
-    s.remove(0, s.skip(0,' '));		// strip leading white space
-    u_int pos = s.skipR(s.length(),' ');
-    s.remove(pos, s.length() - pos);	// and trailing white space
-    return server.recvCheckTSI(s);
-}
-void
-FaxModem::recvCSI(fxStr& csi)
-{
-    csi.remove(0, csi.skip(0,' '));	// strip leading white space
-    u_int pos = csi.skipR(csi.length(),' ');
-    csi.remove(pos, csi.length() - pos);// and trailing white space
-    protoTrace("REMOTE CSI \"%s\"", (char*) csi);
-}
-void FaxModem::recvDCS(Class2Params& params)
-    { server.recvDCS(params); }
-void FaxModem::recvNSF(u_int nsf)
-    { server.recvNSF(nsf); }
 
+/*
+ * Record the file offset to the start of the data
+ * in the file.  We write zero bytes to force the
+ * strip offset to be setup in case this is the first
+ * time the strip is being written.
+ */
 void
-FaxModem::recvSetupPage(TIFF* tif, long group3opts, int fillOrder)
+FaxModem::recvStartPage(TIFF* tif)
 {
-    server.recvSetupPage(tif, group3opts, fillOrder);
-    /*
-     * Record the file offset to the start of the data
-     * in the file.  We write zero bytes to force the
-     * strip offset to be setup in case this is the first
-     * time the strip is being written.
-     */
     u_char null[1];
     (void) TIFFWriteRawStrip(tif, 0, null, 0);
     u_long* lp;
@@ -463,5 +616,11 @@ void
 FaxModem::countPage()
 {
     pageNumber++;
-    server.npages++;
+}
+
+void
+FaxModem::notifyPageSent(TIFF* tif)
+{
+    if (curreq)
+	server.notifyPageSent(*curreq, TIFFFileName(tif));
 }

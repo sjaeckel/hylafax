@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ServerConfig.h,v 1.17 1995/04/08 21:31:06 sam Rel $ */
+/*	$Id: ServerConfig.h,v 1.22 1996/06/24 03:00:42 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -51,7 +51,9 @@ public:
     struct S_filemodetag {
 	const char*	 name;
 	mode_t ServerConfig::*p;
-	mode_t		 def;
+	// NB: this should be mode_t but causes alignment problems
+	//     on systems where it's 16-bits (e.g. m68k-hp-hpux9).
+	u_int		 def;
     };
 private:
     fxStr	longDistancePrefix;	// prefix str for long distance dialing
@@ -78,8 +80,6 @@ protected:
 
     void	setupConfig();
     virtual fxBool setConfigItem(const char* tag, const char* value);
-    virtual void configError(const char* fmt, ...) = 0;
-    virtual void configTrace(const char* fmt, ...) = 0;
 
 // pattern access control list support
     void	updatePatterns(const fxStr& file,
@@ -111,6 +111,7 @@ public:
     u_int	maxConsecutiveBadCalls;	// max consecutive bad phone calls
     fxStr	localIdentifier;	// to use in place of FAXNumber
     fxStr	FAXNumber;		// phone number
+    u_int	maxSetupAttempts;	// # times to try initializing modem
 
     virtual ~ServerConfig();
 
@@ -122,5 +123,11 @@ public:
     UUCPLock*	getUUCPLock(const fxStr& deviceName);
 
     fxBool	isTSIOk(const fxStr& tsi);
+
+    virtual void vconfigError(const char* fmt, va_list ap) = 0;
+    virtual void vconfigTrace(const char* fmt, va_list ap) = 0;
+    virtual void vdialrulesTrace(const char* fmt, va_list ap) = 0;
+    void configError(const char* fmt, ...);
+    void configTrace(const char* fmt, ...);
 };
 #endif /* _ServerConfig_ */

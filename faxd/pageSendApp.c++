@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/pageSendApp.c++,v 1.22 1995/04/08 21:32:27 sam Rel $ */
+/*	$Id: pageSendApp.c++,v 1.43 1996/08/21 21:02:47 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -25,7 +25,6 @@
  */
 #include <sys/types.h>
 #include <unistd.h>
-#include <osfcn.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/file.h>
@@ -33,6 +32,7 @@
 #include <ctype.h>
 
 #include "FaxMachineInfo.h"
+#include "FaxAcctInfo.h"
 #include "UUCPLock.h"
 #include "pageSendApp.h"
 #include "FaxRequest.h"
@@ -46,8 +46,6 @@
 /*
  * Send messages with IXO/TAP protocol.
  */
-
-extern	const char* fmtTime(time_t);
 
 pageSendApp* pageSendApp::_instance = NULL;
 
@@ -84,9 +82,6 @@ pageSendApp::initialize(int argc, char** argv)
 	case 'c':			// set configuration parameter
 	    readConfigItem(iter.optArg());
 	    break;
-	case 't':			// session tracing level
-	    setConfigItem("sessiontracing", iter.optArg());
-	    break;
 	}
 }
 
@@ -121,14 +116,36 @@ pageSendApp::send(const char* filename)
 {
     int fd = Sys::open(filename, O_RDWR);
     if (fd >= 0) {
-	if (::flock(fd, LOCK_EX) >= 0) {
-	    FaxRequest* req = new FaxRequest(filename);
+	if (flock(fd, LOCK_EX) >= 0) {
+	    FaxRequest* req = new FaxRequest(filename, fd);
 	    fxBool reject;
-	    if (req->readQFile(fd, reject) && !reject) {
+	    if (req->readQFile(reject) && !reject) {
 		if (req->findRequest(FaxRequest::send_page) != fx_invalidArrayIndex) {
 		    FaxMachineInfo info;
 		    info.updateConfig(canonicalizePhoneNumber(req->number));
+		    FaxAcctInfo ai;
+
+		    ai.start = Sys::now();
+
 		    sendPage(*req, info);
+
+		    ai.jobid = req->jobid;
+		    ai.jobtag = req->jobtag;
+		    ai.user = req->mailaddr;
+		    ai.duration = Sys::now() - ai.start;
+		    ai.conntime = getConnectTime();
+		    ai.commid = req->commid;
+		    ai.device = getModemDeviceID();
+		    ai.dest = req->external;
+		    ai.csi = "";
+		    ai.params = 0;
+		    if (req->status == send_done)
+			ai.status = "";
+		    else
+			ai.status = req->notice;
+		    if (!ai.record("PAGE"))
+			logError("Error writing %s accounting record, dest=%s",
+			    "PAGE", (const char*) ai.dest);
 		} else
 		    sendFailed(*req, send_failed, "Job has no PIN to send to");
 		req->writeQFile();		// update on-disk copy
@@ -138,7 +155,7 @@ pageSendApp::send(const char* filename)
 	    logError("Could not read request file");
 	} else
 	    logError("Could not lock request file: %m");
-	::close(fd);
+	Sys::close(fd);
     } else
 	logError("Could not open request file: %m");
     return (send_failed);
@@ -149,7 +166,20 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info)
 {
     if (lockModem()) {
 	beginSession(req.number);
-	// NB: may need to set baud rate here XXX
+	req.commid = getCommID();
+	traceServer("SEND PAGE: JOB %s DEST %s COMMID %s"
+	    , (const char*) req.jobid
+	    , (const char*) req.external
+	    , (const char*) req.commid
+	);
+	/*
+	 * Setup tty parity; per-destination information takes
+	 * precedence over command-line arguments/config params;
+	 * otherwise the IXO/TAP spec is used (set below).
+	 */
+	if (info.getPagerTTYParity() != "")
+	    pagerTTYParity = info.getPagerTTYParity();
+	// NB: may need to set tty baud rate here XXX
 	if (setupModem()) {
 	    changeState(SENDING);
 	    fxStr emsg;
@@ -186,13 +216,13 @@ pageSendApp::prepareMsg(FaxRequest& req, FaxMachineInfo& info, fxStr& msg)
     }
     struct stat sb;
     (void) Sys::fstat(fd, sb);
-    msg.resize(sb.st_size);
-    if (Sys::read(fd, &msg[0], sb.st_size) != sb.st_size) {
+    msg.resize((u_int) sb.st_size);
+    if (Sys::read(fd, &msg[0], (u_int) sb.st_size) != sb.st_size) {
 	sendFailed(req, send_failed,
 	    "Internal error: unable to read text message file");
 	return (FALSE);
     }
-    ::close(fd);
+    Sys::close(fd);
 
     u_int maxMsgLen = info.getPagerMaxMsgLength();
     if (maxMsgLen == (u_int) -1)		// not set, use default
@@ -224,17 +254,19 @@ pageSendApp::sendFailed(FaxRequest& req, FaxSendStatus stat, const char* notice,
 void
 pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number, const fxStr& msg)
 {
+    connTime = 0;				// indicate no connection
     if (!getModem()->dataService()) {
 	sendFailed(req, send_failed, "Unable to configure modem for data use");
 	return;
     }
     req.notice = "";
-    abortCall = FALSE;
     fxStr notice;
     time_t pageStart = Sys::now();
     if (pagerSetupCmds != "")			// configure line speed, etc.
 	(void) getModem()->atCmd(pagerSetupCmds);
     CallStatus callstat = getModem()->dial(number, notice);
+    if (callstat == ClassModem::OK)
+	connTime = Sys::now();			// connection start time
     (void) abortRequested();			// check for user abort
     if (callstat == ClassModem::OK && !abortCall) {
 	req.ndials = 0;				// consec. failed dial attempts
@@ -263,7 +295,7 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number
 			break;
 		    }
 		}
-		req.removeItems(i);
+		req.requests.remove(i);
 	    }
 	    if (req.status == send_ok)
 		(void) pageEpilogue(req, info, notice);
@@ -336,6 +368,20 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number
      * database will be updated when the instance is destroyed.
      */
     getModem()->hangup();
+    /*
+     * This may not be exact--the line may already have been
+     * dropped--but it should be close enough unless the modem
+     * gets wedged and the hangup work times out.  Also be
+     * sure to register a non-zero amount of connect time so
+     * that folks doing accounting can adjust charge-back costs
+     * to reflect any minimum connect time tarrifs imposted by
+     * their PTT (e.g. calls < 1 minute are rounded up to 1 min.)
+     */
+    if (connTime) {
+	connTime = Sys::now() - connTime;
+	if (connTime == 0)
+	    connTime++;
+    }
 }
 
 u_int
@@ -397,7 +443,8 @@ pageSendApp::pagePrologue(FaxRequest& req, const FaxMachineInfo& info, fxStr& em
 	putModem("\r", 1);
 	if (getResponse(buf, ixoIDProbe) >= 3) {
 	    // skip leading white space
-	    for (const char* cp = buf; *cp && isspace(*cp); cp++)
+	    const char* cp;
+	    for (cp = buf; *cp && isspace(*cp); cp++)
 		;
 	    gotID = strneq(cp, "ID=", 3);
 	}
@@ -437,12 +484,13 @@ pageSendApp::pagePrologue(FaxRequest& req, const FaxMachineInfo& info, fxStr& em
 	prolog.append(pass);
     prolog.append('\r');
 
+    traceIXO("SEND device identification/login request");
+    putModem((const char*) prolog, prolog.length());
+
     int ntries = ixoLoginRetries;	// retry login up to 3 times
     int unknown = ixoMaxUnknown;	// accept up to 3 unknown messages
     start = Sys::now();
     do {
-	traceIXO("SEND device identification/login request");
-	putModem((const char*) prolog, prolog.length());
 	u_int len = getResponse(buf, ixoLoginTimeout);
 	const u_char* cp = buf;
 	while (len > 0) {
@@ -457,6 +505,11 @@ pageSendApp::pagePrologue(FaxRequest& req, const FaxMachineInfo& info, fxStr& em
 		    req.status = send_retry;
 		    return (FALSE);
 		}
+		/*
+		 * Resend the login request.
+		 */
+		traceIXO("SEND device identification/login request");
+		putModem((const char*) prolog, prolog.length());
 		start = Sys::now();	// restart timer
 		/*
 		 * NB: we should just goto the top of the loop,
@@ -541,7 +594,9 @@ pageSendApp::sendPagerMsg(FaxRequest& req, faxRequest& preq, const fxStr& msg, f
 {
     /*
      * Build page packet:
+     *
      *    STX pin CR line1 CR ... linen CR EEE checksum CR
+     *
      * where pin is the destination Pager ID and line<n>
      * are the lines of the message to send.  The trailing
      * EEE depends on whether or not the message is continued
@@ -558,13 +613,20 @@ pageSendApp::sendPagerMsg(FaxRequest& req, faxRequest& preq, const fxStr& msg, f
     addChecksum(buf);				// append packet checksum
     buf.put('\r');
 
+    /*
+     * Send the packet to paging central.
+     */
+    traceIXO("SEND message block");
+    putModem((const char*) buf, buf.getLength());
+
+    /*
+     * Process replies, possibly retransmitting the packet.
+     */
     fxStackBuffer resp;				// paging central response
     u_int ntries = ixoXmitRetries;		// up to 3 xmits of message
-    u_int unknown = ixoMaxUnknown;		// up to 3 unknown responses
+    u_int unknown = 0;				// count of unknown responses
     time_t start = Sys::now();
     do {
-	traceIXO("SEND message block");
-	putModem((const char*) buf, buf.getLength());
 	u_int len = getResponse(resp, ixoXmitTimeout);
 	const u_char* cp = resp;
 	while (len > 0) {
@@ -580,15 +642,21 @@ pageSendApp::sendPagerMsg(FaxRequest& req, faxRequest& preq, const fxStr& msg, f
 			"after multiple tries";
 		    return (FALSE);
 		}
+		/*
+		 * Retransmit the packet to paging central.
+		 */
+		traceIXO("SEND message block (retransmit)");
+		putModem((const char*) buf, buf.getLength());
 		start = Sys::now();		// restart timer
+		unknown = 0;			// reset unknown response count
 		/*
 		 * NB: we should just goto the top of the loop,
 		 *     but old cfront-based compilers aren't
 		 *     smart enough to handle goto's that might
 		 *     bypass destructors.
 		 */
-		unknown++;			// counteract loop iteration
-		len = 0;			// don't scan forward
+		len = 0;			// flush response buffer
+		flushModemInput();		// flush pending data
 		break;
 	    case RS:
 		traceIXO("RECV RS (message block rejected; skip to next)");
@@ -611,12 +679,15 @@ pageSendApp::sendPagerMsg(FaxRequest& req, faxRequest& preq, const fxStr& msg, f
 			"message block transmit with forced disconnect";
 		    return (FALSE);
 		}
+		/* fall thru... */
+	    default:				// unrecognized response
+		unknown++;
 		break;
 	    }
 	    if (!scanForCode(cp, len))
 		traceResponse(resp);
 	}
-    } while (Sys::now()-start < ixoXmitTimeout && --unknown);
+    } while (Sys::now()-start < ixoXmitTimeout && unknown < ixoMaxUnknown);
     emsg = fxStr::format("Protocol failure: %s to message block transmit",
 	(unknown ?
 	    "timeout waiting for response" : "too many unknown responses"));
@@ -662,21 +733,21 @@ pageSendApp::pageEpilogue(FaxRequest& req, const FaxMachineInfo&, fxStr& emsg)
 void
 pageSendApp::traceResponse(const fxStackBuffer& buf)
 {
+    const char* extra = "";
     u_int len = buf.getLength();
     if (len > 0) {
 	const char* cp = buf;
 	do {
 	    if (!isprint(*cp)) {
-		traceIXO("RECV unknown paging central response: \"%.*s\"",
-		    buf.getLength(), (const char*) buf);
-		return;
+		extra = "unknown paging central response";
+		break;
 	    }
 	} while (--len);
 	/*
 	 * No unprintable characters, just log the string w/o
 	 * the alarming "Unknown paging central response".
 	 */
-	traceIXO("%.*s", buf.getLength(), (const char*) buf);
+	traceIXO("RECV%s: %.*s", extra, buf.getLength(), (const char*) buf);
     }
 }
 
@@ -723,6 +794,8 @@ pageSendApp::putModem(const void* data, int n, long ms)
     return (putModem1(data, n, ms));
 }
 
+time_t pageSendApp::getConnectTime() const	{ return (connTime); }
+
 /*
  * Configuration support.
  */
@@ -739,6 +812,7 @@ pageSendApp::resetConfig()
 const pageSendApp::stringtag pageSendApp::strings[] = {
 { "ixoservice",		&pageSendApp::ixoService,	IXO_SERVICE },
 { "ixodeviceid",	&pageSendApp::ixoDeviceID,	IXO_DEVICEID },
+{ "pagerttyparity",	&pageSendApp::pagerTTYParity,	"even" },
 };
 const pageSendApp::stringtag pageSendApp::atcmds[] = {
 { "pagersetupcmds",	&pageSendApp::pagerSetupCmds },
@@ -784,13 +858,29 @@ pageSendApp::setConfigItem(const char* tag, const char* value)
 }
 #undef	N
 
+u_int
+pageSendApp::getConfigParity(const char* value) const
+{
+    if (streq(value, "even"))
+	return (EVEN);
+    else if (streq(value, "odd"))
+	return (ODD);
+    else if (streq(value, "none"))
+	return (NONE);
+    else {
+	logError("Unknown pager tty parity %s ignored; using EVEN", value);
+	return (EVEN);				// per IXO/TAP spec
+    }
+}
+
 /*
  * Modem and TTY setup
  */
 fxBool 
 pageSendApp::setupModem()
 {
-    return (ModemServer::setupModem() && setParity(EVEN));
+    return (ModemServer::setupModem() &&
+	setParity((Parity) getConfigParity(pagerTTYParity)));
 }
 
 /*
@@ -814,10 +904,27 @@ pageSendApp::unlockModem()
  * Notification handlers.
  */
 
+/*
+ * Handle notification that the modem device has become
+ * available again after a period of being unavailable.
+ */
 void
 pageSendApp::notifyModemReady()
 {
     ready = TRUE;
+}
+
+/*
+ * Handle notification that the modem device looks to
+ * be in a state that requires operator intervention.
+ */
+void
+pageSendApp::notifyModemWedged()
+{
+    if (!sendModemStatus(getModemDeviceID(), "W"))
+	logError("MODEM %s appears to be wedged",
+	    (const char*) getModemDevice());
+    close();
 }
 
 /*
@@ -827,16 +934,18 @@ pageSendApp::notifyModemReady()
 static void
 usage(const char* appName)
 {
-    fxFatal("usage: %s -m deviceID [-t tracelevel] [-l] qfile ...", appName);
+    faxApp::fatal("usage: %s -m deviceID [-t tracelevel] [-l] qfile ...",
+	appName);
 }
 
 static void
 sigCleanup(int s)
 {
+    signal(s, fxSIGHANDLER(sigCleanup));
     logError("CAUGHT SIGNAL %d", s);
     pageSendApp::instance().close();
     if (!pageSendApp::instance().isRunning())
-	::_exit(send_failed);
+	_exit(send_failed);
 }
 
 int
@@ -848,7 +957,7 @@ main(int argc, char** argv)
     u_int l = appName.length();
     appName = appName.tokenR(l, '/');
 
-    faxApp::setOpts("c:m:t:l");
+    faxApp::setOpts("c:m:l");
 
     fxStr devID;
     for (GetoptIter iter(argc, argv, faxApp::getOpts()); iter.notDone(); iter++)
@@ -859,22 +968,10 @@ main(int argc, char** argv)
     if (devID == "")
 	usage(appName);
 
-    /*
-     * Construct the device special file from the device
-     * id by converting all '_'s to '/'s and inserting a
-     * leading DEV_PREFIX.  The _ to / conversion is done
-     * for SVR4 systems which have their devices in
-     * subdirectories!
-     */
-    fxStr device = devID;
-    while ((l = device.next(0, '_')) < device.length())
-	device[l] = '/';
-    device.insert(DEV_PREFIX);
+    pageSendApp* app = new pageSendApp(faxApp::idToDev(devID), devID);
 
-    pageSendApp* app = new pageSendApp(device, devID);
-
-    ::signal(SIGTERM, fxSIGHANDLER(sigCleanup));
-    ::signal(SIGINT, fxSIGHANDLER(sigCleanup));
+    signal(SIGTERM, fxSIGHANDLER(sigCleanup));
+    signal(SIGINT, fxSIGHANDLER(sigCleanup));
 
     app->initialize(argc, argv);
     app->open();
@@ -884,7 +981,7 @@ main(int argc, char** argv)
     if (app->isReady())
 	status = app->send(argv[optind]);
     else
-	status = send_failed;
+	status = send_retry;
     app->close();
     return (status);
 }

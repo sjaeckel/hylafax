@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/Str.c++,v 1.24 1995/04/08 21:44:25 sam Rel $ */
+/*	$Id: Str.c++,v 1.29 1996/08/22 18:12:02 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -146,6 +146,14 @@ fxStr::format(const char* fmt ...)
     return fxStr(buf);
 }
 
+fxStr
+fxStr::vformat(const char* fmt, va_list ap)
+{
+    char buf[4096];
+    ::vsprintf(buf, fmt, ap);
+    return fxStr(buf);
+}
+
 fxStr fxStr::extract(u_int start, u_int chars) const
 {
     fxAssert(start+chars<slength, "Str::extract: Invalid range");
@@ -169,7 +177,19 @@ void fxStr::lowercase(u_int posn, u_int chars)
     if (!chars) chars = slength-1-posn;
     fxAssert(posn+chars<slength, "Str::lowercase: Invalid range");
     while (chars--) {
-#ifdef _tolower
+#ifdef hpux
+	/*
+	 * HPUX (10.x at least) is seriously busted.  According
+	 * to the manual page, when compiling in ANSI C mode tolower
+	 * is defined as a macro that expands to a function that
+	 * is undefined.  It is necessary to #undef tolower before
+	 * using it! (sigh)
+	 */
+#ifdef tolower
+#undef tolower
+#endif
+	data[posn] = tolower(data[posn]);
+#elif _tolower
 	char c = data[posn];
 	if (isupper(c))
 	    data[posn] = _tolower(c);
@@ -185,7 +205,12 @@ void fxStr::raisecase(u_int posn, u_int chars)
     if (!chars) chars = slength-1-posn;
     fxAssert(posn+chars<slength, "Str::raisecase: Invalid range");
     while (chars--) {
-#ifdef _toupper
+#ifdef hpux				// HPUX bogosity; see above
+#ifdef toupper
+#undef toupper
+#endif
+	data[posn] = toupper(data[posn]);
+#elif _toupper
 	char c = data[posn];
 	if (islower(c))
 	    data[posn] = _toupper(c);

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/faxmsg.c,v 1.23 1995/04/08 21:44:52 sam Rel $ */
+/*	$Id: faxmsg.c,v 1.30 1996/07/23 23:21:39 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -57,7 +57,7 @@ main(int argc, char** argv)
     extern char* optarg;
     int fifo, c;
     char* spooldir = FAX_SPOOLDIR;
-    char* how = "";
+    const char* arg;
     char fifoname[256];
     char cmd[80];
     char* appname;
@@ -66,6 +66,7 @@ main(int argc, char** argv)
     const char* cmdfmt;
     char* cp;
     int facility = LOG_DAEMON;
+    int modemRequired;
 
     (void) cvtFacility(LOG_FAX, &facility);
     openlog(argv[0], LOG_PID|LOG_ODELAY, facility);
@@ -75,30 +76,34 @@ main(int argc, char** argv)
     else
 	appname = argv[0];
     if (strcmp(appname, "faxanswer") == 0) {
-	opts = "h:q";
-	usage = "[-h how] [-q queue-dir]";
+	opts = "h:q:";
+	usage = "[-h how] [-q queue-dir] modem";
 	cmdfmt = "A%s";
+	arg = "";			/* default how */
+	modemRequired = 1;
     } else if (strcmp(appname, "faxquit") == 0) {
-	opts = ":q";
-	usage = "[-q queue-dir]";
+	opts = "q:";
+	usage = "[-q queue-dir] [modem]";
 	cmdfmt = "Q";
+	modemRequired = 0;
     } else if (strcmp(appname, "faxabort") == 0) {
-	opts = ":q";
-	usage = "[-q queue-dir]";
+	opts = "q:";
+	usage = "[-q queue-dir] modem";
 	cmdfmt = "Z";
+	modemRequired = 1;
     } else {
 	fatal("Unrecognized command name %s", appname);
     }
     while ((c = getopt(argc, argv, opts)) != -1)
 	switch (c) {
 	case 'h':
-	    how = optarg;
+	    arg = optarg;
 	    break;
 	case 'q':
 	    spooldir = optarg;
 	    break;
 	case '?':
-	    fatal("Bad option `%c'; usage: %s %s [modem]", c, argv[0], usage);
+	    fatal("Bad option `%c'; usage: %s %s", c, argv[0], usage);
 	    /*NOTREACHED*/
 	}
     if (optind == argc-1) {
@@ -107,8 +112,10 @@ main(int argc, char** argv)
 	else
 	    sprintf(fifoname, "%s.%.*s", FAX_FIFO,
 		sizeof (fifoname) - sizeof (FAX_FIFO), argv[optind]);
-    } else
+    } else if (!modemRequired) {
 	strcpy(fifoname, FAX_FIFO);
+    } else
+	fatal("usage: %s %s", argv[0], usage);
     for (cp = fifoname; cp = strchr(cp, '/'); *cp++ = '_')
 	;
     if (chdir(spooldir) < 0)
@@ -116,7 +123,7 @@ main(int argc, char** argv)
     fifo = open(fifoname, O_WRONLY|O_NDELAY);
     if (fifo < 0)
 	fatal("%s: open: %s", fifoname, strerror(errno));
-    sprintf(cmd, cmdfmt, how);
+    sprintf(cmd, cmdfmt, arg);
     if (write(fifo, cmd, strlen(cmd)) != strlen(cmd))
 	fatal("FIFO write failed for command (%s)", strerror(errno));
     (void) close(fifo);

@@ -1,9 +1,9 @@
-.\"	$Header: /usr/people/sam/fax/./man/RCS/textfmt.1,v 1.17 1995/04/08 21:36:41 sam Rel $
+.\"	$Id: textfmt.1,v 1.21 1996/06/24 03:04:24 sam Rel $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993-1995 Sam Leffler
-.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1996 Sam Leffler
+.\" Copyright (c) 1993-1996 Silicon Graphics, Inc.
 .\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH TEXTFMT 1 "December 5, 1994"
+.TH TEXTFMT 1 "May 17, 1996"
 .SH NAME
 textfmt \- convert text to \*(Ps\(tm for facsimile transmission
 .SH SYNOPSIS
@@ -160,6 +160,177 @@ in the resultant \*(Ps, then the next-to-last page, etc.
 .TP
 .BI \-V " spacing"
 Set the line height; the default height is 1.2 x point size.
+.SH "CONFIGURATION PARAMETERS"
+.I textfmt
+reads configuration information from the files
+.BR ${LIBDATA}/hyla.conf ,
+and
+.BR ~/.hylarc ;
+in that order.
+Configuration files follow the conventions described in
+.IR hylafax (1).
+The following configuration parameters are recognized:
+.sp .5
+.nf
+.ta \w'TextLineHeight    'u +\w'boolean    'u +\w'\s-1\fIsee below\fP\s+1    'u
+\fBTag	Type	Default	Description\fP
+Columns	integer	\s-11\s+1	number of columns in formatted output
+FontDir	string	\s-1\fIsee below\fP\s+1	directory for font metric files
+GaudyHeaders	boolean	\s-1No\s+1	enable/disable guady page headers
+ISO8859	boolean	\s-1Yes\s+1	use ISO 8859-1 character encoding
+LineWrap	boolean	\s-1Yes\s+1	wrap/truncate text lines
+Orientation	string	\s-1portrait\s+1	orientation of text on page
+OutlineMargin	inches	\s-10\s+1	width of outline line
+PageCollation	string	\s-1forward\s+1	collate pages in forward or reverse direction
+PageHeaders	boolean	\s-1Yes\s+1	enable/disable page headers
+PageHeight	float	\-	output page height
+PageMargins	string	\s-1\fIsee below\fP\s+1	margins for formatted page
+PageSize	string	\s-1default\s+1	output page size from database
+PageWidth	float	\-	output page width
+TabStop	integer	\s-18\s+1	inter-stop setting in characters
+TextFont	string	\s-1Courier\s+1	name of font for setting text
+TextLineHeight	inches	\-	text formatting line height control
+TextPointSize	inches	\s-1\fIsee below\fP\s+1	size to use in setting text
+.fi
+.PP
+The configuration parameters are explained below.
+Most parameters correspond to a command line option.
+Parameter values identified above as
+.I inches
+are converted according to the following conventions
+(where ``#.##'' is a decimal number):
+.RS
+.nf
+.sp .5
+.ta \w'#.##sp    'u
+#.##bp	big point (1in = 72bp)
+#.##cc	cicero (1cc = 12dd)
+#.##cm	centimeter
+#.##dd	didot point (1157dd = 1238pt)
+#.##in	inch
+#.##mm	millimeter (10mm = 1cm)
+#.##pc	pica (1pc = 12pt)
+#.##pt	point (72.27pt = 1in)
+#.##sp	scaled point (65536sp = 1pt)
+.RE
+.fi
+.LP
+Unit names can be upper or lower case but no white space
+is permitted between the number and the unit.
+Values specified with no unit are interpreted as points.
+.TP 15
+.B Columns
+The number of columns to set text in.
+(Equivalent to the
+.B \-m
+option.)
+.TP 15
+.B FontDir
+The directory where Adobe Font Metric (\s-1AFM\s+1) files are
+located; by default ${AFMDIR}.
+.TP 15
+.B GaudyHeaders
+Control whether or not to use a gaudy-style page header.
+(Equivalent to the
+.B \-G
+option.)
+.TP 15
+.B ISO8859
+Control the use of
+.SM "ISO 8859-1"
+encoding in the generated \*(Ps
+(Equivalent to the
+.B \-D
+option.)
+.TP 15
+.B LineWrap
+Control whether long text lines are wrapper or truncated at the
+right hand margin.
+(Equivalent to the
+.B \-c
+option.)
+.TP 15
+.B Orientation
+Control whether pages are oriented horizontally (``landscape'')
+or vertically (``portrait'').
+(Equivalent to the
+.B \-r
+and
+.B \-R
+options.)
+.TP 15
+.B OutlineMargin
+Control whether columns of text have a line drawn around them and
+the width of the line.
+Setting this parameter to 0 disables outlines.
+(Equivalent to the 
+.B \-o
+option.)
+.TP 15
+.B PageCollation
+Control whether the output file has pages collated in the same
+order as the input file (``forward'') or in reverse order (``reverse).
+(Equivalent to the
+.B \-U
+option.)
+.TP 15
+.B PageHeaders
+Control whether page headers are generated.
+(Equivalent to the
+.B \-B
+option.)
+.TP 15
+.B PageHeight
+Set the output page height in inches (in inches).
+.TP 15
+.B PageMargins
+Set the output page dimensions.
+Dimensions are specified as string of the form:
+``\fBl=\fP#,\fBr=\fP#,\fBt=\fP#,\fBb=\fP#''
+where 
+.B l
+indicates the left margin,
+.B r
+indicates the right margin,
+.B t
+indicates the top margin,
+.B b
+indicates the bottom margin, and
+numbers are interpreted as 
+.IR inches .
+(Equvalent to the 
+.B \-M
+option.)
+.TP 15
+.B PageSize
+Set the output page dimensions by name.
+(Equivalent to the
+.B \-s
+option.)
+.TP 15
+.B PageWidth
+Set the output page width in inches (in inches).
+.TP 15
+.B TabStop
+Set the tab stop distance; in characters.
+.TP 15
+.B TextFont
+Set the name of font to use for setting text.
+(Equivalent to the
+.B \-f
+option.)
+.TP 15
+.B TextLineHeight
+Set the vertical text line height and spacing.
+(Equvalent to the
+.B \-V
+option.)
+.TP 15
+.B TextPointSize
+Set the point size to use in setting text.
+(Equvalent to the
+.B \-p
+option.)
 .SH NOTES
 If
 .I textfmt
@@ -169,12 +340,14 @@ this metric will almost certainly result
 in incorrectly formatted \*(Ps.
 .PP
 .I textfmt
-is derived from the
+is distantly related to the
 .I lptops
 program written by Don Beebe.
 .SH FILES
 .ta \w'${LIBDATA}/pagesizes    'u
 .nf
+${LIBDATA}/hyla.conf	system-wide configuration file
+~/.hylarc	per-user configuration file
 ${LIBDATA}/pagesizes	page size database
 ${AFMDIR}	font metric files
 .fi

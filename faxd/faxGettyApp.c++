@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/faxGettyApp.c++,v 1.30 1995/04/08 21:31:15 sam Rel $ */
+/*	$Id: faxGettyApp.c++,v 1.54 1996/08/03 00:43:08 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -25,7 +25,6 @@
  */
 #include <sys/types.h>
 #include <ctype.h>
-#include <osfcn.h>
 #include <errno.h>
 #include <pwd.h>
 #include <math.h>
@@ -50,10 +49,7 @@
  * HylaFAX Spooling and Command Agent.
  */
 
-const fxStr faxGettyApp::fifoName	= FAX_FIFO;
 const fxStr faxGettyApp::recvDir	= FAX_RECVDIR;
-
-extern	const char* fmtTime(time_t);
 
 faxGettyApp* faxGettyApp::_instance = NULL;
 
@@ -62,7 +58,6 @@ faxGettyApp::faxGettyApp(const fxStr& devName, const fxStr& devID)
 {
     devfifo = -1;
     modemLock = NULL;
-    debug = FALSE;
     lastCIDModTime = 0;
     cidPats = NULL;
     acceptCID = NULL;
@@ -84,20 +79,26 @@ faxGettyApp& faxGettyApp::instance() { return *_instance; }
 void
 faxGettyApp::initialize(int argc, char** argv)
 {
-    for (GetoptIter iter(argc, argv, getOpts()); iter.notDone(); iter++)
-	switch (iter.option()) {
-	case 'D':
-	    detachFromTTY();
-	    break;
-	case 'd':
-	    debug = TRUE;
-	    break;
-	}
     FaxServer::initialize(argc, argv);
     faxApp::initialize(argc, argv);
-    serverPID = fxStr::format("%u", ::getpid());
+
+    for (GetoptIter iter(argc, argv, getOpts()); iter.notDone(); iter++)
+	switch (iter.option()) {
+	case 'c':			// set configuration parameter
+	    readConfigItem(iter.optArg());
+	    break;
+	case 'D':			// detach process from tty
+	    detachFromTTY();
+	    break;
+	}
     modemLock = getUUCPLock(getModemDevice());
-    sendQueuer("D");			// notify that modem exists
+    /*
+     * Notify queuer that modem exists and what the
+     * phone number is.  This is used by the queuer
+     * when processing other messages we sent
+     * later--such as when a document is received.
+     */
+    sendModemStatus("N" | getModemNumber());
 }
 
 void
@@ -112,7 +113,7 @@ void
 faxGettyApp::close()
 {
     if (isRunning()) {
-	sendQueuer("D");
+	sendModemStatus("D");
 	traceServer("CLOSE " | getModemDevice());
 	faxApp::close();
 	FaxServer::close();
@@ -133,7 +134,8 @@ faxGettyApp::setupModem()
      * not be necessary to restart the process to have
      * config file changes take effect.
      */
-    updateConfig(getConfigFile());
+    if (updateConfig(getConfigFile()))
+	sendModemStatus("N" | getModemNumber());
     if (FaxServer::setupModem()) {
 	/*
 	 * Setup modem for receiving.
@@ -172,12 +174,19 @@ void
 faxGettyApp::answerPhone(AnswerType atype, fxBool force)
 {
     if (lockModem()) {
-	sendQueuer("B");
+	sendModemStatus("B");
 	changeState(ANSWERING);
 	CallerID cid;
 	CallType ctype = ClassModem::CALLTYPE_UNKNOWN;
 	if (force || modemWaitForRings(ringsBeforeAnswer, ctype, cid)) {
 	    beginSession(FAXNumber);
+	    sendModemStatus("I" | getCommID());
+	    if (cid.number != "" || cid.name != "") {
+		traceServer("ANSWER: CID NUMBER \"%s\" NAME \"%s\"",
+		    (const char*) cid.number, (const char*) cid.name);
+		faxApp::sendModemStatus(getModemDeviceID(), "C\"%s\"%s\"",
+		    (const char*) cid.number, (const char*) cid.name);
+	    }
 	    /*
 	     * Answer the phone according to atype.  If this is
 	     * ``any'', then pick a more specific type.  If
@@ -191,8 +200,7 @@ faxGettyApp::answerPhone(AnswerType atype, fxBool force)
 		/*
 		 * Call was rejected based on Caller ID information.
 		 */
-		traceServer("ANSWER: CID REJECTED: NUMBER \"%s\" NAME \"%s\"",
-		    (char*) cid.number, (char*) cid.name);
+		traceServer("ANSWER: CID REJECTED");
 		callResolved = FALSE;
 		advanceRotary = FALSE;
 	    } else if (ctype != ClassModem::CALLTYPE_UNKNOWN) {
@@ -211,20 +219,27 @@ faxGettyApp::answerPhone(AnswerType atype, fxBool force)
 		    callResolved = FALSE;
 		    advanceRotary = FALSE;
 		} else {
+		    // NB: answer based on ctype, not atype
 		    ctype = modemAnswerCall(ctype, emsg);
 		    callResolved = processCall(ctype, emsg);
 		}
 	    } else if (atype == ClassModem::ANSTYPE_ANY) {
+		/*
+		 * Normal operation; answer according to the settings
+		 * for the rotary and adaptive answer capabilities.
+		 */
 		int r = answerRotor;
 		do {
-		    atype = answerRotary[r];
-		    ctype = modemAnswerCall(atype, emsg);
-		    callResolved = processCall(ctype, emsg);
+		    callResolved = answerCall(answerRotary[r], ctype, emsg);
 		    r = (r+1) % answerRotorSize;
 		} while (!callResolved && adaptiveAnswer && r != answerRotor);
 	    } else {
-		ctype = modemAnswerCall(atype, emsg);
-		callResolved = processCall(ctype, emsg);
+		/*
+		 * Answer for a specific type of call but w/o
+		 * any existing call type information such as
+		 * distinctive ring.
+		 */
+		callResolved = answerCall(atype, ctype, emsg);
 	    }
 	    /*
 	     * Call resolved.  If we were able to recognize the call
@@ -242,6 +257,7 @@ faxGettyApp::answerPhone(AnswerType atype, fxBool force)
 		else
 		    answerRotor = (answerRotor+1) % answerRotorSize;
 	    }
+	    sendModemStatus("I");
 	    endSession();
 	} else
 	    modemFlushInput();
@@ -283,8 +299,44 @@ faxGettyApp::answerPhone(AnswerType atype, fxBool force)
 	if (state != SENDING && state != ANSWERING && state != RECEIVING) {
 	    discardModem(FALSE);
 	    changeState(LOCKWAIT, pollLockWait);
+	    sendModemStatus("U");
 	}
     }
+}
+
+/*
+ * Answer a call according to the specified answer type
+ * and return the deduced call type.  If we are to use an
+ * external application to deduce and possibly handle the
+ * call then we do it here and return the call type it
+ * comes up with.  Otherwise we use whatever deduction
+ * the modem layer arrives at as the call type.
+ */
+fxBool
+faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg)
+{
+    fxBool callResolved;
+    if (atype == ClassModem::ANSTYPE_EXTERN) {
+	if (egettyArgs != "") {
+	    /*
+	     * Use an external application to deduce and possibly
+	     * handle the call.  We invoke the egetty application
+	     * and interpret the exit status as the deduced call type.
+	     * If the call has not been handled in the subprocess
+	     * then we take action based on the returned call type.
+	     */
+	    ctype = runGetty("EXTERN GETTY", OSnewEGetty,
+		egettyArgs, emsg, lockExternCalls, TRUE);
+	    if (ctype == ClassModem::CALLTYPE_DONE)	// NB: call completed
+		return (TRUE);
+	    if (ctype != ClassModem::CALLTYPE_ERROR)
+		modemAnswerCallCmd(ctype);
+	} else
+	    emsg = "External getty use is not permitted";
+    } else
+	ctype = modemAnswerCall(atype, emsg);
+    callResolved = processCall(ctype, emsg);
+    return (callResolved);
 }
 
 /*
@@ -309,26 +361,32 @@ faxGettyApp::processCall(CallType ctype, fxStr& emsg)
     case ClassModem::CALLTYPE_FAX:
 	traceServer("ANSWER: FAX CONNECTION");
 	changeState(RECEIVING);
+	sendRecvStatus(getModemDeviceID(), "B");
 	callHandled = recvFax();
+	sendRecvStatus(getModemDeviceID(), "E");
 	break;
     case ClassModem::CALLTYPE_DATA:
 	traceServer("ANSWER: DATA CONNECTION");
-	if (gettyArgs != "")
-	    runGetty("GETTY", OSnewGetty, gettyArgs, TRUE);
-	else
+	if (gettyArgs != "") {
+	    sendModemStatus("d");
+	    runGetty("GETTY", OSnewGetty, gettyArgs, emsg, lockDataCalls);
+	    sendModemStatus("e");
+	} else
 	    traceServer("ANSWER: Data connections are not permitted");
 	callHandled = TRUE;
 	break;
     case ClassModem::CALLTYPE_VOICE:
 	traceServer("ANSWER: VOICE CONNECTION");
-	if (vgettyArgs != "")
-	    runGetty("VGETTY", OSnewVGetty, vgettyArgs, TRUE);
-	else
+	if (vgettyArgs != "") {
+	    sendModemStatus("v");
+	    runGetty("VGETTY", OSnewVGetty, vgettyArgs, emsg, lockVoiceCalls);
+	    sendModemStatus("w");
+	} else
 	    traceServer("ANSWER: Voice connections are not permitted");
 	callHandled = TRUE;
 	break;
     case ClassModem::CALLTYPE_ERROR:
-	traceServer("ANSWER: %s", (char*) emsg);
+	traceServer("ANSWER: %s", (const char*) emsg);
 	break;
     }
     return (callHandled);
@@ -339,22 +397,24 @@ faxGettyApp::processCall(CallType ctype, fxStr& emsg)
  * The speed parameter is passed to use in establishing
  * a login session.
  */
-void
+CallType
 faxGettyApp::runGetty(
     const char* what,
     Getty* (*newgetty)(const fxStr&, const fxStr&),
     const char* args,
-    fxBool keepLock
+    fxStr& emsg,
+    fxBool keepLock,
+    fxBool keepModem
 )
 {
-    fxStr prefix(DEV_PREFIX);
+    fxStr prefix(_PATH_DEV);
     fxStr dev(getModemDevice());
     if (dev.head(prefix.length()) == prefix)
 	dev.remove(0, prefix.length());
     Getty* getty = (*newgetty)(dev, fxStr::format("%u", getModemRate()));
     if (getty == NULL) {
-	traceServer("%s: could not create", what);
-	return;
+	emsg = fxStr::format("%s: could not create", what);
+	return (ClassModem::CALLTYPE_ERROR);
     }
     getty->setupArgv(args);
     /*
@@ -370,12 +430,12 @@ faxGettyApp::runGetty(
      */
     if (!keepLock)
 	unlockModem();
-    fxBool parentIsInit = (::getppid() == 1);
-    pid_t pid = ::fork();
+    fxBool parentIsInit = (getppid() == 1);
+    pid_t pid = fork();
     if (pid == -1) {
-	traceServer("%s: can not fork", what);
+	emsg = fxStr::format("%s: can not fork: %s", what, strerror(errno));
 	delete getty;
-	return;
+	return (ClassModem::CALLTYPE_ERROR);
     }
     if (pid == 0) {			// child, start getty session
 	setProcessPriority(BASE);	// remove any high priority
@@ -390,13 +450,13 @@ faxGettyApp::runGetty(
 	     * the time the login process terminates and the
 	     * parent retakes ownership of the lock file (see below).
 	     */
-	    modemLock->setOwner(::getpid());
-	if (::setegid(::getgid()) < 0)
+	    modemLock->setOwner(getpid());
+	if (setegid(getgid()) < 0)
 	    traceServer("runGetty::setegid: %m");
-	if (::seteuid(::getuid()) < 0)
+	if (seteuid(getuid()) < 0)
 	    traceServer("runGetty::seteuid (child): %m");
 	getty->run(getModemFd(), parentIsInit);
-	::_exit(127);
+	_exit(127);
 	/*NOTREACHED*/
     }
     traceServer("%s: START \"%s\", pid %lu", what,
@@ -408,7 +468,8 @@ faxGettyApp::runGetty(
      * close the descriptor so that the getty will get
      * SIGHUP on last close.
      */
-    discardModem(FALSE);
+    if (!keepModem)
+	discardModem(FALSE);
     changeState(GETTYWAIT);
     int status;
     getty->wait(status, TRUE);		// wait for getty/login work to complete
@@ -422,13 +483,14 @@ faxGettyApp::runGetty(
      */
     if (keepLock)
 	modemLock->setOwner(0);		// NB: 0 =>'s use setup pid
-    uid_t euid = ::geteuid();
-    if (::seteuid(::getuid()) < 0)	// Getty::hangup assumes euid is root
+    uid_t euid = geteuid();
+    if (seteuid(getuid()) < 0)		// Getty::hangup assumes euid is root
 	 traceServer("runGetty: seteuid (parent): %m");
     getty->hangup();			// cleanup getty-related stuff
-    ::seteuid(euid);
+    seteuid(euid);
     traceServer("%s: exit status %#o", what, status);
     delete getty;
+    return (CallType)((status >> 8) & 0xff);
 }
 
 /*
@@ -446,9 +508,20 @@ faxGettyApp::setRingsBeforeAnswer(int rings)
 	int fd = getModemFd();
 	IOHandler* h =
 	    Dispatcher::instance().handler(fd, Dispatcher::ReadMask);
-	if (rings > 0 && h == NULL)
+	if (rings > 0 && h == NULL) {
 	    Dispatcher::instance().link(fd, Dispatcher::ReadMask, this);
-	else if (rings == 0 && h != NULL)
+	    /*
+	     * Systems that have a tty driver based on SVR4 streams
+	     * frequently don't implement select properly in that if
+	     * output is collected by another process (e.g. cu, tip,
+	     * kermit) quickly we do not reliably get woken up.  On
+	     * these systems however the close on the tty usually
+	     * causes us to wakeup from select for an exceptional
+	     * condition on the descriptor--and this is good enough
+	     * for us to do the work we need.
+	     */
+	    Dispatcher::instance().link(fd, Dispatcher::ExceptMask, this);
+	} else if (rings == 0 && h != NULL)
 	    Dispatcher::instance().unlink(fd);
     }
 }
@@ -471,22 +544,72 @@ faxGettyApp::isCIDOk(const fxStr& cid)
 void
 faxGettyApp::notifyModemReady()
 {
-    sendQueuer("R" | getModemCapabilities());
+    (void) faxApp::sendModemStatus(getModemDeviceID(),
+	readyState | getModemCapabilities() | ":%02x", modemPriority);
 }
 
-#ifdef notdef
 /*
  * Handle notification that the modem device looks to
  * be in a state that requires operator intervention.
  */
 void
-faxQueueApp::notifyModemWedged()
+faxGettyApp::notifyModemWedged()
 {
-    logError("MODEM \"%s\" appears to be wedged", (char*) getModemDevice());
-    fxStr cmd(wedgedCmd | " " | getModemDeviceID());
-    runCmd(cmd);
+    if (!sendModemStatus("W"))
+	logError("MODEM %s appears to be wedged",
+	    (const char*) getModemDevice());
+    close();
 }
-#endif
+
+void
+faxGettyApp::notifyRecvBegun(const FaxRecvInfo& ri)
+{
+    (void) sendRecvStatus(getModemDeviceID(), "S" | ri.encode());
+
+    FaxServer::notifyRecvBegun(ri);
+}
+
+/*
+ * Handle notification that a page has been received.
+ */
+void
+faxGettyApp::notifyPageRecvd(TIFF* tif, const FaxRecvInfo& ri, int ppm)
+{
+    (void) sendRecvStatus(getModemDeviceID(), "P" | ri.encode());
+
+    FaxServer::notifyPageRecvd(tif, ri, ppm);
+
+    // XXX fill in
+}
+
+/*
+ * Handle notification that a document has been received.
+ */
+void
+faxGettyApp::notifyDocumentRecvd(const FaxRecvInfo& ri)
+{
+    (void) sendRecvStatus(getModemDeviceID(), "D" | ri.encode());
+
+    FaxServer::notifyDocumentRecvd(ri);
+
+    FaxAcctInfo ai;
+    ai.user = "fax";
+    ai.commid = getCommID();
+    ai.duration = (time_t) ri.time;
+    ai.start = Sys::now() - ai.duration;
+    ai.conntime = ai.duration;
+    ai.device = getModemDeviceID();
+    ai.dest = getModemNumber();
+    ai.csi = ri.sender;
+    ai.npages = ri.npages;
+    ai.params = ri.params.encode();
+    ai.status = ri.reason;
+    ai.jobid = "";
+    ai.jobtag = "";
+    if (!ai.record("RECV"))
+	logError("Error writing RECV accounting record, dest=%s",
+	    (const char*) ai.dest);
+}
 
 /*
  * Handle notification that a document has been received.
@@ -494,56 +617,28 @@ faxQueueApp::notifyModemWedged()
 void
 faxGettyApp::notifyRecvDone(const FaxRecvInfo& ri)
 {
-    recordRecv(ri);
+    FaxServer::notifyRecvDone(ri);
+
     // hand to delivery/notification command
-    runCmd(faxRcvdCmd
-	 | " " | ri.qfile
-	 | " " | fxStr::format("%.2f %u", ri.time / 60., ri.sigrate)
-	 | " \"" | ri.protocol | "\""
-	 | " \"" | ri.reason | "\""
-	 | " " | getModemDeviceID()
-	 , TRUE);
+    fxStr cmd(faxRcvdCmd
+	| quote |             ri.qfile	| enquote
+	| quote |   getModemDeviceID()	| enquote
+	| quote |           getCommID()	| enquote
+	| quote |            ri.reason	| enquote
+    );
+    traceServer("RECV FAX: %s", (const char*) cmd);
+    setProcessPriority(BASE);			// lower priority
+    runCmd(cmd, TRUE);
+    setProcessPriority(state);			// restore priority
 }
 
-void faxGettyApp::notifyDocumentSent(FaxRequest&, u_int)		{}
-void faxGettyApp::notifyPollRecvd(FaxRequest&, const FaxRecvInfo&)	{}
-void faxGettyApp::notifyPollDone(FaxRequest&, u_int)			{}
-
 /*
- * Send a message to the central queuer process.
+ * Send a modem status message to the central queuer process.
  */
-void
-faxGettyApp::sendQueuer(const fxStr& msg0)
+fxBool
+faxGettyApp::sendModemStatus(const char* msg)
 {
-    int fifo;
-#ifdef FIFOSELECTBUG
-    /*
-     * We try multiple times to open the appropriate FIFO
-     * file because the system has a kernel bug that forces
-     * the server to close+reopen the FIFO file descriptors
-     * for each message received on the FIFO (yech!).
-     */
-    int tries = 0;
-    do {
-	if (tries > 0)
-	    ::sleep(1);
-	fifo = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-    } while (fifo == -1 && errno == ENXIO && ++tries < 5);
-#else
-    fifo = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-#endif
-    if (fifo != -1) {
-	/*
-	 * Turn off O_NDELAY so that write will block if FIFO is full.
-	 */
-	if (::fcntl(fifo, F_SETFL, ::fcntl(fifo, F_GETFL, 0) &~ O_NDELAY) <0)
-	    logError("fcntl: %m");
-	fxStr msg("+" | getModemDeviceID() | ":" | msg0);
-	if (Sys::write(fifo, msg, msg.length()) != msg.length())
-	    logError("FIFO write failed: %m");
-	::close(fifo);
-    } else if (debug)
-	logError(fifoName | ": Can not open: %m");
+    return faxApp::sendModemStatus(getModemDeviceID(), msg);
 }
 
 /*
@@ -563,7 +658,7 @@ faxGettyApp::openFIFOs()
 void
 faxGettyApp::closeFIFOs()
 {
-    ::close(devfifo), devfifo = -1;
+    Sys::close(devfifo), devfifo = -1;
 }
 
 /*
@@ -588,18 +683,18 @@ faxGettyApp::FIFOMessage(const char* cp)
 {
     switch (cp[0]) {
     case 'A':				// answer the phone
+	traceServer("ANSWER %s", cp[1] != '\0' ? cp+1 : "any");
 	if (cp[1] != '\0') {
-	    traceServer("ANSWER %s", cp+1);
 	    if (streq(cp+1, "fax"))
 		answerPhone(ClassModem::ANSTYPE_FAX, TRUE);
 	    else if (streq(cp+1, "data"))
 		answerPhone(ClassModem::ANSTYPE_DATA, TRUE);
 	    else if (streq(cp+1, "voice"))
 		answerPhone(ClassModem::ANSTYPE_VOICE, TRUE);
-	} else {
-	    traceServer("ANSWER");
-	    answerPhone(ClassModem::ANSTYPE_ANY, TRUE);
-	}
+	    else if (streq(cp+1, "extern"))
+		answerPhone(ClassModem::ANSTYPE_EXTERN, TRUE);
+	} else
+	    answerPhone(answerRotary[0], TRUE);
 	break;
     case 'C':				// configuration control
 	traceServer("CONFIG \"%s\"", cp+1);
@@ -607,14 +702,17 @@ faxGettyApp::FIFOMessage(const char* cp)
 	break;
     case 'H':				// HELLO from queuer
 	traceServer("HELLO");
+	sendModemStatus("N" | getModemNumber());
 	if (state == FaxServer::RUNNING)
 	    notifyModemReady();		// sends capabilities also
-	else
-	    sendQueuer("D");		// good enough
 	break;
     case 'Q':				// quit
 	traceServer("QUIT");
 	close();
+	break;
+    case 'S':				// set modem ready state
+	traceServer("STATE \"%s\"", cp+1);
+	setConfigItem("modemreadystate", cp+1);
 	break;
     case 'Z':				// abort send/receive
 	FaxServer::abortSession();
@@ -628,47 +726,6 @@ faxGettyApp::FIFOMessage(const char* cp)
 /*
  * Miscellaneous stuff.
  */
-
-void
-faxGettyApp::recordRecv(const FaxRecvInfo& ri)
-{
-    char type[80];
-    if (ri.pagelength == 297 || ri.pagelength == (u_int) -1)
-	::strcpy(type, "A4");
-    else if (ri.pagelength == 364)
-	::strcpy(type, "B4");
-    else
-	::sprintf(type, "(%u x %u)", ri.pagewidth, ri.pagelength);
-    traceServer("RECV: %s from %s, %d %s pages, %u dpi, %s, %s at %u bps",
-	(char*) ri.qfile, (char*) ri.sender,
-	ri.npages, type, ri.resolution,
-	(char*) ri.protocol, fmtTime((time_t) ri.time), ri.sigrate);
-
-    FaxAcctInfo ai;
-    ai.user = "fax";
-    ai.duration = (time_t) ri.time;
-    ai.start = Sys::now() - ai.duration;
-    ai.device = getModemDeviceID();
-    ai.dest = getModemNumber();
-    ai.csi = ri.sender;
-    ai.npages = ri.npages;
-    ai.sigrate = ri.sigrate;
-    ai.df = ri.protocol;
-    ai.status = ri.reason;
-    ai.jobid = "";
-    account("RECV", ai);
-}
-
-/*
- * Record a transfer in the transfer log file.
- */
-void
-faxGettyApp::account(const char* cmd, const FaxAcctInfo& ai)
-{
-    if (!ai.record(cmd))
-	logError("Problem writing %s accounting record, dest=%s",
-	    cmd, (const char*) ai.dest);
-}
 
 /*
  * Configuration support.
@@ -687,11 +744,17 @@ const faxGettyApp::stringtag faxGettyApp::strings[] = {
 { "qualifycid",		&faxGettyApp::qualifyCID },
 { "gettyargs",		&faxGettyApp::gettyArgs },
 { "vgettyargs",		&faxGettyApp::vgettyArgs },
-{ "notifycmd",		&faxGettyApp::notifyCmd,	FAX_NOTIFYCMD },
+{ "egettyargs",		&faxGettyApp::egettyArgs },
 { "faxrcvdcmd",		&faxGettyApp::faxRcvdCmd,	FAX_FAXRCVDCMD },
 };
 const faxGettyApp::numbertag faxGettyApp::numbers[] = {
 { "answerbias",		&faxGettyApp::answerBias,	(u_int) -1 },
+};
+const faxGettyApp::booltag faxGettyApp::booleans[] = {
+{ "adaptiveanswer",	&faxGettyApp::adaptiveAnswer,	FALSE },
+{ "lockdatacalls",	&faxGettyApp::lockDataCalls,	TRUE },
+{ "lockvoicecalls",	&faxGettyApp::lockVoiceCalls,	TRUE },
+{ "lockexterncalls",	&faxGettyApp::lockExternCalls,	TRUE },
 };
 
 void
@@ -703,8 +766,11 @@ faxGettyApp::setupConfig()
 	(*this).*strings[i].p = (strings[i].def ? strings[i].def : "");
     for (i = N(numbers)-1; i >= 0; i--)
 	(*this).*numbers[i].p = numbers[i].def;
+    for (i = N(booleans)-1; i >= 0; i--)
+	(*this).*booleans[i].p = booleans[i].def;
+    readyState = "R";			// default is really ready
+    modemPriority = 255;		// default is lowest priority
     ringsBeforeAnswer = 0;		// default is not to answer phone
-    adaptiveAnswer = FALSE;		// no adaptive answer support
     setAnswerRotary("any");		// answer calls as ``any''
 }
 
@@ -719,13 +785,26 @@ faxGettyApp::setConfigItem(const char* tag, const char* value)
 	switch (ix) {
 	case 0: answerBias = fxmin(answerBias, (u_int) 2); break;
 	}
-    } else if (streq(tag, "ringsbeforeanswer"))
+    } else if (findTag(tag, (const tags*)booleans, N(booleans), ix)) {
+	(*this).*booleans[ix].p = getBoolean(value);
+    } else if (streq(tag, "ringsbeforeanswer")) {
 	setRingsBeforeAnswer(getNumber(value));
-    else if (streq(tag, "adaptiveanswer"))
-	adaptiveAnswer = getBoolean(value);
-    else if (streq(tag, "answerrotary"))
+    } else if (streq(tag, "answerrotary")) {
 	setAnswerRotary(value);
-    else
+    } else if (streq(tag, "modempriority")) {
+	u_int p = getNumber(value);
+	if (p != modemPriority) {
+	    modemPriority = p;
+	    if (state == FaxServer::RUNNING)
+		notifyModemReady();
+	}
+    } else if (streq(tag, "modemreadystate")) {
+	if (readyState != value) {
+	    readyState = value;
+	    if (state == FaxServer::RUNNING)
+		notifyModemReady();
+	}
+    } else
 	return (FaxServer::setConfigItem(tag, value));
     return (TRUE);
 }
@@ -737,8 +816,9 @@ faxGettyApp::setConfigItem(const char* tag, const char* value)
 void
 faxGettyApp::setAnswerRotary(const fxStr& value)
 {
+    u_int i;
     u_int l = 0;
-    for (u_int i = 0; i < 3 && l < value.length(); i++) {
+    for (i = 0; i < 3 && l < value.length(); i++) {
 	fxStr type(value.token(l, " \t"));
 	type.raisecase();
 	if (type == "FAX")
@@ -747,9 +827,11 @@ faxGettyApp::setAnswerRotary(const fxStr& value)
 	    answerRotary[i] = ClassModem::ANSTYPE_DATA;
 	else if (type == "VOICE")
 	    answerRotary[i] = ClassModem::ANSTYPE_VOICE;
+	else if (type == "EXTERN")
+	    answerRotary[i] = ClassModem::ANSTYPE_EXTERN;
 	else {
 	    if (type != "ANY")
-		configError("Unknown answer type \"%s\"", (char*) type);
+		configError("Unknown answer type \"%s\"", (const char*) type);
 	    answerRotary[i] = ClassModem::ANSTYPE_ANY;
 	}
     }
@@ -762,7 +844,7 @@ faxGettyApp::setAnswerRotary(const fxStr& value)
 static void
 usage(const char* appName)
 {
-    fxFatal("usage: %s [-q queue-dir] [-Ddpx] modem-device", appName);
+    faxApp::fatal("usage: %s [-c config-item] [-q queue-dir] [-Dpx] modem-device", appName);
 }
 
 static void
@@ -770,7 +852,7 @@ sigCleanup(int s)
 {
     logError("CAUGHT SIGNAL %d", s);
     faxGettyApp::instance().close();
-    ::_exit(-1);
+    _exit(-1);
 }
 
 int
@@ -784,14 +866,13 @@ main(int argc, char** argv)
 
     faxGettyApp::setupPermissions();
 
-    faxApp::setOpts("q:Ddpx");			// p+x are for FaxServer
+    faxApp::setOpts("c:q:Ddpx");		// p+x are for ModemServer
 
     fxStr queueDir(FAX_SPOOLDIR);
     fxStr device;
     GetoptIter iter(argc, argv, faxApp::getOpts());
     for (; iter.notDone(); iter++)
 	switch (iter.option()) {
-	case 'm': device = iter.optArg(); break;	// compatibility
 	case 'q': queueDir = iter.optArg(); break;
 	case '?': usage(appName);
 	}
@@ -801,29 +882,14 @@ main(int argc, char** argv)
 	    usage(appName);
     }
     if (device[0] != '/')				// for getty
-	device.insert(DEV_PREFIX);
+	device.insert(_PATH_DEV);
     if (Sys::chdir(queueDir) < 0)
-	fxFatal(queueDir | ": Can not change directory");
+	faxApp::fatal(queueDir | ": Can not change directory");
 
-    /*
-     * Construct an identifier for the device special
-     * file by stripping a leading prefix (DEV_PREFIX)
-     * and converting all remaining '/'s to '_'s.  This
-     * is required for SVR4 systems which have their
-     * devices in subdirectories!
-     */
-    fxStr devID = device;
-    fxStr prefix(DEV_PREFIX);
-    u_int pl = prefix.length();
-    if (devID.length() > pl && devID.head(pl) == prefix)
-	devID.remove(0, pl);
-    while ((l = devID.next(0, '/')) < devID.length())
-	devID[l] = '_';
+    faxGettyApp* app = new faxGettyApp(device, faxApp::devToID(device));
 
-    faxGettyApp* app = new faxGettyApp(device, devID);
-
-    ::signal(SIGTERM, fxSIGHANDLER(sigCleanup));
-    ::signal(SIGINT, fxSIGHANDLER(sigCleanup));
+    signal(SIGTERM, fxSIGHANDLER(sigCleanup));
+    signal(SIGINT, fxSIGHANDLER(sigCleanup));
 
     app->initialize(argc, argv);
     app->open();

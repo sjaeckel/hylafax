@@ -1,12 +1,12 @@
 #! @SCRIPT_SH@
-#	$Header: /usr/people/sam/fax/./port/RCS/install.sh.in,v 1.17 1995/04/08 21:37:17 sam Rel $
+#	$Id: install.sh.in,v 1.20 1996/06/24 03:04:33 sam Rel $
 #
 # @WARNING@
 #
 # HylaFAX Facsimile Software
 #
-# Copyright (c) 1990-1995 Sam Leffler
-# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# Copyright (c) 1990-1996 Sam Leffler
+# Copyright (c) 1991-1996 Silicon Graphics, Inc.
 # HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
@@ -92,6 +92,10 @@ ECHO=@ECHO@
 VERBOSE=":"
 STRIP="@STRIP@"
 CMP=@CMP@
+objectExists()
+{
+    return 1
+}
 
 TARGETS=
 while [ x"$1" != x ]
@@ -106,17 +110,39 @@ do
     -root)	shift; ROOT=$1;;
     -dir)	CMD=@MKDIR@; HasSource=no;
 		RM=":"; STRIP=":"
+		objectExists()
+		{
+		    test -d $1
+		}
 		;;
     -fifo)	CMD=@MKFIFO@; HasSource=no;
-		x=`echo $CMD | @SED@ 's;.*/;;'`;
-		test $x = mknod && postopts="p";
+		case $CMD in
+		*mknod)	postopts="p";;
+		esac
 		STRIP=":"
+		objectExists()
+		{
+		    #
+		    # If -p is not supported then the right thing
+		    # should still happen...
+		    #
+		    test -p $1 >/dev/null 2>&1
+		}
 		;;
     -ln)	shift; CMD=@LN@; SRC="$1"
 		STRIP=":"
 		;;
     -lns)	shift; CMD=@LN@; preopts="@LN_S@"; SRC="$1"
 		STRIP=":"
+		objectExists()
+		{
+		    #
+		    # Some systems support -h to check for a
+		    # symbolic link and others -l; one should
+		    # do the right thing or both should fail.
+		    #
+		    (test -h $1 || test -l $1) >/dev/null 2>&1
+		}
 		;;
     -src)	shift; SRC="$1";;
     -[fF])	shift; DESTDIR="$1";;
@@ -155,6 +181,8 @@ install()
     if [ -z "$SRC" -a $HasSource = yes ]; then
 	$VERBOSE "$CMD $preopts $src $target $postopts"
 	$CMD $preopts $f $target $postopts
+    elif [ $SaveFirst = no ] && objectExists $target; then
+	$VERBOSE "$target exists; not remade"
     else
 	$VERBOSE "$CMD $preopts $SRC $target $postopts"
 	$CMD $preopts $SRC $target $postopts

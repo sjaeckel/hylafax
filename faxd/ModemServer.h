@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/ModemServer.h,v 1.14 1995/04/08 21:30:59 sam Rel $ */
+/*	$Id: ModemServer.h,v 1.23 1996/07/10 22:18:02 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -51,12 +51,19 @@ class FaxMachineLog;
  * ClassModem driver interface.
  */
 class ModemServer : public ServerConfig, public IOHandler {
+protected:
+    enum Parity {
+	NONE            = 0,
+	EVEN            = 1,
+	ODD             = 2
+    };
 private:
     FILE*	statusFile;		// server status file
     fxBool	deduceComplain;		// if true, complain when can't deduce
     fxBool	changePriority;		// change process priority by state
     fxBool	delayConfig;		// suppress effects while reading config
     fxStr	dialRulesFile;		// dial string rules filename
+    fxStr	commid;			// communication ID
 // generic modem-related stuff
     int		modemFd;		// open modem file
     fxStr	modemDevice;		// name of device to open
@@ -65,7 +72,11 @@ private:
     Timeout	timer;			// timeout support class
     fxBool	timeout;		// timeout during i/o operations
     fxStr	configFile;		// pathname to configuration file
-    BaudRate	curRate;		// current baud rate
+    BaudRate	curRate;		// current termio baud rate
+    Parity	curParity;		// current termio parity setting
+    u_int	curVMin;		// current termio VMIN setting
+    u_int	curVTime;		// current termio VTIME setting
+    u_int	setupAttempts;		// consec. failed attempts to init modem
 // buffered i/o stuff
     short	rcvCC;			// # bytes pending in rcvBuf
     short	rcvNext;		// next available byte in rcvBuf
@@ -83,6 +94,9 @@ private:
     fxBool	openDevice(const char* dev);
     fxBool	reopenDevice();
     fxBool	tcsetattr(int op, struct termios& term);
+    fxBool	tcgetattr(const char* method, struct termios& term);
+    static void setFlow(struct termios&, FlowControl iflow, FlowControl oflow);
+    static void setParity(struct termios&, Parity);
 
 // general trace interface
     void	traceModemIO(const char* dir, const u_char* buf, u_int cc);
@@ -122,11 +136,6 @@ protected:
     void	startTimeout(long ms);
     void	stopTimeout(const char* whichdir);
 // modem line control
-    enum Parity {
-	NONE            = 0,
-	EVEN            = 1,
-	ODD             = 2
-    };
     fxBool	sendBreak(fxBool pause);
     fxBool	setBaudRate(BaudRate rate);
     fxBool	setBaudRate(BaudRate rate, FlowControl i, FlowControl o);
@@ -138,6 +147,7 @@ protected:
 // modem driver interfaces
     fxBool	modemWaitForRings(u_int rings, CallType&, CallerID&);
     CallType	modemAnswerCall(AnswerType, fxStr&);
+    void	modemAnswerCallCmd(CallType);
     void	modemFlushInput();
     void	modemHangup();
 // server state and related control interfaces
@@ -147,17 +157,20 @@ protected:
 // system logging interfaces
     void	traceServer(const char* fmt ...);
     void	traceProtocol(const char* fmt ...);
+    void	traceModemOp(const char* fmt ...);
     void	traceStatus(int kind, const char* fmt ...);
 // modem locking interfaces implemented in derived class
     virtual fxBool lockModem() = 0;
     virtual void unlockModem() = 0;
 // notification interfaces implemented in derived class
     virtual void notifyModemReady() = 0;
+    virtual void notifyModemWedged() = 0;
 // configuration stuff
     virtual void readConfig(const fxStr& filename);
     virtual void resetConfig();
-    virtual void configError(const char* fmt, ...);
-    virtual void configTrace(const char* fmt, ...);
+    virtual void vconfigError(const char* fmt, va_list ap);
+    virtual void vconfigTrace(const char* fmt, va_list ap);
+    virtual void vdialrulesTrace(const char* fmt, va_list ap);
     const fxStr& getConfigFile() const;
 // call/receive session start+end for controlling logging
     void	beginSession(const fxStr& number);
@@ -176,6 +189,7 @@ public:
     const fxStr& getModemDevice() const;
     const fxStr& getModemDeviceID() const;
     const fxStr& getModemNumber() const;
+    const fxStr& getCommID() const;
 
     int		getSessionTracing() const;
     int		getServerTracing() const;
@@ -184,6 +198,17 @@ public:
     fxBool	modemReady() const;
     fxBool	serverBusy() const;
 };
-inline ClassModem* ModemServer::getModem()	{ return modem; }
-inline int ModemServer::getModemFd()		{ return modemFd; }
+inline ClassModem* ModemServer::getModem()		{ return modem; }
+inline int ModemServer::getModemFd()			{ return modemFd; }
+inline int ModemServer::getServerTracing() const
+    { return (tracingLevel); }
+inline int ModemServer::getSessionTracing() const
+    { return (logTracingLevel); }
+inline const fxStr& ModemServer::getModemDevice() const
+    { return modemDevice; }
+inline const fxStr& ModemServer::getModemDeviceID() const
+    { return modemDevID; }
+inline const fxStr& ModemServer::getModemNumber() const
+    { return FAXNumber; }
+inline const fxStr& ModemServer::getCommID() const	{ return commid; }
 #endif /* _ModemServer_ */

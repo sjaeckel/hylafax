@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/GettySysV.c++,v 1.41 1995/04/08 21:30:44 sam Rel $ */
+/*	$Id: GettySysV.c++,v 1.47 1996/07/31 17:38:39 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -28,7 +28,6 @@
 #include <limits.h>
 #include <stddef.h>
 #include <termios.h>
-#include <osfcn.h>
 #include <sys/ioctl.h>
 extern "C" {
 #include <utmp.h>
@@ -86,16 +85,16 @@ SysVSubProc::setupSession(int modemFd)
      * Close everything down except the modem so
      * that the remote side doesn't get hung up on.
      */
-    for (fd = _POSIX_OPEN_MAX-1; fd >= 0; fd--)
+    for (fd = Sys::getOpenMax()-1; fd >= 0; fd--)
 	if (fd != modemFd)
-	    ::close(fd);
-    ::fclose(stdin);
+	    Sys::close(fd);
+    fclose(stdin);
     /*
      * Now make the line be the controlling tty
      * and create a new process group/session for
      * the login process that follows.
      */
-    ::setsid();
+    setsid();
 #ifndef sco
     fd = Sys::open(getLine(), O_RDWR|O_NONBLOCK);
 #else
@@ -104,21 +103,21 @@ SysVSubProc::setupSession(int modemFd)
 #endif
     if (fd != STDIN_FILENO)
 	fatal("Can not setup \"%s\" as stdin", getLine());
-    if (::fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) &~ O_NONBLOCK))
+    if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) &~ O_NONBLOCK))
 	fatal("Can not reset O_NONBLOCK: %m");
-    ::close(modemFd);			// done with this, pitch it
+    Sys::close(modemFd);		// done with this, pitch it
 
     /*
      * Turn off CLOCAL so that SIGHUP is sent on modem disconnect.
      */
     struct termios term;
-    if (::tcgetattr(fd, &term) == 0) {
+    if (tcgetattr(fd, &term) == 0) {
 	term.c_cflag &= ~CLOCAL;
-	::tcsetattr(fd, TCSAFLUSH, &term);
+	tcsetattr(fd, TCSAFLUSH, &term);
     }
 #ifdef TIOCSSOFTCAR
     /* turn the Solaris 2 soft carrier "feature" off */
-    { int off = 0; ::ioctl(fd, TIOCSSOFTCAR, &off); }
+    { int off = 0; ioctl(fd, TIOCSSOFTCAR, &off); }
 #endif
     Getty::setupSession(fd);
 }
@@ -147,12 +146,12 @@ SysVGetty::writeWtmp(utmp* ut)
 {
     // append record of login to wtmp file
 #if HAS_UTMPX
-    ::updwtmpx(_PATH_WTMPX, ut);
+    updwtmpx(_PATH_WTMPX, ut);
 #else
     int fd = Sys::open(_PATH_WTMP, O_WRONLY|O_APPEND);
     if (fd >= 0) {
 	Sys::write(fd, (char *)ut, sizeof (*ut));
-	::close(fd);
+	Sys::close(fd);
     }
 #endif
 }
@@ -164,7 +163,7 @@ void
 SysVGetty::loginAccount()
 {
     static utmp ut;			// zero unset fields
-    ut.ut_pid = ::getpid();
+    ut.ut_pid = getpid();
     ut.ut_type = LOGIN_PROCESS;
 #if HAS_UTEXIT
     ut.ut_exit.e_exit = 0;
@@ -172,7 +171,7 @@ SysVGetty::loginAccount()
 #endif
     ut.ut_time = Sys::now();
     // mark utmp entry as a login
-    ::strncpy(ut.ut_user, "LOGIN", sizeof (ut.ut_user));
+    strncpy(ut.ut_user, "LOGIN", sizeof (ut.ut_user));
     /*
      * For SVR4 systems, use the trailing component of
      * the pathname to avoid problems where truncation
@@ -181,11 +180,11 @@ SysVGetty::loginAccount()
     fxStr id(getLine());
     if (id.length() > sizeof (ut.ut_id))
 	id.remove(0, id.length() - sizeof (ut.ut_id));
-    ::strncpy(ut.ut_id, (char*) id, sizeof (ut.ut_id));
-    ::strncpy(ut.ut_line, getLine(), sizeof (ut.ut_line));
-    ::setutent();
-    ::pututline(&ut);
-    ::endutent();
+    strncpy(ut.ut_id, (char*) id, sizeof (ut.ut_id));
+    strncpy(ut.ut_line, getLine(), sizeof (ut.ut_line));
+    setutent();
+    pututline(&ut);
+    endutent();
     writeWtmp(&ut);
 }
 
@@ -203,22 +202,22 @@ SysVGetty::hangup()
 {
     // at this point we're root and we can reset state
     struct utmp* ut;
-    ::setutent();
-    while ((ut = ::getutent()) != NULL) { 
+    setutent();
+    while ((ut = getutent()) != NULL) { 
 	if (!strneq(ut->ut_line, getLine(), sizeof (ut->ut_line)))
 	    continue;
-	::memset(ut->ut_user, 0, sizeof (ut->ut_user));
+	memset(ut->ut_user, 0, sizeof (ut->ut_user));
 	ut->ut_type = DEAD_PROCESS;
 #if HAS_UTEXIT
 	ut->ut_exit.e_exit = (exitStatus >> 8) & 0xff;		// XXX
 	ut->ut_exit.e_termination = exitStatus & 0xff;		// XXX
 #endif
 	ut->ut_time = Sys::now();
-	::pututline(ut);
+	pututline(ut);
 	writeWtmp(ut);
 	break;
     }
-    ::endutent();
+    endutent();
     Getty::hangup();
 }
 
@@ -244,5 +243,11 @@ OSnewGetty(const fxStr& dev, const fxStr& speed)
 Getty*
 OSnewVGetty(const fxStr& dev, const fxStr& speed)
 {
-    return (new SysVSubProc("bin/vgetty", dev, speed));
+    return (new SysVSubProc(_PATH_VGETTY, dev, speed));
+}
+
+Getty*
+OSnewEGetty(const fxStr& dev, const fxStr& speed)
+{
+    return (new SysVSubProc(_PATH_EGETTY, dev, speed));
 }

@@ -1,5 +1,6 @@
 <HTML>
 <HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
 <TITLE>
 Installation from a Source Distribution
 </TITLE>
@@ -16,32 +17,38 @@ Installation from a Source Distribution
 The source distribution comes in a compressed tar file.  To extract the
 software do something like:
 
-<UL><PRE><TT>
+<UL><LISTING>
 % zcat &lt;somewhere&gt;/v3.0beta099-tar.Z | tar xf -
-</TT></PRE></UL>
+</LISTING></UL>
 
 (uncompress and extract individual files).  The
-software is mostly written in C++.  If you do not have a working C++
+software is almost entirely written in C++. 
+If you do not have a working C++
 compiler and associated libraries for your machine, check
 <A HREF="building.html">here for information on obtaining GNU gcc
 and libg++</A>.
 
 <P>
-<IMG SRC="icons/warning_icon.gif" ALT="NOTE: " ALIGN=left HSPACE=8>
-<EM>If you plan to use GNU gcc to build the software, you must use version
+<TABLE BORDER=0>
+<TR>
+<TD><IMG SRC="icons/warning_icon.gif" ALT="NOTE: " HSPACE=4></TD>
+<TD><EM>If you plan to use GNU gcc to build the software, you must use version
 2.6.1 or newer.  gcc 2.6.3 and libg++ 2.6.2 are the current recommended versions
-of the GNU tools to use</EM>.
+of the GNU tools to use, though newer versions should also work</EM>.</TD>
+</TR>
+</TABLE>
 
 <P>
-To build and install executables from the sources check the <B>README</B>
-file for any known problems, then do the following:
+To build and install executables from the sources check the
+the <A HREF=setup.html#Guidance>section on system-specific guidance</A>
+for any known problems, then do the following:
 
-<UL><PRE><TT>
+<UL><LISTING>
 % ./configure		# see <A HREF="building.html#Building">above</A>
 % make
 % su			# NB: installation must be done by the super-user
 # make install
-</TT></PRE></UL>
+</LISTING></UL>
 
 If you have problems building the software consult the
 <A HREF="building.html">complete documentation on building the software</A>
@@ -70,17 +77,21 @@ where the build took place.
 </UL>
 
 <P>
-Once you have the software installed, see <A HREF="setup.html">
-Server Setup and Basic Configuration</A>.
-<P>
+Once you have the software installed, see the chapter on
+<A HREF="setup.html">
+Server Setup and Basic Configuration</A> to understand how to
+complete the installation procedure.
 
+<!--FOOTER-->
+
+<P>
 <A HREF="toc.html"><IMG SRC="icons/back.gif"> HylaFAX table of contents</A>.<BR>
 
 <HR>
 
 <ADDRESS>
 <A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
-Last updated $Date: 1995/02/20 01:21:22 $.
+Last updated $Date: 1996/08/16 21:03:37 $.
 </ADDRESS>
 
 </BODY>

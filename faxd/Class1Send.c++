@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1Send.c++,v 1.79 1995/04/08 21:29:37 sam Rel $ */
+/*	$Id: Class1Send.c++,v 1.89 1996/08/21 21:02:47 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -36,16 +36,14 @@
 #include "t.30.h"
 
 /*
- * Dial the phone number.  We override this method
- * so that we can force the terminal into a known
- * flow control state.
+ * Force the tty into a known flow control state.
  */
-CallStatus
-Class1Modem::dialFax(const char* number, const Class2Params& dis, fxStr& emsg)
+fxBool
+Class1Modem::sendSetup(FaxRequest& req, const Class2Params& dis, fxStr& emsg)
 {
     if (flowControl == FLOW_XONXOFF)
 	setXONXOFF(FLOW_NONE, FLOW_NONE, ACT_FLUSH);
-    return (FaxModem::dialFax(number, dis, emsg));
+    return (FaxModem::sendSetup(req, dis, emsg));
 }
 
 /*
@@ -87,9 +85,9 @@ Class1Modem::dialResponse(fxStr& emsg)
 }
 
 void
-Class1Modem::sendBegin(const FaxRequest& req)
+Class1Modem::sendBegin()
 {
-    FaxModem::sendBegin(req);
+    FaxModem::sendBegin();
     setInputBuffering(FALSE);
     // polling accounting?
     params.br = (u_int) -1;			// force initial training
@@ -99,7 +97,7 @@ Class1Modem::sendBegin(const FaxRequest& req)
  * Get the initial DIS command.
  */
 FaxSendStatus
-Class1Modem::getPrologue(Class2Params& params, u_int& nsf, fxStr& csi, fxBool& hasDoc, fxStr& emsg)
+Class1Modem::getPrologue(Class2Params& params, fxBool& hasDoc, fxStr& emsg)
 {
     u_int t1 = howmany(conf.t1Timer, 1000);		// T1 timer in seconds
     time_t start = Sys::now();
@@ -114,20 +112,17 @@ Class1Modem::getPrologue(Class2Params& params, u_int& nsf, fxStr& csi, fxBool& h
 	     * An HDLC frame was received; process any
 	     * optional frames that precede the DIS.
 	     */
-	    csi = "";
-	    nsf = 0;
 	    do {
 		switch (frame.getRawFCF()) {
 		case FCF_NSF:
-		    nsf = frame.getDataWord();
 		    break;
 		case FCF_CSI:
-		    decodeTSI(csi, frame);
-		    recvCSI(csi);
+		    { fxStr csi; recvCSI(decodeTSI(csi, frame)); }
 		    break;
 		case FCF_DIS:
 		    dis = frame.getDIS();
-		    params.setFromDIS(dis, frame.getXINFO());
+		    xinfo = frame.getXINFO();
+		    params.setFromDIS(dis, xinfo);
 		    curcap = NULL;			// force initial setup
 		    break;
 		}
@@ -159,7 +154,7 @@ Class1Modem::getPrologue(Class2Params& params, u_int& nsf, fxStr& csi, fxBool& h
 	}
 	/*
 	 * This delay is only supposed to be done if the signal
-	 * is gone (see p.105 of Rec. T.30).  We just presume
+	 * is gone (see p.105 of Rec. T.30).  We just assume
 	 * it rather than send a command to the modem to check.
 	 */
 	pause(200);
@@ -180,8 +175,16 @@ Class1Modem::getPrologue(Class2Params& params, u_int& nsf, fxStr& csi, fxBool& h
  * to entering Phase B of the send protocol.
  */
 void
-Class1Modem::sendSetupPhaseB()
+Class1Modem::sendSetupPhaseB(const fxStr& p, const fxStr& s)
 {
+    if (xinfo&DIS_PWD)
+	encodePWD(pwd, p);
+    else
+	pwd = fxStr::null;
+    if (xinfo&DIS_SUB)
+	encodePWD(sub, s);
+    else
+	sub = fxStr::null;
 }
 
 const u_int Class1Modem::modemPFMCodes[8] = {
@@ -238,7 +241,7 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 	/*
 	 * Transmit the facsimile message/Phase C.
 	 */
-	if (!sendPage(tif, params, emsg))
+	if (!sendPage(tif, params, decodePageChop(pph, params), emsg))
 	    return (send_retry);	// a problem, disconnect
 	/*
 	 * Everything went ok, look for the next page to send.
@@ -276,8 +279,12 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		/* fall thru... */
 	    case FCF_MCF:		// ack confirmation
 	    case FCF_PIP:		// ack, w/ operator intervention
-		countPage();		// update server
-		pph.remove(0,3);	// discard page-handling info
+		countPage();		// bump page count
+		notifyPageSent(tif);	// update server
+		if (pph[2] == 'Z')
+		    pph.remove(0,2+5+1);// discard page-chop+handling info
+		else
+		    pph.remove(0,3);	// discard page-handling info
 		ntrys = 0;
 		if (ppr == FCF_PIP) {
 		    emsg = "Procedure interrupt (operator intervention)";
@@ -344,25 +351,51 @@ Class1Modem::sendTCF(const Class2Params& params, u_int ms)
 {
     u_int tcfLen = params.transferSize(ms);
     u_char* tcf = new u_char[tcfLen];
-    ::memset(tcf, 0, tcfLen);
+    memset(tcf, 0, tcfLen);
     fxBool ok = transmitData(curcap->value, tcf, tcfLen, frameRev, TRUE);
     delete tcf;
     return ok;
 }
 
 /*
- * Send the training prologue frames; TSI and DCS.
+ * Send the training prologue frames:
+ *     PWD	password (optional)
+ *     SUB	subaddress (optional)
+ *     TSI	transmitter subscriber id
+ *     DCS	digital command signal
  */
 fxBool
-Class1Modem::sendPrologue(u_int dcs, const fxStr& tsi)
+Class1Modem::sendPrologue(u_int dcs, u_int dcs_xinfo, const fxStr& tsi)
 {
-    if (transmitFrame(FCF_TSI|FCF_SNDR, tsi, FALSE)) {
-	startTimeout(2550);			// 3.0 - 15% = 2.55 secs
-	fxBool frameSent = sendFrame(FCF_DCS|FCF_SNDR, dcs);
-	stopTimeout("sending DCS frame");
-	return (frameSent);
-    } else
+    fxBool frameSent = (
+	atCmd(thCmd, AT_NOTHING) &&
+	atResponse(rbuf, 2550) == AT_CONNECT
+    );
+    if (!frameSent)
 	return (FALSE);
+    if (pwd != fxStr::null) {
+	startTimeout(2550);		// 3.0 - 15% = 2.55 secs
+	fxBool frameSent = sendFrame(FCF_PWD|FCF_SNDR, pwd, FALSE);
+	stopTimeout("sending PWD frame");
+	if (!frameSent)
+	    return (FALSE);
+    }
+    if (sub != fxStr::null) {
+	startTimeout(2550);		// 3.0 - 15% = 2.55 secs
+	fxBool frameSent = sendFrame(FCF_SUB|FCF_SNDR, sub, FALSE);
+	stopTimeout("sending SUB frame");
+	if (!frameSent)
+	    return (FALSE);
+    }
+    startTimeout(2550);			// 3.0 - 15% = 2.55 secs
+    frameSent = sendFrame(FCF_TSI|FCF_SNDR, tsi, FALSE);
+    stopTimeout("sending TSI frame");
+    if (!frameSent)
+	return (FALSE);
+    startTimeout(2550);			// 3.0 - 15% = 2.55 secs
+    frameSent = sendFrame(FCF_DCS|FCF_SNDR, dcs, dcs_xinfo);
+    stopTimeout("sending DCS frame");
+    return (frameSent);
 }
 
 /*
@@ -375,21 +408,24 @@ isCapable(u_int sr, u_int dis)
     dis = (dis & DIS_SIGRATE) >> 10;
     switch (sr) {
     case DCSSIGRATE_2400V27:
+	if (dis == DISSIGRATE_V27FB)
+	    return (TRUE);
+	/* fall thru... */
     case DCSSIGRATE_4800V27:
-	return ((dis & (DISSIGRATE_V27|DISSIGRATE_V27FB)) != 0);
+	return ((dis & DISSIGRATE_V27) != 0);
     case DCSSIGRATE_9600V29:
     case DCSSIGRATE_7200V29:
 	return ((dis & DISSIGRATE_V29) != 0);
     case DCSSIGRATE_14400V33:
     case DCSSIGRATE_12000V33:
-	if (dis == 0xE)
+	if (dis == DISSIGRATE_V33)
 	    return (TRUE);
 	/* fall thru... */
     case DCSSIGRATE_14400V17:
     case DCSSIGRATE_12000V17:
     case DCSSIGRATE_9600V17:
     case DCSSIGRATE_7200V17:
-	return (dis == 0xD);
+	return (dis == DISSIGRATE_V17);
     }
     return (FALSE);
 }
@@ -404,7 +440,8 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 	emsg = "DIS/DTC received 3 times; DCS not recognized";
 	return (FALSE);
     }
-    u_int dcs = params.getDCS();		// NB: 32-bit DCS
+    u_int dcs = params.getDCS();		// NB: 24-bit DCS and
+    u_int dcs_xinfo = params.getXINFO();	//     32-bit extension
     if (!curcap) {
 	/*
 	 * Select Class 1 capability: use params.br to hunt
@@ -426,14 +463,13 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 	 * modulation technique (v.27, v.29, v.17, v.33).
 	 */
 	params.br = curcap->br;
-	// NB: <<8's are because dcs is in 32-bit format
-	dcs = (dcs &~ (DCS_SIGRATE<<8)) | (curcap->sr<<8);
+	dcs = (dcs &~ DCS_SIGRATE) | curcap->sr;
 	int t = 2;
 	do {
 	    protoTrace("SEND training at %s %s",
 		modulationNames[curcap->mod],
 		Class2Params::bitRateNames[curcap->br]);
-	    if (!sendPrologue(dcs, lid)) {
+	    if (!sendPrologue(dcs, dcs_xinfo, lid)) {
 		if (abortRequested())
 		    goto done;
 		protoTrace("Error sending T.30 prologue frames");
@@ -468,7 +504,7 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 			{ u_int nsf = frame.getDataWord(); }
 			break;
 		    case FCF_CSI:
-			{ fxStr csi; decodeTSI(csi, frame); recvCSI(csi); }
+			{ fxStr csi; recvCSI(decodeTSI(csi, frame)); }
 			break;
 		    }
 		} while (frame.moreFrames() && recvFrame(frame, conf.t4Timer));
@@ -485,7 +521,8 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 		    { u_int newDIS = frame.getDIS();
 		      if (newDIS != dis) {
 			dis = newDIS;
-			params.setFromDIS(dis, frame.getXINFO());
+			xinfo = frame.getXINFO();
+			params.setFromDIS(dis, xinfo);
 			curcap = NULL;
 		      }
 		    }
@@ -508,7 +545,7 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 	 */
     } while (dropToNextBR(params));
 failed:
-    emsg = "Failure to train remote modem";
+    emsg = "Failure to train remote modem at 2400 bps or minimum speed";
 done:
     protoTrace("TRAINING failed");
     return (FALSE);
@@ -522,7 +559,7 @@ fxBool
 Class1Modem::dropToNextBR(Class2Params& params)
 {
     for (;;) {
-	if (params.br == BR_2400)
+	if (params.br == minsp)
 	    return (FALSE);
 	// get ``best capability'' of modem at this baud rate
 	curcap = findBRCapability(--params.br, xmitCaps);
@@ -634,7 +671,7 @@ EOLcode(u_long& w)
  * Send a page of data.
  */
 fxBool
-Class1Modem::sendPage(TIFF* tif, const Class2Params& params, fxStr& emsg)
+Class1Modem::sendPage(TIFF* tif, const Class2Params& params, u_int pageChop, fxStr& emsg)
 {
     /*
      * Set high speed carrier & start transfer.  If the
@@ -651,117 +688,129 @@ Class1Modem::sendPage(TIFF* tif, const Class2Params& params, fxStr& emsg)
     protoTrace("SEND begin page");
     if (flowControl == FLOW_XONXOFF)
 	setXONXOFF(FLOW_XONXOFF, FLOW_NONE, ACT_FLUSH);
-    /*
-     * Correct bit order of data if not what modem expects.
-     */
-    uint16 fillorder;
-    TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
-    const u_char* bitrev =
-	TIFFGetBitRevTable(conf.sendFillOrder != FILLORDER_LSB2MSB);
-    uint32* stripbytecount;
-    (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
-    u_char* fill;
-    u_char* eoFill;
-    u_long w = 0xffffff;
-    u_int minLen = params.minScanlineSize();
-    if (minLen > 0) {
+
+    tstrip_t nstrips = TIFFNumberOfStrips(tif);
+    if (nstrips > 0) {
 	/*
-	 * Client requires a non-zero min-scanline time.  We
-	 * comply by zero-padding scanlines that have <minLen
-	 * bytes of data to send.  To minimize underrun we
-	 * do this padding in a strip-sized buffer.
+	 * Correct bit order of data if not what modem expects.
 	 */
-	uint32 rowsperstrip;
-	TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-	if (rowsperstrip == (uint32) -1)
-	     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &rowsperstrip);
-	fill = new u_char[minLen*rowsperstrip];
-	eoFill = fill + minLen*rowsperstrip;
-    }
-    fxBool firstStrip = setupTagLineSlop(params);
-    u_int ts = getTagLineSlop();
-    u_char* fp = fill;
-    for (tstrip_t strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
-	uint32 totbytes = stripbytecount[strip];
-	if (totbytes > 0) {
-	    u_char* data = new u_char[totbytes+ts];
-	    if (TIFFReadRawStrip(tif, strip, data+ts, totbytes) >= 0) {
-		u_char* dp;
-		if (firstStrip) {
-		    /*
-		     * Generate tag line at the top of the page.
-		     */
-		    dp = imageTagLine(data, fillorder, params);
-		    totbytes = totbytes+ts - (dp-data);
-		    firstStrip = FALSE;
-		} else
-		    dp = data;
-		/*
-		 * Send the strip of data.  This is slightly complicated
-		 * by the fact that we may have to add zero-fill before the
-		 * EOL codes to bring the transmit time for each scanline
-		 * up to the negotiated min-scanline time.
-		 *
-		 * Note that we blindly force the data to be in LSB2MSB bit
-		 * order so that the EOL locating code works (if needed).
-		 * This may result in two extraneous bit reversals if the
-		 * modem wants the data in MSB2LSB order, but for now we'll
-		 * avoid the temptation to optimize.
-		 */
-		if (fillorder != FILLORDER_LSB2MSB)
-		    TIFFReverseBits(dp, totbytes);
-		if (minLen > 0) {
-		    u_char* bp = dp;
-		    u_char* ep = dp+totbytes;
-		    do {
-			u_char* bol = bp;
-			do {
-			    w = (w<<8) | *bp++;
-			} while (!EOLcode(w) && bp < ep);
-			/*
-			 * We're either at an EOL code or at the end of data.
-			 * If necessary, insert zero-fill before the last byte
-			 * in the EOL code so that we comply with the
-			 * negotiated min-scanline time.
-			 */
-			u_int lineLen = bp - bol;
-			if (fp + fxmax(lineLen, minLen) >= eoFill) {
-			    /*
-			     * Not enough space for this scanline, flush
-			     * the current data and reset the pointer into
-			     * the zero fill buffer.
-			     */
-			    rc = sendPageData(fill, fp-fill, bitrev);
-			    fp = fill;
-			    if (!rc)			// error writing data
-				break;
-			}
-			::memcpy(fp, bol, lineLen);	// first part of line
-			fp += lineLen;
-			if (lineLen < minLen) {		// must zero-fill
-			    u_int zeroLen = minLen - lineLen;
-			    ::memset(fp-1, 0, zeroLen);	// zero padding
-			    fp += zeroLen;
-			    fp[-1] = bp[-1];		// last byte in EOL
-			}
-		    } while (bp < ep);
-		} else {
-		    /*
-		     * No EOL-padding needed, just jam the bytes.
-		     */
-		    rc = sendPageData(dp, (u_int) totbytes, bitrev);
-		}
-	    }
-	    delete data;
+	uint16 fillorder;
+	TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
+	const u_char* bitrev =
+	    TIFFGetBitRevTable(conf.sendFillOrder != FILLORDER_LSB2MSB);
+	/*
+	 * Setup tag line processing.
+	 */
+	fxBool doTagLine = setupTagLineSlop(params);
+	u_int ts = getTagLineSlop();
+	/*
+	 * Calculate total amount of space needed to read
+	 * the image into memory (in its encoded format).
+	 */
+	uint32* stripbytecount;
+	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
+	tstrip_t strip;
+	uint32 totdata = 0;
+	for (strip = 0; strip < nstrips; strip++)
+	    totdata += stripbytecount[strip];
+	/*
+	 * Read the image into memory.
+	 */
+	u_char* data = new u_char[totdata+ts];
+	u_int off = ts;			// skip tag line slop area
+	for (strip = 0; strip < nstrips; strip++) {
+	    uint32 sbc = stripbytecount[strip];
+	    if (sbc > 0 && TIFFReadRawStrip(tif, strip, data+off, sbc) >= 0)
+		off += (u_int) sbc;
 	}
-    }
-    if (minLen > 0) {
+	totdata -= pageChop;		// deduct trailing white space not sent
 	/*
-	 * Flush anything that was not sent above.
+	 * Image the tag line, if intended.
 	 */
-	if (fp > fill)
-	    rc = sendPageData(fill, fp-fill, bitrev);
-	delete fill;
+	u_char* dp;
+	if (doTagLine) {
+	    dp = imageTagLine(data+ts, fillorder, params);
+	    totdata = totdata+ts - (dp-data);
+	} else
+	    dp = data;
+	/*
+	 * Send the page of data.  This is slightly complicated
+	 * by the fact that we may have to add zero-fill before the
+	 * EOL codes to bring the transmit time for each scanline
+	 * up to the negotiated min-scanline time.
+	 *
+	 * Note that we blindly force the data to be in LSB2MSB bit
+	 * order so that the EOL locating code works (if needed).
+	 * This may result in two extraneous bit reversals if the
+	 * modem wants the data in MSB2LSB order, but for now we'll
+	 * avoid the temptation to optimize.
+	 */
+	if (fillorder != FILLORDER_LSB2MSB)
+	    TIFFReverseBits(dp, totdata);
+	u_int minLen = params.minScanlineSize();
+	if (minLen > 0) {
+	    /*
+	     * Client requires a non-zero min-scanline time.  We
+	     * comply by zero-padding scanlines that have <minLen
+	     * bytes of data to send.  To minimize underrun we
+	     * do this padding in a strip-sized buffer.
+	     */
+	    uint32 rowsperstrip;
+	    TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+	    if (rowsperstrip == (uint32) -1)
+		 TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &rowsperstrip);
+	    u_char* fill = new u_char[minLen*rowsperstrip];
+	    u_char* eoFill = fill + minLen*rowsperstrip;
+	    u_char* fp = fill;
+
+	    u_char* bp = dp;
+	    u_char* ep = dp+totdata;
+	    u_long w = 0xffffff;
+	    do {
+		u_char* bol = bp;
+		do {
+		    w = (w<<8) | *bp++;
+		} while (!EOLcode(w) && bp < ep);
+		/*
+		 * We're either at an EOL code or at the end of data.
+		 * If necessary, insert zero-fill before the last byte
+		 * in the EOL code so that we comply with the
+		 * negotiated min-scanline time.
+		 */
+		u_int lineLen = bp - bol;
+		if (fp + fxmax(lineLen, minLen) >= eoFill) {
+		    /*
+		     * Not enough space for this scanline, flush
+		     * the current data and reset the pointer into
+		     * the zero fill buffer.
+		     */
+		    rc = sendPageData(fill, fp-fill, bitrev);
+		    fp = fill;
+		    if (!rc)			// error writing data
+			break;
+		}
+		memcpy(fp, bol, lineLen);	// first part of line
+		fp += lineLen;
+		if (lineLen < minLen) {		// must zero-fill
+		    u_int zeroLen = minLen - lineLen;
+		    memset(fp-1, 0, zeroLen);	// zero padding
+		    fp += zeroLen;
+		    fp[-1] = bp[-1];		// last byte in EOL
+		}
+	    } while (bp < ep);
+	    /*
+	     * Flush anything that was not sent above.
+	     */
+	    if (fp > fill && rc)
+		rc = sendPageData(fill, fp-fill, bitrev);
+	    delete fill;
+	} else {
+	    /*
+	     * No EOL-padding needed, just jam the bytes.
+	     */
+	    rc = sendPageData(dp, (u_int) totdata, bitrev);
+	}
+	delete data;
     }
     if (rc || abortRequested())
 	rc = sendRTC(params.is2D());

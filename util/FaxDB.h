@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/FaxDB.h,v 1.13 1995/04/08 21:44:05 sam Rel $ */
+/*	$Id: FaxDB.h,v 1.16 1996/08/21 22:05:16 sam Rel $ */
 /*
- * Copyright (c) 1990-1995 Sam Leffler
- * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1996 Sam Leffler
+ * Copyright (c) 1991-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -29,7 +29,7 @@
 #include "Dictionary.h"
 #include "Ptr.h"
 
-fxDECLARE_StrKeyDictionary(FaxValueDict, fxStr);
+fxDECLARE_StrKeyDictionary(FaxValueDict, fxStr)
 
 class FaxDBRecord : public fxObj {
 protected:
@@ -51,7 +51,7 @@ public:
 };
 
 fxDECLARE_Ptr(FaxDBRecord);
-fxDECLARE_StrKeyDictionary(FaxInfoDict, FaxDBRecordPtr);
+fxDECLARE_StrKeyDictionary(FaxInfoDict, FaxDBRecordPtr)
 
 class FaxDB : public fxObj {
 protected:

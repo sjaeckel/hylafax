@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./util/RCS/PageSize.h,v 1.12 1995/04/08 21:44:14 sam Rel $ */
+/*	$Id: PageSize.h,v 1.14 1996/06/24 03:05:56 sam Rel $ */
 /*
- * Copyright (c) 1993-1995 Sam Leffler
- * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1996 Sam Leffler
+ * Copyright (c) 1993-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 

@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/./faxd/RCS/PCFFont.c++,v 1.9 1995/04/08 21:31:00 sam Rel $ */
+/*	$Id: PCFFont.c++,v 1.12 1996/06/24 03:00:40 sam Rel $ */
 /*
- * Copyright (c) 1994-1995 Sam Leffler
- * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1996 Sam Leffler
+ * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
@@ -91,12 +91,13 @@ inline u_int PCFFont::scanUnit() const
 PCFFont::PCFFont()
 {
     file = NULL;
+    filename = NULL;
     encoding = NULL;
     bitmaps = NULL;
     metrics = NULL;
     toc = NULL;
     cdef = NULL;
-    { int one = 1; char* cp = (char*)&one; isBigEndian = (*cp == 0); }
+    { union { int32 i; char c[4]; } u; u.i = 1; isBigEndian = u.c[0] == 0; }
 }
 
 PCFFont::~PCFFont()
@@ -108,7 +109,7 @@ void
 PCFFont::cleanup()
 {
     if (file != NULL)
-	::fclose(file), file = NULL;
+	fclose(file), file = NULL;
     ready = FALSE;
     delete toc, toc = NULL;
     delete encoding, encoding = NULL;
@@ -123,18 +124,17 @@ PCFFont::cleanup()
  * some of the accelerator info.
  */
 fxBool
-PCFFont::read(const char* filename)
+PCFFont::read(const char* name)
 {
     cleanup();
-    file = ::fopen(filename, "r");
+    filename = name;				// for error diagnostics
+    file = fopen(filename, "r");
     if (file == NULL) {
-	error("%s: Can not open file", filename);
+	error("Can not open file");
 	return (FALSE);
     }
-    if (!readTOC()) {
-	error("Can not read table of contents");
+    if (!readTOC())
 	return (FALSE);
-    }
     if (seekToTable(PCF_METRICS)) {
 	format = getLSB32();
 	if (isFormat(PCF_DEFAULT_FORMAT))
@@ -290,7 +290,7 @@ PCFFont::read(const char* filename)
 	    error("Bad BDF accelerator format 0x%lx", format);
 	    return (FALSE);
 	}
-	::fseek(file, 8, SEEK_CUR);	// skip a bunch of junk
+	fseek(file, 8, SEEK_CUR);	// skip a bunch of junk
 	fontAscent = (short) getINT32();
 	fontDescent = (short) getINT32();
 	// more stuff...
@@ -298,7 +298,8 @@ PCFFont::read(const char* filename)
 	error("Can not seek to BDF accelerator information");
 	return (FALSE);
     }
-    ::fclose(file), file = NULL;
+    fclose(file), file = NULL;
+    filename = NULL;
     return (ready = TRUE);
 }
 
@@ -381,7 +382,7 @@ PCFFont::seekToTable(u_long type)
 {
     for (int i = 0; i < tocSize; i++)
 	if (toc[i].type == type) {
-	    if (::fseek(file, toc[i].offset, SEEK_SET) == -1) {
+	    if (fseek(file, toc[i].offset, SEEK_SET) == -1) {
 		error("Can not seek; fseek failed");
 		return (FALSE);
 	    }
@@ -399,12 +400,16 @@ fxBool
 PCFFont::readTOC()
 {
     u_long version = getLSB32();
-    if (version != PCF_FILE_VERSION)
+    if (version != PCF_FILE_VERSION) {
+	error("Cannot read TOC; bad version number %lu", version);
 	return (FALSE);
+    }
     tocSize = getLSB32();
     toc = new PCFTableRec[tocSize];
-    if (!toc)
+    if (!toc) {
+	error("Cannot read TOC; no space for %lu records", tocSize);
 	return (FALSE);
+    }
     for (int i = 0; i < tocSize; i++) {
 	toc[i].type = getLSB32();
 	toc[i].format = getLSB32();
@@ -590,19 +595,19 @@ void
 PCFFont::print(FILE* fd) const
 {
     if (ready) {
-	::fprintf(fd, "Font Ascent: %d Descent: %d\n", fontAscent, fontDescent);
-	::fprintf(fd, "FirstCol: %u LastCol: %u\n", firstCol, lastCol);
-	::fprintf(fd, "%lu glyphs:\n", numGlyphs);
+	fprintf(fd, "Font Ascent: %d Descent: %d\n", fontAscent, fontDescent);
+	fprintf(fd, "FirstCol: %u LastCol: %u\n", firstCol, lastCol);
+	fprintf(fd, "%lu glyphs:\n", numGlyphs);
 	for (u_int c = firstCol; c <= lastCol; c++) {
 	    charInfo* ci = encoding[c - firstCol];
 	    if (!ci)
 		continue;
 	    if (isprint(c))
-		::fprintf(fd,
+		fprintf(fd,
 		    "'%c': lsb %2d rsb %2d cw %2d ascent %2d descent %d\n",
 		    c, ci->lsb, ci->rsb, ci->cw, ci->ascent, ci->descent);
 	    else
-		::fprintf(fd,
+		fprintf(fd,
 		    "%3d: lsb %2d rsb %2d cw %2d ascent %2d descent %d\n",
 		    c, ci->lsb, ci->rsb, ci->cw, ci->ascent, ci->descent);
 	}
@@ -614,12 +619,13 @@ PCFFont::print(FILE* fd) const
 extern void vlogError(const char* fmt, va_list ap);
 
 void
-PCFFont::error(const char* fmt ...)
+PCFFont::error(const char* fmt0 ...)
 {
     va_list ap;
-    va_start(ap, fmt);
-    static const fxStr font("PCFFont: ");
-    vlogError(font | fmt, ap);
+    va_start(ap, fmt0);
+    fxStr fmt = fxStr::format("PCFFont: %s: %s",
+	filename ? filename : "<unknown file>", fmt0);
+    vlogError(fmt, ap);
     va_end(ap);
 }
 
