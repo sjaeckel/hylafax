@@ -1,4 +1,4 @@
-# $Id: att-dataport-2,v 1.14 1996/06/24 02:58:31 sam Rel $
+# $Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -42,7 +42,7 @@
 # and hardware connection/cabling (e.g. flow control).
 #
 ModemType:		Class2		# use class 2 interface
-ModemRate:		38400		# set rate for DCE-DTE communication
+ModemRate:		19200		# set rate for DCE-DTE communication
 ModemFlowControl:	rtscts		# default
 #
 ModemHardFlowCmd:	AT&R0\D1\Q3	# use RTS/CTS and enable RS232 handling

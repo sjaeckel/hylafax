@@ -1,4 +1,4 @@
-# $Id: everex-2496d,v 1.24 1996/06/24 02:58:34 sam Rel $
+# $Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -48,7 +48,7 @@ ModemFlowControl:	xonxoff		# default
 #
 ModemSetupDTRCmd:	AT&D3		# DTR off causes modem to reset
 ModemSetupDCDCmd:	AT&C0		# DCD always on
-ModemDialCmd:		ATDT%s@		# T for tone dialing, @ for silence
+ModemDialCmd:		ATDT%s		# T for tone dialing
 #
 # Avoid BOR_C_REV 'cuz of a bug in the Everex modem firmware
 # (Rev 901231 or earlier): BOR=3 and REL=1 generates garbage

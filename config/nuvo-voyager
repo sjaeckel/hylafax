@@ -1,4 +1,4 @@
-# $Id: nuvo-voyager,v 1.18 1996/06/24 02:58:36 sam Rel $
+# $Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -52,4 +52,4 @@ ModemMfrQueryCmd:	!Nuvo
 ModemModelQueryCmd:	!9624PFX
 ModemRevQueryCmd:	ATI3
 #
-ModemDialCmd:		ATDT%s@		# T for tone dialing, @ for silence
+ModemDialCmd:		ATDT%s		# T for tone dialing
