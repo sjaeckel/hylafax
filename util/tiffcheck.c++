@@ -1,4 +1,4 @@
-/*	$Id: tiffcheck.c++,v 1.5 1996/08/21 22:52:48 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -185,10 +185,12 @@ checkPageFormat(TIFF* tif, fxStr& emsg)
      */
     float yres;
     if (TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres)) {
-	short resunit = RESUNIT_NONE;
+	short resunit = RESUNIT_INCH;		// TIFF spec default
 	(void) TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
 	if (resunit == RESUNIT_CENTIMETER)
 	    yres *= 25.4f;
+	if (resunit == RESUNIT_NONE)
+	    yres *= 720.0f;		// postscript units ?
 	yres = (yres >= 150 ? 196 : 98);	// convert to well-known values
     } else {
 	/*
