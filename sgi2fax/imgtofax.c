@@ -1,4 +1,4 @@
-/*	$Id: imgtofax.c,v 1.22 1996/06/24 03:05:31 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -214,7 +214,7 @@ imgtofax(char* input, int pn)
     TIFFSetField(tif, TIFFTAG_PAGENUMBER, pn, npages);
     TIFFSetField(tif, TIFFTAG_CLEANFAXDATA, CLEANFAXDATA_CLEAN);
     { char buf[1024];
-      sprintf(buf, "Ditherered B&W version of %s", input);
+      snprintf(buf, sizeof(buf) - 1, "Ditherered B&W version of %s", input);
       TIFFSetField(tif, TIFFTAG_IMAGEDESCRIPTION, buf);
     }
     TIFFSetField(tif, TIFFTAG_SOFTWARE, "sgi2fax");
