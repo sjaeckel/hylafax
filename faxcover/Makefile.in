@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in,v 1.30 1996/06/24 03:00:08 sam Rel $
+#	$Id$
 #
 # @WARNING@
 #
@@ -61,3 +61,6 @@ install: default ${SRCDIR}/faxcover.ps
 	${INSTALL} -F ${LIBDATA} -m 644 \
 	    -idb "${PRODUCT}.sw.client config(suggest)" \
 	    -src ${SRCDIR}/faxcover.ps -O faxcover.ps
+	${INSTALL} -F ${LIBDATA} -m 644 \
+	    -idb "${PRODUCT}.sw.client config(suggest)" \
+	    -src ${SRCDIR}/faxcover_example_sgi.ps -O faxcover_example_sgi.ps
