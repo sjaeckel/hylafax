@@ -1,4 +1,4 @@
-/*	$Id: mkhash.c,v 1.9 1996/08/21 20:06:23 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -117,6 +117,8 @@ main()
     hash("retrytime");
     hash("poll");
     hash("tiff");
+    hash("pdf");
+    hash("!pdf");
     hash("!tiff");
     hash("postscript");
     hash("!postscript");
