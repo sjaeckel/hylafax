@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in,v 1.65 1996/06/24 03:04:03 sam Rel $
+#	$Id$
 #
 # @WARNING@
 #
@@ -123,7 +123,7 @@ MANSED=${SED}\
 	-e 's;\$${SBIN};${SBIN};g' \
 	-e 's;\$${LIBDATA};${LIBDATA};g' \
 	-e 's;\$${LIBEXEC};${LIBEXEC};g' \
-	-e 's;\$${AFMDIR};${AFMDIR};g' ${MANSEDLOCAL}
+	-e 's;\$${FONTPATH};${FONTPATH};g' ${MANSEDLOCAL}
 
 default all targets:: ${TARGETS}
 
