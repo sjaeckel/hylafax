@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: recvstats.sh.in,v 1.25 1996/06/24 03:06:25 sam Rel $
+#	$Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -67,7 +67,7 @@ while [ x"$1" != x"" ] ; do
     shift
 done
 if [ -z "$FILES" ]; then
-    FILES=$SPOOL/etc/xferlog
+    FILES=$SPOOL/etc/xferfaxlog
 fi
 
 #
@@ -117,7 +117,7 @@ esac
 #
 # Generate an awk program to process the statistics file.
 #
-tmpAwk=/tmp/xfer$$
+tmpAwk=/tmp/xferfax$$
 trap "rm -f $tmpAwk; exit 1" 0 1 2 15
 
 ($CAT<<'EOF'

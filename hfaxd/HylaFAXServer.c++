@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++,v 1.36 1997/10/12 11:09:33 guru Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -53,7 +53,7 @@ HylaFAXServer::HylaFAXServer()
     : defJob("")
 {
     state = 0;
-    xferlog = -1;
+    xferfaxlog = -1;
 
     loginAttempts = 0;		// NB: not reset by REIN command
     adminAttempts = 0;		// NB: not reset by REIN command
@@ -597,7 +597,7 @@ const HylaFAXServer::stringtag HylaFAXServer::strings[] = {
 { "faxcontact",		&HylaFAXServer::faxContact,	"FaxMaster" },
 { "useraccessfile",	&HylaFAXServer::userAccessFile,	"/" FAX_PERMFILE },
 { "shutdownfile",	&HylaFAXServer::shutdownFile,	"/etc/shutdown" },
-{ "xferlogfile",	&HylaFAXServer::xferLogFile,	"/etc/clientlog" },
+{ "xferfaxlogfile",	&HylaFAXServer::xferfaxLogFile,	"/etc/clientlog" },
 { "jobfmt",		&HylaFAXServer::jobFormat,
   "%-4j %3i %1a %6.6o %-12.12e %5P %5D %7z %.25s" },
 { "rcvfmt",		&HylaFAXServer::recvFormat,
