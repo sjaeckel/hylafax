@@ -1,4 +1,4 @@
-# $Id: exar,v 1.7 1996/06/24 02:58:34 sam Rel $
+# $Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -55,7 +55,7 @@ ModemSetupAACmd:	AT+FAA=1	# enable in current class
 ModemSendFillOrder:	LSB2MSB		# as expected
 ModemRecvFillOrder:	MSB2LSB		# opposite of what makes sense
 #
-ModemDialCmd:		ATDT%s@		# T for tone dialing, @ for silence
+ModemDialCmd:		ATDT%s		# T for tone dialing
 #
 ModemWaitForConnect:	yes		# wait for CONNECT on answer
 #
