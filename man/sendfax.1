@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1,v 1.51 1996/11/14 19:38:40 sam Rel $
+.\"	$Id$
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -514,6 +514,13 @@ Note that a try
 is a call in which carrier is established and the facsimile
 protocol is commenced; this is contrasted with a call
 attempt that might have failed because the line was busy.
+.TP 12
+.BI \-V " voice-no"
+Pass
+.I voice-no
+to the
+.IR faxcover (1)
+program as the destination person's voice number.
 .TP 12
 .BI \-x " company"
 Pass
