@@ -1,4 +1,4 @@
-/*	$Id: faxmodem.c,v 1.6 1996/08/21 01:34:33 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -186,7 +186,7 @@ parseCapabilities(const char* cp, u_int* caps)
 
 extern	int cvtFacility(const char*, int*);
 
-void
+int
 main(int argc, char** argv)
 {
     extern int optind;
@@ -261,5 +261,5 @@ main(int argc, char** argv)
 	fatal("%s: FIFO write failed for command (%s)",
 	    argv[0], strerror(errno));
     (void) close(fifo);
-    exit(0);
+    return 0;
 }
