@@ -1,4 +1,4 @@
-# $Id: depend,v 1.1 1997/12/07 07:54:46 guru Rel $
+# $Id$
 #
 #	Tim Rice
 #
@@ -7,5 +7,5 @@
 ##P	tifftools	tiff-v3.4beta035
 ##	(i386)	v3.4beta035
 #
-##P	gs403	Aladdin Ghostscript 4.03
-##	(i386)	4.03pl1
+##P	gs510	Aladdin Ghostscript 5.10
+##	(i386)	5.10
