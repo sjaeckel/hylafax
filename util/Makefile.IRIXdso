@@ -1,4 +1,4 @@
-#	$Id: Makefile.IRIXdso,v 1.12 1996/06/24 03:05:52 sam Rel $
+#	$Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -37,3 +37,7 @@ libfaxutil.${DSO}: ${OBJECTS}
 
 installDSO: libfaxutil.${DSO}
 	${PUTCLIENT} -F ${LIBEXEC} -m 444 -O libfaxutil.${DSO}
+
+cleanDSO::
+	-${RM} -f libfaxutil.${DSO}
+
