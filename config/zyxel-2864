@@ -1,4 +1,4 @@
-# $Id: zyxel-2864,v 1.5 1997/09/27 16:03:39 guru Rel $
+# $Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -39,6 +39,7 @@
 #
 # CONFIG: CLASS2.0: ZyXEL*2864*-*
 # CONFIG: CLASS2.0: ZyXEL*O288S*-*
+# CONFIG: CLASS2.0: ZyXEL-U336S*-*
 #
 # BEGIN-SERVER
 # END-SERVER
