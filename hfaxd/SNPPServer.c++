@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++,v 1.26 1998/02/07 12:31:43 guru Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -298,8 +298,10 @@ SNPPServer::mapPagerID(const char* pagerID, fxStr& number, fxStr& pin, fxStr& em
 			    *cp++ = '\0';
 			    number = np;
 			    pin = cp;
-			    if (re)			// do substitutions
-				subRHS(pin, *re, pagerID);
+			    if (re) {			// do substitutions
+				    subRHS(pin, *re, pagerID);
+                    subRHS(number, *re, pagerID);
+                }
 			} else {			// <dialstring>
 			    number = np;
 			    pin = pagerID;
