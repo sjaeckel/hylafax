@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/tsitest.1m,v 1.2 1994/06/24 02:32:04 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/tsitest.1m,v 1.12 1995/04/08 21:36:44 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1994 Sam Leffler
-.\" Copyright (c) 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1994-1995 Sam Leffler
+.\" Copyright (c) 1994-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,14 +25,15 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.TH TSITEST 1M "June 20, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH TSITEST 1M "March 3, 1995"
 .SH NAME
 tsitest \- \*(Fx
 .SM TSI
 access control list checking program
 .SH SYNOPSIS
-.B bin/tsitest
+.B ${SBIN}/tsitest
 [
 .B \-q
 ]
@@ -42,7 +44,9 @@ is an interactive program for the testing of the
 .SM TSI
 access control list (\c
 .SM ACL\c
-) used by the facsimile server to screen incoming facsimile.
+) used by the 
+.IR faxgetty (1M)
+server processes to screen incoming facsimile.
 The 
 .I ACLfile
 specified on the command line is expected to contain 
@@ -55,12 +59,6 @@ and
 prints out whether or not the string is an acceptable
 .SM TSI.
 .PP
-If a
-.B \-q
-option is specified, the normal verbose output is eliminated and
-.I tsitest
-will print only whether input strings are accepted or rejected.
-.PP
 Note that
 .I tsitest
 reads the control list file only when it is initially started up.
@@ -68,7 +66,14 @@ This means that
 .I tsitest
 must be restarted for it to recognize changes to
 .IR ACLfile .
+.SH OPTIONS
+.TP
+.B \-q
+Operate \fIquietly\fP;
+.I tsitest
+will print only whether an input string is accepted or rejected.
 .SH "SEE ALSO"
-.IR faxd (1M),
+.IR faxgetty (1M),
+.IR hylafax (4F),
 .IR config (4F),
 .IR tsi (4F)

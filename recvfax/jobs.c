@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/recvfax/RCS/jobs.c,v 1.26 1994/05/16 19:19:56 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./recvfax/RCS/jobs.c,v 1.31 1995/04/08 21:43:08 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -30,6 +31,8 @@
 #include <pwd.h>
 #include <errno.h>
 
+#define	BADID	0x10000			/* impossible value */
+
 static int
 readJob(Job* job)
 {
@@ -43,6 +46,8 @@ readJob(Job* job)
 	return (0);
     if (flock(fileno(fp), LOCK_SH|LOCK_NB) < 0 && errno == EWOULDBLOCK)
 	job->flags |= JOB_LOCKED;
+    job->jobid = BADID;
+    job->groupid = BADID;
     while (fgets(line, sizeof (line) - 1, fp)) {
 	if (line[0] == '#')
 	    continue;
@@ -56,6 +61,10 @@ readJob(Job* job)
 	    tag++;
 	if (isCmd("tts")) {
 	    job->tts = atoi(tag);
+	} else if (isCmd("jobid")) {
+	    job->jobid = atoi(tag);
+	} else if (isCmd("groupid")) {
+	    job->groupid = atoi(tag);
 	} else if (isCmd("killtime")) {
 	    job->killtime = strdup(tag);
 	} else if (isCmd("number")) {
@@ -82,7 +91,8 @@ readJob(Job* job)
 	(void) flock(fileno(fp), LOCK_UN);
     fclose(fp);
     /* NB: number and sender are uniformly assumed to exist */
-    return (job->number != NULL && job->sender != NULL);
+    return (job->jobid != BADID && job->groupid != BADID &&
+	job->number != NULL && job->sender != NULL);
 }
 
 static Job*
@@ -90,7 +100,7 @@ newJob(const char* qfile)
 {
     Job* job = (Job*) malloc(sizeof(Job));
     memset((char*) job, 0, sizeof (*job));
-    job->qfile = malloc(strlen(FAX_SENDDIR) + strlen(qfile) + 2);
+    job->qfile = malloc(sizeof (FAX_SENDDIR)-1 + strlen(qfile) + 2);
     sprintf(job->qfile, "%s/%s", FAX_SENDDIR, qfile);
     return (job);
 }
@@ -130,7 +140,6 @@ readJobs()
 	sendError("Problem accessing send directory.");
 	done(-1, "EXIT");
     }
-    (void) flock(dirp->dd_fd, LOCK_SH);
     for (dentp = readdir(dirp); dentp; dentp = readdir(dirp)) {
 	if (dentp->d_name[0] != 'q')
 	    continue;
@@ -143,7 +152,6 @@ readJobs()
 		freeJob(jobp);
 	}
     }
-    (void) flock(dirp->dd_fd, LOCK_UN);
     closedir(dirp);
     return jobs;
 }
@@ -183,43 +191,30 @@ checkUser(const char* requestor, struct passwd* pwd)
     return (strcmp(requestor, buf) == 0);
 }
 
-void
-applyToJob(const char* modem, char* tag, const char* op, jobFunc* f)
+static u_int
+setupJobOp(char* tag, const char* op, char** preq, char** parg)
 {
-    Job** job;
-    char* requestor;
-    char* arg;
-
     if (!jobList)
 	jobList = readJobs();
 
-    if ((requestor = strchr(tag, ':')) == 0) {
+    if ((*preq = strchr(tag, ':')) == 0) {
 	protocolBotch("no requestor name for \"%s\" command.", op);
 	done(1, "EXIT");
     }
-    *requestor++ = '\0';
-    arg = strchr(requestor, ':');
-    if (arg)
-	*arg++ = '\0';
+    *(*preq)++ = '\0';
+    *parg = strchr(*preq, ':');
+    if (*parg)
+	*(*parg)++ = '\0';
+    return ((u_int) atoi(tag));
+}
 
-    for (job = &jobList; *job; job = &((*job)->next)) {
-	char *jobname = (*job)->qfile+strlen(FAX_SENDDIR)+2;
-	if (modemMatch(modem, (*job)->modem) && strcmp(jobname, tag) == 0)
-	    break;
-    }
-    if (!*job) {
-	sendClient("notQueued", "%s", tag);
-	return;
-    }
-    /*
-     * Validate requestor is permitted to do op to the
-     * requested job.  We permit the person that submitted
-     * the job, the fax user, and root.  Using the GECOS
-     * field in doing the comparison is a crock, but not
-     * something to change now--leave it for a protocol
-     * redesign.
-     */
-    if (strcmp(requestor, (*job)->sender) != 0) {	/* not the sender */
+static int
+isAdmin(const char* requestor)
+{
+    static int checked = 0;
+    static int isadmin = 0;
+
+    if (!checked) {
 	struct passwd* pwd = getpwuid(getuid());
 
 	if (!pwd) {
@@ -229,25 +224,103 @@ applyToJob(const char* modem, char* tag, const char* op, jobFunc* f)
 	if (!pwd) {
 	    syslog(LOG_ERR, "getpwuid failed for effective uid %d: %m",
 		geteuid());
-	    sendClient("sOwner", "%s", tag);
-	    return;
+	    isadmin = 0;
 	}
-	if (!checkUser(requestor, pwd)) {		/* not fax user */
+	isadmin = checkUser(requestor, pwd);
+	if (!isadmin) {					/* not fax user */
 	    pwd = getpwnam("root");
 	    if (!pwd) {
 		syslog(LOG_ERR, "getpwnam failed for \"root\": %m");
-		sendClient("sOwner", "%s", tag);
-		return;
+		isadmin = 0;
+	    } else
+		isadmin = checkUser(requestor, pwd);	/* root user */
+	}
+	checked = 1;
+    }
+    return (isadmin);
+}
+
+void
+applyToJob(const char* modem, char* tag, const char* op, jobFunc* f)
+{
+    Job** jpp;
+    Job* job;
+    char* requestor;
+    char* arg;
+    u_int jobid;
+
+    jobid = setupJobOp(tag, op, &requestor, &arg);
+    for (jpp = &jobList; job = *jpp; jpp = &job->next)
+	if (modemMatch(modem, job->modem) && job->jobid == jobid)
+	    break;
+    if (job) {
+	/*
+	 * Validate requestor is permitted to do op to the
+	 * requested job.  We permit the person that submitted
+	 * the job, the fax user, and root.  Using the GECOS
+	 * field in doing the comparison is a crock, but not
+	 * something to change now--leave it for a protocol
+	 * redesign.
+	 */
+	if (strcmp(requestor, job->sender) == 0 || isAdmin(requestor)) {
+	    if (debug)
+		syslog(LOG_DEBUG, "%s request by %s for %s",
+		    op, requestor, tag);
+	    (*f)(job, tag, arg);
+	    if (job->flags & JOB_INVALID)
+		*jpp = job->next;
+	} else
+	    sendClient("jobOwner", "%s", tag);
+    } else
+	sendClient("notQueued", "%s", tag);
+}
+
+void
+applyToJobGroup(const char* modem, char* tag, const char* op, jobFunc* f)
+{
+    Job** jpp;
+    Job* job;
+    char* requestor;
+    char* arg;
+    u_int jobsDone = 0;
+    u_int jobsSkipped = 0;
+    u_int groupid;
+    char jobname[32];
+
+    groupid = setupJobOp(tag, op, &requestor, &arg);
+
+    jpp = &jobList;
+    while (job = *jpp) {
+	if (modemMatch(modem, job->modem) && job->groupid == groupid) {
+	    /*
+	     * Validate requestor is permitted to do op to the
+	     * requested job.  We permit the person that submitted
+	     * the job, the fax user, and root.  Using the GECOS
+	     * field in doing the comparison is a crock, but not
+	     * something to change now--leave it for a protocol
+	     * redesign.
+	     */
+	    if (strcmp(requestor, job->sender) && !isAdmin(requestor)) {
+		jobsSkipped++;
+		continue;
 	    }
-	    if (!checkUser(requestor, pwd)) {		/* not root user */
-		sendClient("jobOwner", "%s", tag);
-		return;
+	    if (debug)
+		syslog(LOG_DEBUG, "%s request by %s for %s",
+		    op, requestor, tag);
+	    sprintf(jobname, "%u", job->jobid);
+	    (*f)(job, jobname, arg);
+	    jobsDone++;
+	    if (job->flags & JOB_INVALID) {		/* remove job */
+		*jpp = job->next;
+		continue;
 	    }
 	}
+	jpp = &job->next;
     }
-    if (debug)
-	syslog(LOG_DEBUG, "%s request by %s for %s", op, requestor, tag);
-    (*f)(*job, tag, arg);
-    if ((*job)->flags & JOB_INVALID)
-	*job = (*job)->next;
+    if (jobsDone == 0) {
+	if (jobsSkipped > 0)
+	    sendClient("jobOwner", "%s", tag);
+	else
+	    sendClient("notQueued", "%s", tag);
+    }
 }

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class1.c++,v 1.56 1994/07/03 18:37:24 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1.c++,v 1.69 1995/04/08 21:29:31 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -71,11 +72,17 @@ const Class1Cap Class1Modem::basicCaps[15] = {
 };
 #define	NCAPS	(sizeof (basicCaps) / sizeof (basicCaps[0]))
 
-Class1Modem::Class1Modem(FaxServer& s, const ModemConfig& c) : FaxModem(s,c)
+const char* Class1Modem::tmCmdFmt = "AT+FTM=%u";
+const char* Class1Modem::rmCmdFmt = "AT+FRM=%u";
+
+Class1Modem::Class1Modem(FaxServer& s, const ModemConfig& c)
+    : FaxModem(s,c)
+    , thCmd("AT+FTH=3")
+    , rhCmd("AT+FRH=3")
 {
     group3opts = 0;
-    memcpy(xmitCaps, basicCaps, sizeof (basicCaps));
-    memcpy(recvCaps, basicCaps, sizeof (basicCaps));
+    ::memcpy(xmitCaps, basicCaps, sizeof (basicCaps));
+    ::memcpy(recvCaps, basicCaps, sizeof (basicCaps));
 }
 
 Class1Modem::~Class1Modem()
@@ -92,7 +99,8 @@ Class1Modem::setupModem()
     if (!selectBaudRate(conf.maxRate, conf.flowControl, conf.flowControl))
 	return (FALSE);
     // Query service support information
-    if (atQuery("+FCLASS=?", modemServices, 500))
+    fxStr s;
+    if (doQuery(conf.classQueryCmd, s, 500) && FaxModem::parseRange(s, modemServices))
 	traceBits(modemServices & SERVICE_ALL, serviceNames);
     if ((modemServices & SERVICE_CLASS1) == 0)
 	return (FALSE);
@@ -104,22 +112,22 @@ Class1Modem::setupModem()
      * working around firmware bugs (yech!).
      */
     if (setupManufacturer(modemMfr)) {
-	modemCapability("Mfr \"%s\"", (char*) modemMfr);
+	modemCapability("Mfr " | modemMfr);
 	modemMfr.raisecase();
     }
     (void) setupModel(modemModel);
     (void) setupRevision(modemRevision);
     if (modemModel != "")
-	modemCapability("Model \"%s\"", (char*) modemModel);
+	modemCapability("Model " | modemModel);
     if (modemRevision != "")
-	modemCapability("Revision \"%s\"", (char*) modemRevision);
+	modemCapability("Revision " | modemRevision);
 
     /*
      * Get modem capabilities and calculate best signalling
      * rate, data formatting capabilities, etc. for use in
      * T.30 negotiations.
      */
-    if (!class1Query("+FTM=?", xmitCaps)) {
+    if (!class1Query("AT+FTM=?", xmitCaps)) {
 	serverTrace("Error parsing \"+FTM\" query response: \"%s\"", rbuf);
 	return (FALSE);
     }
@@ -132,8 +140,8 @@ Class1Modem::setupModem()
     modemParams.wd = BIT(WD_1728) | BIT(WD_2048) | BIT(WD_2432);
     modemParams.ln = LN_ALL;
     modemParams.df = BIT(DF_1DMR) | BIT(DF_2DMR);
-    modemParams.ec = 0;
-    modemParams.bf = 0;
+    modemParams.ec = EC_DISABLE;
+    modemParams.bf = BF_DISABLE;
     modemParams.st = ST_ALL;
     traceModemParams();
     /*
@@ -141,7 +149,7 @@ Class1Modem::setupModem()
      * transmit capabilities because we need to know more
      * than the signalling rate to formulate the DIS.
      */ 
-    if (!class1Query("+FRM=?", recvCaps)) {
+    if (!class1Query("AT+FRM=?", recvCaps)) {
 	serverTrace("Error parsing \"+FRM\" query response: \"%s\"", rbuf);
 	return (FALSE);
     }
@@ -193,10 +201,44 @@ Class1Modem::setupClass1Parameters()
 {
     if (modemServices & SERVICE_CLASS1) {
 	atCmd(conf.class1Cmd);
-	if (conf.setupAACmd != "")
-	    atCmd(conf.setupAACmd);
+	setupFlowControl(flowControl);
+	atCmd(conf.setupAACmd);
     }
     return (TRUE);
+}
+
+/*
+ * Setup receive-specific parameters.
+ */
+fxBool
+Class1Modem::setupReceive()
+{
+    return (TRUE);			// nothing to do
+}
+
+/*
+ * Send the modem any commands needed to force use of
+ * the specified flow control scheme.
+ */
+fxBool
+Class1Modem::setupFlowControl(FlowControl fc)
+{
+    switch (fc) {
+    case FLOW_NONE:	return atCmd(conf.class1NFLOCmd);
+    case FLOW_XONXOFF:	return atCmd(conf.class1SFLOCmd);
+    case FLOW_RTSCTS:	return atCmd(conf.class1HFLOCmd);
+    }
+    return (TRUE);
+}
+
+/*
+ * Place the modem into the appropriate state
+ * for sending/received facsimile.
+ */
+fxBool
+Class1Modem::faxService()
+{
+    return (atCmd(conf.class1Cmd) && setupFlowControl(flowControl));
 }
 
 /*
@@ -316,7 +358,7 @@ Class1Modem::abortReceive()
     if (conf.class1RecvAbortOK == 0) {	// modem doesn't send OK response
 	pause(200);
 	flushModemInput();
-	(void) atCmd("", AT_OK, 100);
+	(void) atCmd("AT", AT_OK, 100);
     } else
 	(void) waitFor(AT_OK, conf.class1RecvAbortOK);
     setTimeout(b);			// XXX putModem clobbers timeout state
@@ -488,7 +530,7 @@ Class1Modem::transmitFrame(u_char fcf, fxBool lastFrame)
 {
     startTimeout(2550);			// 3.0 - 15% = 2.55 secs
     fxBool frameSent =
-	class1Cmd("TH", 3, AT_NOTHING) &&
+	atCmd(thCmd, AT_NOTHING) &&
 	atResponse(rbuf, 0) == AT_CONNECT &&
 	sendFrame(fcf, lastFrame);
     stopTimeout("sending HDLC frame");
@@ -505,7 +547,7 @@ Class1Modem::transmitFrame(u_char fcf, u_int dcs, fxBool lastFrame)
      */
     startTimeout(2550);			// 3.0 - 15% = 2.55 secs
     fxBool frameSent =
-	class1Cmd("TH", 3, AT_NOTHING) &&
+	atCmd(thCmd, AT_NOTHING) &&
 	atResponse(rbuf, 0) == AT_CONNECT &&
 	sendFrame(fcf, dcs, lastFrame);
     stopTimeout("sending HDLC frame");
@@ -517,7 +559,7 @@ Class1Modem::transmitFrame(u_char fcf, const fxStr& tsi, fxBool lastFrame)
 {
     startTimeout(3000);			// give more time than others
     fxBool frameSent =
-	class1Cmd("TH", 3, AT_NOTHING) &&
+	atCmd(thCmd, AT_NOTHING) &&
 	atResponse(rbuf, 0) == AT_CONNECT &&
 	sendFrame(fcf, tsi, lastFrame);
     stopTimeout("sending HDLC frame");
@@ -533,7 +575,8 @@ Class1Modem::transmitData(int br, u_char* data, u_int cc,
 {
     if (flowControl == FLOW_XONXOFF)
 	setXONXOFF(FLOW_XONXOFF, FLOW_NONE, ACT_FLUSH);
-    fxBool ok = (class1Cmd("TM", br, AT_CONNECT) &&
+    fxStr tmCmd(br, tmCmdFmt);
+    fxBool ok = (atCmd(tmCmd, AT_CONNECT) &&
 	sendClass1Data(data, cc, bitrev, eod) &&
 	(eod ? waitFor(AT_OK) : TRUE));
     if (flowControl == FLOW_XONXOFF)
@@ -554,7 +597,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, long ms)
 {
     frame.reset();
     startTimeout(ms);
-    fxBool readPending = class1Cmd("RH", 3, AT_NOTHING);
+    fxBool readPending = atCmd(rhCmd, AT_NOTHING);
     if (readPending && waitFor(AT_CONNECT,0))
 	return recvRawFrame(frame);		// NB: stops inherited timeout
     stopTimeout("waiting for v.21 carrier");
@@ -577,8 +620,9 @@ Class1Modem::recvTCF(int br, HDLCFrame& buf, const u_char* bitrev, long ms)
      * Loop waiting for carrier or timeout.
      */
     fxBool readPending, gotCarrier;
+    fxStr rmCmd(br, rmCmdFmt);
     do {
-	readPending = class1Cmd("RM", br, AT_NOTHING);
+	readPending = atCmd(rmCmd, AT_NOTHING);
 	gotCarrier = readPending && waitFor(AT_CONNECT, 0);
     } while (readPending && !gotCarrier && lastResponse == AT_FCERROR);
     /*
@@ -658,34 +702,12 @@ Class1Modem::waitFor(ATResponse wanted, long ms)
 	case AT_NODIALTONE:
 	case AT_NOANSWER:
 	case AT_OFFHOOK:
-	    modemTrace("MODEM ERROR: %s", ATresponses[response]);
+	    modemTrace("MODEM %s", ATresponses[response]);
 	    /* fall thru... */
 	case AT_FCERROR:
 	    return (FALSE);
 	}
     }
-}
-
-/*
- * Interfaces for sending a Class 1 command; i.e, AT+F<cmd>
- */
-
-/*
- * Send <cmd> and wait for expect
- */
-fxBool
-Class1Modem::class1Cmd(const char* cmd, ATResponse expect)
-{
-     return vatFaxCmd(expect, "%s", cmd);
-}
-
-/*
- * Send <cmd>=<a0> and wait for expect
- */
-fxBool
-Class1Modem::class1Cmd(const char* cmd, int a0, ATResponse expect)
-{
-    return vatFaxCmd(expect, "%s=%u", cmd, a0);
 }
 
 /*

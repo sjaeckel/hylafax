@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxTrace.h,v 1.15 1994/05/12 21:04:18 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxTrace.h,v 1.21 1995/04/08 21:30:31 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -38,6 +39,9 @@ const int FAXTRACE_MODEMIO	= 0x0080;	// binary modem i/o
 const int FAXTRACE_STATETRANS	= 0x0100;	// server state transitions
 const int FAXTRACE_QUEUEMGMT	= 0x0200;	// job queue management
 const int FAXTRACE_COPYQUALITY	= 0x0400;	// copy quality checking
+const int FAXTRACE_JOBMGMT	= 0x0800;	// low-level job management
+const int FAXTRACE_IXO		= 0x1000;	// IXO protocol messages
+const int FAXTRACE_CONFIG	= 0x2000;	// configuration file parsing
 const int FAXTRACE_ANY		= 0xffffffff;
 
 const int FAXTRACE_MASK		= 0xffff;

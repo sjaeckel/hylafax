@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2.c++,v 1.85 1994/06/18 00:35:59 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2.c++,v 1.99 1995/04/08 21:29:38 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -25,7 +26,6 @@
 #include "Class2.h"
 #include "ModemConfig.h"
 
-#include <stdlib.h>
 #include <ctype.h>
 
 Class2Modem::Class2Modem(FaxServer& s, const ModemConfig& c) : FaxModem(s,c)
@@ -33,6 +33,7 @@ Class2Modem::Class2Modem(FaxServer& s, const ModemConfig& c) : FaxModem(s,c)
     hangupCode[0] = '\0';
     group3opts = 0;
     serviceType = 0;			// must be set in derived class
+    rtcRev = TIFFGetBitRevTable(conf.sendFillOrder == FILLORDER_LSB2MSB);
 }
 
 Class2Modem::~Class2Modem()
@@ -60,7 +61,8 @@ Class2Modem::setupModem()
     if (!selectBaudRate(conf.maxRate, conf.flowControl, conf.flowControl))
 	return (FALSE);
     // Query service support information
-    if (atQuery("+FCLASS=?", modemServices, 500))
+    fxStr s;
+    if (doQuery(conf.classQueryCmd, s, 500) && FaxModem::parseRange(s, modemServices))
 	traceBits(modemServices & SERVICE_ALL, serviceNames);
     if ((modemServices & serviceType) == 0)
 	return (FALSE);
@@ -72,15 +74,15 @@ Class2Modem::setupModem()
      * working around firmware bugs (yech!).
      */
     if (setupManufacturer(modemMfr)) {
-	modemCapability("Mfr \"%s\"", (char*) modemMfr);
+	modemCapability("Mfr " | modemMfr);
 	modemMfr.raisecase();
     }
     (void) setupModel(modemModel);
     (void) setupRevision(modemRevision);
     if (modemModel != "")
-	modemCapability("Model \"%s\"", (char*) modemModel);
+	modemCapability("Model " | modemModel);
     if (modemRevision != "")
-	modemCapability("Revision \"%s\"", (char*) modemRevision);
+	modemCapability("Revision " | modemRevision);
 
     /*
      * Get modem capabilities and calculate best signalling
@@ -105,8 +107,8 @@ Class2Modem::setupModem()
      *	st	scan time/line
      */
     if (!parseRange(t30parms, modemParams)) {
-	serverTrace("Error parsing \"%s\" query response: \"%s\"",
-	    (char*) dccQueryCmd, (char*) t30parms);
+	serverTrace("Error parsing " | dccQueryCmd | " response: "
+	    "\"" | t30parms | "\"");
 	return (FALSE);
     }
     traceModemParams();
@@ -117,7 +119,6 @@ Class2Modem::setupModem()
      * checking, then the host will do the work.
      */
     cqCmds = "";
-    fxStr s;
     if (doQuery(conf.class2CQQueryCmd, s) && FaxModem::parseRange(s, modemCQ)) {
 	if (modemCQ >>= 1)
 	    cqCmds = conf.class2CQCmd;
@@ -131,7 +132,7 @@ Class2Modem::setupModem()
      * Check if the modem supports polled reception of documents.
      */
     u_int t;
-    if (doQuery("+F" | splCmd | "=?", s) && FaxModem::parseRange(s, t))
+    if (doQuery(splCmd | "=?", s) && FaxModem::parseRange(s, t))
 	hasPolling = (t & BIT(1)) != 0;
     /*
      * Define the code to send to the modem to trigger the
@@ -158,21 +159,28 @@ Class2Modem::setupModem()
 	xmitWaitForXON = FALSE;
     else
 	xmitWaitForXON = conf.class2XmitWaitForXON;
+
     setupClass2Parameters();			// send parameters to the modem
     return (TRUE);
 }
 
 /*
- * Send the modem the Class 2 configuration commands.
+ * Switch the modem to Class 2/2.0 and  insure parameters
+ * are set as we want them since some modems reset state
+ * on switching into Class 2/2.0.  Note that receive-related
+ * parameters are only set on modem reset because some
+ * commands, like setupAACmd, can reset the modem to Class
+ * 0.  This interface is used only for outbound use or when
+ * followed by setup of receive-specific parameters.
  */
 fxBool
 Class2Modem::setupClass2Parameters()
 {
     if (modemServices & serviceType) {		// when resetting at startup
 	atCmd(classCmd);
-	class2Cmd(tbcCmd);			// stream mode
-	class2Cmd(borCmd);			// Phase B+C bit order
-	class2Cmd(crCmd);			// enable receiving
+	setupFlowControl(flowControl);		// flow control
+	atCmd(tbcCmd);				// stream mode
+	atCmd(borCmd);				// Phase B+C bit order
 	/*
 	 * Set Phase C data transfer timeout parameter.
 	 * Note that we also have our own timeout parameter
@@ -181,45 +189,69 @@ Class2Modem::setupClass2Parameters()
 	 * do not support this command (or perhaps they
 	 * hide it under a different name).
 	 */
-	class2Cmd(phctoCmd);
+	atCmd(phctoCmd);
+
+	(void) atCmd(cqCmds);			// copy quality checking
+	(void) atCmd(nrCmd);			// negotiation reporting
+	(void) atCmd(pieCmd);			// program interrupt enable
+	if (getHDLCTracing())			// HDLC frame tracing
+	    atCmd(bugCmd);
 	/*
-	 * Try to setup byte-alignment of received EOL's.
-	 * As always, this is problematic.  If the modem
-	 * does not support this, but accepts the command
-	 * (as many do!), then received facsimile will be
-	 * incorrectly tagged as having byte-aligned EOL
-	 * codes in them--not usually much of a problem.
-	 */
-	if (conf.class2RELCmd != "" && class2Cmd(conf.class2RELCmd))
-	    group3opts |= GROUP3OPT_FILLBITS;
-	else
-	    group3opts &= ~GROUP3OPT_FILLBITS;
-	/*
-	 * Setup various other parameters if defined for modem.
-	 */
-	if (cqCmds != "")			// copy quality checking
-	    (void) class2Cmd(cqCmds);
-	if (nrCmd != "")			// negotiation reporting
-	    (void) class2Cmd(nrCmd);
-	if (pieCmd != "")			// program interrupt enable
-	    (void) class2Cmd(pieCmd);
-	if (getHDLCTracing() && bugCmd != "")	// HDLC frame tracing
-	    class2Cmd(bugCmd);
-	/*
-	 * Force the DCC so that we override whatever
-	 * the modem defaults are.
+	 * Force the DCC so that we can override
+	 * whatever the modem defaults are.
 	 */
 	setupDCC();
-	/*
-	 * Enable adaptive-answer support.  If we're configured,
-	 * we'll act like getty and initiate a login session if
-	 * we get a data connection.  Note that we do this last
-	 * so that the modem can be left in a state other than
-	 * +FCLASS=2 (e.g. Rockwell-based modems often need to be
-	 * in Class 0).
-	 */
-	if (conf.setupAACmd != "")
-	    (void) atCmd(conf.setupAACmd);
+    }
+    return (TRUE);
+}
+
+/*
+ * Setup receive-specific parameters.
+ */
+fxBool
+Class2Modem::setupReceive()
+{
+    /*
+     * Try to setup byte-alignment of received EOL's.
+     * As always, this is problematic.  If the modem
+     * does not support this, but accepts the command
+     * (as many do!), then received facsimile will be
+     * incorrectly tagged as having byte-aligned EOL
+     * codes in them--not usually much of a problem.
+     */
+    if (conf.class2RELCmd != "" && atCmd(conf.class2RELCmd))
+	group3opts |= GROUP3OPT_FILLBITS;
+    else
+	group3opts &= ~GROUP3OPT_FILLBITS;
+    atCmd(crCmd);				// enable receiving
+    /*
+     * Must do this here instead of above because the
+     * station identifier isn't normally setup until
+     * the caller invokes us.
+     */
+    class2Cmd(lidCmd, lid);			// local station identifier
+    /*
+     * Enable adaptive-answer support.  If we're configured,
+     * we'll act like getty and initiate a login session if
+     * we get a data connection.  Note that we do this last
+     * so that the modem can be left in a state other than
+     * +FCLASS=2 (e.g. Rockwell-based modems often need to be
+     * in Class 0).
+     */
+    return atCmd(conf.setupAACmd);
+}
+
+/*
+ * Send the modem any commands needed to force use of
+ * the specified flow control scheme.
+ */
+fxBool
+Class2Modem::setupFlowControl(FlowControl fc)
+{
+    switch (fc) {
+    case FLOW_NONE:	return atCmd(noFlowCmd);
+    case FLOW_XONXOFF:	return atCmd(softFlowCmd);
+    case FLOW_RTSCTS:	return atCmd(hardFlowCmd);
     }
     return (TRUE);
 }
@@ -248,7 +280,7 @@ Class2Modem::setupDCC()
 fxBool
 Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params)
 {
-    int n = sscanf(cap, "%d,%d,%d,%d,%d,%d,%d,%d",
+    int n = ::sscanf(cap, "%d,%d,%d,%d,%d,%d,%d,%d",
 	&params.vr, &params.br, &params.wd, &params.ln,
 	&params.df, &params.ec, &params.bf, &params.st);
     if (n == 8) {
@@ -274,25 +306,13 @@ Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params)
 }
 
 /*
- * Set the modem into data service after auto-detecting
- * an incoming data connection.  Class 2 says this should
- * be automatically done for us.
+ * Place the modem into the appropriate state
+ * for sending/received facsimile.
  */
 fxBool
-Class2Modem::dataService()
+Class2Modem::faxService()
 {
-    return (TRUE);				// nothing to do
-}
-
-/*
- * Set the modem into voice service after auto-detecting
- * an incoming voice call.  ZyXEL (only modem that supports
- * this) say that it should be done automatically.
- */
-fxBool
-Class2Modem::voiceService()
-{
-    return (TRUE);
+    return setupClass2Parameters() && class2Cmd(lidCmd, lid);
 }
 
 fxBool
@@ -347,32 +367,30 @@ Class2Modem::stripQuotes(const char* cp)
     fxStr s(cp);
     u_int pos = s.next(0, '"');
     if (pos != s.length())
-	s.remove(0,pos+1);
+      s.remove(0,pos+1);
     pos = s.next(0, '"');
     if (pos != s.length())
-	s.remove(pos, s.length()-pos);
+      s.remove(pos, s.length()-pos);
     return (s);
 }
 
 /*
  * Construct the Calling Station Identifier (CSI) string
- * for the modem.  This is encoded as an ASCII string
- * according to Table 3/T.30 (see the spec).  Hyphen ('-')
- * and period are converted to space; otherwise invalid
- * characters are ignored in the conversion.  The string may
- * be at most 20 characters (according to the spec).
+ * for the modem.  We permit any ASCII printable characters
+ * in the string though the spec says otherwise.  The max
+ * length is 20 characters (per the spec).
  */
 void
 Class2Modem::setLID(const fxStr& number)
 {
-    fxStr csi;
-    u_int n = fxmin((u_int) number.length(), (u_int) 20);
-    for (u_int i = 0; i < n; i++) {
+    lid.resize(0);
+    for (u_int i = 0, n = number.length(); i < n; i++) {
 	char c = number[i];
 	if (isprint(c) || c == ' ')
-	    csi.append(c);
+	    lid.append(c);
     }
-    class2Cmd(lidCmd, (char*) csi);
+    if (lid.length() > 20)
+	lid.resize(20);
 }
 
 /* 
@@ -410,7 +428,7 @@ Class2Modem::waitFor(ATResponse wanted, long ms)
 	case AT_NOCARRIER:
 	case AT_NODIALTONE:
 	case AT_NOANSWER:
-	    modemTrace("MODEM ERROR: %s", ATresponses[response]);
+	    modemTrace("MODEM %s", ATresponses[response]);
 	    return (FALSE);
 	case AT_FHNG:
 	    // return hangup status, but try to wait for requested response
@@ -421,44 +439,34 @@ Class2Modem::waitFor(ATResponse wanted, long ms)
 }
 
 /*
- * Interfaces for sending a Class 2 command; i.e, AT+F<cmd>
+ * Interfaces for sending a Class 2 commands.
  */
 
 /*
- * Send <cmd> and wait for "OK"
+ * Send <cmd>=<a0> and wait for response.
  */
 fxBool
-Class2Modem::class2Cmd(const char* cmd)
+Class2Modem::class2Cmd(const fxStr& cmd, int a0, ATResponse r, long ms)
 {
-    return vatFaxCmd(AT_OK, "%s", cmd);
+    return atCmd(cmd | fxStr(a0, "=%u"), r, ms);
 }
 
 /*
- * Send <cmd>=<a0> and wait for "OK"
+ * Send <cmd>=<t.30 parameters> and wait response.
  */
 fxBool
-Class2Modem::class2Cmd(const char* cmd, int a0)
+Class2Modem::class2Cmd(const fxStr& cmd, const Class2Params& p, ATResponse r, long ms)
 {
-    return vatFaxCmd(AT_OK, "%s=%u", cmd, a0);
+    return atCmd(cmd | "=" | p.cmd(), r, ms);
 }
 
 /*
- * Send AT+F<cmd>=<t.30 parameters> and wait for "OK".
+ * Send <cmd>="<s>" and wait for response.
  */
 fxBool
-Class2Modem::class2Cmd(const char* cmd, const Class2Params& p)
+Class2Modem::class2Cmd(const fxStr& cmd, const fxStr& s, ATResponse r, long ms)
 {
-    const fxStr& params = p.cmd();
-    return vatFaxCmd(AT_OK, "%s=%s", cmd, (char*) params);
-}
-
-/*
- * Send AT+F<cmd>="<s>" and wait for "OK".
- */
-fxBool
-Class2Modem::class2Cmd(const char* cmd, const char* s)
-{
-    return vatFaxCmd(AT_OK, "%s=\"%s\"", cmd, s);	// XXX handle escapes
+    return atCmd(cmd | "=\"" | s | "\"", r, ms);	// XXX handle escapes
 }
 
 /*
@@ -609,8 +617,9 @@ Class2Modem::processHangup(const char* cp)
 	cp++;
     while (*cp == '0' && cp[1] != '\0')		// strip leading 0's
 	cp++;
-    strncpy(hangupCode, cp, sizeof (hangupCode));
-    protoTrace("REMOTE HANGUP: %s (code %s)", hangupCause(hangupCode), hangupCode);
+    ::strncpy(hangupCode, cp, sizeof (hangupCode));
+    protoTrace("REMOTE HANGUP: %s (code %s)",
+	hangupCause(hangupCode), hangupCode);
 }
 
 /*

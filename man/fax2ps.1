@@ -1,6 +1,6 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/fax2ps.1,v 1.8 1994/06/24 02:17:34 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/fax2ps.1,v 1.13 1995/03/17 18:52:58 sam Rel $
 .\"
-.\" Copyright (c) 1991, 1992, 1993, 1994 by Sam Leffler.
+.\" Copyright (c) 1991, 1992, 1993, 1994, 1995 by Sam Leffler.
 .\" All rights reserved.
 .\"
 .\" This file is provided for unrestricted use provided that this
@@ -8,8 +8,9 @@
 .\" software program in whole or part.  Users may copy, modify or
 .\" distribute this file at will.
 .\"
-.ds Ps P\s-1OST\s+1S\s-1CRIPT\s+1
-.TH FAX2PS 1 "January 15, 1993"
+.if n .po 0
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
+.TH FAX2PS 1 "March 16, 1995"
 .SH NAME
 fax2ps \- convert a
 .SM TIFF
@@ -17,26 +18,7 @@ facsimile to compressed \*(Ps\(tm
 .SH SYNOPSIS
 .B fax2ps
 [
-.B \-a
-] [
-.B \-p
-.IR pagenumber
-] [
-.B \-x
-.IR xresolution
-] [
-.B \-y
-.IR yresolution
-] [
-.B \-s
-] [
-.B \-S
-] [
-.B \-W
-.IR pagewidth
-] [
-.B \-H
-.IR pageheight
+.I options
 ] [
 .IR file ...
 ]
@@ -81,8 +63,8 @@ as a serial line).
 Each output page is filled with white and then only
 the black areas are drawn.
 The \*(Ps specification of the black drawing operations
-is optimized by using a per-page dictionary of the most
-common horizontal move-draw operations required to fill
+is optimized by using a special font that encodes the
+move-draw operations required to fill
 the black regions on the page.
 This compression scheme typically results in a substantially
 reduced \*(Ps description, relative to the straightforward
@@ -94,25 +76,43 @@ for continuous-tone and white-on-black images.
 For these images, it sometimes is more efficient to send
 the raster bitmap image directly; see
 .IR tiff2ps (1).
-.PP
-The compressed \*(Ps description uses codes constructed
-from an extended alphabet of 
-.I "safe characters"
-(i.e. those characters whose concatentation are unlikely
-to be interpreted as a \*(Ps operator or name).
-By default, this alphabet is comprised of
-upper-case alphabetics as well as some other
-printable characters.
-To restrict the alphabet to only upper-case alphabetics, the
-.B \-a
-option may be used.
-To force 
-.I fax2ps
-to include statistics about the effectiveness of the generated
-code dictionary in the output \*(Ps file, the
-.B \-s
-option may be specified.
-(The statistics are included as \*(Ps comments.)
+.SH OPTIONS
+.TP 10
+.BI \-p " number"
+Print only the indicated page.
+Multiple pages may be printed by specifying
+this option more than once.
+.TP 10
+.BI \-x " resolution"
+Use
+.I resolution
+as the horizontal resolution, in dots/inch, of the image data.
+By default this value is taken from the file.
+.TP 10
+.BI \-y " resolution"
+Use
+.I resolution
+as the vertical resolution, in lines/inch, of the image data.
+By default this value is taken from the file.
+.TP 10
+.B \-S
+Scale each page of image data to fill the output page dimensions.
+By default images are presented according to the dimension
+information recorded in the 
+.SM TIFF
+file.
+.TP 10
+.BI \-W " width"
+Use
+.I width
+as the width, in inches, of the output page.
+The default page width is 8.5 inches.
+.TP 10
+.BI \-H " height"
+Use
+.I height
+as the height, in inches, of the output page.
+The default page height is 11 inches.
 .SH DIAGNOSTICS
 Some messages about malformed 
 .SM TIFF
@@ -128,6 +128,12 @@ attempts to recover from such data errors by resynchronizing
 decoding at the end of the current scanline.
 This can result in long horizontal black lines in the resultant
 \*(Ps image.
+.SH NOTES
+If the destination printer supports \*(Ps Level II then
+it is always faster to just send the encoded bitmap generated
+by the
+.IR tiff2ps (1)
+program.
 .SH BUGS
 .I fax2ps
 should probably figure out when it is doing a poor

@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/tsi.4f,v 1.9 1994/06/24 03:47:19 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/tsi.4f,v 1.17 1995/04/08 21:36:43 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,8 +25,9 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.TH TSI 4F "May 9, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH TSI 4F "December 5, 1994"
 .SH NAME
 tsi \- Transmission Subscriber Identification (\c
 .SM TSI\c
@@ -34,7 +36,7 @@ tsi \- Transmission Subscriber Identification (\c
 The \*(Fx configuration parameter
 .B QualifyTSI
 specifies whether or not the identity of 
-calling facsimile machines should be checked against an access
+a calling facsimile machine should be checked against an access
 control list before receiving facsimile.
 If 
 .B QualifyTSI
@@ -61,7 +63,7 @@ should be
 The order of patterns in a
 .SM TSI
 file is important.
-When an facsimile is to be received, the fax server will compare
+When a facsimile is to be received, the fax server will compare
 the client's
 .SM TSI
 against the patterns in the access control list in the order in which
@@ -74,7 +76,7 @@ If no patterns match the client
 then the facsimile is rejected.
 Thus if you want to accept all but a restricted set of
 .SM TSI
-then the last line in the file should be ``^.*$''.
+the last line in the file should be ``^.*$''.
 .PP
 Note that regular expression patterns should be written to
 match a
@@ -99,11 +101,11 @@ matches the following
 strings:
 .sp .5
 .nf
-.in +0.5i
+.RS
 \fC+1.415.555.1212\fP
 \fC    415  555  1212\fP
 \fC1-415-555-1212\fP
-.in -0.5i
+.RE
 .fi
 .PP
 Finally, note that regular expressions can be used to specify
@@ -122,6 +124,6 @@ machines permit any printable
 string to be sent as a
 .SM TSI.
 .SH "SEE ALSO"
-.IR faxd (1M),
-.IR re_foramt (7),
+.IR faxgetty (1M),
+.IR re_format (7),
 .IR config (4F)

@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_ccittrle.c,v 1.17 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_ccittrle.c,v 1.20 1994/07/26 18:21:34 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -33,15 +33,9 @@
 #include "tiffiop.h"
 #include "tif_fax3.h"
 
-DECLARE1(TIFFInitCCITTRLE, TIFF*, tif)
+TIFFInitCCITTRLE(TIFF* tif)
 {
 	TIFFInitCCITTFax3(tif);		/* reuse G3 compression */
-	tif->tif_preencode = NULL;
-	tif->tif_postencode = NULL;
-	tif->tif_encoderow = TIFFNoRowEncode;
-	tif->tif_encodestrip = TIFFNoStripEncode;
-	tif->tif_encodetile = TIFFNoTileEncode;
-	tif->tif_close = NULL;
 	/*
 	 * This magic causes the regular G3 decompression
 	 * code to not skip to the EOL mark at the end of
@@ -53,15 +47,9 @@ DECLARE1(TIFFInitCCITTRLE, TIFF*, tif)
 }
 
 int
-DECLARE1(TIFFInitCCITTRLEW, TIFF*, tif)
+TIFFInitCCITTRLEW(TIFF* tif)
 {
 	TIFFInitCCITTFax3(tif);		/* reuse G3 compression */
-	tif->tif_preencode = NULL;
-	tif->tif_postencode = NULL;
-	tif->tif_encoderow = TIFFNoRowEncode;
-	tif->tif_encodestrip = TIFFNoStripEncode;
-	tif->tif_encodetile = TIFFNoTileEncode;
-	tif->tif_close = NULL;
 	/*
 	 * This magic causes the regular G3 decompression
 	 * code to not skip to the EOL mark at the end of

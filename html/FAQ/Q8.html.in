@@ -1,0 +1,62 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: What other related software is available?
+</TITLE></HEAD><BODY>
+<H1>Q8: What other related software is available?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=What+other+related+software+is+available%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>What other HylaFAX software is available?</I>
+<P>
+<DT>A.
+<DD>HylaFAX is purely a command-line-based facsimile transport system;
+much like mail transport packages such as sendmail and MMDF.  There
+are several freely available packages that provide a front-end
+to the HylaFAX software for sending facsimile and/or for monitoring
+the HylaFAX send and receive queues:
+<UL>
+<LI><A HREF="file://sgi.com/sgi/fax/contrib/faxtool/README">faxtool</A>
+is a GUI package written by Tom Corson for Sun systems; it
+requires XView.
+<LI><A HREF="Q43.html">winflex</A>
+is a Windows 3 client written by
+<A HREF="mailto:pete@tecc.co.uk">Peter Bentley</A>
+<LI><A HREF="http://renoir.corp.sgi.com/nafo_apps/faxmgr/FM2Overview.html">faxmgr2</A>
+is a successor to <I>faxmgr</I>
+written by
+<A HREF="mailto:ctb@corp.sgi.com">Chris Beekhuis</A>; it too is available only
+in a binary installable for for SGI systems.
+faxmgr2 is available in a variety of locations including several CD-ROMS
+distributed to SGI customers (Developers Toolkit, IndiZone, etc.)
+<LI><A HREF="Q41.html">tkflexfax</A>
+is a TCL/Tk-based GUI package written by
+<A HREF="mailto:andy@wx.gtegsc.com">Andy Moskoff</A>.
+<LI><A HREF="Q39.html">sfax</A>
+is a simple, terminal based interface to the HylaFAX
+<A HREF="@CGIPATH@/manpage?1+sendfax">sendfax</A>
+program written by <A HREF="mailto:kenh@cmf.nrl.navy.mil">Ken Hornstein</A>.
+<LI><A HREF="Q42.html">macflex</A>
+is a Macintosh client written by <A HREF="mailto:rob@eats.com">Rob Newberry</A>.
+</UL>
+<P>
+A bit unrelated, but perhaps interesting,
+is the "Remote Printing Experiment" being conducted by folks
+on the Internet.  This provides a distributed fax delivery service that
+uses email to relay facsimile to a local site for delivery.  For info
+about that stuff send mail to
+<A HREF="mailto:tpc-faq@town.hall.org">tpc-faq@town.hall.org</A> or
+visit their <A HREF="http://www.balliol.ox.ac.uk/fax/faxsend.html">WWW site</A>.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

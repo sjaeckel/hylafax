@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2Params.h,v 1.10 1994/06/02 16:34:27 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Params.h,v 1.17 1995/04/08 21:29:47 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,6 +32,16 @@
 #include "Str.h"
 
 struct Class2Params {
+private:
+// XXX these exist solely for FaxModem
+    static const char* pageWidthNames[8];
+    static const char* pageLengthNames[4];
+    static const char* verticalResNames[2];
+    static const char* scanlineTimeNames[8];
+    static const char* dataFormatNames[4];
+
+    friend class FaxModem;
+public:
     u_int vr;		// vertical resolution (VR_*)
     u_int br;		// bit rate (BR_*)
     u_int wd;		// page width (WD_*)
@@ -58,14 +69,6 @@ struct Class2Params {
     static u_int DISbrTab[16];		// DIS best bit rate
     static u_int DCSbrTab[16];		// DIS actual bit rate
 
-// tables for printing class 2 subparameter information
-    static const char* bitRateNames[8];		// br codes
-    static const char* dataFormatNames[4];	// df codes
-    static const char* vresNames[2];		// vr codes
-    static const char* pageWidthNames[8];	// wd codes
-    static const char* pageLengthNames[4];	// ln codes
-    static const char* scanlineTimeNames[8];	// st codes
-
     Class2Params();
 
     int operator==(const Class2Params&) const;
@@ -76,12 +79,30 @@ struct Class2Params {
     void setFromDCS(u_int dcs, u_int xinfo = 0);
     u_int getDCS() const;
     fxBool is2D() const;
-    u_int pageWidth() const;
 
     u_int transferSize(u_int ms) const;
     u_int minScanlineSize() const;
 
-    fxStr encode() const;		// generate encoded string from params
-    void decode(const fxStr&);		// decode previously encoded params
+    u_int pageWidth() const;		// page width in mm
+    void setPageWidthInPixels(u_int w);
+    void setPageWidthInMM(u_int w);
+    u_int pageLength() const;		// page length in mm
+    void setPageLengthInMM(u_int l);
+    u_int verticalRes() const;		// lines/inch
+    void setVerticalRes(u_int res);
+
+    static const char* bitRateNames[8];	// XXX needed by Class 1 driver
+
+    const char* pageWidthName() const;
+    const char* pageLengthName() const;
+    const char* bitRateName() const;
+    const char* verticalResName() const;
+    const char* scanlineTimeName() const;
+    const char* dataFormatName() const;
+
+    fxStr encode() const;		// generate encoded page params
+    void decode(const char*);		// decode previously encoded page params
+    fxStr encodeCaps() const;		// generate encoded capabilities
+    void decodeCaps(const char*);	// decode capabilities
 };
 #endif /* _Class2Params_ */

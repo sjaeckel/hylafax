@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Getty.c++,v 1.24 1994/02/28 14:15:22 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Getty.c++,v 1.40 1995/04/08 21:30:39 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -25,43 +26,47 @@
 #include "Getty.h"
 #include "UUCPLock.h"
 
-#include <stdarg.h>
 #include <termios.h>
 #include <osfcn.h>
-#include <signal.h>
-#include <syslog.h>
-#include <paths.h>
 #include <sys/param.h>
-#include <sys/stat.h>
+extern "C" {
+#include <syslog.h>
+}
+
+#include "Sys.h"
 
 /*
  * FAX Server Getty Support Base Class.
  */
 
-const fxStr Getty::getty = _PATH_GETTY;
-
-Getty::Getty(const fxStr& l, const fxStr& s, u_int t)
-    : line(l)
+Getty::Getty(const char* p, const fxStr& l, const fxStr& s)
+    : getty(p)
+    , line(l)
     , speed(s)
+    , tzVar("TZ")
+    , langVar("LANG")
 {
     pid = 0;
-    timeout = t;
+    argv[0] = NULL;
+    argv[1] = NULL;
 }
 
 Getty::~Getty()
 {
 }
 
-void Getty::setTimeout(u_int t)		{ timeout = t; }
+pid_t Getty::getPID() const		{ return pid; }
+void Getty::setPID(pid_t p)		{ pid = p; }
+const char* Getty::getLine() const	{ return line; }
 
 static void
 sigHUP(int)
 {
-    (void) close(0);
-    (void) close(1);
-    (void) close(2);
-    sleep(5);
-    _exit(1);
+    ::close(STDIN_FILENO);
+    ::close(STDOUT_FILENO);
+    ::close(STDERR_FILENO);
+    ::sleep(5);
+    ::_exit(1);
 }
 
 /*
@@ -120,75 +125,113 @@ Getty::setupArgv(const char* args)
     argv[nargs] = NULL;
 }
 
+fxStr
+Getty::getCmdLine() const
+{
+    fxStr s(getty);
+
+    for (u_int i = 1; argv[i] != NULL; i++) {
+	s.append(' ');
+	s.append(argv[i]);
+    }
+    return (s);
+}
+
+void
+Getty::addEnvVar(int& envc, char* env[], fxStr& var)
+{
+    const char* val = ::getenv(var);
+    if (val) {
+	var.append(fxStr::format("=%s", val));
+	env[envc++] = var;
+    }
+}
+
 /*
- * Run a getty session and if successful exec the
+ * Setup a getty session and if successful exec the
  * getty program.  Note that this is always run in
- * the child.  We actually fork again here so that
- * we immediately reap the real getty and cleanup
- * state.  It also simplifies matters of uid management
- * since the fax server runs as effective uid other
- * than root, but we're started up with real&effective
- * uid root.
+ * the child.
  */
 void
-Getty::run(int fd, const char* args)
+Getty::run(int fd, fxBool parentIsInit)
 {
-    pid = fork();
-    if (pid == -1)
-	fatal("getty: can not fork reaper process");
-    closelog();
-    openlog("FaxGetty", LOG_PID, LOG_AUTH);
-    if (chdir("/dev") < 0)
+    if (Sys::chdir(_PATH_DEV) < 0)
 	fatal("chdir: %m");
-    if (pid == 0) {			// child, exec getty
-	signal(SIGHUP, fxSIGHANDLER(sigHUP));
-	setupArgv(args);
-	/*
-	 * After the session is properly setup, the
-	 * stdio streams will be hooked to the tty
-	 * and we can discard the file descriptor.
-	 */
-	setupSession(fd);
+    /*
+     * Reset signals known to be handled
+     * by the current process (XXX).
+     */
+    ::signal(SIGTERM, fxSIGHANDLER(SIG_DFL));
+    ::signal(SIGHUP, fxSIGHANDLER(sigHUP));
+    /*
+     * After the session is properly setup, the
+     * stdio streams should be hooked to the tty
+     * and the modem descriptor should be closed.
+     */
+    setupSession(fd);
+    /*
+     * If this getty is not being started from init
+     * then pass a restricted environment.  Otherwise
+     * just pass everything through.
+     */
+    if (!parentIsInit) {
+	char* env[10];
+	int envc = 0;
+	addEnvVar(envc, env, tzVar);		// timezone
+	addEnvVar(envc, env, langVar);		// for locale
+	env[envc] = NULL;
+	Sys::execve(getty, argv, env);	
+    } else
+	Sys::execv(getty, argv);
+    ::_exit(127);
+}
 
-	char* envp[1];
-	envp[0] = NULL;
-	execve((char*) getty, argv, envp);
-	_exit(127);
-    } else {				// parent, wait for getty/login
-	close(fd);			// close so HUPCL works correctly
-	int status;
-	wait(status, TRUE);		// wait for getty/login work to complete
-	hangup();
-	_exit(status);			// pass exit status upward
-    }
+/*
+ * Setup descriptors for stdout, and stderr.
+ */
+void
+Getty::setupSession(int fd)
+{
+    struct stat sb;
+    Sys::fstat(fd, sb);
+#if HAS_FCHOWN
+    ::fchown(fd, 0, sb.st_gid);
+#else
+    Sys::chown(getLine(), 0, sb.st_gid);
+#endif
+#if HAS_FCHMOD
+    ::fchmod(fd, 0622);
+#else
+    Sys::chmod(getLine(), 0622);
+#endif
+    if (::dup2(fd, STDOUT_FILENO) < 0)
+	fatal("Unable to dup stdin to stdout: %m");
+    if (::dup2(fd, STDERR_FILENO) < 0)
+	fatal("Unable to dup stdin to stderr: %m");
+}
+
+fxBool
+Getty::wait(int& status, fxBool block)
+{
+    return (Sys::waitpid(pid, status, block ? 0 : WNOHANG) == pid);
 }
 
 void
 Getty::hangup()
 {
-    chown(getLine(), UUCPLock::getUUCPUid(), UUCPLock::getUUCPGid());
-    chmod(getLine(), 0600);		// reset protection
+    // NB: this is executed in the parent
+    fxStr device = fxStr::format("%s/" | line, _PATH_DEV);
+    Sys::chown(device, UUCPLock::getUUCPUid(), UUCPLock::getUUCPGid());
+    Sys::chmod(device, 0600);			// reset protection
 }
 
+extern void vlogError(const char* fmt, va_list ap);
+
 void
-Getty::error(const char* va_alist, ...)
-#define	fmt va_alist
+Getty::fatal(const char* fmt ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    vsyslog(LOG_ERR, fmt, ap);
-    va_end(ap);
-}
-#undef fmt
-
-void
-Getty::fatal(const char* va_alist, ...)
-#define	fmt va_alist
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vsyslog(LOG_ERR, fmt, ap);
-    va_end(ap);
+    vlogError(fmt, ap);
     hangup();
 }
-#undef fmt

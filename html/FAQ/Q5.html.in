@@ -1,0 +1,45 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: What is the current version/status of HylaFAX?
+</TITLE></HEAD><BODY>
+<H1>Q5: What is the current version/status of HylaFAX?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=What+is+the+current+version%2Fstatus+of+HylaFAX%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I> What is the current version/status of HylaFAX?</I>
+<P>
+<DT>A.
+<DD>HylaFAX is distributed in two versions: a <I>released version</I>
+    and a <I>beta version</I>.
+<P>
+Released versions represent software that has been carefully tested
+on all supported platforms and is believed to compile, install, and
+function correctly (except where noted in the distribution documentation).
+Released versions take a long time to create.  The last few
+released versions have been at least 6 months apart.
+<P>
+Beta versions are test versions of the software that are distributed
+more frequently than released versions.  These versions include new
+facilities and/or support for new systems.  They are typically tested
+on one or two systems, but not as thoroughly as released versions and
+not on all supported systems.
+<P>
+The current released and beta versions are always displayed on
+the HylaFAX <A HREF="http://www.vix.com/hylafax/">home page</A>.
+<P>
+See also <A HREF="@HTMLPATH@/version.html">Q10</A>
+for how to identify which version of HylaFAX you have.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_dumpmode.c,v 1.30 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_dumpmode.c,v 1.36.1.1 1995/02/10 19:04:23 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -30,42 +30,26 @@
  * "Null" Compression Algorithm Support.
  */
 #include "tiffiop.h"
-#include <assert.h>
-#include <stdio.h>
 
 /*
  * Encode a hunk of pixels.
  */
 static int
-DECLARE4(DumpModeEncode, TIFF*, tif, u_char*, pp, u_long, cc, u_int, s)
+DumpModeEncode(TIFF* tif, tidata_t pp, tsize_t cc, tsample_t s)
 {
-	/*
-	 * This may be overzealous, but avoids having to
-	 * worry about byte alignment for the (potential)
-	 * byte-swapping work below.
-	 */
-	if (tif->tif_rawcc + cc > tif->tif_rawdatasize)
-		if (!TIFFFlushData1(tif))
-			return (-1);
+	(void) s;
 	while (cc > 0) {
-		int n;
-		if ((n = cc) > tif->tif_rawdatasize)
-			n = tif->tif_rawdatasize;
-		memcpy(tif->tif_rawcp, pp, n);
-		if (tif->tif_flags & TIFF_SWAB) {
-			switch (tif->tif_dir.td_bitspersample) {
-			case 16:
-				assert((n & 3) == 0);
-				TIFFSwabArrayOfShort((u_short *)tif->tif_rawcp,
-				    n/2);
-				break;
-			case 32:
-				assert((n & 15) == 0);
-				TIFFSwabArrayOfLong((u_long *)tif->tif_rawcp,
-				    n/4);
-				break;
-			}
-		}
+		tsize_t n;
+
+		n = cc;
+		if (tif->tif_rawcc + n > tif->tif_rawdatasize)
+			n = tif->tif_rawdatasize - tif->tif_rawcc;
+		/*
+		 * Avoid copy if client has setup raw
+		 * data buffer to avoid extra copy.
+		 */
+		if (tif->tif_rawcp != pp)
+			_TIFFmemcpy(tif->tif_rawcp, pp, n);
 		tif->tif_rawcp += n;
 		tif->tif_rawcc += n;
 		pp += n;
@@ -81,8 +65,9 @@ DECLARE4(DumpModeEncode, TIFF*, tif, u_char*, pp, u_long, cc, u_int, s)
  * Decode a hunk of pixels.
  */
 static int
-DECLARE4(DumpModeDecode, TIFF*, tif, u_char*, buf, u_long, cc, u_int, s)
+DumpModeDecode(TIFF* tif, tidata_t buf, tsize_t cc, tsample_t s)
 {
+	(void) s;
 	if (tif->tif_rawcc < cc) {
 		TIFFError(tif->tif_name,
 		    "DumpModeDecode: Not enough data for scanline %d",
@@ -93,20 +78,8 @@ DECLARE4(DumpModeDecode, TIFF*, tif, u_char*, buf, u_long, cc, u_int, s)
 	 * Avoid copy if client has setup raw
 	 * data buffer to avoid extra copy.
 	 */
-	if (tif->tif_rawcp != (char*) buf)
-		memcpy(buf, tif->tif_rawcp, cc);
-	if (tif->tif_flags & TIFF_SWAB) {
-		switch (tif->tif_dir.td_bitspersample) {
-		case 16:
-			assert((cc & 3) == 0);
-			TIFFSwabArrayOfShort((u_short *)buf, cc/2);
-			break;
-		case 32:
-			assert((cc & 15) == 0);
-			TIFFSwabArrayOfLong((u_long *)buf, cc/4);
-			break;
-		}
-	}
+	if (tif->tif_rawcp != buf)
+		_TIFFmemcpy(buf, tif->tif_rawcp, cc);
 	tif->tif_rawcp += cc;
 	tif->tif_rawcc -= cc;
 	return (1);
@@ -116,7 +89,7 @@ DECLARE4(DumpModeDecode, TIFF*, tif, u_char*, buf, u_long, cc, u_int, s)
  * Seek forwards nrows in the current strip.
  */
 static int
-DECLARE2(DumpModeSeek, TIFF*, tif, u_long, nrows)
+DumpModeSeek(TIFF* tif, uint32 nrows)
 {
 	tif->tif_rawcp += nrows * tif->tif_scanlinesize;
 	tif->tif_rawcc -= nrows * tif->tif_scanlinesize;
@@ -127,7 +100,7 @@ DECLARE2(DumpModeSeek, TIFF*, tif, u_long, nrows)
  * Initialize dump mode.
  */
 int
-DECLARE1(TIFFInitDumpMode, TIFF*, tif)
+TIFFInitDumpMode(TIFF* tif)
 {
 	tif->tif_decoderow = DumpModeDecode;
 	tif->tif_decodestrip = DumpModeDecode;

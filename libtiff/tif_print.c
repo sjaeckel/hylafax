@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_print.c,v 1.47 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_print.c,v 1.55 1994/09/17 23:41:33 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -33,8 +33,8 @@
 #include <stdio.h>
 
 #ifdef JPEG_SUPPORT
-static
-DECLARE2(JPEGPrintQTable, FILE*, fd, u_char*, tab)
+static void
+JPEGPrintQTable(FILE* fd, u_char* tab)
 {
 	int i, j;
 	char *sep;
@@ -50,8 +50,8 @@ DECLARE2(JPEGPrintQTable, FILE*, fd, u_char*, tab)
 	}
 }
 
-static
-DECLARE2(JPEGPrintCTable, FILE*, fd, u_char*, tab)
+static void
+JPEGPrintCTable(FILE* fd, u_char* tab)
 {
 	int i, n, count;
 	char *sep;
@@ -77,6 +77,36 @@ DECLARE2(JPEGPrintCTable, FILE*, fd, u_char*, tab)
 		fputc('\n', fd);
 }
 #endif
+
+#include <ctype.h>
+
+static void
+fprintAscii(FILE* fd, const char* cp)
+{
+	for (; *cp != '\0'; cp++) {
+		const char* tp;
+
+		if (isprint(*cp)) {
+			fputc(*cp, fd);
+			continue;
+		}
+		for (tp = "\tt\bb\rr\nn\vv"; *tp; tp++)
+			if (*tp++ == *cp)
+				break;
+		if (*tp)
+			fprintf(fd, "\\%c", *tp);
+		else
+			fprintf(fd, "\\%03o", *cp & 0xff);
+	}
+}
+
+static void
+fprintAsciiTag(FILE* fd, const char* name, const char* value)
+{
+	fprintf(fd, "  %s: \"", name);
+	fprintAscii(fd, value);
+	fprintf(fd, "\"\n");
+}
 
 static const char *photoNames[] = {
     "min-is-white",				/* PHOTOMETRIC_MINISWHITE */
@@ -109,12 +139,12 @@ static const char *orientNames[] = {
  * to the specified stdio file stream.
  */
 void
-DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
+TIFFPrintDirectory(TIFF* tif, FILE* fd, long flags)
 {
 	register TIFFDirectory *td;
 	char *sep;
 	int i, j;
-	long n;
+	long l, n;
 
 	fprintf(fd, "TIFF Directory at offset 0x%x\n", tif->tif_diroff);
 	td = &tif->tif_dir;
@@ -136,16 +166,18 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 	}
 	if (TIFFFieldSet(tif,FIELD_IMAGEDIMENSIONS)) {
 		fprintf(fd, "  Image Width: %lu Image Length: %lu",
-		    td->td_imagewidth, td->td_imagelength);
+		    (u_long) td->td_imagewidth, (u_long) td->td_imagelength);
 		if (TIFFFieldSet(tif,FIELD_IMAGEDEPTH))
-			fprintf(fd, " Image Depth: %lu", td->td_imagedepth);
+			fprintf(fd, " Image Depth: %lu",
+			    (u_long) td->td_imagedepth);
 		fprintf(fd, "\n");
 	}
 	if (TIFFFieldSet(tif,FIELD_TILEDIMENSIONS)) {
 		fprintf(fd, "  Tile Width: %lu Tile Length: %lu",
-		    td->td_tilewidth, td->td_tilelength);
+		    (u_long) td->td_tilewidth, (u_long) td->td_tilelength);
 		if (TIFFFieldSet(tif,FIELD_TILEDEPTH))
-			fprintf(fd, " Tile Depth: %lu", td->td_tiledepth);
+			fprintf(fd, " Tile Depth: %lu",
+			    (u_long) td->td_tiledepth);
 		fprintf(fd, "\n");
 	}
 	if (TIFFFieldSet(tif,FIELD_RESOLUTION)) {
@@ -245,9 +277,29 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 			fprintf(fd, "%u (0x%x)\n",
 			    td->td_photometric, td->td_photometric);
 	}
-	if (TIFFFieldSet(tif,FIELD_MATTEING))
-		fprintf(fd, "  Matteing: %s\n", td->td_matteing ?
-		    "pre-multiplied with alpha channel" : "none");
+	if (TIFFFieldSet(tif,FIELD_EXTRASAMPLES) && td->td_extrasamples) {
+		fprintf(fd, "  Extra Samples: %u<", td->td_extrasamples);
+		sep = "";
+		for (i = 0; i < td->td_extrasamples; i++) {
+			switch (td->td_sampleinfo[i]) {
+			case EXTRASAMPLE_UNSPECIFIED:
+				fprintf(fd, "%sunspecified", sep);
+				break;
+			case EXTRASAMPLE_ASSOCALPHA:
+				fprintf(fd, "assoc-alpha", sep);
+				break;
+			case EXTRASAMPLE_UNASSALPHA:
+				fprintf(fd, "unassoc-alpha", sep);
+				break;
+			default:
+				fprintf(fd, "%s%u (0x%x)", sep,
+				    td->td_sampleinfo[i], td->td_sampleinfo[i]);
+				break;
+			}
+			sep = ", ";
+		}
+		fprintf(fd, ">\n");
+	}
 #ifdef CMYK_SUPPORT
 	if (TIFFFieldSet(tif,FIELD_INKSET)) {
 		fprintf(fd, "  Ink Set: ");
@@ -267,7 +319,8 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		i = td->td_samplesperpixel;
 		sep = "";
 		for (cp = td->td_inknames; i > 0; cp = strchr(cp, '\0')) {
-			fprintf(fd, "%s%s", sep, cp);
+			fprintf(fd, "%s", sep);
+			fprintAscii(fd, cp);
 			sep = ", ";
 		}
 	}
@@ -275,7 +328,7 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		fprintf(fd, "  Dot Range: %u-%u\n",
 		    td->td_dotrange[0], td->td_dotrange[1]);
 	if (TIFFFieldSet(tif,FIELD_TARGETPRINTER))
-		fprintf(fd, "  Target Printer: %s\n", td->td_targetprinter);
+		fprintAsciiTag(fd, "Target Printer", td->td_targetprinter);
 #endif
 	if (TIFFFieldSet(tif,FIELD_THRESHHOLDING)) {
 		fprintf(fd, "  Thresholding: ");
@@ -402,22 +455,21 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		fprintf(fd, "  Halftone Hints: light %u dark %u\n",
 		    td->td_halftonehints[0], td->td_halftonehints[1]);
 	if (TIFFFieldSet(tif,FIELD_ARTIST))
-		fprintf(fd, "  Artist: \"%s\"\n", td->td_artist);
+		fprintAsciiTag(fd, "Artist", td->td_artist);
 	if (TIFFFieldSet(tif,FIELD_DATETIME))
-		fprintf(fd, "  Date & Time: \"%s\"\n", td->td_datetime);
+		fprintAsciiTag(fd, "Date & Time", td->td_datetime);
 	if (TIFFFieldSet(tif,FIELD_HOSTCOMPUTER))
-		fprintf(fd, "  Host Computer: \"%s\"\n", td->td_hostcomputer);
+		fprintAsciiTag(fd, "Host Computer", td->td_hostcomputer);
 	if (TIFFFieldSet(tif,FIELD_SOFTWARE))
-		fprintf(fd, "  Software: \"%s\"\n", td->td_software);
+		fprintAsciiTag(fd, "Software", td->td_software);
 	if (TIFFFieldSet(tif,FIELD_DOCUMENTNAME))
-		fprintf(fd, "  Document Name: \"%s\"\n", td->td_documentname);
+		fprintAsciiTag(fd, "Document Name", td->td_documentname);
 	if (TIFFFieldSet(tif,FIELD_IMAGEDESCRIPTION))
-		fprintf(fd, "  Image Description: \"%s\"\n",
-		    td->td_imagedescription);
+		fprintAsciiTag(fd, "Image Description", td->td_imagedescription);
 	if (TIFFFieldSet(tif,FIELD_MAKE))
-		fprintf(fd, "  Make: \"%s\"\n", td->td_make);
+		fprintAsciiTag(fd, "Make", td->td_make);
 	if (TIFFFieldSet(tif,FIELD_MODEL))
-		fprintf(fd, "  Model: \"%s\"\n", td->td_model);
+		fprintAsciiTag(fd, "Model", td->td_model);
 	if (TIFFFieldSet(tif,FIELD_ORIENTATION)) {
 		fprintf(fd, "  Orientation: ");
 		if (td->td_orientation < NORIENTNAMES)
@@ -430,10 +482,10 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		fprintf(fd, "  Samples/Pixel: %u\n", td->td_samplesperpixel);
 	if (TIFFFieldSet(tif,FIELD_ROWSPERSTRIP)) {
 		fprintf(fd, "  Rows/Strip: ");
-		if (td->td_rowsperstrip == 0xffffffffL)
+		if (td->td_rowsperstrip == (uint32) -1)
 			fprintf(fd, "(infinite)\n");
 		else
-			fprintf(fd, "%u\n", td->td_rowsperstrip);
+			fprintf(fd, "%lu\n", (u_long) td->td_rowsperstrip);
 	}
 	if (TIFFFieldSet(tif,FIELD_MINSAMPLEVALUE))
 		fprintf(fd, "  Min Sample Value: %u\n", td->td_minsamplevalue);
@@ -455,7 +507,7 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		}
 	}
 	if (TIFFFieldSet(tif,FIELD_PAGENAME))
-		fprintf(fd, "  Page Name: \"%s\"\n", td->td_pagename);
+		fprintAsciiTag(fd, "Page Name", td->td_pagename);
 	if (TIFFFieldSet(tif,FIELD_GROUP3OPTIONS)) {
 		fprintf(fd, "  Group 3 Options:");
 		sep = " ";
@@ -465,8 +517,9 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 			fprintf(fd, "%sEOL padding", sep), sep = "+";
 		if (td->td_group3options & GROUP3OPT_UNCOMPRESSED)
 			fprintf(fd, "%suncompressed data", sep);
-		fprintf(fd, " (%u = 0x%x)\n",
-		    td->td_group3options, td->td_group3options);
+		fprintf(fd, " (%lu = 0x%lx)\n",
+		    (u_long) td->td_group3options,
+		    (u_long) td->td_group3options);
 	}
 	if (TIFFFieldSet(tif,FIELD_CLEANFAXDATA)) {
 		fprintf(fd, "  Fax Data: ");
@@ -487,7 +540,8 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		}
 	}
 	if (TIFFFieldSet(tif,FIELD_BADFAXLINES))
-		fprintf(fd, "  Bad Fax Lines: %u\n", td->td_badfaxlines);
+		fprintf(fd, "  Bad Fax Lines: %lu\n",
+		    (u_long) td->td_badfaxlines);
 	if (TIFFFieldSet(tif,FIELD_BADFAXRUN))
 		fprintf(fd, "  Consecutive Bad Fax Lines: %u\n",
 		    td->td_badfaxrun);
@@ -495,8 +549,9 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		fprintf(fd, "  Group 4 Options:");
 		if (td->td_group4options & GROUP4OPT_UNCOMPRESSED)
 			fprintf(fd, "uncompressed data");
-		fprintf(fd, " (%u = 0x%x)\n",
-		    td->td_group4options, td->td_group4options);
+		fprintf(fd, " (%lu = 0x%lx)\n",
+		    (u_long) td->td_group4options,
+		    (u_long) td->td_group4options);
 	}
 	if (TIFFFieldSet(tif,FIELD_PAGENUMBER))
 		fprintf(fd, "  Page Number: %u-%u\n",
@@ -506,12 +561,12 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		if (flags & TIFFPRINT_COLORMAP) {
 			fprintf(fd, "\n");
 			n = 1L<<td->td_bitspersample;
-			for (i = 0; i < n; i++)
+			for (l = 0; l < n; l++)
 				fprintf(fd, "   %5d: %5u %5u %5u\n",
 				    i,
-				    td->td_colormap[0][i],
-				    td->td_colormap[1][i],
-				    td->td_colormap[2][i]);
+				    td->td_colormap[0][l],
+				    td->td_colormap[1][l],
+				    td->td_colormap[2][l]);
 		} else
 			fprintf(fd, "(present)\n");
 	}
@@ -537,25 +592,37 @@ DECLARE3(TIFFPrintDirectory, TIFF*, tif, FILE*, fd, long, flags)
 		if (flags & TIFFPRINT_CURVES) {
 			fprintf(fd, "\n");
 			n = 1L<<td->td_bitspersample;
-			for (i = 0; i < n; i++) {
+			for (l = 0; l < n; l++) {
 				fprintf(fd, "    %2d: %5u",
-				    i, td->td_transferfunction[0][i]);
+				    i, td->td_transferfunction[0][l]);
 				for (j = 1; j < td->td_samplesperpixel; j++)
 					fprintf(fd, " %5u",
-					    td->td_transferfunction[j][i]);
-				putc('\n', fd);
+					    td->td_transferfunction[j][l]);
+				fputc('\n', fd);
 			}
 		} else
 			fprintf(fd, "(present)\n");
 	}
 #endif
+#if SUBIFD_SUPPORT
+	if (TIFFFieldSet(tif, FIELD_SUBIFD)) {
+		fprintf(fd, "  SubIFD Offsets:");
+		for (i = 0; i < td->td_nsubifd; i++)
+			fprintf(fd, " %5u", td->td_subifd[i]);
+		fputc('\n', fd);
+	}
+#endif
 	if ((flags & TIFFPRINT_STRIPS) &&
 	    TIFFFieldSet(tif,FIELD_STRIPOFFSETS)) {
+		tstrip_t s;
+
 		fprintf(fd, "  %u %s:\n",
 		    td->td_nstrips,
 		    isTiled(tif) ? "Tiles" : "Strips");
-		for (i = 0; i < td->td_nstrips; i++)
-			fprintf(fd, "    %3d: [%8u, %8u]\n",
-			    i, td->td_stripoffset[i], td->td_stripbytecount[i]);
+		for (s = 0; s < td->td_nstrips; s++)
+			fprintf(fd, "    %3d: [%8lu, %8lu]\n",
+			    i,
+			    (u_long) td->td_stripoffset[s],
+			    (u_long) td->td_stripbytecount[s]);
 	}
 }

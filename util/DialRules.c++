@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/DialRules.c++,v 1.13 1994/06/23 00:24:16 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/DialRules.c++,v 1.20 1995/04/08 21:43:54 sam Rel $ */
 /*
- * Copyright (c) 1993, 1994 Sam Leffler
- * Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1995 Sam Leffler
+ * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -24,7 +25,7 @@
  */
 
 /*
- * FlexFAX Dialing String Rule Support.
+ * HylaFAX Dialing String Rule Support.
  */
 #include "DialRules.h"
 #include "RegExArray.h"
@@ -179,7 +180,9 @@ DialStringRules::nextLine(char* line, int lineSize)
 	if (!fgets(line, lineSize, fp))
 	    return (NULL);
 	lineno++;
-	cp = strchr(line, '!');
+	for (cp = line; cp = strchr(cp, '!'); cp++)
+	    if (cp == line || cp[-1] != '\\')
+		break;
 	if (cp)
 	    *cp = '\0';
 	else if (cp = strchr(line, '\n'))
@@ -312,7 +315,12 @@ DialStringRules::parseRuleSet(RuleArray& rules)
 		break;
 	}
 	if (i >= n) {
-	    r.pat = new RegEx(pat, pat.length());
+	    r.pat = new RegEx(pat);
+	    if (r.pat->getErrorCode() > REG_NOMATCH) {
+		fxStr emsg;
+		r.pat->getError(emsg);
+		parseError(pat | ": " | emsg);
+	    }
 	    regex->append(r.pat);
 	} else
 	    r.pat = (*regex)[i];
@@ -342,7 +350,7 @@ DialStringRules::applyRules(const fxStr& name, const fxStr& s)
 	for (u_int i = 0, n = (*ra).length(); i < n; i++) {
 	    DialRule& rule = (*ra)[i];
 	    u_int off = 0;
-	    while (rule.pat->Find(result, off) != REG_NOMATCH) {
+	    while (rule.pat->Find(result, off)) {
 		/*
 		 * Regular expression match.
 		 */

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/PageSize.c++,v 1.13 1994/02/28 14:24:16 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/PageSize.c++,v 1.18 1995/04/08 21:44:13 sam Rel $ */
 /*
- * Copyright (c) 1993, 1994 Sam Leffler
- * Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1995 Sam Leffler
+ * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -146,9 +147,12 @@ PageSizeInfo::getPageInfoByName(const char* name)
     int c = tolower(name[0]);
     size_t len = strlen(name);
     for (int i = 0, n = pageInfo->length(); i < n; i++) {
-	for (const char* cp = (*pageInfo)[i].name; *cp != '\0'; cp++)
-	    if (tolower(*cp) == c && strncasecmp(cp, name, len) == 0)
-		return &(*pageInfo)[i];
+	const PageInfo& pi = (*pageInfo)[i];
+	if (::strncasecmp(pi.abbr, name, len) == 0)
+	    return &pi;
+	for (const char* cp = pi.name; *cp != '\0'; cp++)
+	    if (tolower(*cp) == c && ::strncasecmp(cp, name, len) == 0)
+		return &pi;
     }
     return (NULL);
 }
@@ -159,7 +163,7 @@ PageSizeInfo::getPageSizeByName(const char* name)
     if (pageInfo == NULL)
 	pageInfo = readPageInfoFile();
     const PageInfo* info = getPageInfoByName(name);
-    return info ? new PageSizeInfo(*info) : NULL;
+    return info ? new PageSizeInfo(*info) : (PageSizeInfo*) NULL;
 }
 
 PageSizeInfo*
@@ -182,7 +186,8 @@ PageSizeInfo::getPageSizeBySize(float wmm, float hmm)
 	}
     }
 #define THRESHOLD 720000		// .5" in each dimension
-    return bestMeasure < THRESHOLD ? new PageSizeInfo((*pageInfo)[best]) : NULL;
+    return bestMeasure < THRESHOLD ?
+	new PageSizeInfo((*pageInfo)[best]) : (PageSizeInfo*) NULL;
 }
 
 PageSizeInfo::PageSizeInfo()

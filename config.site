@@ -1,0 +1,194 @@
+# $Header: /usr/people/sam/fax/./RCS/config.site,v 1.20 1995/04/08 21:12:13 sam Rel $
+#
+# HylaFAX Facsimile Software
+#
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics, Inc.
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+#
+# This file holds site-specific configuration parameters.
+#
+# Nothing is defined in here by default, the definitions
+# commented out below serve as documentation for what you
+# can set in this file or a config.local file.
+#
+# Note that you do not need to set anything here unless you
+# want to override the auto-configuration behaviour and/or
+# interactive prompting done by the configure script.
+#
+
+#
+# Package controls.
+#
+#AFM="auto"			# yes|no|auto configure AFM files
+#DSO="auto"			# yes|no|auto configure DSO support
+#GETTY="BSD"			# type of getty support (BSD/SysV)
+#HTML="no"			# yes|no configure HTML documentation
+#PS="gs"			# PostScript support to use (gs/dps)
+#LOCKS="ansi"			# UUCP lockfile scheme to use
+#SYSVINIT="auto"		# yes|no|auto configure SV-style init support
+#SGI2FAX="auto"			# yes|no|auto configure SGI image support
+#DPS="no"			# yes|no configure building SGI DPS-based RIP
+#GS="no"			# yes|no configure building Ghostscript RIP
+
+#
+# Directory parameters.
+#
+#DIR_AFM="/usr/lib/DPS/AFM"		# directory for AFM files
+#DIR_BIN="/usr/local/bin"		# directory for client apps
+#DIR_LIBDATA="/usr/lib/fax"		# directory for client data
+#DIR_LIBEXEC="/usr/lib/fax"		# directory for libraries&hidden apps
+#DIR_MAN="/usr/local/man"		# directory for manual pages
+#DIR_SPOOL="/var/spool/fax"		# directory for spooling area
+#DIR_SBIN="/var/spool/fax/bin"		# directory for system apps
+#DIR_LOCKS="/usr/spool/locks"		# directory for UUCP lock files
+
+#
+# HTML-specific parameters; only used when the
+# HTML package is configured for installation.
+#
+# Note that ``PATH''s are the virtual pathnames used
+# in forming URLs; they are not directory pathnames
+# in the filesystem.
+#
+#DIR_HTML="/var/httpd/htdocs/hylafax"	# directory for HTML documentation
+#DIR_CGI="/var/httpd/cgi-bin"		# directory for CGI scripts
+#HTMLPATH="/hylafax"			# virtual path to HTML materials
+#CGIPATH="/cgi-bin"			# virtual path to CGI scripts
+
+#
+# Miscellaneous parameters.
+#
+#DEFVRES="196"				# default vertical res for outbound fax
+#FILLORDER="MS2LSB"			# bit order of cpu (MSB2LSB/LSB2MSB)
+#FAXGID="uucp"				# group ID for fax user
+#FAXUID="uucp"				# user ID for fax user
+#PAGESIZE="North American Letter"	# default page size
+#SYSGID="sys"				# group ID for system installs
+#SYSUID="bin				# user ID for system installs
+#
+#PATH_GETTY="/etc/getty"		# pathname of suitable getty program
+#PATH_SENDMAIL="/usr/lib/sendmail"	# pathname of suitable sendmail program
+#PATH_GSRIP="/usr/local/bin/gs"		# pathname of Ghostscript-based RIP
+#PATH_DPSRIP="/var/spool/fax/bin/ps2fax.exe"	# pathname of DPS-based RIP
+#MANSCHEME="sysv-source-cat-strip"	# manual page installation scheme
+
+#
+# Parameters used when building the software.
+#
+# Note that configure has several ENVOPTS built into it that are
+# set according to the target.  This is done to help naive folks.
+#
+# Beware of changing the INSTALL definition; you *must* have an
+# install script that emulates the Silicon Graphics install program!
+#
+#AR="/bin/ar"				# pathname of suitable ar program
+#AROPTS="rc"				# options to ar for creating archive
+#CC="gcc"				# name/pathname of C compiler
+#CXX="gcc"				# name/pathname of C++ compiler
+#CXXFILE="-x c++"			# options for proper C++ processing
+#ENVOPTS="-Aa"				# options for getting ANSI C
+#GCOPTS="-g"				# options to pass C compiler
+#GCXXOPTS="-g -pedantic-errors"		# options to pass C++ compiler
+#GENDIST="/sbin/gendist"		# pathname of SGI inst generator program
+#INSTALL='${SHELL} ${PORT}/install.sh'	# SGI install program/emulator
+#LIBMALLOC="auto"			# yes|no|auto configure -lmalloc use
+#LIBPORT='${PORT}/libport.a'		# library with emulation code
+#LIBSUN="auto"				# yes|no|auto configure -lsun use
+#LIBTIFF_CONFIG="-DMMAP_SUPPORT"	# libtiff configuration options
+#LLDOPTS=""				# extra link line options
+#MACHDEPLIBS=""				# extra libraries for linking
+#PORTFUNCS=""				# non-standard functions to emulate
+#PROTOTYPES="-prototypes"		# C compiler options for checking function prototypes
+#RANLIB=":"				# pathname of suitable ranlib program
+#SHDLIBC="-lc_s"			# shared C library, if not standard
+#SIGHANDLERTYPES='(void(*)(int,...))'	# types to check for signal handler
+#STRIP="/bin/strip"			# strip program used by install.sh
+
+#
+# Parameters to control various workarounds for system bugs.
+#
+# These parameters are normally set in configure based on
+# the target system.  If they are set here, then they will
+# override anything done by configure.
+#
+#CONFIG_OPENFIFO="O_RDONLY"		# mode to open FIFOs in server proc's
+#CONFIG_FIFOBUG="yes"			# enable workaround for FIFO select bug
+#CONFIG_SELECTBUG="no"			# enable workaround for select problem
+#CONFIG_WINSZHACK="no"			# include extra files for TIOCWINSZ use
+#CONFIG_ABORTBUG="no"			# enable workaround for abort problems
+#CONFIG_NOSTDINDUP="yes"		# do not redirect stdout to stdin in ondelay
+
+#
+# Dynamic Shared Object (DSO) support.
+#
+# Beware that adding new support for DSOs may require some
+# modifications to the */Makefile.dso files.
+#
+#DSOSUF="so"				# DSO filename suffix
+#DSODELAY="-delay_load"			# DSO option for delayed loading
+#DSOOPTS="-shared -rdata_shared"	# options for building DSOs
+
+#
+# Makefile construction parameters.
+#
+# These should not normally be set; configure will
+# deduce the appropriate syntax to use for includes.
+#
+#MAKECXXOVERRIDE="=.C"			# make override stuff for SunPRO C++
+#MAKEDEPINCLUDE="include"		# make include for dependency files
+#MAKEDSOINCLUDE="#"			# make include for DSO support
+#MAKEINCLUDE=".include"			# make include syntax
+#MAKELQUOTE="<"				# make include syntax
+#MAKERQUOTE=">"				# make include syntax
+#SETMAKE='MAKE	= ${MAKE}'		# define if make does not setup $MAKE
+
+#
+# General system stuff used by the distribution.
+#
+# Beware of setting these as configure selects several programs
+# based on whether or not they are capable of processing scripts
+# included in the distribution (e.g AWK and SCRIPT_SH, SED).
+#
+#AWK="/bin/awk"				# pathname of suitable awk program
+#CAT="/bin/cat"				# pathname of suitable cat program
+#CHGRP="/etc/chgrp"			# pathname of suitable chgrp program
+#CHMOD="/etc/chmod"			# pathname of suitable chmod program
+#CHOWN="/etc/chown"			# pathname of suitable chown program
+#CMP="/bin/cmp"				# pathname of suitable cmp program
+#COL="/bin/col"				# pathname of suitable col program
+#CP="/bin/cp"				# pathname of suitable cp program
+#ECHO="/bin/echo"			# pathname of suitable echo program
+#GREP="/bin/grep"			# pathname of suitable grep program
+#LN="/bin/ln"				# pathname of suitable ln program
+#LN_S="-s"				# option to ${LN} to create symlink
+#MAN="/usr/bin/man"			# pathname of suitable man program
+#MKDIR="/bin/mkdir"			# pathname of suitable mkdir program
+#MKFIFO="/bin/mkfifo"			# pathname of suitable mkfifo program
+#MV="/bin/mv"				# pathname of suitable mv program
+#MV_F="-f"				# option to ${MV} to force operation
+#RMCMD="/bin/rm"			# pathname of suitable rm program
+#SED="/bin/sed"				# pathname of suitable sed program
+#SCRIPT_SH="/bin/sh"			# pathname of suitable shell
+#SORT="/bin/sort"			# pathname of suitable sort program

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class1Send.c++,v 1.65 1994/06/15 23:40:00 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1Send.c++,v 1.79 1995/04/08 21:29:37 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -28,8 +29,7 @@
  *
  * Send protocol.
  */
-#include <stdio.h>
-#include <time.h>
+#include "Sys.h"
 #include "Class1.h"
 #include "ModemConfig.h"
 #include "HDLCFrame.h"
@@ -41,11 +41,11 @@
  * flow control state.
  */
 CallStatus
-Class1Modem::dial(const char* number, const Class2Params& dis, fxStr& emsg)
+Class1Modem::dialFax(const char* number, const Class2Params& dis, fxStr& emsg)
 {
     if (flowControl == FLOW_XONXOFF)
 	setXONXOFF(FLOW_NONE, FLOW_NONE, ACT_FLUSH);
-    return FaxModem::dial(number, dis, emsg);
+    return (FaxModem::dialFax(number, dis, emsg));
 }
 
 /*
@@ -55,16 +55,18 @@ CallStatus
 Class1Modem::dialResponse(fxStr& emsg)
 {
     int ntrys = 0;
-    for (;;) {
-	switch (atResponse(rbuf, conf.dialResponseTimeout)) {
-	case AT_BUSY:		return (BUSY);
-	case AT_NODIALTONE:	return (NODIALTONE);
-	case AT_NOANSWER:	return (NOANSWER);
-	case AT_ERROR:		return (ERROR);
-	case AT_CONNECT:	return (OK);
-	case AT_OK:		return (NOCARRIER);
-	case AT_NOCARRIER:	return (NOCARRIER);
-	default:		return (FAILURE);
+    ATResponse r;
+    do {
+	r = atResponse(rbuf, conf.dialResponseTimeout);
+	switch (r) {
+	case AT_ERROR:	    return (ERROR);	// error in dial command
+	case AT_BUSY:	    return (BUSY);	// busy signal
+	case AT_NOCARRIER:  return (NOCARRIER);	// no carrier detected
+	case AT_OK:	    return (NOCARRIER);	// (for AT&T DataPort)
+	case AT_NODIALTONE: return (NODIALTONE);// local phone connection hosed
+	case AT_NOANSWER:   return (NOANSWER);	// no answer or ring back
+	case AT_TIMEOUT:    return (FAILURE);	// timed out w/o response
+	case AT_CONNECT:    return (OK);	// fax connection
 	case AT_FCERROR:
 	    /*
 	     * Some modems that support adaptive-answer assert a data
@@ -80,7 +82,8 @@ Class1Modem::dialResponse(fxStr& emsg)
 	    }
 	    break;
 	}
-    }
+    } while (r == AT_OTHER && isNoise(rbuf));
+    return (FAILURE);
 }
 
 void
@@ -95,11 +98,11 @@ Class1Modem::sendBegin(const FaxRequest& req)
 /*
  * Get the initial DIS command.
  */
-fxBool
-Class1Modem::getPrologue(Class2Params& params, u_int& nsf, fxStr& csi, fxBool& hasDoc)
+FaxSendStatus
+Class1Modem::getPrologue(Class2Params& params, u_int& nsf, fxStr& csi, fxBool& hasDoc, fxStr& emsg)
 {
     u_int t1 = howmany(conf.t1Timer, 1000);		// T1 timer in seconds
-    time_t start = time(0);
+    time_t start = Sys::now();
     HDLCFrame frame(conf.class1FrameOverhead);
 
     startTimeout(conf.t2Timer);
@@ -132,17 +135,26 @@ Class1Modem::getPrologue(Class2Params& params, u_int& nsf, fxStr& csi, fxBool& h
 	    if (frame.isOK()) {
 		switch (frame.getRawFCF()) {
 		case FCF_DIS:
-		    hasDoc = (dis & DIS_T4XMTR) != 0;	// documents to poll?
-		    return ((dis&DIS_T4RCVR) != 0);
+		    if ((dis&DIS_T4RCVR) == 0) {
+			emsg = "Remote is not T.4 compatible";
+			protoTrace(emsg);
+		    	return (send_failed);
+		    } else {
+			hasDoc = (dis & DIS_T4XMTR) != 0;// documents to poll?
+			return (send_ok);
+		    }
 		case FCF_DTC:				// NB: don't handle DTC
-		    return (FALSE);
+		    emsg = "DTC received when expecting DIS (not supported)";
+		    break;
 		case FCF_DCN:
-		    protoTrace("COMREC error in transmit Phase B/got DCN");
-		    return (FALSE);
+		    emsg = "COMREC error in transmit Phase B/got DCN";
+		    break;
 		default:
-		    protoTrace("COMREC invalid command received/no DIS or DTC");
-		    return (FALSE);
+		    emsg = "COMREC invalid command received/no DIS or DTC";
+		    break;
 		}
+		protoTrace(emsg);
+		return (send_retry);
 	    }
 	}
 	/*
@@ -154,12 +166,13 @@ Class1Modem::getPrologue(Class2Params& params, u_int& nsf, fxStr& csi, fxBool& h
 	/*
 	 * Wait up to T1 for a valid DIS.
 	 */
-	if (time(0)-start >= t1)
+	if (Sys::now()-start >= t1)
 	    break;
 	framerecvd = recvFrame(frame, conf.t2Timer);
     }
-    protoTrace("No answer (T.30 T1 timeout)");
-    return (FALSE);
+    emsg = "No answer (T.30 T1 timeout)";
+    protoTrace(emsg);
+    return (send_retry);
 }
 
 /*
@@ -318,7 +331,7 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 	    return (send_retry);
 	}
     } while (morePages);
-    return (send_done);
+    return (send_ok);
 }
 
 /*
@@ -331,7 +344,7 @@ Class1Modem::sendTCF(const Class2Params& params, u_int ms)
 {
     u_int tcfLen = params.transferSize(ms);
     u_char* tcf = new u_char[tcfLen];
-    memset(tcf, 0, tcfLen);
+    ::memset(tcf, 0, tcfLen);
     fxBool ok = transmitData(curcap->value, tcf, tcfLen, frameRev, TRUE);
     delete tcf;
     return ok;
@@ -629,8 +642,8 @@ Class1Modem::sendPage(TIFF* tif, const Class2Params& params, fxStr& emsg)
      * training, then we use it here (it's used for all
      * high speed carrier traffic other than the TCF).
      */
-    int speed = curcap[HasShortTraining(curcap)].value;
-    if (!class1Cmd("TM", speed, AT_CONNECT)) {
+    fxStr tmCmd(curcap[HasShortTraining(curcap)].value, tmCmdFmt);
+    if (!atCmd(tmCmd, AT_CONNECT)) {
 	emsg = "Unable to establish message carrier";
 	return (FALSE);
     }
@@ -641,11 +654,11 @@ Class1Modem::sendPage(TIFF* tif, const Class2Params& params, fxStr& emsg)
     /*
      * Correct bit order of data if not what modem expects.
      */
-    u_short fillorder;
+    uint16 fillorder;
     TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
     const u_char* bitrev =
 	TIFFGetBitRevTable(conf.sendFillOrder != FILLORDER_LSB2MSB);
-    u_long* stripbytecount;
+    uint32* stripbytecount;
     (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
     u_char* fill;
     u_char* eoFill;
@@ -658,9 +671,9 @@ Class1Modem::sendPage(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	 * bytes of data to send.  To minimize underrun we
 	 * do this padding in a strip-sized buffer.
 	 */
-	u_long rowsperstrip;
+	uint32 rowsperstrip;
 	TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-	if (rowsperstrip == (u_long) -1)
+	if (rowsperstrip == (uint32) -1)
 	     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &rowsperstrip);
 	fill = new u_char[minLen*rowsperstrip];
 	eoFill = fill + minLen*rowsperstrip;
@@ -668,8 +681,8 @@ Class1Modem::sendPage(TIFF* tif, const Class2Params& params, fxStr& emsg)
     fxBool firstStrip = setupTagLineSlop(params);
     u_int ts = getTagLineSlop();
     u_char* fp = fill;
-    for (u_int strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
-	u_int totbytes = (u_int) stripbytecount[strip];
+    for (tstrip_t strip = 0; strip < TIFFNumberOfStrips(tif) && rc; strip++) {
+	uint32 totbytes = stripbytecount[strip];
 	if (totbytes > 0) {
 	    u_char* data = new u_char[totbytes+ts];
 	    if (TIFFReadRawStrip(tif, strip, data+ts, totbytes) >= 0) {
@@ -723,11 +736,11 @@ Class1Modem::sendPage(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    if (!rc)			// error writing data
 				break;
 			}
-			memcpy(fp, bol, lineLen);	// first part of line
+			::memcpy(fp, bol, lineLen);	// first part of line
 			fp += lineLen;
 			if (lineLen < minLen) {		// must zero-fill
 			    u_int zeroLen = minLen - lineLen;
-			    memset(fp-1, 0, zeroLen);	// zero padding
+			    ::memset(fp-1, 0, zeroLen);	// zero padding
 			    fp += zeroLen;
 			    fp[-1] = bp[-1];		// last byte in EOL
 			}
@@ -736,7 +749,7 @@ Class1Modem::sendPage(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    /*
 		     * No EOL-padding needed, just jam the bytes.
 		     */
-		    rc = sendPageData(dp, totbytes, bitrev);
+		    rc = sendPageData(dp, (u_int) totbytes, bitrev);
 		}
 	    }
 	    delete data;
@@ -777,13 +790,10 @@ Class1Modem::sendPPM(u_int ppm, HDLCFrame& mcf, fxStr& emsg)
 {
     for (int t = 0; t < 3; t++) {
 	tracePPM("SEND send", ppm);
-	if (!transmitFrame(ppm|FCF_SNDR)) {
-	    if (!abortRequested())
-		emsg = "Error transmitting post-page message";
-	    return (FALSE);
-	}
-	if (recvFrame(mcf, conf.t4Timer))
+	if (transmitFrame(ppm|FCF_SNDR) && recvFrame(mcf, conf.t4Timer))
 	    return (TRUE);
+	if (abortRequested())
+	    return (FALSE);
     }
     emsg = "No response to MPS or EOP repeated 3 tries";
     return (FALSE);

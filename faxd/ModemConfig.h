@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/ModemConfig.h,v 1.32 1994/07/03 03:32:30 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/ModemConfig.h,v 1.48 1995/04/08 21:30:56 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -27,17 +28,38 @@
 /*
  * Modem Configuration.
  */
+#include "FaxConfig.h"
 #include "FaxModem.h"
 
-struct ModemConfig {
-    fxStr	type;			// hinted modem type
+struct ModemConfig : public FaxConfig {
+private:
+    BaudRate	getRate(const char*);
+    u_int	getFill(const char*);
+    FlowControl	getFlow(const char*);
+    void	setVolumeCmds(const fxStr& value);
+
+    static BaudRate findRate(const char*);
+protected:
+    ModemConfig();
+
+    void setupConfig();
+    virtual void resetConfig();
+
+    virtual fxBool setConfigItem(const char* tag, const char* value);
+    virtual void configError(const char* fmt, ...) = 0;
+    virtual void configTrace(const char* fmt, ...) = 0;
+    fxStr parseATCmd(const char*);
+public:
+    fxStr	type;			// modem type
     fxStr	resetCmds;		// extra modem reset commands
     fxStr	dialCmd;		// cmd for dialing (%s for number)
     fxStr	answerAnyCmd;		// cmd for answering unknown call type
     fxStr	answerDataCmd;		// cmd for answering data call
     fxStr	answerFaxCmd;		// cmd for answering fax call
     fxStr	answerVoiceCmd;		// cmd for answering voice call
-    fxStr	flowControlCmd;		// cmd for setting up flow control
+    fxStr	hardFlowCmd;		// cmd for hardware flow control
+    fxStr	softFlowCmd;		// cmd for software flow control
+    fxStr	noFlowCmd;		// cmd for disabling flow control
     fxStr	setupDTRCmd;		// cmd for setting up DTR handling
     fxStr	setupDCDCmd;		// cmd for setting up DCD handling
     fxStr	setupAACmd;		// cmd for setting up adaptive answer
@@ -58,6 +80,15 @@ struct ModemConfig {
     fxStr	answerFaxBeginCmd;	// cmd to start inbound fax session
     fxStr	answerVoiceBeginCmd;	// cmd to start inbound voice session
     fxStr	sendBeginCmd;		// cmd to start outbound session
+    fxStr	class0Cmd;		// cmd for setting Class 0
+    fxStr	classQueryCmd;		// cmd for getting modem services
+					// distinctive ring
+    fxStr	ringData;		// data call ring string
+    fxStr	ringFax;		// fax call ring string
+    fxStr	ringVoice;		// voice call ring string
+					// caller id
+    fxStr	cidName;		// pattern for name info
+    fxStr	cidNumber;		// pattern for number info
 
 					// protocol timers
     u_int	t1Timer;		// T.30 T1 timer (ms)
@@ -69,6 +100,10 @@ struct ModemConfig {
     u_int	pageDoneTimeout;	// page send/receive timeout (ms)
 					// for class 1:
     fxStr	class1Cmd;		// cmd for setting Class 1
+    fxStr	class1NFLOCmd;		// cmd to setup no flow control
+    fxStr	class1SFLOCmd;		// cmd to setup software flow control
+    fxStr	class1HFLOCmd;		// cmd to setup hardware flow control
+    u_int	class1TCFRecvTimeout;	// timeout receiving TCF
     u_int	class1TCFResponseDelay;	// delay (ms) btwn TCF & ack/nak
     u_int	class1SendPPMDelay;	// delay (ms) before sending PPM
     u_int	class1SendTCFDelay;	// delay (ms) btwn sending DCS & TCF
@@ -97,8 +132,12 @@ struct ModemConfig {
     fxStr	class2CIGCmd;		// cmd to set polling identifier
     fxStr	class2SPLCmd;		// cmd to set polling request
     fxStr	class2PTSCmd;		// cmd to set page status
+    fxStr	class2NFLOCmd;		// cmd to setup no flow control
+    fxStr	class2SFLOCmd;		// cmd to setup software flow control
+    fxStr	class2HFLOCmd;		// cmd to setup hardware flow control
     fxStr	class2RecvDataTrigger;	// send to start recv
     fxBool	class2XmitWaitForXON;	// wait for XON before send
+    fxBool	class2SendRTC;		// append RTC to page data on transmit
 					// for class 2.0:
     fxStr	class2PIECmd;		// cmd to set proc interrupt handling
     fxStr	class2NRCmd;		// cmd to set status reporting
@@ -118,11 +157,9 @@ struct ModemConfig {
     fxStr	tagLineFmt;		// format string for tag lines
     fxStr	tagLineFontFile;	// font file for imaging tag lines
 
-    ModemConfig();
-    ~ModemConfig();
+    virtual ~ModemConfig();
 
-    fxBool parseItem(const char* tag, const char* value);
-    void setVolumeCmds(const fxStr& value);
-    fxStr parseATCmd(const char*);
+    void parseCID(const char*, CallerID&) const;
+    const fxStr& getFlowCmd(FlowControl) const;
 };
 #endif /* _ModemConfig_ */

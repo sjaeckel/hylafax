@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/Obj.c++,v 1.5 1994/02/28 14:24:14 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/Obj.c++,v 1.10 1995/04/08 21:44:11 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -26,6 +27,9 @@
 
 extern "C" void abort();
 
+fxObj::fxObj()				{ referenceCount = 0; }
+fxObj::fxObj(const fxObj& other)
+    { referenceCount = other.referenceCount; }
 fxObj::~fxObj()	{ }
 const char* fxObj::className() const { return "fxObj"; }
 

@@ -1,0 +1,51 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: What does +FHNG:2 mean?
+</TITLE></HEAD><BODY>
+<H1>Q47: What does +FHNG:2 mean?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=What+does+%2BFHNG%3A2+mean%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>What does +FHNG:2 mean? </I>
+<P>
+Sending a fax always fails the same way.  Here as example log file:
+<LISTING>
+Jul  2 14:07:00.42: [14040]: SESSION BEGIN
+Jul  2 14:07:00.46: [14040]: DIAL 8871896
+Jul  2 14:07:00.46: [14040]: <-- [11:ATDT8871896]
+Jul  2 14:07:14.81: [14040]: --> [5:+FCON]
+    &lt;...stuff deleted...&gt;
+Jul  2 14:07:30.43: [14040]: <-- data [2]
+Jul  2 14:07:32.13: [14040]: SEND end page
+Jul  2 14:07:32.23: [14040]: --> [2:OK]
+Jul  2 14:07:32.23: [14040]: <-- [8:AT+FET=0]
+Jul  2 14:07:32.23: [14040]: --> [7:+FHNG:2]
+Jul  2 14:07:32.23: [14040]: REMOTE HANGUP: Call aborted,  from +FK or &lt;CAN&gt; (code 2)
+</LISTING>
+<P>
+<DT>A.
+<DD>The +FHNG status string from the modem indicates that the modem
+firmware encountered some problem--there is no way for the fax
+software to recover from this as the line has already been hung
+up.  These types of errors typically indicate a firmware problem,
+though in this case the status code is very odd.  The only thing I
+can possible think to check is whether or not the order of bits
+sent to the modem is correct.  The probemodem result indicates that
+the modem understands the +FBOR command, so there should be no
+problem.
+<P>
+I would try other fax machines to see if the problem is repeatable.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,5 +1,33 @@
+#	$Header: /usr/people/sam/fax/./util/RCS/typerules,v 1.6 1995/04/08 21:45:08 sam Rel $
 #
-# FlexFAX file type rules.
+# HylaFAX Facsimile Software
+#
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics, Inc.
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+#
+# HylaFAX file type rules.
 #
 # This file contains the file typing rules used by the sendfax
 # program to deduce how input files should be prepared for fax
@@ -70,7 +98,8 @@
 						  -s %s %i
 0	short		017436		error	packed data
 0	short		017635		error	compressed data
-#0	short		0x0506		ps	showcase -p %i
+0	short		0x0506		ps	showcase -p -f %i
+0	short		0x5343		ps	showcase -p -f %i
 0	short		0xf702		ps	dvips -q -o %o %i
 0	string		GIF		tiff
 >3	string		87a		tiff	gif2tiff -%f -v %V %i %o

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxSendStatus.h,v 1.2 1994/06/15 23:40:00 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxSendStatus.h,v 1.6 1995/04/08 21:30:26 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,7 +32,7 @@ enum FaxSendStatus {
     send_retry,			// waiting for retry
     send_failed,		// finished w/o success
     send_done,			// completed successfully
-    send_reformat,		// retry with reformatted documents
+    send_reformat		// retry with reformatted documents
 };
 #define	send_ok	send_done
 #endif /* _FaxSendStatus_ */

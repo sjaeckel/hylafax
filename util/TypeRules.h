@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/TypeRules.h,v 1.7 1994/02/28 14:24:01 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/TypeRules.h,v 1.13 1995/04/08 21:44:39 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -36,7 +37,7 @@
  * type deduction and conversion rules.  The format is
  * as follows:
  *
- * FlexFAX file type rules.
+ * HylaFAX file type rules.
  *
  * This file contains the file typing rules used by the sendfax
  * program to deduce how input files should be prepared for fax
@@ -133,7 +134,7 @@ private:
 	ADDR,		// address of match
 	BYTE,		// 8 bits
 	SHORT,		// 16 bits
-	LONG,		// 32 bits
+	LONG		// 32 bits
     } type;		// data value type
     enum {
 	ANY,		// match anything
@@ -157,6 +158,7 @@ private:
     friend TypeRules* TypeRules::read(const fxStr& file);
 public:
     TypeRule();
+    TypeRule(const TypeRule& other);
     virtual ~TypeRule();
 
     fxBool	match(const void*, u_int size, fxBool verbose = FALSE) const;

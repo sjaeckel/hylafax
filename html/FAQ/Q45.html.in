@@ -1,0 +1,70 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Encoding errors in facsimile received with my Everex 24/96E?
+</TITLE></HEAD><BODY>
+<H1>Q45: Encoding errors in facsimile received with my Everex 24/96E?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Encoding+errors+in+facsimile+received+with+my+Everex+24%2F96E%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Encoding errors in encoded facsimile received with my Everex 24/96E?
+</I>
+<P>
+I use an EverFax modem 24/96E that FlexFAX knows as a 24/96D.
+Everything seems fine except a problem i find every time i have
+to convert a received fax with 2D encoding to postscript using
+<A HREF="@CGIPATH@/manpage?1+fax2ps">fax2ps</A>.
+No problems for the received 1D encoded faxes.
+<P>
+I always get the following errors:
+<LISTING>
+fax000219: Fax3Decode1D: Bad code word at scanline 27 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 28 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 29 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 30 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 31 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 32 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 33 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 34 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 35 (x 5).
+fax000219: Fax3Decode1D: Bad code word at scanline 36 (x 5).
+</LISTING>
+and so on....
+do you think it is *always* a problem of noisy line ?
+Why do i have no problem with 1D encoded fax ?</I>
+<P>
+<DT>A.
+<DD>Several people have reported problems with corrupted reception of
+2D-encoded data.  At one point this worked fine with my Everex
+24/96D, but it looks to be broken now.  You can workaround the
+problem by disabling the reception of 2D-encoded data through
+the <B>Class2DCCQueryCmd</B> configuration parameter; e.g.
+<LISTING>
+#
+# +FDCC=? query syntax is:
+#	(vr),(br),(wd),(ln),(df),(ec),(bf),(st)
+# where,
+#	vr	vertical resolution
+#	br	bit rate
+#	wd	page width
+#	ln	page length
+#	df	data compression
+#	ec	error correction
+#	bf	binary file transfer
+#	st	scan time/line
+#
+Class2DCCQueryCmd:	"!(0,1),(0-3),(0-4),(0-2),(0),(0),(0),(0-7)"
+</LISTING>
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

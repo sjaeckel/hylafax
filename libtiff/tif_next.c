@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_next.c,v 1.19 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_next.c,v 1.22.1.1 1995/02/10 19:04:23 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -45,13 +45,15 @@
 #define WHITE   	((1<<2)-1)
 
 static int
-DECLARE4(NeXTDecode, TIFF*, tif, u_char*, buf, u_long, occ, u_int, s)
+NeXTDecode(TIFF* tif, tidata_t buf, tsize_t occ, tsample_t s)
 {
 	register u_char *bp, *op;
-	register int cc, n;
-	u_char *row;
-	int scanline;
+	register tsize_t cc;
+	register int n;
+	tidata_t row;
+	tsize_t scanline;
 
+	(void) s;
 	/*
 	 * Each scanline is assumed to start off as all
 	 * white (we assume a PhotometricInterpretation
@@ -72,7 +74,7 @@ DECLARE4(NeXTDecode, TIFF*, tif, u_char*, buf, u_long, occ, u_int, s)
 			 */
 			if (cc < scanline)
 				goto bad;
-			memcpy(row, bp, scanline);
+			_TIFFmemcpy(row, bp, scanline);
 			bp += scanline;
 			cc -= scanline;
 			break;
@@ -86,14 +88,14 @@ DECLARE4(NeXTDecode, TIFF*, tif, u_char*, buf, u_long, occ, u_int, s)
 			n = (bp[2] * 256) + bp[3];
 			if (cc < 4+n)
 				goto bad;
-			memcpy(row+off, bp+4, n);
+			_TIFFmemcpy(row+off, bp+4, n);
 			bp += 4+n;
 			cc -= 4+n;
 			break;
 		}
 		default: {
 			register int npixels = 0, grey;
-			int imagewidth = tif->tif_dir.td_imagewidth;
+			u_long imagewidth = tif->tif_dir.td_imagewidth;
 
 			/*
 			 * The scanline is composed of a sequence
@@ -118,17 +120,17 @@ DECLARE4(NeXTDecode, TIFF*, tif, u_char*, buf, u_long, occ, u_int, s)
 		}
 		}
 	}
-	tif->tif_rawcp = (char *)bp;
+	tif->tif_rawcp = (tidata_t) bp;
 	tif->tif_rawcc = cc;
 	return (1);
 bad:
-	TIFFError(tif->tif_name, "NeXTDecode: Not enough data for scanline %d",
-	    tif->tif_row);
+	TIFFError(tif->tif_name, "NeXTDecode: Not enough data for scanline %ld",
+	    (long) tif->tif_row);
 	return (0);
 }
 
 int
-DECLARE1(TIFFInitNeXT, TIFF*, tif)
+TIFFInitNeXT(TIFF* tif)
 {
 	tif->tif_decoderow = NeXTDecode;
 	tif->tif_decodestrip = NeXTDecode;

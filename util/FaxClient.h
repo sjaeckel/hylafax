@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/FaxClient.h,v 1.19 1994/06/23 17:55:03 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/FaxClient.h,v 1.25 1995/04/08 21:44:03 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -30,6 +31,7 @@
 #include "IOHandler.h"
 
 typedef unsigned int FaxClientRC;
+struct hash_t;			// NB: for busted DEC C++ compiler
 
 class FaxClient : public IOHandler {
 private:
@@ -50,6 +52,12 @@ private:
     int		port;		// server port to connect to
 
     void init();
+
+    struct hash_t* hashtab;	// LZW encoder hash table
+    void clearstate(void);
+    fxBool sendLZWData(int fdIn, int cc);
+
+    fxBool sendRawData(void* buf, int cc);
 protected:
     FaxClient();
     FaxClient(const fxStr& hostarg);
@@ -98,6 +106,7 @@ public:
 
     // output
     virtual fxBool sendData(const char* type, const char* filename);
+    virtual fxBool sendLZWData(const char* type, const char* filename);
     virtual fxBool sendLine(const char* cmd);
     virtual fxBool sendLine(const char* cmd, int v);
     virtual fxBool sendLine(const char* cmd, const fxStr& s);

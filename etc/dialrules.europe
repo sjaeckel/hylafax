@@ -1,6 +1,6 @@
-! $Header: /usr/people/sam/fax/etc/RCS/dialrules.europe,v 1.1 1994/07/05 02:58:58 sam Exp $
+! $Header: /usr/people/sam/fax/./etc/RCS/dialrules.europe,v 1.3 1995/01/23 20:37:42 sam Rel $
 !
-! FlexFAX Dialing String Processing Rules
+! HylaFAX (tm) Dialing String Processing Rules
 !   for much of Europe.
 !
 ! From: "Ed Cole" <ed@neu.sgi.com>

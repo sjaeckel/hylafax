@@ -1,0 +1,48 @@
+This is a mailing list for users of the freely available FlexFAX fax
+software.  All messages sent to the address
+
+    flexfax@sgi.com	(or flexfax@sgi.sgi.com for folks inside SGI)
+    
+are immediately forwarded to members of the list.  If you only want
+announcements of new versions of the FlexFAX software then you may
+prefer to subscribe to the mailing list flexfax-announce@sgi.com.
+
+All messages to the list are being archived.  Copies of the archive are
+available by anonymous FTP from the host sgi.com, in the directory
+"sgi/fax/archives".  The mailing list archive files have names that
+reflect the time-period that they cover.  File names are of the form:
+
+    begin-end.Z
+
+where begin and end are dates of the form YYMMMDD, with MMM a 3-letter
+month name (capitalized), DD a 2-digit day of the month, and YY the
+last 2 digits of the year.  For example, 93May25-93Jun14.Z is the
+archive of all correspondence on the flexfax mailing list between May
+25, 1993 and June 14, 1993.  The data in the file are compressed with
+the UNIX compress(1) program (thus the .Z suffix).  New archive files
+are started for each ~10,000 lines of correspondence.  The archives are
+updated every night at midnight local time (0700 GMT in the summer,
+0800 GMT in the winter).
+
+Users without anonymous FTP access should use "ftpmail" services to
+retrieve archive files.  To find out more about one ftpmail service,
+send a message to "ftpmail@gatekeeper.dec.com" whose body consists of
+the single line "help".
+
+FlexFAX information is available via the World Wide Web (WWW) at
+
+    http://www.vix.com/flexfax/
+
+These materials include the documentation provided in the distribution
+and a Frequently Asked Questions (FAQ) document.  Be sure to consult
+the FAQ before posting questions to this mailing list.
+
+Bounced email is treated very aggressively on this list.  If email to you
+bounces for more than 24 hours, you'll probably be moved from this list
+to a "bounces" list, where you'll get a message daily telling you what's
+happened and how to get back on to this list; you'll then have to retrieve
+the archives to find out what you missed.
+
+For further information, contact:
+
+	Sam Leffler	<sam@engr.sgi.com>

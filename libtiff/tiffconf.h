@@ -1,7 +1,7 @@
-/* $Header: /usr/people/sam/tiff/libtiff/RCS/tiffconf.h,v 1.2 92/11/09 11:10:08 sam Rel $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tiffconf.h,v 1.5 1994/09/17 23:34:09 sam Exp $ */
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -33,42 +33,17 @@
  * #defines on the command line, this file can be edited to
  * configure the library.  Otherwise, one can override portability
  * and configuration-related definitions from a Makefile or command
- * line by defining FEAURE_SUPPORT and COMPRESSION_SUPPORT (see below).
+ * line by defining FEATURE_SUPPORT and COMPRESSION_SUPPORT (see below).
  */
 
 /*
  * General portability-related defines:
  *
- * USE_VARARGS		define as 0 or 1 to select between the use of
- *			varargs.h and stdarg.h; i.e. -DUSE_VARARGS=0
- *			means use stdarg.h
- * USE_PROTOTYPES	define as 0 or 1 to select function declarations
- *			and definitions with parameter types
- * USE_CONST		if your compiler defines __STDC__ or __EXTENSIONS__,
- *			but does not support const, define this as 0,
- *			otherwise leave it alone
  * HAVE_IEEEFP		define as 0 or 1 according to the floating point
  *			format suported by the machine
  * BSDTYPES		define this if your system does NOT define the
  *			usual 4BSD typedefs
- *
- * Note that if you compile the code with prototypes (USE_PROTOTYPES=1),
- * then USE_VARARGS must be defined as 0.  Also, beware that if __STDC__
- * is defined and the USE_* symbols are NOT defined, then the following
- * will be used:
- * 	USE_PROTOTYPES	1
- *	USE_VARARGS	0
- *	USE_CONST	1
  */
-#ifndef USE_VARARGS
-#define	USE_VARARGS	0
-#endif
-#ifndef USE_PROTOTYPES
-#define	USE_PROTOTYPES	1
-#endif
-#ifndef USE_CONST
-#define	USE_CONST	1
-#endif
 #ifndef HAVE_IEEEFP
 #define	HAVE_IEEEFP	1
 #endif
@@ -112,8 +87,12 @@
  *
  * STRIPCHOP_SUPPORT	automatically convert single-strip uncompressed images
  *			to mutiple strips of ~8Kb (for reducing memory use)
+ * SUBIFD_SUPPORT	enable support for SubIFD tag (thumbnails and such)
  */
 #ifndef STRIPCHOP_SUPPORT
-#define	STRIPCHOP_SUPPORT		/* enable strip chopping */
+#define	STRIPCHOP_SUPPORT	1	/* enable strip chopping */
+#endif
+#ifndef SUBIFD_SUPPORT
+#define	SUBIFD_SUPPORT		1	/* enable SubIFD tag (330) support */
 #endif
 #endif /* _TIFFCONF_ */

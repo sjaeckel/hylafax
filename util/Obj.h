@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/Obj.h,v 1.5 1994/02/28 14:23:50 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/Obj.h,v 1.11 1995/04/08 21:44:12 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -25,8 +26,6 @@
 #ifndef _Obj_
 #define	_Obj_
 
-// $Revision: 1.5 $
-// $Date: 1994/02/28 14:23:50 $
 #include "Types.h"
 
 // Reference counted objects.  Subclasses of this can use Ptr's.
@@ -34,6 +33,7 @@
 class fxObj {
 public:
     fxObj();
+    fxObj(const fxObj& other);
     virtual ~fxObj();
 // Memory management
     void inc();
@@ -48,7 +48,6 @@ protected:
     u_long	referenceCount;
 };
 
-inline fxObj::fxObj()				{ referenceCount = 0; }
 inline void fxObj::inc()			{ ++referenceCount; }
 inline void fxObj::dec() {
     fxAssert(referenceCount>0,"Bogus object reference count");

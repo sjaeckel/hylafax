@@ -1,0 +1,82 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Macintosh client for FlexFAX/HylaFAX
+</TITLE></HEAD><BODY>
+<H1>Q42: Macintosh client for FlexFAX/HylaFAX</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Macintosh+client+for+FlexFAX%2FHylaFAX">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Macintosh client for FlexFAX</I>
+<P>
+<DT>A.
+<DD><B>Date</B>: <I>Mon, 20 Mar 1995 23:29:08 -0500</I><BR>
+<B>To</B>: <I>flexfax@sgi.sgi.com</I><BR>
+<B>From</B>: <I>rob@eats.com (Rob Newberry)</I><BR>
+<B>Subject</B>: <I>MacFlex 1.0 Beta 2 Available</I><BR>
+
+<H3>MACFLEX 1.0 BETA 2 AVAILABLE</H3>
+<P>
+There is a new version of MacFlex available.  It is available at:
+<UL>
+<A HREF="ftp://eats.com/pub/MacFlex-1-0-B2.sea.hqx">ftp://eats.com/pub/MacFlex-1-0-B2.sea.hqx</A>
+</UL>
+<P>
+This version includes many fixes, most notably:
+<OL>
+<LI>the FAX number doesn't get munched using "print-to-fax"
+<LI>seems to work with MS Word and MS Excel (wow!)
+<LI>the FAX number isn't ignored when submitting manually (dumb, dumb, dumb)
+<LI>better logging and status information (including the imaging process)
+</OL>
+<P>
+On the downside, there's still a couple of things I haven't gotten to.  They
+aren't essential for operation and use, but I do have them on my list.
+<OL>
+<LI>cover sheet support
+<LI>ability to alter and remove jobs
+<LI>a phone book
+</OL>
+<P>
+In the future, I intend to take advantage of HylaFAX features.  Before the
+official release, I probably will change the name and credits to reflect
+HylaFAX, but the software should still work with FlexFAX for a while.  BTW,
+I could use some ideas for a Macintosh/HylaFAX name combination (HylaMac
+just doesn't sound all that great to me...)
+<P>
+There are some bugs I haven't been able to find, but they may have gone away
+due to the other ones I fixed (please do not give me a programming lecture
+just for hoping :-).  They are:
+<P><OL>
+<LI>crashes during the imaging process:<P>
+     I haven't been able to make this part of the program crash.  If you 
+     find a file that crashes the program -- PLEASE -- look in
+<UL>
+                "System Folder:MacFlex Folder:Print"
+</UL>
+     There should be a resource file there.  Send it to me if possible.
+<P>
+<LI>problems with preferences:<P>
+     I am always able to change the preferences.  If someone still finds a
+     problem, please send me some more info!
+</OL>
+<P>
+Thanks to all the people who have used and tested it -- both for the
+information you gave me, and for not being to angry when it screwed up :-).
+<P>
+Please give the new version a try!
+<P>
+Rob
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

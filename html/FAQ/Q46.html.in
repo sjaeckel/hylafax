@@ -1,0 +1,49 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Converting received facsimile with fax2ps generates warnings?
+</TITLE></HEAD><BODY>
+<H1>Q46: Converting received facsimile with fax2ps generates warnings?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Converting+received+facsimile+with+fax2ps+generates+warnings%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Converting received facsimile with fax2ps generates warnings?</I>
+<P>
+Every time I receive a fax, I get this warning:
+<LISTING>
+    sdl:/var/spool/fax/recvq#> fax2ps fax029087 >x
+    Fax3Decode1D: fax029087: Premature EOF at scanline 1056 (x 0).
+    Fax3Decode1D: fax029087: Premature EOF at scanline 1056 (x 0).
+    sdl:/var/spool/fax/recvq#> 
+</LISTING>
+    Is there something that I can do about this or is it on the sending end?
+<P>
+<DT>A.
+<DD>This problem is (was) on the receiving end; however the warnings
+can be ignored.
+<P>
+Prior to the addition of copy quality checking in v2.3beta036,
+the server code wrote the raw received fax data stream into
+the file without properly parsing for end-of-line (EOL) and
+return-to-control (RTC) codes.
+As a result the recorded number of received lines in a facsimile page
+was potentially too large if the raw data stream did not include
+the 6 EOL codes that make up the RTC mark that
+signals the end of a facsimile page.
+The fax2ps program scans each page of data without regard for the
+number of lines recorded in the TIFF file so it would sometimes
+generate extraneous complaints.
+
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2.h,v 1.65 1994/06/06 22:54:36 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2.h,v 1.79 1995/04/08 21:29:40 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -49,6 +50,9 @@ protected:
     fxStr	borCmd;			// set bit order command
     fxStr	abortCmd;		// abort session command
     fxStr	ptsCmd;			// set page status command
+    fxStr	noFlowCmd;		// no flow control command
+    fxStr	softFlowCmd;		// software flow control command
+    fxStr	hardFlowCmd;		// hardware flow control command
     u_int	serviceType;		// modem service required
     u_int	modemCQ;		// copy quality capabilities mask
 
@@ -58,7 +62,10 @@ protected:
     fxBool	hasPolling;		// if true, modem does polled recv
     char	recvDataTrigger;	// char to send to start recv'ing data
     char	hangupCode[4];		// hangup reason (from modem)
+    fxBool	hadHangup;		// true if +FHNG:/+FHS: received
     long	group3opts;		// for writing received TIFF
+    const u_char* rtcRev;		// bit reversal table for RTC
+    fxStr	lid;			// prepared local identifier string
 
 // modem setup stuff
     void setupDefault(fxStr&, const fxStr&, const char*);
@@ -67,8 +74,10 @@ protected:
     virtual fxBool setupRevision(fxStr& rev);
     virtual fxBool setupDCC();
     virtual fxBool setupClass2Parameters();
+    virtual fxBool setupFlowControl(FlowControl fc);
 // transmission support
     fxBool	dataTransfer();
+    fxBool	sendRTC(fxBool is2D);
 
     virtual fxBool sendPage(TIFF* tif) = 0;
     virtual fxBool pageDone(u_int ppm, u_int& ppr) = 0;
@@ -92,7 +101,7 @@ protected:
 	AT_FNSS		= 108,	// NSS received status
 	AT_FTSI		= 109,	// TSI received status
 	AT_FET		= 110,	// post-page-response status
-	AT_FVO		= 111,	// voice transition status
+	AT_FVO		= 111	// voice transition status
     };
     virtual ATResponse atResponse(char* buf, long ms = 30*1000) = 0;
     fxBool	waitFor(ATResponse wanted, long ms = 30*1000);
@@ -104,10 +113,12 @@ protected:
     void	tracePPR(const char* dir, u_int ppr);
     void	tracePPM(const char* dir, u_int ppm);
 // class 2 command support routines
-    fxBool	class2Cmd(const char* cmd, const Class2Params& p);
-    fxBool	class2Cmd(const char* cmd);
-    fxBool	class2Cmd(const char* cmd, int a0);
-    fxBool	class2Cmd(const char* cmd, const char* s);
+    fxBool	class2Cmd(const fxStr& cmd, int a0,
+		    ATResponse = AT_OK, long ms = 30*1000);
+    fxBool	class2Cmd(const fxStr& cmd, const fxStr& a0,
+		    ATResponse = AT_OK, long ms = 30*1000);
+    fxBool	class2Cmd(const fxStr& cmd, const Class2Params&,
+		    ATResponse =AT_OK, long ms = 30*1000);
 // parsing routines for capability&parameter strings
     fxBool	parseClass2Capabilities(const char* cap, Class2Params&);
     fxBool	parseRange(const char*, Class2Params&);
@@ -118,14 +129,15 @@ public:
     virtual ~Class2Modem();
 
 // send support
-    CallStatus	dial(const char* number, const Class2Params& dis, fxStr& emsg);
+    CallStatus	dialFax(const char* number, const Class2Params& dis, fxStr& emsg);
     CallStatus	dialResponse(fxStr& emsg);
-    fxBool	getPrologue(Class2Params&, u_int& nsf, fxStr&, fxBool& hasDoc);
+    FaxSendStatus getPrologue(Class2Params&, u_int&, fxStr&, fxBool&, fxStr&);
     FaxSendStatus sendPhaseB(TIFF* tif, Class2Params&, FaxMachineInfo&,
 		    fxStr& pph, fxStr& emsg);
     void	sendAbort();
 
 // receive support
+    fxBool	setupReceive();
     fxBool	recvBegin(fxStr& emsg);
     fxBool	recvPage(TIFF*, int& ppm, fxStr& emsg);
     fxBool	recvEnd(fxStr& emsg);
@@ -136,8 +148,7 @@ public:
     fxBool	pollBegin(const fxStr& pollID, fxStr& emsg);
 
 // miscellaneous
-    fxBool	dataService();			// establish data service
-    fxBool	voiceService();			// establish voice service
+    fxBool	faxService();			// switch to fax mode
     fxBool	reset(long ms);			// reset modem
     void	setLID(const fxStr& number);	// set local id string
     fxBool	supportsPolling() const;	// modem capability

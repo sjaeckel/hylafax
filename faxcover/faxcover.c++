@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxcover/RCS/faxcover.c++,v 1.30 1994/06/06 15:15:24 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxcover/RCS/faxcover.c++,v 1.37 1995/04/08 21:29:17 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -37,6 +38,7 @@
 #include <fcntl.h>
 #include <sys/file.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 class faxCoverApp {
 private:
@@ -54,8 +56,10 @@ private:
     fxStr	pageCount;	// # pages, not counting cover page
     float	pageWidth;	// page width (mm)
     float	pageLength;	// page length (mm)
+    int		maxcomments;	// max # of comment lines
 
     static fxStr dbName;
+    static const char* prologue;
 
     fxStr tildeExpand(const fxStr& filename);
     void setupPageSize(const char* name);
@@ -80,6 +84,7 @@ fxStr faxCoverApp::dbName("~/.faxdb");
 faxCoverApp::faxCoverApp() : cover(FAX_COVER)
 {
     db = 0;
+    maxcomments = 20;
 }
 
 faxCoverApp::~faxCoverApp()
@@ -102,13 +107,16 @@ faxCoverApp::initialize(int argc, char** argv)
 	cover = cp;
 
     setupPageSize("default");
-    while ((c = getopt(argc, argv, "C:n:t:f:c:p:l:r:s:v:x:")) != -1)
+    while ((c = getopt(argc, argv, "C:n:t:f:c:p:l:m:r:s:v:x:")) != -1)
 	switch (c) {
 	case 's':			// page size
 	    setupPageSize(optarg);
 	    break;
 	case 'C':			// cover sheet
 	    cover = optarg;
+	    break;
+	case 'm':			// max # comment lines
+	    maxcomments = atoi(optarg);
 	    break;
 	case 'n':			// fax number
 	    toFaxNumber = optarg;
@@ -173,6 +181,7 @@ faxCoverApp::usage()
 	" [-c comments]"
 	" [-p #pages]"
 	" [-l to-location]"
+	" [-m maxcomments]"
 	" [-r regarding]"
 	" [-v to-voice-number]"
 	" [-x to-company]"
@@ -182,6 +191,42 @@ faxCoverApp::usage()
 	" -n fax-number"
 	, (char*) appName);
 }
+
+const char* faxCoverApp::prologue = "\
+/wordbreak ( ) def\n\
+/BreakIntoLines\n\
+{ /proc exch def\n\
+  /linewidth exch def\n\
+  /textstring exch def\n\
+  /breakwidth wordbreak stringwidth pop def\n\
+  /curwidth 0 def\n\
+  /lastwordbreak 0 def\n\
+  /startchar 0 def\n\
+  /restoftext textstring def\n\
+  { restoftext wordbreak search\n\
+    { /nextword exch def pop\n\
+      /restoftext exch def\n\
+      /wordwidth nextword stringwidth pop def\n\
+      curwidth wordwidth add linewidth gt\n\
+      { textstring startchar\n\
+	lastwordbreak startchar sub\n\
+	getinterval proc\n\
+	/startchar lastwordbreak def\n\
+	/curwidth wordwidth breakwidth add def }\n\
+      { /curwidth curwidth wordwidth add\n\
+	breakwidth add def\n\
+      } ifelse\n\
+      /lastwordbreak lastwordbreak\n\
+      nextword length add 1 add def\n\
+    }\n\
+    { pop exit }\n\
+    ifelse\n\
+  } loop\n\
+  /lastchar textstring length def\n\
+  textstring startchar lastchar startchar sub\n\
+  getinterval proc\n\
+} def\n\
+";
 
 void
 faxCoverApp::makeCoverSheet()
@@ -200,7 +245,7 @@ faxCoverApp::makeCoverSheet()
     }
     printf("%%!PS-Adobe-2.0 EPSF-2.0\n");
     printf("%%%%Creator: faxcover\n");
-    printf("%%%%Title: FlexFAX Cover Sheet\n");
+    printf("%%%%Title: HylaFAX Cover Sheet\n");
     time_t t = time(0);
     printf("%%%%CreationDate: %s", ctime(&t));
     printf("%%%%Origin: 0 0\n");
@@ -210,7 +255,8 @@ faxCoverApp::makeCoverSheet()
     printf("%%%%EndComments\n");
     printf("%%%%BeginProlog\n");
     printf("100 dict begin\n");
-    emitToDefs(toName, toName != "" ? db->find(toName) : NULL);
+    printf("%s", prologue);
+    emitToDefs(toName, toName != "" ? db->find(toName) : (FaxDBRecord*) NULL);
     printf("/pageWidth %.2f def\n", pageWidth);
     printf("/pageLength %.2f def\n", pageLength);
     emitFromDefs(db->find(sender));
@@ -306,6 +352,10 @@ faxCoverApp::emitCommentDefs()
 	fxStr num(line, "%u");
 	coverDef("comments" | num, comments.cut(0,len));
 	line++;
+    }
+    for (; line < maxcomments; line++) {
+	fxStr num(line, "%u");
+	coverDef("comments" | num, "");
     }
 }
 

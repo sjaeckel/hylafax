@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/UUCPLock.h,v 1.11 1994/03/31 21:52:30 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/UUCPLock.h,v 1.17 1995/04/08 21:31:10 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -33,6 +34,7 @@
 class UUCPLock {
 private:
     fxStr	file;			// lock file pathname
+    mode_t	mode;			// lock file mode
     fxBool	locked;			// is lock currently held
 
     static uid_t UUCPuid;
@@ -45,8 +47,9 @@ private:
     fxBool	isNewer(time_t age);	// is lock file newer than age
     fxBool	ownerExists(int fd);	// does owning process exist
 protected:
-    UUCPLock(const char* device);	// must use derived class
+    UUCPLock(const fxStr& pathname, mode_t mode);
 
+    virtual void setPID(pid_t) = 0;
     virtual fxBool writeData(int fd) = 0;
     virtual fxBool readData(int fd, pid_t& pid) = 0;
 public:
@@ -56,38 +59,18 @@ public:
     static gid_t getUUCPGid();
     static void setLockTimeout(time_t);
 
+    static UUCPLock* newLock(		// public interface to create a lock
+	const char* type,		// lock file type
+	const fxStr& prefix,		// lock file directory+prefix
+	const fxStr& device,		// device pathname
+	mode_t mode);			// file creation mode
+
+    fxBool	isLocked() const;	// device is locked
     fxBool	lock();			// lock device
     void	unlock();		// unlock device
-    fxBool	check();		// check if device is locked
+    fxBool	check();		// check if lock exists
+    fxBool	setOwner(pid_t);	// force process owner identity
 };
 
-/*
- * Lock files with ascii contents (System V style).
- */
-class AsciiUUCPLock : public UUCPLock {
-private:
-    fxStr	data;			// data to write record in lock file
-
-    fxBool writeData(int fd);
-    fxBool readData(int fd, pid_t& pid);
-public:
-    AsciiUUCPLock(const char* device);
-    ~AsciiUUCPLock();
-};
-
-/*
- * Lock files with binary contents (BSD style).
- */
-class BinaryUUCPLock : public UUCPLock {
-private:
-    int		data;			// data to write record in lock file
-
-    fxBool writeData(int fd);
-    fxBool readData(int fd, pid_t& pid);
-public:
-    BinaryUUCPLock(const char* device);
-    ~BinaryUUCPLock();
-};
-
-extern UUCPLock* OSnewUUCPLock(const char* device);
+inline fxBool UUCPLock::isLocked() const	{ return locked; }
 #endif /* _UUCPLOCK_ */

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class1Recv.c++,v 1.51 1994/07/04 18:36:18 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class1Recv.c++,v 1.60 1995/04/08 21:29:35 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -35,8 +36,8 @@
 #include "StackBuffer.h"		// XXX
 
 #include "t.30.h"
-#include <stdlib.h>
-#include <time.h>
+#include "Sys.h"
+
 
 /*
  * Tell the modem to answer the phone.  We override
@@ -62,12 +63,15 @@ Class1Modem::answerCall(AnswerType type, fxStr& emsg)
 const AnswerMsg*
 Class1Modem::findAnswer(const char* s)
 {
-    static const AnswerMsg answer = {
-	"CONNECT", 7,
-	FaxModem::AT_NOTHING, FaxModem::OK, FaxModem::CALLTYPE_UNKNOWN
+    static const AnswerMsg answer[2] = {
+    { "CONNECT ", 8,
+      FaxModem::AT_NOTHING, FaxModem::OK, FaxModem::CALLTYPE_DATA },
+    { "CONNECT",  7,
+      FaxModem::AT_NOTHING, FaxModem::OK, FaxModem::CALLTYPE_UNKNOWN },
     };
-    return strneq(s, answer.msg, answer.len) ?
-	&answer : FaxModem::findAnswer(s);
+    return strneq(s, answer[0].msg, answer[0].len) ? &answer[0] :
+	   strneq(s, answer[1].msg, answer[1].len) ? &answer[1] :
+	      FaxModem::findAnswer(s);
 }
 
 /*
@@ -81,6 +85,7 @@ Class1Modem::recvBegin(fxStr& emsg)
     pageGood = FALSE;				// quality of received page
     messageReceived = FALSE;			// expect message carrier
     recvdDCN = FALSE;				// haven't seen DCN
+    lastPPM = FCF_DCN;				// anything will do
 
     return recvIdentification(
 	FCF_CSI|FCF_RCVR, lid, FCF_DIS|FCF_RCVR, modemDIS(),
@@ -97,7 +102,7 @@ Class1Modem::recvIdentification(u_int f1, const fxStr& id, u_int f2, u_int dics,
 {
     u_int t1 = howmany(timer, 1000);		// in seconds
     u_int trecovery = howmany(conf.class1TrainingRecovery, 1000);
-    time_t start = time(0);
+    time_t start = Sys::now();
     HDLCFrame frame(conf.class1FrameOverhead);
 
     emsg = "No answer (T.30 T1 timeout)";
@@ -155,7 +160,7 @@ Class1Modem::recvIdentification(u_int f1, const fxStr& id, u_int f2, u_int dics,
 	 * DCS from the other side.  First verify there is
 	 * time to make another attempt...
 	 */
-	if (time(0)+trecovery-start >= t1)
+	if (Sys::now()+trecovery-start >= t1)
 	    break;
 	/*
 	 * Delay long enough to miss any training that the
@@ -180,20 +185,20 @@ Class1Modem::recvDCSFrames(HDLCFrame& frame)
 {
     fxStr tsi;
     do {
-	switch (frame.getRawFCF()) {
-	case FCF_NSS|FCF_SNDR:
+	switch (frame.getFCF()) {
+	case FCF_NSS:
 	    protoTrace("REMOTE NSS %#x", frame.getDataWord());
 	    break;
-	case FCF_TSI|FCF_SNDR:
+	case FCF_TSI:
 	    decodeTSI(tsi, frame);
 	    recvCheckTSI(tsi);
 	    break;
-	case FCF_DCS|FCF_SNDR:
+	case FCF_DCS:
 	    processDCSFrame(frame);
 	    break;
 	}
     } while (frame.moreFrames() && recvFrame(frame, conf.t4Timer));
-    return (frame.isOK() && frame.getRawFCF() == (FCF_DCS|FCF_SNDR));
+    return (frame.isOK() && frame.getFCF() == FCF_DCS);
 }
 
 /*
@@ -206,7 +211,7 @@ Class1Modem::recvTraining()
 	modulationNames[curcap->mod],
 	Class2Params::bitRateNames[curcap->br]);
     HDLCFrame buf(conf.class1FrameOverhead);
-    fxBool ok = recvTCF(curcap->value, buf, frameRev, 4500);
+    fxBool ok = recvTCF(curcap->value, buf, frameRev, conf.class1TCFRecvTimeout);
     if (ok) {					// check TCF data
 	u_int n = buf.getLength();
 	u_int nonzero = 0;
@@ -307,6 +312,7 @@ const u_int Class1Modem::modemPPMCodes[8] = {
 fxBool
 Class1Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 {
+top:
     do {
 	u_int timer = conf.t2Timer;
 	if (!messageReceived) {
@@ -322,8 +328,8 @@ Class1Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	     * training, then we use it here (it's used for all
 	     * high speed carrier traffic other than the TCF).
 	     */
-	    int speed = curcap[HasShortTraining(curcap)].value;
-	    (void) class1Cmd("RM", speed, AT_NOTHING);
+	    fxStr rmCmd(curcap[HasShortTraining(curcap)].value, rmCmdFmt);
+	    (void) atCmd(rmCmd, AT_NOTHING);
 	    ATResponse rmResponse = atResponse(rbuf, conf.t2Timer);
 	    if (rmResponse == AT_CONNECT) {
 		/*
@@ -383,26 +389,24 @@ Class1Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	 */
 	HDLCFrame frame(conf.class1FrameOverhead);
 	if (recvFrame(frame, timer)) {
-	    u_int fcf = frame.getRawFCF();
-	    switch (fcf) {
-	    case FCF_DTC:			// XXX no support
+	    switch (lastPPM = frame.getFCF()) {
 	    case FCF_DIS:			// XXX no support
 		protoTrace("RECV DIS/DTC");
 		emsg = "Can not continue after DIS/DTC";
 		return (FALSE);
-	    case FCF_NSS|FCF_SNDR:
-	    case FCF_TSI|FCF_SNDR:
-	    case FCF_DCS|FCF_SNDR:
+	    case FCF_NSS:
+	    case FCF_TSI:
+	    case FCF_DCS:
 		// look for high speed carrier only if training successful
 		messageReceived = !(recvDCSFrames(frame) && recvTraining());
 		break;
-	    case FCF_MPS|FCF_SNDR:		// MPS
-	    case FCF_EOM|FCF_SNDR:		// EOM
-	    case FCF_EOP|FCF_SNDR:		// EOP
-	    case FCF_PRI_MPS|FCF_SNDR:		// PRI-MPS
-	    case FCF_PRI_EOM|FCF_SNDR:		// PRI-EOM
-	    case FCF_PRI_EOP|FCF_SNDR:		// PRI-EOP
-		tracePPM("RECV recv", fcf);
+	    case FCF_MPS:			// MPS
+	    case FCF_EOM:			// EOM
+	    case FCF_EOP:			// EOP
+	    case FCF_PRI_MPS:			// PRI-MPS
+	    case FCF_PRI_EOM:			// PRI-EOM
+	    case FCF_PRI_EOP:			// PRI-EOP
+		tracePPM("RECV recv", lastPPM);
 		if (!prevPage) {
 		    /*
 		     * Post page message, but no previous page
@@ -430,8 +434,8 @@ Class1Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 			 * to what's expected.  (Grr, where's the
 			 * state machine...)
 			 */
-			messageReceived = (fcf == (FCF_EOM|FCF_SNDR));
-			ppm = modemPPMCodes[fcf&7];
+			messageReceived = (lastPPM == FCF_EOM);
+			ppm = modemPPMCodes[lastPPM&7];
 			return (TRUE);
 		    }
 		} else {
@@ -449,7 +453,7 @@ Class1Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 		    messageReceived = TRUE;	// expect DCS next
 		}
 		break;
-	    case FCF_DCN|FCF_SNDR:		// DCN
+	    case FCF_DCN:			// DCN
 		protoTrace("RECV recv DCN");
 		emsg = "COMREC received DCN";
 		recvdDCN = TRUE;
@@ -460,7 +464,17 @@ Class1Modem::recvPage(TIFF* tif, int& ppm, fxStr& emsg)
 	    }
 	}
     } while (!wasTimeout() && lastResponse != AT_EMPTYLINE);
-    emsg = "T.30 T2 timeout, expected page not received";
+    if (lastPPM == FCF_EOM) {
+	/*
+	 * Sigh, no state machine, have to do this the hard
+	 * way.  After receipt of EOM if a subsequent frame
+	 * receive times out then we must restart Phase B
+	 * and redo training et. al.
+	 */
+	if (recvBegin(emsg))
+	    goto top;
+    } else
+	emsg = "T.30 T2 timeout, expected page not received";
     return (FALSE);
 }
 
@@ -497,20 +511,20 @@ Class1Modem::recvEnd(fxStr&)
 {
     if (!recvdDCN) {
 	u_int t1 = howmany(conf.t1Timer, 1000);	// T1 timer in seconds
-	time_t start = time(0);
+	time_t start = Sys::now();
 	/*
 	 * Wait for DCN and retransmit ack of EOP if needed.
 	 */
 	HDLCFrame frame(conf.class1FrameOverhead);
 	do {
 	    if (recvFrame(frame, conf.t2Timer)) {
-		switch (frame.getRawFCF()) {
-		case FCF_EOP|FCF_SNDR:
+		switch (frame.getFCF()) {
+		case FCF_EOP:
 		    (void) transmitFrame(FCF_MCF|FCF_RCVR);
 		    tracePPM("RECV recv", FCF_EOP);
 		    tracePPR("RECV send", FCF_MCF);
 		    break;
-		case FCF_DCN|FCF_SNDR:
+		case FCF_DCN:
 		    break;
 		default:
 		    transmitFrame(FCF_DCN|FCF_RCVR);
@@ -524,8 +538,8 @@ Class1Modem::recvEnd(fxStr&)
 		 */
 		break;
 	    }
-	} while (time(0)-start < t1 &&
-	    (!frame.isOK() || frame.getRawFCF() == (FCF_EOP|FCF_SNDR)));
+	} while (Sys::now()-start < t1 &&
+	    (!frame.isOK() || frame.getFCF() == FCF_EOP));
     }
     setInputBuffering(TRUE);
     return (TRUE);

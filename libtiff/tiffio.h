@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/tiff/libtiff/RCS/tiffio.h,v 1.65 93/03/31 15:22:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tiffio.h,v 1.77 1994/09/19 23:52:15 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -38,6 +38,39 @@
  */
 typedef	struct tiff TIFF;
 
+/*
+ * The following typedefs define the intrinsic size of
+ * data types used in the *exported* interfaces.  These
+ * definitions depend on the proper definition of types
+ * in tiff.h.  Note also that the varargs interface used
+ * pass tag types and values uses the types defined in
+ * tiff.h directly.
+ *
+ * NB: ttag_t is unsigned int and not unsigned short because
+ *     ANSI C requires that the type before the ellipsis be a
+ *     promoted type (i.e. one of int, unsigned int, pointer,
+ *     or double).
+ * NB: tsize_t is int32 and not uint32 because some functions
+ *     return -1.
+ * NB: toff_t is not off_t for many reasons; TIFFs max out at
+ *     32-bit file offsets being the most important
+ */
+typedef	unsigned int ttag_t;	/* directory tag */
+typedef	uint16 tdir_t;		/* directory index */
+typedef	uint16 tsample_t;	/* sample number */
+typedef	uint32 tstrip_t;	/* strip number */
+typedef uint32 ttile_t;		/* tile number */
+typedef	int32 tsize_t;		/* i/o size in bytes */
+#ifdef _WINDOWS
+#include <windows.h>
+typedef	void __far* tdata_t;	/* image data ref */
+typedef	HFILE thandle_t;	/* client data handle */
+#else
+typedef	void* tdata_t;		/* image data ref */
+typedef	void* thandle_t;	/* client data handle */
+#endif
+typedef	int32 toff_t;		/* file offset */
+
 #ifndef NULL
 #define	NULL	0
 #endif
@@ -65,67 +98,67 @@ typedef	struct tiff TIFF;
 #define	TIFFGetB(abgr)	(((abgr) >> 16) & 0xff)
 #define	TIFFGetA(abgr)	(((abgr) >> 24) & 0xff)
 
-#if defined(c_plusplus) || defined(__cplusplus) || defined(__STDC__) || defined(__EXTENDED__) || USE_PROTOTYPES
 #include <stdio.h>
 #include <stdarg.h>
-
-typedef	void (*TIFFErrorHandler)(const char* module, const char* fmt, va_list);
-typedef	int (*TIFFReadWriteProc)(void*, char*, unsigned long);
-typedef	long (*TIFFSeekProc)(void*, long, int);
-typedef	int (*TIFFCloseProc)(void*);
-typedef	long (*TIFFSizeProc)(void*);
-typedef	int (*TIFFMapFileProc)(void*, char**, long*);
-typedef	void (*TIFFUnmapFileProc)(void*, char*, long);
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
-extern	const char* TIFFGetVersion();
+typedef	void (*TIFFErrorHandler)(const char* module, const char* fmt, va_list);
+typedef	tsize_t (*TIFFReadWriteProc)(thandle_t, tdata_t, tsize_t);
+typedef	toff_t (*TIFFSeekProc)(thandle_t, toff_t, int);
+typedef	int (*TIFFCloseProc)(thandle_t);
+typedef	toff_t (*TIFFSizeProc)(thandle_t);
+typedef	int (*TIFFMapFileProc)(thandle_t, tdata_t*, toff_t*);
+typedef	void (*TIFFUnmapFileProc)(thandle_t, tdata_t, toff_t);
+
+extern	const char* TIFFGetVersion(void);
 
 extern	void TIFFClose(TIFF*);
 extern	int TIFFFlush(TIFF*);
 extern	int TIFFFlushData(TIFF*);
-extern	int TIFFGetField(TIFF*, unsigned int, ...);
-extern	int TIFFVGetField(TIFF*, unsigned int, va_list);
-extern	int TIFFGetFieldDefaulted(TIFF*, unsigned int, ...);
-extern	int TIFFVGetFieldDefaulted(TIFF*, unsigned int, va_list);
+extern	int TIFFGetField(TIFF*, ttag_t, ...);
+extern	int TIFFVGetField(TIFF*, ttag_t, va_list);
+extern	int TIFFGetFieldDefaulted(TIFF*, ttag_t, ...);
+extern	int TIFFVGetFieldDefaulted(TIFF*, ttag_t, va_list);
 extern	int TIFFReadDirectory(TIFF*);
-extern	unsigned long TIFFScanlineSize(TIFF*);
-extern	unsigned long TIFFStripSize(TIFF*);
-extern	unsigned long TIFFVStripSize(TIFF*, unsigned long);
-extern	unsigned long TIFFTileRowSize(TIFF*);
-extern	unsigned long TIFFTileSize(TIFF*);
-extern	unsigned long TIFFVTileSize(TIFF*, unsigned long);
+extern	tsize_t TIFFScanlineSize(TIFF*);
+extern	tsize_t TIFFStripSize(TIFF*);
+extern	tsize_t TIFFVStripSize(TIFF*, uint32);
+extern	tsize_t TIFFTileRowSize(TIFF*);
+extern	tsize_t TIFFTileSize(TIFF*);
+extern	tsize_t TIFFVTileSize(TIFF*, uint32);
 extern	int TIFFFileno(TIFF*);
 extern	int TIFFGetMode(TIFF*);
 extern	int TIFFIsTiled(TIFF*);
-extern	long TIFFCurrentRow(TIFF*);
-extern	int TIFFCurrentDirectory(TIFF*);
-extern	int TIFFCurrentStrip(TIFF*);
-extern	int TIFFCurrentTile(TIFF*);
-extern	int TIFFReadBufferSetup(TIFF*, char*, unsigned long);
+extern	int TIFFIsByteSwapped(TIFF*);
+extern	uint32 TIFFCurrentRow(TIFF*);
+extern	tdir_t TIFFCurrentDirectory(TIFF*);
+extern	tstrip_t TIFFCurrentStrip(TIFF*);
+extern	ttile_t TIFFCurrentTile(TIFF*);
+extern	int TIFFReadBufferSetup(TIFF*, tdata_t, tsize_t);
 extern	int TIFFLastDirectory(TIFF*);
-extern	int TIFFSetDirectory(TIFF*, int);
-extern	int TIFFSetField(TIFF*, unsigned int, ...);
-extern	int TIFFVSetField(TIFF*, unsigned int, va_list);
+extern	int TIFFSetDirectory(TIFF*, tdir_t);
+extern	int TIFFSetSubDirectory(TIFF*, uint32);
+extern	int TIFFUnlinkDirectory(TIFF*, tdir_t);
+extern	int TIFFSetField(TIFF*, ttag_t, ...);
+extern	int TIFFVSetField(TIFF*, ttag_t, va_list);
 extern	int TIFFWriteDirectory(TIFF *);
 #if defined(c_plusplus) || defined(__cplusplus)
 extern	void TIFFPrintDirectory(TIFF*, FILE*, long = 0);
-extern	int TIFFReadScanline(TIFF*, unsigned char*, unsigned, unsigned = 0);
-extern	int TIFFWriteScanline(TIFF*, unsigned char*, unsigned, unsigned = 0);
-extern	int TIFFReadRGBAImage(TIFF*,
-	    unsigned long, unsigned long, unsigned long*, int stop = 0);
+extern	int TIFFReadScanline(TIFF*, tdata_t, uint32, tsample_t = 0);
+extern	int TIFFWriteScanline(TIFF*, tdata_t, uint32, tsample_t = 0);
+extern	int TIFFReadRGBAImage(TIFF*, uint32, uint32, uint32*, int stop = 0);
 #else
 extern	void TIFFPrintDirectory(TIFF*, FILE*, long);
-extern	int TIFFReadScanline(TIFF*, unsigned char*, unsigned, unsigned);
-extern	int TIFFWriteScanline(TIFF*, unsigned char*, unsigned, unsigned);
-extern	int TIFFReadRGBAImage(TIFF*,
-	    unsigned long, unsigned long, unsigned long*, int stop);
+extern	int TIFFReadScanline(TIFF*, tdata_t, uint32, tsample_t);
+extern	int TIFFWriteScanline(TIFF*, tdata_t, uint32, tsample_t);
+extern	int TIFFReadRGBAImage(TIFF*, uint32, uint32, uint32*, int stop);
 #endif
 extern	TIFF* TIFFOpen(const char*, const char*);
 extern	TIFF* TIFFFdOpen(int, const char*, const char*);
 extern	TIFF* TIFFClientOpen(const char* name, const char* mode,
-	    void* clientdata,
+	    thandle_t clientdata,
 	    TIFFReadWriteProc readproc, TIFFReadWriteProc writeproc,
 	    TIFFSeekProc seekproc, TIFFCloseProc closeproc,
 	    TIFFSizeProc sizeproc,
@@ -135,110 +168,33 @@ extern	void TIFFError(const char*, const char*, ...);
 extern	void TIFFWarning(const char*, const char*, ...);
 extern	TIFFErrorHandler TIFFSetErrorHandler(TIFFErrorHandler handler);
 extern	TIFFErrorHandler TIFFSetWarningHandler(TIFFErrorHandler handler);
-extern	unsigned int TIFFComputeTile(TIFF*,
-	    unsigned long, unsigned long, unsigned long, unsigned int);
-extern	int TIFFCheckTile(TIFF*,
-	    unsigned long, unsigned long, unsigned long, unsigned);
-extern	unsigned int TIFFNumberOfTiles(TIFF*);
-extern	int TIFFReadTile(TIFF*,
-	    unsigned char*,
-	    unsigned long, unsigned long, unsigned long,
-	    unsigned int);
-extern	int TIFFWriteTile(TIFF*,
-	    unsigned char*,
-	    unsigned long, unsigned long, unsigned long,
-	    unsigned int);
-extern	unsigned int TIFFComputeStrip(TIFF*, unsigned long, unsigned int);
-extern	unsigned int TIFFNumberOfStrips(TIFF*);
-extern	int TIFFReadEncodedStrip(TIFF*, unsigned, unsigned char*, unsigned long);
-extern	int TIFFReadRawStrip(TIFF*, unsigned, unsigned char*, unsigned long);
-extern	int TIFFReadEncodedTile(TIFF*, unsigned, unsigned char*, unsigned long);
-extern	int TIFFReadRawTile(TIFF*, unsigned, unsigned char*, unsigned long);
-extern	int TIFFWriteEncodedStrip(TIFF*, unsigned, unsigned char*, unsigned long);
-extern	int TIFFWriteRawStrip(TIFF*, unsigned, unsigned char*, unsigned long);
-extern	int TIFFWriteEncodedTile(TIFF*, unsigned, unsigned char*, unsigned long);
-extern	int TIFFWriteRawTile(TIFF*, unsigned, unsigned char*, unsigned long);
-extern	void TIFFSetWriteOffset(TIFF*, unsigned long);
-extern	void TIFFSwabShort(unsigned short *);
-extern	void TIFFSwabLong(unsigned long *);
-extern	void TIFFSwabArrayOfShort(unsigned short *, unsigned long);
-extern	void TIFFSwabArrayOfLong(unsigned long *, unsigned long);
+extern	ttile_t TIFFComputeTile(TIFF*, uint32, uint32, uint32, tsample_t);
+extern	int TIFFCheckTile(TIFF*, uint32, uint32, uint32, tsample_t);
+extern	ttile_t TIFFNumberOfTiles(TIFF*);
+extern	tsize_t TIFFReadTile(TIFF*,
+	    tdata_t, uint32, uint32, uint32, tsample_t);
+extern	tsize_t TIFFWriteTile(TIFF*,
+	    tdata_t, uint32, uint32, uint32, tsample_t);
+extern	tstrip_t TIFFComputeStrip(TIFF*, uint32, tsample_t);
+extern	tstrip_t TIFFNumberOfStrips(TIFF*);
+extern	tsize_t TIFFReadEncodedStrip(TIFF*, tstrip_t, tdata_t, tsize_t);
+extern	tsize_t TIFFReadRawStrip(TIFF*, tstrip_t, tdata_t, tsize_t);
+extern	tsize_t TIFFReadEncodedTile(TIFF*, ttile_t, tdata_t, tsize_t);
+extern	tsize_t TIFFReadRawTile(TIFF*, ttile_t, tdata_t, tsize_t);
+extern	tsize_t TIFFWriteEncodedStrip(TIFF*, tstrip_t, tdata_t, tsize_t);
+extern	tsize_t TIFFWriteRawStrip(TIFF*, tstrip_t, tdata_t, tsize_t);
+extern	tsize_t TIFFWriteEncodedTile(TIFF*, ttile_t, tdata_t, tsize_t);
+extern	tsize_t TIFFWriteRawTile(TIFF*, ttile_t, tdata_t, tsize_t);
+extern	void TIFFSetWriteOffset(TIFF*, toff_t);
+extern	void TIFFSwabShort(uint16 *);
+extern	void TIFFSwabLong(uint32 *);
+extern	void TIFFSwabArrayOfShort(uint16 *, unsigned long);
+extern	void TIFFSwabArrayOfLong(uint32 *, unsigned long);
 extern	void TIFFReverseBits(unsigned char *, unsigned long);
 extern	const unsigned char* TIFFGetBitRevTable(int);
+
+extern	void TIFFModeCCITTFax3(TIFF* tif, int isClassF);	/* XXX */
 #if defined(__cplusplus)
 }
-#endif
-#else
-typedef	void (*TIFFErrorHandler)();
-typedef	int (*TIFFReadWriteProc)();
-typedef	long (*TIFFSeekProc)();
-typedef	int (*TIFFCloseProc)();
-typedef	long (*TIFFSizeProc)();
-typedef	int (*TIFFMapFileProc)();
-typedef	void (*TIFFUnmapFileProc)();
-
-extern	char* TIFFGetVersion();
-
-extern	void TIFFClose();
-extern	TIFF *TIFFOpen();
-extern	TIFF *TIFFFdOpen();
-extern	TIFF* TIFFClientOpen();
-extern	char* TIFFFileName();
-extern	int TIFFFileno();
-extern	int TIFFGetMode();
-extern	int TIFFIsTiled();
-extern	unsigned int TIFFComputeTile();
-extern	int TIFFCheckTile();
-extern	long TIFFCurrentRow();
-extern	int TIFFCurrentDirectory();
-extern	int TIFFCurrentStrip();
-extern	int TIFFCurrentTile();
-extern	void TIFFError();
-extern	TIFFErrorHandler TIFFSetErrorHandler();
-extern	int TIFFFlush();
-extern	int TIFFFlushData();
-extern	int TIFFGetField();
-extern	int TIFFVGetField();
-extern	int TIFFGetFieldDefaulted();
-extern	int TIFFVGetFieldDefaulted();
-extern	unsigned int TIFFNumberOfTiles();
-extern	void TIFFPrintDirectory();
-extern	int TIFFReadDirectory();
-extern	int TIFFReadBufferSetup();
-extern	int TIFFReadScanline();
-extern	int TIFFReadTile();
-extern	int TIFFWriteTile();
-extern	unsigned int TIFFComputeStrip();
-extern	unsigned int TIFFNumberOfStrips();
-extern	int TIFFReadEncodedStrip();
-extern	int TIFFReadRawStrip();
-extern	int TIFFReadEncodedTile();
-extern	int TIFFReadRGBAImage();
-extern	int TIFFReadRawTile();
-extern	unsigned long TIFFScanlineSize();
-extern	unsigned long TIFFStripSize();
-extern	unsigned long TIFFVStripSize();
-extern	unsigned long TIFFTileRowSize();
-extern	unsigned long TIFFTileSize();
-extern	unsigned long TIFFVTileSize();
-extern	int TIFFLastDirectory();
-extern	int TIFFSetDirectory();
-extern	int TIFFSetField();
-extern	int TIFFVSetField();
-extern	void TIFFWarning();
-extern	TIFFErrorHandler TIFFSetWarningHandler();
-extern	int TIFFWriteDirectory();
-extern	int TIFFWriteScanline();
-extern	int TIFFWriteEncodedStrip();
-extern	int TIFFWriteRawStrip();
-extern	int TIFFWriteEncodedTile();
-extern	int TIFFWriteRawTile();
-extern	void TIFFSetWriteOffset();
-extern	void TIFFSwabShort();
-extern	void TIFFSwabLong();
-extern	void TIFFSwabArrayOfShort();
-extern	void TIFFSwabArrayOfLong();
-extern	void TIFFReverseBits();
-extern	unsigned char* TIFFGetBitRevTable();
 #endif
 #endif /* _TIFFIO_ */

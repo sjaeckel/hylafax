@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/dialrules.4f,v 1.8 1994/06/24 03:07:47 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/dialrules.4f,v 1.15 1995/04/08 21:35:33 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993, 1994 Sam Leffler
-.\" Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1995 Sam Leffler
+.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,19 +25,20 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.TH DIALRULES 4F "September 22, 1993"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
+.TH DIALRULES 4F "December 5, 1994"
 .SH NAME
 dialrules \- \*(Fx dial string processing rules
 .SH DESCRIPTION
 A dial string specifies how to dial the telephone in order to
-reach a destination facsimile machine.
+reach a destination facsimile machine, or similar device.
 This string is supplied by a user with each outgoing facsimile job.
 User-supplied dial strings need to be processed in two ways by the
-facsimile server process:
-to craft a canonical phone number for use in locating the remote
-machines capabilities,
-and
+\*(Fx server processes:
+to craft a canonical phone number for use in locating the
+receiver's capabilities, and
 to process into a form suitable for sending to a modem.
 In addition client applications may need to process a dial string
 to formulate an external form that does not include private information
@@ -75,13 +77,13 @@ subsequent alpha-numeric characters.
 A rule set is of the form:
 .sp .5
 .nf
-.in +.5i
+.RS
 \fIIdentifier\fP \fB:= [\fP
     \fIrule1\fP
     \fIrule2\fP
     ...
 \fB]\fP
-.in -.5i
+.RE
 .fi
 .sp .5
 where 
@@ -90,7 +92,7 @@ where
 and so on are transformation rules.
 Line breaks are significant.
 The initial rule set definition line and the trailing ``]'' must be
-on separate lines; and each transoformation rule must also be on a
+on separate lines; and each transformation rule must also be on a
 single line.
 Transformation rules are of the form:
 .sp .5
@@ -176,7 +178,7 @@ This is the default set of rules for transforming a dial string into
 a canonical phone number:
 .sp .5
 .nf
-.in +.5i
+.RS
 .ta \w'LDPrefix=${LongDistancePrefix}    'u
 Area=${AreaCode}	! local area code
 Country=${CountryCode}	! local country code
@@ -198,7 +200,7 @@ CanonicalNumber := [
 ^${LDPrefix}	= +${Country}	! replace l.d. dialing code
 ^[^+]	= +${Country}${Area}&	! otherwise, insert canon form
 ]
-.in -.5i
+.RE
 .fi
 .sp .5
 The first rule simply strips anything following a ``#''; this
@@ -214,12 +216,12 @@ country code and area code.
 As an example, assume that
 .sp .5
 .nf
-.in +.5i
+.RS
 AreaCode=415
 CountryCode=1
 InternationalPrefix=011
 LongDistancePrefix=1
-.in -.5i
+.RE
 .fi
 .sp .5
 then if the above set of rules is applied
@@ -227,18 +229,20 @@ to ``01123965-7824#2345'', the transformations would be:
 .sp .5
 .nf
 .ta \w'01123965-7824@2345    'u +\w'01123965-7824    'u
-.in +.5i
+.RS
 01123965-7824@2345	01123965-7824	! strip calling card stuff
 01123965-7824	011239657824		! strip white space etc.
 011239657824	+239657824	! replace int. dialing code
 +239657824	+239657824	! replace l.d. dialing code
 +239657824	+239657824	! otherwise, insert canon form
-.in -.5i
+.RE
 .fi
 .sp .5
 for a final result of ``+239657824''.
 .SH "SEE ALSO"
 .IR sendfax (1),
 .IR dialtest (1M),
-.IR faxd (1M),
+.IR faxq (1M),
+.IR faxsend (1M),
+.IR faxgetty (1M),
 .IR config (4F)

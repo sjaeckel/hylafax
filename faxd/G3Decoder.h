@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/G3Decoder.h,v 1.6 1994/06/04 00:11:49 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Decoder.h,v 1.12 1995/04/08 21:30:36 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -28,12 +29,16 @@
  * Group 3 Facsimile Decoder Support.
  */
 #include "G3Base.h"
+extern "C" {
 #include <setjmp.h>
+}
 
 class fxStackBuffer;
 
 class G3Decoder : private G3Base {
 private:
+    short	data;		// current input/output byte
+    short	bit;		// current bit in input/output byte
     short	bytePending;	// pending byte on recv
     short	prevByte;	// previous decoded byte
     u_char*	refline;	// reference line for 2d decoding
@@ -44,8 +49,7 @@ private:
     int		nextBit();
     void	ungetBit();
     int		nextByte();
-    int		decodeWhiteRun();
-    int		decodeBlackRun();
+    int		decodeRun(const u_short fsm[][256]);
     int		decodeUncompCode();
     void	skipToEOL(int len);
 protected:

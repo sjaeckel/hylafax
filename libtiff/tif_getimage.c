@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_getimage.c,v 1.20 1994/05/16 18:56:17 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_getimage.c,v 1.24.1.1 1995/02/10 19:04:23 sam Exp $ */
 
 /*
- * Copyright (c) 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -33,49 +33,40 @@
 
 typedef	u_char RGBvalue;
 
-static	u_short bitspersample;
-static	u_short samplesperpixel;
-static	u_short photometric;
-static	u_short orientation;
-static	u_short matting;
-static	u_short planarconfig;
+static	uint16 bitspersample;
+static	uint16 samplesperpixel;
+static	uint16 photometric;
+static	uint16 orientation;
+static	uint16 extrasamples;
+static	uint16 planarconfig;
 /* colormap for pallete images */
-static	u_short *redcmap, *greencmap, *bluecmap;
+static	uint16 *redcmap, *greencmap, *bluecmap;
 static	int stoponerr;			/* stop on read error */
 /* YCbCr support */
-static	u_short YCbCrHorizSampling;
-static	u_short YCbCrVertSampling;
+static	uint16 YCbCrHorizSampling;
+static	uint16 YCbCrVertSampling;
 static	float *YCbCrCoeffs;
 static	float *refBlackWhite;
 
-static	u_long **BWmap;
-static	u_long **PALmap;
+static	uint32 **BWmap;
+static	uint32 **PALmap;
 
-#if USE_PROTOTYPES
-static	int gt(TIFF*, int, int, u_long*);
-static	int gtTileContig(TIFF*, u_long*, RGBvalue*, u_long, u_long);
-static	int gtTileSeparate(TIFF*, u_long*, RGBvalue*, u_long, u_long);
-static	int gtStripContig(TIFF*, u_long*, RGBvalue*, u_long, u_long);
-static	int gtStripSeparate(TIFF*, u_long*, RGBvalue*, u_long, u_long);
+static	int gt(TIFF*, uint32, uint32, uint32*);
+static	int gtTileContig(TIFF*, uint32*, RGBvalue*, uint32, uint32);
+static	int gtTileSeparate(TIFF*, uint32*, RGBvalue*, uint32, uint32);
+static	int gtStripContig(TIFF*, uint32*, RGBvalue*, uint32, uint32);
+static	int gtStripSeparate(TIFF*, uint32*, RGBvalue*, uint32, uint32);
 static	int makebwmap(TIFF*, RGBvalue*);
 static	int makecmap(TIFF*, u_short*, u_short*, u_short*);
-#else
-static	int gt();
-static	int gtTileContig();
-static	int gtTileSeparate();
-static	int gtStripContig();
-static	int gtStripSeparate();
-static	int makebwmap();
-static	int makecmap();
-#endif
-static	void initYCbCrConversion();
+static	void initYCbCrConversion(void);
 
 int
-DECLARE5(TIFFReadRGBAImage,
-    TIFF*, tif, u_long, rwidth, u_long, rheight, u_long*, raster, int, stop)
+TIFFReadRGBAImage(TIFF* tif,
+    uint32 rwidth, uint32 rheight, uint32* raster, int stop)
 {
-	int ok;
-	u_long width, height;
+	int ok, alpha;
+	uint32 width, height;
+	uint16 *sampleinfo;
 
 	TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bitspersample);
 	switch (bitspersample) {
@@ -94,14 +85,16 @@ DECLARE5(TIFFReadRGBAImage,
 		    samplesperpixel);
 		return (0);
 	}
-	TIFFGetFieldDefaulted(tif, TIFFTAG_MATTEING, &matting);
+	TIFFGetFieldDefaulted(tif, TIFFTAG_EXTRASAMPLES,
+	    &extrasamples, &sampleinfo);
+	alpha = (extrasamples == 1 && sampleinfo[0] == EXTRASAMPLE_ASSOCALPHA);
 	TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &planarconfig);
-	switch (samplesperpixel - matting) {
+	switch (samplesperpixel - extrasamples) {
 	case 3:
 		break;
 	case 1: case 4:
 /* XXX */
-		if (!matting || planarconfig != PLANARCONFIG_CONTIG)
+		if (!alpha || planarconfig != PLANARCONFIG_CONTIG)
 			break;
 		/* fall thru... */
 	default:
@@ -110,7 +103,7 @@ DECLARE5(TIFFReadRGBAImage,
 		    samplesperpixel,
 		    planarconfig == PLANARCONFIG_CONTIG ?
 			"packed" : "separated",
-		    matting ? " with alpha" : "");
+		    alpha ? " with alpha" : "");
 		return (0);
 	}
 	if (!TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photometric)) {
@@ -138,7 +131,7 @@ DECLARE5(TIFFReadRGBAImage,
 	case PHOTOMETRIC_YCBCR:
 		break;
 	case PHOTOMETRIC_SEPARATED: {
-		u_short inkset;
+		uint16 inkset;
 		TIFFGetFieldDefaulted(tif, TIFFTAG_INKSET, &inkset);
 		if (inkset != INKSET_CMYK) {
 			TIFFError(TIFFFileName(tif),
@@ -169,7 +162,7 @@ DECLARE5(TIFFReadRGBAImage,
 }
 
 static int
-DECLARE4(checkcmap, int, n, u_short*, r, u_short*, g, u_short*, b)
+checkcmap(long n, uint16* r, uint16* g, uint16* b)
 {
 	while (n-- > 0)
 		if (*r++ >= 256 || *g++ >= 256 || *b++ >= 256)
@@ -183,11 +176,8 @@ DECLARE4(checkcmap, int, n, u_short*, r, u_short*, g, u_short*, b)
  * process also handles inverting B&W images when needed.
  */ 
 static int
-DECLARE4(setupMap,
-	TIFF*, tif,
-	u_short, minsamplevalue, u_short, maxsamplevalue,
-	RGBvalue**, pMap
-)
+setupMap(TIFF* tif,
+    uint16 minsamplevalue, uint16 maxsamplevalue, RGBvalue** pMap)
 {
 	register int x, range;
 	RGBvalue *Map;
@@ -224,9 +214,9 @@ DECLARE4(setupMap,
 }
 
 static int
-DECLARE4(gt, TIFF*, tif, int, w, int, h, u_long*, raster)
+gt(TIFF* tif, uint32 w, uint32 h, uint32* raster)
 {
-	u_short minsamplevalue, maxsamplevalue;
+	uint16 minsamplevalue, maxsamplevalue;
 	RGBvalue *Map;
 	int e, ncomps;
 
@@ -264,10 +254,10 @@ DECLARE4(gt, TIFF*, tif, int, w, int, h, u_long*, raster)
 		 * Convert 16-bit colormap to 8-bit (unless it looks
 		 * like an old-style 8-bit colormap).
 		 */
-		if (checkcmap(1<<bitspersample, redcmap, greencmap, bluecmap) == 16) {
-			int i;
-			for (i = (1<<bitspersample)-1; i > 0; i--) {
-#define	CVT(x)		(((x) * 255) / ((1L<<16)-1))
+		if (checkcmap(1L<<bitspersample, redcmap, greencmap, bluecmap) == 16) {
+			long i;
+			for (i = (1L<<bitspersample)-1; i > 0; i--) {
+#define	CVT(x)		((uint16)(((x) * 255) / ((1L<<16)-1)))
 				redcmap[i] = CVT(redcmap[i]);
 				greencmap[i] = CVT(greencmap[i]);
 				bluecmap[i] = CVT(bluecmap[i]);
@@ -284,7 +274,7 @@ DECLARE4(gt, TIFF*, tif, int, w, int, h, u_long*, raster)
 		}
 		break;
 	}
-	ncomps = samplesperpixel - matting;
+	ncomps = samplesperpixel - extrasamples;
 	if (planarconfig == PLANARCONFIG_SEPARATE && ncomps > 1) {
 		e = TIFFIsTiled(tif) ?
 		    gtTileSeparate(tif, raster, Map, h, w) :
@@ -299,10 +289,10 @@ DECLARE4(gt, TIFF*, tif, int, w, int, h, u_long*, raster)
 	return (e);
 }
 
-static u_long
-DECLARE2(setorientation, TIFF*, tif, u_long, h)
+static uint32
+setorientation(TIFF* tif, uint32 h)
 {
-	u_long y;
+	uint32 y;
 
 	TIFFGetFieldDefaulted(tif, TIFFTAG_ORIENTATION, &orientation);
 	switch (orientation) {
@@ -329,14 +319,9 @@ DECLARE2(setorientation, TIFF*, tif, u_long, h)
 	return (y);
 }
 
-#if USE_PROTOTYPES
 typedef void (*tileContigRoutine)
-    (u_long*, u_char*, RGBvalue*, u_long, u_long, int, int);
+    (uint32*, u_char*, RGBvalue*, uint32, uint32, int, int);
 static tileContigRoutine pickTileContigCase(TIFF*, RGBvalue*);
-#else
-typedef void (*tileContigRoutine)();
-static tileContigRoutine pickTileContigCase();
-#endif
 
 /*
  * Get an tile-organized image that has
@@ -345,14 +330,13 @@ static tileContigRoutine pickTileContigCase();
  *	SamplesPerPixel == 1
  */	
 static int
-DECLARE5(gtTileContig,
-	TIFF*, tif, u_long*, raster, RGBvalue*, Map, u_long, h, u_long, w)
+gtTileContig(TIFF* tif, uint32* raster, RGBvalue* Map, uint32 h, uint32 w)
 {
-	u_long col, row, y;
-	u_long tw, th;
+	uint32 col, row, y;
+	uint32 tw, th;
 	u_char *buf;
-	int fromskew, toskew;
-	u_int nrow;
+	int32 fromskew, toskew;
+	uint32 nrow;
 	tileContigRoutine put;
 
 	put = pickTileContigCase(tif, Map);
@@ -378,7 +362,7 @@ DECLARE5(gtTileContig,
 				 * Tile is clipped horizontally.  Calculate
 				 * visible portion and skewing factors.
 				 */
-				u_long npix = w - col;
+				uint32 npix = w - col;
 				fromskew = tw - npix;
 				(*put)(raster + y*w + col, buf, Map,
 				    npix, nrow, fromskew, toskew + fromskew);
@@ -392,14 +376,9 @@ DECLARE5(gtTileContig,
 	return (1);
 }
 
-#if USE_PROTOTYPES
 typedef void (*tileSeparateRoutine)
-    (u_long*, u_char*, u_char*, u_char*, RGBvalue*, u_long, u_long, int, int);
+    (uint32*, u_char*, u_char*, u_char*, RGBvalue*, uint32, uint32, int, int);
 static tileSeparateRoutine pickTileSeparateCase(TIFF*, RGBvalue*);
-#else
-typedef void (*tileSeparateRoutine)();
-static tileSeparateRoutine pickTileSeparateCase();
-#endif
 
 /*
  * Get an tile-organized image that has
@@ -408,16 +387,15 @@ static tileSeparateRoutine pickTileSeparateCase();
  * We assume that all such images are RGB.
  */	
 static int
-DECLARE5(gtTileSeparate,
-	TIFF*, tif, u_long*, raster, RGBvalue*, Map, u_long, h, u_long, w)
+gtTileSeparate(TIFF* tif, uint32* raster, RGBvalue* Map, uint32 h, uint32 w)
 {
-	u_long col, row, y;
-	u_long tw, th;
+	uint32 col, row, y;
+	uint32 tw, th;
 	u_char *buf;
 	u_char *r, *g, *b;
-	u_long tilesize;
-	int fromskew, toskew;
-	u_int nrow;
+	tsize_t tilesize;
+	int32 fromskew, toskew;
+	uint32 nrow;
 	tileSeparateRoutine put;
 
 	put = pickTileSeparateCase(tif, Map);
@@ -450,7 +428,7 @@ DECLARE5(gtTileSeparate,
 				 * Tile is clipped horizontally.  Calculate
 				 * visible portion and skewing factors.
 				 */
-				u_long npix = w - col;
+				uint32 npix = w - col;
 				fromskew = tw - npix;
 				(*put)(raster + y*w + col, r, g, b, Map,
 				    npix, nrow, fromskew, toskew + fromskew);
@@ -471,15 +449,14 @@ DECLARE5(gtTileSeparate,
  *	SamplesPerPixel == 1
  */	
 static int
-DECLARE5(gtStripContig,
-	TIFF*, tif, u_long*, raster, RGBvalue*, Map, u_long, h, u_long, w)
+gtStripContig(TIFF* tif, uint32* raster, RGBvalue* Map, uint32 h, uint32 w)
 {
-	u_long row, y, nrow;
+	uint32 row, y, nrow;
 	u_char *buf;
 	tileContigRoutine put;
-	u_long rowsperstrip;
-	u_long imagewidth;
-	u_long scanline;
+	uint32 rowsperstrip;
+	uint32 imagewidth;
+	tsize_t scanline;
 	int fromskew, toskew;
 
 	put = pickTileContigCase(tif, Map);
@@ -515,17 +492,16 @@ DECLARE5(gtStripContig,
  * We assume that all such images are RGB.
  */
 static int
-DECLARE5(gtStripSeparate,
-	TIFF*, tif, u_long*, raster, RGBvalue*, Map, u_long, h, u_long, w)
+gtStripSeparate(TIFF* tif, uint32* raster, RGBvalue* Map, uint32 h, uint32 w)
 {
 	u_char *buf;
 	u_char *r, *g, *b;
-	u_long row, y, nrow;
-	u_long scanline;
+	uint32 row, y, nrow;
+	tsize_t scanline;
 	tileSeparateRoutine put;
-	u_long rowsperstrip;
-	u_long imagewidth;
-	u_long stripsize;
+	uint32 rowsperstrip;
+	uint32 imagewidth;
+	tsize_t stripsize;
 	int fromskew, toskew;
 
 	stripsize = TIFFStripSize(tif);
@@ -563,7 +539,7 @@ DECLARE5(gtStripSeparate,
 	return (1);
 }
 
-#define	PACK(r,g,b)	((u_long)(r)|((u_long)(g)<<8)|((u_long)(b)<<16))
+#define	PACK(r,g,b)	((uint32)(r)|((uint32)(g)<<8)|((uint32)(b)<<16))
 
 /*
  * Greyscale images with less than 8 bits/sample are handled
@@ -573,19 +549,19 @@ DECLARE5(gtStripSeparate,
  * number.
  */
 static int
-DECLARE2(makebwmap, TIFF*, tif, RGBvalue*, Map)
+makebwmap(TIFF* tif, RGBvalue* Map)
 {
 	register int i;
 	int nsamples = 8 / bitspersample;
-	register u_long *p;
+	register uint32 *p;
 
-	BWmap = (u_long **)_TIFFmalloc(
-	    256*sizeof (u_long *)+(256*nsamples*sizeof(u_long)));
+	BWmap = (uint32 **)_TIFFmalloc(
+	    256*sizeof (uint32 *)+(256*nsamples*sizeof(uint32)));
 	if (BWmap == NULL) {
 		TIFFError(TIFFFileName(tif), "No space for B&W mapping table");
 		return (0);
 	}
-	p = (u_long *)(BWmap + 256);
+	p = (uint32 *)(BWmap + 256);
 	for (i = 0; i < 256; i++) {
 		BWmap[i] = p;
 		switch (bitspersample) {
@@ -628,19 +604,19 @@ DECLARE2(makebwmap, TIFF*, tif, RGBvalue*, Map)
  * number.
  */
 static int
-DECLARE4(makecmap, TIFF*, tif, u_short*, rmap, u_short*, gmap, u_short*, bmap)
+makecmap(TIFF* tif, uint16* rmap, uint16* gmap, uint16* bmap)
 {
 	register int i;
 	int nsamples = 8 / bitspersample;
-	register u_long *p;
+	register uint32 *p;
 
-	PALmap = (u_long **)_TIFFmalloc(
-	    256*sizeof (u_long *)+(256*nsamples*sizeof(u_long)));
+	PALmap = (uint32 **)_TIFFmalloc(
+	    256*sizeof (uint32 *)+(256*nsamples*sizeof(uint32)));
 	if (PALmap == NULL) {
 		TIFFError(TIFFFileName(tif), "No space for Palette mapping table");
 		return (0);
 	}
-	p = (u_long *)(PALmap + 256);
+	p = (uint32 *)(PALmap + 256);
 	for (i = 0; i < 256; i++) {
 		PALmap[i] = p;
 #define	CMAP(x)	\
@@ -696,9 +672,10 @@ c = x; *p++ = PACK(rmap[c]&0xff, gmap[c]&0xff, bmap[c]&0xff);
 	case 1: op;				\
 	}
 #define	CASE4(x,op)	switch (x) { case 3: op; case 2: op; case 1: op; }
+#define	NOP
 
 #define	UNROLL8(w, op1, op2) {		\
-	register u_long x;		\
+	register uint32 x;		\
 	for (x = w; x >= 8; x -= 8) {	\
 		op1;			\
 		REPEAT8(op2);		\
@@ -709,7 +686,7 @@ c = x; *p++ = PACK(rmap[c]&0xff, gmap[c]&0xff, bmap[c]&0xff);
 	}				\
 }
 #define	UNROLL4(w, op1, op2) {		\
-	register u_long x;		\
+	register uint32 x;		\
 	for (x = w; x >= 4; x -= 4) {	\
 		op1;			\
 		REPEAT4(op2);		\
@@ -720,7 +697,7 @@ c = x; *p++ = PACK(rmap[c]&0xff, gmap[c]&0xff, bmap[c]&0xff);
 	}				\
 }
 #define	UNROLL2(w, op1, op2) {		\
-	register u_long x;		\
+	register uint32 x;		\
 	for (x = w; x >= 2; x -= 2) {	\
 		op1;			\
 		REPEAT2(op2);		\
@@ -734,32 +711,23 @@ c = x; *p++ = PACK(rmap[c]&0xff, gmap[c]&0xff, bmap[c]&0xff);
 
 #define	SKEW(r,g,b,skew)	{ r += skew; g += skew; b += skew; }
 
-#if USE_PROTOTYPES
 #define	DECLAREContigPutFunc(name) \
 static void name(\
-    u_long* cp, \
+    uint32* cp, \
     u_char* pp, \
     RGBvalue* Map, \
-    u_long w, u_long h, \
+    uint32 w, uint32 h, \
     int fromskew, int toskew \
 )
-#else
-#define	DECLAREContigPutFunc(name) \
-static void name(cp, pp, Map, w, h, fromskew, toskew)\
-    u_long* cp; \
-    u_char* pp; \
-    RGBvalue* Map; \
-    u_long w; u_long h; \
-    int fromskew; int toskew;
-#endif
 
 /*
  * 8-bit palette => colormap/RGB
  */
 DECLAREContigPutFunc(put8bitcmaptile)
 {
+	(void) Map;
 	while (h-- > 0) {
-		UNROLL8(w, NULL, *cp++ = PALmap[*pp++][0]);
+		UNROLL8(w, NOP, *cp++ = PALmap[*pp++][0]);
 		cp += toskew;
 		pp += fromskew;
 	}
@@ -770,8 +738,9 @@ DECLAREContigPutFunc(put8bitcmaptile)
  */
 DECLAREContigPutFunc(put4bitcmaptile)
 {
-	register u_long *bw;
+	register uint32 *bw;
 
+	(void) Map;
 	fromskew /= 2;
 	while (h-- > 0) {
 		UNROLL2(w, bw = PALmap[*pp++], *cp++ = *bw++);
@@ -785,8 +754,9 @@ DECLAREContigPutFunc(put4bitcmaptile)
  */
 DECLAREContigPutFunc(put2bitcmaptile)
 {
-	register u_long *bw;
+	register uint32 *bw;
 
+	(void) Map;
 	fromskew /= 4;
 	while (h-- > 0) {
 		UNROLL4(w, bw = PALmap[*pp++], *cp++ = *bw++);
@@ -800,8 +770,9 @@ DECLAREContigPutFunc(put2bitcmaptile)
  */
 DECLAREContigPutFunc(put1bitcmaptile)
 {
-	register u_long *bw;
+	register uint32 *bw;
 
+	(void) Map;
 	fromskew /= 8;
 	while (h-- > 0) {
 		UNROLL8(w, bw = PALmap[*pp++], *cp++ = *bw++);
@@ -815,8 +786,9 @@ DECLAREContigPutFunc(put1bitcmaptile)
  */
 DECLAREContigPutFunc(putgreytile)
 {
+	(void) Map;
 	while (h-- > 0) {
-		register u_long x;
+		register uint32 x;
 		for (x = w; x-- > 0;)
 			*cp++ = BWmap[*pp++][0];
 		cp += toskew;
@@ -829,8 +801,9 @@ DECLAREContigPutFunc(putgreytile)
  */
 DECLAREContigPutFunc(put1bitbwtile)
 {
-	register u_long *bw;
+	register uint32 *bw;
 
+	(void) Map;
 	fromskew /= 8;
 	while (h-- > 0) {
 		UNROLL8(w, bw = BWmap[*pp++], *cp++ = *bw++);
@@ -844,8 +817,9 @@ DECLAREContigPutFunc(put1bitbwtile)
  */
 DECLAREContigPutFunc(put2bitbwtile)
 {
-	register u_long *bw;
+	register uint32 *bw;
 
+	(void) Map;
 	fromskew /= 4;
 	while (h-- > 0) {
 		UNROLL4(w, bw = BWmap[*pp++], *cp++ = *bw++);
@@ -859,8 +833,9 @@ DECLAREContigPutFunc(put2bitbwtile)
  */
 DECLAREContigPutFunc(put4bitbwtile)
 {
-	register u_long *bw;
+	register uint32 *bw;
 
+	(void) Map;
 	fromskew /= 2;
 	while (h-- > 0) {
 		UNROLL2(w, bw = BWmap[*pp++], *cp++ = *bw++);
@@ -877,7 +852,7 @@ DECLAREContigPutFunc(putRGBcontig8bittile)
 	fromskew *= samplesperpixel;
 	if (Map) {
 		while (h-- > 0) {
-			register u_long x;
+			register uint32 x;
 			for (x = w; x-- > 0;) {
 				*cp++ = PACK(Map[pp[0]], Map[pp[1]], Map[pp[2]]);
 				pp += samplesperpixel;
@@ -887,7 +862,7 @@ DECLAREContigPutFunc(putRGBcontig8bittile)
 		}
 	} else {
 		while (h-- > 0) {
-			UNROLL8(w, NULL,
+			UNROLL8(w, NOP,
 			    *cp++ = PACK(pp[0], pp[1], pp[2]);
 			    pp += samplesperpixel);
 			cp += toskew;
@@ -902,7 +877,7 @@ DECLAREContigPutFunc(putRGBcontig8bittile)
 DECLAREContigPutFunc(putRGBcontig16bittile)
 {
 	register u_short *wp = (u_short *)pp;
-	register u_int x;
+	register uint32 x;
 
 	fromskew *= samplesperpixel;
 	if (Map) {
@@ -938,7 +913,7 @@ DECLAREContigPutFunc(putRGBcontig8bitCMYKtile)
 	fromskew *= samplesperpixel;
 	if (Map) {
 		while (h-- > 0) {
-			register u_long x;
+			register uint32 x;
 			for (x = w; x-- > 0;) {
 				k = 255 - pp[3];
 				r = (k*(255-pp[0]))/255;
@@ -952,7 +927,7 @@ DECLAREContigPutFunc(putRGBcontig8bitCMYKtile)
 		}
 	} else {
 		while (h-- > 0) {
-			UNROLL8(w, NULL,
+			UNROLL8(w, NOP,
 			    k = 255 - pp[3];
 			    r = (k*(255-pp[0]))/255;
 			    g = (k*(255-pp[1]))/255;
@@ -965,24 +940,14 @@ DECLAREContigPutFunc(putRGBcontig8bitCMYKtile)
 	}
 }
 
-#if USE_PROTOTYPES
 #define	DECLARESepPutFunc(name) \
 static void name(\
-    u_long* cp, \
+    uint32* cp, \
     u_char* r, u_char* g, u_char* b, \
     RGBvalue* Map, \
-    u_long w, u_long h, \
+    uint32 w, uint32 h, \
     int fromskew, int toskew \
 )
-#else
-#define	DECLARESepPutFunc(name) \
-static void name(cp, r, g, b, Map, w, h, fromskew, toskew)\
-    u_long* cp; \
-    u_char* r; u_char* g; u_char* b; \
-    RGBvalue* Map; \
-    u_long w; u_long h; \
-    int fromskew; int toskew;
-#endif
 
 /*
  * 8-bit unpacked samples => RGB
@@ -991,7 +956,7 @@ DECLARESepPutFunc(putRGBseparate8bittile)
 {
 	if (Map) {
 		while (h-- > 0) {
-			register u_long x;
+			register uint32 x;
 			for (x = w; x > 0; x--)
 				*cp++ = PACK(Map[*r++], Map[*g++], Map[*b++]);
 			SKEW(r, g, b, fromskew);
@@ -999,7 +964,7 @@ DECLARESepPutFunc(putRGBseparate8bittile)
 		}
 	} else {
 		while (h-- > 0) {
-			UNROLL8(w, NULL, *cp++ = PACK(*r++, *g++, *b++));
+			UNROLL8(w, NOP, *cp++ = PACK(*r++, *g++, *b++));
 			SKEW(r, g, b, fromskew);
 			cp += toskew;
 		}
@@ -1014,7 +979,7 @@ DECLARESepPutFunc(putRGBseparate16bittile)
 	register u_short *wr = (u_short *)r;
 	register u_short *wg = (u_short *)g;
 	register u_short *wb = (u_short *)b;
-	register u_long x;
+	register uint32 x;
 
 	if (Map) {
 		while (h-- > 0) {
@@ -1045,30 +1010,21 @@ static	float D1, D2;
 static	float D3, D4;
 
 static void
-initYCbCrConversion()
+initYCbCrConversion(void)
 {
 	D1 = 2 - 2*LumaRed;
 	D2 = D1*LumaRed / LumaGreen;
 	D3 = 2 - 2*LumaBlue;
-	D4 = D2*LumaBlue / LumaGreen;
+	D4 = D3*LumaBlue / LumaGreen;
 }
 
 static void
-#if USE_PROTOTYPES
 putRGBContigYCbCrClump(
-	register u_long *cp, register u_char *pp,
+	register uint32* cp, register u_char* pp,
 	int cw, int ch,
-	u_long w,
+	uint32 w,
 	int n, int fromskew, int toskew
 )
-#else
-putRGBContigYCbCrClump(cp, pp, cw, ch, w, n, fromskew, toskew)
-	register u_long *cp;
-	register u_char *pp;
-	int cw, ch;
-	u_long w;
-	int n, fromskew, toskew;
-#endif
 {
 	float Cb, Cr;
 	int j, k;
@@ -1103,9 +1059,10 @@ putRGBContigYCbCrClump(cp, pp, cw, ch, w, n, fromskew, toskew)
 DECLAREContigPutFunc(putcontig8bitYCbCrtile)
 {
 	u_int Coff = YCbCrVertSampling * YCbCrHorizSampling;
-	u_long *tp;
-	u_long x;
+	uint32 *tp;
+	uint32 x;
 
+	(void) Map;
 	/* XXX adjust fromskew */
 	while (h >= YCbCrVertSampling) {
 		tp = cp;
@@ -1144,10 +1101,11 @@ DECLAREContigPutFunc(putcontig8bitYCbCrtile)
  * Select the appropriate conversion routine for packed data.
  */
 static tileContigRoutine
-DECLARE2(pickTileContigCase, TIFF*, tif, RGBvalue*, Map)
+pickTileContigCase(TIFF* tif, RGBvalue* Map)
 {
 	tileContigRoutine put = 0;
 
+	(void) Map;
 	switch (photometric) {
 	case PHOTOMETRIC_RGB:
 		if (bitspersample == 8)
@@ -1194,10 +1152,11 @@ DECLARE2(pickTileContigCase, TIFF*, tif, RGBvalue*, Map)
  *	 to the "packed routines.
  */
 static tileSeparateRoutine
-DECLARE2(pickTileSeparateCase, TIFF*, tif, RGBvalue*, Map)
+pickTileSeparateCase(TIFF* tif, RGBvalue* Map)
 {
 	tileSeparateRoutine put = 0;
 
+	(void) Map;
 	switch (photometric) {
 	case PHOTOMETRIC_RGB:
 		if (bitspersample == 8)

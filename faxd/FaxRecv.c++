@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxRecv.c++,v 1.70 1994/07/04 18:36:58 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxRecv.c++,v 1.87 1995/04/08 21:30:17 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -22,20 +23,16 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include <unistd.h>
 #include <osfcn.h>
-#include <sys/stat.h>
 #include <sys/file.h>
 #include <ctype.h>
-#include <stdio.h>
+
+#include "Sys.h"
 
 #include "Dispatcher.h"
 #include "tiffio.h"
 #include "FaxServer.h"
 #include "FaxRecvInfo.h"
-#include "RegExArray.h"
-#include "BoolArray.h"
-#include "faxServerApp.h"
 #include "t.30.h"
 #include "config.h"
 
@@ -46,9 +43,9 @@
 fxBool
 FaxServer::recvFax()
 {
+    traceProtocol("RECV FAX: begin");
+
     fxStr emsg;
-    changeState(RECEIVING);
-    traceStatus(FAXTRACE_PROTOCOL, "RECV: begin");
     okToRecv = (qualifyTSI == "");	// anything ok if not qualifying
     recvTSI = "";			// sender's identity initially unknown
     FaxRecvInfoArray docs;
@@ -62,17 +59,17 @@ FaxServer::recvFax()
      * after recvBegin can cause part of the first page to
      * be lost.)
      */
-    TIFF* tif = setupForRecv("RECV", info, docs);
+    TIFF* tif = setupForRecv("RECV FAX", info, docs);
     if (tif) {
 	recvPages = 0;			// count of received pages
-	recvStart = time(0);		// count initial negotiation
+	recvStart = Sys::now();		// count initial negotiation
 	if (faxRecognized = modem->recvBegin(emsg)) {
-	    if (!recvDocuments("RECV", tif, info, docs, emsg))
+	    if (!recvDocuments("RECV FAX", tif, info, docs, emsg))
 		modem->recvAbort();
 	    if (!modem->recvEnd(emsg))
-		traceStatus(FAXTRACE_PROTOCOL, "RECV: %s (end)", (char*) emsg);
+		traceProtocol("RECV FAX: %s (end)", (char*) emsg);
 	} else {
-	    traceStatus(FAXTRACE_PROTOCOL, "RECV: %s (begin)", (char*) emsg);
+	    traceProtocol("RECV FAX: %s (begin)", (char*) emsg);
 	    TIFFClose(tif);
 	}
     }
@@ -84,15 +81,14 @@ FaxServer::recvFax()
     for (u_int i = 0, n = docs.length(); i < n; i++) {
 	const FaxRecvInfo& ri = docs[i];
 	if (ri.npages > 0) {
-	    (void) chmod((char*) ri.qfile, recvFileMode);
-	    app->notifyRecvDone(ri);
+	    Sys::chmod(ri.qfile, recvFileMode);
+	    notifyRecvDone(ri);
 	} else {
-	    traceStatus(FAXTRACE_SERVER, "RECV: empty file \"%s\" deleted",
-		(char*) ri.qfile);
-	    unlink((char*) ri.qfile);
+	    traceServer("RECV: No pages received");
+	    Sys::unlink(ri.qfile);
 	}
     }
-    traceStatus(FAXTRACE_PROTOCOL, "RECV: end");
+    traceProtocol("RECV FAX: end");
     return (faxRecognized);
 }
 
@@ -102,10 +98,10 @@ FaxServer::recvFax()
 TIFF*
 FaxServer::setupForRecv(const char* op, FaxRecvInfo& ri, FaxRecvInfoArray& docs)
 {
-    char* cp = tempnam(FAX_RECVDIR, "fax");
+    char* cp = Sys::tempnam(FAX_RECVDIR, "fax");
     if (cp) {
 	ri.qfile = cp;
-	free(cp);
+	::free(cp);
 	ri.npages = 0;			// mark it to be deleted...
 	docs.append(ri);		// ...add it in to the set
 	TIFF* tif = TIFFOpen(ri.qfile, "w");
@@ -113,12 +109,10 @@ FaxServer::setupForRecv(const char* op, FaxRecvInfo& ri, FaxRecvInfoArray& docs)
 	    (void) flock(TIFFFileno(tif), LOCK_EX|LOCK_NB);
 	    return (tif);
 	}
-	traceStatus(FAXTRACE_SERVER,
-	    "%s: Unable to create file \"%s\" for received data", op,
+	traceServer("%s: Unable to create file %s for received data", op,
 	    (char*) ri.qfile);
     } else
-	traceStatus(FAXTRACE_SERVER,
-	    "%s: Unable to create temp file for received data", op);
+	traceServer("%s: Unable to create temp file for received data", op);
     return (NULL);
 }
 
@@ -132,19 +126,17 @@ FaxServer::recvDocuments(const char* op, TIFF* tif, FaxRecvInfo& info, FaxRecvIn
     int ppm;
     for (;;) {
 	 if (!okToRecv) {
-	    traceStatus(FAXTRACE_SERVER,
-		"%s: Permission denied (unacceptable client TSI)", op);
+	    traceServer("%s: Permission denied (unacceptable client TSI)", op);
 	    TIFFClose(tif);
 	    return (FALSE);
 	}
-	traceStatus(FAXTRACE_SERVER, "RECV data in \"%s\"", (char*) info.qfile);
 	npages = 0;
-	time_t recvStart = time(0);
-	recvOK = recvFaxPhaseB(tif, ppm, emsg);
+	time_t recvStart = Sys::now();
+	recvOK = recvFaxPhaseD(tif, ppm, emsg);
 	if (!recvOK)
-	    traceStatus(FAXTRACE_PROTOCOL, "%s: %s (Phase B)", op, (char*)emsg);
+	    traceProtocol("%s: %s (Phase D)", op, (char*)emsg);
 	TIFFClose(tif);
-	recvComplete(info, time(0) - recvStart, emsg);
+	recvComplete(info, Sys::now() - recvStart, emsg);
 	docs[docs.length()-1] = info;
 	if (!recvOK || ppm == PPM_EOP)
 	    return (recvOK);
@@ -163,18 +155,18 @@ FaxServer::recvDocuments(const char* op, TIFF* tif, FaxRecvInfo& info, FaxRecvIn
  * Receive Phase B protocol processing.
  */
 fxBool
-FaxServer::recvFaxPhaseB(TIFF* tif, int& ppm, fxStr& emsg)
+FaxServer::recvFaxPhaseD(TIFF* tif, int& ppm, fxStr& emsg)
 {
     ppm = PPM_EOP;
     do {
 	if (++recvPages > maxRecvPages) {
-	    emsg = "Maximum receive page count exceeded, job aborted";
+	    emsg = "Maximum receive page count exceeded, job terminated";
 	    return (FALSE);
 	}
 	if (!modem->recvPage(tif, ppm, emsg))
 	    return (FALSE);
 	if (PPM_PRI_MPS <= ppm && ppm <= PPM_PRI_EOP) {
-	    emsg = "Procedure interrupt received, job aborted";
+	    emsg = "Procedure interrupt received, job terminated";
 	    return (FALSE);
 	}
     } while (ppm == PPM_MPS || ppm == PPM_PRI_MPS);
@@ -190,11 +182,11 @@ FaxServer::recvComplete(FaxRecvInfo& info, time_t recvTime, const fxStr& emsg)
 {
     info.time = recvTime;
     info.npages = npages;
-    info.pagewidth = pageWidthCodes[clientParams.wd];
-    info.pagelength = pageLengthCodes[clientParams.ln];
-    info.sigrate = atoi(Class2Params::bitRateNames[clientParams.br]);
-    info.protocol = Class2Params::dataFormatNames[clientParams.df];
-    info.resolution = (clientParams.vr == VR_FINE ? 196. : 98.);
+    info.pagewidth = clientParams.pageWidth();
+    info.pagelength = clientParams.pageLength();
+    info.sigrate = ::atoi(clientParams.bitRateName());
+    info.protocol = clientParams.dataFormatName();
+    info.resolution = (clientParams.vr == VR_FINE ? 196 : 98);
     info.sender = recvTSI;
     info.reason = emsg;
 }
@@ -207,16 +199,11 @@ FaxServer::recvDCS(const Class2Params& params)
 {
     clientParams = params;
 
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE wants %s",
-	Class2Params::bitRateNames[params.br]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE wants %s",
-	Class2Params::pageWidthNames[params.wd]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE wants %s",
-	Class2Params::pageLengthNames[params.ln]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE wants %s",
-	Class2Params::vresNames[params.vr]);
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE wants %s",
-	Class2Params::dataFormatNames[params.df]);
+    traceProtocol("REMOTE wants %s", params.bitRateName());
+    traceProtocol("REMOTE wants %s", params.pageWidthName());
+    traceProtocol("REMOTE wants %s", params.pageLengthName());
+    traceProtocol("REMOTE wants %s", params.verticalResName());
+    traceProtocol("REMOTE wants %s", params.dataFormatName());
 }
 
 /*
@@ -238,27 +225,15 @@ fxBool
 FaxServer::recvCheckTSI(const fxStr& tsi)
 {
     recvTSI = tsi;
-    traceStatus(FAXTRACE_PROTOCOL, "REMOTE TSI \"%s\"", (char*) tsi);
-    updateTSIPatterns();
-    if (qualifyTSI != "") {	// check against database of acceptable tsi's
-	okToRecv = FALSE;	// reject if no patterns!
-	if (tsiPats != NULL) {
-	    for (u_int i = 0; i < tsiPats->length(); i++) {
-		RegEx* pat = (*tsiPats)[i];
-		if (pat->Find(tsi) != REG_NOMATCH) {
-		    okToRecv = (*acceptTSI)[i];
-		    break;
-		}
-	    }
-	}
-    } else
-	okToRecv = TRUE;
-    traceStatus(FAXTRACE_SERVER, "%s TSI \"%s\"",
-	okToRecv ? "ACCEPT" : "REJECT", (char*) tsi);
+    okToRecv = isTSIOk(tsi);
+    traceProtocol("REMOTE TSI \"%s\"", (char*) tsi);
+    traceServer("%s TSI \"%s\"", okToRecv ? "ACCEPT" : "REJECT", (char*) tsi);
     if (okToRecv)
 	setServerStatus("Receiving from \"%s\"", (char*) tsi);
     return (okToRecv);
 }
+
+#include "version.h"
 
 /*
  * Prepare for the reception of page data by setting the
@@ -269,19 +244,19 @@ FaxServer::recvSetupPage(TIFF* tif, long group3opts, int fillOrder)
 {
     TIFFSetField(tif, TIFFTAG_SUBFILETYPE,	FILETYPE_PAGE);
     TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,
-	(u_long) pageWidthCodes[clientParams.wd]);
+	(uint32) clientParams.pageWidth());
     TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,	1);
     TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,	PHOTOMETRIC_MINISWHITE);
     TIFFSetField(tif, TIFFTAG_ORIENTATION,	ORIENTATION_TOPLEFT);
     TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,	1);
-    TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,	-1L);
+    TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,	(uint32) -1);
     TIFFSetField(tif, TIFFTAG_PLANARCONFIG,	PLANARCONFIG_CONTIG);
-    TIFFSetField(tif, TIFFTAG_FILLORDER,	fillOrder);
+    TIFFSetField(tif, TIFFTAG_FILLORDER,	(uint16) fillOrder);
     TIFFSetField(tif, TIFFTAG_XRESOLUTION,	204.);
     TIFFSetField(tif, TIFFTAG_YRESOLUTION,
-	(clientParams.vr == VR_FINE) ? 196. : 98.);
+	(float) clientParams.verticalRes());
     TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT,	RESUNIT_INCH);
-    TIFFSetField(tif, TIFFTAG_SOFTWARE,		"FlexFAX Version 2.3beta");
+    TIFFSetField(tif, TIFFTAG_SOFTWARE,		VERSION);
     TIFFSetField(tif, TIFFTAG_IMAGEDESCRIPTION,	(char*) recvTSI);
     switch (clientParams.df) {
     case DF_2DMMR:
@@ -290,91 +265,25 @@ FaxServer::recvSetupPage(TIFF* tif, long group3opts, int fillOrder)
     case DF_2DMRUNCOMP:
 	TIFFSetField(tif, TIFFTAG_COMPRESSION,	COMPRESSION_CCITTFAX3);
 	group3opts |= GROUP3OPT_2DENCODING|GROUP3OPT_UNCOMPRESSED;
-	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,group3opts);
+	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,(uint32) group3opts);
 	break;
     case DF_2DMR:
 	TIFFSetField(tif, TIFFTAG_COMPRESSION,	COMPRESSION_CCITTFAX3);
 	group3opts |= GROUP3OPT_2DENCODING;
-	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,group3opts);
+	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,(uint32) group3opts);
 	break;
     case DF_1DMR:
 	TIFFSetField(tif, TIFFTAG_COMPRESSION,	COMPRESSION_CCITTFAX3);
 	group3opts &= ~GROUP3OPT_2DENCODING;
-	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,group3opts);
+	TIFFSetField(tif, TIFFTAG_GROUP3OPTIONS,(uint32) group3opts);
 	break;
     }
     char dateTime[24];
     time_t now = time(0);
-    strftime(dateTime, sizeof (dateTime), "%Y:%m:%d %H:%M:%S", localtime(&now));
+    ::strftime(dateTime, sizeof (dateTime), "%Y:%m:%d %H:%M:%S",
+	::localtime(&now));
     TIFFSetField(tif, TIFFTAG_DATETIME,	    dateTime);
     TIFFSetField(tif, TIFFTAG_MAKE,	    (char*) modem->getManufacturer());
     TIFFSetField(tif, TIFFTAG_MODEL,	    (char*) modem->getModel());
     TIFFSetField(tif, TIFFTAG_HOSTCOMPUTER, (char*) hostname);
-}
-
-/*
- * Update the TSI pattern arrays if the file
- * of TSI patterns has been changed since the last
- * time we read it.
- */
-void
-FaxServer::updateTSIPatterns()
-{
-    FILE* fd = fopen((char*) qualifyTSI, "r");
-    if (fd != NULL) {
-	struct stat sb;
-	if (fstat(fileno(fd), &sb) >= 0 && sb.st_mtime >= lastPatModTime) {
-	    readTSIPatterns(fd, tsiPats, acceptTSI);
-	    lastPatModTime = sb.st_mtime;
-	}
-	fclose(fd);
-    } else if (tsiPats) {
-	// file's been removed, delete any existing info
-	delete tsiPats, tsiPats = NULL;
-	delete acceptTSI, acceptTSI = NULL;
-    }
-}
-
-/*
- * Read the file of TSI patterns into an array.
- *
- * The order of patterns is preserved and a leading ``!''
- * is interpreted to mean ``reject TSI if matched by this
- * regex''.  Note also that we always allocate an array
- * of patterns.  The TSI pattern matching logic rejects
- * TSI that don't match any patterns.  Thus an empty file
- * causes all incoming facsimile to be rejected.
- */
-void
-FaxServer::readTSIPatterns(FILE* fd, RegExArray*& pats, fxBoolArray*& accept)
-{
-    if (pats)
-	pats->resize(0);
-    else
-	pats = new RegExArray;
-    if (accept)
-	accept->resize(0);
-    else
-	accept = new fxBoolArray;
-
-    char line[256];
-    while (fgets(line, sizeof (line)-1, fd)) {
-	char* cp = strchr(line, '#');
-	if (cp || (cp = strchr(line, '\n')))
-	    *cp = '\0';
-	/* trim off trailing white space */
-	for (cp = strchr(line, '\0'); cp > line; cp--)
-	    if (!isspace(cp[-1]))
-		break;
-	*cp = '\0';
-	if (line[0] == '\0')
-	    continue;
-	if (line[0] == '!') {
-	    accept->append(FALSE);
-	    pats->append(new RegEx(line+1));
-	} else {
-	    accept->append(TRUE);
-	    pats->append(new RegEx(line));
-	}
-    }
 }

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/G3Base.c++,v 1.2 1994/07/27 22:35:54 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Base.c++,v 1.6 1995/04/08 21:30:32 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,10 +32,9 @@
 void
 G3Base::setup(const u_char* b, fxBool is2d)
 {
-    bitmap = b;
     is2D = is2d;
     tag = G3_1D;
-    bit = 0;					// force initial read
+    bitmap = b;
 }
 
 /*

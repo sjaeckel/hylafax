@@ -1,7 +1,7 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/faxmsg.c,v 1.19 1994/06/07 00:26:40 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/faxmsg.c,v 1.23 1995/04/08 21:44:52 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -48,6 +48,8 @@ fatal(char* fmt, ...)
     exit(-1);
 }
 
+extern	int cvtFacility(const char*, int*);
+
 void
 main(int argc, char** argv)
 {
@@ -62,8 +64,11 @@ main(int argc, char** argv)
     const char* opts;
     const char* usage;
     const char* cmdfmt;
+    char* cp;
+    int facility = LOG_DAEMON;
 
-    openlog(argv[0], LOG_PID, LOG_FAX);
+    (void) cvtFacility(LOG_FAX, &facility);
+    openlog(argv[0], LOG_PID|LOG_ODELAY, facility);
     appname = strrchr(argv[0], '/');
     if (appname)
 	appname++;
@@ -93,7 +98,7 @@ main(int argc, char** argv)
 	    spooldir = optarg;
 	    break;
 	case '?':
-	    fatal("Bad option `%c'; usage: %s %s [modem]", c, argv[0]);
+	    fatal("Bad option `%c'; usage: %s %s [modem]", c, argv[0], usage);
 	    /*NOTREACHED*/
 	}
     if (optind == argc-1) {
@@ -104,6 +109,8 @@ main(int argc, char** argv)
 		sizeof (fifoname) - sizeof (FAX_FIFO), argv[optind]);
     } else
 	strcpy(fifoname, FAX_FIFO);
+    for (cp = fifoname; cp = strchr(cp, '/'); *cp++ = '_')
+	;
     if (chdir(spooldir) < 0)
 	fatal("%s: chdir: %s", spooldir, strerror(errno));
     fifo = open(fifoname, O_WRONLY|O_NDELAY);

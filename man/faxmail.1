@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/faxmail.1,v 1.11 1994/06/24 02:17:34 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/faxmail.1,v 1.20 1995/04/08 21:35:45 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,48 +25,16 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Ps P\s-1OST\s+1S\s-1CRIPT\s+1
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
 .TH FAXMAIL 1 "May 12, 1993"
 .SH NAME
 faxmail \- convert a mail message to \*(Ps\(tm for sending as facsimile
 .SH SYNOPSIS
 .B faxmail
 [
-.B \-b
-.I bold-font
-] [
-.B \-i
-.I italic-font
-] [
-.B \-f
-.I font-name
-] [
-.B \-F
-.I font-file
-] [
-.B -p
-.IR pointsize
-] [
-.B \-n
-] [
-.B \-s
-.I pagesize-name
-] [
-.B \-w
-] [
-.B \-1234
-] [
-.B \-x
-.I x-margin
-] [
-.B \-y
-.I y-margin
-] [
-.B \-H
-.I page-height
-] [
-.B \-W
-.I page-width
+.I options
 ]
 .SH DESCRIPTION
 .I Faxmail
@@ -89,11 +58,11 @@ sam: "|${BIN}/faxmail | ${BIN}/sendfax \-d sam@5551212 \-n"
 formats a mail message according to the following rules.
 First, it strips all header information except the following:
 .nf
-.in +0.5i
+.RS
 .ta \w'Keywords    'u +\w'Keywords    'u +\w'Keywords    'u
 From	To	Cc	Subject
 Date	Summary	Keywords
-.in -0.5i
+.RE
 .fi
 .PP
 (The 
@@ -103,21 +72,14 @@ and
 header lines are useful when forwarding news articles.)
 Header lines that are kept have the 
 .I tag
-set in a ``Helvetica-Bold'' font and the
+set in a ``\fIbold font\fP'' and the
 .I value
-set in a ``Helvetica-Oblique'' font.
-The
-.B \-b
-and
-.B \-i
-options can be used to override the bold and italic
-fonts used to set the header lines.
+set in an ``\fIitalic font\fP''.
 .PP
 The body of the mail message is wrapped at line boundaries
 (unless the
 .B \-w
-option is specified) and set in a 
-.IR "body font" .
+option is specified) and set in a ``\fIbody font\fP''.
 By default,
 .I faxmail
 searches for a file containing a personalized body font
@@ -134,69 +96,163 @@ in the sender's home directory.
 This file should contain a \*(Ps
 description for a font whose name is the name of the account.
 For example, if the following line, is encountered,
-.PP
+.sp .5
 .ti +0.5i
 From: Sam Leffler <sam@sgi.com>
-.PP
+.sp .5
 .I faxmail
 will look for the file
 .I ~sam/.faxfont.ps
 on the current machine.
 If this file exists, it should contain a description for
 a font named ``sam''.
-.PP
-If no personalized body font is found, or if the
-.B \-n
-option is specified on the command line,
+If no personalized body font is used,
 .I faxmail
-will set the body of the mail message in a Courier-Bold font.
-The
-.B \-f
-option can be used to specify an alternate default
-\*(Ps font name to use.
-The
-.B \-F
-option can be used to specify the name of a file containing a
-\*(Ps font description.
-In the latter case, the font's \*(Ps name should be the
-same as the filename; e.g.
-.I "/tmp/MyFont.ps"
-must define a font named ``MyFont''.
+will set the body of the mail message in a constant width font.
 .PP
 By default,
 .I faxmail
 sets all text in 12 point type on an 8.5" by 11" page
 with .5" top and bottom margins and .35" left and right
 hand margins.
-The
-.B \-p
-option may be used to specify an alternate point size.
-The
-.B \-x
-and
-.B \-y
-options can be used to specify alternate margins (in inches).
-The
-.B \-s
-option can be used to specify a non-default page size by name
-or the
-.B \-W
-and
-.B \-H
-options can be used to specify specific page dimensions in inches.
+There are options to control the point size and page dimensions;
+see below.
 .PP
-.I Faxmail
+.I faxmail
 can also format multiple pages of text in an 
 .IR n -up
 format; where
 .I n
 is 1, 2, 3, or 4.
-That is, 1-up generates 1 ouput page per input page
-(default),
+That is, 1-up generates 1 ouput page per input page (default),
 2-up generates 1 output page for each 4 input pages,
 3-up generates 1 output page for each 9 input pages,
 and
 4-up generates 1 output page for reach 16 input pages.
+.SH OPTIONS
+.TP 10
+.BI \-b " font"
+Make
+.IR font ,
+a \*(Ps font name,
+the ``\fIbold font\fP'' used to set header lines.
+.TP 10
+.BI \-i " font"
+Make
+.IR font ,
+a \*(Ps font name,
+the ``\fIitalic font\fP'' used to set header lines.
+.TP 10
+.BI \-f " font"
+Make
+.IR font ,
+a \*(Ps font name,
+the ``\fIbody font\fP'' used to set the body of mail messages.
+.TP 10
+.BI \-F " file"
+Use the \*(Ps font description in
+.I file
+to set the body of the mail message.
+The font's \*(Ps name should be the
+same as the filename; e.g.
+.I "/tmp/MyFont.ps"
+must define a font named ``MyFont''.
+.TP 10
+.BI -p " size"
+Set all text using
+.I size
+for the font point size.
+.TP 10
+.B \-n
+Suppress the normal algorithm used to search for a personalized
+body font.
+.TP 10
+.BI \-s " size"
+Set the page size to use.
+Cover pages are normally generated using
+a system-default page size
+(usually letter-size pages, 8.5" by 11", for sites in North America).
+Alternate page sizes are specified symbolically using either
+the name or abbreviation of an entry in the
+.IR pagesizes (4F)
+database; e.g.
+.I a3
+(ISO A3),
+.I a4
+(ISO A4),
+.I a5
+(ISO A5),
+.I a6
+(ISO A6),
+.I b4
+(ISO B4),
+.I na-let
+(North American Letter),
+.I us-leg
+(American Legal),
+.I us-led
+(American Ledger),
+.I us-exe
+(American Executive),
+.I jp-let
+(Japanese Letter),
+and
+.I jp-leg
+(Japanese Legal).
+Comparisons are case-insensitive and any match of a
+substring of the full page-size name is sufficient; e.g. ``legal'' would
+match ``American Legal''.
+.TP 10
+.B \-w
+Do not wrap lines in the message body at word
+boundaries; instead image lines using no margins.
+(This usually causes the imaged page to look
+like the lines truncated.)
+.TP 10
+.B \-1
+(\c
+.BR \-2 ,
+.BR \-3 ,
+.BR \-4 )
+Format the message in an
+.IR n -up
+format.
+.B \-1
+generates one output page per input page (default).
+.B \-2
+generates one output page for each 4 input pages,
+.B \-3
+generates one output page for each 9 input pages.
+.B \-4
+generates one output page for each 16 input pages.
+.TP 10
+.BI \-x " margin"
+Format the message using left and right margins of width
+.I margin 
+(in inches).
+By default,
+.I faxmail
+uses .35" margins on the left and right hand side of the page.
+.TP 10
+.BI \-y " margin"
+Format the message using top and bottom margins of height
+.I margin 
+(in inches).
+By default,
+.I faxmail
+uses .5" margins on the top and bottom of the page.
+.TP 10
+.BI \-H " height"
+Use
+.I height
+as the height, in inches, of the output page.
+The default page height is taken from the default page size.
+.TP 10
+.BI \-W " width"
+Use
+.I width
+as the width, in inches, of the output page.
+The default page width is taken from the default page size.
 .SH NOTES
 The personalized body fonts are intended to be
 fonts that represent a person's handwriting.
@@ -218,5 +274,5 @@ ${LIBDATA}/pagesizes	page size database
 .br
 ${AFMDIR}	for font metrics
 .SH "SEE ALSO"
-.IR flexfax (1),
+.IR hylafax (1),
 .IR sendfax (1)

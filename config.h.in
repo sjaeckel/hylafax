@@ -1,0 +1,124 @@
+/*	$Header: /usr/people/sam/fax/./RCS/config.h.in,v 1.75 1995/04/08 21:12:01 sam Rel $ */
+/*
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and 
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+ * 
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * OF THIS SOFTWARE.
+ */
+
+/*
+ * Warning, this file was automatically created by the HylaFAX configure script
+ *
+ * VERSION:	@VERSION@
+ * DATE:	@DATE@
+ * TARGET:	@TARGET@
+ * CCOMPILER:	@CCOMPILER@
+ * CXXCOMPILER:	@CXXCOMPILER@
+ */
+#ifndef _CONFIG_
+#define	_CONFIG_
+#include "port.h"
+
+/*
+ * Spooling configuration definitions.
+ * The master spooling directory is broken up into several
+ * subdirectories to isolate information that should be
+ * protected (e.g. documents) and to minimize the number
+ * of files in a single directory (e.g. the send queue).
+ */
+#define	FAX_SPOOLDIR	"@SPOOL@"
+#define FAX_LIBEXEC	"@LIBEXEC@"	/* place for lib executables */
+#define	FAX_LIBDATA	"@LIBDATA@"	/* place for lib data files */
+
+#ifndef _PATH_GETTY
+#define	_PATH_GETTY	"@PATHGETTY@"	/* getty program for data call */
+#endif
+
+#define	FAX_USER	"@FAXUID@"	/* account name of the ``fax user'' */
+#define	FAX_SERVICE	"fax"		/* client-server service name */
+#define	FAX_PROTONAME	"tcp"		/* protocol used by client+server */
+#define	FAX_DEFPORT	4557		/* port to use if service is unknown */
+#define	FAX_DEFHOST	"localhost"	/* default host for service */
+
+#define	FAX_JOBSEQF	"sendq/seqf"	/* send job sequencing info */
+#define	FAX_GROUPSEQF	"sendq/grpseqf"	/* send job group sequencing info */
+#define	FAX_DOCSEQF	"sendq/docseqf"	/* document sequencing info */
+#define	FAX_CONFIG	"etc/config"	/* master configuration file */
+#define	FAX_XFERLOG	"etc/xferlog"	/* send/recv log file */
+#define	FAX_PERMFILE	"etc/hosts"	/* send permission file */
+#define	FAX_ETCDIR	"etc"		/* subdir for configuration files  */
+#define	FAX_RECVDIR	"recvq"		/* subdir for received facsimiles  */
+#define	FAX_SENDDIR	"sendq"		/* subdir for send description files */
+#define	FAX_DOCDIR	"docq"		/* subdir for documents to send */
+#define	FAX_TMPDIR	"tmp"		/* subdir for temp copies of docs */
+#define	FAX_INFODIR	"info"		/* subdir for remote machine info */
+#define	FAX_CTLDIR	"cinfo"		/* subdir for remote machine ctl info */
+#define	FAX_LOGDIR	"log"		/* subdir for log files */
+#define	FAX_STATUSDIR	"status"	/* subdir for server status files */
+#define FAX_CONFIGPREF	"config"	/* prefix for local config files */
+#define FAX_REMOTEPREF	"remote"	/* prefix for remote config files */
+#define FAX_QFILEPREF	"sendq/q"	/* prefix for queue file */
+#define	FAX_SHUTDOWNSUF	"shut"		/* suffix for shutdown status files */
+#define	FAX_INFOSUF	"info"		/* suffix for server info files */
+
+#define	FAX_FIFO	"FIFO"		/* FIFO file for talking to daemon */
+#define	MODEM_ANY	"any"		/* any modem acceptable identifier */
+#define	FAX_PROTOVERS	2		/* client-server protocol version */
+
+/* NB: all times are given in seconds */
+#define	FAX_REQBUSY	(5*60)		/* requeue interval on busy answer */
+#define	FAX_REQPROTO	(1*60)		/* requeue interval on protocol error */
+#define	FAX_REQUEUE	(15*60)		/* requeue interval on other */
+#define	FAX_RETRIES	3		/* number times to retry send */
+#define	FAX_REDIALS	12		/* number times to dial phone */
+#define	FAX_TIMEOUT	"now + 3 hours"	/* default job timeout (at syntax) */
+#define	FAX_DEFVRES	@DEFVRES@	/* default vertical resolution */
+					/* default is no email notification */
+#define	FAX_DEFNOTIFY	SendFaxClient::no_notice
+#define	FAX_DEFPRIORITY	127		/* default job priority */
+
+#ifndef FAX_TRUSTED
+/* set of trusted users for setting from address when sending */
+#define	FAX_TRUSTED	"daemon", "uucp", "fax"
+#endif
+
+#define	UUCP_LOCKDIR	"@UUCP_LOCKDIR@" /* directory for UUCP lock files */
+#define	UUCP_LOCKTYPE	"@UUCP_LOCKTYPE@"		/* UUCP lock file type */
+#define	UUCP_LOCKMODE	0444		/* UUCP lock file creation mode */
+#define	UUCP_LCKTIMEOUT	30		/* UUCP lock auto-expiration (secs) */
+#define	UUCP_PIDDIGITS	10		/* # digits to write to lock file */
+#define	DEV_PREFIX	"/dev/"		/* prefix to strip from special files */
+
+#define	LOG_FAX		"daemon"	/* logging identity */
+
+#define	HOST_FILLORDER	FILLORDER_@FILLORDER@	/* CPU bit order */
+
+#define	FAX_TYPERULES	"typerules"	/* file type and conversion rules */
+#define	FAX_DIALRULES	"dialrules"	/* client dialstring conversion rules */
+#define	FAX_PAGESIZES	"pagesizes"	/* page size database */
+#define	FAX_COVER	"faxcover.ps"	/* prototype cover sheet file */
+#define	FAX_NOTIFYCMD	"bin/notify"	/* command to do job notification */
+#define	FAX_TRANSCMD	"bin/transcript"/* command to return transcript */
+#define	FAX_FAXRCVDCMD	"bin/faxrcvd"	/* command to process a received fax */
+#define	FAX_POLLRCVDCMD	"bin/pollrcvd"	/* command to process a received fax */
+#define FAX_PS2FAXCMD	"bin/ps2fax"	/* command to convert postscript */
+#define	FAX_COVERCMD	"bin/mkcover"	/* command to make cont. cover page */
+#endif

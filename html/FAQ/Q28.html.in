@@ -1,0 +1,33 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: How do I get a line of text across the top of each outgoing page?
+</TITLE></HEAD><BODY>
+<H1>Q28: How do I get a line of text across the top of each outgoing page?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=How+do+I+get+a+line+of+text+across+the+top+of+each+outgoing+page%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>How do I get a line of text across the top of each outgoing page? </I>
+<P>
+On our old fax machine, stuff was printed out at the top of each outbound
+page.
+Does this show up with HylaFAX?
+<P>
+<DT>A.
+<DD>HylaFAX calls this line of text a <I>tag line</I>.
+Tag line configuration is described in the
+<A HREF="@HTMLPATH@/setup-advanced.html#TagLine">advanced server
+setup documentation</A>.
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

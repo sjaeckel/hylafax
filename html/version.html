@@ -1,0 +1,64 @@
+<HTML>
+<HEAD>
+<TITLE>
+How to tell which HylaFAX version you have
+</TITLE>
+</HEAD>
+
+<BODY>
+
+<BASEFONT SIZE=4>
+<B><FONT SIZE=+3>H</FONT>OW TO <FONT SIZE=+2>T</FONT>ELL <FONT SIZE=+2>W</FONT>HICH <FONT SIZE=+2>H</FONT>YLA<FONT SIZE=+1>FAX</FONT> <FONT SIZE=+2>V</FONT>ERSION <FONT SIZE=+2>Y</FONT>OU <FONT SIZE=+2>H</FONT>AVE</B>
+<BASEFONT SIZE=3>
+
+<HR SIZE=4>
+
+If you have need to refer to this specific software,
+you should identify it as:
+
+<PRE>
+    HylaFAX v&lt;<I>version</I>&gt;&lt;<I>n</I>&gt;
+</PRE>
+
+where &lt;<I>version</I>&gt; is found in the file <B>VERSION</B>
+and &lt;<I>n</I>&gt; is the number recorded in <B>dist/hylfax.alpha</B>.
+This string is also prominently displayed when you run the
+configure script to setup the software for compilation and each
+time the faxq scheduler process is started (look in the file where syslog
+messages are recorded).
+
+<P>
+If you have a binary distribution for a Silicon Graphics machine,
+&lt;<I>version</I>&gt; and &lt;<I>n</I>&gt;
+are displayed in <TT>"versions -n hylafax.sw"</TT>;
+for example:
+
+<PRE>
+I = Installed, R = Removed
+
+   Name                 Version     Description
+
+I  hylafax              1006004075  HylaFAX Facsimile Software, Version 3.0beta
+I  hylafax.sw           1006004075  HylaFAX Software
+I  hylafax.sw.client    1006004075  HylaFAX Client Software
+I  hylafax.sw.server    1006004075  HylaFAX Server Software
+</PRE>
+
+Here
+&lt;<I>version</I>&gt; = 3.0beta and
+&lt;<I>n</I>&gt; = 075 (the right three digits in the Version
+column), so this is HylaFAX v3.0beta075.
+<P>
+
+<A HREF="toc.html"><IMG SRC="icons/back.gif">
+HylaFAX table of contents</A>.<BR>
+
+<HR>
+
+<ADDRESS>
+<A HREF="sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+Last updated $Date: 1995/02/20 23:22:22 $.
+</ADDRESS>
+
+</BODY>
+</HTML>

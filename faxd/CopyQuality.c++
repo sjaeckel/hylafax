@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/CopyQuality.c++,v 1.9 1994/07/03 01:05:45 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/CopyQuality.c++,v 1.16 1995/04/08 21:29:56 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -27,6 +28,7 @@
  * Page Data Receive and Copy Quality Support for Modem Drivers.
  */
 #include "FaxModem.h"
+#include "FaxTrace.h"
 #include "ModemConfig.h"
 #include "StackBuffer.h"
 #include "FaxServer.h"
@@ -71,14 +73,14 @@ FaxModem::recvPageDLEData(TIFF* tif, fxBool checkQuality,
 	 */
 	u_int rowpixels = params.pageWidth();
 	u_int rowbytes = howmany(rowpixels, 8);
-	u_char scanlinebuf[howmany(2432,8)];	// current decoded scanline
-	u_char reflinebuf[howmany(2432,8)];	// for refline
+	u_char scanlinebuf[1+howmany(2432,8)];	// current decoded scanline
+	u_char reflinebuf[1+howmany(2432,8)];	// for refline
 	fxStackBuffer curGood;			// raw data for last good row
 	fxStackBuffer* recvGood = &curGood;
 
-	setRefLine(reflinebuf);
-	memset(reflinebuf, 0, rowbytes);
-	u_char* scanline = scanlinebuf;
+	setRefLine(reflinebuf+1);
+	::memset(reflinebuf, 0, rowbytes+1);
+	u_char* scanline = scanlinebuf+1;
 	// XXX initialize recvGood to all white
 	lastRowBad = FALSE;			// no previous row
 	cblc = 0;				// current bad line run
@@ -93,7 +95,7 @@ FaxModem::recvPageDLEData(TIFF* tif, fxBool checkQuality,
 		 * later for deciding whether or not the page quality
 		 * is acceptable.
 		 */
-		memset(scanline, 0, rowbytes);		// decoding only sets 1s
+		::memset(scanline, 0, rowbytes);	// decoding only sets 1s
 		if (decodeRow(scanline, rowpixels)) {
 		    recvRow(tif, *getRecvBuf(), buf);	// record good row
 		    { u_char* t = scanline;
@@ -249,7 +251,7 @@ FaxModem::recvRow(TIFF* tif, fxStackBuffer& row, u_char* buf)
 	while (n-- > 0)
 	    buf[recvCC++] = bitrev[*cp++];
     } else {
-	memcpy(&buf[recvCC], (char*) row, row.getLength());
+	::memcpy(&buf[recvCC], (char*) row, row.getLength());
 	recvCC += row.getLength();
     }
     row.reset();
@@ -267,18 +269,14 @@ u_long FaxModem::getRecvConsecutiveBadLineCount() const
  * Trace a protocol-receive related activity.
  */
 void
-FaxModem::recvTrace(const char* va_alist ...)
-#define	fmt va_alist
+FaxModem::recvTrace(const char* fmt ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    char buf[1024];
-    strcpy(buf, "RECV: ");
-    strcat(buf, fmt);
-    server.vtraceStatus(FAXTRACE_PROTOCOL, buf, ap);
+    static const fxStr recv("RECV: ");
+    server.vtraceStatus(FAXTRACE_PROTOCOL, recv | fmt, ap);
     va_end(ap);
 }
-#undef fmt
 
 /*
  * Note an invalid G3 code word.
@@ -321,15 +319,11 @@ FaxModem::badDecodingState(const char* type, int x)
  * Trace a copy quality-reated activity.
  */
 void
-FaxModem::copyQualityTrace(const char* va_alist ...)
-#define	fmt va_alist
+FaxModem::copyQualityTrace(const char* fmt ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    char buf[1024];
-    strcpy(buf, "RECV/CQ: ");
-    strcat(buf, fmt);
-    server.vtraceStatus(FAXTRACE_COPYQUALITY, buf, ap);
+    static const fxStr cq("RECV/CQ: ");
+    server.vtraceStatus(FAXTRACE_COPYQUALITY, cq | fmt, ap);
     va_end(ap);
 }
-#undef fmt

@@ -3,8 +3,8 @@
 
 %%Notice: Copyright (c) 1989 Adobe Systems Incorporated.  All rights reserved.
 
-% $Revision: 1.2 $
-% $Date: 1991/05/23 12:50:28 $
+% $Revision: 1.3 $
+% $Date: 1994/11/24 18:02:10 $
 
 %
 % This file makes a number of definitions that are technically system specific
@@ -53,6 +53,14 @@ userdict /legal known not {
 
 userdict /letter known not {
   userdict /letter {} put
+} if
+
+userdict /a4 known not {
+  userdict /a4 {} put
+} if
+
+userdict /b4 known not {
+  userdict /b4 {} put
 } if
 
 statusdict /pagecount known not {

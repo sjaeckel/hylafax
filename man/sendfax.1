@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/sendfax.1,v 1.25 1994/06/24 02:32:04 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/sendfax.1,v 1.38 1995/04/08 21:36:33 sam Rel $
 .\"
-.\"  FlexFAX Facsimile Software
+.\"  HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,64 +25,21 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.ds Ps P\s-1OST\s+1S\s-1CRIPT\s+1
-.TH SENDFAX 1 "June 14, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
+.TH SENDFAX 1 "December 22, 1994"
 .SH NAME
 sendfax \- submit a facsimile job for transmission
 .SH SYNOPSIS
 .B sendfax
 [
-.B \-a
-.I transmit-time
-] [
-.B \-c
-.I comments
-] [
-.B \-r
-.I regarding
-] [
-.B \-x
-.I to-company
-] [
-.B \-y
-.I to-location
-] [
-.B \-d
-.I destination
-] [
-.B \-f
-.I from
-] [
-.B \-h
-.IR host [ :modem ]
-] [
-.B \-i
-.I identifier
-] [
-.B \-k
-.I kill-time
-] [
-.B \-lm
-] [
-.B \-n
-] [
-.B \-p
-] [
-.B \-s
-.I pagesize-name
-] [
-.B \-t
-.I tries
-] [
-.B \-v
-] [
-.B \-DR
+.I options
 ] [
 .IR files ...
 ]
 .SH DESCRIPTION
-.I Sendfax
+.I sendfax
 submits one or more facsimile transmission requests
 to a \*(Fx facsimile server.
 Requests are normally processed immediately, although
@@ -93,19 +51,27 @@ For each job that is queued,
 .I sendfax
 prints a
 .I "job identifier"
+and a
+.I "job group identifier"
 on the standard output.
-This number can be supplied to the
+A job identifier is the token by which jobs are
+identified within \*(Fx; job group identifiers are
+used to reference a set of jobs that have been
+submitted at the same time.
+Job and job group identifiers can be supplied to the
 .IR faxrm (1)
-command to remove the job or to the
+command to remove the jobs or to the
 .IR faxalter (1)
-command to alter certain of its parameters.
+command to alter job parameters.
 .PP
-Facsimile documents are made from the concatenation
-of one or more files specified on the command line.
-If no files are supplied,
+Facsimile are made from the concatenation
+of a cover page (see below)
+and one or more files specified on the command line.
+If no files are supplied on the command line,
 .I sendfax
-reads data from the standard input unless polling is requested (see below).
-.I Sendfax
+will read data from the standard input unless polling is requested.
+.PP
+.I sendfax
 passes \*(Ps\(tm and
 .SM TIFF
 Class F documents directly through to the fax server for transmission,
@@ -128,63 +94,36 @@ Note that since
 Class F documents are processed directly it is simple to forward
 a received facsimile.
 .PP
-By default,
+By default
 .I sendfax
-will generate a cover page for each
-facsimile that is to be transmitted.
+will generate a cover page for each facsimile that is to be transmitted.
 This cover page is created by the ancillary
 .IR faxcover (1)
 program using information deduced by
 .I sendfax
-and by information supplied on the command line:
-the
-.B \-x
-option is used to specify the receiver's company,
-the
-.B \-y
-option is used to specify the receiver's geographical location,
-the
-.B \-c
-option is used to specify a 
-.I comments
-field, the
-.B \-r
-option is used to specifiy a ``Re:'' subject, and,
-if a destination is specified as
-.IR user@fax-number ,
-the
-.I user
-string will be passed to
-.I faxcover
-as the identity of the recipient.
-Note that the above options must
-.I precede
-the
-.B \-d
-option on the command line.
-Note also, that multi-word names must be enclosed in quote marks;
-for example,
-``Sam Leff\&ler@+1.415.555.1212''.
-See
-.I faxcover
-for more information about how cover pages are created.
-If no cover page is desired, for example because
-it is already included in the document, the
+and by information supplied on the command line.
+Automatic cover page generation may be suppressed with the
 .B \-n
-option should be specified.
+option.
 .PP
 In addition to sending documents,
 .I sendfax
-can be used to effect polling of a remote facsimile machine.
+can be used to poll a remote facsimile machine to retrieve
+waiting documents.
 If the
 .B \-p
-option is specified, a polling request will be submitted.
+option is specified, a polling request will be submitted
+to each destination.
 If a poll request is made in conjunction with the transmission
 of documents, the poll request will take place after the documents
 are transmitted.
 Documents retrieved by polling are returned to the requestor
 by electronic mail and may be viewed with a suitable viewer program.
 .PP
+One or more destinations may be specified on the command line
+using the
+.B \-d
+option.
 A destination is the dialing string to use to contact
 the remote fax machine.
 Phone numbers may include non-numeric characters for
@@ -196,13 +135,13 @@ not be included if an unambigous number is specified.
 Examples of unambiguous phone numbers are:
 .nf
 .sp .5
-.in +0.5i
+.RS
 .ta \w'+31.77.594.313      'u
 \+31.77.594.131	\fIto call the Netherlands\fP
 +14159657824	\fIto call California\fP
 9657824	\fIto make a local call\fP
 1-215-356-1666	\fIto call Pennsylvania from within the US\fP
-.in -0.5i
+.RE
 .sp .5
 .fi
 Non-numeric strings, such as ``*70'' (to defeat
@@ -214,138 +153,274 @@ rules configured for use on the server; c.f.
 and
 .IR dialrules (4F).
 .PP
-By default, a facsimile is sent at low
-resolution (98 lines/inch).
-Medium resolution (196 lines/inch), often
-called
-.IR "fine mode" ,
-can be requested with the
-.B \-m
-option.
-Low resolution can also be explicitly requested with the
+A destination may also be specified as
+.IR user@fax-number .
+In this case the
+.I user
+string will be passed to
+.I faxcover
+as the identity of the recipient.
+Note that multi-word names must be enclosed in quote marks;
+for example,
+``Sam Leff\&ler@+1.415.555.1212''.
+.SH OPTIONS
+.TP 12
+.BI \-a " time"
+Schedule transmission at the indicated
+.IR time .
+Times are specified using the syntax of the
+.IR at (1)
+command; e.g. ``now + 30 minutes'' to schedule transmission
+30 minutes in the future.
+By default,
+.I sendfax
+schedules facsimile for ``now''.
+.TP 12
+.BI \-c " comments"
+Pass
+.I comments
+to the
+.IR faxcover (1)
+program for inclusion in the comments field of any generated
+cover page.
+.TP 12
+.B \-D
+Enable notification by electronic mail when the
+facsimile has been delivered.
+By default \*(Fx will notify the submitter only if there is
+a problem with a job.
+.TP 12
+.BI \-d " destination"
+Create a job to transmit the supplied documents to
+a facsimile machine at the indicated
+.IR destination .
+If the
+.I destination
+is of the form ``\fIuser\fP@\fIphone-number\fP'' then any
+cover page will show \fIuser\fP as the intended receipient.
+.TP 12
+.BI \-f " from"
+Use
+.I from
+as the identity of the facsimile sender.
+Otherwise the sender is the user that invoked
+.IR sendfax .
+The sender is an account name to which the \*(Fx software
+should direct notification messages.
+The
+.I from
+identity may be a fullblown ``From:'' line, e.g.
+e.g. ``Joe Blow <joe@foo.com>''
+and ``joe@foo.com (Joe Blow)'' are acceptable.
+If no host-part is specified in the
+.I from
+string the local hostname is used.
+This option is useful when
+.I sendfax
+is invoked on behalf of another user, such as in the implementation
+of an electronic mail to fax gateway.
+.TP 12
+.BI \-h " host\fR[\fP:modem\fR]\fP"
+Force the jobs to be processed on a specific
+.I host
+and, optionally, using a particular
+.IR modem .
+The
+.I host
+may be either a symbolic name or a network address.
+If no
+.B \-h
+option is supplied,
+.I sendfax
+uses the
+.SM FAXSERVER
+environment variable to identify the \*(Fx server to
+which the jobs should be directed.
+If no server is specified then
+.I sendfax
+attempts to contact a server on the local host.
+If no modem is specified, the job will be submitted to any
+available modem.
+An alternative syntax for the server specification, \fImodem\fP@\fIhost\fP,
+is also supported; e.g. ``ttym2@oxford.berkeley.edu''.
+.TP 12
+.BI \-i " identifier"
+Use the 
+.I identifier
+string in any notification messages instead of the usual job
+identifier number.
+This option is useful for applications that cross reference
+notification messages against job submissions.
+.TP 12
+.BI \-k " time"
+Kill the job if it does not complete in the indicated
+.IR time .
+As for the
+.B \-a
+option, the
+.I time
+is specifed using notation compatible with
+.IR at (1).
+Note that the
+.I time
+is relative to the time of the initial transmission attempt.
+The default kill time is ``now +1 day'' (one day from the time
+the job is first processed).
+To retry for an hour, ``now +1 hour'' could be used.
+.TP 12
 .B \-l
-option.
-.PP
-Facsimile are normally imaged in system-default page size
+Transmit the facsimile at a vertical resolution of
+98 lines/inch; otherwise known as \fIlow resolution\fP.
+.TP 12
+.B \-m
+Transmit the facsimile at a vertical resolution of
+196 lines/inch; otherwise known as \fImedium resolution\fP
+or \fIfine mode\fP.
+.TP 12
+.B \-n
+Suppress the automatic generation of a cover page for each facsimile job.
+Note that polling requests do not receive a cover page unless they
+are combined with the transmission of one or more files.
+.TP
+.B \-N
+Do not notify the sender by electronic mail when the
+facsimile has been delivered or requeued.
+.TP 12
+.B \-p
+Poll each destination for any available documents.
+If a poll request is made together with document transmission, the
+poll operation is done after the documents are transmitted.
+Documents received by polling are returned to the sender by
+electronic mail.
+.TP 12
+.BI \-P " priority"
+Assign the specified scheduling
+.I priority
+for each job.
+A priority is an integer value in the range [0-255].
+Lower values result in higher priority processing.
+By default, each job is assigned 127 for an initial scheduling priority.
+A job's priority is raised (numerically lowered) for each
+failed attempt to transmit so that retransmit attempts
+are done ahead of newly submitted jobs.
+The
+.I priority
+may also be specified as one of the following symbolic names:
+.I default
+or 
+.I normal
+(127),
+.I bulk
+or
+.I junk
+(207),
+.I high
+(63).
+.TP 12
+.B \-R
+Enable notification by electronic mail when the
+facsimile has been delivered and when it is requeued for retransmission.
+By default \*(Fx will notify the submitter only if there is
+a problem with a job.
+.TP 12
+.BI \-r " regarding"
+Pass 
+.I regarding
+to the
+.IR faxcover (1)
+program as the value of the ``Re:'' field of any generated cover page.
+.TP 12
+.BI \-s " size"
+Set the page size to use for the transmitted facsimile.
+Facsimile are normally imaged with a system-default page size
 (usually letter-size pages, 8.5" by 11", for sites in North America).
-Alternate page sizes can be specified with the
-.B \-s
-option.
-Well known page sizes include:
-ISO A3,
-ISO A4,
-ISO A5,
-ISO A6,
-ISO B4,
-North American Letter,
-American Legal,
-American Ledger,
-American Executive,
-Japanese Letter,
+Alternate page sizes are specified symbolically using either
+the name or abbreviation of an entry in the
+.IR pagesizes (4F)
+database; e.g.
+.I a3
+(ISO A3),
+.I a4
+(ISO A4),
+.I a5
+(ISO A5),
+.I a6
+(ISO A6),
+.I b4
+(ISO B4),
+.I na-let
+(North American Letter),
+.I us-leg
+(American Legal),
+.I us-led
+(American Ledger),
+.I us-exe
+(American Executive),
+.I jp-let
+(Japanese Letter),
 and
-Japanese Legal.
+.I jp-leg
+(Japanese Legal).
+Comparisons are case-insensitive and any match of a
+substring of the full page-size name is sufficient; e.g. ``legal'' would
+match ``American Legal''.
+.IP
 Note that it may not be permissible to image into the
-full page area; the guaranteed reproduceable area for a page is 
-typically smaller.
-Also, note that while arbitrary page sizes can be specified to
-.IR sendfax ,
-only a limited number of page dimensions are supported by the
+full page area; the guaranteed reproducible area for a page is 
+typically inset.
+Also, note that while arbitrary page sizes can be specified through
+the page size database,
+only a limited set of page dimensions are supported by the
 Group 3 facsimile protocol.
 Thus if an odd-size facsimile is submitted for transmission
 it may not be possible to determine if it can be sent
 until the fax server establishes communication
 with the remote facsimile machine.
-.PP
-By default,
-.I sendfax
-uses the
-.B FAXSERVER
-environment variable to identify the facsimile server to
-which the job should be directed.
-This can be overridden with a
-.B \-h
-option.
-The server specified with the 
-.B \-h
-option and by the environment variable is a host name or
-address and, optionally, a modem identifier (if a specific
-modem is to be used).
-To syntax for the latter is either \fIhost\fP:\fBmodem\fP
-or \fBmodem\fP@\fIhost\fP; e.g. ``ttym2@oxford.berkeley.edu''.
-If no modem is specified, the job will be submitted to any
-available modem.
-.PP
-If the first attempt to send a facsimile is
-unsuccessful, \*(Fx will periodically try to resend the facsimile.
-By default, \*(Fx
-will try to transmit the facsimile for one day from the time
-of the initial transmission.
-The
-.B \-k
-option can be used to specified an alternate time
-for killing the job.
-This time is specified using notation compatible with
-.IR at (1)
-and as a time relative to the time of the initial transmission
-attempt.
-Thus, for example, the default kill time is specified as
-``now +1 day'' (one day from the current time).
-To retry for an hour, ``now +1 hour'' could be used.
-The
-.B \-t
-option can also be used to specify a maximum number of times
-that the facsimile system should try to send the job.
-.PP
-If an error is encountered while processing a job, the
-facsimile server will send an electronic mail message to
-the account that submitted the job.
-If the
-.B \-D
-option is specified, \*(Fx
-will also notify the account by mail when the job is
-completed.
-In addition, if the
-.B \-R
-option is specified, notification will also be returned any
-time the job must be requeued for retransmission.
-Notification messages identify a job by its job identifier.
-An arbitary identification string can be specified instead
-with the
-.B \-i
-option.
-.PP
-If the
+.TP 12
+.BI \-t " tries"
+Make no more than
+.I tries
+attempts to send the facsimile.
+By default, \*(Fx will terminate a job if:
+3 consecutive attempts to send a particular page fail, or
+it appears the receiver is not a facsimile machine.
+Otherwise \*(Fx places no limit on the
+.I number
+of attempts to send a facsimile, instead terminating a job
+if it is not completed within a 
+.I "kill time"
+timeout interval.
+Note that a try
+is a call in which carrier is established and the facsimile
+protocol is commenced; this is contrasted with a call
+attempt that might have failed because the line was busy.
+.TP 12
+.BI \-x " company"
+Pass
+.I company
+to the
+.IR faxcover (1)
+program as the destination company name.
+.TP 12
+.BI \-y " location"
+Pass
+.I location
+to the
+.IR faxcover (1)
+program as the destination company's location.
+.TP 12
 .B \-v
-option is specified,
-.I sendfax
-will print information on the standard output
+Print information on the standard output
 about each conversion and cover sheet
 generation operation it does.
-If this option is specified twice, the protocol
-between
+If 
+.B \-v
+is specified twice, the protocol between
 .I sendfax
 and the
 .I faxd.recv
 server process that does the submission work on the
-remote machine will also be displayed.
-.PP
-In normal operation the sender's identity for
-submitted jobs is set according to the user that
-invoked
-.IR sendfax .
-In some instances, however, it is useful to
-override this procedure and explicitly specify the 
-sender's identity.
-The
-.B \-f
-option can be used to explicitly specify a sender's identity if 
-.I sendfax
-is invoked by a trusted user: by default root, daemon, and uucp.
-The information specified with the
-.B \-f
-option can be a full ``From:'' line;
-e.g. ``Joe Blow <joe@foo.com>''
-and ``joe@foo.com (Joe Blow)'' are acceptable.
+remote machine is also displayed.
 .SH DIAGNOSTICS
 The following messages are generated because of problems
 encountered on the local machine.
@@ -409,9 +484,10 @@ The facsimile server is missing the file
 This file must be present and contain a list of the
 hosts that are allowed to submit jobs.
 .PP
-.B "Your host does not have permission to use the fax server."
-The client's host is not permitted to submit jobs to this server.
-Only those hosts listed in the file
+.B "Service refused; you do not have permission to use the fax server from %s."
+The client is not permitted to submit jobs to this server from the
+specified host.
+Only those hosts and users listed in the file
 .B etc/hosts
 on the server machine are permitted to submit jobs.
 .SH FILES
@@ -425,13 +501,13 @@ ${BIN}/faxcover	for generating cover sheets
 .fi
 .SH "SEE ALSO"
 .IR at (1),
-.IR flexfax (1),
+.IR hylafax (1),
 .IR faxalter (1),
 .IR faxcover (1),
 .IR faxmail (1),
 .IR faxrm (1),
 .IR faxstat (1),
 .IR sgi2fax (1),
-.IR faxd (1M),
-.IR flexfax (4F),
+.IR faxq (1M),
+.IR hylafax (4F),
 .IR typerules (4F)

@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/faxanswer.1m,v 1.10 1994/06/24 01:52:11 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/faxanswer.1m,v 1.21 1995/04/08 21:35:39 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,53 +25,51 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.TH FAXANSWER 1M "June 14, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH FAXANSWER 1M "March 3, 1995"
 .SH NAME
-faxanswer \- tell facsimile server to answer the telephone
+faxanswer \- tell a \*(Fx server to answer the telephone
 .SH SYNOPSIS
-.B ${SPOOL}/bin/faxanswer
+.B ${SBIN}/faxanswer
 [
 .B \-q
 .I queue-dir
 ] [
 .B \-h
 .I how
-] [
-.I modem
 ]
+.I modem
 .SH DESCRIPTION
-.I Faxanswer
-sends a message to the facsimile server process servicing
+.I faxanswer
+sends a message to the \*(Fx
+.IR faxgetty (1M)
+process servicing
 .I modem
 telling it to answer the telephone.
 This is useful, for example, when a modem is used on a
 shared phone line and configured to not normally answer the phone.
 .PP
-If
+The specified
 .I modem
-is specified, it can either be the name (typically the
+can either be the name (typically the
 last component of the terminal port the
 modem is attached to), or the full name
 of the associated 
 .SM FIFO
 named pipe file, e.g. ``\s-1FIFO\s+1.ttym2''.
-If no modem is specified,
-.I faxanswer
-will send the request to the ``\s-1FIFO\s+1'' named pipe file;
-this is convenient for machines that have only one facsimile
-server running.
 .SH OPTIONS
-The
-.B \-q
-option can be used to specify a spooling area other than
+.TP 10
+.BI \-q " dir"
+Use a spooling area other than
 .IR ${SPOOL} .
-.PP
-The
+.TP 10
 .B \-h
-option can be used to specify exactly ``how'' the phone should
+Specify exactly ``how'' the phone should
 be answered.
-By default, the facsimile server is told to answer the phone and
-accept any kind of connect (voice, data, fax).
+By default, the server process is instructed
+to answer the phone and
+accept any kind of call (voice, data, fax).
 Discrimination of the type of call is dependent on a modem's
 .I "adaptive-answer"
 support.
@@ -84,9 +83,9 @@ or
 .IR voice .
 .SH FILES
 Consult
-.IR flexfax (4F)
+.IR hylafax (4F)
 for a complete discussion of the structure and
 content of the spooling area.
 .SH "SEE ALSO"
-.IR flexfax (4F),
-.IR faxd (1M)
+.IR hylafax (4F),
+.IR faxgetty (1M)

@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/faxquit.1m,v 1.10 1994/06/24 01:58:36 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/faxquit.1m,v 1.21 1995/04/08 21:35:47 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,11 +25,13 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.TH FAXQUIT 1M "June 14, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH FAXQUIT 1M "March 3, 1995"
 .SH NAME
-faxquit \- tell facsimile server to terminate
+faxquit \- tell a \*(Fx server to terminate
 .SH SYNOPSIS
-.B ${SPOOL}/bin/faxquit
+.B ${SBIN}/faxquit
 [
 .B \-q
 .I queue-dir
@@ -36,34 +39,38 @@ faxquit \- tell facsimile server to terminate
 .I modem
 ]
 .SH DESCRIPTION
-.I Faxquit
-sends a message to the facsimile server process servicing
-.I modem
+.I faxquit
+sends a message to a \*(Fx server process
 telling it to quit operation.
 .PP
 If
 .I modem
-is specified, it can either be the name (typically the
+is specified, the 
+.IR faxgetty (1M)
+process servicing the specified modem is notified.
+.I modem
+can either be the name (typically the
 last component of the terminal port the
 modem is attached to), or the full name
 of the associated 
 .SM FIFO
 named pipe file, e.g. ``\s-1FIFO\s+1.ttym2''.
+.PP
 If no modem is specified,
 .I faxquit
-will send the request to the ``\s-1FIFO\s+1'' named pipe file;
-this is convenient for machines that have only one facsimile
-server running.
+will send the request to the ``\s-1FIFO\s+1'' named pipe file
+causing the \*(Fx queue manager process to terminate.
 .SH OPTIONS
-The
-.B \-q
-option can be used to specify a spooling area other than
+.TP 10
+.BI \-q " dir"
+Use a spooling area other than
 .IR ${SPOOL} .
 .SH FILES
 Consult
-.IR flexfax (4F)
+.IR hylafax (4F)
 for a complete discussion of the structure and
 content of the spooling area.
 .SH "SEE ALSO"
-.IR flexfax (4F),
-.IR faxd (1M)
+.IR hylafax (4F),
+.IR faxq (1M),
+.IR faxgetty (1M)

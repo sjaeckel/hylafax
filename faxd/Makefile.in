@@ -1,0 +1,209 @@
+#! smake
+#	$Header: /usr/people/sam/fax/./faxd/RCS/Makefile.in,v 1.108 1995/04/08 21:30:51 sam Rel $
+#
+# @WARNING@
+#
+# HylaFAX Facsimile Software
+#
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics
+# 
+# Permission to use, copy, modify, distribute, and sell this software and 
+# its documentation for any purpose is hereby granted without fee, provided
+# that (i) the above copyright notices and this permission notice appear in
+# all copies of the software and related documentation, and (ii) the names of
+# Sam Leffler and Silicon Graphics may not be used in any advertising or
+# publicity relating to the software without the specific, prior written
+# permission of Sam Leffler and Silicon Graphics.
+# 
+# THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+# EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+# WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+# 
+# IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+# ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+# OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+# WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
+# LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+# OF THIS SOFTWARE.
+#
+
+#
+# VERSION:	@VERSION@
+# DATE:		@DATE@
+# TARGET:	@TARGET@
+# CCOMPILER:	@CCOMPILER@
+# CXXCOMPILER:	@CXXCOMPILER@
+#
+DEPTH=..
+@MAKEINCLUDE@ @MAKELQUOTE@${DEPTH}/defs@MAKERQUOTE@
+
+SRCDIR	= ${DEPTH}/${TOPSRCDIR}/faxd
+VPATH	= ../@SRCDIR@/faxd
+
+CFILES	= tif_compress.c
+C++FILES=\
+	ClassModem.c++ \
+	FaxModem.c++ \
+	Class0.c++ \
+	Class1.c++ \
+	Class1Poll.c++ \
+	Class1Recv.c++ \
+	Class1Send.c++ \
+	Class2.c++ \
+	Class20.c++ \
+	Class2Ersatz.c++ \
+	Class2Params.c++ \
+	Class2Poll.c++ \
+	Class2Recv.c++ \
+	Class2Send.c++ \
+	CopyQuality.c++ \
+	DestControl.c++ \
+	DestInfo.c++ \
+	FaxAcctInfo.c++ \
+	FaxConfig.c++ \
+	FaxFont.c++ \
+	FaxMachineInfo.c++ \
+	FaxMachineLog.c++ \
+	FaxPoll.c++ \
+	FaxRecv.c++ \
+	FaxRecvInfo.c++ \
+	FaxRequest.c++ \
+	FaxSend.c++ \
+	ModemServer.c++ \
+	FaxServer.c++ \
+	G3Base.c++ \
+	G3Decoder.c++ \
+	G3Encoder.c++ \
+	Getty.c++ \
+	Getty@GETTY@.c++ \
+	HDLCFrame.c++ \
+	Job.c++ \
+	Modem.c++ \
+	ModemConfig.c++ \
+	PCFFont.c++ \
+	QLink.c++ \
+	ServerConfig.c++ \
+	TagLine.c++ \
+	UUCPLock.c++ \
+	faxApp.c++ \
+	faxGettyApp.c++ \
+	faxQueueApp.c++ \
+	faxRequest.c++ \
+	faxSendApp.c++ \
+	tagtest.c++ \
+	tsitest.c++ \
+	pageSendApp.c++
+MODEM_OBJS=\
+	ClassModem.o \
+	FaxModem.o \
+	Class0.o \
+	Class1.o \
+	Class1Poll.o \
+	Class1Recv.o \
+	Class1Send.o \
+	Class2.o \
+	Class20.o \
+	Class2Ersatz.o \
+	Class2Poll.o \
+	Class2Recv.o \
+	Class2Send.o \
+	Class2Params.o \
+	CopyQuality.o \
+	G3Base.o \
+	G3Decoder.o \
+	G3Encoder.o \
+	HDLCFrame.o \
+	ModemConfig.o \
+	FaxFont.o \
+	PCFFont.o \
+	TagLine.o
+SERVER_OBJS=\
+	faxApp.o \
+	\
+	faxRequest.o \
+	FaxRequest.o \
+	\
+	FaxAcctInfo.o \
+	FaxConfig.o \
+	FaxMachineInfo.o \
+	FaxMachineLog.o \
+	FaxPoll.o \
+	FaxRecv.o \
+	FaxRecvInfo.o \
+	FaxSend.o \
+	ModemServer.o \
+	FaxServer.o \
+	UUCPLock.o \
+	ServerConfig.o
+FAXQOBJS=\
+	DestControl.o \
+	DestInfo.o \
+	Job.o \
+	Modem.o \
+	QLink.o \
+	\
+	faxQueueApp.o
+FAXSENDOBJS=\
+	faxSendApp.o
+FAXGETTYOBJS=\
+	Getty.o \
+	Getty@GETTY@.o \
+	\
+	faxGettyApp.o
+TARGETS=libfaxserver.${DSO} faxq faxsend faxgetty tsitest tagtest pagesend
+
+LLDLIBS=${LIBS} ${MACHDEPLIBS} -lm
+
+default all::
+	@${MAKE} incdepend
+	@${MAKE} targets
+
+targets: $(TARGETS)
+
+@MAKEINCLUDE@ @MAKELQUOTE@${COMMONRULES}@MAKERQUOTE@
+
+libfaxserver.a: ${SERVER_OBJS} ${MODEM_OBJS} tif_compress.o
+	${AR} ${AROPTS} libfaxserver.a $?
+	${RANLIB} libfaxserver.a
+
+@MAKEDSOINCLUDE@ @MAKELQUOTE@${SRCDIR}/Makefile.dso@MAKERQUOTE@
+
+ALPHA	= ${DEPTH}/${TOPSRCDIR}/dist/hylafax.alpha
+VERSION	= ${DEPTH}/${TOPSRCDIR}/VERSION
+
+LDIRT	= version.h
+
+version.h: ${VERSION} ${ALPHA}
+	VERSION=`cat ${VERSION}`; \
+	VERSION="$${VERSION}`${NAWK} '{print $$3}' ${ALPHA}`"; \
+	rm -f version.h; \
+	echo "#define VERSION \"HylaFAX (tm) Version $$VERSION\"">version.h
+faxQueueApp.o FaxRecv.o: version.h
+incdepend: version.h
+
+faxq:	${FAXQOBJS} libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ ${FAXQOBJS} libfaxserver.${DSO} ${LDFLAGS}
+faxsend: ${FAXSENDOBJS} libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ ${FAXSENDOBJS} libfaxserver.${DSO} ${LDFLAGS}
+faxgetty: ${FAXGETTYOBJS} libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ ${FAXGETTYOBJS} libfaxserver.${DSO} ${LDFLAGS}
+
+PAGESENDOBJS=\
+	pageSendApp.o
+pagesend:${PAGESENDOBJS} libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ ${PAGESENDOBJS} libfaxserver.${DSO} ${LDFLAGS}
+
+tagtest: tagtest.o libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ tagtest.o libfaxserver.${DSO} ${LDFLAGS}
+tsitest: tsitest.o libfaxserver.${DSO} ${LIBS}
+	${C++F} -o $@ tsitest.o libfaxserver.${DSO} ${LDFLAGS}
+
+PUTSERV=${INSTALL} -idb ${PRODUCT}.sw.server
+
+install: default
+	${PUTSERV} -F ${SBIN} -u ${FAXUSER} -m 4755 -O faxq
+	${PUTSERV} -F ${LIBEXEC} -u ${FAXUSER} -m 4755 -O faxgetty
+	${PUTSERV} -F ${LIBEXEC} -m 755 -O faxsend pagesend
+	${PUTSERV} -F ${SBIN} -m 755 -O tsitest tagtest 

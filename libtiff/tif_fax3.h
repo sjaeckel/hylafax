@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_fax3.h,v 1.10 92/10/21 08:50:18 sam Rel $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_fax3.h,v 1.14 1994/09/17 23:22:37 sam Exp $ */
 
 /*
- * Copyright (c) 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -42,35 +42,22 @@
 typedef struct {
 	short	data;			/* current i/o byte */
 	short	bit;			/* current i/o bit in byte */
-	short	white;			/* value of the color ``white'' */
-	u_long	rowbytes;		/* XXX maybe should be a long? */
-	u_long	rowpixels;		/* XXX maybe should be a long? */
+	uint32	rowbytes;		/* bytes in a decoded scanline */
+	uint32	rowpixels;		/* pixels in a scanline */
 	enum { 				/* decoding/encoding mode */
 	    G3_1D,			/* basic 1-d mode */
 	    G3_2D			/* optional 2-d mode */
 	} tag;
-#if defined(__STDC__) || defined(__EXTENDED__) || USE_CONST
 	const u_char *bitmap;		/* bit reversal table */
-#else
-	u_char	*bitmap;		/* bit reversal table */
-#endif
 	u_char	*refline;		/* reference line for 2d decoding */
 } Fax3BaseState;
 
 /* these routines are used by Group 4 (T.6) */
-#if USE_PROTOTYPES
-extern	int Fax3Decode2DRow(TIFF*, u_char*, int);
-extern	int Fax3Encode2DRow(TIFF*, u_char*, u_char*, int);
+extern	int Fax3Decode2DRow(TIFF*, u_char*, uint32);
+extern	int Fax3Encode2DRow(TIFF*, u_char*, u_char*, uint32);
 extern	void Fax3PutBits(TIFF*, u_int, u_int);
 extern	void Fax3PutEOL(TIFF*);
 extern	int TIFFInitCCITTFax3(TIFF*);
-#else
-extern	int Fax3Decode2DRow();
-extern	int Fax3Encode2DRow();
-extern	void Fax3PutBits();
-extern	void Fax3PutEOL();
-extern	int TIFFInitCCITTFax3();
-#endif
 
 #define	Fax3FlushBits(tif, sp) {			\
 	if ((tif)->tif_rawcc >= (tif)->tif_rawdatasize)	\

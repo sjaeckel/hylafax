@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/FaxDB.c++,v 1.16 1994/06/23 00:25:23 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/FaxDB.c++,v 1.20 1995/04/08 21:44:04 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -96,7 +97,7 @@ FaxDB::find(const fxStr& s, fxStr* name)
     for (FaxInfoDictIter iter(dict); iter.notDone(); iter++) {
 	fxStr t(iter.key());
 	t.lowercase();
-	if (pat.Find(t) != REG_NOMATCH) {
+	if (pat.Find(t)) {
 	    if (name)
 		*name = iter.key();
 	    return (iter.value());

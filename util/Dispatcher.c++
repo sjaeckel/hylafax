@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1987, 1988, 1989, 1990, 1991 Stanford University
  * Copyright (c) 1991 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -23,13 +24,14 @@
  */
 
 // Dispatcher provides an interface to the "select" system call.
+#include "port.h"
 
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #undef NULL
 #include <sys/param.h>
-#if defined(AIXV3) || defined(svr4)
+#if HAS_SYSSELECT
 #include <sys/select.h>
 #endif
 #include <sys/time.h>
@@ -206,12 +208,7 @@ inline timeval TimerQueue::earliestTime() const {
 
 timeval TimerQueue::currentTime() {
     timeval curTime;
-#if defined(svr4) && !defined(__GNUC__)
     gettimeofday(&curTime, 0);
-#else
-    struct timezone curZone;
-    gettimeofday(&curTime, &curZone);
-#endif
     return curTime;
 }
 
@@ -583,16 +580,6 @@ void Dispatcher::sigCLD(int)
 	Dispatcher::instance()._cqueue->setStatus(pid, status);
 }
 
-#ifndef fxSIGHANDLER
-#define	fxSIGHANDLER
-#endif
-#ifndef fxSIGVECHANDLER
-#define	fxSIGVECHANDLER
-#endif
-#ifndef fxSIGACTIONHANDLER
-#define	fxSIGACTIONHANDLER
-#endif
-
 #ifndef SA_INTERRUPT
 #define	SA_INTERRUPT	0
 #endif
@@ -644,14 +631,12 @@ int Dispatcher::waitFor(
         if (wmaskret.anySet()) {
 	    for (int i = 0; i < _nfds; i++)
 		if (wmaskret.isSet(i) && !_wmask->isSet(i)) {
-printf("select incorrectly returns bit %d set in write mask\n", i);
 		    wmaskret.clrBit(i);
 		}
         }
         if (emaskret.anySet()) {
 	    for (int i = 0; i < _nfds; i++)
 		if (emaskret.isSet(i) && !_emask->isSet(i)) {
-printf("select incorrectly returns bit %d set in exception mask\n", i);
 		    emaskret.clrBit(i);
 		}
         }

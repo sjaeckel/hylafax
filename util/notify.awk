@@ -1,10 +1,10 @@
 #! /bin/sh
-#	$Header: /usr/people/sam/fax/util/RCS/notify.awk,v 1.6 1994/06/17 00:54:48 sam Exp $
+#	$Header: /usr/people/sam/fax/./util/RCS/notify.awk,v 1.20 1995/04/08 21:44:56 sam Rel $
 #
-# FlexFAX Facsimile Software
+# HylaFAX Facsimile Software
 #
-# Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-# Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+# Copyright (c) 1990-1995 Sam Leffler
+# Copyright (c) 1991-1995 Silicon Graphics, Inc.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
 # its documentation for any purpose is hereby granted without fee, provided
@@ -32,45 +32,63 @@
 # overflowing the exec arg list on some systems like SCO.
 #
 
+func printItem(fmt, tag, value)
+{
+    printf "%14s: " fmt "\n", tag, value;
+}
+
 #
 # Construct a return-to-sender message.
 #
 func returnToSender()
 {
     printf "\n    ---- Unsent job status ----\n\n"
-    printf "%11s: %s\n", "Destination", number;
-    printf "%11s: %s\n", "Sender", sender;
-    printf "%11s: %s\n", "Mailaddr", mailaddr;
+    printItem("%s", "Destination", number);
+    printItem("%s", "Sender", sender);
+    printItem("%s", "Mailaddr", mailaddr);
     if (modem != "any")
-	printf "%11s: %s\n", "Modem", modem;
-    printf "%11s: %u (mm)\n", "PageWidth", pagewidth;
-    printf "%11s: %.0f (mm)\n", "PageLength", pagelength;
-    printf "%11s: %.0f (lpi)\n", "Resolution", resolution;
-    printf "%11s: %s\n", "Status", status;
-    printf "%11s: %u (consecutive failed calls to destination)\n",
-	"Dials", ndials;
-    printf "%11s: %u (attempts to send current page)\n",
-	"Attempts", ntries;
-    printf "%11s: %u (directory of next page to send)\n",
-	"Dirnum", dirnum;
-    if (nfiles > 0) {
-	printf "\n    ---- Unsent files submitted for transmission ----\n\n";
-	printf "This archive was created with %s, %s, and %s.\n",
-	    tar, compressor, encoder;
-	printf "The original files can be recovered by applying the following commands:\n";
-	printf "\n";
-	printf "    %s			# generates rts.%s.Z file\n", decoder, tar;
-	printf "    %s rts.%s.Z  | %s xvf -	# generates separate files\n",
-	    decompressor, tar, tar;
-	printf "\n";
-	printf "and the job can be resubmitted using the following command:\n";
-	printf "\n";
-	printf "    sendfax -d %s" poll notify resopt "%s\n", number, files;
-	printf "\n";
+	printItem("%s", "Modem", modem);
+    printItem("%s", "Submitted From", client);
+    if (jobType == "facsimile") {
+	printItem("%u (mm)", "Page Width", pagewidth);
+	printItem("%.0f (mm)", "Page Length", pagelength);
+	printItem("%.0f (lpi)", "Resolution", resolution);
+    }
+    printItem("%s", "Status", status);
+    printItem("%u (exchanges with remote device)", "Dialogs", tottries);
+    printItem("%u (consecutive failed calls to destination)", "Dials", ndials);
+    printItem("%u (total phone calls placed)", "Calls", totdials);
+    if (jobType == "facsimile") {
+	printItem("%u (attempts to send current page)", "Attempts", ntries);
+	printItem("%u (directory of next page to send)", "Dirnum", dirnum);
+	if (nfiles > 0) {
+	    printf "\n    ---- Unsent files submitted for transmission ----\n\n";
+	    printf "This archive was created with %s, %s, and %s.\n",
+		tar, compressor, encoder;
+	    printf "The original files can be recovered by applying the following commands:\n";
+	    printf "\n";
+	    printf "    %s			# generates rts.%s.Z file\n", decoder, tar;
+	    printf "    %s rts.%s.Z  | %s xvf -	# generates separate files\n",
+		decompressor, tar, tar;
+	    printf "\n";
+	    printf "and the job can be resubmitted using the following command:\n";
+	    printf "\n";
+	    printf "    sendfax -d %s" poll notify resopt "%s\n", number, files;
+	    printf "\n";
 
-	system("cd docq;" tar " cf - " files \
-			" | " compressor \
-			" | " encoder " rts." tar ".Z");
+	    system("cd docq;" tar " cf - " files \
+			    " | " compressor \
+			    " | " encoder " rts." tar ".Z");
+	}
+    } else if (jobType == "pager") {
+	printf "\n    ---- Unsent pages submitted for transmission ----\n\n";
+	for (i = 0; i < npins; i++)
+	    printf "%14s\n",  "PIN " pins[i];
+	if (nfiles != 0) {
+	    printf "\n    ---- Message text ----\n\n";
+	    while (getline <files)
+		print $0;
+	}    
     }
 }
 
@@ -92,16 +110,25 @@ func putHeaders(subject)
     print "To: " mailaddr;
     print "Subject: " subject;
     print "";
-    printf "Your facsimile job to " number;
+    printf "Your " jobType " job to " number;
 }
 
-BEGIN		{ nfiles = 0; }
+BEGIN		{ nfiles = 0;
+		  npins = 0;
+		  pagewidth = 0;
+		  pagelength = 0;
+		  resolution = 0;
+		  jobType = "facsimile";
+		  signalrate = "unknown";
+		  dataformat = "unknown";
+		}
 /^number/	{ number = $2; }
 /^external/	{ number = $2; }		# override unprocessed number
 /^sender/	{ sender = $2; }
 /^mailaddr/	{ mailaddr = $2; }
 /^jobtag/	{ jobtag = $2; }
-/^status/	{ status = $2;
+/^jobtype/	{ jobType = $2; }
+/^status/	{ status = $0; sub("status:", "", status);
 		  if (status ~ /\\$/) {
 		      sub("\\\\$", "", status);
 		      while (getline) {
@@ -122,40 +149,62 @@ BEGIN		{ nfiles = 0; }
 /^ndials/	{ ndials = $2; }
 /^pagewidth/	{ pagewidth = $2; }
 /^pagelength/	{ pagelength = $2; }
+/^signalrate/	{ signalrate = $2; }
+/^dataformat/	{ dataformat = $2; }
 /^modem/	{ modem = $2; }
+/^totdials/	{ totdials = $2; }
+/^tottries/	{ tottries = $2; }
+/^client/	{ client = $2; }
 /^notify/	{ if ($2 == "when done")
 		      notify = " -D";
 		  else if ($2 == "when requeued")
 		      notify = " -R";
 		}
-/^[!]*post/	{ split($2, parts, "/");
+/^[!]*post/	{ if (NF == 2)
+		      split($2, parts, "/");
+		  else
+		      split($3, parts, "/");
 		  if (!match(parts[2], "\.cover")) {	# skip cover pages
 		     files = files " " parts[2];
 		     nfiles++;
 		  }
 		}
-/^!tiff/	{ split($2, parts, "/"); files = files " " parts[2]; nfiles++; }
+/^!tiff/	{ if (NF == 2)
+		      split($2, parts, "/");
+		  else
+		      split($3, parts, "/");
+		  files = files " " parts[2]; nfiles++;
+		}
+/^!page/	{ pins[npins++] = $3; }
+/^data/		{ files = $3; nfiles++; }
 /^poll/		{ poll = " -p"; }
 END {
     if (jobtag == "") {
 	jobtag = FILENAME;
-	sub(".*/q", "Facsimile job ", jobtag);
+	sub(".*/q", jobType " job ", jobtag);
     }
     if (why == "done") {
 	putHeaders(jobtag " to " number " completed");
 	print " was completed successfully.";
 	print "";
-	printf "%11s: %u\n", "Pages", npages;
-	if (resolution == 196)
-	    printf "%11s: Fine\n", "Quality";
-	else
-	    printf "%11s: Normal\n", "Quality";
-	printf "%11s: %u (mm)\n", "PageWidth", pagewidth;
-	printf "%11s: %.0f (mm)\n", "PageLength", pagelength;
-	printf "%11s: %s\n", "SignalRate", "unknown";
-	printf "%11s: %s\n", "DataFormat", "unknown";
+	if (jobType == "facsimile") {
+	    printItem("%u", "Pages", npages);
+	    if (resolution == 196)
+		printItem("%s", "Quality", "Fine");
+	    else
+		printItem("%s", "Quality", "Normal");
+	    printItem("%u (mm)", "Page Width", pagewidth);
+	    printItem("%.0f (mm)", "Page Length", pagelength);
+	    printItem("%s", "Signal Rate", signalrate);
+	    printItem("%s", "Data Format", dataformat);
+	}
+	if (tottries != 1)
+	    printItem("%s (exchanges with remote device)", "Dialogs", tottries);
+	if (totdials != 1)
+	    printItem("%s (total phone calls placed)", "Calls", totdials);
 	if (modem != "any")
-	    printf "%11s: %s\n", "Modem", modem;
+	    printItem("%s", "Modem", modem);
+	printItem("%s", "Submitted From", client);
 	printf "\nTotal transmission time was " jobTime ".";
 	if (status != "")
 	    print "  Additional information:\n    " status;
@@ -165,6 +214,17 @@ END {
 	printStatus(status);
 	returnTranscript(pid, canon);
 	returnToSender();
+    } else if (why == "rejected") {
+	putHeaders(jobtag " to " number " failed");
+	printf " was rejected because:\n    ";
+	printStatus(status);
+	returnToSender();
+    } else if (why == "blocked") {
+	putHeaders(jobtag " to " number " blocked");
+	printf " is delayed in the scheduling queues because:\n    ";
+	printStatus(status);
+	print "";
+	print "The job will be processed as soon as possible."
     } else if (why == "requeued") {
 	putHeaders(jobtag " to " number " requeued");
 	printf " was not sent because:\n    ";
@@ -205,11 +265,6 @@ END {
 	    print "an unspecified problem occurred.";
 	print "";
 	printf "Total connect time was %s.\n", jobTime;
-    } else if (why == "file_rejected") {
-	putHeaders(jobtag " to " number " failed");
-	printf " was rejected because:\n    ";
-	printStatus(status);
-	returnToSender();
     } else {
 	putHeaders("Notice about " jobtag);
 	print " had something happen to it."

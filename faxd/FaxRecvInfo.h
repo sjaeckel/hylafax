@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxRecvInfo.h,v 1.12 1994/02/28 14:14:29 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxRecvInfo.h,v 1.17 1995/04/08 21:30:20 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -36,16 +37,17 @@ class FaxRecvInfo : public fxObj {
 public:
     fxStr	qfile;		// file containing data
     u_short	npages;		// number of total pages
-    u_short	pagewidth;	// page width (pixels)
     u_short	sigrate;	// signalling rate
-    float	pagelength;	// page length (mm)
-    float	resolution;	// resolution (dpi)
+    u_int	pagewidth;	// page width (pixels)
+    u_int	pagelength;	// page length (mm)
+    u_int	resolution;	// resolution (dpi)
     fxStr	protocol;	// communication protocol
     fxStr	sender;		// sender's TSI
     float	time;		// time on the phone
     fxStr	reason;		// reason for failure
 
     FaxRecvInfo();
+    FaxRecvInfo(const FaxRecvInfo& other);
     ~FaxRecvInfo();
 };
 fxDECLARE_ObjArray(FaxRecvInfoArray, FaxRecvInfo);

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/Dictionary.h,v 1.9 1994/05/16 22:00:09 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/Dictionary.h,v 1.12 1995/04/08 21:43:58 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -25,8 +26,8 @@
 #ifndef _Dictionary_
 #define	_Dictionary_
 
-// $Revision: 1.9 $
-// $Date: 1994/05/16 22:00:09 $
+// $Revision: 1.12 $
+// $Date: 1995/04/08 21:43:58 $
 #include "Types.h"
 #include "Array.h"
 #include "Str.h"

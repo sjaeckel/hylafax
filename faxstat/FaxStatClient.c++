@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxstat/RCS/FaxStatClient.c++,v 1.13 1994/06/06 21:35:57 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxstat/RCS/FaxStatClient.c++,v 1.17 1995/04/08 21:34:40 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -66,31 +67,27 @@ FaxStatClient::start(fxBool debug)
 }
 
 void
-FaxStatClient::printError(const char* va_alist ...)
-#define	fmt va_alist
+FaxStatClient::printError(const char* fmt ...)
 {
     va_list ap;
-    va_start(ap, va_alist);
-    vfprintf(stderr, fmt, ap);
+    va_start(ap, fmt);
+    ::vfprintf(stderr, fmt, ap);
     va_end(ap);
-    fputs("\n", stderr);
+    ::fputs("\n", stderr);
 }
-#undef fmt
 
 void
-FaxStatClient::printWarning(const char* va_alist ...)
-#define	fmt va_alist
+FaxStatClient::printWarning(const char* fmt ...)
 {
     va_list ap;
-    va_start(ap, va_alist);
-    fprintf(stderr, "Warning, ");
-    vfprintf(stderr, fmt, ap);
+    va_start(ap, fmt);
+    ::fprintf(stderr, "Warning, ");
+    ::vfprintf(stderr, fmt, ap);
     va_end(ap);
-    fputs("\n", stderr);
+    ::fputs("\n", stderr);
 }
-#undef fmt
 
-#define	isCmd(s)	(strcasecmp(s, cmd) == 0)
+#define	isCmd(s)	(::strcasecmp(s, cmd) == 0)
 
 void
 FaxStatClient::recvConf(const char* cmd, const char* tag)
@@ -108,7 +105,7 @@ FaxStatClient::recvConf(const char* cmd, const char* tag)
 	for (u_int i = 0; i < serverStatus.length(); i++) {
 	    FaxServerStatus& stat = serverStatus[i];
 	    if (stat.host == getHost() &&
-	      (strcmp(modem, MODEM_ANY) == 0 || stat.modem == modem)) {
+	      (modem == MODEM_ANY || modem == stat.modem)) {
 		stat.serverInfo(info);
 		break;
 	    }
@@ -129,7 +126,7 @@ FaxStatClient::recvConf(const char* cmd, const char* tag)
 	    goto bad;
 	}
     } else if (isCmd("error")) {
-	printf("%s\n", tag);
+	::printf("%s\n", tag);
     } else if (isCmd(".")) {
 bad:
 	handleEof(0, FALSE);

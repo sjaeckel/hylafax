@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/textfmt.1,v 1.8 1994/06/24 02:17:34 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/textfmt.1,v 1.17 1995/04/08 21:36:41 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1993, 1994 Sam Leffler
-.\" Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1993-1995 Sam Leffler
+.\" Copyright (c) 1993-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,48 +25,16 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Ps P\s-1OST\s+1S\s-1CRIPT\s+1
-.TH TEXTFMT 1 "May 12, 1993"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
+.TH TEXTFMT 1 "December 5, 1994"
 .SH NAME
 textfmt \- convert text to \*(Ps\(tm for facsimile transmission
 .SH SYNOPSIS
 .B ${LIBEXEC}/textfmt
 [
-.B \-12
-] [
-.B \-B
-] [
-.B \-c
-] [
-.B \-D
-] [
-.B \-f
-.I font
-] [
-.B \-G
-] [
-.B \-m
-.I columns
-] [
-.B \-o
-.I width
-] [
-.B \-p
-.I pointsize
-] [
-.B \-r
-] [
-.B \-R
-] [
-.B \-s
-.I pagesize-name
-] [
-.B \-U
-] [
-.B \-Ml=#,r=#,t=#,b=#
-] [
-.B \-V
-.I vertical-spacing
+.I options
 ] [
 .IR files ...
 ]
@@ -78,7 +47,6 @@ suitable for facsimile transmission.
 It is usually invoked as a filter program by the
 .IR sendfax (1)
 program.
-.PP
 Input files may be specified on the command line.
 If none are given, then
 .I textfmt
@@ -88,7 +56,7 @@ By default,
 .I textfmt
 will generate an output document that is formtted with a single
 vertical column of text, set in a 10 point fixed width font, and
-has a simple page header that consists of the file name, last
+with a simple page header that consists of the file name, last
 modification date, and the page number.
 Pages are generated according to the default page dimensions
 (see
@@ -104,57 +72,94 @@ program; other options are for features that are not provided by
 .IR enscript .
 .TP
 .B \-1
-set text in one column.
+Set text in one column.
 .TP
 .B \-2
-set text two columns.
+Set text two columns.
 .TP
 .B \-B
-suppress page headers.
+Suppress page headers.
 .TP
 .B \-c
-clip long text lines instead of wrapping them at page margins.
+Clip long text lines instead of wrapping them at page margins.
 .TP
 .B \-D
-do not use
+Do not use
 .SM "ISO 8859-1"
 encoding in the generated \*(Ps.
 .TP
-.B \-f
-use the specified font for setting text.
+.BI \-f " font"
+Set text using the \*(Ps font named
+.IR font .
 .TP
 .B \-G
-use a gaudy-style page header.
+Use a gaudy-style page header.
 .TP
-.B \-m
-set text in the specified number of columns.
+.BI \-m " cols"
+Set text in
+.I cols
+columns.
 .TP
-.B \-M
-set the page margins; the default margins are:
+.BI \-M "\fBl=\fP#,\fBr=\fP#,\fBt=\fP#,\fBb=\fP#"
+Set the page margins; the default margins are:
 left and right .25 inch, top .85 inch, bottom .5 inch.
 .TP
 .B \-o
-draw an outline around each column of text; the specified number 
+Draw an outline around each column of text; the specified number 
 defines the width of the line that is drawn.
 .TP
-.B \-p
-use the specified point size for setting text.
+.BI \-p " pts"
+Set text using fonts with
+.I pts
+point size.
 .TP
 .B \-r
-set pages rotated by 90 degrees (in ``Landscape mode'').
+Set pages rotated by 90 degrees (in ``Landscape mode'').
 .TP
 .B \-R
-set pages unrotated (in ``Portrait mode'').
+Set pages unrotated (in ``Portrait mode'').
 .TP
-.B \-s
-use the page dimensions associated with the the named page size.
+.BI \-s " size"
+Set the output size according to the named page size.
+Images are normally created with a system-default page size
+(usually letter-size pages, 8.5" by 11", for sites in North America).
+Alternate page sizes are specified symbolically using either
+the name or abbreviation of an entry in the
+.IR pagesizes (4F)
+database; e.g.
+.I a3
+(ISO A3),
+.I a4
+(ISO A4),
+.I a5
+(ISO A5),
+.I a6
+(ISO A6),
+.I b4
+(ISO B4),
+.I na-let
+(North American Letter),
+.I us-leg
+(American Legal),
+.I us-led
+(American Ledger),
+.I us-exe
+(American Executive),
+.I jp-let
+(Japanese Letter),
+and
+.I jp-leg
+(Japanese Legal).
+Comparisons are case-insensitive and any match of a
+substring of the full page-size name is sufficient; e.g. ``legal'' would
+match ``American Legal''.
 .TP
 .B \-U
-reverse collate pages; that is the last page will appear first
+Reverse collate pages; that is the last page will appear first
 in the resultant \*(Ps, then the next-to-last page, etc.
 .TP
-.B \-V
-set the vertical spacing; default is 1.2 x point size.
+.BI \-V " spacing"
+Set the line height; the default height is 1.2 x point size.
 .SH NOTES
 If
 .I textfmt
@@ -174,6 +179,6 @@ ${LIBDATA}/pagesizes	page size database
 ${AFMDIR}	font metric files
 .fi
 .SH "SEE ALSO"
-.IR flexfax (1),
+.IR hylafax (1),
 .IR sendfax (1),
 .IR pagesizes (4F)

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxstat/RCS/SendStatus.c++,v 1.12 1994/02/28 14:17:19 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxstat/RCS/SendStatus.c++,v 1.16 1995/04/08 21:34:45 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -32,6 +33,20 @@ FaxSendStatus::FaxSendStatus()
 {
    isLocked = FALSE;
    isSendAt = FALSE;
+}
+FaxSendStatus::FaxSendStatus(const FaxSendStatus& other)
+    : fxObj(other)
+    , jobname(other.jobname)
+    , sender(other.sender)
+    , number(other.number)
+    , dts(other.dts)
+    , tts(other.tts)
+    , status(other.status)
+    , host(other.host)
+    , modem(other.modem)
+{
+    isLocked = other.isLocked;
+    isSendAt = other.isSendAt;
 }
 FaxSendStatus::~FaxSendStatus() {}
 

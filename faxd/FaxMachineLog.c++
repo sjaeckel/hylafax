@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxMachineLog.c++,v 1.17 1994/02/28 14:15:10 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxMachineLog.c++,v 1.21 1995/04/08 21:30:10 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -24,16 +25,16 @@
  */
 #include <ctype.h>
 #include <osfcn.h>
-#include <syslog.h>
 #include <sys/time.h>
-#include <sys/stat.h>
-#include <string.h>
 #include <errno.h>
-#include <fcntl.h>
+
+#include "Sys.h"
 
 #include "config.h"
 #include "FaxMachineLog.h"
 #include "StackBuffer.h"
+
+extern void logError(const char* fmt ...);
 
 const fxStr FaxMachineLog::logDir(FAX_LOGDIR);
 
@@ -43,22 +44,22 @@ FaxMachineLog::FaxMachineLog(const fxStr& number, mode_t mode)
     for (int i = canon.length()-1; i >= 0; i--)
 	if (!isdigit(canon[i]))
 	    canon.remove(i,1);
-    mode_t omask = umask(022);
-    fd = open((char*) (FaxMachineLog::logDir | "/" | canon),
+    mode_t omask = ::umask(022);
+    fd = Sys::open(logDir | "/" | canon,
 	O_WRONLY|O_APPEND|O_CREAT, mode);
-    (void) umask(omask);
+    (void) ::umask(omask);
     if (fd != -1) {
-	pid = getpid();
+	pid = ::getpid();
 	log("SESSION BEGIN");
     } else
-	syslog(LOG_ERR, "Can not open machine log for \"%s\"", (char*) number);
+	logError("Can not open machine log for " | number);
 }
 
 FaxMachineLog::~FaxMachineLog()
 {
     if (fd != -1) {
 	log("SESSION END");
-	close(fd);
+	::close(fd);
     }
 }
 
@@ -81,9 +82,10 @@ FaxMachineLog::vlog(const char* fmt0, va_list ap)
     int oerrno = errno;			// save errno on entry
     char buf[16*1024];
     timeval tv;
-    (void) gettimeofday(&tv, 0);
-    strftime(buf, sizeof (buf), "%h %d %T", localtime((time_t*) &tv.tv_sec));
-    sprintf(buf+strlen(buf), ".%02u: [%5d]: ", tv.tv_usec / 10000, pid);
+    (void) ::gettimeofday(&tv, 0);
+    ::strftime(buf, sizeof (buf), "%h %d %T",
+	::localtime((time_t*) &tv.tv_sec));
+    ::sprintf(buf+strlen(buf), ".%02u: [%5d]: ", tv.tv_usec / 10000, pid);
     /*
      * Copy format string into a local buffer so
      * that we can substitute for %m, a la syslog.
@@ -96,12 +98,12 @@ FaxMachineLog::vlog(const char* fmt0, va_list ap)
 		fmt.put("%%"); fp++;
 		continue;
 	    case 'm':			// substitute errno string
-		fmt.put(strerror(oerrno));
+		fmt.put(::strerror(oerrno));
 		continue;
 	    }
 	fmt.put(fp[0]);
     }
     fmt.put('\n'); fmt.put('\0');
-    vsprintf(buf+strlen(buf), (char*) fmt, ap);
-    (void) write(fd, buf, strlen(buf));
+    ::vsprintf(buf+strlen(buf), (char*) fmt, ap);
+    (void) Sys::write(fd, buf, strlen(buf));
 }

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/DialRules.h,v 1.9 1994/02/28 14:23:45 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/DialRules.h,v 1.13 1995/04/08 21:43:55 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -25,7 +26,7 @@
 #ifndef _DialStringRules_
 #define	_DialStringRules_
 /*
- * FlexFAX Dialing String Processing Rules.
+ * HylaFAX Dialing String Processing Rules.
  *
  * This file describes how to process user-specified dialing strings
  * to create two items:

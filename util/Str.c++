@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/Str.c++,v 1.19 1994/06/29 21:21:20 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/Str.c++,v 1.24 1995/04/08 21:44:25 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -25,9 +26,11 @@
 #include "Str.h"
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #define NUMBUFSIZE 2048
 char fxStr::emptyString = '\0';
+fxStr fxStr::null;
 
 fxStr::fxStr(u_int l)
 {
@@ -130,6 +133,17 @@ fxStr::~fxStr()
 {
     assert(data);
     if (data != &emptyString) delete data;
+}
+
+fxStr
+fxStr::format(const char* fmt ...)
+{
+    char buf[4096];
+    va_list ap;
+    va_start(ap, fmt);
+    ::vsprintf(buf, fmt, ap);
+    va_end(ap);
+    return fxStr(buf);
 }
 
 fxStr fxStr::extract(u_int start, u_int chars) const
@@ -481,6 +495,34 @@ u_int fxStr::nextR(u_int posn, const char * c, u_int clen) const
     if (!clen) clen = strlen(c);
     while (counter--) {
 	if (quickFind(*buf,c,clen)) return (buf-data+1);
+	buf--;
+    }
+    return 0;
+}
+
+u_int fxStr::find(u_int posn, const char * c, u_int clen) const
+{
+    fxAssert(posn<slength, "Str::find: invalid index");
+    char * buf = data + posn;
+    u_int counter = slength-1-posn;
+    if (!clen) clen = strlen(c);
+    while (counter--) {
+	if (quickFind(*buf,c,clen) && strncmp(buf,c,clen) == 0)
+	    return (buf-data);
+	buf++;
+    }
+    return slength-1;
+}
+
+u_int fxStr::findR(u_int posn, const char * c, u_int clen) const
+{
+    fxAssert(posn<slength, "Str::findR: invalid index");
+    char * buf = data + posn - 1;
+    u_int counter = posn;
+    if (!clen) clen = strlen(c);
+    while (counter--) {
+	if (quickFind(*buf,c,clen) && strncmp(buf,c,clen) == 0)
+	    return (buf-data+1);
 	buf--;
     }
     return 0;

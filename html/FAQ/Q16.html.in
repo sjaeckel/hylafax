@@ -1,0 +1,186 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: How do I create a fax cover page template?
+</TITLE></HEAD><BODY>
+<H1>Q16: How do I create a fax cover page template?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=How+do+I+create+a+fax+cover+page+template%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>How do I create a fax cover page template?</I>
+<P>
+I'd like to create a new cover template page as I would prefer for our
+faxes to *not* go out with the Silicon Graphics logo. :)
+<P>
+Does anyone have experience doing this?  Can someone point me toward the
+proper instructions?  I've read the faxcover man page, which tells me
+how to use an alternative template, but I can't figure out how to create
+one.
+<P>
+<DT>A.
+<DD>Look on sgi.com in the directory
+<A HREF="file://sgi.com/sgi/fax/contrib/covers">~ftp/pub/sgi/fax/contrib/covers</A>.
+This contains (among other things) a compressed
+and tarred file called
+<A HREF="file://sgi.com/sgi/fax/contrib/covers/make_faxcover.tar.Z">make_faxcover.tar.Z</A>  It contains instructions as well
+as a script for converting a "tgif" eps file to a fax cover template.  It
+was put together by Thomas Erskine.
+<P>
+<DT>A.
+<DD>(From Randy Davis)
+  Here's how I did mine, and it works great.  But, please note, I do *not*
+know postscript, I just figured out a good deal of it by trial and error and
+playing with modifying postscript source files.
+<P>
+  Here's what you do:
+<OL>
+ <LI> create a postscript file that contains your customized cover sheet that
+    looks exactly as you like it, WITH sample text in each of the fields that
+    you want the package to replace with the real text in actual use.
+<P>
+      I used FrameMaker to make ours, complete with company logo, and had
+    FrameMaker output a postscript file.  I suppose you could even use troff
+    and use a troff-to-postscript converter if you like.  The key part is to
+    get a postscript file that looks as you like, and has sample text in
+    each of the fields to be filled in by the program, each sample text of
+    which is unique to each field so you can find each one buried in the
+    postscript later on.
+<LI>
+ Make a copy of this postscript file (just to be safe :-), and start
+    modifying the copy this way:
+<DL>
+<DT>a)
+<DD>Modify the prologue (the first part of the postscript file prior to the
+       actual pages) to add the following macros - I added them immediately
+       after the first block comments at the top of the file (comments are
+       denoted by a % at the beginning of the line).
+<LISTING>
+---------------------------------------------------------------------------
+1 setlinejoin
+/nullstring () def
+/IS {
+    dup where {
+        pop
+        load dup nullstring ne {S} {pop} ifelse
+    } {pop} ifelse
+} bind def
+/M  { moveto } bind def
+/S { show  } bind def
+---------------------------------------------------------------------------
+</LISTING>
+    You will have to see if the /M, /S, or /IS macros are redefined later on
+in
+  the prologue, and if they are, you may have to make some decisions and do
+  some work outside of the scope of this short instruction sheet.  As I
+recall,
+  the postscript file output by the version of FrameMaker *did* redefine one
+  of them, yet I could not find it used anywhere in the rest of the document,
+  so I just removed it with no ill effects.  In any event, it is a good idea
+  to have a postscript printer or working version of ghostscript handy so you
+  can check your work after each modification to make sure the file still
+  works (and backtrack if it breaks).
+<DT>b)
+<DD>Find your sample text strings in the postscript file (they will be
+       enclosed in paranthesis) and change them to use the IS macro and M
+       macros:
+<P>
+         This is the hard-to-explain part.  Let me preface it with a quick
+       intro into postscript text drawing.  Each text string is enclosed in
+       parenthesis, and either in front or after the text string on the same
+       line is a macro and a set of coordinates detailing where to "draw" the
+       text on the page.  In addition, some packages, like FrameMaker, will
+       sometimes break a string into two or more separate strings in the
+       postscript document, for no reason that I can find.  For instance, the
+       phrase "Now is the time for all good men to come to the..." might all
+       be on one line, not broken, in whatever utility you use to generate
+       the postscript, etc, but your output postscript file may "draw" it in
+       three sections, and even out of order, e.g.:
+<LISTING>
+(e for all good men to co) 120 523.33 T
+(Now is the tim) 72 523.33 T
+(me to the...) 173.5 523.33 T
+</LISTING>
+         But, note that you can combine this into one string by just using
+the
+       coordinates for the string that began the line (look for the smallest
+       "x" coordinate, which is the first of the two coordinates), e.g.:
+<LISTING>
+(Now is the time for all good men to come to the...) 72 523.33 T
+</LISTING>
+         And you should be unable to tell the difference on the output page.
+<P>
+         OK, so you need to find the sample text you put in to mark the
+       location of the fields.  This is best explained by example.  For
+       instance, in my template page straight from FrameMaker after I
+combined
+       any broken strings, I have the following lines (which happen to be in
+       order):
+<LISTING>
+(Please deliver to:) 72 523.33 T
+(Name:) 206.71 505.33 T
+(to-name) 270 505.33 T
+(Company:) 180.04 487.33 T
+(to-company) 270 487.33 T
+(Recipient\325s Extension:) 99.35 469.33 T
+(to-voice-number) 270 469.33 T
+(FAX Number:) 154.15 451.33 T
+(to-fax-number) 270 451.33 T
+</LISTING>
+  (In each of these cases, it turns out that FrameMaker put the text strings
+preceding the coordinates, ending the line with "T", which turns out to be a
+ macro which is defined in the prologue with a line or group of lines
+begining
+with "/T {" and which expects this line ordering.)
+<P>
+  If you will notice in my sample postscript exerpt above, you can identify
+the sample strings I put in to determine the exact coordinates of where I
+wanted the fields to be.  Those sample strings are "to-name" (on the third
+line), "to-company" (on the fifth line), etc...
+<P>
+  Now, what you want to do is to convert each sample text line to the
+format expected by the faxcover EPSI wrapper.  This involves changing, in
+my case, the format of:
+<LISTING>
+(text) <x-coord> <y-coord> T
+</LISTING>
+ to the new format of:
+<LISTING>
+<x-coord> <y-coord> M /<parameter name> IS
+</LISTING>
+  All you really need is the x/y coordinates and to know which parameter
+should go at these coordinates.  Note that you only have to change JUST the
+lines that you want the program to fill the text in for - you don't have to
+change any other text lines, and should probably leave them alone.  The
+<parameter name>s are defined on the faxcover man page.  In my case, the
+modified exerpt becomes:
+<LISTING>
+(Please deliver to:) 72 523.33 T
+(Name:) 206.71 505.33 T
+270 505.33 M /to IS
+(Company:) 180.04 487.33 T
+270 487.33 M /to-company IS
+(Recipient\325s Extension:) 99.35 469.33 T
+270 469.33 M /to-voice-number IS
+(FAX Number:) 154.15 451.33 T
+270 451.33 M /to-fax-number IS
+</LISTING>
+</DL>
+</OL>
+Thats basically all there is to it, or was to it for me.  Hope this helps -
+feel free to ask me more if I missed something.  Note that I only installed
+the package about four weeks ago, yet it all works fine, including the cover
+sheet. :-)
+
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

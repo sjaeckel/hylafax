@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxmail/RCS/faxmail.c++,v 1.31 1994/06/22 14:25:33 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxmail/RCS/faxmail.c++,v 1.37 1995/04/08 21:33:56 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -28,6 +29,7 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdarg.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -490,7 +492,7 @@ faxMailApp::formatMail(FILE* fd)
     }
     endLogicalPage(fd);
     if (row != 0 || col != 0)
-	fputs("end restore\n", fd);
+	fputs("showpage end restore\n", fd);
 }
 
 void
@@ -546,6 +548,8 @@ faxMailApp::showWrapItalic(FILE* fd, const char* cp)
 	italic.show(fd, cp, tp-cp);
 }
 
+float fxmin(float a, float b)	{ return (a < b ? a : b); }
+
 void
 faxMailApp::startLogicalPage(FILE* fd)
 {
@@ -560,12 +564,13 @@ faxMailApp::startLogicalPage(FILE* fd)
     if (pagefactor > 1) {
 	fprintf(fd, "%g inch %g inch translate\n",
 	    xMargin + col * pagewidth / (float) pagefactor,
-	    yMargin + (pagefactor - row - 1) * pageheight / (float) pagefactor);
-	fprintf(fd, "%g dup scale\n", 1./pagefactor);
-    } else
-	fprintf(fd, "%.2f inch %.2f inch translate\n", xMargin, yMargin);
-    if (pagefactor > 1) 
+	    yMargin + (pagefactor - row - 1) * pageheight / pagefactor);
+	float w = (pagewidth - (pagefactor-1)*xMargin) / pageWidth;
+	float h = (pageheight - (pagefactor-1)*yMargin) / pageHeight;
+	fprintf(fd, "%g dup scale\n", fxmin(w, h) / pagefactor);
 	fprintf(fd, "OL\n");
+    }
+    fprintf(fd, "%.2f inch %.2f inch translate\n", xMargin, yMargin);
     fprintf(fd, "H\n");			// top of page
     startNewPage = FALSE;
 }
@@ -574,13 +579,13 @@ void
 faxMailApp::endLogicalPage(FILE* fd)
 {
     flushOutput(fd);
-    fprintf(fd, "grestore showpage\n");
+    fprintf(fd, "grestore\n");
     if (++row == pagefactor) {
 	row = 0;
 	if (++col == pagefactor)
 	    col = 0;
 	if (row == 0 && col == 0)
-	    fputs("end restore\n", fd);
+	    fputs("showpage end restore\n", fd);
     }
     startNewPage = TRUE;
 }

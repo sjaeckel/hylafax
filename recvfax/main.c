@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/recvfax/RCS/main.c,v 1.49 1994/06/28 00:22:51 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./recvfax/RCS/main.c,v 1.66 1995/04/08 21:43:09 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,6 +32,8 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <errno.h>
 
 char*	SPOOLDIR = FAX_SPOOLDIR;
 
@@ -43,11 +46,14 @@ char	line[1024];		/* current input line */
 char*	tag;			/* keyword: tag */
 int	debug = 0;
 Job*	jobList = 0;
-int	seqnum = 0;
 int	version = 0;
 char	userID[1024];
 struct	tm now;			/* current time of day */
 int	privileged = 0;
+static struct sockaddr_in peeraddr;
+int	peeraddrlen;
+
+extern	int cvtFacility(const char*, int*);
 
 void
 done(int status, char* how)
@@ -61,12 +67,14 @@ done(int status, char* how)
 static void
 setUserID(const char* modemname, char* tag)
 {
+    (void) modemname;
     strncpy(userID, tag, sizeof (userID)-1);
 }
 
 static void
 setProtoVersion(const char* modemname, char* tag)
 {
+    (void) modemname;
     version = atoi(tag);
     if (version > FAX_PROTOVERS) {
 	protocolBotch(
@@ -79,6 +87,7 @@ setProtoVersion(const char* modemname, char* tag)
 static void
 ackPermission(const char* modemname, char* tag)
 {
+    (void) modemname; (void) tag;
     sendClient("permission", "%s", "granted");
     fflush(stdout);
 }
@@ -91,26 +100,39 @@ struct {
     int		check;		/* if true, checkPermission first */
     void	(*cmdFunc)(const char*, char*);
 } cmds[] = {
-    { "begin",		TRUE,	submitJob },
-    { "checkPerm",	TRUE,	ackPermission },
-    { "tiff",		TRUE,	getTIFFData },
-    { "postscript",	TRUE,	getPostScriptData },
-    { "data",		TRUE,	getDataOldWay },
-    { "poll",		TRUE,	newPollID },
-    { "userID",		FALSE,	setUserID },
-    { "version",	FALSE,	setProtoVersion },
-    { "serverStatus",	FALSE,	sendServerStatus },
-    { "serverInfo",	FALSE,	sendServerInfo },
-    { "allStatus",	FALSE,	sendAllStatus },
-    { "userStatus",	FALSE,	sendUserStatus },
-    { "jobStatus",	FALSE,	sendJobStatus },
-    { "recvStatus",	FALSE,	sendRecvStatus },
-    { "remove",		TRUE,	removeJob },
-    { "kill",		TRUE,	killJob },
-    { "alterTTS",	TRUE,	alterJobTTS },
-    { "alterKillTime",	TRUE,	alterJobKillTime },
-    { "alterMaxDials",	TRUE,	alterJobMaxDials },
-    { "alterNotify",	TRUE,	alterJobNotification },
+    { "begin",			TRUE,	submitJob },
+    { "checkPerm",		TRUE,	ackPermission },
+    { "tiff",			TRUE,	getTIFFData },
+    { "postscript",		TRUE,	getPostScriptData },
+    { "zpostscript",		TRUE,	getZPostScriptData },
+    { "opaque",			TRUE,	getOpaqueData },
+    { "zopaque",		TRUE,	getZOpaqueData },
+    { "data",			TRUE,	getDataOldWay },
+    { "poll",			TRUE,	newPollID },
+    { "userID",			FALSE,	setUserID },
+    { "version",		FALSE,	setProtoVersion },
+    { "serverStatus",		FALSE,	sendServerStatus },
+    { "serverInfo",		FALSE,	sendServerInfo },
+    { "allStatus",		FALSE,	sendAllStatus },
+    { "userStatus",		FALSE,	sendUserStatus },
+    { "jobStatus",		FALSE,	sendJobStatus },
+    { "recvStatus",		FALSE,	sendRecvStatus },
+    { "remove",			TRUE,	removeJob },
+    { "removeGroup",		TRUE,	removeJobGroup },
+    { "kill",			TRUE,	killJob },
+    { "killGroup",		TRUE,	killJobGroup },
+    { "alterTTS",		TRUE,	alterJobTTS },
+    { "alterGroupTTS",		TRUE,	alterJobGroupTTS },
+    { "alterKillTime",		TRUE,	alterJobKillTime },
+    { "alterGroupKillTime",	TRUE,	alterJobGroupKillTime },
+    { "alterMaxDials",		TRUE,	alterJobMaxDials },
+    { "alterGroupMaxDials",	TRUE,	alterJobGroupMaxDials },
+    { "alterNotify",		TRUE,	alterJobNotification },
+    { "alterGroupNotify",	TRUE,	alterJobGroupNotification },
+    { "alterModem",		TRUE,	alterJobModem },
+    { "alterGroupModem",	TRUE,	alterJobGroupModem },
+    { "alterPriority",		TRUE,	alterJobPriority },
+    { "alterGroupPriority",	TRUE,	alterJobGroupPriority },
 };
 #define	NCMDS	(sizeof (cmds) / sizeof (cmds[0]))
 
@@ -122,9 +144,11 @@ main(int argc, char** argv)
     struct sockaddr_in sin;
     int sinlen;
     int c;
+    int facility = LOG_DAEMON;
 
     now = *localtime(&t);
-    openlog(argv[0], LOG_PID, LOG_FAX);
+    (void) cvtFacility(LOG_FAX, &facility);
+    openlog(argv[0], LOG_PID, facility);
     umask(077);
     while ((c = getopt(argc, argv, "q:d")) != -1)
 	switch (c) {
@@ -159,16 +183,17 @@ main(int argc, char** argv)
 #endif
     sinlen = sizeof (sin);
     if (getsockname(0, (struct sockaddr*) &sin, &sinlen) == 0) {
-	privileged = (sin.sin_port == FAX_DEFPORT+1);
-	if (privileged) {
-	    sinlen = sizeof (sin);
-	    getpeername(0, (struct sockaddr*) &sin, &sinlen);
+	privileged = (sin.sin_port == htons(FAX_DEFPORT+1));
+	peeraddrlen = sizeof (peeraddr);
+	getpeername(0, (struct sockaddr*) &peeraddr, &peeraddrlen);
+	if (privileged)
 	    syslog(LOG_NOTICE,
 		"Connection to privileged fax service port from %s.",
-		inet_ntoa(sin.sin_addr));
-	}
-    } else
+		getClientIdentity());
+    } else {
 	syslog(LOG_WARNING, "getsockname: %m");
+	memset(&peeraddr, 0, sizeof (peeraddr));
+    }
     strcpy(modemname, MODEM_ANY);
     strcpy(userID, "");
     while (getCommandLine() && !isCmd(".")) {
@@ -210,6 +235,14 @@ main(int argc, char** argv)
     done(0, "END");
 }
 
+const char*
+getClientIdentity()
+{
+    struct hostent* hp =
+	gethostbyaddr(&peeraddr.sin_addr, peeraddrlen, peeraddr.sin_family);
+    return (hp ? hp->h_name : inet_ntoa(peeraddr.sin_addr));
+}
+
 int
 getCommandLine()
 {
@@ -239,24 +272,41 @@ getCommandLine()
     return (1);
 }
 
+int
+openFIFO(const char* fifoname)
+{
+    int fd;
+#ifdef FIFOSELECTBUG
+    /*
+     * We try multiple times to open the appropriate FIFO
+     * file because the system has a kernel bug that forces
+     * the server to close+reopen the FIFO file descriptors
+     * for each message received on the FIFO (yech!).
+     */
+    { int tries = 0;
+      do {
+	if (tries > 0)
+	    sleep(1);
+	fd = open(fifoname, O_WRONLY|O_NDELAY);
+      } while (fd == -1 && errno == ENXIO && ++tries < 5);
+    }
+#else
+    fd = open(fifoname, O_WRONLY|O_NDELAY);
+#endif
+    return (fd);
+}
+
 /*
  * Notify server of job parameter alteration.
  */
 int
-notifyServer(const char* modem, const char* va_alist, ...)
-#define	fmt va_alist
+notifyServer(const char* modem, const char* fmt, ...)
 {
-    char fifoname[1024];
     int fifo;
 
-    if (strcmp(modem, MODEM_ANY) == 0)
-	strcpy(fifoname, FAX_FIFO);
-    else
-	sprintf(fifoname, "%s.%.*s", FAX_FIFO,
-	    sizeof (fifoname) - (sizeof (FAX_FIFO)+2), modem);
     if (debug)
 	syslog(LOG_DEBUG, "notify server for \"%s\"", modem);
-    fifo = open(fifoname, O_WRONLY|O_NDELAY);
+    fifo = openFIFO(FAX_FIFO);
     if (fifo != -1) {
 	char buf[2048];
 	int len, ok;
@@ -279,10 +329,9 @@ notifyServer(const char* modem, const char* va_alist, ...)
 	close(fifo);
 	return (ok);
     } else if (debug)
-	syslog(LOG_INFO, "%s: Can not open for notification: %m", fifoname);
+	syslog(LOG_INFO, "%s: Can not open for notification: %m", FAX_FIFO);
     return (0);
 }
-#undef fmt
 
 extern int parseAtSyntax(const char*, const struct tm*, struct tm*, char* emsg);
 
@@ -315,30 +364,25 @@ vsendClient(char* tag, char* fmt, va_list ap)
 }
 
 void
-sendClient(char* tag, char* va_alist, ...)
-#define	fmt va_alist
+sendClient(char* tag, char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
     vsendClient(tag, fmt, ap);
     va_end(ap);
 }
-#undef fmt
 
 void
-sendError(char* va_alist, ...)
-#define	fmt va_alist
+sendError(char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
     vsendClient("error", fmt, ap);
     va_end(ap);
 }
-#undef fmt
 
 void
-sendAndLogError(char* va_alist, ...)
-#define	fmt va_alist
+sendAndLogError(char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -346,11 +390,9 @@ sendAndLogError(char* va_alist, ...)
     vsyslog(LOG_ERR, fmt, ap);
     va_end(ap);
 }
-#undef fmt
 
 void
-protocolBotch(char* va_alist, ...)
-#define	fmt va_alist
+protocolBotch(char* fmt, ...)
 {
     char buf[1024];
     va_list ap;
@@ -360,4 +402,3 @@ protocolBotch(char* va_alist, ...)
     vsyslog(LOG_ERR, buf, ap);
     va_end(ap);
 }
-#undef fmt

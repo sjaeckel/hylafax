@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/tagtest.c++,v 1.8 1994/07/02 19:40:12 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/tagtest.c++,v 1.13 1995/04/08 21:31:30 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -27,7 +28,7 @@
  *
  * Usage: tagtest [-f fontfile] [-m format] [-o output.tif] input.tif
  */
-#include <time.h>
+#include "Sys.h"
 
 #include "PCFFont.h"
 #include "G3Decoder.h"
@@ -36,6 +37,11 @@
 #include "FaxFont.h"
 #include "tiffio.h"
 #include "Class2Params.h"
+#if HAS_LOCALE
+extern "C" {
+#include <locale.h>
+}
+#endif
 
 u_int	tagLineSlop;
 FaxFont* tagLineFont;
@@ -72,10 +78,10 @@ setupTagLine()
     if (!tagLineFont->isReady() && tagLineFontFile != "")
 	(void) tagLineFont->read(tagLineFontFile);
 
-    time_t t = time(0);
-    tm* tm = localtime(&t);
+    time_t t = Sys::now();
+    tm* tm = ::localtime(&t);
     char line[1024];
-    strftime(line, sizeof (line), tagLineFmt, tm);
+    ::strftime(line, sizeof (line), tagLineFmt, tm);
     tagLine = line;
     u_int l = 0;
     while (l < tagLine.length()) {
@@ -277,6 +283,12 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
     return (dst);
 }
 
+void
+vlogError(const char* fmt, va_list ap)
+{
+    ::vfprintf(stderr, fmt, ap);
+}
+
 const char* appName;
 
 void
@@ -296,6 +308,12 @@ main(int argc, char* argv[])
     int c;
     const char* output = "t.tif";
 
+#ifdef LC_CTYPE
+    setlocale(LC_CTYPE, "");			// for <ctype.h> calls
+#endif
+#ifdef LC_TIME
+    setlocale(LC_TIME, "");			// for strftime calls
+#endif
     appName = argv[0];
     while ((c = getopt(argc, argv, "f:m:o:")) != -1)
 	switch (c) {

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxstat/RCS/ServerStatus.c++,v 1.7 1994/06/06 21:35:57 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxstat/RCS/ServerStatus.c++,v 1.11 1995/04/08 21:34:47 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -24,8 +25,16 @@
  */
 #include "ServerStatus.h"
 
-FaxServerStatus::FaxServerStatus() { }
-FaxServerStatus::~FaxServerStatus() { }
+FaxServerStatus::FaxServerStatus() {}
+FaxServerStatus::FaxServerStatus(const FaxServerStatus& other)
+    : fxObj(other)
+    , number(other.number)
+    , status(other.status)
+    , info(other.info)
+    , host(other.host)
+    , modem(other.modem)
+{}
+FaxServerStatus::~FaxServerStatus() {}
 
 int
 FaxServerStatus::compare(const FaxServerStatus* other) const

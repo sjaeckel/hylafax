@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/Class2Send.c++,v 1.82 1994/06/15 23:40:00 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/Class2Send.c++,v 1.96 1995/04/08 21:29:52 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,7 +32,7 @@
  */
 
 CallStatus
-Class2Modem::dial(const char* number, const Class2Params& dis, fxStr& emsg)
+Class2Modem::dialFax(const char* number, const Class2Params& dis, fxStr& emsg)
 {
     if (conf.class2DDISCmd != "") {
 	Class2Params ddis(dis);
@@ -42,28 +43,8 @@ Class2Modem::dial(const char* number, const Class2Params& dis, fxStr& emsg)
 	if (class2Cmd(conf.class2DDISCmd, ddis))
 	    params = ddis;
     }
-    return (FaxModem::dial(number, dis, emsg));
-}
-
-/*
- * Status messages to ignore when dialing.
- */
-static fxBool
-isNoise(const char* s)
-{
-    static const char* noiseMsgs[] = {
-	"CED",		// RC32ACL-based modems send this before +FCON
-	"DIALING",
-	"RRING",	// Telebit
-	"RINGING",	// ZyXEL
-	"+FHR:",	// Intel 144e
-	NULL
-    };
-
-    for (u_int i = 0; noiseMsgs[i] != NULL; i++)
-	if (strneq(s, noiseMsgs[i], strlen(noiseMsgs[i])))
-	    return (TRUE);
-    return (FALSE);
+    hadHangup = FALSE;
+    return (FaxModem::dialFax(number, dis, emsg));
 }
 
 /*
@@ -111,22 +92,14 @@ Class2Modem::dialResponse(fxStr& emsg)
  * Process the string of session-related information
  * sent to the caller on connecting to a fax machine.
  */
-fxBool
-Class2Modem::getPrologue(Class2Params& dis, u_int& nsf, fxStr& csi, fxBool& hasDoc)
+FaxSendStatus
+Class2Modem::getPrologue(Class2Params& dis, u_int& nsf, fxStr& csi, fxBool& hasDoc, fxStr& emsg)
 {
     fxBool gotParams = FALSE;
     hasDoc = FALSE;
     nsf = 0;
     for (;;) {
 	switch (atResponse(rbuf, conf.t1Timer)) {
-	case AT_TIMEOUT:
-	case AT_EMPTYLINE:
-	case AT_NOCARRIER:
-	case AT_NODIALTONE:
-	case AT_NOANSWER:
-	case AT_ERROR:
-	    processHangup("10");		// Unspecified Phase A error
-	    return (FALSE);
 	case AT_FPOLL:
 	    hasDoc = TRUE;
 	    protoTrace("REMOTE has document to POLL");
@@ -135,19 +108,27 @@ Class2Modem::getPrologue(Class2Params& dis, u_int& nsf, fxStr& csi, fxBool& hasD
 	    gotParams = parseClass2Capabilities(skipStatus(rbuf), dis);
 	    break;
 	case AT_FNSF:
-	    { const char* cp = skipStatus(rbuf);
-	      nsf = fromHex(cp, strlen(cp));
-	      protoTrace("REMOTE NSF \"%s\"", cp);
-	    }
+	    protoTrace("REMOTE NSF \"%s\"", skipStatus(rbuf));
 	    break;
 	case AT_FCSI:
 	    csi = stripQuotes(skipStatus(rbuf));
 	    recvCSI(csi);
 	    break;
-	case AT_FHNG:
-	    return (FALSE);
 	case AT_OK:
-	    return (gotParams);
+	    if (gotParams)
+		return (send_ok);
+	    /* fall thru... */
+	case AT_TIMEOUT:
+	case AT_EMPTYLINE:
+	case AT_NOCARRIER:
+	case AT_NODIALTONE:
+	case AT_NOANSWER:
+	case AT_ERROR:
+	    processHangup("20");		// Unspecified Phase B error
+	    /* fall thru... */
+	case AT_FHNG:
+	    emsg = hangupCause(hangupCode);
+	    return (send_retry);
 	}
     }
 }
@@ -172,13 +153,11 @@ Class2Modem::dataTransfer()
 	FlowControl oiFlow = getInputFlow();
 	if (flowControl == FLOW_XONXOFF)
 	    setXONXOFF(FLOW_NONE, getOutputFlow(), ACT_NOW);
-	status = vatFaxCmd(AT_NOTHING, "DT") &&
-	    waitFor(AT_CONNECT, conf.pageStartTimeout);
-	if (status) {
+	if (status = atCmd("AT+FDT", AT_CONNECT, conf.pageStartTimeout)) {
 	    protoTrace("SEND wait for XON");
 	    int c;
-	    startTimeout(conf.pageStartTimeout);
-	    while ((c = getModemChar()) != EOF) {
+	    startTimeout(10*1000);		// 5 seconds *should* be enough
+	    while ((c = getModemChar(0)) != EOF) {
 		modemTrace("--> [1:%c]", c);
 		if (c == DC1)
 		    break;
@@ -189,8 +168,7 @@ Class2Modem::dataTransfer()
 	if (flowControl == FLOW_XONXOFF)
 	    setXONXOFF(oiFlow, getOutputFlow(), ACT_NOW);
     } else {
-	status = vatFaxCmd(AT_NOTHING, "DT") &&
-	    waitFor(AT_CONNECT, conf.pageStartTimeout);
+	status = atCmd("AT+FDT", AT_CONNECT, conf.pageStartTimeout);
     }
     return (status);
 }
@@ -290,7 +268,7 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		}
 	    }
 	}
-    } while (transferOK && morePages);
+    } while (transferOK && morePages && !hadHangup);
     if (!transferOK) {
 	if (emsg == "") {
 	    if (hangupCode[0])
@@ -299,11 +277,37 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		emsg = "Communication failure during Phase B/C";
 	}
 	sendAbort();			// terminate session
+    } else if (hadHangup && morePages) {
+	/*
+	 * Modem hung up before the transfer completed (e.g. PPI
+	 * modems which get confused when they receive RTN and return
+	 * +FHNG:0).  Setup an error return so that the job will
+	 * be retried.
+	 */
+	transferOK = FALSE;
+	emsg = "Communication failure during Phase B/C (modem protocol botch)";
     }
-    return (transferOK ? send_done : send_retry);
+    return (transferOK ? send_ok : send_retry);
 failed:
     sendAbort();
     return (send_failed);
+}
+
+/*
+ * Send RTC to terminate a page.
+ */
+fxBool
+Class2Modem::sendRTC(fxBool is2D)
+{
+    static const u_char RTC1D[9] =
+	{ 0x00,0x10,0x01,0x00,0x10,0x01,0x00,0x10,0x01 };
+    static const u_char RTC2D[10] =
+	{ 0x00,0x18,0x00,0xC0,0x06,0x00,0x30,0x01,0x80,0x0C };
+    protoTrace("SEND %s RTC", is2D ? "2D" : "1D");
+    if (is2D)
+	return putModemDLEData(RTC2D, sizeof (RTC2D), rtcRev, getDataTimeout());
+    else
+	return putModemDLEData(RTC1D, sizeof (RTC1D), rtcRev, getDataTimeout());
 }
 
 /*
@@ -312,5 +316,6 @@ failed:
 void
 Class2Modem::sendAbort()
 {
-    (void) class2Cmd(abortCmd);
+    if (!hadHangup)
+	(void) atCmd(abortCmd);
 }

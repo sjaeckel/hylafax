@@ -1,0 +1,51 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: Why have fax user?
+</TITLE></HEAD><BODY>
+<H1>Q35: Why have fax user?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=Why+have+fax+user%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>Why have fax user?</I>
+<P>
+I've been trying to figure out why there is a need for a "fax" user. I'm 
+running AIX 3.2.5 (and I checked this under Solaris as well). It seems 
+that if the fax user has the same userid as uucp, then for any sort of 
+lookup, uucp will be returned when one might want fax's userid.
+<P>
+   For example, I have a file. I do a 'chmod fax filename' and then do an
+ls -l. ls shows that the file is now owned by uucp. In addition, if I try
+to use faxrm from the fax userid to remove someone elses job, faxrm 
+reports that I'm not the fax user. So, in the end, I can not remove 
+anyone's fax job if I am not the fax user, which I will never be because
+faxid = 5 = uucpid.
+<P>
+	So, why the fax user? Why not run everything under uucp? If there 
+are compelling reasons, where is the code which faxrm uses to check if 
+you are the owner of a fax or the "fax" user? (I looked and looked, but 
+nothing seemed obvious)
+<P>
+<DT>A.
+<DD>Because the "fax" user has a separate passwd file entry it can have a
+private passwd different from uucp.  The reason that it's got the same
+uid as uucp is to simplify management of the UUCP lock files and tty
+device protections.  It should be possible to have a uid different from
+uucp (at one time it did), but right now the code has some assumptions
+that require it to be identical.  At some point in the future the
+requirement that the fax&uucp uids be the same may be eliminated
+(patches welcome).
+
+</DL>
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/StackBuffer.c++,v 1.7 1994/02/28 14:24:19 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/StackBuffer.c++,v 1.11 1995/04/08 21:44:23 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -23,6 +24,7 @@
  * OF THIS SOFTWARE.
  */
 #include "StackBuffer.h"
+#include "Str.h"
 #include <stdlib.h>
 
 fxStackBuffer::fxStackBuffer(u_int grow)
@@ -51,7 +53,8 @@ fxStackBuffer::fxStackBuffer(const fxStackBuffer& other)
     memcpy(base, other.base, len);
 }
 
-void fxStackBuffer::addc(char c)
+void
+fxStackBuffer::addc(char c)
 {
     if (next >= end) {
 	grow(amountToGrowBy);
@@ -59,7 +62,8 @@ void fxStackBuffer::addc(char c)
     *next++ = c;
 }
 
-void fxStackBuffer::grow(u_int amount)
+void
+fxStackBuffer::grow(u_int amount)
 {
     // insure an acceptable amount of growth
     if (amount < amountToGrowBy) amount = amountToGrowBy;
@@ -80,7 +84,8 @@ void fxStackBuffer::grow(u_int amount)
     next = base + len;
 }
 
-void fxStackBuffer::put(char const* c, u_int len)
+void
+fxStackBuffer::put(char const* c, u_int len)
 {
     u_int remainingSpace = end - next;
     if  (len > remainingSpace) {
@@ -88,4 +93,10 @@ void fxStackBuffer::put(char const* c, u_int len)
     }
     memcpy(next, c, len);
     next += len;
+}
+
+void
+fxStackBuffer::put(const fxStr& s)
+{
+    put(s, s.length());
 }

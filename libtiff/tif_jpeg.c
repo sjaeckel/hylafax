@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_jpeg.c,v 1.7 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_jpeg.c,v 1.9.1.1 1995/02/10 19:04:23 sam Exp $ */
 
 /*
- * Copyright (c) 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,7 +31,8 @@
  */
 #include "tiffiop.h"
 
-DECLARE1(TIFFInitJPEG, TIFF*, tif)
+TIFFInitJPEG(TIFF* tif)
 {
+	(void) tif;
 	return (1);
 }

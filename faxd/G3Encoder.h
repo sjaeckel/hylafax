@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/G3Encoder.h,v 1.3 1994/06/04 00:12:26 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Encoder.h,v 1.7 1995/04/08 21:30:38 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -34,6 +35,8 @@ struct tableentry;
 
 class G3Encoder : private G3Base {
 private:
+    short	data;		// current input/output byte
+    short	bit;		// current bit in input/output byte
     fxStackBuffer& buf;
 
     void	putBits(u_int bits, u_int length);

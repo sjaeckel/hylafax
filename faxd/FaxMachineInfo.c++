@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/FaxMachineInfo.c++,v 1.29 1994/04/04 18:24:29 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/FaxMachineInfo.c++,v 1.43 1995/04/08 21:30:08 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -22,186 +23,135 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include <ctype.h>
 #include <osfcn.h>
-#include <unistd.h>
-#include <syslog.h>
-#include <sys/stat.h>
 #include <sys/file.h>
-#include <fcntl.h>
 
-#include "config.h"
+#include "Sys.h"
+
 #include "FaxMachineInfo.h"
-#include "FaxTrace.h"
 #include "class2.h"
-
-static	fxBool getBoolean(const char* cp);
-static	fxBool getLine(FILE*, char* line, int cc, char*& tag, char*& val);
-static	int getNum(const char* s);
-
-const fxStr FaxMachineCtlInfo::ctlDir(FAX_CTLDIR);
-
-#define	isCmd(s,cmd)	(strcasecmp(s, cmd) == 0)
-
-FaxMachineCtlInfo::FaxMachineCtlInfo()
-{
-    tracingLevel = -1;
-}
-FaxMachineCtlInfo::~FaxMachineCtlInfo() {}
-
-void
-FaxMachineCtlInfo::restore(const fxStr& canon)
-{
-    mode_t omask = umask(022);
-    FILE* fp = fopen(ctlDir | "/" | canon, "r");
-    (void) umask(omask);
-    if (fp) {
-	char line[1024];
-	char* tag;
-	char* val;
-
-	while (getLine(fp, line, sizeof (line), tag, val)) {
-	    if (isCmd(tag, "rejectNotice")) {
-		rejectNotice = val;
-	    } else if (isCmd(tag, "tracingLevel")) {
-		tracingLevel = getNum(val) & FAXTRACE_MASK;
-	    }
-	}
-	fclose(fp);
-    }
-}
-
-const fxStr&
-FaxMachineCtlInfo::getRejectNotice() const
-{
-    return rejectNotice;
-}
-
-fxBool
-FaxMachineCtlInfo::getTracingLevel(int& l) const
-{
-    if (tracingLevel != -1) {
-	l = tracingLevel;
-	return (TRUE);
-    } else
-	return (FALSE);
-}
+#include "config.h"
 
 const fxStr FaxMachineInfo::infoDir(FAX_INFODIR);
 
-FaxMachineInfo::FaxMachineInfo(const fxStr& number, fxBool)
+FaxMachineInfo::FaxMachineInfo()
 {
-    fp = NULL;
-    locked = 0;
-    supportsHighRes = TRUE;
-    supports2DEncoding = TRUE;
-    supportsPostScript = FALSE;
-    calledBefore = FALSE;
-    maxPageWidth = 2432;		// 1728 at 303 mm
-    maxPageLength = -1;			// unlimited
+    changed = FALSE;
+    resetConfig();
+}
+FaxMachineInfo::FaxMachineInfo(const FaxMachineInfo& other)
+    : FaxConfig(other)
+    , file(other.file)
+    , csi(other.csi)
+    , lastSendFailure(other.lastSendFailure)
+    , lastDialFailure(other.lastDialFailure)
+    , pagerPassword(other.pagerPassword)
+{
+    locked = other.locked;
+
+    supportsHighRes = other.supportsHighRes;
+    supports2DEncoding = other.supports2DEncoding;
+    supportsPostScript = other.supportsPostScript;
+    calledBefore = other.calledBefore;
+    maxPageWidth = other.maxPageWidth;
+    maxPageLength = other.maxPageLength;
+    maxSignallingRate = other.maxSignallingRate;
+    minScanlineTime = other.minScanlineTime;
+    sendFailures = other.sendFailures;
+    dialFailures = other.dialFailures;
+
+    pagerMaxMsgLength = other.pagerMaxMsgLength;
+
+    changed = other.changed;
+}
+FaxMachineInfo::~FaxMachineInfo() { writeConfig(); }
+
+int
+FaxMachineInfo::getMaxPageWidthInMM() const
+{
+    return (int)(maxPageWidth/(204.0f/25.4f));
+}
+
+#include <ctype.h>
+
+fxBool
+FaxMachineInfo::updateConfig(const fxStr& number)
+{
+    fxStr canon(number);
+    for (u_int i = 0; i < canon.length(); i++)
+	if (!isdigit(canon[i]))
+	    canon.remove(i);
+    if (file == "")
+	file = infoDir | "/" | canon;
+    return FaxConfig::updateConfig(file);
+}
+
+void
+FaxMachineInfo::resetConfig()
+{
+    supportsHighRes = TRUE;		// assume 196 lpi support
+    supports2DEncoding = TRUE;		// assume 2D-encoding support
+    supportsPostScript = FALSE;		// no support for Adobe protocol
+    calledBefore = FALSE;		// never called before
+    maxPageWidth = 2432;		// max required width
+    maxPageLength = -1;			// infinite page length
     maxSignallingRate = BR_14400;	// T.17 14.4KB
     minScanlineTime = ST_0MS;		// 0ms/0ms
-    changed = FALSE;
     sendFailures = 0;
     dialFailures = 0;
 
-    fxStr canon(number);
-    for (int i = canon.length()-1; i >= 0; i--)
-	if (!isdigit(canon[i]))
-	    canon.remove(i,1);
+    pagerMaxMsgLength = (u_int) -1;	// unlimited length
+    pagerPassword = "";			// no password string
 
-    FaxMachineCtlInfo::restore(canon);
-
-    fxStr file(infoDir | "/" | canon);
-    mode_t omask = umask(022);
-    int fd = open((char*) file, O_RDWR|O_CREAT, 0644);
-    if (fd < 0)
-	syslog(LOG_ERR, "%s: open: %m", (char*) file);
-    (void) umask(omask);
-    if (fd >= 0) {
-	if (flock(fd, LOCK_EX|LOCK_NB) == 0 && (fp = fdopen(fd, "r+w")))
-	    restore();
-	else
-	    close(fd);
-    }
+    locked = 0;
 }
-FaxMachineInfo::~FaxMachineInfo()
+
+extern void vlogError(const char* fmt, va_list ap);
+
+void
+FaxMachineInfo::error(const char* fmt0 ...)
 {
-    if (fp) {
-	if (changed)
-	    update();
-	fclose(fp);
-    }
+    va_list ap;
+    va_start(ap, fmt0);
+    vlogError(file | ": " | fmt0, ap);
+    va_end(ap);
 }
 
-int
-FaxMachineInfo::operator==(const FaxMachineInfo& other) const
+/*
+ * Report an error encountered while parsing the info file.
+ */
+void
+FaxMachineInfo::vconfigError(const char* fmt0, va_list ap)
 {
-    return (
-	supportsHighRes == other.supportsHighRes
-     && supports2DEncoding == other.supports2DEncoding
-     && supportsPostScript == other.supportsPostScript
-     && calledBefore == other.calledBefore
-     && maxPageWidth == other.maxPageWidth
-     && maxPageLength == other.maxPageLength
-     && maxSignallingRate == other.maxSignallingRate
-     && minScanlineTime == other.minScanlineTime
-     && csi == other.csi
-     && jobInProgress == other.jobInProgress
-     && rejectNotice == other.rejectNotice
-     && sendFailures == other.sendFailures
-     && dialFailures == other.dialFailures
-     && lastSendFailure == other.lastSendFailure
-     && lastDialFailure == other.lastDialFailure
-    );
+    vlogError(file |
+	fxStr::format(": line %u: %s", getConfigLineNumber(), fmt0), ap);
 }
-
-int
-FaxMachineInfo::operator!=(const FaxMachineInfo& other) const
-    { return !(*this == other); }
-
-const fxStr&
-FaxMachineInfo::getRejectNotice() const
+void
+FaxMachineInfo::configError(const char* fmt0 ...)
 {
-    const fxStr& notice = FaxMachineCtlInfo::getRejectNotice();
-    if (notice == "")
-	return rejectNotice;
-    else
-	return notice;
+    va_list ap;
+    va_start(ap, fmt0);
+    vconfigError(fmt0, ap);
+    va_end(ap);
+}
+void
+FaxMachineInfo::configTrace(const char* fmt0 ...)
+{
+    va_list ap;
+    va_start(ap, fmt0);
+    vconfigError(fmt0, ap);
+    va_end(ap);
 }
 
-static fxBool
-getBoolean(const char* cp)
-{
-    return (strcasecmp(cp, "on") == 0 || strcasecmp(cp, "yes") == 0);
-}
+#define	N(a)		(sizeof (a) / sizeof (a[0]))
 
-static int
-getNum(const char* s)
-{
-    return ((int) strtol(s, NULL, 0));
-}
-
-static fxBool
-getLine(FILE* fp, char* line, int n, char*& tag, char*& val)
-{
-    while (fgets(line, n-1, fp)) {
-	if (line[0] == '#')
-	    continue;
-	char* cp = strchr(line, '\n');
-	if (cp)
-	    *cp = '\0';
-	val = strchr(line, ':');
-	if (!val)
-	    continue;
-	*val++ = '\0';
-	while (isspace(*val))
-	    val++;
-	tag = line;
-	return (TRUE);
-    }
-    return (FALSE);
-}
+static const char* brnames[] =
+   { "2400", "4800", "7200", "9600", "12000", "14400" };
+#define	NBR	N(brnames)
+static const char* stnames[] =
+   { "0ms", "5ms", "10ms/5ms", "10ms",
+     "20ms/10ms", "20ms", "40ms/20ms", "40ms" };
+#define	NST	N(stnames)
 
 #define	HIRES	0
 #define	G32D	1
@@ -211,106 +161,83 @@ getLine(FILE* fp, char* line, int n, char*& tag, char*& val)
 #define	BR	5
 #define	ST	6
 
-static const char* brnames[] =
-   { "2400", "4800", "7200", "9600", "12000", "14400" };
-#define	NBR	(sizeof (brnames) / sizeof (brnames[0]))
-static const char* stnames[] =
-   { "0ms", "5ms", "10ms/5ms", "10ms",
-     "20ms/10ms", "20ms", "40ms/20ms", "40ms" };
-#define	NST	(sizeof (stnames) / sizeof (stnames[0]))
+#define	setLocked(b,ix)	locked |= b<<ix
 
-void
-FaxMachineInfo::restore()
+fxBool
+FaxMachineInfo::setConfigItem(const char* tag, const char* value)
 {
-    char line[1024];
-    char* tag;
-    char* val;
-
-    while (getLine(fp, line, sizeof (line), tag, val)) {
-	int b;
-	if (line[0] == '&') {			// locked down indicator
-	    b = 1;
-	    tag++;
-	} else
-	    b = 0;
-	if (isCmd(tag, "supportsHighRes")) {
-	    supportsHighRes = getBoolean(val);
-	    locked |= (b<<HIRES);
-	} else if (isCmd(tag, "supports2DEncoding")) {
-	    supports2DEncoding = getBoolean(val);
-	    locked |= (b<<G32D);
-	} else if (isCmd(tag, "supportsPostScript")) {
-	    supportsPostScript = getBoolean(val);
-	    locked |= (b<<PS);
-	} else if (isCmd(tag, "calledBefore")) {
-	    calledBefore = getBoolean(val);
-	} else if (isCmd(tag, "maxPageWidth")) {
-	    maxPageWidth = atoi(val);
-	    locked |= (b<<WD);
-	} else if (isCmd(tag, "maxPageLength")) {
-	    maxPageLength = atoi(val);
-	    locked |= (b<<LN);
-	} else if (isCmd(tag, "maxSignallingRate")) {
-	    for (u_int i = 0; i < NBR; i++)
-		if (strcmp(brnames[i], val) == 0) {
-		    maxSignallingRate = i;
-		    locked |= (b<<BR);
-		    break;
-		}
-	} else if (isCmd(tag, "minScanlineTime")) {
-	    for (u_int i = 0; i < NST; i++)
-		if (strcmp(stnames[i], val) == 0) {
-		    minScanlineTime = i;
-		    locked |= (b<<ST);
-		    break;
-		}
-	} else if (isCmd(tag, "remoteCSI")) {
-	    csi = val;
-	} else if (isCmd(tag, "jobInProgress")) {
-	    jobInProgress = val;
-	} else if (isCmd(tag, "rejectNotice")) {
-	    rejectNotice = val;
-	} else if (isCmd(tag, "lastSendFailure")) {
-	    lastSendFailure = val;
-	} else if (isCmd(tag, "lastDialFailure")) {
-	    lastDialFailure = val;
-	} else if (isCmd(tag, "sendFailures")) {
-	    sendFailures = atoi(val);
-	} else if (isCmd(tag, "dialFailures")) {
-	    dialFailures = atoi(val);
+    int b = (tag[0] == '&' ? 1 : 0);	// locked down indicator
+    if (b) tag++;
+    if (streq(tag, "supportshighres")) {
+	supportsHighRes = getBoolean(value);
+	setLocked(b, HIRES);
+    } else if (streq(tag, "supports2dencoding")) {
+	supports2DEncoding = getBoolean(value);
+	setLocked(b, G32D);
+    } else if (streq(tag, "supportspostscript")) {
+	supportsPostScript = getBoolean(value);
+	setLocked(b, PS);
+    } else if (streq(tag, "calledbefore")) {
+	calledBefore = getBoolean(value);
+    } else if (streq(tag, "maxpagewidth")) {
+	maxPageWidth = getNumber(value);
+	setLocked(b, WD);
+    } else if (streq(tag, "maxpagelength")) {
+	maxPageLength = getNumber(value);
+	setLocked(b, LN);
+    } else if (streq(tag, "sendfailures")) {
+	sendFailures = getNumber(value);
+    } else if (streq(tag, "dialfailures")) {
+	dialFailures = getNumber(value);
+    } else if (streq(tag, "remotecsi")) {
+	csi = value;
+    } else if (streq(tag, "lastsendfailure")) {
+	lastSendFailure = value;
+    } else if (streq(tag, "lastdialfailure")) {
+	lastDialFailure = value;
+    } else if (streq(tag, "maxsignallingrate")) {
+	u_int ix;
+	if (findValue(value, brnames, N(brnames), ix)) {
+	    maxSignallingRate = ix;
+	    setLocked(b, BR);
 	}
-    }
-    changed = FALSE;
+    } else if (streq(tag, "minscanlinetime")) {
+	u_int ix;
+	if (findValue(value, stnames, N(stnames), ix)) {
+	    minScanlineTime = ix;
+	    setLocked(b, ST);
+	}
+    } else if (streq(tag, "pagermaxmsglength")) {
+	pagerMaxMsgLength = getNumber(value);
+    } else if (streq(tag, "pagerpassword")) {
+	pagerPassword = value;
+    } else
+	return (FALSE);
+    return (TRUE);
 }
 
 #define	isLocked(b)	(locked & (1<<b))
 
-void
-FaxMachineInfo::setSupportsHighRes(fxBool b)
-{
-    if (!isLocked(HIRES)) {
-	 supportsHighRes = b;
-	 changed = TRUE;
+#define	checkLock(ix, member, value)	\
+    if (!isLocked(ix)) {		\
+	member = value;			\
+	changed = TRUE;			\
     }
-}
 
-void
-FaxMachineInfo::setSupports2DEncoding(fxBool b)
-{
-    if (!isLocked(G32D)) {
-	supports2DEncoding = b;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setSupportsPostScript(fxBool b)
-{
-    if (!isLocked(PS)) {
-	supportsPostScript = b;
-	changed = TRUE;
-    }
-}
+void FaxMachineInfo::setSupportsHighRes(fxBool b)
+    { checkLock(HIRES, supportsHighRes, b); }
+void FaxMachineInfo::setSupports2DEncoding(fxBool b)
+    { checkLock(G32D, supports2DEncoding, b); }
+void FaxMachineInfo::setSupportsPostScript(fxBool b)
+    { checkLock(PS, supportsPostScript, b); }
+void FaxMachineInfo::setMaxPageWidthInPixels(int v)
+    { checkLock(WD, maxPageWidth, v); }
+void FaxMachineInfo::setMaxPageLengthInMM(int v)
+    { checkLock(LN, maxPageLength, v); }
+void FaxMachineInfo::setMaxSignallingRate(int v)
+    { checkLock(BR, maxSignallingRate, v); }
+void FaxMachineInfo::setMinScanlineTime(int v)
+    { checkLock(ST, minScanlineTime, v); }
 
 void
 FaxMachineInfo::setCalledBefore(fxBool b)
@@ -319,134 +246,77 @@ FaxMachineInfo::setCalledBefore(fxBool b)
     changed = TRUE;
 }
 
-void
-FaxMachineInfo::setMaxPageWidth(int v)
-{
-    if (!isLocked(WD)) {
-	maxPageWidth = v;
-	changed = TRUE;
+#define	checkChanged(member, value)	\
+    if (member != value) {		\
+	member = value;			\
+	changed = TRUE;			\
     }
-}
 
-void
-FaxMachineInfo::setMaxPageLength(int v)
-{
-    if (!isLocked(LN)) {
-	maxPageLength = v;
-	changed = TRUE;
-    }
-}
+void FaxMachineInfo::setCSI(const fxStr& v)
+    { checkChanged(csi, v); }
+void FaxMachineInfo::setLastSendFailure(const fxStr& v)
+    { checkChanged(lastSendFailure, v); }
+void FaxMachineInfo::setLastDialFailure(const fxStr& v)
+    { checkChanged(lastDialFailure, v); }
+void FaxMachineInfo::setSendFailures(int v)
+    { checkChanged(sendFailures, v); }
+void FaxMachineInfo::setDialFailures(int v)
+    { checkChanged(dialFailures, v); }
 
+/*
+ * Rewrite the file if the contents have changed.
+ */
 void
-FaxMachineInfo::setMaxSignallingRate(int v)
+FaxMachineInfo::writeConfig()
 {
-    if (!isLocked(BR)) {
-	maxSignallingRate = v;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setMinScanlineTime(int v)
-{
-    if (!isLocked(ST)) {
-	minScanlineTime = v;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setCSI(const fxStr& v)
-{
-    if (csi != v) {
-	csi = v;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setJobInProgress(const fxStr& v)
-{
-    if (jobInProgress != v) {
-	jobInProgress = v;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setRejectNotice(const fxStr& v)
-{
-    if (rejectNotice != v) {
-	rejectNotice = v;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setLastSendFailure(const fxStr& v)
-{
-    if (lastSendFailure != v) {
-	lastSendFailure = v;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setLastDialFailure(const fxStr& v)
-{
-    if (lastDialFailure != v) {
-	lastDialFailure = v;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setSendFailures(int v)
-{
-    if (sendFailures != v) {
-	sendFailures = v;
-	changed = TRUE;
-    }
-}
-
-void
-FaxMachineInfo::setDialFailures(int v)
-{
-    if (dialFailures != v) {
-	dialFailures = v;
-	changed = TRUE;
+    if (changed) {
+	mode_t omask = ::umask(022);
+	int fd = Sys::open(file, O_WRONLY|O_CREAT, 0644);
+	(void) ::umask(omask);
+	if (fd >= 0) {
+	    FILE* fp = ::fdopen(fd, "w");
+	    if (fp != NULL) {
+		writeConfig(fp);
+		::ftruncate(fd, ::ftell(fp));
+		::fclose(fp);		// XXX check for write error
+		return;
+	    } else
+		error("fdopen: %m");
+	    ::close(fd);
+	} else
+	    error("open: %m");
+	changed = FALSE;
     }
 }
 
 static void
 putBoolean(FILE* fp, const char* tag, fxBool locked, fxBool b)
 {
-    fprintf(fp, "%s%s: %s\n", locked ? "&" : "", tag, b ? "yes" : "no");
+    ::fprintf(fp, "%s%s:%s\n", locked ? "&" : "", tag, b ? "yes" : "no");
 }
 
 static void
 putDecimal(FILE* fp, const char* tag, fxBool locked, int v)
 {
-    fprintf(fp, "%s%s: %d\n", locked ? "&" : "", tag, v);
+    ::fprintf(fp, "%s%s:%d\n", locked ? "&" : "", tag, v);
 }
 
 static void
 putString(FILE* fp, const char* tag, fxBool locked, const char* v)
 {
-    fprintf(fp, "%s%s: %s\n", locked ? "&" : "", tag, v);
+    ::fprintf(fp, "%s%s:\"%s\"\n", locked ? "&" : "", tag, v);
 }
 
 static void
 putIfString(FILE* fp, const char* tag, fxBool locked, const char* v)
 {
     if (*v != '\0')
-	fprintf(fp, "%s%s: %s\n", locked ? "&" : "", tag, v);
+	::fprintf(fp, "%s%s:\"%s\"\n", locked ? "&" : "", tag, v);
 }
 
 void
-FaxMachineInfo::update()
+FaxMachineInfo::writeConfig(FILE* fp)
 {
-    rewind(fp);
     putBoolean(fp, "supportsHighRes", isLocked(HIRES), supportsHighRes);
     putBoolean(fp, "supports2DEncoding", isLocked(G32D),supports2DEncoding);
     putBoolean(fp, "supportsPostScript", isLocked(PS), supportsPostScript);
@@ -458,13 +328,8 @@ FaxMachineInfo::update()
     putString(fp, "minScanlineTime", isLocked(ST),
 	stnames[fxmin(minScanlineTime, ST_40MS)]);
     putString(fp, "remoteCSI", FALSE, csi);
-    putIfString(fp, "jobInProgress", FALSE, jobInProgress);
-    putIfString(fp, "rejectNotice", FALSE, rejectNotice);
     putDecimal(fp, "sendFailures", FALSE, sendFailures);
     putIfString(fp, "lastSendFailure", FALSE, lastSendFailure);
     putDecimal(fp, "dialFailures", FALSE, dialFailures);
     putIfString(fp, "lastDialFailure", FALSE, lastDialFailure);
-    fflush(fp);
-    (void) ftruncate(fileno(fp), ftell(fp));		// XXX
-    changed = FALSE;
 }

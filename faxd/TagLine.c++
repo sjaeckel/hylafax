@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/TagLine.c++,v 1.11 1994/07/02 19:39:19 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/TagLine.c++,v 1.16 1995/04/08 21:31:07 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -29,6 +30,8 @@
 #include "FaxFont.h"
 #include "FaxRequest.h"
 
+#include "Sys.h"
+
 static void
 insert(fxStr& tag, u_int l, const fxStr& s)
 {
@@ -48,10 +51,10 @@ FaxModem::setupTagLine(const FaxRequest& req)
     if (!tagLineFont->isReady() && conf.tagLineFontFile != "")
 	(void) tagLineFont->read(conf.tagLineFontFile);
 
-    time_t t = time(0);
-    tm* tm = localtime(&t);
+    time_t t = Sys::now();
+    tm* tm = ::localtime(&t);
     char line[1024];
-    strftime(line, sizeof (line), conf.tagLineFmt, tm);
+    ::strftime(line, sizeof (line), conf.tagLineFmt, tm);
     tagLine = line;
     u_int l = 0;
     while (l < tagLine.length()) {
@@ -97,7 +100,7 @@ FaxModem::setupTagLine(const FaxRequest& req)
 fxBool
 FaxModem::setupTagLineSlop(const Class2Params& params)
 {
-    if (tagLineFont->isReady()) {
+    if (tagLineFont->isReady() && tagLineFields > 0) {
 	tagLineSlop = (tagLineFont->fontHeight()+MARGIN_TOP+MARGIN_BOT+3) * 
 	    howmany(params.pageWidth(),8);
 	return (TRUE);
@@ -170,7 +173,7 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
      */
     u_int lpr = howmany(w,32);			// longs/raster row
     u_long* raster = new u_long[(h+3)*lpr];	// decoded raster
-    memset(raster, 0, (h+3)*lpr*sizeof (u_long));// clear raster to white
+    ::memset(raster, 0, (h+3)*lpr*sizeof (u_long));// clear raster to white
     /*
      * Break the tag into fields and render each piece of
      * text centered in its field.  Experiments indicate
@@ -214,7 +217,7 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
 	    l1 += lpr;
 	    l2 += lpr;
 	}
-	memset(l3, 0, MARGIN_BOT*lpr*sizeof (u_long));
+	::memset(l3, 0, MARGIN_BOT*lpr*sizeof (u_long));
     }
     /*
      * If the source is 2D-encoded and the decoding done
@@ -271,6 +274,6 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params)
 	encoded = tagLineSlop + decoded;
     u_char* dst = buf + tagLineSlop + (int)(decoded-encoded);
     u_char* src = result;
-    memcpy(dst, src, encoded);
+    ::memcpy(dst, src, encoded);
     return (dst);
 }

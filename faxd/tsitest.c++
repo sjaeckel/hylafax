@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/tsitest.c++,v 1.2 1994/06/23 00:36:58 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/tsitest.c++,v 1.7 1995/04/08 21:31:33 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -32,6 +33,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "RegExArray.h"
 #include "BoolArray.h"
@@ -76,12 +79,18 @@ readTSIPatterns(FILE* fd, RegExArray*& pats, fxBoolArray*& accept)
 	*cp = '\0';
 	if (line[0] == '\0')
 	    continue;
+	RegEx* re;
 	if (line[0] == '!') {
 	    accept->append(FALSE);
-	    pats->append(new RegEx(line+1));
+	    pats->append(re = new RegEx(line+1));
 	} else {
 	    accept->append(TRUE);
-	    pats->append(new RegEx(line));
+	    pats->append(re = new RegEx(line));
+	}
+	if (re->getErrorCode() > REG_NOMATCH) {
+	    fxStr emsg;
+	    re->getError(emsg);
+	    printf("Bad TSI pattern: %s: " | emsg | ".\n", re->pattern());
 	}
     }
 }
@@ -162,7 +171,7 @@ main(int argc, char* argv[])
 		if (verbose)
 		    printf("[check %s]\n", pat->pattern());
 		fxStr tsi(line);
-		if (pat->Find(tsi) != REG_NOMATCH) {
+		if (pat->Find(tsi)) {
 		    printf("%s (matched by %s)\n",
 			(*acceptTSI)[i] ? "accept" : "reject",
 			pat->pattern());

@@ -1,4 +1,4 @@
-/* $Header: /usr/people/sam/fax/fax2ps/RCS/fax2ps.c,v 1.36 1994/05/16 20:51:19 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/contrib/fax2ps/RCS/fax2ps.c,v 1.33.2.1 1995/03/16 18:56:30 sam Exp $" */
 
 /*
  * Copyright (c) 1991, 1992, 1993, 1994 by Sam Leffler.
@@ -12,382 +12,28 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
 
 #include "defs.h"
 
-#define	MAXCODEPROBES	5
-CodeEntry* codehash[CODEHASH];
-CodeEntry* codetable;
-
-char**	codeNames;		/* codeNames[code] => ASCII code name */
-char*	codeNameSpace;		/* storage space for codeNames and strings */
-int	ncodes = 0;		/* number of assigned codes */
-int	maxcodes = 0;		/* max # codes that fit in codetable */
-int	maxpairs = 0;		/* max # pairs that fit in pairtable */
-int	includeStatistics = FALSE;/* if 1, add comments w/ frequency stats */
-int	startOfRow;		/* if 1, have yet to emit a code for this row */
-int	dopairs = FALSE;	/* if 1, encode pairs of codes */
 float	defxres = 204.;		/* default x resolution (pixels/inch) */
 float	defyres = 98.;		/* default y resolution (lines/inch) */
 float	pageWidth = 8.5;	/* image page width (inches) */
 float	pageHeight = 11.0;	/* image page length (inches) */
 int	scaleToPage = FALSE;	/* if true, scale raster to page dimensions */
 
-CodeEntry*
-enterCode(int dx, int len)
-{
-    int h, c;
-    CodeEntry* cp;
-
-    cp = codehash[h = HASHCODE(dx,len)];
-    if (cp) {
-	if (cp->move == dx && cp->runlen == len)
-	    return (cp);
-	c = h ? CODEHASH - h : 1;	/* Knott's rehash algorithm */
-	for (;;) {
-	    if ((h -= c) < 0)
-		h += CODEHASH;
-	    cp = codehash[h];
-	    if (!cp)
-		break;
-	    if (cp->move == dx && cp->runlen == len)
-		return (cp);
-	}
-    }
-    if (ncodes == maxcodes) {
-	maxcodes += MAXCODES;
-	codetable = (CodeEntry*) (maxcodes == MAXCODES ?
-	    malloc(maxcodes * sizeof (CodeEntry)) :
-	    realloc(codetable, maxcodes * sizeof (CodeEntry))
-	);
-	if (codetable == NULL) {
-	    fprintf(stderr, "Panic, code table overflow\n");
-	    exit(-1);
-	}
-    }
-    codehash[h] = cp = &codetable[ncodes++];
-    cp->c.count = 0;
-    cp->c.code = (u_short) -1;
-    cp->c.cost = 0;
-    cp->move = dx;
-    cp->runlen = len;
-    return (cp);
-}
-
-void
-printCode(CodeEntry* cp)
-{
-    if (startOfRow) {
-	printf("%d r\n", fax.row);
-	startOfRow = FALSE;
-    }
-    if (cp->c.code == (u_short) -1)
-	printf("%d %d f", cp->runlen, cp->move);
-    else
-	printf("%s", codeNames[cp->c.code]);
-    putchar('\n');
-}
-
-CodePairEntry* pairhash[PAIRHASH];
-CodePairEntry* pairtable;
-int	npairs = 0;
-
-CodePairEntry*
-findPair(CodeEntry* a, CodeEntry* b)
-{
-    int h, c;
-    CodePairEntry* pp;
-
-    pp = pairhash[h = HASHPAIR(a,b)];
-    if (pp->a == a && pp->b == b)
-	return (pp);
-    c = h ? PAIRHASH - h : 1;		/* Knott's rehash algorithm */
-    for (;;) {
-	if ((h -= c) < 0)
-	    h += PAIRHASH;
-	pp = pairhash[h];
-	if (pp->a == a && pp->b == b)
-	    return (pp);
-    }
-    /*NOTREACHED*/
-}
-
-CodePairEntry*
-enterPair(CodeEntry* a, CodeEntry* b)
-{
-    int h, c;
-    CodePairEntry* pp;
-
-    pp = pairhash[h = HASHPAIR(a,b)];
-    if (pp) {
-	if (pp->a == a && pp->b == b)
-	    return (pp);
-	c = h ? PAIRHASH - h : 1;	/* Knott's rehash algorithm */
-	for (;;) {
-	    if ((h -= c) < 0)
-		h += PAIRHASH;
-	    pp = pairhash[h];
-	    if (!pp)
-		break;
-	    if (pp->a == a && pp->b == b)
-		return (pp);
-	}
-    }
-    if (npairs == maxpairs) {
-	maxpairs += MAXPAIRS;
-	pairtable = (CodePairEntry*) (maxpairs == MAXPAIRS ?
-	    malloc(maxpairs * sizeof (CodePairEntry)) :
-	    realloc(pairtable, maxpairs * sizeof (CodePairEntry))
-	);
-	if (pairtable == NULL) {
-	    fprintf(stderr, "Panic, pair table overflow\n");
-	    exit(-1);
-	}
-    }
-    pairhash[h] = pp = &pairtable[npairs++];
-    pp->c.count = 0;
-    pp->c.code = (u_short) -1;
-    pp->c.cost = 0;
-    pp->a = a;
-    pp->b = b;
-    return (pp);
-}
-
-int
-printPair(CodeEntry* a, CodeEntry* b)
-{
-    CodePairEntry* pp = findPair(a,b);
-
-    if (pp && pp->c.code != (u_short) -1) {
-	if (startOfRow) {
-	    printf("%d r\n", fax.row);
-	    startOfRow = FALSE;
-	}
-	printf("%s\n", codeNames[pp->c.code]);
-	return (TRUE);
-    } else
-	return (FALSE);
-}
-
-#define	MIN(a,b)	((a)<(b)?(a):(b))
-
-static char alphabet[] = {
-    '!', '"', '#', '$', '&', '*', '+', ',', ':', ';', '?', '@',
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    '^', '_', '~'
-};
-static int MaxAlpha = (sizeof (alphabet) / sizeof (alphabet[0]));
-
-/*
- * Construct a table of code names from a limited
- * alphabet.  By default, the alphabet is comprised
- * of all the non-special ASCII PostScript characters
- * (except for lower case alphabetics which are avoided
- * to insure we don't construct a PostScript operator
- * name).  The alphabet can be restricted to just the 
- * upper case alphabetics with the -a option.
- */
-void
-makeCodeNames(int ncodes)
-{
-    int n, cc, len, nc, digit, code;
-    char* cp;
-    short key[11];
-
-    n = ncodes;
-    cc = 0;
-    len = 2;		/* minimum length string */
-    nc = 1;
-    do {
-	nc *= MaxAlpha;
-	cc += MIN(n, nc) * len++;
-    } while ((n -= MIN(n,nc)) > 0);
-    codeNameSpace = (char*) malloc(ncodes*sizeof (char*) + cc);
-    codeNames = (char**) codeNameSpace;
-    cp = (char*) (codeNames + ncodes);
-
-    n = ncodes;
-    len = 1;
-    code = 0;
-    nc = 1;
-    for (digit = 0; digit < 11; digit++)
-	key[digit] = -1;
-    do {
-	nc *= MaxAlpha;
-	cc = MIN(n,nc);
-	while (cc-- > 0) {
-	    for (digit = 0; ++key[digit] == MaxAlpha; key[digit++] = 0)
-		;
-	    codeNames[code++] = cp;
-	    switch (len) {
-	    case 5: *cp++ = alphabet[key[4]];
-	    case 4: *cp++ = alphabet[key[3]];
-	    case 3: *cp++ = alphabet[key[2]];
-	    case 2: *cp++ = alphabet[key[1]];
-	    case 1: *cp++ = alphabet[key[0]];
-	    }
-	    *cp++ = '\0';
-	}
-	len++;
-    } while ((n -= MIN(n,nc)) > 0);
-}
-
-#define	DIGITS(x)	((x) < 10 ? 1 : (x) < 100 ? 2 : (x) < 1000 ? 3 : 4)
-
-int
-codeCost(CodeEntry* cp)
-{
-    /* 3 is constant overhead for <blank><len><blank><move>f */
-    return (3 + DIGITS(cp->move) + DIGITS(cp->runlen));
-}
-
-/*
- * DEFCOST is the cost to define the specified code for this
- * move-draw operation.  It's calculated according to:
- *	/<code>{<move-draw>}d\n
- * which translates to 5 + cost(code) + cost(move-draw).
- */
-#define	DEFCOST(mdc, codelen)	(mdc + codelen + 5)
-/*
- * USECOST is the cost to use the code once it's been defined.
- * This is just the number of uses times the length of the code
- * plus one -- the one is for the blank needed by the parser.
- */
-#define	USECOST(count, codelen)	(count * (codelen+1))
-/*
- * CODEDCOST is the total cost to define and use the defined
- * code (in place of straight move-draw operations).  We assume
- * that the "code" field holds the result of the {pair|code}Cost
- * calculation (see below).
- */
-#define	CODEDCOST(c, codelen) \
-    (USECOST(c->count, codelen) + DEFCOST(c->code, codelen))
-
-int
-codeLength(int code)
-{
-    return (code < MaxAlpha ? 1 : code < MaxAlpha*MaxAlpha ? 2 : 3);
-}
-
-int
-codeCostCompare(const void* a1, const void* a2)
-{
-    const Code* c1 = *(const Code**)a1;
-    const Code* c2 = *(const Code**)a2;
-    return (c2->cost - c1->cost);
-}
-
-/*
- * Sort pairs and singletons, assign codes, and 
- * reset counts for the next pass where we test
- * out the encoding.
- */
-int
-assignCodes(Code** sorted, int clearCounts)
-{
-    int i, n, code, codelen;
-    CodePairEntry* pp;
-    CodeEntry* cp;
-
-    /*
-     * Calculate the cost to use the operation "as is"
-     * (i.e. w/o an encoding).  This is simply the number
-     * of uses times the cost of the move-draw operation.
-     * We save the {pair|code}Cost calculation for reuse
-     * below (when making the final decision about which
-     * codes are actually worth defining.
-     */
-    i = 0;
-    for (cp = codetable, n = ncodes; n-- > 0; i++, cp++) {
-	sorted[i] = &cp->c;
-	cp->c.code = codeCost(cp);
-	cp->c.cost = cp->c.count * cp->c.code;
-    }
-    for (pp = pairtable, n = npairs; n-- > 0; i++, pp++) {
-	sorted[i] = &pp->c;
-	pp->c.code = pp->a->c.code + pp->b->c.code;
-	pp->c.cost = pp->c.count * pp->c.code;
-    }
-    qsort(sorted, ncodes + npairs, sizeof (Code*), codeCostCompare);
-    code = 0;
-    codelen = codeLength(code);
-    for (i = 0, n = npairs + ncodes; n-- > 0; i++) {
-	Code* c = sorted[i];
-	if (c->cost > CODEDCOST(c, codelen)) {
-	    c->code = code++;
-	    codelen = codeLength(code);
-	} else
-	    c->code = (u_short) -1;
-	if (clearCounts)
-	    c->count = 0;
-    }
-    return (code);
-}
-
-void
-makeCodeTable(void)
-{
-    int i, n;
-    Code** sorted;
-    CodeEntry* cp;
-
-    sorted = (Code**) malloc((npairs+ncodes) * sizeof (Code*));
-    makeCodeNames(n = assignCodes(sorted, FALSE));
-    /*
-     * Oversize the dictionary in case the lookup function
-     * is optimized for a partially populated data structure.
-     * Most any hashing algorithm should do fine with a max
-     * 75% population.
-     */
-    printf("%d dict begin\n", 4*n/3);
-    for (i = 0, n = npairs + ncodes; n-- > 0; i++) {
-	Code* c = sorted[i];
-	if (c->code == (u_short) -1)
-	    continue;
-	if (isPair(c)) {
-	    CodePairEntry* pp = (CodePairEntry*) c;
-	    printf("/%s{", codeNames[c->code]);
-	    cp = pp->a;
-	    if (cp->c.code < c->code)
-		printf("%s", codeNames[cp->c.code]);
-	    else
-		printf("%d %d f", cp->runlen, cp->move);
-	    putchar(' ');
-	    cp = pp->b;
-	    if (cp->c.code < c->code)
-		printf("%s", codeNames[cp->c.code]);
-	    else
-		printf("%d %d f", cp->runlen, cp->move);
-	    printf("}d");
-	    if (includeStatistics)
-		printf("\t%% %d hits", c->count);
-	    putchar('\n');
-	} else {
-	    cp = (CodeEntry*) c;
-	    printf("/%s{%d %d f}d", codeNames[c->code], cp->runlen, cp->move);
-	    if (includeStatistics)
-		printf("\t%% %d hits", c->count);
-	    putchar('\n');
-	}
-    }
-    free((char*) sorted);
-}
+static	void do_font_insert(void);
 
 static void
 setupPass(TIFF* tif, int pass)
 {
-    long* stripbytecount;
+    uint32* stripbytecount;
 
     fax.pass = pass;
     fax.row = 0;
     TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
     fax.cc = stripbytecount[0];
     fax.bp = fax.buf;
-    FaxPreDecode();
+    FaxPreDecode(tif);
 }
 
 static	int totalPages = 0;
@@ -395,11 +41,11 @@ static	int totalPages = 0;
 void
 printTIF(TIFF* tif, int pageNumber)
 {
-    u_long w, h;
-    short fill, unit, photometric, compression;
+    uint32 w, h;
+    uint16 fill, unit, photometric, compression;
     float xres, yres;
-    long g3opts;
-    long* stripbytecount;
+    uint32 g3opts;
+    uint32* stripbytecount;
 
     TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
     fax.cc = stripbytecount[0];
@@ -425,7 +71,6 @@ printTIF(TIFF* tif, int pageNumber)
 	yres *= 25.4;
     }
     TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photometric);
-    fax.b.white = (photometric == PHOTOMETRIC_MINISBLACK);
     /*
      * Calculate the scanline/tile widths.
      */
@@ -445,37 +90,7 @@ printTIF(TIFF* tif, int pageNumber)
     TIFFGetField(tif, TIFFTAG_COMPRESSION, &compression);
     if (compression == COMPRESSION_CCITTFAX4)
 	fax.options = FAX3_NOEOL;
-    /*
-     * First pass: create code and pair frequency tables.
-     */
-    memset((char*) codehash, 0, sizeof (codehash));
-    memset((char*) pairhash, 0, sizeof (pairhash));
-    maxcodes = 0;
-    maxpairs = 0;
-    setupPass(tif, 1);
-    ncodes = npairs = 0;
-    if (compression == COMPRESSION_CCITTFAX4)
-	Fax4DecodeRow(tif, h*w);
-    else
-	Fax3DecodeRow(tif, h*w);
-    if (dopairs) {
-	/*
-	 * Second pass: assign codes according to frequency
-	 *  thresholds and rescan data to get true usage.
-	 */
-	CodeEntry** sorted = (CodeEntry**)
-	    malloc((npairs+ncodes) * sizeof (CodeEntry*));
-	assignCodes((Code**) sorted, TRUE);
-	free((char*) sorted);
-	setupPass(tif, 2);
-	if (compression == COMPRESSION_CCITTFAX4)
-	    Fax4DecodeRow(tif, h*w);
-	else
-	    Fax3DecodeRow(tif, h*w);
-    }
-    /*
-     * Third pass: generate code table and encoded data.
-     */
+
     printf("%%%%Page: \"%d\" %d\n", pageNumber, pageNumber);
     printf("gsave\n");
     if (scaleToPage) {
@@ -488,30 +103,18 @@ printTIF(TIFF* tif, int pageNumber)
 	printf("%g %g scale\n", 72./xres, -72./yres);
     }
     printf("0 setgray\n");
-    makeCodeTable();
     setupPass(tif, 3);
     while (fax.cc > 0) {
-	startOfRow = 1;
 	if (compression == COMPRESSION_CCITTFAX4)
 	    Fax4DecodeRow(tif, w);
 	else
 	    Fax3DecodeRow(tif, w);
-	if (!startOfRow)
-	    printf("s\n");
+	print_scan_row(w, fax.scanline);
     }
     printf("p\n");
     printf("grestore\n");
     free((char*) fax.scanline);
     free((char*) fax.buf);
-    free(codeNameSpace);
-    if (maxcodes > 0) {
-	free((char*) codetable);
-	codetable = NULL;
-    }
-    if (maxpairs > 0) {
-	free((char*) pairtable);
-	pairtable = NULL;
-    }
     totalPages++;
 }
 
@@ -521,7 +124,8 @@ TIFFGetField(tif, TIFFTAG_PAGENUMBER, &pn, &ptotal)
 int
 findPage(TIFF* tif, int pageNumber)
 {
-    short pn = -1, ptotal = -1;
+    uint16 pn = (uint16) -1;
+    uint16 ptotal = (uint16) -1;
     if (GetPageNumber(tif)) {
 	while (pn != pageNumber && TIFFReadDirectory(tif) && GetPageNumber(tif))
 	    ;
@@ -534,7 +138,7 @@ void
 fax2ps(TIFF* tif, int npages, int* pages, char* filename)
 {
     if (npages > 0) {
-	short pn, ptotal;
+	uint16 pn, ptotal;
 	int i;
 
 	if (!GetPageNumber(tif))
@@ -557,16 +161,14 @@ fax2ps(TIFF* tif, int npages, int* pages, char* filename)
 #undef GetPageNumber
 
 static int
-pcompar(const void* va, const void* vb)
+pcompar(void* va, void* vb)
 {
-    const int* pa = (const int*) va;
-    const int* pb = (const int*) vb;
+    int* pa = (int*) va;
+    int* pb = (int*) vb;
     return (*pa - *pb);
 }
 
-#ifndef atof			/* XXX for GNU gcc, gack! */
 extern	double atof();
-#endif
 
 main(int argc, char** argv)
 {
@@ -578,7 +180,7 @@ main(int argc, char** argv)
     long t;
     TIFF* tif;
 
-    while ((c = getopt(argc, argv, "p:x:y:W:H:aswzS")) != -1)
+    while ((c = getopt(argc, argv, "p:x:y:W:H:wS")) != -1)
 	switch (c) {
 	case 'H':		/* page height */
 	    pageHeight = atof(optarg);
@@ -588,11 +190,6 @@ main(int argc, char** argv)
 	    break;
 	case 'W':		/* page width */
 	    pageWidth = atof(optarg);
-	    break;
-	case 'a':		/* use only upper-case alphabetics */
-	    MaxAlpha = 26;
-	    for (t = 0; t < MaxAlpha; t++)
-		alphabet[t] = 'A' + t;
 	    break;
 	case 'p':		/* print specific page */
 	    pageNumber = atoi(optarg);
@@ -607,9 +204,6 @@ main(int argc, char** argv)
 		pages = (int*) malloc(sizeof (int));
 	    pages[npages++] = pageNumber;
 	    break;
-	case 's':		/* include frequency statistics as comments */
-	    includeStatistics = TRUE;
-	    break;
 	case 'w':
 	    dowarnings = TRUE;
 	    break;
@@ -619,12 +213,9 @@ main(int argc, char** argv)
 	case 'y':
 	    defyres = atof(optarg);
 	    break;
-	case 'z':		/* do pair analysis (not effective) */
-	    dopairs = TRUE;
-	    break;
 	case '?':
 	    fprintf(stderr,
-"usage: %s [-a] [-w] [-p pagenumber] [-x xres] [-y res] [-s] [-S] [-W pagewidth] [-H pageheight] [files]\n",
+"usage: %s [-w] [-p pagenumber] [-x xres] [-y res] [-S] [-W pagewidth] [-H pageheight] [files]\n",
 		argv[0]);
 	    exit(-1);
 	}
@@ -645,11 +236,11 @@ main(int argc, char** argv)
     printf("%%%%Pages: (atend)\n");
     printf("%%%%EndComments\n");
     printf("%%%%BeginProlog\n");
-    printf("/d{bind def}def\n");			/* bind and def proc */
-    printf("/f{0 rmoveto 0 rlineto}d\n");		/* fill span */
-    printf("/r{0 exch moveto}d\n");			/* begin row */
-    printf("/s{stroke}d\n");				/* stroke row */
-    printf("/p{end showpage}d \n");			/* end page */
+    do_font_insert();
+    printf("/d{bind def}def\n"); /* bind and def proc */
+    printf("/m{0 exch moveto}d\n");
+    printf("/s{show}d\n");
+    printf("/p{showpage}d \n");	/* end page */
     printf("%%%%EndProlog\n");
     if (optind < argc) {
 	do {
@@ -685,5 +276,37 @@ main(int argc, char** argv)
     printf("%%%%Trailer\n");
     printf("%%%%Pages: %u\n", totalPages);
     printf("%%%%EOF\n");
+
     exit(0);
+}
+
+/* 
+ * Create a special PostScript font for printing FAX documents.  By taking
+ * advantage of the font-cacheing mechanism, a substantial speed-up in 
+ * rendering time is realized. 
+ */
+static void
+do_font_insert(void)
+{
+    puts("/newfont 10 dict def newfont begin /FontType 3 def /FontMatrix [1");
+    puts("0 0 1 0 0] def /FontBBox [0 0 512 1] def /Encoding 256 array def");
+    puts("0 1 31{Encoding exch /255 put}for 120 1 255{Encoding exch /255");
+    puts("put}for Encoding 37 /255 put Encoding 40 /255 put Encoding 41 /255");
+    puts("put Encoding 92 /255 put /count 0 def /ls{Encoding exch count 3");
+    puts("string cvs cvn put /count count 1 add def}def 32 1 36{ls}for");
+    puts("38 1 39{ls}for 42 1 91{ls}for 93 1 99{ls}for /count 100");
+    puts("def 100 1 119{ls}for /CharDict 5 dict def CharDict begin /white");
+    puts("{dup 255 eq{pop}{1 dict begin 100 sub neg 512 exch bitshift");
+    puts("/cw exch def cw 0 0 0 cw 1 setcachedevice end}ifelse}def /black");
+    puts("{dup 255 eq{pop}{1 dict begin 110 sub neg 512 exch bitshift");
+    puts("/cw exch def cw 0 0 0 cw 1 setcachedevice 0 0 moveto cw 0 rlineto");
+    puts("0 1 rlineto cw neg 0 rlineto closepath fill end}ifelse}def /numbuild");
+    puts("{dup 255 eq{pop}{6 0 0 0 6 1 setcachedevice 0 1 5{0 moveto");
+    puts("dup 32 and 32 eq{1 0 rlineto 0 1 rlineto -1 0 rlineto closepath");
+    puts("fill newpath}if 1 bitshift}for pop}ifelse}def /.notdef {}");
+    puts("def /255 {}def end /BuildChar{exch begin dup 110 ge{Encoding");
+    puts("exch get 3 string cvs cvi CharDict /black get}{dup 100 ge {Encoding");
+    puts("exch get 3 string cvs cvi CharDict /white get}{Encoding exch get");
+    puts("3 string cvs cvi CharDict /numbuild get}ifelse}ifelse exec end");
+    puts("}def end /Bitfont newfont definefont 1 scalefont setfont");
 }

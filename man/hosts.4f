@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/hosts.4f,v 1.10 1994/06/24 02:32:04 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/hosts.4f,v 1.19 1995/04/08 21:35:53 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,10 +25,11 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.ds Fx \fIFlexFAX\fP
-.TH HOSTS 4F "June 14, 1994"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH HOSTS 4F "December 5, 1994"
 .SH NAME
-hosts \- host name data base
+hosts \- \*(Fx job submission access control list
 .SH DESCRIPTION
 The file
 .B etc/hosts
@@ -56,30 +58,38 @@ which access is to be disallowed.
 That is, if the pattern matches the client information,
 then access is denied.
 .PP
+Note that regular expressions are 
+.B not
+anchored.
+That is, a regular expression may match a substring of
+of the ``\fIuser\fP@\fIhost\fP'' string.
+Use ``^'' to match the start of the string and ``$'' to
+match the end.
+.PP
 Each regular expression pattern must appear on a line by itself.
 Trailing white space is ignored.
 Comments are introduced with the ``#'' character and extend
 to the end of the line.
 For backwards compatibility, host name patterns without a
-user specification are interpreted as ``.*@\fIhost\fP'';
+user specification are interpreted as ``^.*@\fIhost\fP$'';
 i.e. any user on that host may submit a jobs for transmission.
 .PP
 The following is a sample hosts file.
 .sp .5
 .nf
-.in +0.5i
+.RS
 .ft C
 .ta \w'oxford.Berkeley.EDU    'u
 127.0.0.1	# anyone coming through local host
-sam@flake.*sgi.com	# Sam on his work machine
-sam@oxford.*Berkeley.*	# Sam on his machine at home
-\&.*@.*.\e.esd\e..*	# anyone in the esd domain
-!tom@.*	# Tom Davis is denied access,
-\&.*\e.sgi.com	# but anyone else at sgi is ok
+^sam@flake.*sgi.com$	# Sam on his work machine
+^sam@oxford.*Berkeley.*	# Sam on his machine at home
+^\&.*@.*.\e.esd\e..*	# anyone in the esd domain
+!^tom@.*	# Tom Davis is denied access,
+\&.*\e.sgi.com$	# but anyone else at sgi is ok
 .ft P
 .fi
-.in -0.5i
+.RE
 .SH "SEE ALSO"
 .IR sendfax (1),
 .IR faxd.recv (1M),
-.IR flexfax (4F)
+.IR hylafax (4F)

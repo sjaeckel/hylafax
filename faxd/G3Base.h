@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/G3Base.h,v 1.1 1994/05/27 23:16:51 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Base.h,v 1.5 1995/04/08 21:30:33 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -30,8 +31,6 @@
 #include "Types.h"
 
 struct G3Base {
-    short	data;		// current input/output byte
-    short	bit;		// current bit in input/output byte
     fxBool	is2D;		// whether or not data is 2d-encoded
     enum { G3_1D, G3_2D } tag;	// 1d/2d decoded row type
     const u_char* bitmap;	// bit reversal table

@@ -1,0 +1,60 @@
+<HTML><HEAD><TITLE>
+HylaFAQ: [Linux] Output file requires shared library libc.so.4?
+</TITLE></HEAD><BODY>
+<H1>Q14: [Linux] Output file requires shared library libc.so.4?</H1>
+<P><HR>
+<A HREF="mailto:flexfaq@flake.asd.sgi.com">
+<IMG SRC="@HTMLPATH@/icons/faq-feedback.gif" ALT="?" ALIGN=left HSPACE=8 BORDER=0>
+</A>
+Got something to say about this answer?  Use the 
+<A HREF="@CGIPATH@/faq-feedback?Question=%5BLinux%5D+Output+file+requires+shared+library+libc%2Eso%2E4%3F">
+feedback form</A>
+to send your comments to the HylaFAQ maintainers, or hit the question mark
+button to invoke the mailer.
+<BR CLEAR=left><HR>
+<DL COMPACT>
+<DT>Q.
+<DD><I>[Linux] Output file requires shared library `libc.so.4'?</I>
+<P>
+My setup:
+<UL>
+Linux 1.1.89<BR>
+gcc 2.6.2p2  (note -- there is no release of gcc 2.6.3 for Linux yet)<BR>
+libc 4.6.27<BR>
+libg++ 2.6.2.1<BR>
+</UL>
+<P>
+The problem: make craps out with the following error:
+<UL><TT>
+ld: Output file requires shared library `libc.so.4'
+gcc: Internal compiler error: program ld got fatal signal 6
+make: *** [t] Error 1
+</TT></UL>
+<P>
+It appears to be a combination of the "-g" option and the
+need of a "-l" library.
+<P>
+<DT>A.
+<DD>
+I found a mention of a similar problem on one of the Linux newsgroups.  It
+appears there was a system configuration problem for me (and some others...).
+<P>
+This seems to be the fix:
+<P>
+>	Thanks to those who replied and pointed me in the right direction.<BR>
+>I was linking using the -g and -pg options.  It turns out that I needed to<BR>
+>make two symbolic links in /usr/lib:<BR>
+><BR>
+>	libg.sa -> libc.sa<BR>
+>	libc_p.sa -> libc.sa<BR>
+><BR>
+>After that, the problem went away.<BR>
+<P>
+I have rebuilt HylaFAX using these options.  I no longer had any of the errors.
+</DL>
+
+<P><HR>
+<ADDRESS>
+<A HREF="@HTMLPATH@/sam.html">Sam Leffler</A> / <A HREF="mailto:sam@engr.sgi.com">sam@engr.sgi.com</A>.
+</ADDRESS>
+</BODY></HTML>

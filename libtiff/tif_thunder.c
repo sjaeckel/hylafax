@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_thunder.c,v 1.22 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/tiff/libtiff/RCS/tif_thunder.c,v 1.24.1.1 1995/02/10 19:04:23 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -63,17 +63,20 @@ static const int threebitdeltas[8] = { 0, 1, 2, 3, 0, -3, -2, -1 };
 }
 
 static int
-DECLARE3(ThunderDecode, TIFF*, tif, register u_char*, op, u_long, maxpixels)
+ThunderDecode(TIFF* tif, tidata_t op, tsize_t maxpixels)
 {
 	register u_char *bp;
-	register int n, cc, delta;
-	register u_int lastpixel;
-	register u_long npixels;
+	register tsize_t cc;
+	u_int lastpixel;
+	tsize_t npixels;
 
 	bp = (u_char *)tif->tif_rawcp;
 	cc = tif->tif_rawcc;
-	lastpixel = npixels = 0;
+	lastpixel = 0;
+	npixels = 0;
 	while (cc > 0 && npixels < maxpixels) {
+		int n, delta;
+
 		n = *bp++, cc--;
 		switch (n & THUNDER_CODE) {
 		case THUNDER_RUN:		/* pixel run */
@@ -112,23 +115,24 @@ DECLARE3(ThunderDecode, TIFF*, tif, register u_char*, op, u_long, maxpixels)
 			break;
 		}
 	}
-	tif->tif_rawcp = (char *)bp;
+	tif->tif_rawcp = (tidata_t) bp;
 	tif->tif_rawcc = cc;
 	if (npixels != maxpixels) {
 		TIFFError(tif->tif_name,
 		    "ThunderDecode: %s data at scanline %ld (%lu != %lu)",
 		    npixels < maxpixels ? "Not enough" : "Too much",
-		    tif->tif_row, npixels, maxpixels);
+		    (long) tif->tif_row, (long) npixels, (long) maxpixels);
 		return (0);
 	}
 	return (1);
 }
 
 static int
-DECLARE4(ThunderDecodeRow, TIFF*, tif, u_char*, buf, u_long, occ, u_int, s)
+ThunderDecodeRow(TIFF* tif, tidata_t buf, tsize_t occ, tsample_t s)
 {
-	u_char *row = buf;
+	tidata_t row = buf;
 	
+	(void) s;
 	while ((long)occ > 0) {
 		if (!ThunderDecode(tif, row, tif->tif_dir.td_imagewidth))
 			return (0);
@@ -139,7 +143,7 @@ DECLARE4(ThunderDecodeRow, TIFF*, tif, u_char*, buf, u_long, occ, u_int, s)
 }
 
 int
-DECLARE1(TIFFInitThunderScan, TIFF*, tif)
+TIFFInitThunderScan(TIFF* tif)
 {
 	tif->tif_decoderow = ThunderDecodeRow;
 	tif->tif_decodestrip = ThunderDecodeRow;

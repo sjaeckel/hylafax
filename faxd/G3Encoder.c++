@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/G3Encoder.c++,v 1.4 1994/07/02 19:38:57 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/G3Encoder.c++,v 1.8 1995/04/08 21:30:37 sam Rel $ */
 /*
- * Copyright (c) 1994 Sam Leffler
- * Copyright (c) 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1994-1995 Sam Leffler
+ * Copyright (c) 1994-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -45,6 +46,7 @@ G3Encoder::setupEncoder(u_int fillOrder, fxBool is2d)
      * need to bit reverse only if the desired order is different.
      */
     setup(TIFFGetBitRevTable(fillOrder != FILLORDER_MSB2LSB), is2d);
+    data = 0;
     bit = 8;
 }
 

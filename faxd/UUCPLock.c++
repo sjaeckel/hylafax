@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/UUCPLock.c++,v 1.27 1994/06/29 21:23:53 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/UUCPLock.c++,v 1.43 1995/04/08 21:31:08 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -22,56 +23,111 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
-#include <stdlib.h>
+#include "UUCPLock.h"
+#include "faxApp.h"
+#include "Sys.h"
+#include "config.h"
+
 #include <sys/param.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <string.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <time.h>
-#include <pwd.h>
-#ifdef svr4
+#ifdef HAS_MKDEV
 extern "C" {
 #include <sys/mkdev.h>
 }
 #endif
-
-#include "UUCPLock.h"
-#include "config.h"
+#include <pwd.h>
 
 /*
  * UUCP Device Locking Support.
+ *
+ * NB: There is some implicit understanding of sizeof (pid_t).
  */
 
-extern	void fxFatal(const char* va_alist ...);
+/*
+ * Lock files with ascii contents (System V style).
+ */
+class AsciiUUCPLock : public UUCPLock {
+private:
+    fxStr	data;			// data to write record in lock file
 
-UUCPLock::UUCPLock(const char* device)
+    void setPID(pid_t);
+    fxBool writeData(int fd);
+    fxBool readData(int fd, pid_t& pid);
+public:
+    AsciiUUCPLock(const fxStr&, mode_t);
+    ~AsciiUUCPLock();
+};
+
+/*
+ * Lock files with binary contents (BSD style).
+ */
+class BinaryUUCPLock : public UUCPLock {
+private:
+    pid_t	data;			// data to write record in lock file
+
+    void setPID(pid_t);
+    fxBool writeData(int fd);
+    fxBool readData(int fd, pid_t& pid);
+public:
+    BinaryUUCPLock(const fxStr&, mode_t);
+    ~BinaryUUCPLock();
+};
+
+UUCPLock*
+UUCPLock::newLock(const char* type,
+    const fxStr& dir, const fxStr& device, mode_t mode)
 {
-    setupIDs();
-    char pathname[1024];
-#ifdef svr4
-    struct stat sb;
-    (void) stat(device, &sb);
-    sprintf(pathname, "%s/%s%03d.%03d.%03d", UUCP_LOCKDIR, UUCP_LOCKPREFIX,
-	major(sb.st_dev), major(sb.st_rdev), minor(sb.st_rdev));
+    fxStr pathname(dir);
+
+    if (type[0] == '+') {		// SVR4-style lockfile names
+#if defined(HAS_MKDEV) || (defined(major) && defined(minor))
+	/*
+	 * SVR4-style lockfile names are of the form LK.xxx.yyy.zzz
+	 * where xxx is the major device of the filesystem on which
+	 * the device resides and yyy and zzz are the major & minor
+	 * numbers of the locked device.  This format is used if the
+	 * lockfile type is specified with a leading '+'; e.g.
+	 * ``+ascii'' or ``+binary''. 
+	 */
+	struct stat sb;
+	Sys::stat(device, sb);
+	pathname.append(fxStr::format("/LK.%03d.%03d.%03d",
+	    major(sb.st_dev), major(sb.st_rdev), minor(sb.st_rdev)));
+	type++;
 #else
-    const char* cp = strrchr(device, '/');
-    sprintf(pathname, "%s/%s%s", UUCP_LOCKDIR, UUCP_LOCKPREFIX,
-	cp ? cp+1 : device);
+	fxFatal("No support for SVR4-style UUCP lockfiles");
 #endif
-    file = pathname;
-#ifdef sco
-    /*
-     * SCO uses upper case letters on modem control devices, but
-     * requires that the locking be done on the lower case device.
-     * Consequently we convert the generated pathname to reflect
-     * this convention.
-     */
-    file.lowercase(file.nextR(file.length(), '/')+strlen(UUCP_LOCKPREFIX));
-#endif
+    } else {				// everybody else's lockfile names
+	u_int l = device.nextR(device.length(), '/');
+	pathname.append("/LCK.." | device.token(l, '/'));
+	if (type[0] == '-') {		// SCO-style lockfile names
+	    /*
+	     * Some systems (e.g. SCO) uses upper case letters on modem
+	     * control devices, but require that the locking be done on
+	     * the lower case device.  If the lock file type is specified
+	     * as ``-ascii'' or ``-binary'', etc. then we convert the
+	     * generated pathname to reflect this convention.
+	     */
+	    pathname.lowercase(dir.length()+6);
+	    type++;
+	}
+    }
+    if (streq(type, "ascii"))
+	return new AsciiUUCPLock(pathname, mode);
+    else if (streq(type, "binary"))
+	return new BinaryUUCPLock(pathname, mode);
+    else
+	fxFatal("Unknown UUCP lock file type \"%s\"", type);
+    return (NULL);
+}
+
+UUCPLock::UUCPLock(const fxStr& pathname, mode_t m) : file(pathname)
+{
+    mode = m;
     locked = FALSE;
+
+    setupIDs();
 }
 
 UUCPLock::~UUCPLock()
@@ -86,12 +142,12 @@ void
 UUCPLock::setupIDs()
 {
     if (UUCPuid == (uid_t) -1) {
-	passwd *pwd = getpwnam("uucp");
+	const passwd *pwd = ::getpwnam("uucp");
 	if (!pwd)
 	    fxFatal("Can not deduce identity of UUCP");
 	UUCPuid = pwd->pw_uid;
 	UUCPgid = pwd->pw_gid;
-	endpwent();			// paranoia
+	::endpwent();			// paranoia
     }
 }
 uid_t UUCPLock::getUUCPUid() { setupIDs(); return UUCPuid; }
@@ -110,26 +166,24 @@ UUCPLock::create()
      * We create a separate file and link it to
      * the destination to avoid a race condition.
      */
-    fxStr tmpS(UUCP_LOCKDIR);
-    tmpS.append("/TM.faxXXXXXX");
-    char* tmp = tmpS;			// NB: for systems w/o prototypes
-    int fd = mkstemp(tmp);
+    fxStr tmp = file.head(file.nextR(file.length(),'/')) | "/TM.faxXXXXXX";
+    int fd = Sys::mkstemp(tmp);
     if (fd >= 0) {
-	(void) writeData(fd);
+	writeData(fd);
 #if HAS_FCHMOD
-	(void) fchmod(fd, UUCP_LOCKMODE);
+	::fchmod(fd, mode);
 #else
-	(void) chmod(tmp, UUCP_LOCKMODE);
+	Sys::chmod(tmp, mode);
 #endif
 #if HAS_FCHOWN
-	(void) fchown(fd, UUCPuid, UUCPgid);
+	::fchown(fd, UUCPuid, UUCPgid);
 #else
-	(void) chown(tmp, UUCPuid, UUCPgid);
+	Sys::chown(tmp, UUCPuid, UUCPgid);
 #endif
-	(void) close(fd);
+	::close(fd);
 
-	locked = (link(tmp, (char*) file) == 0);
-	(void) unlink(tmp);
+	locked = (Sys::link(tmp, file) == 0);
+	Sys::unlink(tmp);
     }
     return (locked);
 }
@@ -142,9 +196,7 @@ fxBool
 UUCPLock::isNewer(time_t age)
 {
     struct stat sb;
-    if (stat((char*) file, &sb) != 0)
-	return (FALSE);
-    return ((time(0) - sb.st_ctime) < age);
+    return (Sys::stat(file, sb) != 0 ? FALSE : Sys::now() - sb.st_mtime < age);
 }
 
 /*
@@ -158,12 +210,12 @@ UUCPLock::lock()
 {
     if (locked)
 	return (FALSE);
-    uid_t ouid = geteuid();
-    seteuid(0);				// need to be root
+    uid_t ouid = ::geteuid();
+    ::seteuid(0);			// need to be root
     fxBool ok = create();
     if (!ok)
 	ok = check() && create();
-    seteuid(ouid);
+    ::seteuid(ouid);
     return (ok);
 }
 
@@ -174,12 +226,35 @@ void
 UUCPLock::unlock()
 {
     if (locked) {
-	uid_t ouid = geteuid();
-	seteuid(0);			// need to be root
-	(void) unlink((char*) file);
-	seteuid(ouid);
+	uid_t ouid = ::geteuid();
+	::seteuid(0);			// need to be root
+	Sys::unlink(file);
+	::seteuid(ouid);
 	locked = FALSE;
     }
+}
+
+/*
+ * Set a particular owner process
+ * pid for an already locked device.
+ */
+fxBool
+UUCPLock::setOwner(pid_t pid)
+{
+    fxBool ok = FALSE;
+    if (locked) {
+	uid_t ouid = ::geteuid();
+	::seteuid(0);			// need to be root
+	int fd = Sys::open(file, O_WRONLY);
+	if (fd != -1) {
+	    if (pid)
+		setPID(pid);
+	    ok = writeData(fd);
+	    ::close(fd);
+	}
+	::seteuid(ouid);
+    }
+    return (ok);
 }
 
 /*
@@ -189,28 +264,30 @@ fxBool
 UUCPLock::ownerExists(int fd)
 {
     pid_t pid;
-    return readData(fd, pid) && (kill(pid, 0) == 0 || errno != ESRCH);
+    return (readData(fd, pid) && (::kill(pid, 0) == 0 || errno != ESRCH));
 }
 
 /*
  * Check to see if the lock exists and is still active.
- * Locks are automatically expired after UUCPLock::lockTimeout seconds,
- * or if the process owner is no longer around.
+ * Locks are automatically expired after
+ * UUCPLock::lockTimeout seconds if the process owner
+ * is no longer around.
  */
 fxBool
 UUCPLock::check()
 {
-    int fd = open((char*) file, O_RDONLY);
+    int fd = Sys::open(file, O_RDONLY);
     if (fd != -1) {
 	if (lockTimeout > 0) {
-	    if (isNewer(lockTimeout) && ownerExists(fd)) {
-		close(fd);
+	    if (isNewer(lockTimeout) || ownerExists(fd)) {
+		::close(fd);
 		return (FALSE);
 	    }
-	    close(fd);
-	    return (unlink((char*) file) == 0);
+	    ::close(fd);
+	    logInfo("Purge stale UUCP lock %s", (const char*) file);
+	    return (Sys::unlink(file) == 0);
 	} else {
-	    close(fd);
+	    ::close(fd);
 	    return (FALSE);
 	}
     }
@@ -220,29 +297,32 @@ UUCPLock::check()
 /*
  * ASCII lock file interface.
  */
-AsciiUUCPLock::AsciiUUCPLock(const char* device) : UUCPLock(device),
-    data(UUCP_PIDDIGITS+2)
-{
-    sprintf((char*) data, "%*d\n", UUCP_PIDDIGITS, getpid());
-}
+AsciiUUCPLock::AsciiUUCPLock(const fxStr& path, mode_t m)
+    : UUCPLock(path, m)
+    , data(UUCP_PIDDIGITS+2)
+{ setPID(::getpid()); }
+AsciiUUCPLock::~AsciiUUCPLock() {}
 
-AsciiUUCPLock::~AsciiUUCPLock()
+void
+AsciiUUCPLock::setPID(pid_t pid)
 {
+    // XXX should this be %d or %ld? depends on pid_t
+    ::sprintf((char*) data, "%*d\n", UUCP_PIDDIGITS, pid);
 }
 
 fxBool
 AsciiUUCPLock::writeData(int fd)
 {
-    return write(fd, (char*) data, UUCP_PIDDIGITS+1) == (UUCP_PIDDIGITS+1);
+    return (Sys::write(fd, data, UUCP_PIDDIGITS+1) == (UUCP_PIDDIGITS+1));
 }
 
 fxBool
 AsciiUUCPLock::readData(int fd, pid_t& pid)
 {
     char buf[UUCP_PIDDIGITS+1];
-    if (read(fd, buf, UUCP_PIDDIGITS) == UUCP_PIDDIGITS) {
+    if (Sys::read(fd, buf, UUCP_PIDDIGITS) == UUCP_PIDDIGITS) {
 	buf[UUCP_PIDDIGITS] = '\0';
-	pid = atoi(buf);
+	pid = ::atol(buf);	// NB: assumes pid_t is <= 32-bits
 	return (TRUE);
     } else
 	return (FALSE);
@@ -251,39 +331,30 @@ AsciiUUCPLock::readData(int fd, pid_t& pid)
 /*
  * Binary lock file interface.
  */
+BinaryUUCPLock::BinaryUUCPLock(const fxStr& path, mode_t m)
+    : UUCPLock(path, m)
+{ setPID(::getpid()); }
+BinaryUUCPLock::~BinaryUUCPLock() {}
 
-BinaryUUCPLock::BinaryUUCPLock(const char* device) : UUCPLock(device)
+void
+BinaryUUCPLock::setPID(pid_t pid)
 {
-    data = getpid();		// binary pid of lock holder
-}
-
-BinaryUUCPLock::~BinaryUUCPLock()
-{
+    data = pid;			// binary pid of lock holder
 }
 
 fxBool
 BinaryUUCPLock::writeData(int fd)
 {
-    return write(fd, (char*) &data, sizeof (data)) == sizeof (data);
+    return (Sys::write(fd, (char*) &data, sizeof (data)) == sizeof (data));
 }
 
 fxBool
 BinaryUUCPLock::readData(int fd, pid_t& pid)
 {
-    int data;
-    if (read(fd, (char*) &data, sizeof (data)) == sizeof (data)) {
+    pid_t data;
+    if (Sys::read(fd, (char*) &data, sizeof (data)) == sizeof (data)) {
 	pid = data;
 	return (TRUE);
     } else
 	return (FALSE);
-}
-
-UUCPLock*
-OSnewUUCPLock(const char* device)
-{
-#if UUCP_LOCKTYPE == 1
-    return new BinaryUUCPLock(device);
-#else
-    return new AsciiUUCPLock(device);
-#endif
 }

@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxalter/RCS/faxalter.c++,v 1.15 1994/06/23 00:35:24 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxalter/RCS/faxalter.c++,v 1.23 1995/04/08 21:28:17 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -27,18 +28,23 @@
 #include "config.h"
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
 
 class faxAlterApp : public FaxClient {
 private:
     fxStr	appName;		// for error messages
+    fxBool	groups;			// group or job id's
     fxStr	notify;
     fxStr	tts;
     fxStr	killtime;
     fxStr	maxdials;
+    fxStr	modem;
+    fxStr	priority;
     fxStrArray	jobids;
 
+    const char* alterCmd(const char* param);
     void usage();
     void printError(const char* fmt, ...);
     void printWarning(const char* fmt, ...);
@@ -53,7 +59,7 @@ public:
     void recvEof();
     void recvError(const int err);
 };
-faxAlterApp::faxAlterApp() {}
+faxAlterApp::faxAlterApp() { groups = FALSE; }
 faxAlterApp::~faxAlterApp() {}
 
 void
@@ -64,7 +70,7 @@ faxAlterApp::initialize(int argc, char** argv)
     appName = argv[0];
     u_int l = appName.length();
     appName = appName.tokenR(l, '/');
-    while ((c = getopt(argc, argv, "a:h:k:n:t:DQRpv")) != -1)
+    while ((c = getopt(argc, argv, "a:h:k:m:n:P:t:DQRgpv")) != -1)
 	switch (c) {
 	case 'D':			// set notification to when done
 	    notify = "when done";
@@ -78,11 +84,17 @@ faxAlterApp::initialize(int argc, char** argv)
 	case 'a':			// send at specified time
 	    tts = optarg;
 	    break;
+	case 'g':			// apply to groups, not jobs
+	    groups = TRUE;
+	    break;
 	case 'h':			// server's host
 	    setHost(optarg);
 	    break;
 	case 'k':			// kill job at specified time
 	    killtime = optarg;
+	    break;
+	case 'm':			// modem
+	    modem = optarg;
 	    break;
 	case 'n':			// set notification
 	    if (strcmp(optarg, "done") == 0)
@@ -94,6 +106,12 @@ faxAlterApp::initialize(int argc, char** argv)
 	    break;
 	case 'p':			// send now (push)
 	    tts = "now";
+	    break;
+	case 'P':			// scheduling priority
+	    priority = optarg;
+	    if ((u_int) atoi(priority) > 255)
+		fxFatal("Invalid job priority %s;"
+		    " values must be in the range [0,255]", optarg);
 	    break;
 	case 't':			// set max number of retries
 	    n = atoi(optarg);
@@ -109,7 +127,8 @@ faxAlterApp::initialize(int argc, char** argv)
 	}
     if (optind >= argc)
 	usage();
-    if (tts == "" && notify == "" && killtime == "" && maxdials == "")
+    if (tts == "" && notify == "" && killtime == "" &&
+      maxdials == "" && modem == "" && priority == "")
 	fxFatal("No job parameters specified for alteration.");
     setupUserIdentity();
     for (; optind < argc; optind++)
@@ -123,11 +142,22 @@ faxAlterApp::usage()
       " [-h server-host]"
       " [-a time]"
       " [-k time]"
+      " [-m modem]"
       " [-n notify]"
+      " [-P priority]"
       " [-t tries]"
       " [-p]"
+      " [-g]"
       " [-DQR]"
       " jobID...", (char*) appName);
+}
+
+const char*
+faxAlterApp::alterCmd(const char* param)
+{
+    static char cmd[80];
+    ::sprintf(cmd, "alter%s%s", groups ? "Group" : "", param);
+    return (cmd);
 }
 
 void
@@ -138,13 +168,17 @@ faxAlterApp::open()
 	    fxStr line = jobids[i] | ":" | getSenderName();
 	    // do notify first 'cuz setting tts causes q rescan
 	    if (notify != "")
-		sendLine("alterNotify", (char*)(line | ":" | notify));
+		sendLine(alterCmd("Notify"), (char*)(line | ":" | notify));
 	    if (tts != "")
-		sendLine("alterTTS", (char*)(line | ":" | tts));
+		sendLine(alterCmd("TTS"), (char*)(line | ":" | tts));
 	    if (killtime != "")
-		sendLine("alterKillTime", (char*)(line | ":" | killtime));
+		sendLine(alterCmd("KillTime"), (char*)(line | ":" | killtime));
 	    if (maxdials != "")
-		sendLine("alterMaxDials", (char*)(line | ":" | maxdials));
+		sendLine(alterCmd("MaxDials"), (char*)(line | ":" | maxdials));
+	    if (priority != "")
+		sendLine(alterCmd("Priority"), (char*)(line | ":" | priority));
+	    if (modem != "")
+		sendLine(alterCmd("Modem"), (char*)(line | ":" | modem));
 	}
 	sendLine(".\n");
 	startRunning();

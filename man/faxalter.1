@@ -1,9 +1,10 @@
-.\"	$Header: /usr/people/sam/fax/man/RCS/faxalter.1,v 1.10 1994/06/24 01:14:58 sam Exp $
+.\"	$Header: /usr/people/sam/fax/./man/RCS/faxalter.1,v 1.22 1995/04/08 21:35:38 sam Rel $
 .\"
-.\" FlexFAX Facsimile Software
+.\" HylaFAX Facsimile Software
 .\"
-.\" Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
-.\" Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+.\" Copyright (c) 1990-1995 Sam Leffler
+.\" Copyright (c) 1991-1995 Silicon Graphics, Inc.
+.\" HylaFAX is a trademark of Silicon Graphics
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and 
 .\" its documentation for any purpose is hereby granted without fee, provided
@@ -24,79 +25,128 @@
 .\" LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 .\" OF THIS SOFTWARE.
 .\"
-.TH FAXALTER 1 "January 15, 1993"
+.if n .po 0
+.ds Fx \fIHyla\s-1FAX\s+1\fP
+.TH FAXALTER 1 "April 3, 1995"
 .SH NAME
-faxalter \- alter parameters of a facsimile job queued for transmission
+faxalter \- alter parameters of a \*(Fx job queued for transmission
 .SH SYNOPSIS
 .B faxalter
 [
-.B \-h
-.I hostname
-] [
-.B \-a
-.I tts
-] [
-.B \-k
-.I killtime
-] [
-.B \-n
-.I notify
-] [
-.B \-p
-] [
-.B \-t
-.I maxtries
-] [
-.B \-DQR
+.I options
 ]
-.IR jobid ...
+.IR id ...
 .SH DESCRIPTION
-.I Faxalter
-alters parameters of one or more facsimile jobs that
+.I faxalter
+changes parameters of one or more \*(Fx jobs that
 are queued for transmission.
-At present only a limited number of parameters can be altered:
-the time to send a job, the time to kill a job,
-the notification scheme, and maximum number of times to try
-sending the job.
-A 
-.I jobid
-is the number printed by
+Numerous parameters can be altered:
+.sp .5
+.RS
+.nf
+\(bu the time to send a job,
+\(bu the time to kill a job,
+\(bu the modem to use,
+\(bu the notification scheme,
+\(bu the scheduling priority for the job, and
+\(bu the maximum number of times to try sending the job.
+.fi
+.RE
+.sp .5
+An 
+.I id
+is a number that identifies a
+.I job
+(default) or
+.I "job group"
+submitted to \*(Fx; these numbers are printed by
 .IR sendfax (1)
-when a job is queued for transmission.
-This number can also be obtained from
+when jobs are queued for transmission.
+Job and job group identifiers can also be obtained from
 .IR faxstat (1).
-.PP
-The
-.B \-a
-option is used to specify a new time to send a job.
+Users can only alter jobs that they
+have queued; except the
+.I fax
+user and the super-user who can alter any job.
+By default,
+.I faxalter
+contacts the facsimile server on the host specified
+in the
+.B FAXSERVER
+environment variable.
+This can be overridden with the
+.B \-h
+option.
+.SH OPTIONS
+.TP 10
+.BI \-a " time"
+Specify a new time to send a job.
 The syntax for specifying a time is the same as used
 by
 .IR sendfax (1)
 (and
 .IR at (1)).
+.TP 10
+.B \-g
+Interpret each
+.I id
+as a
+.IR "job group identifier" .
+A job group identifier is the number assigned by \*(Fx
+to each group of jobs submitted together.
+This number is printed by
+.I sendfax
+when jobs are submitted.
+.TP 10
+.BI \-h " host"
+Force the server to be contacted on a specific
+.IR host .
 The
-.B \-p
-option specifies that the jobs should be
-.IR pushed ;
-that is, they should be sent immediately
-(NB: this is equivalent to ``\-a now''.)
-.PP
-The
-.B \-k
-option is used to specify a new time to kill a job;
+.I host
+may be either a symbolic name or a network address.
+If no
+.B \-h
+option is supplied,
+.I faxalter
+uses the
+.B FAXSERVER
+environment variable to identify the \*(Fx server to
+which the jobs should be directed.
+If no server is specified then
+.I faxalter
+attempts to contact a server on the local host.
+.TP 10
+.BI \-k " time"
+Specify a new time to kill a job;
 the syntax is the same as used for the 
 .B \-a
 option.
-.PP
-The
-.B \-t
-option is used to alter the maximum number of times the
+.TP 10
+.BI \-m " modem"
+Assign/reassign the jobs to the specified.
+Specifying ``any'' for the modem causes the jobs to be
+scheduled for any available modem.
+.TP 10
+.B \-p
+The jobs should be
+.IR pushed ;
+that is, they should be sent immediately
+(NB: this is equivalent to ``\-a now''.)
+.TP 10
+.BI \-P " pri"
+Set the scheduling priority for the specified jobs.
+The priority is an integer value in the range 0-255;
+lower values give a job higher priority.
+The default scheduling priority for a job is 127
+and priorities are recalculated after each attempt to
+process a job.
+.TP 10
+.BI \-t " tries"
+Set the maximum number of times the
 server should call the remote fax machine.
-.PP
-The
-.B \-n
-option is used to select a notification scheme to
-use for the specified jobs.
+.TP 10
+.BI \-n " scheme"
+Select a notification scheme to use for the specified jobs.
 Possible schemes are:
 ``\fInone\fP'' for no notification (default),
 ``\fIwhen done\fP'' for notification when the job is completed,
@@ -112,21 +162,6 @@ respectively.
 One can also leave off ``\fIwhen\fP'' when using the
 .B \-n
 option; e.g., ``\fIdone\fP'' instead of ``\fIwhen done\fP''.
-.PP
-Users can only alter jobs that they
-have queued; except the
-.I fax
-user who can alter any job.
-.PP
-By default,
-.I faxalter
-contacts the facsimile server on the host specified
-in the
-.B FAXSERVER
-environment variable.
-This can be overridden with the
-.B \-h
-option.
 .SH DIAGNOSTICS
 .B "Job %s not altered: it was not queued."
 The specified job was not found in the server's queue.
@@ -146,7 +181,7 @@ the server was unable to deduce the identity under which
 it was executing.  That is, there was no password file
 entry for the server's effective user id.
 This (usually) indicates that the entry in the file
-.I ${USRETC}/inetd.conf
+.I /usr/etc/inetd.conf
 on the remove machine is setup wrong; see
 .IR faxd.recv (1M)
 for more information.
@@ -154,12 +189,19 @@ for more information.
 .B "Job %s not altered: you neither own it nor are the fax user."
 A request was made to alter a job that the user does not own
 (and the user is not the ``fax'' user).
+.PP
+.B "Service refused; you do not have permission to use the fax server from %s."
+The client is not permitted to manipulate
+jobs on this server from the indicated host.
+Only those hosts and users listed in the file
+.B etc/hosts
+on the server machine are permitted to manipulate jobs.
 .SH BUGS
-.I Faxalter
+.I faxalter
 must be run on the same host on which the job was
 submitted.
 .SH "SEE ALSO"
-.IR flexfax (1),
+.IR hylafax (1),
 .IR sendfax (1),
 .IR faxrm (1),
 .IR faxstat (1),

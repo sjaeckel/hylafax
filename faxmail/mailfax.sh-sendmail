@@ -2,7 +2,8 @@
 #
 # mailfax - email to fax gateway for sendmail
 #
-# This file should be installed as /usr/local/bin/mailfax
+# This file should be installed as /usr/local/lib/fax/mailfax
+# (or whatever is specified in the sendmail.cf file).
 #
 # Edit your sendmail configuration.  Include the following
 # mailer definition (or similar):
@@ -12,7 +13,7 @@
 # 
 # and add the following address rewriting rule to rule set 0:
 # 
-# # forward FAX messages to FlexFAX software
+# # forward FAX messages to HylaFAX software
 # R$+<@$+.FAX>		$#fax $@ $2 $: $1		user@host.FAX
 #
 # Note that the mailfax script must be invoked as either root, daemon, or

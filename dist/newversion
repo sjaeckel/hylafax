@@ -1,10 +1,11 @@
 #! /bin/sh
-#	$Header: /usr/people/sam/fax/dist/RCS/newversion,v 1.2 1994/04/27 22:37:51 sam Exp $
+#	$Header: /usr/people/sam/fax/./dist/RCS/newversion,v 1.7 1995/04/08 21:08:41 sam Rel $
 #
-# FlexFAX Facsimile Software
+# HylaFAX Facsimile Software
 #
-# Copyright (c) 1994 Sam Leffler
-# Copyright (c) 1994 Silicon Graphics, Inc.
+# Copyright (c) 1994-1995 Sam Leffler
+# Copyright (c) 1994-1995 Silicon Graphics, Inc.
+# HylaFAX is a trademark of Silicon Graphics
 # 
 # Permission to use, copy, modify, distribute, and sell this software and 
 # its documentation for any purpose is hereby granted without fee, provided
@@ -25,8 +26,8 @@
 # LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
 # OF THIS SOFTWARE.
 #
-rm -f flexfax.version
+rm -f hylafax.version
 awk '
 $1 ~ /.*beta/ { print "define FAX_VNUM " $0 }
 $1 !~ /.*beta/{ print "define FAX_VNUM \"" $0 " (release)\"" }
-' ../VERSION > flexfax.version
+' ../VERSION > hylafax.version

@@ -1,8 +1,8 @@
-/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_flush.c,v 1.17 1994/05/16 18:52:55 sam Exp $ */
+/* $Header: /usr/people/sam/fax/libtiff/RCS/tif_flush.c,v 1.19 1994/07/26 16:46:03 sam Exp $ */
 
 /*
- * Copyright (c) 1988, 1989, 1990, 1991, 1992 Sam Leffler
- * Copyright (c) 1991, 1992 Silicon Graphics, Inc.
+ * Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993, 1994 Sam Leffler
+ * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -30,7 +30,7 @@
 #include "tiffiop.h"
 
 int
-DECLARE1(TIFFFlush, TIFF*, tif)
+TIFFFlush(TIFF* tif)
 {
 
 	if (tif->tif_mode != O_RDONLY) {
@@ -47,7 +47,7 @@ DECLARE1(TIFFFlush, TIFF*, tif)
  * Flush buffered data to the file.
  */
 int
-DECLARE1(TIFFFlushData, TIFF*, tif)
+TIFFFlushData(TIFF* tif)
 {
 	if ((tif->tif_flags & TIFF_BEENWRITING) == 0)
 		return (0);

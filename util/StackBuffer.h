@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/util/RCS/StackBuffer.h,v 1.5 1994/05/13 20:25:43 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./util/RCS/StackBuffer.h,v 1.10 1995/04/08 21:44:24 sam Rel $ */
 /*
- * Copyright (c) 1990, 1991, 1992, 1993, 1994 Sam Leffler
- * Copyright (c) 1991, 1992, 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1990-1995 Sam Leffler
+ * Copyright (c) 1991-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -27,10 +28,14 @@
 
 #include "Types.h"
 
-// A growable buffer of characters, designed to be used on the cpu stack.
-// It contains an internal buffer, and avoids allocating memory from
-// freestore, unless the buffer is insufficient to the task at hand.
+class fxStr;
 
+/*
+ * A growable buffer of characters, designed to be used
+ * on the cpu stack.  It contains an internal buffer, and
+ * avoids allocating memory from freestore, unless the
+ * buffer is insufficient to the task at hand.
+ */
 class fxStackBuffer {
 public:
     fxStackBuffer(u_int amountToGrowBy = 0);
@@ -40,6 +45,7 @@ public:
     void put(char c);			// Put the character "c" into the buffer
     void put(char const* c, u_int len);	// Put bunch of bytes in the buffer
     void put(char const* c);
+    void put(const fxStr&);
     void set(char c);			// Stick in char w/o extending length
     void reset();			// Reset buffer to empty
     u_int getLength() const;		// Return number of bytes in buffer
@@ -47,6 +53,9 @@ public:
     // NB: the buffer is *NOT* null terminated, unless you put one there.
     operator char*();			// Return base of buffer
     operator unsigned char*();		// Return base of buffer
+    operator const char*() const;	// Return base of buffer
+    operator const unsigned char*() const;// Return base of buffer
+    char& operator[](u_int i) const;	// Return character in buffer
 protected:
     char	buf[1000];
     char*	next;
@@ -65,5 +74,10 @@ inline void fxStackBuffer::set(char c)		{ put(c); next--; }
 inline void fxStackBuffer::reset()		{ next = base; }
 inline fxStackBuffer::operator char*()		{ return base; }
 inline fxStackBuffer::operator unsigned char*()	{ return (unsigned char*)base; }
+inline fxStackBuffer::operator const char*() const
+    { return base; }
+inline fxStackBuffer::operator const unsigned char*() const
+    { return (unsigned char*)base; }
 inline u_int fxStackBuffer::getLength() const	{ return next - base; }
+inline char& fxStackBuffer::operator[](u_int ix) const { return base[ix]; }
 #endif /* _StackBuffer_ */

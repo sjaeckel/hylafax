@@ -1,7 +1,8 @@
-/*	$Header: /usr/people/sam/fax/faxd/RCS/GettyBSD.c++,v 1.25 1994/02/28 14:15:23 sam Exp $ */
+/*	$Header: /usr/people/sam/fax/./faxd/RCS/GettyBSD.c++,v 1.33 1995/04/08 21:30:41 sam Rel $ */
 /*
- * Copyright (c) 1993, 1994 Sam Leffler
- * Copyright (c) 1993, 1994 Silicon Graphics, Inc.
+ * Copyright (c) 1993-1995 Sam Leffler
+ * Copyright (c) 1993-1995 Silicon Graphics, Inc.
+ * HylaFAX is a trademark of Silicon Graphics
  *
  * Permission to use, copy, modify, distribute, and sell this software and 
  * its documentation for any purpose is hereby granted without fee, provided
@@ -31,32 +32,26 @@
 #include <stddef.h>
 #include <termios.h>
 #include <osfcn.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
-#include <paths.h>
-#include <time.h>
 #include <utmp.h>
 
-BSDGetty::BSDGetty(const fxStr& l, const fxStr& s, u_int t) : Getty(l,s,t)
+#include "Sys.h"
+#include "config.h"
+
+/*
+ * FAX Server BSD-style Getty&co. Support.
+ */
+
+/*
+ * BSD subprocess support; used by getty-style processes.
+ */
+
+BSDSubProc::BSDSubProc(const char* path, const fxStr& l, const fxStr& s) : Getty(path,l,s)
 {
 }
 
-BSDGetty::~BSDGetty()
+BSDSubProc::~BSDSubProc()
 {
-}
-
-fxBool
-BSDGetty::isBSDGetty()
-{
-    return (access((char*) getty, X_OK) == 0);
-}
-
-Getty*
-OSnewGetty(const fxStr& dev, const fxStr& speed)
-{
-    return (BSDGetty::isBSDGetty() ? new BSDGetty(dev, speed) : NULL);
 }
 
 /*
@@ -64,36 +59,36 @@ OSnewGetty(const fxStr& dev, const fxStr& speed)
  * so that the normal stdio routines can be used.
  */
 void
-BSDGetty::setupSession(int modemFd)
+BSDSubProc::setupSession(int modemFd)
 {
     int fd;
     /*
      * Close everything down except the modem so
      * that the remote side doesn't get hung up on.
      */
-    for (fd = getdtablesize()-1; fd >= 0; fd--)
+    for (fd = ::getdtablesize()-1; fd >= 0; fd--)
 	if (fd != modemFd)
-	    (void) close(fd);
+	    (void) ::close(fd);
     /*
      * Now make the line be the controlling tty
      * and create a new process group/session for
      * the login process that follows.
      */
-    fd = open("tty", 0);		// NB: assumes we're in /dev
+    fd = Sys::open("tty", 0);		// NB: assumes we're in /dev
     if (fd >= 0) {
-	(void) ioctl(fd, TIOCNOTTY, 0);
-	(void) close(fd);
+	::ioctl(fd, TIOCNOTTY, 0);
+	::close(fd);
     }
-    (void) setsid();
-    fd = open(getLine(), O_RDWR|O_NONBLOCK);
+    ::setsid();
+    fd = Sys::open(getLine(), O_RDWR|O_NONBLOCK);
     if (fd != STDIN_FILENO)
 	fatal("Can not setup \"%s\" as stdin", getLine());
     if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) &~ O_NONBLOCK))
 	fatal("Can not reset O_NONBLOCK: %m");
-    close(modemFd);			// done with this, pitch it
+    ::close(modemFd);			// done with this, pitch it
 
 #ifdef TIOCSCTTY
-    if (ioctl(fd, TIOCSCTTY, 0))
+    if (::ioctl(fd, TIOCSCTTY, 0))
 	fatal("Cannot set controlling tty: %m");
 #endif
 #ifdef TIOCGETDFLT
@@ -105,19 +100,19 @@ BSDGetty::setupSession(int modemFd)
      * set the CLOCAL state from it; otherwise, we leave CLOCAL on.
      */
     struct termios term, dflt;
-    if (ioctl(fd, TIOCGETDFLT, &dflt) == 0 && (dflt.c_cflag & CLOCAL) == 0) {
-	(void) tcgetattr(fd, &term);
+    if (::ioctl(fd, TIOCGETDFLT, &dflt) == 0 && (dflt.c_cflag & CLOCAL) == 0) {
+	::tcgetattr(fd, &term);
 	term.c_cflag &= ~CLOCAL;
-	(void) tcsetattr(fd, TCSAFLUSH, &term);
+	::tcsetattr(fd, TCSAFLUSH, &term);
     }
 #else
     /*
      * Turn off CLOCAL so that SIGHUP is sent on modem disconnect.
      */
     struct termios term;
-    if (tcgetattr(fd, &term) == 0) {
+    if (::tcgetattr(fd, &term) == 0) {
 	term.c_cflag &= ~CLOCAL;
-	(void) tcsetattr(fd, TCSAFLUSH, &term);
+	::tcsetattr(fd, TCSAFLUSH, &term);
     }
 #endif
     /*
@@ -125,63 +120,63 @@ BSDGetty::setupSession(int modemFd)
      * Establish the initial line termio settings and set
      * protection on the device file.
      */
-    struct stat sb;
-    (void) stat(getLine(), &sb);
-    (void) chown(getLine(), 0, sb.st_gid);
-    (void) chmod(getLine(), 0622);
-    if (dup2(fd, STDOUT_FILENO) < 0)
-	fatal("Unable to dup stdin to stdout: %m");
-    if (dup2(fd, STDERR_FILENO) < 0)
-	fatal("Unable to dup stdin to stderr: %m");
+    Getty::setupSession(fd);
 }
 
-#ifdef __bsdi__
-extern "C" int logout(const char*);
-extern "C" int logwtmp(const char*, const char*, const char*);
-#endif
+/*
+ * BSD getty/login-specific subprocess support.
+ */
+
+BSDGetty::BSDGetty(const char* path, const fxStr& l, const fxStr& s) : BSDSubProc(path,l,s)
+{
+}
+
+BSDGetty::~BSDGetty()
+{
+}
 
 #define	lineEQ(a,b)	(strncmp(a,b,sizeof(a)) == 0)
 
 void
 BSDGetty::writeWtmp(utmp* ut)
 {
-#ifndef __bsdi__
-    int wfd = open(_PATH_WTMP, O_WRONLY|O_APPEND);
+#if HAS_LOGWTMP
+    ::logwtmp(ut->ut_line, "", "");
+#else
+    int wfd = Sys::open(_PATH_WTMP, O_WRONLY|O_APPEND);
     if (wfd >= 0) {
 	struct stat buf;
-	if (fstat(wfd, &buf) == 0) {
-	    memset(ut->ut_name, 0, sizeof (ut->ut_name));
-	    memset(ut->ut_host, 0, sizeof (ut->ut_host));
-	    ut->ut_time = time(0);
-	    if (write(wfd, (char *)ut, sizeof (*ut)) != sizeof (*ut))
-		(void) ftruncate(wfd, buf.st_size);
+	if (Sys::fstat(wfd, buf) == 0) {
+	    ::memset(ut->ut_name, 0, sizeof (ut->ut_name));
+	    ::memset(ut->ut_host, 0, sizeof (ut->ut_host));
+	    ut->ut_time = Sys::now();
+	    if (Sys::write(wfd, (char *)ut, sizeof (*ut)) != sizeof (*ut))
+		::ftruncate(wfd, buf.st_size);
 	}
-	(void) close(wfd);
+	::close(wfd);
     }
-#else
-    logwtmp(ut->ut_line, "", "");
 #endif
 }
 
 void
 BSDGetty::logout(const char* line)
 {
-#ifndef __bsdi__
-    int ufd = open(_PATH_UTMP, O_RDWR);
+#if HAS_LOGOUT
+    ::logout(line);
+#else
+    int ufd = Sys::open(_PATH_UTMP, O_RDWR);
     if (ufd >= 0) {
 	struct utmp ut;
-	while (read(ufd, (char *)&ut, sizeof (ut)) == sizeof (ut))
+	while (Sys::read(ufd, (char *)&ut, sizeof (ut)) == sizeof (ut))
 	    if (ut.ut_name[0] && lineEQ(ut.ut_line, line)) {
-		memset(ut.ut_name, 0, sizeof (ut.ut_name));
-		memset(ut.ut_host, 0, sizeof (ut.ut_host));
+		::memset(ut.ut_name, 0, sizeof (ut.ut_name));
+		::memset(ut.ut_host, 0, sizeof (ut.ut_host));
 		ut.ut_time = time(0);
-		(void) lseek(ufd, -(long) sizeof (ut), SEEK_CUR);
-		(void) write(ufd, (char *)&ut, sizeof (ut));
+		::lseek(ufd, -(long) sizeof (ut), SEEK_CUR);
+		Sys::write(ufd, (char *)&ut, sizeof (ut));
 	    }
-	(void) close(ufd);
+	::close(ufd);
     }
-#else
-    ::logout(line);
 #endif
 }
 
@@ -189,22 +184,31 @@ void
 BSDGetty::hangup()
 {
     // at this point we're root and we can reset state
-    int ufd = open(_PATH_UTMP, O_RDONLY);
+    int ufd = Sys::open(_PATH_UTMP, O_RDONLY);
     if (ufd >= 0) {
 	struct utmp ut;
-	while (read(ufd, (char *)&ut, sizeof (ut)) == sizeof (ut))
+	while (Sys::read(ufd, (char *)&ut, sizeof (ut)) == sizeof (ut))
 	    if (ut.ut_name[0] && lineEQ(ut.ut_line, getLine())) {
 		writeWtmp(&ut);
 		break;
 	    }
-	(void) close(ufd);
+	::close(ufd);
     }
     logout(getLine());
     Getty::hangup();
 }
 
-fxBool
-BSDGetty::wait(int& status, fxBool block)
+/*
+ * Public Interfaces.
+ */
+Getty*
+OSnewGetty(const fxStr& dev, const fxStr& speed)
 {
-    return (waitpid(getPID(), &status, block ? 0 : WNOHANG) == getPID());
+    return (new BSDGetty(_PATH_GETTY, dev, speed));
+}
+
+Getty*
+OSnewVGetty(const fxStr& dev, const fxStr& speed)
+{
+    return (new BSDSubProc("bin/vgetty", dev, speed));
 }

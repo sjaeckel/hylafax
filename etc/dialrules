@@ -1,6 +1,6 @@
-! $Header: /usr/people/sam/fax/etc/RCS/dialrules,v 1.2 1993/05/06 11:34:09 sam Exp $
+! $Header: /usr/people/sam/fax/./etc/RCS/dialrules,v 1.4 1995/01/23 20:37:42 sam Rel $
 !
-! FlexFAX Dialing String Processing Rules.
+! HylaFAX (tm) Dialing String Processing Rules.
 !
 ! This file describes how to process user-specified dialing strings
 ! to create two items:
