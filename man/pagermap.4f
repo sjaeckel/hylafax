@@ -1,4 +1,4 @@
-.\"	$Id: pagermap.4f,v 1.5 1998/02/07 12:31:43 guru Rel $
+.\"	$Id$
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -124,4 +124,4 @@ Sky(.*)	1800SkyTel/\e1
 .sp .5
 .SH "SEE ALSO"
 .IR hfaxd (1M),
-.IR hylafax (4F)
+.IR hylafax-server (4F)
