@@ -1,4 +1,4 @@
-/*	$Id: Modem.h,v 1.28 1996/06/24 03:00:38 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -40,7 +40,7 @@ class RegExDict;
 class fxStackBuffer;
 class Modem;
 
-class ModemClass {
+class ModemGroup {
 private:
     static RegExDict* classes;	// registered modem classes
 public:
