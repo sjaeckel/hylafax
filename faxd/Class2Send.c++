@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++,v 1.104 1998/02/07 12:10:54 guru Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -198,7 +198,7 @@ Class2Modem::dataTransfer()
 static fxBool
 pageInfoChanged(const Class2Params& a, const Class2Params& b)
 {
-    return (a.vr != b.vr || a.wd != b.wd || a.ln != b.ln || a.df != b.df);
+    return (a.vr != b.vr || a.wd != b.wd || a.ln != b.ln || a.df != b.df || a.br != b.br);
 }
 
 /*
@@ -281,6 +281,12 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 			       " (giving up after 3 attempts)";
 			break;
 		    }
+		    if (params.br == BR_2400) {
+			emsg = "Unable to transmit page"
+				"(NAK at all possible signalling rates)";
+			break;
+		    }
+		    next.br--;
 		    morePages = TRUE;	// retransmit page
 		    transferOK = TRUE;
 		    break;
