@@ -1,4 +1,4 @@
-/*	$Id: manifest.h,v 1.7 1996/11/23 17:28:21 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -44,15 +44,6 @@
 #define	FAXUID_MAX	60002		// fits in unsigned 16-bit value
 #endif
 #define	FAXUID_ANON	FAXUID_MAX	// UID of anonymous user
-
-/*
- * Sequence numbers are assigned for jobs and documents
- * stored in the fax filesystem.  We constrain these
- * numbers to be 16-bit values, rolling them over a bit
- * early (for historical reasons).
- */
-#define	MAXSEQNUM	32000		// safely fits in 16 bits
-#define	NEXTSEQNUM(x)	((x) % MAXSEQNUM)
 
 /*
  * The client-server protocol is derived from the Internet
