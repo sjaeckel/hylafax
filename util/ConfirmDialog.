@@ -1,0 +1,130 @@
+#ident $Header: /d/sam/flexkit/fax/util/RCS/ConfirmDialog.c++,v 1.2 91/05/23 12:49:36 sam Exp $
+
+/*
+ * Copyright (c) 1991 by Sam Leffler.
+ * All rights reserved.
+ *
+ * This file is provided for unrestricted use provided that this
+ * legend is included on all tape media and as a part of the
+ * software program in whole or part.  Users may copy, modify or
+ * distribute this file at will.
+ */
+#include "Window.h"
+#include "ConfirmDialog.h"
+#include "Label.h"
+#include "FieldEditor.h"
+#include "Gap.h"
+#include "Parts.h"
+#include "Str.h"
+#include "StyleGuide.h"
+#include "Palette.h"
+
+ConfirmDialog::ConfirmDialog(fxVisualApplication *app, fxView* icon,
+	const char *prompt, fxBool modal) :
+    fxDialogBox(app, modal)
+{
+    fxViewStack *top = new
+	    fxViewStack(vertical, variableSize, variableSize, 9, 9, 6);
+    top->setColor(fx_uiGray);
+    fxViewStack* hs = new
+	    fxViewStack(horizontal, variableSize, variableSize, 0,0, 4);
+	hs->add(icon, alignTop);
+	if (prompt)
+	    interior->add(fxMakeTextBox((char*) prompt, variableSize, fixedSize,
+		fx_theStyleGuide->dialogFontFamily,
+		fx_theStyleGuide->dialogFontSize));
+	hs->add(interior, alignLeft);
+	top->add(hs);
+    buttonStack = new
+	fxViewStack(horizontal, fixedSize, fixedSize, 6, 0, 8);
+    top->add(new fxGap(vertical, fixedSize, 4));
+    top->add(buttonStack, alignRight);
+    fxWindow::add(top);
+}
+ConfirmDialog::~ConfirmDialog() {}
+
+const char* ConfirmDialog::className() const { return "ConfirmDialog"; }
+
+fxButton*
+ConfirmDialog::addButton(char* buttonName, fxButton *button)
+{
+    button = fxDialogBox::addButton(buttonName, button);
+    buttonStack->add(button);
+    return button;
+}
+
+fxDialogBox*
+MakeConfirmDialog(fxVisualApplication *app, const char* prompt)
+{
+    ConfirmDialog* cd =
+	new ConfirmDialog(app, fxMakeQuestionDialogIcon(), prompt, TRUE);
+    cd->setStartWithMouseInView(cd->addGoAwayButton("Accept"));
+    cd->addCancelButton();
+    cd->setTitle("Confirmer");
+    return (cd);
+}
+
+fxDialogBox*
+MakeNotifyDialog(fxVisualApplication *app, const char* prompt)
+{
+    ConfirmDialog* cd =
+	new ConfirmDialog(app, fxMakeWarningDialogIcon(), prompt, TRUE);
+    cd->setStartWithMouseInView(cd->addGoAwayButton("OK"));
+    cd->setTitle("Notifier");
+    return (cd);
+}
+
+#include "VisualApplication.h"
+#include <stdarg.h>
+
+fxBool
+confirmRequest(fxVisualApplication* app, const char* va_alist ...)
+#define	fmt va_alist
+{
+    va_list ap;
+    va_start(ap, fmt);
+    fxBool b = vconfirmRequest(app, fmt, ap);
+    va_end(ap);
+    return (b);
+}
+#undef fmt
+
+fxBool
+vconfirmRequest(fxVisualApplication* app, const char* fmt, va_list ap)
+{
+    assert(app->isOpened());
+    char text[2048];
+    vsprintf(text, fmt, ap);
+    fxDialogBox* box = MakeConfirmDialog(app, text);
+    box->start(TRUE);
+    fxBool b = !box->wasCancelled();
+    app->remove(box);
+    return (b);
+}
+
+void
+notifyUser(fxVisualApplication* app, const char* va_alist ...)
+#define	fmt va_alist
+{
+    va_list ap;
+    va_start(ap, va_alist);
+    vnotifyUser(app, fmt, ap);
+    va_end(ap);
+}
+#undef fmt
+
+void
+vnotifyUser(fxVisualApplication* app, const char* fmt, va_list ap)
+{
+    if (!app->isOpened()) {
+	fprintf(stderr, "%s: ", app->className());	// XXX
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, ".\n");
+    } else {
+	char text[2048];
+	vsprintf(text, fmt, ap);
+	fxDialogBox* box = MakeNotifyDialog(app, text);
+	box->start(TRUE);
+	app->remove(box);
+    }
+}

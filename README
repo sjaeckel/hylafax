@@ -1,0 +1,48 @@
+$Header: /d/sam/flexkit/fax/RCS/README,v 1.3 91/05/23 12:56:07 sam Exp $
+
+FlexFAX, Version 0.9
+
+About the System
+----------------
+This is a reasonably full-function facsimile service for SGI
+systems.  One facsimile server process exists for each external
+fax modem hooked to a serial port.  Client software spools
+outgoing facsimile which are handled by the server processes.
+Received facsimile are stored in a receive queue area and may
+be automatically delivered by mail and/or printed.  Servers
+are heavily parameterized through per-server configuration
+files and through auxiliary shell scripts that perform
+system-related operations (e.g. processing received facsimile,
+converting PostScript to bitmap images for transmission).
+
+The server requires a PostScript to bitmap facsimile conversion
+utility for useful operation (otherwise, only bitmaps may be
+transmitted.)  A Display PostScript-based imager is provided
+for IRIX 4.0-based systems.  For other systems, a Ghoscript-based
+version is included.
+
+An administration tool that ``hooks into'' the system administration
+facilities is provided.  While not complete, it provides easy
+access to the most important administrative operations.
+
+Note that you need a fax modem to use this software.  Two
+types of modems are known to work:
+
+    Abaton InterFax 24/96
+    Class 2 modems, such as the Everex 24/96D
+
+The first modem is common on Macintosh systems, while the
+second modem is actually a class of modems that conform to
+the "Class 2" host-modem interface standard.  The software
+is known to work with the Everex modem, w/ firmware dated
+October 5, 1990 or later.
+
+Use and Propriety
+-----------------
+Silicon Graphics has seen fit to allow me to give this work
+away.  It is free.  There is no support or guarantee of any
+sort as to its operations, correctness, or whatever.  If you
+do anything useful with all or parts of it, I'd like to know
+about it and, hopefully, be acknowledged.
+
+	Sam Leffler	(sam@sgi.com)

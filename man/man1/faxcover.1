@@ -1,0 +1,129 @@
+.\"	$Header: /usr/people/sam/flexkit/fax/man/man1/RCS/faxcover.1,v 1.2 91/06/04 21:36:13 sam Exp $
+.\"
+.\" Copyright (c) 1991 by Sam Leffler.
+.\" All rights reserved.
+.\"
+.\" This file is provided for unrestricted use provided that this
+.\" legend is included on all tape media and as a part of the
+.\" software program in whole or part.  Users may copy, modify or
+.\" distribute this file at will.
+.\"
+.TH FAXCOVER 1 "June 4, 1991"
+.SH NAME
+faxcover \- generate a cover page for an outgoing facsimile
+.SH SYNOPSIS
+.B faxcover
+[
+.B \-n
+.I dest-number
+] [
+.B \-t
+.I dest-name
+] [
+.B \-f
+.IR from-name
+] [
+.B \-l
+.I dest-location
+] [
+.B \-v
+.I dest-phone
+] [
+.B \-c
+.I comments
+] [
+.B \-p
+.I page-count
+]
+.SH DESCRIPTION
+.I Faxcover
+generates an Encapsulated PostScript\(tm (\c
+.SM EPS\c
+) facsimile cover page document on the standard output.
+The cover page fills an 8.5" by 11" page and
+is created according to the information supplied
+on the command line and a 
+.I "cover sheet template"
+file.
+.PP
+.I Faxcover
+is normally invoked by the
+.I sendfax
+utility to generate the cover page for each outgoing facsmile.
+.PP
+.I Faxcover
+works by creating a PostScript dictionary
+that contains definitions for the appropriate
+pieces of information one might find on a facsimile
+cover page.
+Specifically, the following names are defined:
+.sp .5
+.nf
+.in +0.5i
+.ta \w'\fIfrom-voice-number    'u
+\fIto\fP	destination person
+\fIto-company\fP	destination company
+\fIto-location\fP	destination geographic location
+\fIto-voice-number\fP	person's voice phone number
+\fIto-fax-number\fP	destination fax phone number
+\fIcomments\fP	arbitrary comments
+\fIpage-count\fP	# pages not counting cover page
+\fIfrom	sender\fP person
+\fIfrom-company\fP	sender's company
+\fIfrom-location\fP	sender geographic location
+\fIfrom-fax-number\fP	sender's fax phone number
+\fIfrom-voice-number\fP	sender's voice phone number
+.in -0.5i
+.fi
+.PP
+If information is unavailable for an item, the appropriate
+symbol is defined to be a null string.
+.PP
+Following the definition prologue, a prototype cover sheet template file
+is copied.
+This file is expected to be a PostScript program
+that uses the supplied definitions to generate a
+cover page.
+The template must include a
+.B showpage
+operator to cause the page to be imaged.
+The above definitions will be defined in the
+.IR "current dictionary" .
+A trailing
+.B end
+operator is supplied by
+.IR faxcover ,
+so any manipulation of the dictionary stack should
+leave the current dictionary on the top of the
+stack on completion.
+.PP
+The template file is named
+.IR faxcover.ps .
+.I Faxcover
+looks first for this file in the home directory
+of the sender.
+If no such file is present, then it looks in the
+directory where the
+.I FlexFAX
+client applications are installed.
+If no template file is located,
+.I faxcover
+will not generate a cover page.
+.SH DIAGNOSTICS
+Complaints about not being able to locate a template file.
+.SH FILES
+.ta \w'/usr/local/bin/fax/faxcover.ps    'u
+~/.faxdb	personal fax number database
+.br
+/usr/local/bin/fax/faxcover.ps	default cover page template
+.SH BUGS
+Information not supplied on the command line is
+currently obtained from the
+.I ~/.faxdb
+file.
+See
+.IR faxcomp (1)
+for a description of its format.
+.SH "SEE ALSO"
+.IR faxcomp (1),
+.IR sendfax (1)

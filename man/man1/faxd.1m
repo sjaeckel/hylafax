@@ -1,0 +1,99 @@
+.\"	$Header: /usr/people/sam/flexkit/fax/man/man1/RCS/faxd.1m,v 1.2 91/06/04 21:35:53 sam Exp $
+.\"
+.\" Copyright (c) 1991 by Sam Leffler.
+.\" All rights reserved.
+.\"
+.\" This file is provided for unrestricted use provided that this
+.\" legend is included on all tape media and as a part of the
+.\" software program in whole or part.  Users may copy, modify or
+.\" distribute this file at will.
+.\"
+.TH FAXD 1M "June 4, 1991"
+.SH NAME
+/usr/etc/faxd \- facsimile modem server
+.SH SYNOPSIS
+.B /usr/etc/faxd
+[
+.B \-m
+.I device
+] [
+.B \-q
+.I queue-dir
+] [
+.B \-12
+] [
+.B \-i
+.I requeue-interval
+]
+.SH DESCRIPTION
+.I Faxd
+is the central processing agent of the
+.I FlexFAX
+facsimile service.
+One
+.I faxd
+process is started for each facsimile modem on a machine
+(typically by
+.IR init (1M)).
+.I Faxd
+listens to its facsimile modem for phone calls
+and to two
+.SM FIFO
+files on which it accepts command directives.
+.SH OPTIONS
+The
+.B \-m
+option is used to specify the terminal device that the
+facsimile modem is attached to.
+The default device is
+.I /dev/ttym2
+(for historical reasons).
+.PP
+The
+.B \-q
+option can be used to specify a spooling area in which
+to operate other than
+.IR /usr/spool/fax .
+.PP
+The
+.B \-i
+option can be used to specify the interval, in seconds,
+that a job should be held between transmission attempts.
+By default, this interval is 15*60 seconds (i.e. 15 minutes).
+.PP
+The
+.B \-1
+and
+.B \-2
+options control whether or not the server will utilize
+the optional 2-dimensional Group 3 facsimile encoding.
+By default,
+.I faxd
+will negotiate to use 2-d encoding.
+This can also be explicitly requested with the
+.B \-2
+option.
+The
+.B \-1
+option will suppress this negotiation.
+.SH FILES
+Consult
+.IR flexfax (4F)
+for a complete discussion of the structure and
+content of the spooling area.
+.SH BUGS
+While
+.I faxd
+is processing a job, it does not respond to
+commands.
+This means, in particular, that there is no
+way to cleanly abort an operation.
+.SH "SEE ALSO"
+.IR faxadmin (1M),
+.IR flexfax (4F),
+.IR config (4F),
+.IR hosts (4F),
+.IR info (4F),
+.IR recvq (4F),
+.IR sendq (4F),
+.IR xferlog (4F),

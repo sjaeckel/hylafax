@@ -1,0 +1,19 @@
+# last written Mon Apr 22 11:52:20 1991
+ModemType: Abaton
+AreaCode: 415
+CountryCode: 1
+FAXNumber: +1.415.965.7824
+VoiceNumber: +1.415.335.1269
+DialPrefix: 9
+LongDistancePrefix: 1
+InternationalPrefix: 011
+UseDialPrefix: no
+SpeakerVolume: 0
+ProtocolTracing: 11
+ToneDialing: yes
+RingsBeforeAnswer: 1
+CommaPauseTime: 2
+WaitForCarrier: 30
+TagLineAtTop: yes
+RecvFileMode: 0644
+QualifyTSI: no
