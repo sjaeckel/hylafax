@@ -1,4 +1,4 @@
-.\"	$Id: typerules.4f,v 1.20 1996/06/24 03:04:25 sam Rel $
+.\"	$Id$
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -217,4 +217,4 @@ This would allow, for example, command line options to be selected
 based on file type.
 .SH "SEE ALSO"
 .IR sendfax (1),
-.IR hylafax (1)
+.IR hylafax-client (1)

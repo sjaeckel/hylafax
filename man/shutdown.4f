@@ -1,4 +1,4 @@
-.\"	$Id: shutdown.4f,v 1.2 1996/06/24 03:04:22 sam Rel $
+.\"	$Id$
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -88,4 +88,4 @@ supported by
 .IR hfaxd (1M).
 .SH "SEE ALSO"
 .IR hfaxd (1M),
-.IR hylafax (4F)
+.IR hylafax-server (4F)
