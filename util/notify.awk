@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: notify.awk,v 1.40 1997/09/25 09:12:46 guru Rel $
+#	$Id$
 #
 # HylaFAX Facsimile Software
 #
@@ -52,6 +52,8 @@ function docType(s)
 	return "PostScript";
     else if (match(s, "\.tif"))
 	return "TIFF";
+    else if (match(s, "\.pdf"))
+	return "PDF";
     else if (match(s, "\.pcl"))
 	return "PCL";
     else
