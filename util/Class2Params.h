@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.h,v 1.23 1996/08/08 19:20:34 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -80,7 +80,7 @@ public:
     void setFromDCS(u_int dcs, u_int xinfo = 0);
     u_int getDCS() const;
     u_int getXINFO() const;
-    fxBool is2D() const;
+    bool is2D() const;
 
     u_int transferSize(u_int ms) const;
     u_int minScanlineSize() const;

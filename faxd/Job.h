@@ -1,4 +1,4 @@
-/*	$Id: Job.h,v 1.33 1996/08/21 22:31:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -116,8 +116,8 @@ public:
     u_short	pagewidth;	// desired output page width (mm)
     u_short	pagelength;	// desired output page length (mm)
     u_short	resolution;	// desired vertical resolution (lpi)
-    fxBool	willpoll;	// job has polling request
-    fxBool	suspendPending;	// suspend state change pending for job
+    bool	willpoll;	// job has polling request
+    bool	suspendPending;	// suspend state change pending for job
 
     fxStr	file;		// queue file name
     fxStr	jobid;		// job identifier
@@ -165,6 +165,6 @@ public:
     operator Job&() const	{ return *(Job*)ql; }
     operator Job*() const	{ return (Job*) ql; }
     Job& job() const		{ return *(Job*)ql; }
-    fxBool notDone()		{ return ql != head; }
+    bool notDone()		{ return ql != head; }
 };
 #endif /* _Job_ */

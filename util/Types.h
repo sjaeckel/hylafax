@@ -1,4 +1,4 @@
-/*	$Id: Types.h,v 1.21 1996/06/24 03:06:12 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -32,13 +32,6 @@
 #include "new.h"
 #include "sys/types.h"
 #include "port.h"
-
-// Boolean type
-typedef unsigned char fxBool;
-#undef	TRUE
-#define	TRUE	((fxBool)1)
-#undef	FALSE
-#define	FALSE	((fxBool)0)
 
 // minimum of two numbers
 inline int fxmin(int a, int b)		{ return (a < b) ? a : b; }

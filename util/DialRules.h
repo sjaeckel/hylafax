@@ -1,4 +1,4 @@
-/*	$Id: DialRules.h,v 1.17 1996/06/24 03:05:41 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -51,12 +51,12 @@ private:
     u_int	lineno;		// current line number during parsing
     FILE*	fp;		// open file during parsing
     VarDict*	vars;		// defined variables during parsing
-    fxBool	verbose;	// trace parsing of rules file
+    bool	verbose;	// trace parsing of rules file
     RegExArray*	regex;		// regular expressions
     RulesDict*	rules;		// rules defined in the file
 
-    fxBool parseRules();
-    fxBool parseRuleSet(RuleArray& rules);
+    bool parseRules();
+    bool parseRuleSet(RuleArray& rules);
     const char* parseToken(const char* cp, fxStr& v);
     char* nextLine(char* line, int lineSize);
     void subRHS(fxStr& v);
@@ -68,14 +68,14 @@ public:
     DialStringRules(const char* filename);
     virtual ~DialStringRules();
 
-    void setVerbose(fxBool b);
+    void setVerbose(bool b);
     u_int getLineno() const;
     const fxStr& getFilename() const;
 
     void def(const fxStr& var, const fxStr& value);
     void undef(const fxStr& var);
 
-    fxBool parse(fxBool shouldExist = TRUE);
+    bool parse(bool shouldExist = true);
 
     fxStr applyRules(const fxStr& name, const fxStr& s);
     fxStr canonicalNumber(const fxStr&);

@@ -1,4 +1,4 @@
-/*	$Id: UnixTransport.h,v 1.4 1996/06/24 03:06:13 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -35,11 +35,11 @@ public:
     UnixTransport(FaxClient&);
     ~UnixTransport();
 
-    static fxBool isA(const char*);
+    static bool isA(const char*);
 
-    fxBool callServer(fxStr& emsg);
+    bool callServer(fxStr& emsg);
 
-    fxBool initDataConn(fxStr& emsg);
-    fxBool openDataConn(fxStr& emsg);
+    bool initDataConn(fxStr& emsg);
+    bool openDataConn(fxStr& emsg);
 };
 #endif /* _UnixTransport_ */

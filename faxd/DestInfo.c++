@@ -1,4 +1,4 @@
-/*	$Id: DestInfo.c++,v 1.14 1996/08/21 21:53:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -58,18 +58,18 @@ DestInfo::updateConfig()
     info.writeConfig();				// update as necessary
 }
 
-fxBool
+bool
 DestInfo::isActive(Job& job) const
 {
     if (running == NULL)
-	return (FALSE);
+	return (false);
     else if (running == &job)
-	return (TRUE);
+	return (true);
     else {
 	for (Job* jp = running->dnext; jp != NULL; jp = jp->dnext)
 	    if (jp == &job)
-		return (TRUE);
-	return (FALSE);
+		return (true);
+	return (false);
     }
 }
 

@@ -1,4 +1,4 @@
-/*	$Id: Trigger.h,v 1.12 1996/08/21 01:34:55 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -140,11 +140,11 @@ private:
 
     Trigger(trid_t, const fxStr& fifoName);
 
-    fxBool parse(const char*);		// parse trigger spec
+    bool parse(const char*);		// parse trigger spec
     static void syntaxError(const char* spec, const char* msg);
 
     void purgeWildRefs();		// purge all wildcard references
-    fxBool cancel();
+    bool cancel();
 
     static void post(TriggerEvent, const QLink&, const QLink&, fxStackBuffer&);
     void send(const char* fmt ...);
@@ -154,7 +154,7 @@ public:
     static void purgeClient(HylaClient*);// purge all triggers for client
 
     static void create(const fxStr& id, const char* spec);
-    static fxBool cancel(const char* tid);
+    static bool cancel(const char* tid);
 
     static void post(TriggerEvent, const Job&, const char* = NULL);
     static void post(TriggerEvent, const Modem&, const char* = NULL);

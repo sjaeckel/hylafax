@@ -1,4 +1,4 @@
-/*	$Id: Dictionary.h,v 1.17 1996/08/21 22:26:37 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -74,8 +74,8 @@ public:
     operator KEY const &() const
     KEY const& key() const;
     VALUE& value() const;
-    fxBool removed();
-    fxBool notDone();
+    bool removed();
+    bool notDone();
 }
 *******************************************/
 
@@ -155,8 +155,8 @@ public:
     void operator=(fxDictionary&);	// not a const argument!
     void operator++()	   { increment(); }
     void operator++(int)   { increment(); }
-    fxBool removed() const { return invalid; }
-    fxBool notDone() const { return node != 0; }
+    bool removed() const { return invalid; }
+    bool notDone() const { return node != 0; }
 protected:
     void* getKey() const;
     void* getValue() const;

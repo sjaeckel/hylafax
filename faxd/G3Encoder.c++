@@ -1,4 +1,4 @@
-/*	$Id: G3Encoder.c++,v 1.11 1996/06/24 03:00:31 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -39,7 +39,7 @@ G3Encoder::~G3Encoder() {}
  * Reset encoding state.
  */
 void
-G3Encoder::setupEncoder(u_int fillOrder, fxBool is2d)
+G3Encoder::setupEncoder(u_int fillOrder, bool is2d)
 {
     is2D = is2d;
     /*

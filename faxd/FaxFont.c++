@@ -1,4 +1,4 @@
-/*	$Id: FaxFont.c++,v 1.6 1996/06/24 03:00:23 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -28,7 +28,7 @@
 
 FaxFont::FaxFont()
 {
-    ready = FALSE;		// font not ready for use
+    ready = false;		// font not ready for use
     fontAscent = fontDescent = 0;
 }
 

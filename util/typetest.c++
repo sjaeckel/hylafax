@@ -1,4 +1,4 @@
-/*	$Id: typetest.c++,v 1.9 1996/09/30 21:03:43 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -117,7 +117,7 @@ main(int argc, char* argv[])
 	fprintf(stderr, "Unable to setup file typing and conversion rules\n");
 	return (-1);
     }
-    typeRules->setVerbose(TRUE);
+    typeRules->setVerbose(true);
     for (; optind < argc; optind++)
 	(void) fileType(argv[optind]);
     return (0);

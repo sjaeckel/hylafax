@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.h,v 1.17 1996/06/24 03:00:52 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -47,7 +47,7 @@ public:
     };
 private:
 // runtime state
-    fxBool	ready;			// modem ready for use
+    bool	ready;			// modem ready for use
     UUCPLock*	modemLock;		// uucp lockfile handle
     fxStr	pollRcvdCmd;		// command for docs received by polling
     u_int	desiredBR;		// desired signalling rate
@@ -62,9 +62,9 @@ private:
 // configuration support
     void	setupConfig();
     void	resetConfig();
-    fxBool	setConfigItem(const char* tag, const char* value);
+    bool	setConfigItem(const char* tag, const char* value);
 // modem handling
-    fxBool	lockModem();
+    bool	lockModem();
     void	unlockModem();
 // notification interfaces used by FaxServer
     void	notifyModemReady();
@@ -87,7 +87,7 @@ public:
 
     FaxSendStatus send(const char* filename);
 
-    fxBool	isReady() const;
+    bool	isReady() const;
 };
-inline fxBool faxSendApp::isReady() const 	{ return ready; }
+inline bool faxSendApp::isReady() const 	{ return ready; }
 #endif

@@ -1,4 +1,4 @@
-/*	$Id: Timeout.h,v 1.7 1996/06/24 03:06:10 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -32,7 +32,7 @@
  */
 class Timeout {
 private:
-    static fxBool timerExpired;
+    static bool timerExpired;
     static void sigAlarm(int);
 protected:
     virtual void traceTimer(const char* fmt ...);
@@ -43,6 +43,6 @@ public:
     void startTimeout(long ms);
     void stopTimeout();
 
-    fxBool wasTimeout() const		{ return Timeout::timerExpired; }
+    bool wasTimeout() const		{ return Timeout::timerExpired; }
 };
 #endif /* _Timeout_ */

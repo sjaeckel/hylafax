@@ -1,4 +1,4 @@
-/*	$Id: GettySysV.h,v 1.20 1996/06/24 03:00:34 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -54,6 +54,6 @@ public:
     ~SysVGetty();
 
     void hangup();
-    fxBool wait(int& status, fxBool block = FALSE);
+    bool wait(int& status, bool block = false);
 };
 #endif /* _SYSVGETTY_ */
