@@ -1,4 +1,4 @@
-/*	$Id: SuperServer.c++,v 1.4 1996/06/24 03:01:47 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -23,10 +23,10 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
+#include "Sys.h"
 #include "Dispatcher.h"
 #include "HylaFAXServer.h"
 #include "SuperServer.h"
-#include "Sys.h"
 #include "Socket.h"
 
 #define	MAXTRIES	5
