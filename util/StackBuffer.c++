@@ -1,4 +1,4 @@
-/*	$Id: StackBuffer.c++,v 1.16 1996/10/03 23:40:40 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -116,4 +116,18 @@ fxStackBuffer::fput(const char* fmt ...)
     va_start(ap, fmt);
     vput(fmt, ap);
     va_end(ap);
+}
+
+fxStackBuffer& fxStackBuffer::operator=(const fxStackBuffer& other)
+{
+    if (&other != this) {
+        u_int size = other.end - other.base;
+        u_int len = other.getLength();
+        if (base != buf) free(base);
+        base = (size > sizeof(buf)) ? (char*) malloc(size) : &buf[0];
+        end = base + size;
+        next = base + len;
+        memcpy(base, other.base, len);
+   }
+   return *this;
 }

@@ -1,4 +1,4 @@
-/*	$Id: StackBuffer.h,v 1.15 1996/09/25 17:22:27 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,6 +60,7 @@ public:
     operator const unsigned char*() const;// Return base of buffer
     char& operator[](u_int i) const;	// Return character in buffer
     char& operator[](int i) const;	// Return character in buffer
+    fxStackBuffer& operator=(const fxStackBuffer&);
 protected:
     char	buf[1000];
     char*	next;
