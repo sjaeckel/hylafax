@@ -1,4 +1,4 @@
-! $Id: dialrules.europe,v 1.6 1996/06/24 02:59:32 sam Rel $
+! $Id$
 !
 ! HylaFAX (tm) Dialing String Processing Rules
 !   for much of Europe.
@@ -31,7 +31,7 @@ WS=" 	"			! our notion of white space
 ! long distance and/or international dialing.
 !
 CanonicalNumber := [
-#.*                     =                       ! strip calling card stuff
+%.*                     =                       ! strip calling card stuff
 [abcABC]		= 2			! these convert alpha to numbers
 [defDEF]		= 3
 [ghiGHI]		= 4
