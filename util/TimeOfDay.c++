@@ -1,4 +1,4 @@
-/*	$Id: TimeOfDay.c++,v 1.13 1997/09/29 17:49:10 guru Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -125,7 +125,7 @@ TimeOfDay::parse(const char* cp)
 	    cp += 2;
 	} else if (isalpha(*cp)) {		// list of days
 	    do {
-		static const char* dayNames = "Sun Mon Tue Wed Thu Fri Sat";
+		static const char* dayNames = "Sun Mon Tue Wed Thu Fri Sat ";
 		u_int i;
 		for (i = 0; dayNames[i] != '\0'; i += 4)
 		    if (cp[0] == dayNames[i] && cp[1] == dayNames[i+1])
@@ -139,7 +139,8 @@ TimeOfDay::parse(const char* cp)
 		for (; !isalnum(*cp) && *cp != ',' && *cp; cp++)
 		    ;
 	    } while (isalpha(*cp));
-	} else
+	}
+	if (days == 0)
 	    days = 0x7f;			// default to any day
 	// skip to any time range
 	while (*cp && *cp != ',' && !isdigit(*cp))
