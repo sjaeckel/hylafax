@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++,v 1.95 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -859,7 +859,7 @@ fxBool
 FaxClient::jobLastTime(u_long tv)
 {
     return (command("JPARM LASTTIME %02d%02d%02d",
-	tv/(24*60*60), (tv/(60*60))%60, (tv/60)%60) == COMPLETE);
+	tv/(24*60*60), (tv/(60*60))%24, (tv/60)%60) == COMPLETE);
 }
 fxBool
 FaxClient::jobRetryTime(u_long tv)
