@@ -1,4 +1,4 @@
-/*	$Id: GettyBSD.h,v 1.26 1996/06/24 03:00:33 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -42,6 +42,8 @@ public:
 };
 
 class BSDGetty : public BSDSubProc {
+protected:
+    void setupSession(int modemFd);
 private:
     void writeWtmp(utmp* ut);
     void logout(const char* line);
