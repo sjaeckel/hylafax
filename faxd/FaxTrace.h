@@ -1,4 +1,4 @@
-/*	$Id: FaxTrace.h,v 1.28 1996/06/24 03:00:30 sam Rel $ */
+/*	$Id$ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -47,6 +47,7 @@ const int FAXTRACE_MODEMSTATE	= 0x08000;	// modem state changes
 const int FAXTRACE_DIALRULES	= 0x10000;	// dialstring processing
 const int FAXTRACE_DOCREFS	= 0x20000;	// document reference handling
 const int FAXTRACE_TIFF		= 0x40000;	// TIFF library msgs
+const int FAXTRACE_ECM		= 0x80000;	// ECM HDLC image data frames
 const int FAXTRACE_ANY		= 0xffffffff;
 
 const int FAXTRACE_MASK		= 0xfffff;
