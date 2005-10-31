@@ -1,4 +1,4 @@
-/*	$Id: setegid.c,v 1.5 1996/06/24 03:04:34 sam Rel $
+/*	$Id$
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -26,7 +26,7 @@
 #include "port.h"
 #include <unistd.h>
 
-#ifdef hpux
+#if defined(hpux) || defined(__hpux) || defined(__hpux__)
 int
 setegid(gid_t gid)
 {
