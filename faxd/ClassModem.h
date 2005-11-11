@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: ClassModem.h 5 2005-11-11 21:48:47Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -68,6 +68,7 @@ typedef struct {
 #define	ESC_DELAY	(0x80|0x04)	// delay period of time
 #define	ESC_WAITFOR	(0x80|0x08)	// wait for modem response
 #define	ESC_FLUSH	(0x80|0x10)	// flush input queue
+#define	ESC_PLAY	(0x80|0x20)	// play (voice) file
 
 #ifdef OFF
 #undef OFF			// workaround for SCO

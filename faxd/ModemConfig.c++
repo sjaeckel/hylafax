@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: ModemConfig.c++ 5 2005-11-11 21:48:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -456,6 +456,9 @@ ModemConfig::parseATCmd(const char* cp)
 	    }
 	    ecode[0] = ESC_WAITFOR;
 	    ecode[1] = (u_char) resp;
+	} else if (esc.length() > 5 && strneq(esc, "play:", 5)) {
+	    ecode[0] = ESC_PLAY;
+	    ecode[1] = (u_char) esc[5];
 	} else {
 	    configError("Unknown AT escape code \"%s\"", (const char*) esc);
 	    pos = epos;

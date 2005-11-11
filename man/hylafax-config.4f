@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: hylafax-config.4f 5 2005-11-11 21:48:47Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2005-11-11 13:32:03 -0800 (Fri, 11 Nov 2005) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2005-11-11 13:48:47 -0800 (Fri, 11 Nov 2005) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -547,6 +547,10 @@ until
 is reached.  Note that if the modem is in voice mode to hear these
 DTMF digits, then it must be returned to fax mode in the
 .B ModemAnswerCmd.
+In order to prevent this feature from losing incoming fax calls, if
+fax sender CNG is detected while waiting for DTMF or if ten seconds
+elapse without sufficient DTMF then the remaining expected digits
+will be populated by whitespace, triggering fax answering.
 
 For example, the following settings will cause HylaFAX to enter
 voice mode and go off-hook when a RING is detected.  It will then
@@ -1674,6 +1678,7 @@ The following escape codes are interpreted:
 <delay:N>	delay N x 10 ms on the host (0 <= N <= 255)
 <flush>	flush any pending input data from the modem
 <waitfor:R>	wait for the response R from the modem (see below)
+<play:C>	play the etc/playC.raw audio file (see below)
 .fi
 .RE
 .sp .5
@@ -1716,6 +1721,25 @@ with a leading ``\s-1CONNECT\s+1'' in it; and
 ``\s-1ATS99=2\er<delay:2><flush><waitfor:NOTHING>\s+1'' would send
 ``\s-1ATS99=2\er\s+1'' to the modem, delay 20 ms, flush any
 input from the modem, and then continue (not wait for any response).
+.PP
+The ``<play:C>'' escape can be used to play a raw audio file with
+a voice modem.  The files are named etc/playC.raw where ``C'' is
+any character.  This feature can be used, for example, to play a brief
+audio message after picking up the line but before answering.  A
+configuration example may be:
+.nf
+
+  ModemRingResponse:  "AT+FCLASS=8;H1\enAT+VSM=131\enAT+VLS=1\enAT+VTX\en<waitfor:CONNECT><play:1><waitfor:OK>AT+VTS=[933,,150]"
+  ModemAnswerCmd:     "<delay:100>AT+FCLASS=1;A"
+  CallIDPattern:      SHIELDED_DTMF
+  CallIDAnswerLength: 4
+
+.fi
+In this example using an IS-101 voice-compliant modem, a RING indication from
+the modem will cause the modem to be placed in voice mode, set ulaw audio
+compression, and via the connected phone line play back the etc/play1.raw 
+audio file, which may say, "After the tone enter a four-digit extension, then 
+start the fax."  Following the message a tone is played.
 .TP
 .B ModemAnswerCmd
 The command to answer the phone.
