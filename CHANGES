@@ -1,4 +1,6 @@
-#	$Id: CHANGES 2 2005-11-11 21:32:03Z faxguy $	
+#	$Id: CHANGES 4 2005-11-11 21:44:48Z faxguy $	
+
+* add EOT/disconnection detection following fax dialing (11 Nov 2005)
 
 Changelog for HylaFAX 4.2.3rc1
 

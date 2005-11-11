@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class1Send.c++ 4 2005-11-11 21:44:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -146,6 +146,7 @@ Class1Modem::getPrologue(Class2Params& params, bool& hasDoc, fxStr& emsg, u_int&
     }
 
     for (;;) {
+	if (gotEOT) break;
 	if (framerecvd) {
 	    /*
 	     * An HDLC frame was received; process any
