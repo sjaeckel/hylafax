@@ -1,4 +1,4 @@
-/* $Id: tif_fax3.h 2 2005-11-11 21:32:03Z faxguy $ */
+/* $Id: tif_fax3.h 7 2005-11-11 21:52:04Z faxguy $ */
 
 /*
  * Copyright (c) 1990-1997 Sam Leffler
@@ -255,21 +255,27 @@ static const char* StateNames[] = {
  * 11 consecutive zero bits.  This means that if EOLcnt
  * is non-zero then we still need to scan for the final flag
  * bit that is part of the EOL code.
+ *
+ * In order to prevent getting forever stuck in these loops
+ * (perhaps by a hung modem or hung sender) we raiseRTC if
+ * it appears to be the case.
  */
 #define	SYNC_EOL(eoflab) do {						\
     if (EOLcnt == 0) {							\
-	for (;;) {							\
+	for (u_int i = 0;; i++) {					\
 	    NeedBits16(11,eoflab);					\
 	    if (GetBits(11) == 0)					\
 		break;							\
 	    ClrBits(1);							\
+	    if (i > 30000) raiseRTC();					\
 	}								\
     }									\
-    for (;;) {								\
+    for (u_int i = 0;; i++) {						\
 	NeedBits8(8,eoflab);						\
 	if (GetBits(8))							\
 	    break;							\
 	ClrBits(8);							\
+	if (i > 30000) raiseRTC();					\
     }									\
     while (GetBits(1) == 0)						\
 	ClrBits(1);							\
