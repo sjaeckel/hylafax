@@ -1,5 +1,7 @@
-#	$Id: CHANGES 4 2005-11-11 21:44:48Z faxguy $	
+#	$Id: CHANGES 5 2005-11-11 21:48:47Z faxguy $	
 
+* improve useability of SHIELDED_DTMF functions (11 Nov 2005)
+* add "play" option for modem config commands for voice (11 Nov 2005)
 * add EOT/disconnection detection following fax dialing (11 Nov 2005)
 
 Changelog for HylaFAX 4.2.3rc1

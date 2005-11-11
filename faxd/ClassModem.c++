@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: ClassModem.c++ 5 2005-11-11 21:48:47Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -942,6 +942,34 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
 		    case ESC_FLUSH:			// flush input
 			flushModemInput();
 			break;
+		    case ESC_PLAY:
+			{
+			    fxStr filename = fxStr("etc/play");
+			    filename.append(cmd[++i]);
+			    filename.append(".raw");
+			    protoTrace("Playing file \"%s\".", (const char*) filename);
+			    int fd = open((const char*) filename, O_RDONLY);
+			    if (fd > 0) {
+				u_char buf[1024];
+				int len, pos;
+				do {
+				    pos = 0;
+				    do {
+					len = read(fd, &buf[pos], 1);
+					if (buf[pos] == 0x10) buf[++pos] = 0x10;
+					pos++;
+				    } while (len > 0 &&  pos < sizeof(buf) - 1);
+				    putModem(&buf[0], pos, getDataTimeout());
+				} while (len > 0);
+				close(fd);
+			    } else {
+				protoTrace("Unable to open file \"%s\" for reading.", (const char*) filename);
+			    }
+			    u_char buf[2];
+			    buf[0] = DLE; buf[1] = ETX;
+			    putModem(buf, 2, getDataTimeout());
+			}
+			break;
 		    }
 		} while (++i < cmdlen && isEscape(cmd[i]));
 		pos = i;				// next segment starts here
@@ -1349,18 +1377,29 @@ ClassModem::waitForRings(u_short rings, CallType& type, CallID& callid)
 		    if (conf.idConfig[j].pattern == "SHIELDED_DTMF") {	// retrieve DID, e.g. via voice DTMF
 			ringstart = Sys::now();
 			do {
-			    int c = server.getModemChar(5000);
-			    if (c == 0x10) c = server.getModemChar(5000);
+			    int c = server.getModemChar(10000);
+			    if (c == 0x10) c = server.getModemChar(10000);
 			    if (c == 0x23 || c == 0x2A || (c >= 0x30 && c <= 0x39)) {
 				// a DTMF digit was received...
 				protoTrace("MODEM HEARD DTMF: %c", c);
 				callid[j].append(fxStr::format("%c", c));
+			    } else if (c == 0x73) {
+				// got silence, keep waiting
+				protoTrace("MODEM HEARD SILENCE");
+			    } else if (c == 0x62) {
+				// got busy tone, fail
+				protoTrace("MODEM HEARD BUSY");
+				return (false);
+			    } else if (c == 0x63) {
+				// got CNG tone, we're not going to get more DTMF, trigger answering
+				protoTrace("MODEM HEARD CNG");
+				break;
 			    }
 			} while (callid.length(j) < conf.idConfig[j].answerlength && (Sys::now()-ringstart < 10));
-			u_char buf[2];
-			buf[0] = DLE; buf[1] = ETX;
-			if (!putModem(buf, 2, 3000))
-			    return (false);
+			/*
+			 * If the sender doesn't send enough DTMF then we want to answer anyway.
+			 */
+			while (callid.length(j) < conf.idConfig[j].answerlength) callid[j].append(" ");
 		    }
 		}
 	    }
