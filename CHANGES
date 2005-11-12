@@ -1,5 +1,6 @@
-#	$Id: CHANGES 8 2005-11-11 22:11:04Z faxguy $	
+#	$Id: CHANGES 9 2005-11-13 00:17:36Z faxguy $	
 
+* add CHARSET config option for mailing scripts (12 Nov 2005)
 * disable usage of AT+FRS in USR prototype config (11 Nov 2005)
 * prevent some faxgetty hangs in Phase C EOL sync (11 Nov 2005)
 * update hfaxd 'site adduser' functionality (11 Nov 2005)
