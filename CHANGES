@@ -1,5 +1,7 @@
-#	$Id: CHANGES 9 2005-11-13 00:17:36Z faxguy $	
+#	$Id: CHANGES 10 2005-11-13 02:55:10Z faxguy $	
 
+* use To-Company and To-Name coverpage entries in the notification
+  message if they are available to use (12 Nov 2005)
 * add CHARSET config option for mailing scripts (12 Nov 2005)
 * disable usage of AT+FRS in USR prototype config (11 Nov 2005)
 * prevent some faxgetty hangs in Phase C EOL sync (11 Nov 2005)
