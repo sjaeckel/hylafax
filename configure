@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: configure 9 2005-11-13 00:17:36Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -119,6 +119,7 @@ CHMOD
 CHOWN
 CC
 CCOMPILER
+CHARSET
 CMP
 COL
 CP
@@ -294,6 +295,15 @@ test -d /usr/local/bin && PATH=/usr/local/bin:$PATH	# for GNU stuff
 PATH=$PATH:$OPATH
 
 POSIXLY_CORRECT=1; export POSIXLY_CORRECT		# disable GNU extensions
+
+#
+# Check for locale settings before setting LC_ALL.
+#
+CHARSET=`(locale -c LC_MESSAGES | tail -n 1)`
+if test X$CHARSET = X; then
+    CHARSET=us-ascii
+fi
+
 LC_ALL=C; export LC_ALL					# set a common language
 
 #
@@ -389,7 +399,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 2 $"
+	echo "This is HylaFAX configure $Revision: 9 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
