@@ -1,15 +1,7 @@
-$Id: README 2 2005-11-11 21:32:03Z faxguy $
-
-                           *   ANNOUNCE   *
-
-The HylaFAX development team is pleased to announce our 4.2.2
-patch level release!  As always, our sincerest thanks go to all who
-participate and provide feedback.
-
-                               *   *   *
+$Id: README 11 2005-11-14 16:32:52Z faxguy $
 
 This document is intended to describe the significant differences
-between hylafax-4.2.2 and older releases, point out any known
+between this version of HylaFAX and older releases, point out any known
 incompatibilites and issues, and provide the reader with directions to
 further resources regarding HylaFAX. 
 
