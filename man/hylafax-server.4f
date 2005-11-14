@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-server.4f 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: hylafax-server.4f 11 2005-11-14 16:32:52Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -715,5 +715,4 @@ archive/*	database of archived jobs
 .IR xferfaxlog (${MANNUM4_5}),
 .PP
 Extensive documentation is available in online at
-http://www.hylafax.org/.
-Many of these materials are also included in the software distribution.
+http://hylafax.sourceforge.net/.
