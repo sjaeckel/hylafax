@@ -1,4 +1,6 @@
-#	$Id: CHANGES 10 2005-11-13 02:55:10Z faxguy $	
+#	$Id: CHANGES 12 2005-11-14 16:34:17Z faxguy $	
+
+New Changes
 
 * use To-Company and To-Name coverpage entries in the notification
   message if they are available to use (12 Nov 2005)
@@ -10,7 +12,7 @@
 * add "play" option for modem config commands for voice (11 Nov 2005)
 * add EOT/disconnection detection following fax dialing (11 Nov 2005)
 
-Changelog for HylaFAX 4.2.3rc1
+Changelog for HylaFAX 4.2.3
 
 * fix clients to accept 1yz preliminary reponse on connection
   according to RFC959 (8 Nov 2005)
