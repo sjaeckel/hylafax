@@ -1,4 +1,4 @@
-.\"	$Id: wedged.1m 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: wedged.1m 13 2005-11-15 23:34:48Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -74,7 +74,8 @@ associated with the modem.
 .P
 If there exists an executable file 
 .B ${SPOOL}/etc/resetmodem
-then that file will be executed upon execution of
+then that file will be executed (with the device name as the only
+argument) upon execution of
 the
 .I wedged
 script in an effort to recover the modem.
