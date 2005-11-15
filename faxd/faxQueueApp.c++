@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 13 2005-11-15 23:34:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1982,7 +1982,7 @@ faxQueueApp::delayJob(Job& job, FaxRequest& req, const char* mesg, time_t tts)
 }
 
 void
-faxQueueApp::timeoutAccounting(Job& job, FaxRequest& req)
+faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
 {
     FaxAcctInfo ai;
     ai.jobid = (const char*) req.jobid;
@@ -1997,7 +1997,11 @@ faxQueueApp::timeoutAccounting(Job& job, FaxRequest& req)
     ai.csi = "";
     ai.npages = 0;
     ai.params = 0;
-    ai.status = "Kill time expired";
+    ai.status = "";
+    if (strstr(type, "UNSENT"))
+	ai.status = "Kill time expired";
+    else if (strstr(type, "SUBMIT"));
+	ai.status = "Submitted";
     CallID empty_callid;
     ai.callid = empty_callid;
     ai.owner = (const char*) req.owner;
@@ -2005,14 +2009,14 @@ faxQueueApp::timeoutAccounting(Job& job, FaxRequest& req)
     pid_t pid = fork();
     switch (pid) {
 	case -1:			// error
-	    if (!ai.record("UNSENT"))
-		logError("Error writing UNSENT accounting record, dest=%s",
-		    (const char*) ai.dest);
+	    if (!ai.record(type))
+		logError("Error writing %s accounting record, dest=%s",
+		    type, (const char*) ai.dest);
 	    break;
 	case 0:				// child
-	    if (!ai.record("UNSENT"))
+	    if (!ai.record(type))
 		logError("Error writing UNSENT accounting record, dest=%s",
-		    (const char*) ai.dest);
+		    type, (const char*) ai.dest);
 	    _exit(255);
 	    /*NOTREACHED*/
 	default:			// parent
@@ -2037,7 +2041,7 @@ faxQueueApp::timeoutJob(Job& job)
 	job.state = FaxRequest::state_failed;
 	FaxRequest* req = readRequest(job);
 	if (req) {
-	    timeoutAccounting(job, *req);
+	    queueAccounting(job, *req, "UNSENT");
 	    req->notice = "Kill time expired";
 	    deleteRequest(job, req, Job::timedout, true);
 	}
@@ -2062,7 +2066,7 @@ faxQueueApp::timeoutJob(Job& job, FaxRequest& req)
     job.state = FaxRequest::state_failed;
     traceQueue(job, "KILL TIME EXPIRED");
     Trigger::post(Trigger::JOB_TIMEDOUT, job);
-    timeoutAccounting(job, req);
+    queueAccounting(job, req, "UNSENT");
     req.notice = "Kill time expired";
     deleteRequest(job, req, Job::timedout, true);
     setDead(job);
@@ -2073,7 +2077,7 @@ faxQueueApp::timeoutJob(Job& job, FaxRequest& req)
  * using the specified job description file.
  */
 bool
-faxQueueApp::submitJob(const fxStr& jobid, bool checkState)
+faxQueueApp::submitJob(const fxStr& jobid, bool checkState, bool doaccounting)
 {
     Job* job = Job::getJobByID(jobid);
     if (job) {
@@ -2127,6 +2131,7 @@ faxQueueApp::submitJob(const fxStr& jobid, bool checkState)
 	      req.state != FaxRequest::state_done &&
 	      req.state != FaxRequest::state_failed) {
 		status = submitJob(req, checkState);
+		if (doaccounting) queueAccounting(*job, req, "SUBMIT");
 	    } else if (reject) {
 		Job job(req);
 		job.state = FaxRequest::state_failed;
@@ -2788,7 +2793,7 @@ faxQueueApp::FIFOMessage(char cmd, const fxStr& id, const char* args)
 	break;
     case 'S':				// submit an outbound job
 	traceServer("SUBMIT JOB %s", args);
-	if (status = submitJob(args))
+	if (status = submitJob(args, false, true))
 	    pokeScheduler();
 	break;
     case 'U':				// unreference file

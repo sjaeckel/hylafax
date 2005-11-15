@@ -1,4 +1,4 @@
-/*	$Id: FaxAcctInfo.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxAcctInfo.c++ 13 2005-11-15 23:34:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -40,28 +40,43 @@ FaxAcctInfo::record(const char* cmd)
 {
     bool ok = false;
     int fd = Sys::open(FAX_XFERLOG, O_RDWR|O_CREAT|O_APPEND, 0644);
+
+    char timebuf[80];
+    strftime(timebuf, sizeof (timebuf), "%D %H:%M", localtime(&start));
+
+    char jobtagbuf[80];
+    u_int i = 0;
+    char c;
+    for (const char* cp = jobtag; (c = *cp); cp++) {
+	if (i == sizeof (jobtagbuf)-2)		// truncate string
+	    break;
+	if (c == '\t')				// tabs are field delimiters
+	    c = ' ';
+	else if (c == '"')			// escape quote marks
+	    jobtagbuf[i++] = '\\';
+	jobtagbuf[i++] = c;
+    }
+    jobtagbuf[i] = '\0';
+
+    fxStr paramsbuf = fxStr::format("%u", params);
+    fxStr npagesbuf = fxStr::format("%d", npages);
+    fxStr durationbuf = fxStr::format("%s", fmtTime(duration));
+    fxStr conntimebuf = fxStr::format("%s", fmtTime(conntime));
+
+    fxStr callid_formatted = "";
+    for (i = 2; i < callid.size(); i++) {
+	if (i > 2) callid_formatted.append("::");
+	callid_formatted.append(callid[i]);
+    }
+
     if (fd >= 0) {
 	fxStackBuffer record;
-	char buf[80];
-	strftime(buf, sizeof (buf), "%D %H:%M", localtime(&start));
-	record.put(buf);			// $ 1 = time
+	record.put(timebuf);			// $ 1 = time
 	record.fput("\t%s", cmd);		// $ 2 = SEND|RECV|POLL|PAGE
 	record.fput("\t%s", commid);		// $ 3 = commid
 	record.fput("\t%s", device);		// $ 4 = device
 	record.fput("\t%s", jobid);		// $ 5 = jobid
-	u_int i = 0;
-	char c;
-	for (const char* cp = jobtag; (c = *cp); cp++) {
-	    if (i == sizeof (buf)-2)		// truncate string
-		break;
-	    if (c == '\t')			// tabs are field delimiters
-		c = ' ';
-	    else if (c == '"')			// escape quote marks
-		buf[i++] = '\\';
-	    buf[i++] = c;
-	}
-	buf[i] = '\0';
-	record.fput("\t\"%s\"", buf);		// $ 6 = jobtag
+	record.fput("\t\"%s\"", jobtagbuf);	// $ 6 = jobtag
 	record.fput("\t%s", user);		// $ 7 = sender
 	record.fput("\t\"%s\"", dest);		// $ 8 = dest
 	record.fput("\t\"%s\"", csi);		// $ 9 = csi
@@ -72,11 +87,6 @@ FaxAcctInfo::record(const char* cmd)
 	record.fput("\t\"%s\"", status);	// $14 = status
 	record.fput("\t\"%s\"", callid.size() > CallID::NAME ? (const char*) callid[1] : "");	// $15 = CallID2/CIDName
 	record.fput("\t\"%s\"", callid.size() > CallID::NUMBER ? (const char*) callid[0] : "");	// $16 = CallID1/CIDNumber
-	fxStr callid_formatted = "";
-	for (i = 2; i < callid.size(); i++) {
-	    if (i > 2) callid_formatted.append("::");
-	    callid_formatted.append(callid[i]);
-	}
 	record.fput("\t\"%s\"", (const char*) callid_formatted);	// $17 = CallID3 -> CallIDn
 	record.fput("\t\"%s\"", owner);					// $18 = owner
 	record.fput("\t\"%s\"", (const char*) faxdcs);			// $19 = DCS
@@ -84,6 +94,45 @@ FaxAcctInfo::record(const char* cmd)
 	flock(fd, LOCK_EX);
 	ok = (Sys::write(fd, record, record.getLength()) == (ssize_t)record.getLength());
 	Sys::close(fd);				// implicit unlock
+    }
+
+    /*
+     * Here we provide a hook for an external accounting
+     * facility, such as a database.
+     */
+    const char* argv[21];
+    argv[0] = "FaxAccounting";
+    argv[1] = timebuf;
+    argv[2] = cmd;
+    argv[3] = commid;
+    argv[4] = device;
+    argv[5] = jobid;
+    argv[6] = jobtagbuf;
+    argv[7] = user;
+    argv[8] = dest;
+    argv[9] = csi;
+    argv[10] = (const char*) paramsbuf;
+    argv[11] = (const char*) npagesbuf;
+    argv[12] = (const char*) durationbuf;
+    argv[13] = (const char*) conntimebuf;
+    argv[14] = status;
+    argv[15] = callid.size() > CallID::NAME ? (const char*) callid[1] : "";
+    argv[16] = callid.size() > CallID::NUMBER ? (const char*) callid[0] : "";
+    argv[17] = (const char*) callid_formatted;
+    argv[18] = owner;
+    argv[19] = (const char*) faxdcs;
+    argv[20] = NULL;
+    pid_t pid = fork();		// signal handling in some apps seems to require a fork here
+    switch (pid) {
+	case 0:
+	    Sys::execv("etc/FaxAccounting", (char* const*) argv);
+	    sleep(1);		// XXX give parent time
+	    _exit(127);
+	case -1:
+	    break;
+	default:
+	    Sys::waitpid(pid);
+	    break;
     }
     return (ok);
 }

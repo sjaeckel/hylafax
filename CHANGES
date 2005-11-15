@@ -1,7 +1,9 @@
-#	$Id: CHANGES 12 2005-11-14 16:34:17Z faxguy $	
+#	$Id: CHANGES 13 2005-11-15 23:34:48Z faxguy $	
 
 New Changes
 
+* add support for etc/FaxAccounting database hook (15 Nov 2005)
+* add SUBMIT xferfaxlog records upon job submission (15 Nov 2005)
 * use To-Company and To-Name coverpage entries in the notification
   message if they are available to use (12 Nov 2005)
 * add CHARSET config option for mailing scripts (12 Nov 2005)
