@@ -1,4 +1,4 @@
-#	$Id: CHANGES 13 2005-11-15 23:34:48Z faxguy $	
+#	$Id: CHANGES 15 2005-11-16 23:31:44Z faxguy $	
 
 New Changes
 
@@ -8,7 +8,7 @@ New Changes
   message if they are available to use (12 Nov 2005)
 * add CHARSET config option for mailing scripts (12 Nov 2005)
 * disable usage of AT+FRS in USR prototype config (11 Nov 2005)
-* prevent some faxgetty hangs in Phase C EOL sync (11 Nov 2005)
+* prevent some faxgetty hangs in Phase C EOL sync (11, 16 Nov 2005)
 * update hfaxd 'site adduser' functionality (11 Nov 2005)
 * improve useability of SHIELDED_DTMF functions (11 Nov 2005)
 * add "play" option for modem config commands for voice (11 Nov 2005)
