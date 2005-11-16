@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: hfaxd.1m 14 2005-11-16 18:17:39Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -78,7 +78,8 @@ is intended to be the ``carrier'' through which they are supported.
 .I hfaxd
 is typically used in one of two ways; either as a standalone
 process that is started at system boot time to listen
-for client connections on one or more ports,
+for client connections on one or more ports (in which case the
+-i, -o, or -s option must be used),
 or as a subservient process to the
 .IR inetd (${MANNUM1_8})
 program.
