@@ -1,4 +1,4 @@
-/* $Id: tif_fax3.h 7 2005-11-11 21:52:04Z faxguy $ */
+/* $Id: tif_fax3.h 15 2005-11-16 23:31:44Z faxguy $ */
 
 /*
  * Copyright (c) 1990-1997 Sam Leffler
@@ -262,20 +262,20 @@ static const char* StateNames[] = {
  */
 #define	SYNC_EOL(eoflab) do {						\
     if (EOLcnt == 0) {							\
-	for (u_int i = 0;; i++) {					\
+	for (u_long i = 0;; i++) {					\
 	    NeedBits16(11,eoflab);					\
 	    if (GetBits(11) == 0)					\
 		break;							\
 	    ClrBits(1);							\
-	    if (i > 30000) raiseRTC();					\
+	    if (i > 150000) raiseRTC();					\
 	}								\
     }									\
-    for (u_int i = 0;; i++) {						\
+    for (u_long i = 0;; i++) {						\
 	NeedBits8(8,eoflab);						\
 	if (GetBits(8))							\
 	    break;							\
 	ClrBits(8);							\
-	if (i > 30000) raiseRTC();					\
+	if (i > 150000) raiseRTC();					\
     }									\
     while (GetBits(1) == 0)						\
 	ClrBits(1);							\
