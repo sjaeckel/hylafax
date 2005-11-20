@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 5 2005-11-11 21:48:47Z faxguy $ */
+/*	$Id: ClassModem.c++ 16 2005-11-21 05:38:07Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -40,7 +40,7 @@ const char* ClassModem::callStatus[10] = {
     "No answer from remote",			// NOANSWER
     "No local dialtone",			// NODIALTONE
     "Invalid dialing command",			// ERROR
-    "Unknown problem (check modem power)",	// FAILURE
+    "Unknown problem",				// FAILURE
     "Carrier established, but Phase A failure",	// NOFCON
     "Data connection established (wanted fax)",	// DATACONN
     "Glare - RING detected",			// RING
