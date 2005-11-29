@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxMachineInfo.c++ 21 2005-11-29 23:44:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -181,6 +181,7 @@ static const char* stnames[] =
 #define V34	8
 #define V17	9
 #define BATCH	10
+#define PAGING	11
 
 #define	setLocked(b,ix)	locked |= b<<ix
 
@@ -255,6 +256,7 @@ FaxMachineInfo::setConfigItem(const char* tag, const char* value)
 	pagerTTYParity = value;
     } else if (streq(tag, "pagingprotocol")) {
 	pagingProtocol = value;
+	setLocked(b, PAGING);
     } else if (streq(tag, "pagesource")) {
 	pageSource = value;
     } else if (streq(tag, "pagersetupcmds")) {
@@ -403,7 +405,7 @@ FaxMachineInfo::writeConfig(fxStackBuffer& buf)
 	putDecimal(buf, "pagerMaxMsgLength", true, pagerMaxMsgLength);
     putIfString(buf, "pagerPassword", true, pagerPassword);
     putIfString(buf, "pagerTTYParity", true, pagerTTYParity);
-    putIfString(buf, "pagingProtocol", true, pagingProtocol);
+    putIfString(buf, "pagingProtocol", isLocked(PAGING), pagingProtocol);
     putIfString(buf, "pageSource", true, pageSource);
     putIfString(buf, "pagerSetupCmds", true, pagerSetupCmds);
 }

@@ -1,10 +1,12 @@
-#	$Id: CHANGES 19 2005-11-29 21:08:06Z faxguy $	
+#	$Id: CHANGES 21 2005-11-29 23:44:39Z faxguy $	
 
 New Changes
 
+* don't automatically lock-down pagingProtocol in info files
+  (29 Nov 2005)
 * fix minor memory leak (29 Nov 2005)
 * fix for clients specifying TZONE LOCAL/GMT and using %Y for
-  JobFmt and RcvFmt (22 Nov 2005)
+  JobFmt and RcvFmt (29 Nov 2005)
 * add support for etc/FaxAccounting database hook (15 Nov 2005)
 * add SUBMIT xferfaxlog records upon job submission (15 Nov 2005)
 * use To-Company and To-Name coverpage entries in the notification
