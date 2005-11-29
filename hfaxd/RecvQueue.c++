@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: RecvQueue.c++ 17 2005-11-29 21:04:30Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -459,7 +459,7 @@ HylaFAXServer::Rprintf(FILE* fd, const char* fmt,
 	    case 'Y':
 		{ char buf[30];					// XXX HP C++
 		  strftime(buf, sizeof (buf), "%Y:%m:%d %H:%M:%S",
-		      localtime(&ri.recvTime));
+			IS(USEGMT) ? gmtime(&ri.recvTime) : localtime(&ri.recvTime));
 		  fprintf(fd, fspec, buf);
 		}
 		break;

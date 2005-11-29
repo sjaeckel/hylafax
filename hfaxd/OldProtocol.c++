@@ -1,4 +1,4 @@
-/*	$Id: OldProtocol.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: OldProtocol.c++ 17 2005-11-29 21:04:30Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -138,6 +138,12 @@ OldProtocolServer::open(void)
     (void) umask(077);
     dirSetup();					// initialize directory handling
 
+    /*
+     * old protocol Jprintf format %Y historically gives localtime,
+     * we'll force off USEGMT now that %Y is GMT/LOCAL aware, just like
+     * SNNPServer.
+     */
+    state &= ~S_USEGMT;
     doProtocol();
 }
 
