@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Jobs.c++ 17 2005-11-29 21:04:30Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1814,7 +1814,7 @@ HylaFAXServer::Jprintf(FILE* fd, const char* fmt, const Job& job)
 	    case 'Y':
 		{ char buf[30];				// XXX HP C++
 		  strftime(buf, sizeof (buf), "%Y/%m/%d %H.%M.%S",
-		    localtime(&job.tts));
+			IS(USEGMT) ? gmtime(&job.tts) : localtime(&job.tts));
 		  fprintf(fd, fspec, buf);
 		}
 		break;
