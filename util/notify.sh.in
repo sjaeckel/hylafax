@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 10 2005-11-13 02:55:10Z faxguy $
+#    $Id: notify.sh.in 20 2005-11-29 22:06:32Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -854,7 +854,7 @@ if [ "$NOTIFY_FAXMASTER" = "yes" ]; then
 	    jobtag="$jobtype job $jobid"
 	fi
 	echo "To: $TOADDR"
-	echo "Subject: $jobtag to $DESTINATION $WHY"
+	echo "Subject: $jobtag to $number $WHY"
 	echo
 	returnTranscript
 	returnToSender
