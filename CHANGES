@@ -1,9 +1,8 @@
-#	$Id: CHANGES 21 2005-11-29 23:44:39Z faxguy $	
+#	$Id: CHANGES 22 2005-11-29 23:48:26Z faxguy $	
 
 New Changes
 
-* don't automatically lock-down pagingProtocol in info files
-  (29 Nov 2005)
+* don't lock-down pagingProtocol by default (29 Nov 2005)
 * fix minor memory leak (29 Nov 2005)
 * fix for clients specifying TZONE LOCAL/GMT and using %Y for
   JobFmt and RcvFmt (29 Nov 2005)
