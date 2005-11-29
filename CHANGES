@@ -1,7 +1,8 @@
-#	$Id: CHANGES 17 2005-11-29 21:04:30Z faxguy $	
+#	$Id: CHANGES 19 2005-11-29 21:08:06Z faxguy $	
 
 New Changes
 
+* fix minor memory leak (29 Nov 2005)
 * fix for clients specifying TZONE LOCAL/GMT and using %Y for
   JobFmt and RcvFmt (22 Nov 2005)
 * add support for etc/FaxAccounting database hook (15 Nov 2005)
