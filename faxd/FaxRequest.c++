@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxRequest.c++ 19 2005-11-29 21:08:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -206,12 +206,12 @@ FaxRequest::readQFile(bool& rejectJob)
     char stackbuf[2048];
     char* buf = stackbuf;
     char* bp = buf;
-    if (sb.st_size > (off_t)sizeof(buf)-1)	// extra byte for terminating \0
+    if (sb.st_size > (off_t)sizeof(stackbuf)-1)	// extra byte for terminating \0
 	bp = buf = new char[sb.st_size+1];
     if (Sys::read(fd, bp, (u_int) sb.st_size) != sb.st_size) {
 	error("Read error: %s", strerror(errno));
-	if (bp != buf)
-	    delete bp;
+	if (buf != stackbuf)
+	    delete [] buf;
 	return (false);
     }
     /*
@@ -434,7 +434,7 @@ FaxRequest::readQFile(bool& rejectJob)
     if (desiredec > EC_ECLFULL)	desiredec = EC_ECLFULL;
     if (desireddf > DF_2DMMR)	desireddf = DF_2DMMR;
     if (buf != stackbuf)			// dynamically allocated buffer
-	delete buf;
+	delete [] buf;
     return (true);
 }
 
