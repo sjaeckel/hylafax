@@ -1,4 +1,4 @@
-/*	$Id: CopyQuality.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: CopyQuality.c++ 23 2005-12-01 23:15:21Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -657,6 +657,7 @@ FaxModem::writeECMData(TIFF* tif, u_char* buf, u_int cc, const Class2Params& par
 			    sdnormcount = 0;
 			}
 			u_long clength = 256*256*256*buf[i+2]+256*256*buf[i+3]+256*buf[i+4]+buf[i+5];
+			if (clength > 256) clength = 256;		// keep it sane
 			fxStr comment = "";
 			for (u_long cpos = 0; i+6+cpos < cc && cpos < clength; cpos++) {
 			    if (!isprint(buf[i+6+cpos])) break;		// only printables
