@@ -1,7 +1,9 @@
-#	$Id: CHANGES 22 2005-11-29 23:48:26Z faxguy $	
+#	$Id: CHANGES 24 2005-12-08 01:23:38Z faxguy $	
 
 New Changes
 
+* fix rare occassion where TCF fails following an unexpected
+  receipt of prologue frames (7 Dec 2005)
 * don't lock-down pagingProtocol by default (29 Nov 2005)
 * fix minor memory leak (29 Nov 2005)
 * fix for clients specifying TZONE LOCAL/GMT and using %Y for
