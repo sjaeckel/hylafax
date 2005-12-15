@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 28 2005-12-16 01:09:33Z faxguy $ */
+/*	$Id: Login.c++ 29 2005-12-16 01:27:32Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -183,8 +183,8 @@ HylaFAXServer::pamCheck(const char* user, const char* pass)
 		retval = true;
 
 	pamEnd(pamret);
-	return retval;
 #endif
+	return retval;
 }
 
 void HylaFAXServer::pamEnd(int pamret)
