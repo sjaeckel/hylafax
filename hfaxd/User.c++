@@ -1,4 +1,4 @@
-/*	$Id: User.c++ 6 2005-11-11 21:50:14Z faxguy $ */
+/*	$Id: User.c++ 25 2005-12-16 00:42:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -51,7 +51,7 @@ gid_t	HylaFAXServer::faxuid = 0;		// reserved fax uid
 
 #ifdef HAVE_PAM
 extern int
-pamconv(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata);
+pamconv(int num_msg, STRUCT_PAM_MESSAGE **msg, struct pam_response **resp, void *appdata);
 #endif
 
 bool
