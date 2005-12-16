@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 9 2005-11-13 00:17:36Z faxguy $
+#	$Id: configure 30 2005-12-16 22:40:25Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -399,7 +399,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 9 $"
+	echo "This is HylaFAX configure $Revision: 30 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -2426,11 +2426,10 @@ EOF
 	Note "  Found tiffio.h version ${header_ver}"
 	Note "  Found libtiff version ${lib_ver}"
 	if [ ${header_ver} -ge 19960307 ]; then
-	    if [ "${lib_ver}" = "3.4" ]; then
-		tiff_runlen_t="uint16"
-	    elif [ "${lib_ver}" = "3.5" -o "${lib_ver}" = "3.6" -o "${lib_ver}" = "3.7" ]; then
-		tiff_runlen_t="uint32"
-	    fi
+	    case ${lib_ver} in
+		3.4)		tiff_runlen_t="uint16" ;;
+		3.[567])	tiff_runlen_t="uint32" ;;
+	    esac
 	fi
     else
 	cat 1>&2 <<EOF
