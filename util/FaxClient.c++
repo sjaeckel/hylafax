@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxClient.c++ 31 2005-12-21 01:17:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -458,7 +458,7 @@ FaxClient::FaxParam FaxClient::struParam =
     { "STRU", struNames, N(struNames), &FaxClient::stru };
 bool FaxClient::setStruct(u_int v)	{ return setCommon(struParam, v); }
 
-static const char* formNames[] = { "", "PS", "PS2", "TIFF", "PCL" };
+static const char* formNames[] = { "", "PS", "PS2", "TIFF", "PCL", "PDF" };
 FaxClient::FaxParam FaxClient::formParam =
     { "FORM", formNames, N(formNames), &FaxClient::format };
 bool FaxClient::setFormat(u_int v)	{ return setCommon(formParam, v); }

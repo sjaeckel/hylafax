@@ -1,4 +1,4 @@
-/*	$Id: FileTransfer.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FileTransfer.c++ 31 2005-12-21 01:17:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -60,6 +60,7 @@ static struct {
 { "PS",	  true,		 "ps",  "Adobe PostScript Level I" },
 { "PS2",  HAVE_PSLEVEL2, "ps",  "Adobe PostScript Level II" },
 { "PCL",  HAVE_PCL5,	 "pcl", "HP Printer Control Language (PCL), Version 5"},
+{ "PDF",  true,		 "pdf", "Adobe Portable Document Format" },
 };
 static 	const char* typenames[] =  { "ASCII", "EBCDIC", "Image", "Local" };
 static 	const char* strunames[] =  { "File", "Record", "Page", "TIFF" };

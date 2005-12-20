@@ -1,4 +1,4 @@
-/*	$Id: FaxItem.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxItem.c++ 31 2005-12-21 01:17:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -50,6 +50,7 @@ FaxItem::isSavedOp() const
     return (op == FaxRequest::send_tiff_saved ||
 	    op == FaxRequest::send_postscript_saved ||
 	    op == FaxRequest::send_pcl_saved ||
+	    op == FaxRequest::send_pdf_saved ||
 	    op == FaxRequest::send_page_saved ||
 	    op == FaxRequest::send_data_saved);
 }
