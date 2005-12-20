@@ -1,7 +1,8 @@
-#	$Id: CHANGES 29 2005-12-16 01:27:32Z faxguy $	
+#	$Id: CHANGES 31 2005-12-21 01:17:11Z faxguy $	
 
 New Changes
 
+* use PDF in q-files when appropriate (20 Dec 2005)
 * fix possible hfaxd login vulnerability due to PAM
   library absence during build (15 Dec 2005)
 * fix a Solaris compile error due to PAM_CONV_AGAIN (15 Dec 2005)

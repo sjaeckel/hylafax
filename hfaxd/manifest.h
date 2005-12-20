@@ -1,4 +1,4 @@
-/*	$Id: manifest.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: manifest.h 31 2005-12-21 01:17:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -92,6 +92,7 @@
 #define	FORM_PS		1	// PostScript Level I
 #define	FORM_PS2	2	// PostScript Level II
 #define	FORM_PCL	3	// HP-PCL5
+#define	FORM_PDF	4	// Portable Document Format
 
 /*
  * Definitions for the TELNET protocol (only those used).

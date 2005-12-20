@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 19 2005-11-29 21:08:06Z faxguy $ */
+/*	$Id: FaxRequest.c++ 31 2005-12-21 01:17:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -161,7 +161,7 @@ char* FaxRequest::opNames[18] = {
     "page",
     "!page",
     "uucp",
-    "13", "14", "15"
+    "15", "16", "17"
 };
 char* FaxRequest::notifyVals[4] = {
     "none",			// no_notice
@@ -378,10 +378,17 @@ FaxRequest::readQFile(bool& rejectJob)
 		addItem(send_tiff, tag, rejectJob);
 	    break;
 	case H_POSTSCRIPT:
+	    // collides with H_PDF
 	    if (cmd[0] == '!')
-		addItem(send_postscript_saved, tag);
+		if (cmd[2] == 'o')
+		    addItem(send_postscript_saved, tag);
+		else
+		    addItem(send_pdf_saved, tag);
 	    else
-		addItem(send_postscript, tag, rejectJob);
+		if (cmd[1] == 'o')
+		    addItem(send_postscript, tag, rejectJob);
+		else
+		    addItem(send_pdf, tag, rejectJob);
 	    break;
 	case H_PCL:
 	    if (cmd[0] == '!')

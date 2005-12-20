@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FileSystem.c++ 31 2005-12-21 01:17:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -760,7 +760,7 @@ HylaFAXServer::docType(const char* docname, FaxSendOp& op)
 	    if (cc > 2 && b.buf[0] == '%' && b.buf[1] == '!')
 		op = FaxRequest::send_postscript;
 	    else if (cc > 2 && b.buf[0] == '%' && b.buf[1] == 'P') {
-	    	logError("What we have here is a PDF file");
+	    	logDebug("What we have here is a PDF file");
 	    	op = FaxRequest::send_pdf;
 	    }
 	    else if (cc > (ssize_t)sizeof (b.h) && isTIFF(b.h))
