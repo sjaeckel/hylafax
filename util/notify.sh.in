@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 31 2005-12-21 01:17:11Z faxguy $
+#    $Id: notify.sh.in 33 2005-12-21 16:31:36Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -246,6 +246,27 @@ parseQfile()
 
 }
 
+fileType()
+# determine the type of file passed using the unix 'file' command
+# with the '-i' option (mime type output)
+{
+    FILENAME=$1
+    if [ -f "$FILENAME" ] ; then
+	FILETYPE=`file $FILENAME`
+        if (match "$FILETYPE" "postscript") ; then 
+            echo "PostScript"
+        elif (match "$FILETYPE" "tiff") ; then 
+            echo "TIFF"
+        elif (match "$FILETYPE" "pdf") ; then 
+            echo "PDF"
+        else
+            echo "Unknown document type"
+        fi
+    else
+        echo "File does not exist"
+    fi
+}
+
 returnFaxImage()
 # output a mime encoded set of file attachments with mime headers
 # for each file listed in the files_XX set, make sure that it is 
@@ -264,10 +285,19 @@ returnFaxImage()
     for i in `local_seq 1 $nfiles`; do 
         name="files_$i"
 	eval filename=`echo "$"$name`
-
 	if [ -s $filename ] ; then # file is > 0 size
 	    type="filetype_$i"
 	    eval FROMFMT=`echo "$"$type`
+	    #
+	    # Because Ghostscript accepts PDF identically to PostScript
+	    # and because HylaFAX has historically handled PDF named as
+	    # "postscript" we have to double-check the PostScript filetype.
+	    #
+	    if [ "$FROMFMT" = "PostScript" ]; then
+		if [ "`fileType $filename`" != "PostScript" ]; then
+		    FROMFMT=PDF
+		fi
+	    fi
             case "$FROMFMT" in "PostScript" | "TIFF" | "PDF" ) # test we know the source format
                 if [ "$RETURNFORMAT" = "tif" ] ; then
                     ENCODEDFILENAME="$number-$i.tif"
@@ -558,6 +588,16 @@ returnToSender()
                     FILESIZE=$1
 		    type="filetype_$i"
 		    eval filetype=`echo "$"$type`
+		    #
+		    # Because Ghostscript accepts PDF identically to PostScript
+		    # and because HylaFAX has historically handled PDF named as
+		    # "postscript" we have to double-check the PostScript filetype.
+		    #
+		    if [ "$filetype" = "PostScript" ]; then
+			if [ "`fileType $filename`" != "PostScript" ]; then
+			    filetype=PDF
+			fi
+		    fi
 		    printf "%-20s %8d %s\n" "$filename" "$FILESIZE" "$filetype"
                 fi
             done
