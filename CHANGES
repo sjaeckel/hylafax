@@ -1,7 +1,8 @@
-#	$Id: CHANGES 33 2005-12-21 16:31:36Z faxguy $	
+#	$Id: CHANGES 35 2005-12-22 01:34:45Z faxguy $	
 
 New Changes
 
+* fix configure in vsnprintf detection (21 Dec 2005)
 * use PDF in q-files when appropriate (20-21 Dec 2005)
 * fix possible hfaxd login vulnerability due to PAM
   library absence during build (15 Dec 2005)
