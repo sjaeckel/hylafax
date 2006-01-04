@@ -1,7 +1,8 @@
-#	$Id: CHANGES 37 2006-01-04 16:54:01Z faxguy $	
+#	$Id: CHANGES 38 2006-01-05 06:56:00Z faxguy $	
 
 New Changes
 
+* fix SHIELDED_DTMF to work per IS-101 (4 Jan 2005)
 * fix configure in vsnprintf detection (21 Dec 2005)
 * use PDF in q-files when appropriate (20-21 Dec 2005)
 * fix rare occassion where TCF fails following an unexpected
