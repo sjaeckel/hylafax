@@ -1,33 +1,36 @@
-#	$Id: CHANGES 36 2006-01-04 16:39:45Z faxguy $	
+#	$Id: CHANGES 37 2006-01-04 16:54:01Z faxguy $	
 
 New Changes
 
-* CVE-2005-3539: Fix for faxrcvd/notify script vulnerabilites
-  (4 Jan 2004)
 * fix configure in vsnprintf detection (21 Dec 2005)
 * use PDF in q-files when appropriate (20-21 Dec 2005)
-* CVE-2005-3538: fix possible hfaxd login vulnerability due
-  to PAM library absence during build (15 Dec 2005)
-* fix a Solaris compile error due to PAM_CONV_AGAIN (15 Dec 2005)
-* all Mainpine boards no longer identified as the DUO+
-  2-port model (15 Dec 2005)
-* fix Solaris 9 compile error due to PAM (15 Dec 2005)
 * fix rare occassion where TCF fails following an unexpected
   receipt of prologue frames (7 Dec 2005)
-* don't lock-down pagingProtocol by default (29 Nov 2005)
-* fix minor memory leak (29 Nov 2005)
-* fix for clients specifying TZONE LOCAL/GMT and using %Y for
-  JobFmt and RcvFmt (29 Nov 2005)
 * add support for etc/FaxAccounting database hook (15 Nov 2005)
 * add SUBMIT xferfaxlog records upon job submission (15 Nov 2005)
 * use To-Company and To-Name coverpage entries in the notification
   message if they are available to use (12 Nov 2005)
 * add CHARSET config option for mailing scripts (12 Nov 2005)
 * disable usage of AT+FRS in USR prototype config (11 Nov 2005)
-* prevent some faxgetty hangs in Phase C EOL sync (11, 16 Nov 2005)
-* update hfaxd 'site adduser' functionality (11 Nov 2005)
 * improve useability of SHIELDED_DTMF functions (11 Nov 2005)
 * add "play" option for modem config commands for voice (11 Nov 2005)
+
+Changelog for HylaFAX 4.2.4
+
+* CVE-2005-3539: Fix for faxrcvd/notify script vulnerabilites
+  (4 Jan 2004)
+* CVE-2005-3538: fix possible hfaxd login vulnerability due
+  to PAM library absence during build (15 Dec 2005)
+* fix a Solaris compile error due to PAM_CONV_AGAIN (15 Dec 2005)
+* all Mainpine boards no longer identified as the DUO+
+  2-port model (15 Dec 2005)
+* fix Solaris 9 compile error due to PAM (15 Dec 2005)
+* don't lock-down pagingProtocol by default (29 Nov 2005)
+* fix minor memory leak (29 Nov 2005)
+* fix for clients specifying TZONE LOCAL/GMT and using %Y for
+  JobFmt and RcvFmt (29 Nov 2005)
+* prevent some faxgetty hangs in Phase C EOL sync (11, 16 Nov 2005)
+* update hfaxd 'site adduser' functionality (11 Nov 2005)
 * add EOT/disconnection detection following fax dialing (11 Nov 2005)
 
 Changelog for HylaFAX 4.2.3
