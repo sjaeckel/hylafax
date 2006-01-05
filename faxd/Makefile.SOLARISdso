@@ -1,4 +1,4 @@
-#	$Id: Makefile.SOLARISdso 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: Makefile.SOLARISdso 40 2006-01-05 18:03:14Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -38,8 +38,8 @@ libfaxserver.${DSO}: ${SERVER_OBJS} ${MODEM_OBJS}
 
 installDSO: libfaxserver.${DSO}
 	${PUTSERV} -F ${LIBDIR} -m 755 -O libfaxserver.${DSO}.${LIBVERSION}
-	(cd ${LIBDIR}; ln -s libfaxserver.${DSO}.${LIBVERSION} libfaxserver.${DSO})
+	(cd ${LIBDIR}; ${RM} libfaxserver.${DSO}; ln -s libfaxserver.${DSO}.${LIBVERSION} libfaxserver.${DSO})
 
 cleanDSO::
-	-${RM} -f libfaxserver.${DSO}.${LIBVERSION}
+	-${RM} -f libfaxserver.${DSO}.${LIBVERSION} libfaxserver.${DSO}
 
