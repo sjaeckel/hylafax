@@ -1,4 +1,4 @@
-#	$Id: distrules 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: distrules 41 2006-01-07 01:43:18Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -363,6 +363,8 @@ HYLAFAXSRC=\
 	util/notify.awk				\
 	util/faxcron.sh.in			\
 	util/archive.sh.in			\
+	util/common-functions.sh.in		\
+	util/dictionary.sh.in			\
 	util/faxrcvd.sh.in			\
 	util/mkcover.sh.in			\
 	util/notify.sh.in			\

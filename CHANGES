@@ -1,8 +1,10 @@
-#	$Id: CHANGES 40 2006-01-05 18:03:14Z faxguy $	
+#	$Id: CHANGES 41 2006-01-07 01:43:18Z faxguy $	
 
 New Changes
 
-* enable and fix Solaris DSO (5 Jan 2005)
+* add dictionary for notify, faxrcvd, and pollrcvd
+  internationalization support (6 Jan 2006)
+* enable and fix Solaris DSO (5 Jan 2006)
 * fix build for SUNWSpro (5 Jan 2006)
 * fix SHIELDED_DTMF to work per IS-101 (4 Jan 2006)
 * fix configure in vsnprintf detection (21 Dec 2005)

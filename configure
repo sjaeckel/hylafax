@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 40 2006-01-05 18:03:14Z faxguy $
+#	$Id: configure 41 2006-01-07 01:43:18Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -399,7 +399,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 40 $"
+	echo "This is HylaFAX configure $Revision: 41 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -4830,6 +4830,8 @@ CONF_FILES="
     util/faxcron.sh
     util/pagesizes
     util/archive.sh
+    util/dictionary.sh
+    util/common-functions.sh
     util/faxrcvd.sh
     util/mkcover.sh
     util/notify.sh
