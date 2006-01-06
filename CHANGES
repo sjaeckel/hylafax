@@ -1,7 +1,8 @@
-#	$Id: CHANGES 41 2006-01-07 01:43:18Z faxguy $	
+#	$Id: CHANGES 45 2006-01-07 01:54:12Z faxguy $	
 
 New Changes
 
+* fix notify awk error due to comments (6 Jan 2006)
 * add dictionary for notify, faxrcvd, and pollrcvd
   internationalization support (6 Jan 2006)
 * enable and fix Solaris DSO (5 Jan 2006)
