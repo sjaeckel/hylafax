@@ -1,3 +1,4 @@
+#    $Id: dictionary.sh.in 43 2006-01-07 01:47:32Z faxguy $
 case "$LANG" in
     pt_*)
 	DICTRECEIVEAGENT="Servidor de fax HylaFAX";
