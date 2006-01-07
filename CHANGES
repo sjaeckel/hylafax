@@ -1,7 +1,8 @@
-#	$Id: CHANGES 45 2006-01-07 01:54:12Z faxguy $	
+#	$Id: CHANGES 46 2006-01-07 15:53:54Z faxguy $	
 
 New Changes
 
+* fix faxrcvd CALLID assignment error on some shells (7 Jan 2006)
 * fix notify awk error due to comments (6 Jan 2006)
 * add dictionary for notify, faxrcvd, and pollrcvd
   internationalization support (6 Jan 2006)
