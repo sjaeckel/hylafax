@@ -1,4 +1,4 @@
-/*	$Id: faxadduser.c 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxadduser.c 47 2006-01-07 18:46:46Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *
@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <time.h>
+#include <crypt.h>
 
 #include "config.h"
 #include "port.h"

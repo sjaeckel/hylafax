@@ -1,7 +1,8 @@
-#	$Id: CHANGES 46 2006-01-07 15:53:54Z faxguy $	
+#	$Id: CHANGES 47 2006-01-07 18:46:46Z faxguy $	
 
 New Changes
 
+* fix faxadduser from segfaulting on AMD64 (7 Jan 2006)
 * fix faxrcvd CALLID assignment error on some shells (7 Jan 2006)
 * fix notify awk error due to comments (6 Jan 2006)
 * add dictionary for notify, faxrcvd, and pollrcvd
