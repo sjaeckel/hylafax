@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 24 2005-12-08 01:23:38Z faxguy $ */
+/*	$Id: Class1Recv.c++ 54 2006-01-10 00:46:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -668,7 +668,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			    trainok = recvTraining();
 			    messageReceived = (!trainok && lastResponse == AT_FRH3);
 			}
-		    } while (!trainok && traincount++ < 3);
+		    } while (!trainok && traincount++ < 3 && recvFrame(frame, FCF_RCVR, timer));
 		    if (messageReceived && lastResponse == AT_FRH3 && waitFor(AT_CONNECT,0)) {
 			messageReceived = false;
 			if (recvFrame(frame, FCF_RCVR, conf.t2Timer, true)) {

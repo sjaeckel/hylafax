@@ -1,4 +1,4 @@
-#	$Id: CHANGES 53 2006-01-10 00:27:48Z faxguy $	
+#	$Id: CHANGES 54 2006-01-10 00:46:08Z faxguy $	
 
 New Changes
 
@@ -15,7 +15,7 @@ New Changes
 * fix configure in vsnprintf detection (21 Dec 2005)
 * use PDF in q-files when appropriate (20-21 Dec 2005)
 * fix rare occassion where TCF fails following an unexpected
-  receipt of prologue frames (7 Dec 2005)
+  receipt of prologue frames (7 Dec 2005, 9 Jan 2006)
 * add support for etc/FaxAccounting database hook (15 Nov 2005)
 * add SUBMIT xferfaxlog records upon job submission (15 Nov 2005)
 * use To-Company and To-Name coverpage entries in the notification
