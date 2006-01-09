@@ -1,7 +1,9 @@
-#	$Id: CHANGES 47 2006-01-07 18:46:46Z faxguy $	
+#	$Id: CHANGES 52 2006-01-09 22:33:26Z faxguy $	
 
 New Changes
 
+* improve German, Portuguese, and Spanish translations (7 Jan 2006)
+* fix formatting of e-mails on some shells (9 Jan 2006)
 * fix faxadduser from segfaulting on AMD64 (7 Jan 2006)
 * fix faxrcvd CALLID assignment error on some shells (7 Jan 2006)
 * fix notify awk error due to comments (6 Jan 2006)
