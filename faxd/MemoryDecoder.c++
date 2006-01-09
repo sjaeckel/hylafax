@@ -1,4 +1,4 @@
-/*	$Id: MemoryDecoder.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: MemoryDecoder.c++ 56 2006-01-10 01:11:47Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -490,7 +490,8 @@ u_char* MemoryDecoder::convertDataFormat(const Class2Params& params)
 	cc = raster.getLength();
 	u_char* rasterdst = new u_char[cc];
 	memcpy(rasterdst, (const unsigned char*) raster, cc);
-	unsigned char *pmap[1] = { rasterdst };
+	unsigned char *pmap[1];
+	pmap[0] = rasterdst;
 	struct jbg_enc_state jbigstate;
 	jbg_enc_init(&jbigstate, width, rows, 1, pmap, bufferJBIGData, NULL);
 	/*
