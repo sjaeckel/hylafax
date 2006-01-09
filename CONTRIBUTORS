@@ -37,39 +37,39 @@ Abramo Bagnara       Chris Bainbridge     Charly Baker
 Toki Barron          Stephan Bauer        George Bell
 Dmitry Bely          Thomas Biege         David Birnbaum       
 Trevor Blackwell     Siegfried Bosch      Marc Boucher         
-Ross Boylan          Frank Brock          Glen Burkhardt       
-Yves Carlier         Ed Casas             Jonathon Chen        
-Robert Colquhoun     Ken Cornetet         Seth Cuaiklin        
-Albert DeKnuydt      Reeby Dobalina       Paul Eggert          
-Juergen Fischer      Kevin Fleming        John Florian         
-Patrice Fournier     Vyacheslav Frolov    Andrea Gabellini
-John Gilman          Kris Henderson       Sascha Herrmann      
-Carsten Hoeger       Lee Howard           John Interrante      
-Sascha Ittner        Damiam Ivereigh      Bernard Jech         
-Nico Kadel-Garcia    Sean Kamath          Jonathan Kamens      
-Dimitry Ketov        Steffan Klipsch      Hannu Koivisto       
-Arjen de Korte       Bernd Krumböck       Dmitry V. Kustov     
-Ken Lalonde          Ilguiz Latypov       Rob Leadbeater       
-Guillaume Legoupil   Todd Lipcon          Greg Luck            
-Andy MacNamara       Lionel Mamane        Pierluigi Mangani    
-Campbell McKilligan  Bodo Meissner        John Miller          
-Aldo Mini            Boris Mironov        Seth Mos             
-Torsten Mueller      Darren Nickerson     Andrea Nicolini      
-Giulio Orsero        Davide Pagnin        Chris Parsons        
-Michael Pedersen     John Perkins         Simon Perry          
-Diego Pettena        Frank Peters         Vu Pham              
-John Patrick Poet    Harald Pollack       Andreas Pretzsch     
-Bernd Proissl        Matthew Rice         Tim Rice             
-Pedro Roçadas        Daniel Robbins       Giuseppe Sacco       
-Michael Salzmann     Sven Schmidt         John Sellens         
-Simon <iahnl@iah.nl> Vilmos Soti          Alan Sparks          
-Andy Sparrow         Marco Steinacher     Iain Stevenson       
-Marius Strobl        Mikhail T.           Kazuhide Takahashi   
-Daryl Thachuk        Steve Tuckner        Aidan Van Dyk        
-Rich Walker          Norbert Warmuth      Phil Watkinson       
-James Werkowski      Bruce Whittaker      Chas Williams        
-John Williams        Steve Williams       John Wolfe           
-Bill Young           Bruce Young
+Ross Boylan          Frank Brock          Holger Bruenjes
+Glen Burkhardt       Yves Carlier         Ed Casas             
+Jonathon Chen        Robert Colquhoun     Ken Cornetet         
+Seth Cuaiklin        Albert DeKnuydt      Reeby Dobalina       
+Paul Eggert          Juergen Fischer      Kevin Fleming        
+John Florian         Patrice Fournier     Vyacheslav Frolov    
+Andrea Gabellini     John Gilman          Kris Henderson       
+Sascha Herrmann      Carsten Hoeger       Lee Howard           
+John Interrante      Sascha Ittner        Damiam Ivereigh      
+Bernard Jech         Nico Kadel-Garcia    Sean Kamath          
+Jonathan Kamens      Dimitry Ketov        Steffan Klipsch      
+Hannu Koivisto       Arjen de Korte       Bernd Krumböck       
+Dmitry V. Kustov     Ken Lalonde          Ilguiz Latypov       
+Rob Leadbeater       Guillaume Legoupil   Todd Lipcon          
+Greg Luck            Andy MacNamara       Lionel Mamane        
+Pierluigi Mangani    Campbell McKilligan  Bodo Meissner        
+John Miller          Aldo Mini            Boris Mironov        
+Seth Mos             Torsten Mueller      Darren Nickerson     
+Andrea Nicolini      Giulio Orsero        Davide Pagnin        
+Chris Parsons        Michael Pedersen     John Perkins         
+Simon Perry          Diego Pettena        Frank Peters         
+Vu Pham              John Patrick Poet    Harald Pollack       
+Andreas Pretzsch     Bernd Proissl        Matthew Rice         
+Tim Rice             Pedro Roçadas        Daniel Robbins       
+Giuseppe Sacco       Michael Salzmann     Sven Schmidt         
+John Sellens         Simon <iahnl@iah.nl> Vilmos Soti          
+Alan Sparks          Andy Sparrow         Marco Steinacher     
+Iain Stevenson       Marius Strobl        Mikhail T.           
+Kazuhide Takahashi   Daryl Thachuk        Steve Tuckner        
+Aidan Van Dyk        Rich Walker          Norbert Warmuth      
+Phil Watkinson       James Werkowski      Bruce Whittaker      
+Chas Williams        John Williams        Steve Williams       
+John Wolfe           Bill Young           Bruce Young
 
 We appreciate and recognize the upstreamed contributions from these 
 distributions:

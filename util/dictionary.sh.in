@@ -1,4 +1,4 @@
-#    $Id: dictionary.sh.in 43 2006-01-07 01:47:32Z faxguy $
+#    $Id: dictionary.sh.in 49 2006-01-09 16:38:00Z faxguy $
 case "$LANG" in
     pt_*)
 	DICTRECEIVEAGENT="Servidor de fax HylaFAX";
@@ -227,12 +227,12 @@ case "$LANG" in
 	DICTCALLID7="ID Llamada 7";
 	;;
     de_*)
-	DICTRECEIVEAGENT="Der HylaFAX Empfangsagent";
+	DICTRECEIVEAGENT="HylaFAX Empfang";
 	DICTRECEIVEDFROM="Fax empfangen von \$SENDER";
 	DICTRETRIEVEDFROM="Fax geholt von \$SENDER";
 	DICTMSGINTRO="Das ganze Dokument wurde nicht empfangen weil:";
-	DICTLOGFOLLOWS="    ---- Ablauf der Session ----";
-	DICTLOGFOLLOWS2="Ablauf der Session anbei";
+	DICTLOGFOLLOWS="    ---- Ablauf der Uebertragung ----";
+	DICTLOGFOLLOWS2="Ablauf der Uebertragung";
 	DICTNOLOGAVAIL="    Kein Protokoll des Ablaufs verfügbar";
 	DICTDISPATCHEDTO="Das Fax wurde automatisch weitergeleitet an: \$SENDTO.";
 	DICTPOLLDISPATCHTO="Das Fax wurde abgerufen und zugestellt an: \$MAILADDR.";
@@ -329,8 +329,8 @@ case "$LANG" in
 	DICTYES="Ja";
 	DICTNO="Nein";
 	DICTRECEIVED="Empfangen";
-	DICTTIMETORECV="Zeit zu empfangen";
-	DICTERRCORRECT="Störungskorrektes";
+	DICTTIMETORECV="Verarbeitungszeit";
+	DICTERRCORRECT="FehlerKorrektur";
 	DICTCALLID1="Anrufe ID 1";
 	DICTCALLID2="Anrufe ID 2";
 	DICTCALLID3="Anrufe ID 3";
