@@ -1,4 +1,4 @@
-/*	$Id: faxadduser.c 47 2006-01-07 18:46:46Z faxguy $ */
+/*	$Id: faxadduser.c 51 2006-01-09 21:56:38Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *
@@ -31,10 +31,13 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <time.h>
-#include <crypt.h>
 
 #include "config.h"
 #include "port.h"
+
+#if HAS_CRYPT_H
+#include <crypt.h>
+#endif
 
 #ifndef FAX_DEFAULT_UID
 #define FAX_DEFAULT_UID 60002
