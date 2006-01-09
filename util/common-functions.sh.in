@@ -1,5 +1,5 @@
 #!/bin/sh
-#    $Id: common-functions.sh.in 43 2006-01-07 01:47:32Z faxguy $
+#    $Id: common-functions.sh.in 50 2006-01-09 17:18:26Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -13,7 +13,7 @@ setInfoSize()
 		DICTTIMETORECV DICTSIGNALRATE DICTDATAFORMAT DICTERRCORRECT \
 		DICTCALLID1 DICTCALLID2 DICTCALLID3 DICTCALLID4 DICTCALLID \
 		DICTCALLID6 DICTCALLID7 DICTRECEIVEDON DICTCOMMID; do
-    printf "%s%n" "`eval echo "$"$ITEM`" THISLEN > /dev/null
+    THISLEN="`echo $ITEM | wc -m`"
     if [ $THISLEN -gt $INFOSIZE ]; then INFOSIZE=$THISLEN; fi
     done
 }
