@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 44 2006-01-07 01:53:20Z faxguy $
+#    $Id: notify.sh.in 53 2006-01-10 00:27:48Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -73,6 +73,7 @@ TTYCMD=tty
 CHARSET=us-ascii
 
 . etc/setup.cache
+. bin/common-functions
 
 local_seq() {
 	if [ $1 -gt $2 ]; then
@@ -172,6 +173,7 @@ setCustomValues()
     if [ -f etc/FaxDictionary ]; then
 	. etc/FaxDictionary
     fi
+    setItemSize
 }
 
 parseQfile()
@@ -522,10 +524,10 @@ mimeEncode()
 
 printItem()
 {
-    FMT="$1"
+    FMT="`echo %$ITEMSIZE\s: $1`"
     TAG="$2"
     VALUE="$3"
-    printf "%16s: $FMT\n" "$TAG" "$VALUE"
+    printf "$FMT\n" "$TAG" "$VALUE"
 }
 
 

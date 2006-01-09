@@ -1,11 +1,14 @@
 #!/bin/sh
-#    $Id: common-functions.sh.in 50 2006-01-09 17:18:26Z faxguy $
+#    $Id: common-functions.sh.in 53 2006-01-10 00:27:48Z faxguy $
 
 #
 # This holds various functions that are common to the
 # various bin scripts.
 #
 
+#
+# For getting all of the "faxinfo" items to line up.
+#
 setInfoSize()
 {
     INFOSIZE=0
@@ -13,8 +16,25 @@ setInfoSize()
 		DICTTIMETORECV DICTSIGNALRATE DICTDATAFORMAT DICTERRCORRECT \
 		DICTCALLID1 DICTCALLID2 DICTCALLID3 DICTCALLID4 DICTCALLID \
 		DICTCALLID6 DICTCALLID7 DICTRECEIVEDON DICTCOMMID; do
-    THISLEN="`echo $ITEM | wc -m`"
-    if [ $THISLEN -gt $INFOSIZE ]; then INFOSIZE=$THISLEN; fi
+	THISLEN="`eval echo "$"$ITEM | wc -m | $SED 's/ //g'`"
+	if [ $THISLEN -gt $INFOSIZE ]; then INFOSIZE=$THISLEN; fi
+    done
+}
+
+#
+# For getting all of the notify job items to line up.
+#
+setItemSize()
+{
+    ITEMSIZE=0
+    for ITEM in DICTDESTINATION DICTJOBID DICTGROUPID DICTSENDER DICTMAILADDR \
+		DICTCOMMID DICTMODEM DICTSUBMITTEDFROM DICTPAGEWIDTH \
+		DICTPAGELENGTH DICTRES DICTSTATUS DICTDIALOGS DICTDIALS \
+		DICTCALLS DICTPAGES DICTATTEMPS DICTDIRNUM DICTRECEIVER DICTQUALITY \
+		DICTPAGEWIDTH DICTPAGELENGTH DICTDATAFORMAT DICTREMOTEEQUIPMENT \
+		DICTREMOTESTATION; do
+	THISLEN="`eval echo "$"$ITEM | wc -m | $SED 's/ //g'`"
+	if [ $THISLEN -gt $ITEMSIZE ]; then ITEMSIZE=$THISLEN; fi
     done
 }
 
