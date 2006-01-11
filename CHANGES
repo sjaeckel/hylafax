@@ -1,7 +1,8 @@
-#	$Id: CHANGES 58 2006-01-12 01:05:27Z faxguy $	
+#	$Id: CHANGES 59 2006-01-12 01:17:04Z faxguy $	
 
 New Changes
 
+* remove echo -e calls from notify for portability (11 Jan 2006)
 * add job owner feature to DestControls (11 Jan 2006)
 * add prototype config for Digicom Leonardo modem (11 Jan 2006)
 * improve German, Portuguese, and Spanish translations (9 Jan 2006)
