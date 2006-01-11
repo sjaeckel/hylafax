@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 13 2005-11-15 23:34:48Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 58 2006-01-12 01:05:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -442,9 +442,13 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		    setDead(job);
 		}
 	    }
-	    if (processnext) processJob(*targetjob, targetjob->breq, destJobs[targetjob->dest], destCtrls[targetjob->dest]);
-	    else if (startsendjob) sendJobStart(*targetjob->bfirst(), targetjob->bfirst()->breq, destCtrls[targetjob->dest]);
-	    else {
+	    if (processnext) {
+		destCtrls.setUser(targetjob->breq->owner);
+		processJob(*targetjob, targetjob->breq, destJobs[targetjob->dest], destCtrls[targetjob->dest]);
+	    } else if (startsendjob) {
+		destCtrls.setUser(targetjob->bfirst()->breq->owner);
+		sendJobStart(*targetjob->bfirst(), targetjob->bfirst()->breq, destCtrls[targetjob->dest]);
+	    } else {
 		/*
 		 * This destination was marked as called, but all jobs to this
 		 * destination failed preparation, so we must undo the call marking.
@@ -2193,17 +2197,19 @@ faxQueueApp::unblockDestJobs(Job& job, DestInfo& di)
      * ready for processing.
      */
     Job* jb;
-    const DestControlInfo& dci = destCtrls[job.dest];
     u_int n = 1;
-    while (isOKToCall(di, dci, n) && (jb = di.nextBlocked())) {
-	setReadyToRun(*jb);
-	if (!di.supportsBatching()) n++;
+    while (jb = di.nextBlocked()) {
 	FaxRequest* req = readRequest(*jb);
-	if (req) {
+	if (!req) continue;
+	destCtrls.setUser(req->owner);
+	const DestControlInfo& dci = destCtrls[job.dest];
+	if (isOKToCall(di, dci, n)) {
+	    setReadyToRun(*jb);
+	    if (!di.supportsBatching()) n++;
 	    req->notice = "";
 	    updateRequest(*req, *jb);
-	    delete req;
 	}
+	delete req;
     }
 }
 
@@ -2295,6 +2301,7 @@ faxQueueApp::runScheduler()
 		/*
 		 * Do per-destination processing and checking.
 		 */
+		destCtrls.setUser(req->owner);
 		DestInfo& di = destJobs[job.dest];
 		const DestControlInfo& dci = destCtrls[job.dest];
 		/*
