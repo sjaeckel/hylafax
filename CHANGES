@@ -1,7 +1,8 @@
-#	$Id: CHANGES 57 2006-01-11 17:27:16Z faxguy $	
+#	$Id: CHANGES 58 2006-01-12 01:05:27Z faxguy $	
 
 New Changes
 
+* add job owner feature to DestControls (11 Jan 2006)
 * add prototype config for Digicom Leonardo modem (11 Jan 2006)
 * improve German, Portuguese, and Spanish translations (9 Jan 2006)
 * fix formatting of e-mails (9 Jan 2006)

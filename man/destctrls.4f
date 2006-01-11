@@ -1,4 +1,4 @@
-.\"	$Id: destctrls.4f 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: destctrls.4f 58 2006-01-12 01:05:27Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -70,9 +70,10 @@ The order of entries in a file is important.
 When a parameter value is needed
 .I faxq
 sequentially scans the file until it finds a record that matches
-the canonical form of the destination phone number.
-If the requested parameter is defined in this record, then the
-value is returned, otherwise a default value is used from the
+the canonical form of the destination phone number.  If ``owner'' is
+included in the entry, then the owner of the job-in-process must also
+match.  If a matching entry is found, then the
+values given in the entry are used, otherwise values are used from the
 .I faxq
 configuration file.
 .PP
@@ -81,8 +82,10 @@ consult
 .IR hylafax-config (${MANNUM4_5})
 for a description of each parameter
 (except
+.B Owner
+and
 .B RejectNotice
-which is described below).
+which are described below).
 .sp .5
 .nf
 .ta \w'MaxConcurrentCalls    'u +\w'integer    'u +\w'\fIunlimited\fP    'u
@@ -92,6 +95,7 @@ MaxDials	integer	\s-1\fIunlimited\fP\s+1	max phone calls to make to transmit a j
 MaxSendPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a send
 MaxTries	integer	\s-13\s+1	max attempts to transmit a job
 Modem	string	\s-1Any\s+1	ModemGroup to use for destination
+Owner	string \s-1\s+1	Restrict to jobs owned by this user
 RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
@@ -118,6 +122,13 @@ included in this
 matching a destination, then the value of
 .B Modem
 is overridden by the inclusive set of modems found in both.
+.PP
+The
+.B Owner
+parameter constrains the usage of the entry to when the job
+owner matches this user.  Entries containing an
+.B Owner
+setting will be skipped when jobs from other users are processed.
 .PP
 The
 .B RejectNotice

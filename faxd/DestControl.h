@@ -1,4 +1,4 @@
-/*	$Id: DestControl.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: DestControl.h 58 2006-01-12 01:05:27Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -40,7 +40,7 @@
  */
 class DestControlInfo {
 private:
-    RE	pattern;		// destination pattern
+    RE		pattern;		// destination pattern
     u_long	defined;		// parameters that were defined
     u_int	maxConcurrentCalls;	// max number of parallel calls
     u_int	maxSendPages;		// max pages in a send job
@@ -48,6 +48,7 @@ private:
     u_int	maxTries;		// max transmit attempts
     fxStr	rejectNotice;		// if set, reject w/ this notice
     fxStr	modem;			// if set, try with it
+    fxStr	owner;			// if set, rule only applies to owner
     TimeOfDay	tod;			// time of day restrictions
     int		usexvres;		// use extended resolution
     u_int	vres;			// use extended resolution
@@ -87,6 +88,7 @@ fxDECLARE_ObjArray(DestControlInfoArray, DestControlInfo)
 class DestControl {
 private:
     fxStr	filename;		// database filename
+    fxStr	user;			// control username
     time_t	lastModTime;		// last modification timestamp
     u_int	lineno;			// line number while parsing
     DestControlInfoArray info;		// control information
@@ -101,6 +103,7 @@ public:
     virtual ~DestControl();
 
     void setFilename(const char* filename);
+    void setUser(fxStr);
 
     const DestControlInfo& operator[](const fxStr&);
 };

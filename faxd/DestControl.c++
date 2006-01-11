@@ -1,4 +1,4 @@
-/*	$Id: DestControl.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: DestControl.c++ 58 2006-01-12 01:05:27Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -44,8 +44,8 @@
 
 const DestControlInfo DestControlInfo::defControlInfo;
 
-DestControlInfo::DestControlInfo()		 : pattern("")	{ defined = 0; }
-DestControlInfo::DestControlInfo(const char* re) : pattern(re)	{ defined = 0; }
+DestControlInfo::DestControlInfo()		 : pattern("")	{ defined = 0; owner = ""; }
+DestControlInfo::DestControlInfo(const char* re) : pattern(re)	{ defined = 0; owner = ""; }
 DestControlInfo::DestControlInfo(const DestControlInfo& other)
     : pattern(other.pattern)
     , rejectNotice(other.rejectNotice)
@@ -53,6 +53,7 @@ DestControlInfo::DestControlInfo(const DestControlInfo& other)
     , tod(other.tod)
     , args(other.args)
 {
+    owner = other.owner;
     defined = other.defined;
     maxConcurrentCalls = other.maxConcurrentCalls;
     maxSendPages = other.maxSendPages;
@@ -75,6 +76,8 @@ DestControlInfo::parseEntry(const char* tag, const char* value, bool quoted)
 	rejectNotice = value;
     } else if (streq(tag, "modem")) {
 	modem = value;
+    } else if (streq(tag, "owner")) {
+	owner = value;
     } else if (streq(tag, "maxconcurrentjobs")) {	// backwards compatibility
 	maxConcurrentCalls = getNumber(value);
 	setDefined(DCI_MAXCONCURRENTCALLS);
@@ -190,6 +193,7 @@ DestControlInfo::getVRes() const
 DestControl::DestControl()
 {
     lastModTime = 0;
+    user = "";
 }
 DestControl::~DestControl() {}
 
@@ -200,6 +204,12 @@ DestControl::setFilename(const char* s)
 	filename = s;
 	lastModTime = 0;
     }
+}
+
+void
+DestControl::setUser(fxStr s)
+{
+    user = s;
 }
 
 const DestControlInfo&
@@ -213,6 +223,7 @@ DestControl::operator[](const fxStr& canon)
     }
     for (u_int i = 0, n = info.length(); i < n; i++) {
 	DestControlInfo& dci = info[i];
+	if (dci.owner != "" && !streq(dci.owner, user)) continue;	// pattern is specific to another user
 	if (dci.pattern.Find(canon))
 	    return (dci);
     }
