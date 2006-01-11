@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 9 2005-11-13 00:17:36Z faxguy $
+#	$Id: faxsetup.sh.in 60 2006-01-12 04:39:43Z faxguy $
 #
 # @WARNING@
 #
@@ -1269,6 +1269,14 @@ system you can obtain them by public FTP from the place where you obtained
 the HylaFAX software or from the master FTP site at ftp.sgi.com.
 EOF
      fi
+fi
+
+#
+# Some systems will require /etc/localtime to be copied to
+# /var/spool/hylafax/etc/localtime due to hfaxd's chroot
+#
+if [ -f /etc/localtime ]; then
+    $CP -af /etc/localtime $DIR_SPOOL/etc/
 fi
 
 #
