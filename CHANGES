@@ -1,7 +1,8 @@
-#	$Id: CHANGES 54 2006-01-10 00:46:08Z faxguy $	
+#	$Id: CHANGES 57 2006-01-11 17:27:16Z faxguy $	
 
 New Changes
 
+* add prototype config for Digicom Leonardo modem (11 Jan 2006)
 * improve German, Portuguese, and Spanish translations (9 Jan 2006)
 * fix formatting of e-mails (9 Jan 2006)
 * fix faxadduser from segfaulting on AMD64 (7 Jan 2006)
