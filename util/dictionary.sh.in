@@ -1,19 +1,19 @@
-#    $Id: dictionary.sh.in 61 2006-01-12 04:49:24Z faxguy $
+#    $Id: dictionary.sh.in 64 2006-01-14 18:34:45Z faxguy $
 case "$LANG" in
     it_*)
 	DICTRECEIVEAGENT="The HylaFAX Receive Agent";
 	DICTRECEIVEDFROM="Facsimile ricevuto da \$SENDER";
 	DICTRETRIEVEDFROM="Facsimile scaricato da \$SENDER";
-	DICTMSGINTRO="Il documento non è stato completamente ricevuto perchè:";
+	DICTMSGINTRO="Il documento non è stato completamente ricevuto perché:";
 	DICTLOGFOLLOWS="    ---- Segue trascrizione della sessione ----";
 	DICTLOGFOLLOWS2="Segue trascrizione della sessione";
 	DICTNOLOGAVAIL="    Trascrizione non disponibile";
 	DICTDISPATCHEDTO="Il facsimile è stato automaticamente inviato a: \$SENDTO.";
 	DICTPOLLDISPATCHTO="Il facsimile è stato richiesto da e inviato a: \$MAILADDR.";
 	DICTNOTRECEIVED="facsimile non ricevuto";
-	DICTATTEMPTEDFAXFAILED="Un tentativo di ricevere un facsimile su \$DEVICE è fallito perchè:"
-	DICTATTEMPTEDPOLLFAILED="Un tentativo di scaricare un facsimile tramite \$DEVICE è fallito perchè:";
-	DICTFAILEDBECAUSE="è fallito perchè:";
+	DICTATTEMPTEDFAXFAILED="Un tentativo di ricevere un facsimile su \$DEVICE è fallito perché:"
+	DICTATTEMPTEDPOLLFAILED="Un tentativo di scaricare un facsimile tramite \$DEVICE è fallito perché:";
+	DICTFAILEDBECAUSE="è fallito perché:";
 	DICTUNKNOWNDOCTYPE="Tipo documento non riconosciuto";
 	DICTNOFILEEXISTS="File inesistente";
 	DICTDESTINATION="Destinazione";
@@ -45,7 +45,7 @@ case "$LANG" in
 	DICTDIRNUM="Dirnum";
 	DICTDOCSSUBMITTED="Documenti inviati per essere trasmessi";
 	DICTDOCSTEXT1="I seguenti documenti sono stati inviati per essere trasmessi e sono";
-	DICTDOCSTEXT2="disponibili sul server per essere riutilizzati finchè non saranno automaticamente";
+	DICTDOCSTEXT2="disponibili sul server per essere riutilizzati finché non saranno automaticamente";
 	DICTDOCSTEXT3="eliminati quando questo lavoro sarà `if [ \"\$doneop\" = archive ]; then echo 'archiviato'; else echo 'rimosso'; fi`. I documenti possono anche essere manualmente";
 	DICTDOCSTEXT4="eliminati tramite il comando faxrm; consultate faxrm(1) per maggiori informazioni.";
 	DICTFILENAME="Nome file";
@@ -74,23 +74,23 @@ case "$LANG" in
 	DICTPROCESSINGTIME="Il tempo di elaborazione è stato";
 	DICTADDITIONALINFO="  Informazioni addizionali:";
 	DICTFAILED="fallito";
-	DICTREJECTEDBECAUSE="è stato rifiutato perchè:";
+	DICTREJECTEDBECAUSE="è stato rifiutato perché:";
 	DICTBLOCKED="bloccato";
-	DICTDELAYEDBECAUSE="è stato riaccodato nella coda dei lavori in attesa perchè:";
+	DICTDELAYEDBECAUSE="è stato riaccodato nella coda dei lavori in attesa perché:";
 	DICTASSOONASPOSSIBLE="Il lavoro verrà eseguito appena possibile.";
 	DICTREQUEUED="riaccodato";
-	DICTWASNOTSENT="non è stato spedito perchè:";
+	DICTWASNOTSENT="non è stato spedito perché:";
 	DICTWILLBERETRIED="Il lavoro verrà riprovato alle";
 	DICTREMOVEDFROMQUEUE="rimosso dalla coda";
 	DICTWASDELETED="è stato cancellato dalla coda.";
 	DICTTIMEDOUT="non è stato completato prima dell'orario prefissato.";
-	DICTCONVERSION1="non è stato inviato perchè la conversione del documento";
+	DICTCONVERSION1="non è stato inviato perché la conversione del documento";
 	DICTCONVERSION2="in facsimile è fallita.  L'output del convertitore è stato:";
 	DICTCONVERSION3="Verificate i documenti Postscript per l'uso di font non standard e construtti non validi";
-	DICTNOFORMATTER1="non è stato spedito perchè";
+	DICTNOFORMATTER1="non è stato spedito perché";
 	DICTNOFORMATTER2="lo script di conversione del documento non è stato trovato.";
 	DICTNOTICEABOUT="Avviso a riguardo di";
-	DICTPOLLINGFAILED=", una richiesta di poll,\nnon può essere completata perchè ";
+	DICTPOLLINGFAILED=", una richiesta di poll,\nnon può essere completata perché ";
 	DICTREMOTEREJECTED="il dispositivo remoto ha rifiutato la richiesta.";
 	DICTNODOCTOPOLL="nessun documento era disponibile per essere scaricato in poll.";
 	DICTUNSPECIFIEDPROBLEM="è accaduto un problema non meglio specificato.";
@@ -100,7 +100,7 @@ case "$LANG" in
 	DICTUNKNOWNREASON4="Questa situazione non si dovrebbe mai verificare, contattare il Vostro amministratori di sistema.";
 	DICTRECEIVEDON="Ricevuto tramite";
 	DICTPOLLFAILED="scarico in polling di un facsimile fallito";
-	DICTYES="Si";
+	DICTYES="Sì";
 	DICTNO="No";
 	DICTRECEIVED="Ricevuto";
 	DICTTIMETORECV="Tempo per la ricezione";
