@@ -1,7 +1,10 @@
-#	$Id: CHANGES 62 2006-01-12 13:22:37Z faxguy $	
+#	$Id: CHANGES 67 2006-01-18 06:27:07Z faxguy $	
 
 New Changes
 
+* add support for libtiff-3.8 (17 Jan 2006)
+* add Polish dictionary translations (17 Jan 2006)
+* add French dictionary translations (17 Jan 2006)
 * add Italian dictionary translations (11 Jan 2006)
 * copy localtime to the etc spool directory for hfaxd
   to resolve time issues on some systems (11 Jan 2006)

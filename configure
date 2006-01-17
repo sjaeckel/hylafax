@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 41 2006-01-07 01:43:18Z faxguy $
+#	$Id: configure 67 2006-01-18 06:27:07Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -399,7 +399,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 41 $"
+	echo "This is HylaFAX configure $Revision: 67 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -2428,7 +2428,7 @@ EOF
 	if [ ${header_ver} -ge 19960307 ]; then
 	    case ${lib_ver} in
 		3.4)		tiff_runlen_t="uint16" ;;
-		3.[567])	tiff_runlen_t="uint32" ;;
+		3.[5678])	tiff_runlen_t="uint32" ;;
 	    esac
 	fi
     else
@@ -2464,8 +2464,8 @@ EOF
 
 Incompatible TIFF Library.
 
-HylaFAX ${VERSION} requires TIFF software distribution ver 3.4, 3.5, 
-3.6, or 3.7.  If you do not have up to date TIFF software on your system
+HylaFAX ${VERSION} requires TIFF software distribution versions 3.4 through
+3.8.  If you do not have up to date TIFF software on your system
 then you can retrieve it from the location where you obtained this software.
 The Home Page for version 3.5 and later is http://www.libtiff.org
 EOF
