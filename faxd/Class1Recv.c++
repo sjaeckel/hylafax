@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 54 2006-01-10 00:46:08Z faxguy $ */
+/*	$Id: Class1Recv.c++ 69 2006-01-26 06:48:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1416,7 +1416,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					protoTrace("RECV sent fourth PPR");
 				    } else {
 					// we already got the signal
-					rtnframe = ppsframe;
+					rtnframe.put(ppsframe, ppsframe.getLength());
 				    }
 				    pprcnt = 0;
 				    if (signalRcvd != 0 || recvFrame(rtnframe, FCF_RCVR, conf.t2Timer)) {
