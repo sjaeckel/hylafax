@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxRecv.c++ 70 2006-01-26 18:00:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -69,7 +69,7 @@ FaxServer::recvFax(const CallID& callid, fxStr& emsg)
 	     * If the system is busy then notifyRecvBegun may not return
 	     * quickly.  Thus we run it in a child process and move on.
 	     */
-	    waitNotifyPid = fork();
+	    waitNotifyPid = fork();	// waitNotifyPid keeps the notifies ordered
 	    switch (waitNotifyPid) {
 		case 0:
 		    // NB: partially fill in info for notification call
@@ -219,11 +219,10 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, f
 	 * If syslog is busy then notifyDocumentRecvd may not return
 	 * quickly.  Thus we run it in a child process and move on.
 	 */
-	pid_t pid = waitNotifyPid;
+	if (waitNotifyPid > 0) (void) Sys::waitpid(waitNotifyPid);	// keep the notifies ordered
 	waitNotifyPid = fork();
 	switch (waitNotifyPid) {
 	    case 0:
-		if (pid > 0) (void) Sys::waitpid(pid);
 		notifyDocumentRecvd(info);
 		sleep(1);		// XXX give parent time
 		exit(0);
@@ -284,11 +283,10 @@ FaxServer::recvFaxPhaseD(TIFF* tif, FaxRecvInfo& info, u_int& ppm, fxStr& emsg)
 	 * Thus we run it in a child process and move on.  Timestamps
 	 * in syslog cannot be expected to have exact precision anyway.
 	 */
-	pid_t pid = waitNotifyPid;
+	if (waitNotifyPid > 0) (void) Sys::waitpid(waitNotifyPid);	// keep the notifies ordered
 	waitNotifyPid = fork();
 	switch (waitNotifyPid) {
 	    case 0:
-		if (pid > 0) (void) Sys::waitpid(pid);
 		notifyPageRecvd(tif, info, ppm);
 		sleep(1);		// XXX give parent time
 		exit(0);

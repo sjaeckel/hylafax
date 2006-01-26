@@ -1,7 +1,9 @@
-#	$Id: CHANGES 69 2006-01-26 06:48:44Z faxguy $	
+#	$Id: CHANGES 70 2006-01-26 18:00:59Z faxguy $	
 
 New Changes
 
+* fix a potential faxgetty hang due to miuse of 
+  waitpid (26 Jan 2006)
 * fix a rare segfault in Class 1 receiving when, for example,
   CTC is received instead of PPS (25 Jan 2006)
 * add support for libtiff-3.8 (17 Jan 2006)
