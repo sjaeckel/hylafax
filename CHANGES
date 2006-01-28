@@ -1,7 +1,9 @@
-#	$Id: CHANGES 70 2006-01-26 18:00:59Z faxguy $	
+#	$Id: CHANGES 71 2006-01-29 04:12:37Z faxguy $	
 
 New Changes
 
+* fix EOFB on the end of MMR images, which should address
+  a variety of sending issues related with MMR data (28 Jan 2005)
 * fix a potential faxgetty hang due to miuse of 
   waitpid (26 Jan 2006)
 * fix a rare segfault in Class 1 receiving when, for example,
