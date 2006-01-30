@@ -1,9 +1,10 @@
-#	$Id: CHANGES 72 2006-01-30 20:34:58Z faxguy $	
+#	$Id: CHANGES 73 2006-01-30 21:59:11Z faxguy $	
 
 New Changes
 
+* remove HTML from configure also (30 Jan 2006)
 * fix EOFB on the end of MMR images, which should address
-  a variety of sending issues related with MMR data (28, 30 Jan 2005)
+  a variety of sending issues related with MMR data (28, 30 Jan 2006)
 * fix a potential faxgetty hang due to miuse of 
   waitpid (26 Jan 2006)
 * fix a rare segfault in Class 1 receiving when, for example,
@@ -14,14 +15,9 @@ New Changes
 * add Italian dictionary translations (11 Jan 2006)
 * copy localtime to the etc spool directory for hfaxd
   to resolve time issues on some systems (11 Jan 2006)
-* remove echo -e calls from notify for portability (11 Jan 2006)
 * add job owner feature to DestControls (11 Jan 2006)
-* add prototype config for Digicom Leonardo modem (11 Jan 2006)
 * improve German, Portuguese, and Spanish translations (9 Jan 2006)
 * fix formatting of e-mails (9 Jan 2006)
-* fix faxadduser from segfaulting on AMD64 (7 Jan 2006)
-* fix faxrcvd CALLID assignment error on some shells (7 Jan 2006)
-* fix notify awk error due to comments (6 Jan 2006)
 * add dictionary for notify, faxrcvd, and pollrcvd
   internationalization support (6 Jan 2006)
 * enable and fix Solaris DSO (5 Jan 2006)
@@ -39,6 +35,14 @@ New Changes
 * disable usage of AT+FRS in USR prototype config (11 Nov 2005)
 * improve useability of SHIELDED_DTMF functions (11 Nov 2005)
 * add "play" option for modem config commands for voice (11 Nov 2005)
+
+Changelog for HylaFAX 4.2.5
+
+* remove echo -e calls from notify for portability (11 Jan 2006)
+* add prototype config for Digicom Leonardo modem (11 Jan 2006)
+* fix faxadduser from segfaulting on AMD64 (7 Jan 2006)
+* fix faxrcvd CALLID assignment error on some shells (7 Jan 2006)
+* fix notify awk error due to comments (6 Jan 2006)
 
 Changelog for HylaFAX 4.2.4
 

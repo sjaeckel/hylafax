@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 67 2006-01-18 06:27:07Z faxguy $
+#	$Id: configure 73 2006-01-30 21:59:11Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -43,11 +43,9 @@ DIR_LIBDATA=/usr/local/lib/fax
 DIR_LIB=/usr/local/lib
 DIR_LIBEXEC=$DIR_SBIN
 DIR_SPOOL=/var/spool/hylafax
-DIR_HTML=/var/httpd/htdocs/hylafax
 DIR_CGI=/var/httpd/cgi-bin
 PATH_DPSRIP=$DIR_LIBEXEC/ps2fax.exe
 PATH_IMPRIP=/usr/lib/print/psrip
-HTMLPATH=/hylafax
 CGIPATH=/cgi-bin
 DEFVRES=98
 PAGESIZE="North American Letter"
@@ -57,7 +55,6 @@ SYSUID=bin
 SYSGID=
 DSO=auto
 GETTY=auto
-HTML=no
 PS=auto
 SYSVINIT=auto
 FAXQ_SERVER=yes			# init script starts faxq
@@ -162,9 +159,6 @@ GSRIP 		PATH_GSRIP
 HFAXD_OLD_PROTOCOL
 HFAXD_SERVER
 HFAXD_SNPP_SERVER
-HTML
-HTMLDIR 	DIR_HTML
-HTMLPATH
 IMP
 IMPRIP		PATH_IMPRIP
 INSTALL
@@ -399,7 +393,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 67 $"
+	echo "This is HylaFAX configure $Revision: 73 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -4421,15 +4415,14 @@ HylaFAX configuration parameters (part 1 of 2) are:
 [ 3] Directory for lib executables:     $DIR_LIBEXEC
 [ 4] Directory for system apps:  	$DIR_SBIN
 [ 5] Directory for manual pages:        $DIR_MAN
-[ 6] Directory for HTML documentation:  $DIR_HTML
-[ 7] Directory for spooling:            $DIR_SPOOL
-[ 8] Directory for uucp lock files:     $DIR_LOCKS
-[ 9] Uucp lock file scheme:             $LOCKS
-[10] PostScript imager package:         $PS
-[11] PostScript imager program:         $PATH_PSRIP
-[12] Manual page installation scheme:   $MANSCHEME
-[13] Default page size:                 $PAGESIZE
-[14] Default vertical res (lpi):        $DEFVRES
+[ 6] Directory for spooling:            $DIR_SPOOL
+[ 7] Directory for uucp lock files:     $DIR_LOCKS
+[ 8] Uucp lock file scheme:             $LOCKS
+[ 9] PostScript imager package:         $PS
+[10] PostScript imager program:         $PATH_PSRIP
+[11] Manual page installation scheme:   $MANSCHEME
+[12] Default page size:                 $PAGESIZE
+[13] Default vertical res (lpi):        $DEFVRES
 
 EOF
 }
@@ -4440,19 +4433,19 @@ printConfig2()
 
 HylaFAX configuration parameters (part 2 of 2) are:
 
-[15] Location of getty program:         $PATH_GETTY
-[16] Location of voice getty program:   $PATH_VGETTY
-[17] Location of sendmail program:      $PATH_SENDMAIL
-[18] Location of TIFF tools:            $TIFFBIN
-[19] Location of SysV init scripts:	$DIR_SYSVINIT
-[20] Location of SysV start scripts:	$DIR_SYSVINITSTART
-[21] Location of SysV stop scripts:	$DIR_SYSVINITSTOP
-[22] Name of SysV start script:		$NAME_SYSVINITSTART
-[23] Name of SysV stop script:		$NAME_SYSVINITSTOP
-[24] Init script starts faxq:		$FAXQ_SERVER
-[25] Init script starts hfaxd		$HFAXD_SERVER
-[26] Start old protocol:		$HFAXD_OLD_PROTOCOL
-[27] Start paging protocol:		$HFAXD_SNPP_SERVER
+[14] Location of getty program:         $PATH_GETTY
+[15] Location of voice getty program:   $PATH_VGETTY
+[16] Location of sendmail program:      $PATH_SENDMAIL
+[17] Location of TIFF tools:            $TIFFBIN
+[18] Location of SysV init scripts:	$DIR_SYSVINIT
+[19] Location of SysV start scripts:	$DIR_SYSVINITSTART
+[20] Location of SysV stop scripts:	$DIR_SYSVINITSTOP
+[21] Name of SysV start script:		$NAME_SYSVINITSTART
+[22] Name of SysV stop script:		$NAME_SYSVINITSTOP
+[23] Init script starts faxq:		$FAXQ_SERVER
+[24] Init script starts hfaxd		$HFAXD_SERVER
+[25] Start old protocol:		$HFAXD_OLD_PROTOCOL
+[26] Start paging protocol:		$HFAXD_SNPP_SERVER
 EOF
 }
   
@@ -4475,18 +4468,15 @@ promptForParameter()
     5)	promptForNonNullStringParameter "$DIR_MAN" \
 	    "Directory to install manual pages";	DIR_MAN="$param"
 	;;
-    6)	promptForNonNullStringParameter "$DIR_HTML" \
-	    "Directory to install HTML documentation";	DIR_HTML="$param"
-	;;
-    7)	promptForNonNullStringParameter "$DIR_SPOOL" \
+    6)	promptForNonNullStringParameter "$DIR_SPOOL" \
 	    "Directory to setup server spooling area";	DIR_SPOOL="$param"
 	;;
-    8)	promptForNonNullStringParameter "$DIR_LOCKS" \
+    7)	promptForNonNullStringParameter "$DIR_LOCKS" \
 	    "Directory for uucp lock files";		DIR_LOCKS="$param"
 	;;
-    9)	promptForUUCPLockScheme;;
-    10)	promptForImagerPackage; PickRIP; CheckRIP;;
-    11)	promptForNonNullStringParameter "$PATH_PSRIP" \
+    8)	promptForUUCPLockScheme;;
+    9)	promptForImagerPackage; PickRIP; CheckRIP;;
+    10)	promptForNonNullStringParameter "$PATH_PSRIP" \
 	    "PostScript imager program";		PATH_PSRIP="$param"
 	case "$PS" in
 	dps)	PATH_DPSRIP=$PATH_PSRIP;;
@@ -4494,46 +4484,46 @@ promptForParameter()
 	gs)	PATH_GSRIP=$PATH_PSRIP;;
 	esac
 	;;
-    12)	promptForManPageScheme;;
-    13)	promptForPageSize $SRCDIR/util/pagesizes.in;;
-    14)	promptForVRes;;
-    15)	promptForNonNullStringParameter "$PATH_GETTY" \
+    11)	promptForManPageScheme;;
+    12)	promptForPageSize $SRCDIR/util/pagesizes.in;;
+    13)	promptForVRes;;
+    14)	promptForNonNullStringParameter "$PATH_GETTY" \
 	    "Location of getty program";		PATH_GETTY="$param"
 	;;
-    16) promptForNonNullStringParameter "$PATH_VGETTY" \
+    15) promptForNonNullStringParameter "$PATH_VGETTY" \
 	    "Location of vgetty program";	        PATH_VGETTY="$param"
 	;;
-    17)	promptForNonNullStringParameter "$PATH_SENDMAIL" \
+    16)	promptForNonNullStringParameter "$PATH_SENDMAIL" \
 	    "Location of sendmail program";		PATH_SENDMAIL="$param"
 	;;
-    18) promptForNonNullStringParameter "$TIFFBIN" \
+    17) promptForNonNullStringParameter "$TIFFBIN" \
 	    "Location of TIFF tools";			TIFFBIN="$param"
 	;;
-    19) promptForNonNullStringParameter "$DIR_SYSVINIT" \
+    18) promptForNonNullStringParameter "$DIR_SYSVINIT" \
 	    "Location of SysV init scripts";		DIR_SYSVINIT="$param"
 	;;
-    20) promptForNonNullStringParameter "$DIR_SYSVINITSTART" \
+    19) promptForNonNullStringParameter "$DIR_SYSVINITSTART" \
 	    "Location of SysV start scripts";		DIR_SYSVINITSTART="$param"
 	;;
-    21) promptForNonNullStringParameter "$DIR_SYSVINITSTOP" \
+    20) promptForNonNullStringParameter "$DIR_SYSVINITSTOP" \
 	    "Location of SysV stop scripts";		DIR_SYSVINITSTOP="$param"
 	;;
-    22) promptForNonNullStringParameter "$NAME_SYSVINITSTART" \
+    21) promptForNonNullStringParameter "$NAME_SYSVINITSTART" \
 	    "Name of SysV start script";		NAME_SYSVINITSTART="$param"
 	;;
-    23) promptForNonNullStringParameter "$NAME_SYSVINITSTOP" \
+    22) promptForNonNullStringParameter "$NAME_SYSVINITSTOP" \
 	    "Name of SysV stop script";			NAME_SYSVINITSTOP="$param"
 	;;
-    24) promptForNonNullStringParameter "$FAXQ_SERVER" \
+    23) promptForNonNullStringParameter "$FAXQ_SERVER" \
 	    "Init script starts faxq";			FAXQ_SERVER="$param"
 	;;
-    25) promptForNonNullStringParameter "$HFAXD_SERVER" \
+    24) promptForNonNullStringParameter "$HFAXD_SERVER" \
 	    "Init script starts hfaxd";			HFAXD_SERVER="$param"
 	;;
-    26) promptForNonNullStringParameter "$HFAXD_OLD_PROTOCOL" \
+    25) promptForNonNullStringParameter "$HFAXD_OLD_PROTOCOL" \
 	    "Start old protocol";			HFAXD_OLD_PROTOCOL="$param"
 	;;
-    27) promptForNonNullStringParameter "$HFAXD_SNPP_SERVER" \
+    26) promptForNonNullStringParameter "$HFAXD_SNPP_SERVER" \
 	    "Start paging protocol";			HFAXD_SNPP_SERVER="$param"
 	;;
     esac
@@ -4866,23 +4856,6 @@ test $SGI2FAX = yes &&	   	   SedConfigFiles sgi2fax/Makefile
 test $PORT = yes &&		   SedConfigFiles port/Makefile
 test $REGEX = yes &&		   SedConfigFiles regex/Makefile
 test $DBLIB = yes &&		   SedConfigFiles dblib/Makefile
-if [ $HTML = yes ]; then
-    HTMLDIRS="
-	html
-	html/tools
-    "
-    for i in $HTMLDIRS; do
-	#
-	# NB: GNU sed/sh breaks when using the more conventional
-	#     attack, so we resort to this silliness...
-	#
-	SedConfigFiles `(cd $SRCDIR/$i; echo *.in) | \
-	    $SED -e 's;\.in;;g' \
-	    -e "s;Makefile;$i/&;g" \
-	    -e "s;[^ ]*\.html;$i/&;g" \
-	    -e "s;[^ ]*\.sh;$i/&;g"`
-    done
-fi
 test -f $SRCDIR/MLA/VERSION &&	   SedConfigFiles MLA/Makefile
 
 if [ "$MAKEDEPINCLUDE" != "sinclude" ]; then
@@ -4913,9 +4886,6 @@ if [ "$MAKEDEPINCLUDE" != "sinclude" ]; then
     test $PORT = yes	&& DEPEND="$DEPEND port"
     test $REGEX = yes	&& DEPEND="$DEPEND regex"
     test $DBLIB = yes	&& DEPEND="$DEPEND dblib"
-    if [ $HTML = yes ]; then
-	DEPEND="$DEPEND html html/tools"
-    fi
     test -f $SRCDIR/MLA/VERSION && DEPEND="$DEPEND MLA"
     test -d $SRCDIR/faxview -a -d faxview && DEPEND="$DEPEND faxview"
     for i in $DEPEND; do
