@@ -1,7 +1,8 @@
-#	$Id: CHANGES 73 2006-01-30 21:59:11Z faxguy $	
+#	$Id: CHANGES 77 2006-01-31 03:04:42Z faxguy $	
 
 New Changes
 
+* don't use tiffcp "-r" option on JBIG TIFFs (30 Jan 2006)
 * remove HTML from configure also (30 Jan 2006)
 * fix EOFB on the end of MMR images, which should address
   a variety of sending issues related with MMR data (28, 30 Jan 2006)
