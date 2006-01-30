@@ -1,77 +1,66 @@
-This software is more than 6 years old and is the product of many
-folks' work.  Robin Schaufler did the original scheme for delayed
-submission and worked on the client-server protocol.  More recently,
-the following people have helped either by testing or by contributing
-fixes and/or improvements:
+This software has been around at least since 1990 (some dates
+indicate 1998) and is the product of many folks' work.  We are
+truly indebted the the following for their contributions:
 
-  Matthias Apitz     Chris Beekhuis       Peter Bentley
-  Marc Boucher       Piete Brooks         Bill Campbell
-  Brent Chapman      Camden Clarke        Tom Corson
-  Alan Crosswell     Mark Diekhans        Greg Ferguson
-  Steve Fine         Andrew Ford          Nico Garcia
-  Wolfgang Henke     Viet Hoang           Bert Hooyman
-  Ken Hornstein      Dirk Husemann        Brian Katzung
-  Masao Kitano       Carsten Koch         John T Kohl
-  Scott Kramer       Rickard Linck        Rick Lyons
-  Tom Lislegaard     Rob MacKinnon        Kevin McManamon
-  Les Mikesell       Bill Morrow          Andy Moskoff
-  Chris Munonye      Rob Newberry         Dag Nygren
-  Jonas Olsson       Dave Packer          Damon Permezel
-  David Pike         Amir Plivatsky       Andy Rabagliati
-  Eric Rescorla      Matthew Rice         Tim Rice
-  Marshall Rose      Daniel Rosenblatt    Joel Rosi-Schwartz
-  Tim Rylance        Joseph E. Sacco      Thomas A. Szybist
-  Brent Townshend    Peter White          Steve Williams
-  Scott Woodard      David Vrona          Paul Vixie
-  Christian Zahl
-
-(and surely others).  Also, a special thanks to Ed McCreight for
-his help in making a working Class 1 driver.
-
-We are indebted to the following people for their contributions to  
-HylaFAX since the project was moved to hylafax.org (November 1998):
-
-Alvaro Aguilera      Andre Albsmeier      a.pogoda@web.de
-Ronald Appelfelder   Heinz-Ado Arnolds    Jay Ashworth
-Abramo Bagnara       Chris Bainbridge     Charly Baker
-Toki Barron          Stephan Bauer        George Bell
-Dmitry Bely          Thomas Biege         David Birnbaum       
+Alvaro Aguilera      Andre Albsmeier      Matthias Apitz       
+a.pogoda@web.de      Ronald Appelfelder   Heinz-Ado Arnolds    
+Jay Ashworth         Abramo Bagnara       Chris Bainbridge     
+Charly Baker         Toki Barron          Stephan Bauer        
+Chris Beekhuis       George Bell          Dmitry Bely          
+Peter Bentley        Thomas Biege         David Birnbaum       
 Trevor Blackwell     Siegfried Bosch      Marc Boucher         
-Ross Boylan          Frank Brock          Holger Bruenjes
-Glen Burkhardt       Filippo Carletti     Yves Carlier         
-Ed Casas             Jonathon Chen        Robert Colquhoun     
-Ken Cornetet         Seth Cuaiklin        Albert DeKnuydt      
-Reeby Dobalina       Paul Eggert          Alessandro Fiorino
+Ross Boylan          Frank Brock          Piete Brooks         
+Holger Bruenjes      Glen Burkhardt       Bill Campbell        
+Filippo Carletti     Yves Carlier         Ed Casas             
+Brent Chapman        Jonathon Chen        Camden Clarke        
+Robert Colquhoun     Ken Cornetet         Tom Corson           
+Alan Crosswell       Seth Cuaiklin        Albert DeKnuydt      
+Mark Diekhans        Reeby Dobalina       Paul Eggert          
+Greg Ferguson        Steve Fine           Alessandro Fiorino
 Juergen Fischer      Kevin Fleming        John Florian         
-Patrice Fournier     Marco de Freitas     Vyacheslav Frolov    
-Andrea Gabellini     John Gilman          Kris Henderson       
-Sascha Herrmann      Carsten Hoeger       Lee Howard           
+Andrew Ford          Patrice Fournier     Marco de Freitas     
+Vyacheslav Frolov    Andrea Gabellini     John Gilman          
+Kris Henderson       Wolfgang Henke       Sascha Herrmann      
+Viet Hoang           Carsten Hoeger       Bert Hooyman         
+Ken Hornstein        Lee Howard           Dirk Husemann        
 John Interrante      Sascha Ittner        Damiam Ivereigh      
 Bernard Jech         Nico Kadel-Garcia    Tadeusz Andrzej Kadlubowski
-Sean Kamath          Jonathan Kamens      Dimitry Ketov        
-Steffan Klipsch      Hannu Koivisto       Arjen de Korte       
-Bernd Krumböck       Dmitry V. Kustov     Ken Lalonde          
-Ilguiz Latypov       Rob Leadbeater       Guillaume Legoupil   
-Todd Lipcon          Greg Luck            Andy MacNamara       
-Philippe Maladjian   Lionel Mamane        Pierluigi Mangani    
-Campbell McKilligan  Bodo Meissner        John Miller          
-Aldo Mini            Boris Mironov        Seth Mos             
-Torsten Mueller      Darren Nickerson     Andrea Nicolini      
-Giulio Orsero        Davide Pagnin        Chris Parsons        
-Michael Pedersen     John Perkins         Simon Perry          
+Sean Kamath          Jonathan Kamens      Brian Katzung        
+Dimitry Ketov        Masao Kitano         Steffan Klipsch      
+Carsten Koch         John T Kohl          Hannu Koivisto       
+Arjen de Korte       Scott Kramer         Bernd Krumböck       
+Dmitry V. Kustov     Ken Lalonde          Ilguiz Latypov       
+Rob Leadbeater       Sam Leffler          Guillaume Legoupil   
+Rickard Linck        Todd Lipcon          Tom Lislegaard       
+Greg Luck            Rick Lyons           Rob MacKinnon        
+Andy MacNamara       Philippe Maladjian   Lionel Mamane        
+Pierluigi Mangani    Ed McCreight         Campbell McKilligan  
+Kevin McManamon      Bodo Meissner        Les Mikesell         
+John Miller          Aldo Mini            Boris Mironov        
+Bill Morrow          Seth Mos             Andy Moskoff         
+Torsten Mueller      Chris Munonye        Rob Newberry         
+Darren Nickerson     Andrea Nicolini      Dag Nygren           
+Jonas Olsson         Giulio Orsero        Dave Packer          
+Davide Pagnin        Chris Parsons        Michael Pedersen     
+John Perkins         Damon Permezel       Simon Perry          
 Diego Pettena        Frank Peters         Vu Pham              
-John Patrick Poet    Harald Pollack       Andreas Pretzsch     
-Bernd Proissl        Matthew Rice         Tim Rice             
-Pedro Roçadas        Daniel Robbins       Giuseppe Sacco       
+David Pike           Amir Plivatsky       John Patrick Poet    
+Harald Pollack       Andreas Pretzsch     Bernd Proissl        
+Andy Rabagliati      Eric Rescorla        Matthew Rice         
+Tim Rice             Pedro Roçadas        Daniel Robbins       
+Marshall Rose        Daniel Rosenblatt    Joel Rosi-Schwartz   
+Tim Rylance          Joseph E. Sacco      Giuseppe Sacco       
 Michael Salzmann     Sven Schmidt         John Sellens         
 Simon <iahnl@iah.nl> Vilmos Soti          Alan Sparks          
 Andy Sparrow         Marco Steinacher     Iain Stevenson       
-Marius Strobl        Mikhail T.           Kazuhide Takahashi   
-Daryl Thachuk        Steve Tuckner        Aidan Van Dyk        
-Rich Walker          Norbert Warmuth      Phil Watkinson       
-James Werkowski      Bruce Whittaker      Chas Williams        
-John Williams        Steve Williams       John Wolfe           
-Bill Young           Bruce Young
+Marius Strobl        Thomas A. Szybist    Mikhail T.           
+Kazuhide Takahashi   Daryl Thachuk        Brent Townshend      
+Steve Tuckner        Aidan Van Dyk        Paul Vixie           
+David Vrona          Rich Walker          Norbert Warmuth      
+Phil Watkinson       James Werkowski      Peter White          
+Bruce Whittaker      Chas Williams        John Williams        
+Steve Williams       John Wolfe           Scott Woodard        
+Bill Young           Bruce Young          Christian Zahl
 
 We appreciate and recognize the upstreamed contributions from these 
 distributions:

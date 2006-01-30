@@ -1,4 +1,4 @@
-$Id: INSTALL 11 2005-11-14 16:32:52Z faxguy $	
+$Id: INSTALL 75 2006-01-31 00:39:53Z faxguy $	
 
 If this file proves to be insufficient, please read the included
 man pages and see on-line documentation at:
@@ -37,6 +37,3 @@ hylafax-server manpage.  Remember however that the manual pages are for
 reference; the on-line documentation is designed to be more introductory in 
 nature and should usually be consulted first when you're looking for 
 general guidance.
-
-See the README for details on where to turn if you've done all of this
-and still need help!
