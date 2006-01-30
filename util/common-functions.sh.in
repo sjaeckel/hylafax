@@ -1,5 +1,5 @@
 #!/bin/sh
-#    $Id: common-functions.sh.in 53 2006-01-10 00:27:48Z faxguy $
+#    $Id: common-functions.sh.in 76 2006-01-31 00:56:15Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -32,7 +32,7 @@ setItemSize()
 		DICTPAGELENGTH DICTRES DICTSTATUS DICTDIALOGS DICTDIALS \
 		DICTCALLS DICTPAGES DICTATTEMPS DICTDIRNUM DICTRECEIVER DICTQUALITY \
 		DICTPAGEWIDTH DICTPAGELENGTH DICTDATAFORMAT DICTREMOTEEQUIPMENT \
-		DICTREMOTESTATION; do
+		DICTREMOTESTATION DICTSIGNALRATE; do
 	THISLEN="`eval echo "$"$ITEM | wc -m | $SED 's/ //g'`"
 	if [ $THISLEN -gt $ITEMSIZE ]; then ITEMSIZE=$THISLEN; fi
     done
