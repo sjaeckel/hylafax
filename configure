@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 73 2006-01-30 21:59:11Z faxguy $
+#	$Id: configure 79 2006-01-31 19:31:26Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -393,7 +393,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 73 $"
+	echo "This is HylaFAX configure $Revision: 79 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3411,11 +3411,11 @@ if [ "$DSO" = auto ]; then
 	fi
 	DSOSUF=so
 	LIBUTIL=''
-	LIBFAXSERVER='-lfaxserver'
 	FAXD='${DEPTH}/faxd'
+	LIBFAXSERVER='-L${FAXD} -lfaxserver'
 	# options here are passed directly to ld, not through g++ first
 	DSOOPTS='-G -h $@'
-	if [ "${ISGCC}" = "yes" ] ; then
+	if [ ${ISGCC} = "yes" ] ; then
 	    LLDOPTS='-L${UTIL} -L${FAXD} -R${LIBDIR} -lfaxutil -lstdc++'
 	    GCOPTS="${GCOPTS} -fpic"
 	    GCXXOPTS="${GCXXOPTS} -fpic"
@@ -3479,16 +3479,6 @@ if [ "$DSO" = no ]; then
     DSOSUF=a DSOOPTS= DSODELAY= LLDOPTS=
 else
     MAKEDSOINCLUDE="$MAKEINCLUDE"
-    case $CC-$TARGET in
-    gcc-*-linux-gnu)
-	GCOPTS="${GCOPTS} -fpic"
-	;;
-    esac
-    case $CXX-$TARGET in
-    g++-*-linux-gnu)
-	GCXXOPTS="${GCXXOPTS} -fpic"
-	;;
-    esac
 fi
 
 Note ""

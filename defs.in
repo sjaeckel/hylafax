@@ -1,4 +1,4 @@
-# $Id: defs.in 74 2006-01-30 23:33:46Z faxguy $
+# $Id: defs.in 79 2006-01-31 19:31:26Z faxguy $
 #
 # @WARNING@
 #
@@ -192,7 +192,7 @@ LIBREGEX	= @LIBREGEX@
 # random utility functions and classes
 UTIL		= ${DEPTH}/util
 FAXD		= @FAXD@
-LIBFAXSERVER= @LIBFAXSERVER@
+LIBFAXSERVER	= @LIBFAXSERVER@
 LIBUTIL		= @LIBUTIL@
 LIBPORT		= @LIBPORT@
 
