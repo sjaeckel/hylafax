@@ -1,4 +1,4 @@
-/*	$Id: FileTransfer.c++ 31 2005-12-21 01:17:11Z faxguy $ */
+/*	$Id: FileTransfer.c++ 80 2006-02-01 18:57:45Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -381,11 +381,13 @@ HylaFAXServer::sendTIFFHeader(TIFF* tif, int fdout)
 	templ.xres[0] = (uint32) res;
     TIFFGetField(tif, TIFFTAG_YRESOLUTION, &res);
 	templ.yres[0] = (uint32) res;
-    if (templ.Compression.tdir_offset == COMPRESSION_CCITTFAX3)
+    if (templ.Compression.tdir_offset == COMPRESSION_CCITTFAX3) {
 	templ.Options.tdir_tag = TIFFTAG_GROUP3OPTIONS;
-    else
+	getLong(tif, templ.Options);
+    } else if (templ.Compression.tdir_offset == COMPRESSION_CCITTFAX4) {
 	templ.Options.tdir_tag = TIFFTAG_GROUP4OPTIONS;
-    getLong(tif, templ.Options);
+	getLong(tif, templ.Options);
+    }
     getShort(tif, templ.ResolutionUnit);
     TIFFGetField(tif, TIFFTAG_PAGENUMBER,  &templ.PageNumber.tdir_offset);
     getLong(tif, templ.BadFaxLines);
