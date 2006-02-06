@@ -1,7 +1,9 @@
-#	$Id: CHANGES 83 2006-02-03 21:43:55Z faxguy $	
+#	$Id: CHANGES 84 2006-02-07 00:25:54Z faxguy $	
 
 New Changes
 
+* compensate for senders who send MMR, JBIG, or JPEG without
+  signalling ECM (6 Feb 2006)
 * ignore MESSAGE-WAITING after dial (3 Feb 2006)
 * fix problem with blocked jobs not unblocking (2 Feb 2006)
 * fix hfaxd to recognize JBIG and JPEG faxes (1 Feb 2006)
