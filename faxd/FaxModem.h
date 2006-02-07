@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxModem.h 86 2006-02-08 05:55:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -70,6 +70,7 @@ private:
 // phase c data receive & copy quality checking
     u_int	cblc;		// current count of consecutive bad lines
     bool	lastRowBad;	// last decoded row was bad
+    u_long	linesWereA4Width;// count of lines measuring 1728 pel
 
     u_long	recvEOLCount;	// EOL count for received page
     u_long	recvBadLineCount;
