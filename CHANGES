@@ -1,7 +1,9 @@
-#	$Id: CHANGES 84 2006-02-07 00:25:54Z faxguy $	
+#	$Id: CHANGES 86 2006-02-08 05:55:43Z faxguy $	
 
 New Changes
 
+* compensate for sender who send 1728 pixel width data
+  when they signal another size in DCS (7 Feb 2006)
 * compensate for senders who send MMR, JBIG, or JPEG without
   signalling ECM (6 Feb 2006)
 * ignore MESSAGE-WAITING after dial (3 Feb 2006)
