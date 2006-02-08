@@ -1,7 +1,8 @@
-#	$Id: CHANGES 86 2006-02-08 05:55:43Z faxguy $	
+#	$Id: CHANGES 87 2006-02-08 16:52:59Z faxguy $	
 
 New Changes
 
+* fix incorrect "Fax protocol error" in ECM mode (8 Feb 2006)
 * compensate for sender who send 1728 pixel width data
   when they signal another size in DCS (7 Feb 2006)
 * compensate for senders who send MMR, JBIG, or JPEG without
