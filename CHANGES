@@ -1,7 +1,8 @@
-#	$Id: CHANGES 87 2006-02-08 16:52:59Z faxguy $	
+#	$Id: CHANGES 88 2006-02-15 00:29:25Z faxguy $	
 
 New Changes
 
+* fix buffer overrun in NSF parsing (14 Feb 2006)
 * fix incorrect "Fax protocol error" in ECM mode (8 Feb 2006)
 * compensate for sender who send 1728 pixel width data
   when they signal another size in DCS (7 Feb 2006)

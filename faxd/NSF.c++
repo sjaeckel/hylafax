@@ -1,4 +1,4 @@
-/* $Id: NSF.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/* $Id: NSF.c++ 88 2006-02-15 00:29:25Z faxguy $ */
 /* 
  * This file does not exist in the original HylaFAX distribution.
  * Created by Dmitry Bely, April 2000
@@ -458,8 +458,8 @@ void NSF::findStationId( bool reverseOrder )
     /*
      * Trying to find the longest printable ASCII sequence
      */
-    for( const char *p = (const char*)thisnsf + NSFData::vendorIdSize,
-             *end = p + thisnsf.length(); p < end; p++ ){
+    const char *p = (const char*) thisnsf, *end = p + thisnsf.length();
+    for (p += NSFData::vendorIdSize; p < end; p++) {
         if( isprint(*p) ){
             if( !idSize++ ) 
                 id = p;
