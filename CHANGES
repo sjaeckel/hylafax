@@ -1,7 +1,8 @@
-#	$Id: CHANGES 88 2006-02-15 00:29:25Z faxguy $	
+#	$Id: CHANGES 89 2006-02-15 18:13:58Z faxguy $	
 
 New Changes
 
+* replace Class1SendMsgDelay with Class1SwitchingCmd (15 Feb 2006)
 * fix buffer overrun in NSF parsing (14 Feb 2006)
 * fix incorrect "Fax protocol error" in ECM mode (8 Feb 2006)
 * compensate for sender who send 1728 pixel width data
