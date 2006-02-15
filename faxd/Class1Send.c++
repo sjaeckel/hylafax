@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 87 2006-02-08 16:52:59Z faxguy $ */
+/*	$Id: Class1Send.c++ 89 2006-02-15 18:13:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -323,7 +323,10 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 	     * "before sending any signals using V.27 ter/V.29/V.33/V.17 
 	     * modulation system"
 	     */
-	    pause(conf.class1SendMsgDelay);
+	    if (!atCmd(conf.class1SwitchingCmd, AT_OK)) {
+		protoTrace("Failure to receive silence.");
+		return (send_failed);
+	    }
 	}
 
 	/*
@@ -1068,7 +1071,11 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 	    if (flowControl == FLOW_XONXOFF)   
 		setXONXOFF(FLOW_XONXOFF, FLOW_NONE, ACT_FLUSH);
 	    if (!useV34) {
-		pause(conf.class1SendMsgDelay);		// T.30 5.3.2.4
+		// T.30 5.3.2.4 (03/93) gives this to be a 75ms minimum
+		if (!atCmd(conf.class1SwitchingCmd, AT_OK)) {
+		    protoTrace("Failure to receive silence.");
+		    return (false);
+		}
 		/*
 		 * T.30 Section 5, Note 5 states that we must use long training
 		 * on the first high-speed data message following CTC.
