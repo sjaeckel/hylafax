@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 69 2006-01-26 06:48:44Z faxguy $ */
+/*	$Id: Class1Recv.c++ 91 2006-02-16 19:51:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1691,6 +1691,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 
 	if (!lastblock) {
 	    // confirm block received as good
+	    if (!useV34) atCmd(conf.class1SwitchingCmd, AT_OK);
 	    (void) transmitFrame((sendERR ? FCF_ERR : FCF_MCF)|FCF_RCVR);
 	    tracePPR("RECV send", sendERR ? FCF_ERR : FCF_MCF);
 	}
