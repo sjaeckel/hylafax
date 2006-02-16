@@ -1,7 +1,9 @@
-#	$Id: CHANGES 89 2006-02-15 18:13:58Z faxguy $	
+#	$Id: CHANGES 90 2006-02-16 17:43:23Z faxguy $	
 
 New Changes
 
+* on TCF retransmissions don't fallback to V.17 9600 or
+  V.17 7200 as it's only likely to be more problematic (16 Feb 2006)
 * replace Class1SendMsgDelay with Class1SwitchingCmd (15 Feb 2006)
 * fix buffer overrun in NSF parsing (14 Feb 2006)
 * fix incorrect "Fax protocol error" in ECM mode (8 Feb 2006)
