@@ -1,7 +1,8 @@
-#	$Id: CHANGES 92 2006-02-20 22:05:19Z faxguy $	
+#	$Id: CHANGES 96 2006-02-28 16:32:34Z faxguy $	
 
 New Changes
 
+* correct CIELAB to be ITULAB (28 Feb 2006)
 * add iaxmodem prototype config file (20 Feb 2006)
 * do Class1SwitchingCmd before sending MCF after PPS-NULL (16 Feb 2006)
 * on TCF retransmissions don't fallback to V.17 9600 or
