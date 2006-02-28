@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh.in 76 2006-01-31 00:56:15Z faxguy $
+#	$Id: faxrcvd.sh.in 95 2006-02-28 16:31:48Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -246,6 +246,32 @@ if [ -f $FILE ]; then
 	     echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
 	     echo ""
 	     encode $FILE;
+	 elif [ "$FILETYPE" = "tif-r" ]; then
+	     echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
+	     echo "Content-Description: FAX document"
+	     echo "Content-Transfer-Encoding: $ENCODING"
+	     echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
+	     echo ""
+	     if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
+			tiffcp -c jpeg:R $FILE $FILE.r.tif
+			encode $FILE.r.tif
+			$RM -f $FILE.r.tif 2>$ERRORSTO
+	     else 
+			encode $FILE
+	     fi
+	 elif [ "$FILETYPE" = "tif-y" ]; then
+	     echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
+	     echo "Content-Description: FAX document"
+	     echo "Content-Transfer-Encoding: $ENCODING"
+	     echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
+	     echo ""
+	     if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
+			tiffcp -c jpeg:Y $FILE $FILE.y.tif
+			encode $FILE.y.tif
+			$RM -f $FILE.y.tif 2>$ERRORSTO
+	     else
+			encode $FILE
+	     fi
 	 elif [ "$FILETYPE" = "pdf" ]; then
 	     echo "Content-Type: application/pdf; name=\"$FILENAME.pdf\""
 	     echo "Content-Description: FAX document"
