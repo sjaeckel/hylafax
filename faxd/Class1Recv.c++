@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 91 2006-02-16 19:51:47Z faxguy $ */
+/*	$Id: Class1Recv.c++ 97 2006-03-02 00:45:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -354,15 +354,22 @@ Class1Modem::recvTraining()
 	 * Determine number of non-zero bytes and
 	 * the longest zero-fill run in the data.
 	 */
-	while (i < n) {
-	    u_int j;
-	    for (; i < n && buf[i] != 0; i++)
-		nonzero++;
-	    for (j = i; j < n && buf[j] == 0; j++)
-		;
-	    if (j-i > zerorun)
-		zerorun = j-i;
-	    i = j;
+	if (i < n) {
+	    while (i < n) {
+		u_int j;
+		for (; i < n && buf[i] != 0; i++)
+		    nonzero++;
+		for (j = i; j < n && buf[j] == 0; j++)
+		    ;
+		if (j-i > zerorun)
+		    zerorun = j-i;
+		i = j;
+	    }
+	} else {
+	    /*
+	     * There was no non-zero data.
+	     */
+	    nonzero = n;
 	}
 	/*
 	 * Our criteria for accepting is that there must be
