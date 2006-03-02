@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxGettyApp.h 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -106,7 +106,7 @@ private:
     bool	canLockModem();
     bool	lockModem();
     void	unlockModem();
-    bool	setupModem();
+    bool	setupModem(bool isSend);
     void	discardModem(bool dropDTR);
 // inbound call handling
     bool	isCIDOk(const fxStr& cid);

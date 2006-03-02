@@ -1,7 +1,9 @@
-#	$Id: CHANGES 97 2006-03-02 00:45:33Z faxguy $	
+#	$Id: CHANGES 98 2006-03-03 05:36:46Z faxguy $	
 
 New Changes
 
+* expand Class1JBIGSupport to allow for differentiation
+  between full, none, send, and receive support (2 Mar 2006)
 * fix indicator when 100% non-zero TCF data is received (1 Mar 2006)
 * correct CIELAB to be ITULAB (28 Feb 2006)
 * add iaxmodem prototype config file (20 Feb 2006)

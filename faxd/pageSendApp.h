@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: pageSendApp.h 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -104,7 +104,7 @@ private:
     bool	canLockModem();
     bool	lockModem();
     void	unlockModem();
-    bool	setupModem();
+    bool	setupModem(bool isSend);
 // notification interfaces used by ModemServer
     void	notifyModemReady();
     void	notifyModemWedged();

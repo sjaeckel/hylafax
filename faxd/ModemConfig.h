@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 89 2006-02-15 18:13:58Z faxguy $ */
+/*	$Id: ModemConfig.h 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -57,6 +57,7 @@ private:
     u_int	getSpeed(const char* value);
     u_int	getDataFormat(const char* value);
     u_int       getRTNHandling(const char* cp);
+    u_int       getJBIGSupport(const char* cp);
     ECMType	getECMType(const char* cp);
 
     static bool findRate(const char*, BaudRate&);
@@ -162,7 +163,6 @@ public:
     u_int	class1ECMFrameSize;	// ECM frame size for transmission
     bool	class1GreyJPEGSupport;	// Greyscale JPEG support
     bool	class1ColorJPEGSupport;	// Full-color JPEG support
-    bool	class1JBIGSupport;	// monochrome JBIG support
     bool	class1ECMSupport;	// support T.30-A ECM
     bool	class1PersistentECM;	// continue to correct
     bool	class1TCFRecvHack;	// deliberately look for V.21 disconnect
@@ -228,6 +228,7 @@ public:
     u_int	recvDataFormat;		// received facsimile data format
 
     RTNHandling rtnHandling;            // RTN signal handling method
+    JBIGSupport	class1JBIGSupport;	// monochrome JBIG support
     bool	saveUnconfirmedPages;	// don't delete unconfirmed pages
     
     					// Distinctive ring data as sequences of DRON/DROF intervals

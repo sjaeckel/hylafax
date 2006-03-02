@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: ModemServer.c++ 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -448,7 +448,7 @@ const fxStr& ModemServer::getConfigFile() const { return configFile; }
  * Setup the modem; if needed.
  */
 bool
-ModemServer::setupModem()
+ModemServer::setupModem(bool isSend)
 {
     if (!modem) {
 	const char* dev = modemDevice;
@@ -459,7 +459,7 @@ ModemServer::setupModem()
 	 * The deduceComplain cruft is just to reduce the
 	 * noise in the log file when probing for a modem.
 	 */
-	modem = deduceModem();
+	modem = deduceModem(isSend);
 	if (!modem) {
 	    discardModem(true);
 	    if (deduceComplain) {
@@ -507,11 +507,11 @@ ModemServer::readyModem()
  * driver class.
  */
 ClassModem*
-ModemServer::deduceModem()
+ModemServer::deduceModem(bool isSend)
 {
     ClassModem* modem = new Class0Modem(*this, *this);
     if (modem) {
-	if (modem->setupModem())
+	if (modem->setupModem(isSend))
 	    return modem;
 	delete modem;
     }
