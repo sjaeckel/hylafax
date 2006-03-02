@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 86 2006-02-08 05:55:43Z faxguy $ */
+/*	$Id: FaxModem.h 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -44,6 +44,7 @@ class FaxServer;
 // NB: these would be enums in the FaxModem class
 //     if there were a portable way to refer to them!
 typedef unsigned int RTNHandling;       // RTN signal handling method 
+typedef unsigned int JBIGSupport;	// JBIG support available
 
 /*
  * This is an abstract class that defines the interface to
@@ -175,6 +176,12 @@ public:
         RTN_IGNORE     = 2,         // ignore error and send next page
         RTN_RETRANSMITIGNORE = 3    // retransmit but ignore error instead of hanging up
     };
+    enum {			// FaxModem::JBIGSupport
+	JBIG_NONE = 0,		    // no JBIG support
+	JBIG_RECV = 1,		    // receive-only JBIG support
+	JBIG_SEND = 2,		    // send-only JBIG support
+	JBIG_FULL = 3		    // full JBIG support
+    };
 
     virtual ~FaxModem();
 
@@ -277,7 +284,7 @@ public:
     virtual bool recvEnd(fxStr& emsg) = 0;
     virtual void recvAbort() = 0;
     virtual void recvSucceeded();
-    virtual void pokeConfig() = 0;
+    virtual void pokeConfig(bool isSend) = 0;
     // query interfaces for optional state
     virtual bool getRecvPWD(fxStr&);
     virtual bool getRecvTSI(fxStr&);

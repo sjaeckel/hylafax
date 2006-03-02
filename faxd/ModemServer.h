@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: ModemServer.h 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -127,10 +127,10 @@ protected:
     ModemServer(const fxStr& deviceName, const fxStr& devID);
 
 // modem driver setup+teardown interfaces
-    virtual bool setupModem();
+    virtual bool setupModem(bool isSend = true);
     virtual bool readyModem();
     virtual void discardModem(bool dropDTR);
-    virtual ClassModem* deduceModem();
+    virtual ClassModem* deduceModem(bool isSend = true);
 // low-level modem interfaces
     int		getModemFd();				// XXX
     BaudRate	getModemRate() const;

@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class2.c++ 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -45,7 +45,7 @@ Class2Modem::~Class2Modem()
  * the remainder of the Class 2 support fairly generic.
  */
 bool
-Class2Modem::setupModem()
+Class2Modem::setupModem(bool isSend)
 {
     if (!selectBaudRate(conf.maxRate, conf.flowControl, conf.flowControl))
 	return (false);
@@ -266,7 +266,7 @@ Class2Modem::setupModem()
 }
 
 void
-Class2Modem::pokeConfig()
+Class2Modem::pokeConfig(bool isSend)
 {
 }
 
@@ -425,7 +425,7 @@ Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params)
 
 /*
  * Place the modem into the appropriate state
- * for sending/received facsimile.
+ * for sending facsimile.
  */
 bool
 Class2Modem::faxService(bool enableV34)

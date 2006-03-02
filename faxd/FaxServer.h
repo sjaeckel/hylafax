@@ -1,4 +1,4 @@
-/*	$Id: FaxServer.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxServer.h 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -85,8 +85,8 @@ private:
 protected:
     FaxServer(const fxStr& deviceName, const fxStr& devID);
 
-    bool	setupModem();
-    ClassModem*	deduceModem();
+    bool	setupModem(bool isSend = true);
+    ClassModem*	deduceModem(bool isSend = true);
     void	discardModem(bool dropDTR);
     fxStr	getModemCapabilities() const;
 

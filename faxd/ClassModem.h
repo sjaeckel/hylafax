@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 5 2005-11-11 21:48:47Z faxguy $ */
+/*	$Id: ClassModem.h 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -229,7 +229,7 @@ protected:
 public:
     virtual ~ClassModem();
 
-    virtual bool setupModem() = 0;
+    virtual bool setupModem(bool isSend = true) = 0;
     virtual bool isFaxModem() const = 0;	// XXX safe to cast
 
     virtual bool sync(long ms = 0);		// synchronize (wait for "OK")

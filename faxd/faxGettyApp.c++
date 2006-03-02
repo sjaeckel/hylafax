@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -135,7 +135,7 @@ bool faxGettyApp::canLockModem()	{ return modemLock->check(); }
 bool faxGettyApp::isModemLocked()	{ return modemLock->isLocked(); }
 
 bool
-faxGettyApp::setupModem()
+faxGettyApp::setupModem(bool isSend)
 {
     /*
      * Reread the configuration file if it has been
@@ -146,7 +146,7 @@ faxGettyApp::setupModem()
      */
     if (updateConfig(getConfigFile()))
 	sendModemStatus("N" | getModemNumber());
-    if (FaxServer::setupModem() && ModemServer::readyModem()) {
+    if (FaxServer::setupModem(false) && ModemServer::readyModem()) {
 	/*
 	 * Setup modem for receiving.
 	 */
@@ -380,7 +380,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
 			}
 			// modem settings may have changed...
 			FaxModem* modem = (FaxModem*) ModemServer::getModem();
-			modem->pokeConfig();
+			modem->pokeConfig(false);
 		    }
 		    Sys::close(pipefd[0]);
 		    break;
@@ -485,7 +485,7 @@ faxGettyApp::answerCleanup()
 
     bool isSetup;
     if (isModemLocked() || lockModem()) {
-	isSetup = setupModem();
+	isSetup = setupModem(false);
 	unlockModem();
     } else
 	isSetup = false;

@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class2.h 98 2006-03-03 05:36:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -72,7 +72,7 @@ protected:
     fxStr	lid;			// prepared local identifier string
 
 // modem setup stuff
-    virtual bool setupModem();
+    virtual bool setupModem(bool isSend = true);
     virtual bool setupModel(fxStr& model);
     virtual bool setupRevision(fxStr& rev);
     virtual bool setupDCC();
@@ -150,7 +150,7 @@ public:
     bool	recvPage(TIFF*, u_int& ppm, fxStr& emsg, const fxStr& id);
     bool	recvEnd(fxStr& emsg);
     void	recvAbort();
-    void	pokeConfig();
+    void	pokeConfig(bool isSend);
 
 // polling support
     bool	requestToPoll(fxStr& emsg);
@@ -158,7 +158,7 @@ public:
 		    fxStr& emsg);
 
 // miscellaneous
-    bool	faxService(bool enableV34);	// switch to fax mode
+    bool	faxService(bool enableV34);	// switch to fax mode (send)
     bool	reset(long ms);			// reset modem
     void	setLID(const fxStr& number);	// set local id string
     bool	supportsPolling() const;	// modem capability
