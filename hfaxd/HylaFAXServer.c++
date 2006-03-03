@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 101 2006-03-04 00:14:46Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -97,6 +97,11 @@ HylaFAXServer::HylaFAXServer()
     tzname[0] = tm.tm_zone;
     tzname[1] = NULL;
 #endif
+
+    // Latest glibc will revert to UTC in the chroot if it can't
+    // find the zoneinfo file and no TZ is set in the environment.
+    fxStr tz = fxStr::format("%s%d:%02d%s", tzname[0], (gmtoff / 3600), ((gmtoff / 60) % 60), tzname[1]);
+    setenv("TZ", tz, 0);
 
     cachedTIFF = NULL;
 }
