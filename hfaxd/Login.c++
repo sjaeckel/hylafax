@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 29 2005-12-16 01:27:32Z faxguy $ */
+/*	$Id: Login.c++ 102 2006-03-04 00:47:06Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -268,7 +268,7 @@ HylaFAXServer::passCmd(const char* pass)
 }
 
 void
-HylaFAXServer::login(void)
+HylaFAXServer::login(bool isSNPP)
 {
     loginAttempts = 0;		// this time successful
     state |= S_LOGGEDIN;
@@ -296,7 +296,10 @@ HylaFAXServer::login(void)
 #endif
 
     (void) isShutdown(false);	// display any shutdown messages
-    reply(230, "User %s logged in.", (const char*) the_user);
+    if (isSNPP)
+	reply(250, "User %s logged in.", (const char*) the_user);
+    else
+	reply(230, "User %s logged in.", (const char*) the_user);
     if (TRACE(LOGIN))
 	logInfo("FAX LOGIN FROM %s [%s], %s"
 	    , (const char*) remotehost

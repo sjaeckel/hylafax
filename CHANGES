@@ -1,7 +1,8 @@
-#	$Id: CHANGES 101 2006-03-04 00:14:46Z faxguy $	
+#	$Id: CHANGES 102 2006-03-04 00:47:06Z faxguy $	
 
 New Changes
 
+* fix SNPP login reply to say 250 instead of 230 (3 Mar 2006)
 * use TZ environment variable instead of etc/localtime (3 Mar 2006)
 * fix %1z RcvFmt output (3 Mar 2006)
 * expand Class1JBIGSupport to allow for differentiation
