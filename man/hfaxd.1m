@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 60 2006-01-12 04:39:43Z faxguy $
+.\"	$Id: hfaxd.1m 101 2006-03-04 00:14:46Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -364,21 +364,6 @@ files in the
 .I hfaxd
 configuration file: absolute pathnames relative to the root of the 
 spooling should be used to specify filenames.
-.SH "TIME ZONE SUPPORT"
-.I hfaxd
-uses system time libraries in order to work with time settings in jobs.
-On some systems the time libraries cannot access the local time zone
-information (specifically
-.BR /etc/localtime
-) due to the root directory change that
-.I hfaxd
-makes at startup.  For this purpose, if the
-.IR faxsetup (${MANNUM1_8})
-script finds
-.BR /etc/localtime
-to be on the system it will copy it to
-.BR ${SPOOL}/etc/localtime
-in an effort to allow the system time libraries access to it.
 .SH "SERVER ACCESS CONTROL"
 The file
 .BR ${SPOOL}/etc/shutdown ,
