@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: HylaFAXServer.h 102 2006-03-04 00:47:06Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -353,7 +353,7 @@ protected:
     bool checkUser(const char*);
     bool checkuser(FILE*, const char *name);
     bool checkuser(const char *name);
-    void login(void);
+    void login(bool isSNPP = false);
     void end_login(void);
     virtual void dologout(int status);
     const char* fixPathname(const char* file);
