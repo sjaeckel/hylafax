@@ -1,4 +1,4 @@
-/*	$Id: CopyQuality.c++ 95 2006-02-28 16:31:48Z faxguy $ */
+/*	$Id: CopyQuality.c++ 99 2006-03-03 17:10:34Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -273,7 +273,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		     * we don't count those lines as bad.
 		     */
 		    linesWereA4Width += decodedPixels == 1728 ? 1 : 0;
-		    if (linesWereA4Width < (recvEOLCount + 1) * 95 / 100) {
+		    if (decodedPixels != 1728 || linesWereA4Width < ((recvEOLCount + 1) * 95 / 100)) {
 			recvBadLineCount++;
 			cblc++;
 			lastRowBad = true;
