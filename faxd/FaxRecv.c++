@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 70 2006-01-26 18:00:59Z faxguy $ */
+/*	$Id: FaxRecv.c++ 100 2006-03-03 23:32:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -135,6 +135,7 @@ FaxServer::getRecvFile(fxStr& qfile, fxStr& emsg)
     if (ftmp < 0)
         emsg = "Failed to find unused filename";
 
+    (void) flock(ftmp, LOCK_EX);
     return ftmp;
 }
 
