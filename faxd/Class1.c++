@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 103 2006-03-06 19:17:41Z faxguy $ */
+/*	$Id: Class1.c++ 104 2006-03-07 01:16:45Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -515,8 +515,16 @@ Class1Modem::renegotiatePrimary(bool constrain)
     buf[size++] = DLE;
     if (constrain) {
 	// don't neotiate a faster rate
-	if (primaryV34Rate == 1 || primaryV34Rate == 2) buf[size++] = 0x70;	// 2400 bit/s
-	else buf[size++] = primaryV34Rate + 0x6D;	// drop 4800 bit/s
+	if (primaryV34Rate == 1) buf[size++] = 0x70;	// 2400 bit/s
+	else if (primaryV34Rate == 2 || primaryV34Rate == 3) {
+	    /*
+	     * V.34 bitspeed 2400 is only possible with symbolrate 2400, and
+	     * as we have no way of determining the symbolrate, we cannot
+	     * wisely instruct the modem to use 2400 bps unless the modem
+	     * negotiates it independently.
+	     */
+	    buf[size++] = 0x71;				// 4800 bit/s
+	} else buf[size++] = primaryV34Rate + 0x6D;	// drop 4800 bit/s
 	buf[size++] = DLE;
     }
     buf[size++] = 0x6C;					// <DLE><pph>
