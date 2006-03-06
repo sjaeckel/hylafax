@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: Class1.c++ 103 2006-03-06 19:17:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -561,9 +561,9 @@ Class1Modem::waitForDCEChannel(bool awaitctrl)
 		    protoTrace("Control channel retrain");
 		    // wait for the control channel to reappear
 		    // should we reset the timeout setting?
-		    waitForDCEChannel(true);
+		    gotresponse = waitForDCEChannel(true);
 		    gotRTNC = true;
-		    return (false);
+		    return ((awaitctrl ? gotresponse : false));
 		    break;
 		case 0x6B:
 		    protoTrace("Primary channel selected");
