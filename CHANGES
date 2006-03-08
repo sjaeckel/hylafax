@@ -1,7 +1,8 @@
-#	$Id: CHANGES 104 2006-03-07 01:16:45Z faxguy $	
+#	$Id: CHANGES 105 2006-03-09 00:16:22Z faxguy $	
 
 New Changes
 
+* improve and extend JPEG parsing (8 Mar 2006)
 * set minimum V.34 constrain threshold to 4800 bps (6 Mar 2006)
 * improve the reaction to a V.34 control channel retrain (6 Mar 2006)
 * fix SNPP login reply to say 250 instead of 230 (3 Mar 2006)
