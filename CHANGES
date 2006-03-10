@@ -1,7 +1,8 @@
-#	$Id: CHANGES 105 2006-03-09 00:16:22Z faxguy $	
+#	$Id: CHANGES 107 2006-03-10 19:29:35Z faxguy $	
 
 New Changes
 
+* fix parsing error in DICTDOCSTEXT4 (10 Mar 2006)
 * improve and extend JPEG parsing (8 Mar 2006)
 * set minimum V.34 constrain threshold to 4800 bps (6 Mar 2006)
 * improve the reaction to a V.34 control channel retrain (6 Mar 2006)
