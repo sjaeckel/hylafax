@@ -1,7 +1,8 @@
-#	$Id: CHANGES 108 2006-03-13 19:31:13Z faxguy $	
+#	$Id: CHANGES 109 2006-03-14 02:43:16Z faxguy $	
 
 New Changes
 
+* fix faxgetty hang in ECM due to missing timeouts (13 Mar 2006)
 * add QualifyCID-Ex support (13 Mar 2006)
 * fix parsing error in DICTDOCSTEXT4 (10 Mar 2006)
 * improve and extend JPEG parsing (8 Mar 2006)

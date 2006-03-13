@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 104 2006-03-07 01:16:45Z faxguy $ */
+/*	$Id: Class1.c++ 109 2006-03-14 02:43:16Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -962,7 +962,7 @@ Class1Modem::recvECMFrame(HDLCFrame& frame)
 	}
     }
 
-    int bit = getModemBit(0);
+    int bit = getModemBit(60000);
     u_short ones = 0;
 
     // look for the last sync flag (possibly the previous one)
@@ -976,11 +976,11 @@ Class1Modem::recvECMFrame(HDLCFrame& frame)
 		return false;
 	    }
 	    if (bit == 0 || ones > 6) ones = 0;
-	    bit = getModemBit(0);
+	    bit = getModemBit(60000);
 	    if (bit == 1) ones++;
 	} while (!(ones == 6 && bit == 0 && bit != EOF) && !didBlockEnd());
 	ones = 0;
-	bit = getModemBit(0);
+	bit = getModemBit(60000);
     }
 
     // receive the frame, strip stuffed zero-bits, and look for end flag
@@ -995,7 +995,7 @@ Class1Modem::recvECMFrame(HDLCFrame& frame)
 	    protoTrace("Timeout receiving HDLC frame");
 	    return (false);
 	}
-	bit = getModemBit(0);
+	bit = getModemBit(60000);
 	if (bit == 1) {
 	    ones++;
 	}
@@ -1029,7 +1029,7 @@ Class1Modem::recvECMFrame(HDLCFrame& frame)
 	    rcpframe = true;
 	}
     } while (ones != 6 && bit != EOF && !rcpframe);
-    bit = getModemBit(0);			// trailing bit on flag
+    bit = getModemBit(60000);			// trailing bit on flag
     if (!rcpframe) {
 	if (frame.getLength() > 0)
 	    traceHDLCFrame("-->", frame, true);
