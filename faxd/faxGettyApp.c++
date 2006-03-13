@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 108 2006-03-13 19:31:13Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 110 2006-03-14 07:17:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -755,11 +755,14 @@ faxGettyApp::isCIDOk(const CallID& callid)
 	pid_t pid = fork();
 	switch (pid) {
 	    case 0:
+		errno = 0;
 		Sys::execv((const char*) qualifyCIDex, (char* const*) argv);
+		if (errno)
+		    traceProtocol("Couldn't run QualifyCID-Ex, %s: %s", (const char*) qualifyCIDex, strerror(errno));
 		sleep(1);           // XXX give parent time
 		_exit(-1);
 	    case -1:
-		traceProtocol("Couldn't fork to run QualifyCID-Ex: %s", (const char*) qualifyCIDex);
+		traceProtocol("Couldn't fork to run QualifyCID-Ex, %s: %s", (const char*) qualifyCIDex, strerror(errno));
 		break;
 	    default:
 		int estat = -1;
