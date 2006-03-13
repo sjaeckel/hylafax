@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 108 2006-03-13 19:31:13Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -330,7 +330,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
     bool callResolved;
     bool advanceRotary = true;
     fxStr emsg;
-    if (!isCIDOk(callid.size() > CallID::NUMBER ? callid.id(CallID::NUMBER) : "")) {	// check Caller ID if present
+    if (!isCIDOk(callid)) {	// check Caller ID if present
 	/*
 	 * Call was rejected based on Caller ID information.
 	 */
@@ -743,8 +743,33 @@ faxGettyApp::setRingsBeforeAnswer(int rings)
 }
 
 bool
-faxGettyApp::isCIDOk(const fxStr& cid)
+faxGettyApp::isCIDOk(const CallID& callid)
 {
+    if (qualifyCIDex.length()) {
+	const char* argv[callid.size()+3];
+	argv[0] = (const char*) qualifyCIDex;
+	argv[1] = (const char*) getModemDevice();
+	for (u_int i = 0; i < callid.size(); i++)
+	    argv[i+2] = (const char*) callid.id(i);
+	argv[callid.size()+2] = NULL;
+	pid_t pid = fork();
+	switch (pid) {
+	    case 0:
+		Sys::execv((const char*) qualifyCIDex, (char* const*) argv);
+		sleep(1);           // XXX give parent time
+		_exit(-1);
+	    case -1:
+		traceProtocol("Couldn't fork to run QualifyCID-Ex: %s", (const char*) qualifyCIDex);
+		break;
+	    default:
+		int estat = -1;
+		Sys::waitpid(pid, estat);
+		if (estat != 0)
+		    return (false);	// qualifyCIDex rejects call
+		break;
+	}
+    }
+    const fxStr cid = callid.size() > CallID::NUMBER ? callid.id(CallID::NUMBER) : "";
     updatePatterns(qualifyCID, cidPats, acceptCID, lastCIDModTime);
     return (qualifyCID == "" ? true : checkACL(cid, cidPats, *acceptCID));
 }
@@ -987,6 +1012,7 @@ faxGettyApp::resetConfig()
 
 faxGettyApp::stringtag faxGettyApp::strings[] = {
 { "qualifycid",		&faxGettyApp::qualifyCID },
+{ "qualifycid-ex",	&faxGettyApp::qualifyCIDex },
 { "gettyargs",		&faxGettyApp::gettyArgs },
 { "vgettyargs",		&faxGettyApp::vgettyArgs },
 { "egettyargs",		&faxGettyApp::egettyArgs },

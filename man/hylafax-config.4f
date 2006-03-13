@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 98 2006-03-03 05:36:46Z faxguy $
+.\"	$Id: hylafax-config.4f 108 2006-03-13 19:31:13Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-03-02 21:36:46 -0800 (Thu, 02 Mar 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-03-13 11:31:13 -0800 (Mon, 13 Mar 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -188,6 +188,7 @@ PostScriptTimeout\(S1	integer	\s-1300\s+1	timeout on \*(Ps interpreter runs (sec
 PriorityScheduling	boolean	\s-1\fIsee below\fP\s+1	use available priority job scheduling mechanism
 PS2FaxCmd\(S1	string	\s-1bin/ps2fax\s+1	\*(Ps \s-1RIP\s+1 command script
 QualifyCID	string	\-	file of Caller-ID or DNIS patterns for checking inbound calls
+QualifyCID-Ex	string	\-	executable file for inbound CallID checking
 QualifyPWD	string	\-	file of \s-1PWD\s+1 patterns for qualifying senders
 QualifyTSI	string	\-	file of \s-1TSI\s+1 patterns for qualifying senders
 RecvDataFormat	string	\s-1adaptive\s+1	format for received facsimile data
@@ -1218,6 +1219,18 @@ The
 .B CallIDPattern
 parameters must also be setup to reflect the manner in which
 the modem returns call identification information to the host.
+.TP
+.B QualifyCID-Ex
+A string that specifies an executable file to run with the arguments of 
+device name first followed by all
+.B CallIDPattern
+matches for each incoming call.
+.B QualifyCID-Ex
+is run just before checking against
+.B QualifyCID,
+and if
+.B QualifyCID-Ex
+exits with a non-zero value, then the call will be rejected.
 .TP
 .B QualifyPWD
 A string that specifies whether or not the identity of 
