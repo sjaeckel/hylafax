@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 109 2006-03-14 02:43:16Z faxguy $ */
+/*	$Id: Class1.c++ 112 2006-03-14 20:53:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -697,12 +697,12 @@ bool
 Class1Modem::recvRawFrame(HDLCFrame& frame)
 {
     /*
-     * The spec says that a frame that takes between
-     * 2.55 and 3.45 seconds to be received may be
-     * discarded; we also add some time for DCE
-     * to detect and strip flags. 
+     * We need to be generous here ... given that
+     * some frames can be long and some devices
+     * can add lots of flags to the signalling.
+     * 5 sec appears to be too short.
      */
-    startTimeout(5000);
+    startTimeout(conf.t2Timer);
     /*
      * Strip HDLC frame flags. This is not needed,
      * (according to the standard DCE does the job),
