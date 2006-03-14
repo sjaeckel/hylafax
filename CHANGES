@@ -1,7 +1,8 @@
-#	$Id: CHANGES 109 2006-03-14 02:43:16Z faxguy $	
+#	$Id: CHANGES 112 2006-03-14 20:53:03Z faxguy $	
 
 New Changes
 
+* extend timeout in V.21 HDLC frame reception to T2 (14 Mar 2006)
 * fix faxgetty hang in ECM due to missing timeouts (13 Mar 2006)
 * add QualifyCID-Ex support (13 Mar 2006)
 * fix parsing error in DICTDOCSTEXT4 (10 Mar 2006)
