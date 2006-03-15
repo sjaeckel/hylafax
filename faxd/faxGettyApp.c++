@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 110 2006-03-14 07:17:40Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 113 2006-03-15 13:22:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -64,9 +64,6 @@ faxGettyApp::faxGettyApp(const fxStr& devName, const fxStr& devID)
 {
     devfifo = -1;
     modemLock = NULL;
-    lastCIDModTime = 0;
-    cidPats = NULL;
-    acceptCID = NULL;
     setupConfig();
 
     fxAssert(_instance == NULL, "Cannot create multiple faxGettyApp instances");
@@ -75,8 +72,6 @@ faxGettyApp::faxGettyApp(const fxStr& devName, const fxStr& devID)
 
 faxGettyApp::~faxGettyApp()
 {
-    delete acceptCID;
-    delete cidPats;
     delete modemLock;
 }
 
@@ -330,62 +325,66 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
     bool callResolved;
     bool advanceRotary = true;
     fxStr emsg;
-    if (!isCIDOk(callid)) {	// check Caller ID if present
+    bool oktoanswer = true;
+    fxStr callid_formatted = "";
+    for (u_int i = 0; i < callid.size(); i++)
+	callid_formatted.append(quote | callid.id(i) | enquote);
+    if (callid_formatted.length()) traceProtocol("CallID:%s", (const char*) callid_formatted);
+    if (dynamicConfig.length()) {
+	fxStr cmd(dynamicConfig | quote | getModemDevice() | enquote | callid_formatted);
+	fxStr localid = "";
+	int pipefd[2], idlength, status;
+	char line[1024];
+	pipe(pipefd);
+	pid_t pid = fork();
+	switch (pid) {
+	    case -1:
+		emsg = "Could not fork for local ID.";
+		logError("%s", (const char*)emsg);
+		Sys::close(pipefd[0]);
+		Sys::close(pipefd[1]);
+		break;
+	    case  0:
+		dup2(pipefd[1], STDOUT_FILENO);
+		Sys::close(pipefd[0]);
+		Sys::close(pipefd[1]);
+		execl("/bin/sh", "sh", "-c", (const char*) cmd, (char*) NULL);
+		sleep(1);
+		exit(1);
+	    default:
+		Sys::close(pipefd[1]);
+		{
+		    FILE* fd = fdopen(pipefd[0], "r");
+		    while (fgets(line, sizeof (line)-1, fd)) {
+			line[strlen(line)-1]='\0';		// Nuke \n at end of line
+			if (strcasecmp(line, "REJECT") == 0) {
+			    oktoanswer = false;
+			} else {
+			    (void) readConfigItem(line);
+			}
+		    }
+		    Sys::waitpid(pid, status);
+		    if (status != 0) {
+			emsg = fxStr::format("Bad exit status %#o for \'%s\'", status, (const char*) cmd);
+			logError("%s", (const char*)emsg);
+		    }
+		    // modem settings may have changed...
+		    FaxModem* modem = (FaxModem*) ModemServer::getModem();
+		    modem->pokeConfig(false);
+		}
+		Sys::close(pipefd[0]);
+		break;
+	}
+    }
+    if (!oktoanswer) {		// call rejected by DynamicConfig
 	/*
 	 * Call was rejected based on Caller ID information.
 	 */
-	emsg = "ANSWER: CID REJECTED";
+	emsg = "ANSWER: CALL REJECTED";
 	traceServer("%s", (const char*)emsg);
 	callResolved = false;
 	advanceRotary = false;
     } else {
-	fxStr callid_formatted = "";
-	for (u_int i = 0; i < callid.size(); i++)
-	    callid_formatted.append(quote | callid.id(i) | enquote);
-	if (callid_formatted.length()) traceProtocol("CallID:%s", (const char*) callid_formatted);
-	if (dynamicConfig.length()) {
-	    fxStr cmd(dynamicConfig | quote | getModemDevice() | enquote | callid_formatted);
-	    fxStr localid = "";
-	    int pipefd[2], idlength, status;
-	    char line[1024];
-	    pipe(pipefd);
-	    pid_t pid = fork();
-	    switch (pid) {
-		case -1:
-		    emsg = "Could not fork for local ID.";
-		    logError("%s", (const char*)emsg);
-		    Sys::close(pipefd[0]);
-		    Sys::close(pipefd[1]);
-		    break;
-		case  0:
-		    dup2(pipefd[1], STDOUT_FILENO);
-		    Sys::close(pipefd[0]);
-		    Sys::close(pipefd[1]);
-		    execl("/bin/sh", "sh", "-c", (const char*) cmd, (char*) NULL);
-		    sleep(1);
-		    exit(1);
-		default:
-		    Sys::close(pipefd[1]);
-		    {
-			FILE* fd = fdopen(pipefd[0], "r");
-			while (fgets(line, sizeof (line)-1, fd)){
-			    line[strlen(line)-1]='\0';		// Nuke \n at end of line
-			    (void) readConfigItem(line);
-			}
-			Sys::waitpid(pid, status);
-			if (status != 0)
-			{
-			    emsg = fxStr::format("Bad exit status %#o for \'%s\'", status, (const char*) cmd);
-			    logError("%s", (const char*)emsg);
-			}
-			// modem settings may have changed...
-			FaxModem* modem = (FaxModem*) ModemServer::getModem();
-			modem->pokeConfig(false);
-		    }
-		    Sys::close(pipefd[0]);
-		    break;
-	    }
-	}
 	if (ctype != ClassModem::CALLTYPE_UNKNOWN) {
 	    /*
 	     * Distinctive ring or other means has already identified
@@ -742,41 +741,6 @@ faxGettyApp::setRingsBeforeAnswer(int rings)
     }
 }
 
-bool
-faxGettyApp::isCIDOk(const CallID& callid)
-{
-    if (qualifyCIDex.length()) {
-	const char* argv[callid.size()+3];
-	argv[0] = (const char*) qualifyCIDex;
-	argv[1] = (const char*) getModemDevice();
-	for (u_int i = 0; i < callid.size(); i++)
-	    argv[i+2] = (const char*) callid.id(i);
-	argv[callid.size()+2] = NULL;
-	pid_t pid = fork();
-	switch (pid) {
-	    case 0:
-		errno = 0;
-		Sys::execv((const char*) qualifyCIDex, (char* const*) argv);
-		if (errno)
-		    traceProtocol("Couldn't run QualifyCID-Ex, %s: %s", (const char*) qualifyCIDex, strerror(errno));
-		sleep(1);           // XXX give parent time
-		_exit(-1);
-	    case -1:
-		traceProtocol("Couldn't fork to run QualifyCID-Ex, %s: %s", (const char*) qualifyCIDex, strerror(errno));
-		break;
-	    default:
-		int estat = -1;
-		Sys::waitpid(pid, estat);
-		if (estat != 0)
-		    return (false);	// qualifyCIDex rejects call
-		break;
-	}
-    }
-    const fxStr cid = callid.size() > CallID::NUMBER ? callid.id(CallID::NUMBER) : "";
-    updatePatterns(qualifyCID, cidPats, acceptCID, lastCIDModTime);
-    return (qualifyCID == "" ? true : checkACL(cid, cidPats, *acceptCID));
-}
-
 /*
  * Notification handlers.
  */
@@ -1014,8 +978,6 @@ faxGettyApp::resetConfig()
 #define	N(a)	(sizeof (a) / sizeof (a[0]))
 
 faxGettyApp::stringtag faxGettyApp::strings[] = {
-{ "qualifycid",		&faxGettyApp::qualifyCID },
-{ "qualifycid-ex",	&faxGettyApp::qualifyCIDex },
 { "gettyargs",		&faxGettyApp::gettyArgs },
 { "vgettyargs",		&faxGettyApp::vgettyArgs },
 { "egettyargs",		&faxGettyApp::egettyArgs },

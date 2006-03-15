@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 108 2006-03-13 19:31:13Z faxguy $
+.\"	$Id: hylafax-config.4f 113 2006-03-15 13:22:37Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-03-13 11:31:13 -0800 (Mon, 13 Mar 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-03-15 05:22:37 -0800 (Wed, 15 Mar 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -187,8 +187,6 @@ PollRcvdCmd	string	\s-1bin/pollrcvd\s+1	delivery script for facsimile received b
 PostScriptTimeout\(S1	integer	\s-1300\s+1	timeout on \*(Ps interpreter runs (secs)
 PriorityScheduling	boolean	\s-1\fIsee below\fP\s+1	use available priority job scheduling mechanism
 PS2FaxCmd\(S1	string	\s-1bin/ps2fax\s+1	\*(Ps \s-1RIP\s+1 command script
-QualifyCID	string	\-	file of Caller-ID or DNIS patterns for checking inbound calls
-QualifyCID-Ex	string	\-	executable file for inbound CallID checking
 QualifyPWD	string	\-	file of \s-1PWD\s+1 patterns for qualifying senders
 QualifyTSI	string	\-	file of \s-1TSI\s+1 patterns for qualifying senders
 RecvDataFormat	string	\s-1adaptive\s+1	format for received facsimile data
@@ -768,7 +766,7 @@ and
 .TP
 .B DynamicConfig
 The pathname of the optional shell script, e.g. ``etc/localid'', that 
-makes dynamic configuration changes, i.e., to 
+performs call rejection and makes dynamic configuration changes, i.e., to 
 .B LocalIdentifier,
 based on device ID and call identification.  The script is passed those
 values as the parameters ($1 = device id, $2 = CallID1, $3 = CallID2, $4 = CallID3, ...), 
@@ -779,7 +777,9 @@ configuration items to change in a ``parameter:value'' format, i.e.
 to be changed, then each item must be on its own line.
 This is commonly used to dynamically alter the local identification 
 of systems which use DID/DNIS, but it can also be used to allow different
-modem configurations for different senders.
+modem configurations for different senders.  To reject calls
+.B DynamicConfig
+should send ``REJECT'' on standard output.
 Note that this script must be marked as executable by the faxgetty process.
 .TP
 .B FAXNumber
@@ -1194,43 +1194,6 @@ for transmission to
 suitable for transmission;
 see
 .IR ps2fax (${MANNUM1_8}).
-.TP
-.B QualifyCID
-A string that specifies whether or not \fIcall identification information\fP
-should be checked against an access control list before accepting
-an inbound call.
-If 
-.B QualifyCID
-is non-null and there is call identification service,
-then only calls with 
-.B CallID1
-data matching identifications
-in the file specified by this string (typically \fBetc/cid\fP)
-will be accepted; see
-.IR callid (${MANNUM4_5}).
-If
-.B QualifyCID
-is not specified in the configuration file, or the value is
-null, then all incoming calls will be answerable.
-Note that call identification screening is only available when this
-service is enabled on the phone line and the modem is capable of
-presenting that information to the host.
-The
-.B CallIDPattern
-parameters must also be setup to reflect the manner in which
-the modem returns call identification information to the host.
-.TP
-.B QualifyCID-Ex
-A string that specifies an executable file to run with the arguments of 
-device name first followed by all
-.B CallIDPattern
-matches for each incoming call.
-.B QualifyCID-Ex
-is run just before checking against
-.B QualifyCID,
-and if
-.B QualifyCID-Ex
-exits with a non-zero value, then the call will be rejected.
 .TP
 .B QualifyPWD
 A string that specifies whether or not the identity of 
