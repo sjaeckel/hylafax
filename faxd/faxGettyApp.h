@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.h 108 2006-03-13 19:31:13Z faxguy $ */
+/*	$Id: faxGettyApp.h 113 2006-03-15 13:22:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -67,11 +67,6 @@ private:
 
     u_short	ringsBeforeAnswer;	// # rings to wait
     u_short	ringsHeard;		// # rings received
-    fxStr	qualifyCID;		// if set, no answer w/o acceptable cid
-    fxStr	qualifyCIDex;		// if set, executable to run to check cid
-    time_t	lastCIDModTime;		// last mod time of CID patterns file
-    REArray*	cidPats;		// recv cid patterns
-    fxBoolArray* acceptCID;		// accept/reject matched cid
     CallID	received_callid;	// non-null received CNID
     fxStr	gettyArgs;		// getty arguments
     fxStr	vgettyArgs;		// voice getty arguments
@@ -110,7 +105,6 @@ private:
     bool	setupModem(bool isSend);
     void	discardModem(bool dropDTR);
 // inbound call handling
-    bool	isCIDOk(const CallID& callid);
     bool	processCall(CallType ctype, fxStr& emsg, const CallID& callid);
     CallType	runGetty(const char* what,
 		    Getty* (*newgetty)(const fxStr&, const fxStr&),

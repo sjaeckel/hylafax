@@ -1,10 +1,10 @@
-#	$Id: CHANGES 112 2006-03-14 20:53:03Z faxguy $	
+#	$Id: CHANGES 113 2006-03-15 13:22:37Z faxguy $	
 
 New Changes
 
+* remove QualifyCID in lieu of DynamicConfig REJECT (15 Mar 2006)
 * extend timeout in V.21 HDLC frame reception to T2 (14 Mar 2006)
 * fix faxgetty hang in ECM due to missing timeouts (13 Mar 2006)
-* add QualifyCID-Ex support (13 Mar 2006)
 * fix parsing error in DICTDOCSTEXT4 (10 Mar 2006)
 * improve and extend JPEG parsing (8 Mar 2006)
 * set minimum V.34 constrain threshold to 4800 bps (6 Mar 2006)
