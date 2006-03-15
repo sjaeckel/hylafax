@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 113 2006-03-15 13:22:37Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 114 2006-03-15 16:49:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -325,13 +325,25 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
     bool callResolved;
     bool advanceRotary = true;
     fxStr emsg;
-    bool oktoanswer = true;
+
     fxStr callid_formatted = "";
+
+    /*
+     * We default to accepting all calls.
+     * If the DynamicConfig set's RejectCall to true, then we
+     * will reject it.
+     */
+    rejectCall = false;
+
     for (u_int i = 0; i < callid.size(); i++)
 	callid_formatted.append(quote | callid.id(i) | enquote);
-    if (callid_formatted.length()) traceProtocol("CallID:%s", (const char*) callid_formatted);
+
+    if (callid_formatted.length())
+    	traceProtocol("CallID:%s", (const char*) callid_formatted);
+
     if (dynamicConfig.length()) {
 	fxStr cmd(dynamicConfig | quote | getModemDevice() | enquote | callid_formatted);
+	traceServer("DynamicConfig: %s", (const char*)cmd);
 	fxStr localid = "";
 	int pipefd[2], idlength, status;
 	char line[1024];
@@ -355,16 +367,13 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
 		Sys::close(pipefd[1]);
 		{
 		    FILE* fd = fdopen(pipefd[0], "r");
-		    while (fgets(line, sizeof (line)-1, fd)) {
+		    while (fgets(line, sizeof (line)-1, fd)){
 			line[strlen(line)-1]='\0';		// Nuke \n at end of line
-			if (strcasecmp(line, "REJECT") == 0) {
-			    oktoanswer = false;
-			} else {
-			    (void) readConfigItem(line);
-			}
+			(void) readConfigItem(line);
 		    }
 		    Sys::waitpid(pid, status);
-		    if (status != 0) {
+		    if (status != 0)
+		    {
 			emsg = fxStr::format("Bad exit status %#o for \'%s\'", status, (const char*) cmd);
 			logError("%s", (const char*)emsg);
 		    }
@@ -376,7 +385,9 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
 		break;
 	}
     }
-    if (!oktoanswer) {		// call rejected by DynamicConfig
+
+    if (rejectCall)
+    {
 	/*
 	 * Call was rejected based on Caller ID information.
 	 */
@@ -993,6 +1004,7 @@ faxGettyApp::booltag faxGettyApp::booleans[] = {
 { "lockvoicecalls",	&faxGettyApp::lockVoiceCalls,	true },
 { "lockexterncalls",	&faxGettyApp::lockExternCalls,	true },
 { "logcalls",		&faxGettyApp::logCalls,		true },
+{ "rejectcall",		&faxGettyApp::rejectCall,	false },
 };
 
 void

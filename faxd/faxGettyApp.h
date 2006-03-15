@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.h 113 2006-03-15 13:22:37Z faxguy $ */
+/*	$Id: faxGettyApp.h 114 2006-03-15 16:49:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -83,6 +83,7 @@ private:
     fxStr	dynamicConfig;		// command to dynamically alter configuration
     u_int	modemPriority;		// modem priority passed to faxq
     bool	logCalls;		// Log all calls for FaxAcctInfo
+    bool	rejectCall;
 
     static faxGettyApp* _instance;
 
