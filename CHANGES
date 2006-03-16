@@ -1,7 +1,8 @@
-#	$Id: CHANGES 114 2006-03-15 16:49:41Z faxguy $	
+#	$Id: CHANGES 116 2006-03-17 00:00:15Z faxguy $	
 
 New Changes
 
+* add linux-isdn-2 prototype config file (16 Mar 2006)
 * remove QualifyCID in lieu of DynamicConfig RejectCall (15 Mar 2006)
 * extend timeout in V.21 HDLC frame reception to T2 (14 Mar 2006)
 * fix faxgetty hang in ECM due to missing timeouts (13 Mar 2006)
