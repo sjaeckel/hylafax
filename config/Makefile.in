@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 92 2006-02-20 22:05:19Z faxguy $
+#	$Id: Makefile.in 116 2006-03-17 00:00:15Z faxguy $
 #
 # @WARNING@
 #
@@ -73,6 +73,7 @@ CONFIGFILES=class1 \
 	hayes \
 	iaxmodem \
 	intel-400e \
+	linux-isdn-2 \
 	lucent \
 	lucent-isa \
 	lucent-mt-2 \
