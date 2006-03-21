@@ -1,4 +1,4 @@
-/* $Id: NSF.h 2 2005-11-11 21:32:03Z faxguy $ */
+/* $Id: NSF.h 118 2006-03-21 23:57:33Z faxguy $ */
 /* 
  * This file does not exist in the original HylaFAX distribution.
  * Created by Dmitry Bely, April 2000
@@ -60,7 +60,7 @@ private:
     void clear();
     void loadHexData( const char* hexNSF, bool useHex );
     void loadRawData( const u_char* rawData, int size, const u_char* revTab );
-    void findStationId( bool reverseOrder );
+    void findStationId( bool reverseOrder, u_int vendorIdSize );
     void decode();
 };
 

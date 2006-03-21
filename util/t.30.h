@@ -1,4 +1,4 @@
-/*	$Id: t.30.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: t.30.h 118 2006-03-21 23:57:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -62,8 +62,8 @@
 
 #define	TCF_DURATION	1500		// 1.5 seconds
 
-// this is our defined NSF manufacturer code in reverse bit-order
-#define HYLAFAX_NSF	"\255\000\125"
+// this is our defined NSF manufacturer code
+#define HYLAFAX_NSF	"\xB5\x00\xAA"
 
 /*
  * Facsimile control field (FCF) values
