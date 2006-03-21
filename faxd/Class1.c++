@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 112 2006-03-14 20:53:03Z faxguy $ */
+/*	$Id: Class1.c++ 117 2006-03-21 14:28:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -530,7 +530,8 @@ Class1Modem::renegotiatePrimary(bool constrain)
     buf[size++] = 0x6C;					// <DLE><pph>
     if (!putModemData(buf, size)) return (false);
     if (constrain)
-	protoTrace("Request primary rate renegotiation (limit %u bit/s).", primaryV34Rate > 2 ? (primaryV34Rate-2)*2400 : 2400);
+	protoTrace("Request primary rate renegotiation (limit %u bit/s).", 
+	    primaryV34Rate == 1 ? 2400 : primaryV34Rate > 3 ? (primaryV34Rate-2)*2400 : 4800);
     else
 	protoTrace("Request primary rate renegotiation.");
     return (true);
