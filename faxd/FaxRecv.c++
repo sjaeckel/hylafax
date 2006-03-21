@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 100 2006-03-03 23:32:08Z faxguy $ */
+/*	$Id: FaxRecv.c++ 119 2006-03-21 23:59:32Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -64,6 +64,9 @@ FaxServer::recvFax(const CallID& callid, fxStr& emsg)
     if (tif) {
 	recvPages = 0;			// total count of received pages
 	fileStart = pageStart = Sys::now();
+
+	modem->flushModemInput();
+
 	if (faxRecognized = modem->recvBegin(emsg)) {
 	    /*
 	     * If the system is busy then notifyRecvBegun may not return
