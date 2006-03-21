@@ -1,7 +1,8 @@
-#	$Id: CHANGES 118 2006-03-21 23:57:33Z faxguy $	
+#	$Id: CHANGES 119 2006-03-21 23:59:32Z faxguy $	
 
 New Changes
 
+* flush modem I/O on receptions before sending any data (21 Mar 2006)
 * add German NSFs and correct HylaFAX NSF bit order (21 Mar 2006)
 * add linux-isdn-2 prototype config file (16 Mar 2006)
 * remove QualifyCID in lieu of DynamicConfig RejectCall (15 Mar 2006)
