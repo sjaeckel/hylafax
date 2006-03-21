@@ -1,7 +1,8 @@
-#	$Id: CHANGES 116 2006-03-17 00:00:15Z faxguy $	
+#	$Id: CHANGES 118 2006-03-21 23:57:33Z faxguy $	
 
 New Changes
 
+* add German NSFs and correct HylaFAX NSF bit order (21 Mar 2006)
 * add linux-isdn-2 prototype config file (16 Mar 2006)
 * remove QualifyCID in lieu of DynamicConfig RejectCall (15 Mar 2006)
 * extend timeout in V.21 HDLC frame reception to T2 (14 Mar 2006)
