@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.h 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: pageSendApp.h 121 2006-03-23 20:15:40Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -123,7 +123,7 @@ public:
     void	open();
     void	close();
 
-    FaxSendStatus send(const char* filename);
+    FaxSendStatus send(const char** filename, int num);
 
     bool	isReady() const;
 };
