@@ -1,7 +1,8 @@
-#	$Id: CHANGES 120 2006-03-23 16:19:42Z faxguy $	
+#	$Id: CHANGES 121 2006-03-23 20:15:40Z faxguy $	
 
 New Changes
 
+* fix batch sending of page jobs (23 Mar 2006)
 * flush modem I/O on receptions before sending any data (21 Mar 2006)
 * add German NSFs and correct HylaFAX NSF bit order (21 Mar 2006)
 * add linux-isdn-2 prototype config file (16 Mar 2006)
