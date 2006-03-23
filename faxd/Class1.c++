@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 117 2006-03-21 14:28:43Z faxguy $ */
+/*	$Id: Class1.c++ 120 2006-03-23 16:19:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -701,9 +701,14 @@ Class1Modem::recvRawFrame(HDLCFrame& frame)
      * We need to be generous here ... given that
      * some frames can be long and some devices
      * can add lots of flags to the signalling.
-     * 5 sec appears to be too short.
+     * Adhering to the spec too closely, 5 sec,
+     * appears to be too conservative; if the modem
+     * has said CONNECT, then it should be
+     * responsible enough to carry-through with
+     * things.  A timeout here is only needed to
+     * reign-in modems that don't carry-through.
      */
-    startTimeout(conf.t2Timer);
+    startTimeout(10000);
     /*
      * Strip HDLC frame flags. This is not needed,
      * (according to the standard DCE does the job),
