@@ -1,4 +1,4 @@
-#	$Id: CHANGES 119 2006-03-21 23:59:32Z faxguy $	
+#	$Id: CHANGES 120 2006-03-23 16:19:42Z faxguy $	
 
 New Changes
 
@@ -6,7 +6,7 @@ New Changes
 * add German NSFs and correct HylaFAX NSF bit order (21 Mar 2006)
 * add linux-isdn-2 prototype config file (16 Mar 2006)
 * remove QualifyCID in lieu of DynamicConfig RejectCall (15 Mar 2006)
-* extend timeout in V.21 HDLC frame reception to T2 (14 Mar 2006)
+* extend timeout in V.21 HDLC frame reception to T2 (14, 23 Mar 2006)
 * fix faxgetty hang in ECM due to missing timeouts (13 Mar 2006)
 * fix parsing error in DICTDOCSTEXT4 (10 Mar 2006)
 * improve and extend JPEG parsing (8 Mar 2006)
