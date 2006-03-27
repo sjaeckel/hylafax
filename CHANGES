@@ -1,4 +1,4 @@
-#	$Id: CHANGES 121 2006-03-23 20:15:40Z faxguy $	
+#	$Id: CHANGES 123 2006-03-27 23:27:53Z faxguy $	
 
 New Changes
 
@@ -13,7 +13,7 @@ New Changes
 * improve and extend JPEG parsing (8 Mar 2006)
 * set minimum V.34 constrain threshold to 4800 bps (6 Mar 2006)
 * improve the reaction to a V.34 control channel retrain (6 Mar 2006)
-* fix SNPP login reply to say 250 instead of 230 (3 Mar 2006)
+* fix SNPP login reply to say 250 instead of 230 (3, 27 Mar 2006)
 * use TZ environment variable instead of etc/localtime (3 Mar 2006)
 * fix %1z RcvFmt output (3 Mar 2006)
 * expand Class1JBIGSupport to allow for differentiation
