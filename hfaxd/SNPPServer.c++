@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++ 102 2006-03-04 00:47:06Z faxguy $ */
+/*	$Id: SNPPServer.c++ 123 2006-03-27 23:27:53Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1017,7 +1017,7 @@ SNPPServer::loginCmd(const char* loginID, const char* pass)
 		return;
 	    }
 	}
-	login(true);
+	login(250);
     } else {
 	if (++loginAttempts >= maxLoginAttempts) {
 	    reply(421, "Login incorrect (closing connection).");
