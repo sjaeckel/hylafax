@@ -1,7 +1,8 @@
-#	$Id: CHANGES 123 2006-03-27 23:27:53Z faxguy $	
+#	$Id: CHANGES 124 2006-03-29 02:15:14Z faxguy $	
 
 New Changes
 
+* add -nointeractive option to faxsetup (28 Mar 2006)
 * fix batch sending of page jobs (23 Mar 2006)
 * flush modem I/O on receptions before sending any data (21 Mar 2006)
 * add German NSFs and correct HylaFAX NSF bit order (21 Mar 2006)
