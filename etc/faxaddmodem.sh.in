@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 89 2006-02-15 18:13:58Z faxguy $
+#	$Id: faxaddmodem.sh.in 125 2006-03-29 05:56:19Z faxguy $
 #
 # @WARNING@
 #
@@ -45,11 +45,15 @@
 #
 SPOOL=@SPOOL@
 
+INTERACTIVE=yes
+SKELFILE=
 SPEED=
 while [ x"$1" != x"" ] ; do
     case $1 in
     -s)	    SPEED=$2; shift;;
-    -*)	    echo "Usage: $0 [-s SPEED] [ttyname]"; exit 1;;
+    -nointeractive)	INTERACTIVE=no;;
+    -skel=*)		SKELFILE="`echo $1 | sed 's/^-skel=//'`";;
+    -*)	    echo "Usage: $0 [-s SPEED] [-nointeractive] [-skel=proto_file] [ttyname]"; exit 1;;
     *)	    TTY=$1;;
     esac
     shift
@@ -140,7 +144,13 @@ promptForNonNullStringParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    echo
+	    x=
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -156,7 +166,13 @@ promptForNonNullStringParameter()
 #
 promptForStringParameter()
 {
-    prompt "$2 [$1]?"; read x
+    prompt "$2 [$1]?";
+    if [ "$INTERACTIVE" != "no" ]; then
+	read x
+    else
+	echo
+	x=
+    fi
     if [ "$x" ]; then
 	# strip leading and trailing white space
 	x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -173,7 +189,13 @@ promptForNumericParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    echo
+	    x=
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -198,7 +220,13 @@ promptForCStyleNumericParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    echo
+	    x=
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space and C-style 0x prefix
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -223,7 +251,13 @@ promptForBooleanParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    echo
+	    x=
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -553,7 +587,13 @@ promptForSpeakerVolume()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "Modem speaker volume [$SpeakerVolume]?"; read x
+	prompt "Modem speaker volume [$SpeakerVolume]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    echo
+	    x=
+	fi
 	if [ "$x" != "" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -672,7 +712,11 @@ if [ -f $OLDCONFIG ]; then
 else
     echo "No existing configuration, let's do this from scratch."
     echo ""
-    getServerParameters $MODEMCONFIG/skel # get from skeletal file
+    if [ -n "$SKELFILE" ]; then
+	getServerParameters "$SKELFILE" # get from specified skeletal file
+    else
+	getServerParameters $MODEMCONFIG/skel # get from skeletal file
+    fi
     ok="prompt"				# prompt for parameters
 fi
 
@@ -745,7 +789,13 @@ EOF
     if [ "$TagLineFont" != "" -a "$TagLineFont" != '""' ]; then
 	checkForLocalFile $TagLineFont "tag line font";
     fi
-    printServerConfig; prompt "Are these ok [yes]?"; read ok
+    printServerConfig; prompt "Are these ok [yes]?";
+    if [ "$INTERACTIVE" != "no" ]; then
+	read ok
+    else
+	echo
+	ok=
+    fi
 done
 
 #
@@ -923,7 +973,13 @@ promptForFlowControlParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    echo
+	    x=
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -1168,7 +1224,12 @@ EOF
 	while [ "`echo \" $MODEMCLASSES \" | $GREP \" $x \"`" = "" ]; do
 	    echo $SUPPORT
 	    prompt "How should it be configured [$DEFAULTCLASS]?";
-	    read x
+	    if [ "$INTERACTIVE" != "no" ]; then
+		read x
+	    else
+		echo
+		x=
+	    fi
 	    if [ "$x" = "" ]; then x=$DEFAULTCLASS; fi
 	done
 	echo ""
@@ -1198,10 +1259,19 @@ if [ ! -f $proto ]; then
     echo ""
     if [ "$ProtoType" != "skel" ]; then
         prompt "Do you want to continue using the skeletal configuration file [yes]?"
-        read x
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    echo
+	    x=
+	fi
 	isOK $x || exit 1
 	ProtoType=skel;
-	proto=$MODEMCONFIG/$ProtoType;
+	if [ -n "$SKELFILE" ]; then
+	    proto="$SKELFILE"
+	else
+	    proto=$MODEMCONFIG/$ProtoType;
+	fi
 	if [ ! -f $proto ]; then
 	    cat<<EOF
 
@@ -1222,7 +1292,13 @@ fi
 #
 promptForATCmdParameter()
 {
-    prompt "$2 [$1]?"; read x
+    prompt "$2 [$1]?";
+    if [ "$INTERACTIVE" != "no" ]; then
+	read x
+    else
+	echo
+	x=
+    fi
     if [ "$x" ]; then
 	# strip leading and trailing white space, quote marks;
 	# redouble any backslashes lost through shell processing
@@ -1243,7 +1319,13 @@ promptForBitOrderParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    echo
+	    x=
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -1428,7 +1510,12 @@ checkFlowControlAgainstTTY()
 	    echo "Warning, the modem is setup to use software flow control,"
 	    echo "but the \"$TTY\" device is used with hardware flow control"
 	    prompt "Do you want to use \"ttym${PORT}\" instead [yes]?"
-	    read x
+	    if [ "$INTERACTIVE" != "no" ]; then
+		read x
+	    else
+		echo
+		x=
+	    fi
 	    if isOK $x; then
 		TTY="ttym${PORT}"
 		DEVID="`echo $TTY | tr '/' '_'`"
@@ -1442,7 +1529,12 @@ checkFlowControlAgainstTTY()
 	    echo "Warning, the modem is setup to use hardware flow control,"
 	    echo "but the \"$TTY\" device does not honor the RTS/CTS signals."
 	    prompt "Do you want to use \"ttyf${PORT}\" instead [yes]?"
-	    read x
+	    if [ "$INTERACTIVE" != "no" ]; then
+		read x
+	    else
+		echo
+		x=
+	    fi
 	    if isOK $x; then
 		TTY="ttyf${PORT}"
 		DEVID="`echo $TTY | tr '/' '_'`"
@@ -1696,7 +1788,13 @@ while isNotOK $ok; do
     # XXX not sure what kind of consistency checking that can
     # be done w/o knowing more about the modem...
     #
-    prompt "Are these ok [yes]?"; read ok
+    prompt "Are these ok [yes]?";
+    if [ "$INTERACTIVE" != "no" ]; then
+	read ok
+    else
+	echo
+	ok=
+    fi
 done
 TMPSED=$TMPDIR/faxsed$$; JUNK="$JUNK $TMPSED"
 (echoServerSedCommands; echoModemSedCommands)>$TMPSED
@@ -1980,7 +2078,13 @@ EOF
     if [ "$DestControls" != "" -a "$DestControls" != '""' ]; then
 	checkForLocalFile $DestControls "destination controls";
     fi
-    printSchedulerConfig; prompt "Are these ok [yes]?"; read ok
+    printSchedulerConfig; prompt "Are these ok [yes]?";
+    if [ "$INTERACTIVE" != "no" ]; then
+	read ok
+    else
+	echo
+	ok=
+    fi
 done
 
 if [ $updateConfig = yes ]; then
