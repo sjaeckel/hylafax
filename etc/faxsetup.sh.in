@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 101 2006-03-04 00:14:46Z faxguy $
+#	$Id: faxsetup.sh.in 124 2006-03-29 02:15:14Z faxguy $
 #
 # @WARNING@
 #
@@ -228,10 +228,13 @@ Options: [defaults in brackets after descriptions]
   -help                  print this message
   -quiet                 do not print 'Using ...' messages
   -verbose		 opposite of -quiet
+  -nointeractive         assume defaults for all prompts
 EOF
 }
 
 QUIET=no
+INTERACTIVE=no
+AREACODE=000
 isServer=no
 isClient=no
 
@@ -282,6 +285,7 @@ do
     -server)		isServer=yes;;
 
     -quiet)		QUIET=yes;;
+    -nointeractive)	INTERACTIVE=no;;
     -verbose)		QUIET=no;;
     -help)		usage; exit 0;;
     -*)
@@ -699,7 +703,7 @@ EOF
     #
     defaultLogFacility=daemon
     defaultCountryCode=1
-    defaultAreaCode=
+    defaultAreaCode=$AREACODE
     defaultLongDistancePrefix=1
     defaultInternationalPrefix=011
     defaultDialStringRules=\"etc/dialrules\"
@@ -1471,7 +1475,13 @@ promptForNonNullStringParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -1487,7 +1497,13 @@ promptForNonNullStringParameter()
 #
 promptForStringParameter()
 {
-    prompt "$2 [$1]?"; read x
+    prompt "$2 [$1]?";
+    if [ "$INTERACTIVE" != "no" ]; then
+	read x
+    else
+	x=
+	echo
+    fi
     if [ "$x" ]; then
 	# strip leading and trailing white space
 	x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -1504,7 +1520,13 @@ promptForNumericParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -1529,7 +1551,13 @@ promptForCStyleNumericParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space and C-style 0x prefix
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -1554,7 +1582,13 @@ promptForBooleanParameter()
 {
     x=""
     while [ -z "$x" ]; do
-	prompt "$2 [$1]?"; read x
+	prompt "$2 [$1]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	if [ "$x" ]; then
 	    # strip leading and trailing white space
 	    x=`echo "$x" | $SED -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
@@ -1681,7 +1715,12 @@ if onServer; then
 	echo ""
 	echo "You do not appear to have a \"$FAX\" user in the password file."
 	prompt "HylaFAX needs this to work properly, add it [yes]?"
-	read x
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	isOK $x && addFaxUser
     fi
     machdepPasswdWork
@@ -1742,7 +1781,12 @@ if [ -z "$x" ]; then
 
 	EOF
 	prompt "Should a hylafax entry be added to $SERVICES [yes]?"
-	read x
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	isOK $x && echo "$ENTRY" >>$SERVICES
     fi
 fi
@@ -1769,7 +1813,12 @@ if [ -z "$x" ]; then
 
 	EOF
 	prompt "Should an snpp entry be added to $SERVICES [yes]?"
-	read x
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	isOK $x && echo "$ENTRY" >>$SERVICES
     fi
 fi
@@ -1834,7 +1883,13 @@ manual setup if your operating system does not have a System-V
 style init program.
 
 EOF
-	    prompt "Should an entry be added to $INETDCONF [no]?"; read x
+	    prompt "Should an entry be added to $INETDCONF [no]?";
+	    if [ "$INTERACTIVE" != "no" ]; then
+		read x
+	    else
+		x=
+		echo
+	    fi
 	    if [ "$x" = y -o "$x" = yes ]; then
 		echo "$E" >>$INETDCONF;
 		signalINETD=yes
@@ -1851,7 +1906,13 @@ instead of $DIR_LIBEXEC/hfaxd.  You will need to correct
 this before client requests to submit jobs will be properly serviced.
 
 EOF
-		prompt "Should the entry in $INETDCONF be corrected [yes]?"; read x
+		prompt "Should the entry in $INETDCONF be corrected [yes]?";
+		if [ "$INTERACTIVE" != "no" ]; then
+		    read x
+		else
+		    x=
+		    echo
+		fi
 		isOK "$x" && editInetdConf
 	    fi
 	    if [ "$U" != $FAX ]; then
@@ -1865,7 +1926,13 @@ $U user instead of the $FAX user.  This must be corrected
 before client requests to submit jobs will be properly serviced.
 
 EOF
-		prompt "Should the entry in $INETDCONF be corrected [yes]?"; read x
+		prompt "Should the entry in $INETDCONF be corrected [yes]?";
+		if [ "$INTERACTIVE" != "no" ]; then
+		    read x
+		else
+		    x=
+		    echo
+		fi
 		isOK "$x" && editInetdConf
 	    fi
 	fi
@@ -1909,7 +1976,12 @@ if onServer; then
 
 	EOF
 	prompt "Should an entry be added for the FaxMaster to $ALIASES [yes]?"
-	read x
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	if isOK $x; then
 	    promptForNonNullStringParameter "${USER:-root}" \
 	       "Users to receive fax-related mail"
@@ -1992,7 +2064,13 @@ EOF
 	    done
 	fi
 	printConfig
-	prompt "Are these ok [yes]?"; read ok
+	prompt "Are these ok [yes]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read ok;
+	else
+	    ok=y
+	    echo
+	fi
 	test -z "$ok" && ok=yes
 	case "$ok" in
 	[1-4])	promptForParameter $ok;;
@@ -2199,7 +2277,13 @@ EOF
 	    if [ "$DestControls" != "" -a "$DestControls" != '""' ]; then
 		checkForLocalFile $DestControls "destination controls";
 	    fi
-	    printSchedulerConfig; prompt "Are these ok [yes]?"; read ok
+	    printSchedulerConfig; prompt "Are these ok [yes]?";
+	    if [ "$INTERACTIVE" != "no" ]; then
+		read ok
+	    else
+		ok=
+		echo
+	    fi
 	    isOK "$ok" && break
 	done
 
@@ -2252,7 +2336,13 @@ if onServer; then
     if [ "$FAXD" ]; then
 	echo ""
 	echo "You seem to be running FlexFAX (there are faxd processes)."
-	prompt "Is it ok to terminate these processes ($FAXD) [yes]?"; read x
+	prompt "Is it ok to terminate these processes ($FAXD) [yes]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	if isOK "$x"; then
 	    if kill $FAXD; then
 		echo "Sent a SIGTERM to processes $FAXD."
@@ -2276,7 +2366,13 @@ Something is hung.  The command
     
 did not terminate the faxd processes as expected.
 EOF
-		prompt "Should we continue to wait [no]?"; read x
+		prompt "Should we continue to wait [no]?";
+		if [ "$INTERACTIVE" != "no" ]; then
+		    read x
+		else
+		    x=
+		    echo
+		fi
 		isNotOK "$x" && break
 	    done
 	fi
@@ -2289,7 +2385,12 @@ You have a HylaFAX scheduler process running.  faxq will be
 restarted shortly, as soon as some other work has been completed.
 EOF
 	prompt "Can I terminate this faxq process ($FAXQ) [yes]?";
-	read x
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=
+	    echo
+	fi
 	if isOK "$x" ]; then
 	    $DIR_SBIN/faxquit >/dev/null 2>&1
 	    while true; do
@@ -2311,7 +2412,13 @@ Warning: faxq is busy with outbound jobs!
 faxq did not terminate in response to the faxquit command because
 there are subprocesses actively processing outbound jobs.
 EOF
-		    prompt "Should we continue to wait [yes]?"; read x
+		    prompt "Should we continue to wait [yes]?";
+		    if [ "$INTERACTIVE" != "no" ]; then
+			read x
+		    else
+			x=
+			echo
+		    fi
 		    isOK "$x" || break
 		else
 		    cat<<EOF
@@ -2322,7 +2429,13 @@ Something is hung, faxq did not terminate in response to the faxquit
 command.  There do not appear to be any faxsend or pagesend subprocesses
 actively handling outbound jobs so the reason for it running is unknown.
 EOF
-		    prompt "Should we continue to wait [no]?"; read x
+		    prompt "Should we continue to wait [no]?";
+		    if [ "$INTERACTIVE" != "no" ]; then
+			read x
+		    else
+			x=
+			echo
+		    fi
 		    isNotOK "$x" && break
 		fi
 	    done
@@ -2357,7 +2470,13 @@ EOF
 	fi
     fi
 
-    prompt "Should I restart the HylaFAX server processes [yes]?"; read x
+    prompt "Should I restart the HylaFAX server processes [yes]?";
+    if [ "$INTERACTIVE" != "no" ]; then
+	read x
+    else
+	x=
+	echo
+    fi
     if isOK "$x"; then
 	echo ""
 	if [ -x ${DIR_SYSVINIT}/hylafax ]; then
@@ -2375,7 +2494,13 @@ EOF
 You do not appear to have any modems configured for use.  Modems are
 configured for use with HylaFAX with the faxaddmodem(@MANNUM1_8@) command.
 EOF
-	prompt "Do you want to run faxaddmodem to configure a modem [yes]?"; read x
+	prompt "Do you want to run faxaddmodem to configure a modem [yes]?";
+	if [ "$INTERACTIVE" != "no" ]; then
+	    read x
+	else
+	    x=no
+	    echo
+	fi
 	while isOK "$x"; do
 	     $DIR_SBIN/faxaddmodem
 	     prompt "Do you want to run faxaddmodem to configure another modem [yes]?"; read x
@@ -2398,7 +2523,12 @@ processes are being started by init(@MANNUM1_8@) then sending each of them a
 QUIT message with the faxquit command should cause them to be restarted.
 EOF
 	    prompt "Is it ok to send a QUIT command to each process [yes]?"
-	    read x
+	    if [ "$INTERACTIVE" != "no" ]; then
+		read x
+	    else
+		x=
+		echo
+	    fi
 	    if isOK "$x"; then
 		for x in $DEVS; do
 		    devid="`expr $x : 'config.\(.*\)'`"
@@ -2423,7 +2553,12 @@ tty configuration file but did not notify init to re-read the file.
 
 EOF
 		prompt "Send init a SIGHUP so that it re-reads its configuration file [yes]?"
-		read x
+		if [ "$INTERACTIVE" != "no" ]; then
+		    read x
+		else
+		    x=
+		    echo
+		fi
 		if isOK "$x"; then
 		    init="`findproc init`"
 		    if [ "$init" ]; then
@@ -2450,7 +2585,12 @@ capabilities and supply the appropriate arguments).
 
 EOF
 		prompt "Should I run faxmodem for each configured modem [yes]?"
-		read x
+		if [ "$INTERACTIVE" != "no" ]; then
+		    read x
+		else
+		    x=no
+		    echo
+		fi
 		if isOK "$x"; then
 		    for x in $DEVS; do
 			devid="`expr $x : 'config.\(.*\)'`"
