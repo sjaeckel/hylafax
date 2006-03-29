@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 101 2006-03-04 00:14:46Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 127 2006-03-29 21:54:55Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -39,6 +39,7 @@
 #include <limits.h>
 #include <grp.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 const char* HylaFAXServer::version = HYLAFAX_VERSION;
 
