@@ -1,4 +1,4 @@
-#	$Id: CHANGES 126 2006-03-29 21:47:54Z faxguy $	
+#	$Id: CHANGES 127 2006-03-29 21:54:55Z faxguy $	
 
 New Changes
 
@@ -16,7 +16,7 @@ New Changes
 * set minimum V.34 constrain threshold to 4800 bps (6 Mar 2006)
 * improve the reaction to a V.34 control channel retrain (6 Mar 2006)
 * fix SNPP login reply to say 250 instead of 230 (3, 27 Mar 2006)
-* use TZ environment variable instead of etc/localtime (3 Mar 2006)
+* use TZ environment variable instead of etc/localtime (3, 29 Mar 2006)
 * fix %1z RcvFmt output (3 Mar 2006)
 * expand Class1JBIGSupport to allow for differentiation
   between full, none, send, and receive support (2 Mar 2006)
