@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: Makefile.in 129 2006-03-29 21:58:24Z faxguy $
 #
 # @WARNING@
 #
@@ -69,7 +69,6 @@ install: default ${SRCDIR}/faxcover.ps
 #
 # These targets are created during the configuration procedure.
 #
-clobber:
+clobberconfig:
 	-${RM} -f edit-faxcover.sh
-	-${RM} -f Makefile ${MKDEPFILE} .*dependtime .*incdepend
 
