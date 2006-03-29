@@ -1,7 +1,8 @@
-#	$Id: CHANGES 125 2006-03-29 05:56:19Z faxguy $	
+#	$Id: CHANGES 126 2006-03-29 21:47:54Z faxguy $	
 
 New Changes
 
+* update config.guess and config.sub (29 Mar 2006)
 * add -nointeractive option to faxsetup, faxaddmodem (28 Mar 2006)
 * fix batch sending of page jobs (23 Mar 2006)
 * flush modem I/O on receptions before sending any data (21 Mar 2006)
