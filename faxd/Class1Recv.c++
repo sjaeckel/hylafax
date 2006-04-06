@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 97 2006-03-02 00:45:33Z faxguy $ */
+/*	$Id: Class1Recv.c++ 130 2006-04-06 12:35:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -222,7 +222,7 @@ Class1Modem::recvIdentification(
 				// It's unclear if we are in "COMMAND REC" or "RESPONSE REC" mode,
 				// but since we are already detecting the carrier, wait the longer.
 				gotframe = recvFrame(frame, FCF_RCVR, conf.t2Timer, true);
-				lastResponse == AT_NOTHING;
+				lastResponse = AT_NOTHING;
 			    }
 			}
 		    }
