@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 130 2006-04-06 12:35:49Z faxguy $ */
+/*	$Id: Class1Recv.c++ 131 2006-04-11 04:06:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1143,7 +1143,6 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    gotEOT = true;
 				    recvdDCN = true;
 				    continue;
-				    break;
 				default:
 				    // The message is not ECM-specific: fall out of ECM receive, and let
 				    // the earlier message-handling routines try to cope with the signal.
@@ -1152,7 +1151,6 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    prevPage--;		// counteract the forthcoming increment
 				    // maybe we should save an unconfirmed page here?
 				    return (true);
-				    break;
 			    }
 			    if (!sendERR) {	// as long as we're not trying to send the ERR signal (set above)
 			        if (useV34) gotprimary = waitForDCEChannel(false);
@@ -1588,7 +1586,6 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    prevPage--;		// counteract the forthcoming increment
 			    // maybe we should save an unconfirmed page here?
 			    return (true);
-			    break;
 		    }
 		} else {
 		    emsg = "T.30 T2 timeout, expected signal not received";
