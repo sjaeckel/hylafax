@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 81 2006-02-03 01:49:47Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 131 2006-04-11 04:06:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -369,14 +369,12 @@ faxQueueApp::prepareJobStart(Job& job, FaxRequest* req,
 	    Sys::now() + random() % requeueInterval);
 	delete req;
 	return false;
-	break;
     default:				// parent, setup handler to wait
 	job.startPrepare(pid);
 	delete req;			// must reread after preparation
 	job.breq = NULL;
 	Trigger::post(Trigger::JOB_PREP_BEGIN, job);
 	return true;
-	break;
     }
 }
 
@@ -396,7 +394,6 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 	status = Job::failed;
     } else
 	status >>= 8;
-    bool abort = true;
     if (job.suspendPending) {		// co-thread waiting
 	job.suspendPending = false;
 	releaseModem(job);

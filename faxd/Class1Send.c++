@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 90 2006-02-16 17:43:23Z faxguy $ */
+/*	$Id: Class1Send.c++ 131 2006-04-11 04:06:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1292,7 +1292,6 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 				emsg = "COMREC invalid response received to RR.";
 				protoTrace(emsg);
 				return (false);
-				break;
 			}
 		    } while (!gotppr);		
 		}
@@ -1516,7 +1515,6 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 						emsg = "COMREC invalid response received to RR.";
 						protoTrace(emsg);
 						return (false);
-						break;
 					}
 				    } while (!goterr);		
 				}

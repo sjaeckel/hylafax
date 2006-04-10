@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 114 2006-03-15 16:49:41Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 131 2006-04-11 04:06:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -345,7 +345,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
 	fxStr cmd(dynamicConfig | quote | getModemDevice() | enquote | callid_formatted);
 	traceServer("DynamicConfig: %s", (const char*)cmd);
 	fxStr localid = "";
-	int pipefd[2], idlength, status;
+	int pipefd[2], status;
 	char line[1024];
 	pipe(pipefd);
 	pid_t pid = fork();
