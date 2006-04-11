@@ -1,7 +1,8 @@
-#	$Id: CHANGES 127 2006-03-29 21:54:55Z faxguy $	
+#	$Id: CHANGES 132 2006-04-11 21:15:07Z faxguy $	
 
 New Changes
 
+* fix batching from sleep queue to limit to MaxBatchJobs (11 Apr 2006)
 * update config.guess and config.sub (29 Mar 2006)
 * add -nointeractive option to faxsetup, faxaddmodem (28 Mar 2006)
 * fix batch sending of page jobs (23 Mar 2006)
