@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 131 2006-04-11 04:06:04Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 132 2006-04-11 21:15:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2389,6 +2389,14 @@ faxQueueApp::runScheduler()
 			 * jobs to other destinations.
 			 */
 			unblockDestJobs(job, di);
+
+			/*
+			 * Since job files are passed to the send program as command-line
+			 * parameters, our batch size is limited by that number of
+			 * parameters.  64 should be a portable number.
+			 */
+			if (maxBatchJobs > 64) maxBatchJobs = 64;
+			u_int batchedjobs = 1;
 			/*
 			 * Jobs that are on the sleep queue with state_sleeping
 			 * can be batched because the tts that the submitter requested
@@ -2399,7 +2407,7 @@ faxQueueApp::runScheduler()
 			 * alteration to the queue file must occur below within the loop
 			 * where the queue file is updated.
 			 */
-			for (JobIter sleepiter(sleepq); sleepiter.notDone(); sleepiter++) {
+			for (JobIter sleepiter(sleepq); batchedjobs < maxBatchJobs && sleepiter.notDone(); sleepiter++) {
 			    if (sleepiter.job().dest != job.dest || sleepiter.job().state != FaxRequest::state_sleeping)
 				continue;
 			    sleepiter.job().stopTTSTimer();
@@ -2407,20 +2415,14 @@ faxQueueApp::runScheduler()
 			    sleepiter.job().state = FaxRequest::state_ready;
 			    sleepiter.job().remove();
 			    setReadyToRun(sleepiter.job());
+			    batchedjobs++;
 			}
 
 			Job* bjob = &job;	// Last batched Job
 			Job* cjob;		// current Job
 			FaxRequest* creq;	// current request
 
-			/*
-			 * Since job files are passed to the send program as command-line
-			 * parameters, our batch size is limited by that number of
-			 * parameters.  64 should be a portable number.
-			 */
-			if (maxBatchJobs > 64) maxBatchJobs = 64;
-			
-			u_int batchedjobs = 1;
+			batchedjobs = 1;
 			for (u_int j = 0; batchedjobs < maxBatchJobs && j < NQHASH; j++) {
 			    for (JobIter joblist(runqs[j]); batchedjobs < maxBatchJobs && joblist.notDone(); joblist++) {
 				cjob = joblist;
