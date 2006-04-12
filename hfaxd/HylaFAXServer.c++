@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 127 2006-03-29 21:54:55Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 133 2006-04-13 04:34:02Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -88,7 +88,6 @@ HylaFAXServer::HylaFAXServer()
     time_t now = Sys::now();
     struct tm gmt = *gmtime(&now);
     struct tm tm = *localtime(&now);
-    gmt.tm_isdst = tm.tm_isdst;
     gmtoff = mktime(&gmt) - mktime(&tm);
 #if HAS_TM_ZONE
     /*

@@ -1,7 +1,9 @@
-#	$Id: CHANGES 132 2006-04-11 21:15:07Z faxguy $	
+#	$Id: CHANGES 133 2006-04-13 04:34:02Z faxguy $	
 
 New Changes
 
+* fix incorrect hfaxd time calculations when local time was
+  in daylight time (12 Apr 2006)
 * fix batching from sleep queue to limit to MaxBatchJobs (11 Apr 2006)
 * update config.guess and config.sub (29 Mar 2006)
 * add -nointeractive option to faxsetup, faxaddmodem (28 Mar 2006)
