@@ -1,9 +1,9 @@
-#	$Id: CHANGES 134 2006-04-13 18:43:39Z faxguy $	
+#	$Id: CHANGES 135 2006-04-13 18:51:12Z faxguy $	
 
 New Changes
 
-* fix incorrect hfaxd SENDTIME parsing when local time was in
-  daylight time (13 Apr 2006)
+* fix incorrect hfaxd SENDTIME and SNMPP parsing when local time 
+  was in daylight time (13 Apr 2006)
 * fix incorrect hfaxd time calculations when local time was
   in daylight time (12 Apr 2006)
 * fix batching from sleep queue to limit to MaxBatchJobs (11 Apr 2006)

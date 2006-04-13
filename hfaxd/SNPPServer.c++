@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++ 123 2006-03-27 23:27:53Z faxguy $ */
+/*	$Id: SNPPServer.c++ 135 2006-04-13 18:51:12Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -811,7 +811,7 @@ SNPPServer::SNPPTime(time_t& result)
 	     */
 	    if (tm.tm_year < 90)
 		tm.tm_year += 100;
-	    tm.tm_isdst= -1;		// XXX not sure about this???
+	    tm.tm_isdst= 0;		// GMT/UTC never has DST
 	    /*
 	     * The above time is assumed to be relative to
 	     * GMT and mktime returns locally adjusted time
