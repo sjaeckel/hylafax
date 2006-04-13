@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Parser.c++ 134 2006-04-13 18:43:39Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1308,7 +1308,7 @@ HylaFAXServer::TIMESPEC(u_int len, time_t& result)
 		    tm.tm_mday = twodigits(cp+6, 32);
 		    tm.tm_mon  = twodigits(cp+4, 13) - 1;
 		    tm.tm_year = fourdigits(cp+0) - 1900;
-		    tm.tm_isdst= -1;		// XXX not sure about this???
+		    tm.tm_isdst = 0;		// client gives UTC which never has DST
 		    /*
 		     * Client specifies time relative to GMT
 		     * and mktime returns locally adjusted
