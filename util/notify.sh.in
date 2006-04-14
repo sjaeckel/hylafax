@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 59 2006-01-12 01:17:04Z faxguy $
+#    $Id: notify.sh.in 137 2006-04-15 06:39:38Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -429,7 +429,7 @@ putMimeSetup()
 # A MimeBoundary must immediately preceed the mime content definition section for each
 # of the mime sections. No blank lines between the mimeboundary and the content definition.
 # I think a blank line in front of the mimeboundary is required.
-# So, the code hear is organized such that all functions putting out a mime contect section
+# So, the code here is organized such that all functions putting out a mime contect section
 # are respnosible for putting in their own leading mimeboundary. But they are NOT to put in 
 # any mime boundary trailers.
 # The last thing of the action section is to put in terminating mime boundary.
