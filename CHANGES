@@ -1,7 +1,8 @@
-#	$Id: CHANGES 136 2006-04-15 06:34:29Z faxguy $	
+#	$Id: CHANGES 138 2006-04-15 06:48:42Z faxguy $	
 
 New Changes
 
+* fix subaddress sending with sendfax (14 Apr 2006)
 * fix encoding of quoted-printable text (14 Apr 2006)
 * fix incorrect hfaxd SENDTIME and SNMPP parsing when local time 
   was in daylight time (13 Apr 2006)
