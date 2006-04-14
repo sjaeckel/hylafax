@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh.in 95 2006-02-28 16:31:48Z faxguy $
+#	$Id: faxrcvd.sh.in 136 2006-04-15 06:34:29Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -187,6 +187,7 @@ if [ -f $FILE ]; then
 	    if [ -f log/c$COMMID ]; then
 		$SED -e '/-- data/d' \
 		 -e '/start.*timer/d' -e '/stop.*timer/d' \
+		 -e 's/=/=3D/g' \
 		 log/c$COMMID
 	    elif [ -n "$COMMID" ]; then
 		echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)."
@@ -228,6 +229,7 @@ if [ -f $FILE ]; then
 	    if [ -f log/c$COMMID ]; then
 		$SED -e '/-- data/d' \
 		     -e '/start.*timer/d' -e '/stop.*timer/d' \
+		     -e 's/=/=3D/g' \
 		     log/c$COMMID
 	    elif [ -n "$COMMID" ]; then
 		echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)."
@@ -297,7 +299,10 @@ else
     #
     # Generate notification mail for a failed attempt.
     #
-    (echo "To: $TOADDR"
+    (echo "Mime-Version: 1.0"
+     echo "Content-Type: text/plain; charset=$CHARSET"
+     echo "Content-Transfer-Encoding: quoted-printable"
+     echo "To: $TOADDR"
      echo "From: $DICTRECEIVEAGENT <$FROMADDR>"
      echo "Subject: $DICTNOTRECEIVED"
      echo ""
@@ -310,6 +315,7 @@ else
      if [ -f log/c$COMMID ]; then
 	$SED -e '/-- data/d' \
 	     -e '/start.*timer/d' -e '/stop.*timer/d' \
+	     -e 's/=/=3D/g' \
 	    log/c$COMMID
      elif [ -n "$COMMID" ]; then
 	echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)."
