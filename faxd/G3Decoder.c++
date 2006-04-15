@@ -1,4 +1,4 @@
-/*	$Id: G3Decoder.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: G3Decoder.c++ 139 2006-04-15 07:04:20Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -216,7 +216,7 @@ G3Decoder::decodeRow(void* scanline, u_int lastx)
 	pb = refruns;
 	b1 = *pb++;
 #define	badlength(a0,lastx) do {			\
-    if (isG4)						\
+    if (isG4 && RTCrow == -1)				\
 	RTCrow = rowref;				\
     badPixelCount("2D", a0, lastx);			\
     rowgood = false;					\
