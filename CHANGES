@@ -1,7 +1,8 @@
-#	$Id: CHANGES 138 2006-04-15 06:48:42Z faxguy $	
+#	$Id: CHANGES 139 2006-04-15 07:04:20Z faxguy $	
 
 New Changes
 
+* improve the decoding of corrupt MMR image data (14 Apr 2006)
 * fix subaddress sending with sendfax (14 Apr 2006)
 * fix encoding of quoted-printable text (14 Apr 2006)
 * fix incorrect hfaxd SENDTIME and SNMPP parsing when local time 
