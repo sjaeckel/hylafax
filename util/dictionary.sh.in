@@ -1,4 +1,5 @@
-#    $Id: dictionary.sh.in 107 2006-03-10 19:29:35Z faxguy $
+#! /bin/sh
+#    $Id: dictionary.sh.in 140 2006-04-17 19:59:56Z faxguy $
 case "$LANG" in
     pl_*)
 	DICTRECEIVEAGENT="Serwer faxów HylaFAX";
