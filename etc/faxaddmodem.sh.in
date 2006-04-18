@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 125 2006-03-29 05:56:19Z faxguy $
+#	$Id: faxaddmodem.sh.in 142 2006-04-18 21:47:45Z faxguy $
 #
 # @WARNING@
 #
@@ -283,7 +283,8 @@ faxGID=`$GREP "^$PROTOGID:" $GROUP | cut -d: -f3`
 if [ -z "$faxGID" ]; then faxGID=$defPROTOGID; fi
 
 while [ -z "$TTY" -o ! -c /dev/$TTY ]; do
-    test "$TTY" != "" && echo "/dev/$TTY is not a terminal device."
+    test "$TTY" != "" && echo "/dev/$TTY is not a terminal device." 1>&2
+    if [ "$INTERACTIVE" -eq "no" ]; then exit 1; fi
     prompt "Serial port that modem is connected to [$TTY]?"; read TTY
 done
 

@@ -1,7 +1,9 @@
-#	$Id: CHANGES 139 2006-04-15 07:04:20Z faxguy $	
+#	$Id: CHANGES 142 2006-04-18 21:47:45Z faxguy $	
 
 New Changes
 
+* improve error handling in faxaddmodem -nointeractive (18 Apr 2006)
+* fix a lot of compile warnings (18 Apr 2006)
 * improve the decoding of corrupt MMR image data (14 Apr 2006)
 * fix subaddress sending with sendfax (14 Apr 2006)
 * fix encoding of quoted-printable text (14 Apr 2006)
