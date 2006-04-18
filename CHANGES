@@ -1,7 +1,9 @@
-#	$Id: CHANGES 142 2006-04-18 21:47:45Z faxguy $	
+#	$Id: CHANGES 143 2006-04-19 05:27:12Z faxguy $	
 
 New Changes
 
+* fix send buffer when transmitting non-ECM data with a non-zero
+  scanline-time value (18 Apr 2006)
 * improve error handling in faxaddmodem -nointeractive (18 Apr 2006)
 * fix a lot of compile warnings (18 Apr 2006)
 * improve the decoding of corrupt MMR image data (14 Apr 2006)

@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 131 2006-04-11 04:06:04Z faxguy $ */
+/*	$Id: Class1Send.c++ 143 2006-04-19 05:27:12Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1808,8 +1808,12 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 
 	/*
 	 * After a page chop rowsperstrip is no longer valid, as the strip will
-	 * be shorter.  Therefore, convertPhaseCData (for the benefit of JBIG) and 
-	 * correctPhaseCData deliberately update rowsperstrip.
+	 * be shorter.  Therefore, convertPhaseCData (for the benefit of supporting
+	 * the sending of JBIG NEWLEN markers) and correctPhaseCData (only in the 
+	 * case of MMR data) deliberately update rowsperstrip.  Page-chopped and
+	 * un-converted MH and MR data will not have updated rowsperstrip.
+	 * However, this only amounts to a allocating more memory than is needed,
+	 * and this is not consequential.
 	 */
 
 	if (conf.softRTFCC && params.df != newparams.df) {

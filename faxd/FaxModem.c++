@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxModem.c++ 143 2006-04-19 05:27:12Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -748,7 +748,7 @@ FaxModem::correctPhaseCData(u_char* buf, u_long* pBufSize,
 	 */
 	MemoryDecoder dec2(buf, params.pageWidth(), *pBufSize, fillorder, params.is2D(), false);
 	endOfData = dec2.cutExtraRTC();
-	rows = dec2.getRows();
+	// we don't update rows because we don't decode the entire image
     }
     if( endOfData )
         *pBufSize = endOfData - buf;
