@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 83 2006-02-03 21:43:55Z faxguy $ */
+/*	$Id: ClassModem.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -959,7 +959,7 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
 					len = read(fd, &buf[pos], 1);
 					if (buf[pos] == 0x10) buf[++pos] = 0x10;
 					pos++;
-				    } while (len > 0 &&  pos < sizeof(buf) - 1);
+				    } while (len > 0 &&  (u_int) pos < sizeof(buf) - 1);
 				    putModem(&buf[0], pos, getDataTimeout());
 				} while (len > 0);
 				close(fd);

@@ -1,4 +1,4 @@
-/*	$Id: tsitest.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: tsitest.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -139,8 +139,7 @@ int
 main(int argc, char* argv[])
 {
     bool verbose = true;
-    extern int optind, opterr;
-    extern char* optarg;
+    extern int optind;
     int c;
 
     appName = argv[0];

@@ -1,4 +1,4 @@
-/*	$Id: choptest.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: choptest.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -57,7 +57,7 @@ fatal(const char* fmt ...)
 int
 main(int argc, char* argv[])
 {
-    extern int optind, opterr;
+    extern int optind;
     extern char* optarg;
     float minChop = 3.0;		// chop if >= 3" white space at bottom
     u_int minRows;
@@ -129,8 +129,8 @@ main(int argc, char* argv[])
 			printf(
 			    "Chop %u rows, strip was %lu bytes, need only %lu\n"
 			    , dec.getLastBlanks()
-			    , totbytes
-			    , dec.getEndOfPage() - data
+			    , (u_long) totbytes
+			    , (u_long) (dec.getEndOfPage() - data)
 			);
 		    } else {
 			printf("Don't chop, found %u rows, need %u rows\n"

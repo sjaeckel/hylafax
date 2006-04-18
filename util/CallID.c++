@@ -1,4 +1,4 @@
-/*	$Id: CallID.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: CallID.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 2004 iFAX Solutions, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -67,20 +67,19 @@ size_t CallID::makeString(fxStr& output)
 
 const char* CallID::id (int i) const
 {
-    fxAssert(i<_id.length(), "Invalid CallID[] index");
+    fxAssert((u_int)i<_id.length(), "Invalid CallID[] index");
     return _id[i];
 }
 
 int CallID::length (int i) const
 {
-    fxAssert(i<_id.length(), "Invalid CallID[] index");
+    fxAssert((u_int)i<_id.length(), "Invalid CallID[] index");
     return _id[i].length();
 }
 
-
 fxStr& CallID::operator [](int i)
 {
-    fxAssert(i<_id.length(), "Invalid CallID[] index");
+    fxAssert((u_int)i<_id.length(), "Invalid CallID[] index");
     return _id[i];
 }
 

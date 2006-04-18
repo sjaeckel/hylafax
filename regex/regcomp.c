@@ -287,8 +287,8 @@ register struct parse *p;
 int stop;			/* character this ERE should end at */
 {
 	register char c;
-	register sopno prevback;
-	register sopno prevfwd;
+	register sopno prevback = HERE();
+	register sopno prevfwd = HERE();
 	register sopno conc;
 	register int first = 1;		/* is this the first alternative? */
 
@@ -1593,8 +1593,8 @@ struct parse *p;
 register struct re_guts *g;
 {
 	register sop *scan;
-	sop *start;
-	register sop *newstart;
+	sop *start = g->strip;
+	register sop *newstart = g->strip;
 	register sopno newlen;
 	register sop s;
 	register char *cp;

@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxmail.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -616,7 +616,7 @@ faxMailApp::copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile)
         fxStackBuffer buf;
         bool ok = true;
         while (mime.getLine(fd, buf) && ok) {
-	        ok = (Sys::write(ftmp, buf, buf.getLength()) == buf.getLength());
+	        ok = ((u_int) Sys::write(ftmp, buf, buf.getLength()) == buf.getLength());
         }
         if (ok) {
             Sys::close(ftmp);
