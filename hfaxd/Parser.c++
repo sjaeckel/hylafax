@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 134 2006-04-13 18:43:39Z faxguy $ */
+/*	$Id: Parser.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -903,6 +903,8 @@ HylaFAXServer::cmd(Token t)
 	    return (true);
 	}
 	break;
+    default:
+	break;
     }
     return (false);
 }
@@ -981,6 +983,8 @@ HylaFAXServer::site_cmd(Token t)
 	    helpCmd(sitetab, s);
 	    return (true);
 	}
+	break;
+    default:
 	break;
     }
     return (false);
@@ -1199,6 +1203,8 @@ HylaFAXServer::param_cmd(Token t)
 	    helpCmd(parmtab, s);
 	    return (true);
 	}
+	break;
+    default:
 	break;
     }
     return (false);
@@ -1420,6 +1426,8 @@ HylaFAXServer::multi_STRING(fxStr& s)
 	case T_LEXERR:
 	    syntaxError("unmatched quote mark");
 	    return (false);
+	default:
+	    break;
 	}
     }
 }

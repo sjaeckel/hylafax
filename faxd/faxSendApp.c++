@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxSendApp.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -121,7 +121,7 @@ faxSendApp::send(const char** filenames, int num)
     u_int batched = BATCH_FIRST;
     FaxSendStatus status = send_done;
     fxStr batchcommid, notice;
-    time_t retrybatchtts;
+    time_t retrybatchtts = 0;
 
     for (int i = 0; i < num; i++)
     {

@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class2Recv.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -346,7 +346,7 @@ Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
     int blc = 0;
     int cblc = 0;
     ppr = 0;
-    if (sscanf(cp, "%d,%d,%d,%d", &ppr, &lc, &blc, &cblc) > 0) {
+    if (sscanf(cp, "%d,%ld,%d,%d", &ppr, &lc, &blc, &cblc) > 0) {
 
 	/*
 	 * In practice we cannot trust the modem line count when we're 

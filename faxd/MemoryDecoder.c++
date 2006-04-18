@@ -1,4 +1,4 @@
-/*	$Id: MemoryDecoder.c++ 72 2006-01-30 20:34:58Z faxguy $ */
+/*	$Id: MemoryDecoder.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -231,8 +231,6 @@ void MemoryDecoder::fixFirstEOL()
  */
 u_char* MemoryDecoder::cutExtraRTC()
 {
-    u_char* start = current();
-    
     /*
      * We expect RTC near the end of data and thus
      * do not check all image to save processing time.
@@ -340,7 +338,6 @@ u_char* MemoryDecoder::encodeTagLine(u_long* raster, u_int th, u_int slop)
     G3Encoder enc(result);
     enc.setupEncoder(fillorder, is2D, isG4);
 
-    u_char* start = current();
     decode(NULL, width, th);		// discard decoded data
     if (!isG4) {
 	/*
@@ -540,5 +537,8 @@ u_char* MemoryDecoder::convertDataFormat(const Class2Params& params)
 	printf("Attempt to convert Phase C data to JBIG without JBIG support.  This should not happen.\n");
 	return (NULL);
 #endif /* HAVE_JBIG */
+    } else {
+	printf("Attempt to convert Phase C data to an unsupported format.  This should not happen.\n");
+	return (NULL);
     }
 }

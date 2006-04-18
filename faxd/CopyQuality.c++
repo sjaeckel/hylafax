@@ -1,4 +1,4 @@
-/*	$Id: CopyQuality.c++ 105 2006-03-09 00:16:22Z faxguy $ */
+/*	$Id: CopyQuality.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -230,7 +230,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		     * is done instead of replacing the missing data with white
 		     * to avoid visual disconnect of blackened areas.
 		     */
-		    if (decodedPixels < rowpixels) {
+		    if ((u_int) decodedPixels < rowpixels) {
 			u_int filledchars = (decodedPixels + 7) / 8;
 			u_short rembits = decodedPixels % 8;
 			memcpy(recvRow + filledchars, curGood + filledchars, rowSize - filledchars);
@@ -238,12 +238,12 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 			    // now deal with the transitional character
 			    u_char remmask = 0;
 			    for (u_short bit = 0; bit < 8; bit++) {
-				remmask<<1;
+				remmask<<=1;
 				if (bit < rembits) remmask |= 1;
 			    }
 			    recvRow[filledchars-1] = (recvRow[filledchars-1] & remmask) | (curGood[filledchars-1] & ~remmask);
 			}
-		    } else if (decodedPixels >= rowpixels) {
+		    } else if ((u_int) decodedPixels >= rowpixels) {
 			/*
 			 * If we get a long pixel count, then our correction mechanism
 			 * involves trimming horizontal "streaks" at the end of the

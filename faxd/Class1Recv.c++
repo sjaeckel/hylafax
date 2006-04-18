@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 131 2006-04-11 04:06:04Z faxguy $ */
+/*	$Id: Class1Recv.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -984,7 +984,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	    }
 	    if (useV34 || gotRTNC) {		// V.34 mode or if +FRH:3 in adaptive reception
 		if (!gotEOT) {
-		    bool gotprimary;
+		    bool gotprimary = false;
 		    if (useV34) gotprimary = waitForDCEChannel(false);
 		    while (!sendERR && !gotEOT && (gotRTNC || (ctrlFrameRcvd != fxStr::null))) {
 			/*

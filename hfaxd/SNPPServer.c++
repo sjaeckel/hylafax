@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++ 135 2006-04-13 18:51:12Z faxguy $ */
+/*	$Id: SNPPServer.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -683,6 +683,8 @@ SNPPServer::cmd(Token t)
 	    return (true);
 	}
 	break;
+    default:
+	break;
     }
     return (false);
 }
@@ -778,6 +780,8 @@ SNPPServer::site_cmd(Token t)
 	    jstatCmd(defJob);
 	    return (true);
 	}
+	break;
+    default:
 	break;
     }
     return (false);

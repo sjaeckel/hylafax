@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 132 2006-04-11 21:15:07Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -941,7 +941,7 @@ faxQueueApp::preparePageChop(const FaxRequest& req,
 	float threshold = req.chopthreshold;
 	if (threshold == -1)
 	    threshold = pageChopThreshold;
-	u_int minRows;
+	u_int minRows = 0;
 	switch(params.vr) {
 	    case VR_NORMAL:
 	    case VR_200X100:
@@ -1417,7 +1417,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
     if (req && req->status == send_retry) {
 	// prevent turnaround-redialing, delay any blocked jobs
 	time_t newtts = req->tts;
-	while (cjob = di.nextBlocked()) {
+	while ((cjob = di.nextBlocked())) {
 	    FaxRequest* blockedreq = readRequest(*cjob);
 	    if (blockedreq) {
 		delayJob(*cjob, *blockedreq, "Delayed by prior call", newtts);
@@ -2194,7 +2194,7 @@ faxQueueApp::unblockDestJobs(Job& job, DestInfo& di)
      */
     Job* jb;
     u_int n = 1;
-    while (jb = di.nextBlocked()) {
+    while ((jb = di.nextBlocked())) {
 	FaxRequest* req = readRequest(*jb);
 	if (!req) continue;
 	destCtrls.setUser(req->owner);

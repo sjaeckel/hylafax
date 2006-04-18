@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 131 2006-04-11 04:06:04Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -238,7 +238,8 @@ faxGettyApp::listenForRing()
 	    /* DID modems may only signal a call with DID data - no RING */
 	    bool done = false;
 	    for (u_int i = 0; i < callid.size(); i++) {
-		if (idConfig[i].answerlength > 0 && callid[i].length() >= idConfig[i].answerlength) {
+		if ((u_int) idConfig[i].answerlength > 0 && 
+		    callid[i].length() >= (u_int) idConfig[i].answerlength) {
 		    done = true;
 		    break;
 		}

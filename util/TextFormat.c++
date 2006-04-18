@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: TextFormat.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -231,7 +231,7 @@ TextFormat::setModTimeAndDate(time_t t)
     struct tm* tm = localtime(&t);
     char buf[30];
     strftime(buf, sizeof (buf), "%X", tm); modTime = buf;
-    strftime(buf, sizeof (buf), "%D", tm); modDate = buf;
+    strftime(buf, sizeof (buf), "%F", tm); modDate = buf;
 }
 void TextFormat::setModTime(const char* cp)	{ modTime = cp; }
 void TextFormat::setModDate(const char* cp)	{ modDate = cp; }

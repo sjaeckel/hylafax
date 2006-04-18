@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: ModemServer.c++ 141 2006-04-18 19:15:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -224,6 +224,8 @@ ModemServer::changeState(ModemServerState s, long timeout)
 	    break;
 	case MODEMWAIT:
 	    setupAttempts = 0;
+	    break;
+	default:
 	    break;
 	}
     } else if (s == MODEMWAIT && ++setupAttempts >= maxSetupAttempts) {
