@@ -1,4 +1,4 @@
-/*	$Id: faxconfig.c 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxconfig.c 145 2006-04-19 23:49:59Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -93,7 +93,7 @@ main(int argc, char** argv)
     } else {
         strcpy(fifoname, FAX_FIFO);
     }
-    for (cp = fifoname; cp = strchr(cp, '/'); *cp++ = '_')
+    for (cp = fifoname; (cp = strchr(cp, '/')); *cp++ = '_')
 	;
     if (chdir(spooldir) < 0)
 	fatal("%s: chdir: %s", spooldir, strerror(errno));

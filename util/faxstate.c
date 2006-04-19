@@ -1,4 +1,4 @@
-/*	$Id: faxstate.c 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxstate.c 145 2006-04-19 23:49:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -121,7 +121,7 @@ main(int argc, char** argv)
     } else {
         fatal("Argument is too large: %s", argv[optind]);
     }
-    for (cp = devid; cp = strchr(cp, '/'); *cp++ = '_')
+    for (cp = devid; (cp = strchr(cp, '/')); *cp++ = '_')
 	;
     if (chdir(spooldir) < 0)
 	fatal("%s: chdir: %s", spooldir, strerror(errno));
