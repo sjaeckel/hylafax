@@ -1,4 +1,4 @@
-/*	$Id: Trigger.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Trigger.c++ 144 2006-04-19 20:23:44Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -366,7 +366,7 @@ Trigger::send(const char* fmt ...)
  * Post an event to interested parties.
  */
 void
-Trigger::post(TriggerEvent e, const QLink& tr, const QLink& any, fxStackBuffer& msg)
+Trigger::post(TriggerEvent e, const QLink& tl, const QLink& any, fxStackBuffer& msg)
 {
     TriggerMsgHeader& hdr = *((TriggerMsgHeader*) &msg[0]);
     hdr.length = (u_short) msg.getLength();
@@ -375,7 +375,7 @@ Trigger::post(TriggerEvent e, const QLink& tr, const QLink& any, fxStackBuffer& 
 
     u_short mask = 1<<(e&15);
     const QLink* ql;
-    for (ql = tr.next; ql != &tr; ql = ql->next) {
+    for (ql = tl.next; ql != &tl; ql = ql->next) {
 	TriggerRef* tr = (TriggerRef*) ql;
 	if (tr->ref.interests[e>>4] & mask) {
 	    HylaClient& client = *tr->ref.client;
