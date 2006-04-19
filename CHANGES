@@ -1,7 +1,8 @@
-#	$Id: CHANGES 143 2006-04-19 05:27:12Z faxguy $	
+#	$Id: CHANGES 144 2006-04-19 20:23:44Z faxguy $	
 
 New Changes
 
+* fix variable naming collission in faxd/Trigger.c++ (19 Apr 2006)
 * fix send buffer when transmitting non-ECM data with a non-zero
   scanline-time value (18 Apr 2006)
 * improve error handling in faxaddmodem -nointeractive (18 Apr 2006)
