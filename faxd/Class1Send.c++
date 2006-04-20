@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 147 2006-04-21 04:32:57Z faxguy $ */
+/*	$Id: Class1Send.c++ 148 2006-04-21 04:44:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1052,7 +1052,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 		}
 	    }
 	    fcountuniq = fcount;
-	    if (fcount == 1 && pprcnt > 0) {
+	    if (fcount == 1 && pprcnt > 0 && firstframe[3] == 0) {
 		/*
 		 * Some receivers may have a hard time hearing the first frame,
 		 * However, some receivers do not like frame duplication within a
