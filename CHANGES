@@ -1,7 +1,9 @@
-#	$Id: CHANGES 146 2006-04-20 23:15:21Z faxguy $	
+#	$Id: CHANGES 147 2006-04-21 04:32:57Z faxguy $	
 
 New Changes
 
+* change Class 1 ECM sending behavior when retransmitting a single
+  frame to avoid triggering problems on some receivers (20 Apr 2006)
 * replace DestControls with JobControl feature (20 Apr 2006)
 * fix variable naming collission in faxd/Trigger.c++ (19 Apr 2006)
 * fix send buffer when transmitting non-ECM data with a non-zero
