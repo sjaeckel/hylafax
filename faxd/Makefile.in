@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 40 2006-01-05 18:03:14Z faxguy $
+#	$Id: Makefile.in 146 2006-04-20 23:15:21Z faxguy $
 #
 # @WARNING@
 #
@@ -60,7 +60,7 @@ C++FILES=ClassModem.c++ \
 	Class2Recv.c++ \
 	Class2Send.c++ \
 	CopyQuality.c++ \
-	DestControl.c++ \
+	JobControl.c++ \
 	DestInfo.c++ \
 	FaxAcctInfo.c++ \
 	FaxFont.c++ \
@@ -139,7 +139,7 @@ SERVER_OBJS=faxApp.o \
 	FaxServer.o \
 	UUCPLock.o \
 	ServerConfig.o
-FAXQOBJS=DestControl.o \
+FAXQOBJS=JobControl.o \
 	DestInfo.o \
 	Job.o \
 	HylaClient.o \

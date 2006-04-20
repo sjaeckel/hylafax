@@ -1,7 +1,8 @@
-#	$Id: CHANGES 144 2006-04-19 20:23:44Z faxguy $	
+#	$Id: CHANGES 146 2006-04-20 23:15:21Z faxguy $	
 
 New Changes
 
+* replace DestControls with JobControl feature (20 Apr 2006)
 * fix variable naming collission in faxd/Trigger.c++ (19 Apr 2006)
 * fix send buffer when transmitting non-ECM data with a non-zero
   scanline-time value (18 Apr 2006)
