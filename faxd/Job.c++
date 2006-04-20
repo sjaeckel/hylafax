@@ -1,4 +1,4 @@
-/*	$Id: Job.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Job.c++ 146 2006-04-20 23:15:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -50,14 +50,49 @@ JobSendHandler::~JobSendHandler() {}
 void JobSendHandler::childStatus(pid_t, int status)
     { faxQueueApp::instance().sendJobDone(job, status); }
 
+JobCtrlHandler::JobCtrlHandler(Job& j) : job(j) {}
+JobCtrlHandler::~JobCtrlHandler() {}
+
+int
+JobCtrlHandler::inputReady (int f)
+{
+    char data[1024];
+    fxAssert(f == fd, "Reading from a FD which is not our own");
+    int n;
+    while ((n = Sys::read(fd, data, sizeof(data)-1)) > 0)
+    {
+    	data[n] = '\0';
+	buf.append(data, n);
+    }
+    return 0;
+}
+
+void
+JobCtrlHandler::childStatus(pid_t, int status)
+{
+    /*
+     * Dispatcher sometimes tells us child has exited before we
+     * get a chance to read it's pipe (even though it is ready)
+     */
+    inputReady(fd);
+    Dispatcher::instance().unlink(fd);
+    close(fd);
+    job.jci = new JobControlInfo(buf);
+    buf.resize(0);
+    faxQueueApp::instance().ctrlJobDone(job, status);
+}
+
+
 fxIMPLEMENT_StrKeyPtrValueDictionary(JobDict, Job*)
 JobDict Job::registry;
+JobControlInfo Job::defJCI;
 
 Job::Job(const FaxRequest& req)
     : killHandler(*this)
     , ttsHandler(*this)
     , prepareHandler(*this)
     , sendHandler(*this)
+    , ctrlHandler(*this)
     , file(req.qfile)
     , jobid(req.jobid)
 {
@@ -67,6 +102,7 @@ Job::Job(const FaxRequest& req)
     pid = 0;
     state = req.state;
 
+    jci = NULL;
     dnext = NULL;
     modem = NULL;
     bprev = NULL;
@@ -166,6 +202,28 @@ void
 Job::startSend(pid_t p)
 {
     Dispatcher::instance().startChild(pid = p, &sendHandler);
+}
+
+void
+Job::startControl(pid_t p, int fd)
+{
+    if (jci) {
+	delete jci;
+	jci = NULL;
+    }
+    ctrlHandler.fd = fd;
+    Dispatcher::instance().link(fd, Dispatcher::ReadMask, &ctrlHandler);
+    Dispatcher::instance().startChild(pid = p, &ctrlHandler);
+}
+
+void
+Job::setJCI(fxStr jcibuf)
+{
+    if (jci) {
+	delete jci;
+	jci = NULL;
+    }
+    jci = new JobControlInfo(jcibuf);
 }
 
 fxStr

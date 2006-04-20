@@ -1,4 +1,4 @@
-/*	$Id: Modem.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Modem.h 146 2006-04-20 23:15:21Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -107,7 +107,7 @@ public:
 
     static Modem& getModemByID(const fxStr& id);
     static Modem* modemExists(const fxStr& id);
-    static Modem* findModem(const Job& job, const DestControlInfo& dci);
+    static Modem* findModem(const Job& job);
 
     bool assign(Job&);		// assign modem
     void release();			// release modem

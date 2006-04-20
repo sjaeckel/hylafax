@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Modem.c++ 146 2006-04-20 23:15:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -136,11 +136,11 @@ Modem::isCapable(const Job& job) const
  * work associated with the specified job.
  */
 Modem*
-Modem::findModem(const Job& job, const DestControlInfo& dci)
+Modem::findModem(const Job& job)
 {
     RE* c = ModemGroup::find(job.device);
     if (c) {
-	const fxStr& mdci = dci.getModem();
+	const fxStr& mdci = job.getJCI().getModem();
 	RE* cdci = mdci != "" ? ModemGroup::find(mdci) : NULL;
 	int loops = 2;
 

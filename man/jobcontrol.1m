@@ -1,4 +1,4 @@
-.\"	$Id: destctrls.4f 58 2006-01-12 01:05:27Z faxguy $
+.\"	$Id: jobcontrol.1m 146 2006-04-20 23:15:21Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -27,65 +27,46 @@
 .\"
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
-.TH DESTCTRLS ${MANNUM4_5} "October 3, 1995"
+.TH JOBCONTROL ${MANNUM1_8} "Mar 27, 2006"
 .SH NAME
-destctrls \- per-destination controls for \*(Fx servers
+jobcontrols \- per-job controls for \*(Fx servers
 .SH DESCRIPTION
 The \*(Fx configuration parameter
-.B DestControls
-specifies whether or not to apply
-per-destination controls on job characteristics
+.B JobControlCmd
+specifies the script that is used to apply 
+per-job controls on job characteristics
 such as the time-of-day to place a call.
 .PP
-The controls file is a simple
+The controls program is passed the respective job ID number as the first and only argument.
+.PP
+The controls program should produce a simple line-based
 .SM ASCII
-file containing a series of records of the form:
+output containing a series of records of the form:
 .sp .5
 .RS
-.ta \w'\fIdest\fP    'u
-\fIdest\fP	param = value ... param = value
+param: value
 .RE
 .sp .5
-where
-.I dest
-is a regular expression matched against
-the canonical form of a destination phone number and
-parameters are specified by named assignments
-(though the ``='' can also be left out).
-Whitespace may be used freely though it is used to identify
-the end of
-.I dest
-and the start of the parameter list.
+which is parsed the same manner as all HylaFAX config files.
 Parameter values are parsed exactly as specified in
 .IR hylafax-config (${MANNUM4_5});
 i.e. values with embedded whitespace may be enclosed in quote marks (``"'').
 .PP
-Comments are introduced with a ``#'' character and extend to the
-end of the line.
-Parameter lists may be continued across lines by starting subsequent
-lines with a whitespace character (lines commented out with ``#''
-are also considered to be part of a continued record).
+All output on a line following a ``#'' character is ignored.
 .PP
-The order of entries in a file is important.
-When a parameter value is needed
-.I faxq
-sequentially scans the file until it finds a record that matches
-the canonical form of the destination phone number.  If ``owner'' is
-included in the entry, then the owner of the job-in-process must also
-match.  If a matching entry is found, then the
-values given in the entry are used, otherwise values are used from the
+The output order is important.
+The last parameter value in the output overrides any previous values in the output.
+Otherwise a default value is used from the
 .I faxq
 configuration file.
 .PP
-The following parameters may be specified on a per-destination basis;
+The following parameters may be output on a per-job basis;
 consult
 .IR hylafax-config (${MANNUM4_5})
 for a description of each parameter
 (except
-.B Owner
-and
 .B RejectNotice
-which are described below).
+which is described below).
 .sp .5
 .nf
 .ta \w'MaxConcurrentCalls    'u +\w'integer    'u +\w'\fIunlimited\fP    'u
@@ -95,7 +76,6 @@ MaxDials	integer	\s-1\fIunlimited\fP\s+1	max phone calls to make to transmit a j
 MaxSendPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a send
 MaxTries	integer	\s-13\s+1	max attempts to transmit a job
 Modem	string	\s-1Any\s+1	ModemGroup to use for destination
-Owner	string \s-1\s+1	Restrict to jobs owned by this user
 RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
@@ -124,13 +104,6 @@ matching a destination, then the value of
 is overridden by the inclusive set of modems found in both.
 .PP
 The
-.B Owner
-parameter constrains the usage of the entry to when the job
-owner matches this user.  Entries containing an
-.B Owner
-setting will be skipped when jobs from other users are processed.
-.PP
-The
 .B RejectNotice
 parameter controls whether or not to reject
 jobs to the destination.
@@ -143,7 +116,7 @@ phone numbers; for example
 .sp .5
 .nf
 .ft C
- \.*911$    RejectNotice = "Calls to emergency numbers are not permitted"
+    RejectNotice: "Calls to emergency numbers are not permitted"
 .ft P
 .fi
 .PP
@@ -170,13 +143,15 @@ such as
 .I faxsend
 and
 .IR pagesend .
+(Note that in a batched-jobs instance that these parameters will apply to all
+jobs in the batch.)
 This is a convenient mechanism for defining configuration parameters
 for all modems without having to modify each modem-specific configuration
 file.  For example,
 .sp .5
 .nf
 .ft C
- \.*    SessionTracing = 0x4f
+    SessionTracing: 0x4f
 .ft P
 .fi
 .PP
@@ -189,13 +164,35 @@ international phone calls one might use:
 .sp .5
 .nf
 .ft C
- [+][^1]    DesiredBR=3 DesiredEC=0
+    DesiredBR: 3
+    DesiredEC: 0
+.ft P
+.fi
+.PP
+The controls program will likely need to refer to the
+sendq file corresponding to the job in order to obtain
+information such as the number being dialed, the job owner, or
+the number of send attempts.  For this purpose the parseQfile
+function has been placed in bin/common-functions to assist
+in this.  For example:
+.nf
+.ft C
+
+    #!/bin/sh
+    . etc/setup.cache
+    . bin/common-functions
+    QFILE=sendq/q$1
+    parseQfile
+    case "$number-$owner-$tottries" in
+        5551212-lee-3) echo "Class1ECMSupport: no";;
+        *-sam-*) echo "LocalIdentifier: +1.800.555.1212";;
+        911-*) echo "RejectNotice: \\"Calls to 911 are not permitted\\"";;
+    esac
+    exit 0
+
 .ft P
 .fi
 .SH NOTES
-Beware that canonical phone numbers have a leading ``+'' which is
-a special character for regular expressions.  An easy way to
-match ``+'' is with ``[+]''; e.g. ``[+]14159657824''.
 .SH "SEE ALSO"
 .IR faxq (${MANNUM1_8}),
 .IR hylafax-config (${MANNUM4_5}),
