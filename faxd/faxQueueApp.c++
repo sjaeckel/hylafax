@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 146 2006-04-20 23:15:21Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 151 2006-04-21 23:39:56Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2466,33 +2466,12 @@ faxQueueApp::runScheduler()
 			 * parameters.  64 should be a portable number.
 			 */
 			if (maxBatchJobs > 64) maxBatchJobs = 64;
-			u_int batchedjobs = 1;
-			/*
-			 * Jobs that are on the sleep queue with state_sleeping
-			 * can be batched because the tts that the submitter requested
-			 * is known to have passed already.  So we pull these jobs out
-			 * of the sleep queue and place them into the run queue so that
-			 * the batching loop below can pick them up.  Note that we cannot
-			 * read the queue file (readRequest) at this point.  Any needed
-			 * alteration to the queue file must occur below within the loop
-			 * where the queue file is updated.
-			 */
-			for (JobIter sleepiter(sleepq); batchedjobs < maxBatchJobs && sleepiter.notDone(); sleepiter++) {
-			    if (sleepiter.job().dest != job.dest || sleepiter.job().state != FaxRequest::state_sleeping)
-				continue;
-			    sleepiter.job().stopTTSTimer();
-			    sleepiter.job().tts = now;
-			    sleepiter.job().state = FaxRequest::state_ready;
-			    sleepiter.job().remove();
-			    setReadyToRun(sleepiter.job());
-			    batchedjobs++;
-			}
 
 			Job* bjob = &job;	// Last batched Job
 			Job* cjob;		// current Job
 			FaxRequest* creq;	// current request
 
-			batchedjobs = 1;
+			u_int batchedjobs = 1;
 			for (u_int j = 0; batchedjobs < maxBatchJobs && j < NQHASH; j++) {
 			    for (JobIter joblist(runqs[j]); batchedjobs < maxBatchJobs && joblist.notDone(); joblist++) {
 				cjob = joblist;
@@ -2524,14 +2503,40 @@ faxQueueApp::runScheduler()
 				cjob->bprev = bjob;
 				bjob = cjob;
 				cjob->breq = creq;
-				if (creq->tts > now) {
-				    // This job was batched from sleeping, things have
-				    // changed; Update the queue file for onlookers.
-				    creq->tts = now;
-				    updateRequest(*creq, *cjob);
-				}
 				batchedjobs++;
 			    }
+			}
+			/*
+			 * Jobs that are on the sleep queue with state_sleeping
+			 * can be batched because the tts that the submitter requested
+			 * is known to have passed already.  So we pull these jobs out
+			 * of the sleep queue and batch them directly.
+			 */
+			for (JobIter sleepiter(sleepq); batchedjobs < maxBatchJobs && sleepiter.notDone(); sleepiter++) {
+			    if (sleepiter.job().dest != job.dest || sleepiter.job().state != FaxRequest::state_sleeping)
+				continue;
+			    cjob = sleepiter;
+			    cjob->stopTTSTimer();
+			    cjob->tts = now;
+			    cjob->state = FaxRequest::state_ready;
+			    cjob->remove();
+
+			    cjob->modem = job.modem;
+
+			    creq = readRequest(*cjob);
+
+			    traceJob(job, "ADDING JOB " | cjob->jobid | " TO BATCH");
+			    bjob->bnext = cjob;
+			    cjob->bprev = bjob;
+			    bjob = cjob;
+			    cjob->breq = creq;
+			    if (creq->tts > now) {
+				// This job was batched from sleeping, things have
+				// changed; Update the queue file for onlookers.
+				creq->tts = now;
+				updateRequest(*creq, *cjob);
+			    }
+			    batchedjobs++;
 			}
 			bjob->bnext = NULL;
 		    } else

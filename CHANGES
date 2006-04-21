@@ -1,4 +1,4 @@
-#	$Id: CHANGES 147 2006-04-21 04:32:57Z faxguy $	
+#	$Id: CHANGES 151 2006-04-21 23:39:56Z faxguy $	
 
 New Changes
 
@@ -13,11 +13,11 @@ New Changes
 * improve the decoding of corrupt MMR image data (14 Apr 2006)
 * fix subaddress sending with sendfax (14 Apr 2006)
 * fix encoding of quoted-printable text (14 Apr 2006)
-* fix incorrect hfaxd SENDTIME and SNMPP parsing when local time 
+* fix incorrect hfaxd SENDTIME and SNPP parsing when local time 
   was in daylight time (13 Apr 2006)
 * fix incorrect hfaxd time calculations when local time was
   in daylight time (12 Apr 2006)
-* fix batching from sleep queue to limit to MaxBatchJobs (11 Apr 2006)
+* fix batching from sleep queue to limit to MaxBatchJobs (11, 21 Apr 2006)
 * update config.guess and config.sub (29 Mar 2006)
 * add -nointeractive option to faxsetup, faxaddmodem (28 Mar 2006)
 * fix batch sending of page jobs (23 Mar 2006)
