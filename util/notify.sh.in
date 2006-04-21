@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 146 2006-04-20 23:15:21Z faxguy $
+#    $Id: notify.sh.in 149 2006-04-21 19:30:29Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -500,7 +500,7 @@ returnToSender()
     if [ "$jobtype" = "facsimile" ] ; then
         printItem "%u ($DICTPAGESTRANSMITTED)" "$DICTPAGES" "$npages"
         printItem "%u ($DICTTOTALPAGES)" "$DICTTOTPAGES" "$totpages"
-        printItem "%u ($DICTATTEMPTSPAGE)" "$DICTATTEMPS" "$ntries"
+        printItem "%u ($DICTATTEMPTSPAGE)" "$DICTATTEMPTS" "$ntries"
         printItem "%u ($DICTDIRNEXTPAGE)" "$DICTDIRNUM" "$dirnum"
         if [ $nfiles -gt 0 -a "$RETURNTECHINFO" = "yes" ] ; then
             printBanner "$DICTDOCSSUBMITTED"
