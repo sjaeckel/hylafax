@@ -1,7 +1,8 @@
-#	$Id: CHANGES 151 2006-04-21 23:39:56Z faxguy $	
+#	$Id: CHANGES 152 2006-04-24 04:03:14Z faxguy $	
 
 New Changes
 
+* fix batching to check modem selection before batching (24 Apr 2006)
 * change Class 1 ECM sending behavior when retransmitting a single
   frame to avoid triggering problems on some receivers (20 Apr 2006)
 * replace DestControls with JobControl feature (20 Apr 2006)
