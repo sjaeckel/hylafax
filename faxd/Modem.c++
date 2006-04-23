@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 146 2006-04-20 23:15:21Z faxguy $ */
+/*	$Id: Modem.c++ 152 2006-04-24 04:03:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -129,6 +129,15 @@ Modem::isCapable(const Job& job) const
     if (job.resolution && !supportsVRes(job.resolution))
 	return (false);
     return (true);
+}
+
+bool
+Modem::isInGroup(const fxStr& mgroup)
+{
+    RE* c = ModemGroup::find(mgroup);
+    if (c)
+	return (c->Find(mgroup));
+    return ((devID == mgroup));
 }
 
 /*

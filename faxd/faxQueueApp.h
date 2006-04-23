@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 146 2006-04-20 23:15:21Z faxguy $ */
+/*	$Id: faxQueueApp.h 152 2006-04-24 04:03:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -207,6 +207,7 @@ private:
     bool	submitJob(const fxStr& jobid, bool checkState = false, bool doaccounting = false);
     bool	suspendJob(const fxStr& jobid, bool abortActive);
     void	rejectSubmission(Job&, FaxRequest&, const fxStr& reason);
+    bool	areBatchable(FaxRequest& reqa, FaxRequest& reqb, Job& job);
 
     void	setReadyToRun(Job& job);
     void	setSleep(Job& job, time_t tts);

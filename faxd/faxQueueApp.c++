@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 151 2006-04-21 23:39:56Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 152 2006-04-24 04:03:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2297,6 +2297,19 @@ faxQueueApp::removeDestInfoJob(Job& job)
 	destJobs.remove(job.dest);
     }
 }
+
+/*
+ * Compare two job requests to each other and to a selected
+ * job to see if they can be batched together.
+ */
+bool
+faxQueueApp::areBatchable(FaxRequest& reqa, FaxRequest& reqb, Job& job)
+{
+    // make sure the job's modem is in the requested ModemGroup 
+    if (!job.modem->isInGroup(reqb.modem)) return(false);
+    return(true);
+}
+
 /*
  * Scan the list of jobs and process those that are ready
  * to go.  Note that the scheduler should only ever be
@@ -2468,36 +2481,28 @@ faxQueueApp::runScheduler()
 			if (maxBatchJobs > 64) maxBatchJobs = 64;
 
 			Job* bjob = &job;	// Last batched Job
-			Job* cjob;		// current Job
-			FaxRequest* creq;	// current request
+			Job* cjob = &job;	// current Job
 
 			u_int batchedjobs = 1;
 			for (u_int j = 0; batchedjobs < maxBatchJobs && j < NQHASH; j++) {
 			    for (JobIter joblist(runqs[j]); batchedjobs < maxBatchJobs && joblist.notDone(); joblist++) {
+				if (joblist.job().dest != cjob->dest)
+				    continue;
 				cjob = joblist;
 				if (job.jobid == cjob->jobid)
 				    continue;	// Skip the current job
 				fxAssert(cjob->tts <= Sys::now(), "Sleeping job on run queue");
 				fxAssert(cjob->modem == NULL, "Job on run queue holding modem");
-				if (job.dest != cjob->dest)
+				FaxRequest* creq = readRequest(*cjob);
+				if (!areBatchable(*req, *creq, job)) {
+				    delete creq;
 				    continue;
-
-				/* Check priorities */
-				cjob->modem = job.modem;
-
-				creq = readRequest(*cjob);
-
-				/* XXX Should do some check here:
-				 * normal checks for a request (use a function?)
-				 * max total of pages in a batch,
-				 * We don't have to worry about compression format, resolution, 
-				 * and other negotiation parameters because we renegotiate settings
-				 * between jobs after EOM.
-				 * ... */
-
-				traceJob(job, "ADDING JOB " | cjob->jobid | " TO BATCH");
+				}
 				if (iter.notDone() && &iter.job() == bjob)
 				    iter++;
+
+				traceJob(job, "ADDING JOB " | cjob->jobid | " TO BATCH");
+				cjob->modem = job.modem;
 				cjob->remove();
 				bjob->bnext = cjob;
 				cjob->bprev = bjob;
@@ -2516,16 +2521,18 @@ faxQueueApp::runScheduler()
 			    if (sleepiter.job().dest != job.dest || sleepiter.job().state != FaxRequest::state_sleeping)
 				continue;
 			    cjob = sleepiter;
+			    FaxRequest* creq = readRequest(*cjob);
+			    if (!areBatchable(*req, *creq, job)) {
+				delete creq;
+				continue;
+			    }
+
+			    traceJob(job, "ADDING JOB " | cjob->jobid | " TO BATCH");
 			    cjob->stopTTSTimer();
 			    cjob->tts = now;
 			    cjob->state = FaxRequest::state_ready;
 			    cjob->remove();
-
 			    cjob->modem = job.modem;
-
-			    creq = readRequest(*cjob);
-
-			    traceJob(job, "ADDING JOB " | cjob->jobid | " TO BATCH");
 			    bjob->bnext = cjob;
 			    cjob->bprev = bjob;
 			    bjob = cjob;
