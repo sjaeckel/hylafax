@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 119 2006-03-21 23:59:32Z faxguy $ */
+/*	$Id: FaxRecv.c++ 153 2006-04-24 04:46:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -64,8 +64,6 @@ FaxServer::recvFax(const CallID& callid, fxStr& emsg)
     if (tif) {
 	recvPages = 0;			// total count of received pages
 	fileStart = pageStart = Sys::now();
-
-	modem->flushModemInput();
 
 	if (faxRecognized = modem->recvBegin(emsg)) {
 	    /*
