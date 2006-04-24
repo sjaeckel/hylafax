@@ -1,7 +1,10 @@
-#	$Id: CHANGES 153 2006-04-24 04:46:30Z faxguy $	
+#	$Id: CHANGES 154 2006-04-24 16:57:31Z faxguy $	
 
 New Changes
 
+* change "Job aborted" to "Call aborted" and thereby fix a problem
+  with the lead job in a batch being marked as failed if a batched
+  job is aborted (24 Apr 2006)
 * undo modem I/O flush on receptions before sending any data (24 Apr 2006)
 * fix batching to check modem selection before batching (24 Apr 2006)
 * change Class 1 ECM sending behavior when retransmitting a single

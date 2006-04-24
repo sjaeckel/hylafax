@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: pageSendApp.c++ 154 2006-04-24 16:57:31Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -418,7 +418,7 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number
 	}
     }
     if (abortCall)
-	sendFailed(req, send_failed, "Job aborted by user");
+	sendFailed(req, send_retry, "Call aborted by user");
     else if (req.status == send_retry) {
 	if (req.totdials == req.maxdials) {
 	    notice = req.notice | "; too many attempts to dial";
