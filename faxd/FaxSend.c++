@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxSend.c++ 154 2006-04-24 16:57:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -355,7 +355,7 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	}
     }
     if (abortCall)
-	sendFailed(fax, send_failed, "Job aborted by user");
+	sendFailed(fax, send_retry, "Call aborted by user");
     else if (fax.status == send_retry) {
 	if (fax.totdials == fax.maxdials) {
 	    notice = fax.notice | "; too many attempts to dial";
