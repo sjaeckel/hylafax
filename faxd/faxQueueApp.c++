@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 152 2006-04-24 04:03:14Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 156 2006-04-26 04:29:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1624,7 +1624,9 @@ faxQueueApp::setReadyToRun(Job& job)
 	    case -1:			// error - continue with no JCI
 		jobError(job, "JOB CONTROL: fork: %m");
 		Sys::close(pfd[1]);
-		ctrlJobDone(job, 0);
+		// When fork fails we need to run jobCtrlDone, since there
+		// will be no child signal to start it.
+		ctrlJobDone(job, -1);
 		break;
 	    case 0:				// child, exec command
 		if (pfd[1] != STDOUT_FILENO)
@@ -1638,7 +1640,6 @@ faxQueueApp::setReadyToRun(Job& job)
 		_exit(255);
 		/*NOTREACHED*/
 	    default:			// parent, read from pipe and wait
-		Sys::close(pfd[1]);
 		if (maxBatchJobs > 1) {
 		    /*
 		     * We must wait for JobControl to not defeat batching.
@@ -1661,11 +1662,13 @@ faxQueueApp::setReadyToRun(Job& job)
 		     */
 		    job.startControl(pid, pfd[0]);
 		}
+		Sys::close(pfd[1]);
 		break;
 	    }
 	} else {
-	    jobError(job, "Could not open pipe for JobControl");
-	    ctrlJobDone(job, 0);
+	    // If our pipe fails, we can't run the child, but we still
+	    // Need jobCtrlDone to be called to proceed this job
+	    ctrlJobDone(job, -1);
 	}
     } else {
     	ctrlJobDone(job, 0);
