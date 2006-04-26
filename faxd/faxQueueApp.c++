@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 156 2006-04-26 04:29:41Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 159 2006-04-26 18:42:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -75,6 +75,10 @@ faxQueueApp::SchedTimeout::~SchedTimeout() {}
 void
 faxQueueApp::SchedTimeout::timerExpired(long, long)
 {
+    if (faxQueueApp::instance().scheduling() ) {
+	start(0);
+	return;
+    }
     faxQueueApp::instance().runScheduler();
     started = false;
 }
@@ -89,10 +93,10 @@ faxQueueApp::SchedTimeout::start(u_short s)
      * once per second.
      */
     if (!started && Sys::now() > lastRun) {
-	Dispatcher::instance().startTimer(s, 1, this);
-	lastRun = Sys::now() + s;
 	started = true;
 	pending = false;
+	Dispatcher::instance().startTimer(s, 1, this);
+	lastRun = Sys::now() + s;
     } else {
 	if (!pending && lastRun <= Sys::now()) {
 	    /*
@@ -117,6 +121,7 @@ faxQueueApp::faxQueueApp()
     fifo = -1;
     quit = false;
     dialRules = NULL;
+    inSchedule = false;
     setupConfig();
 
     fxAssert(_instance == NULL, "Cannot create multiple faxQueueApp instances");
@@ -1579,7 +1584,7 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 	    } else {
 		traceQueue(job, "SEND INCOMPLETE: retry immediately; " |
 		    req->notice); 
-		setReadyToRun(job);		// NB: job.tts will be <= now
+		setReadyToRun(job, false);	// NB: job.tts will be <= now
 	    }
 	} else					// signal waiting co-thread
 	    job.suspendPending = false;
@@ -1609,7 +1614,7 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
  * the job is placed on the ready-to-run queue.
  */
 void
-faxQueueApp::setReadyToRun(Job& job)
+faxQueueApp::setReadyToRun(Job& job, bool wait)
 {
     if (jobCtrlCmd.length()) {
 	const char *app[3];
@@ -1640,7 +1645,7 @@ faxQueueApp::setReadyToRun(Job& job)
 		_exit(255);
 		/*NOTREACHED*/
 	    default:			// parent, read from pipe and wait
-		if (maxBatchJobs > 1) {
+		if (wait) {
 		    /*
 		     * We must wait for JobControl to not defeat batching.
 		     */
@@ -1865,7 +1870,7 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
 	setSleep(job, job.tts);
     } else {					// ready to go now
 	job.startKillTimer(req.killtime);
-	setReadyToRun(job);
+	setReadyToRun(job, false);
     }
     updateRequest(req, job);
     return (true);
@@ -2240,7 +2245,7 @@ void
 faxQueueApp::runJob(Job& job)
 {
     job.remove();
-    setReadyToRun(job);
+    setReadyToRun(job, true);
     /*
      * In order to deliberately batch jobs by using a common
      * time-to-send we need to give time for the other jobs'
@@ -2274,7 +2279,7 @@ faxQueueApp::unblockDestJobs(Job& job, DestInfo& di)
 	FaxRequest* req = readRequest(*jb);
 	if (!req) continue;
 	if (isOKToCall(di, job.getJCI(), n)) {
-	    setReadyToRun(*jb);
+	    setReadyToRun(*jb, false);
 	    if (!di.supportsBatching()) n++;
 	    req->notice = "";
 	    updateRequest(*req, *jb);
@@ -2338,6 +2343,8 @@ faxQueueApp::runScheduler()
 	close();
 	return;
     }
+    fxAssert(inSchedule == false, "Scheduler running twice");
+    inSchedule = true;
     /*
      * Reread the configuration file if it has been
      * changed.  We do this before each scheduler run
@@ -2573,6 +2580,14 @@ faxQueueApp::runScheduler()
      * that terminated without telling us.
      */
     HylaClient::purge();		// XXX maybe do this less often
+
+    inSchedule = false;
+}
+
+bool
+faxQueueApp::scheduling(void)
+{
+    return inSchedule;
 }
 
 /*
