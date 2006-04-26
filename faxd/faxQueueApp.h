@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 152 2006-04-24 04:03:14Z faxguy $ */
+/*	$Id: faxQueueApp.h 159 2006-04-26 18:42:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -134,6 +134,7 @@ private:
     SchedTimeout schedTimeout;		// timeout for running scheduler
     DestInfoDict destJobs;		// jobs organized by destination
     fxStrDict	pendingDocs;		// documents waiting for removal
+    bool	inSchedule;		// indicates processing of runScheduler
 
     static faxQueueApp* _instance;
 
@@ -209,7 +210,7 @@ private:
     void	rejectSubmission(Job&, FaxRequest&, const fxStr& reason);
     bool	areBatchable(FaxRequest& reqa, FaxRequest& reqb, Job& job);
 
-    void	setReadyToRun(Job& job);
+    void	setReadyToRun(Job& job, bool wait);
     void	setSleep(Job& job, time_t tts);
     void	setDead(Job& job);
     void	setActive(Job& job);
@@ -226,6 +227,7 @@ private:
     void	removeDestInfoJob(Job& job);
     void        unblockDestJobs(Job& job, DestInfo& di);
 
+    bool	scheduling();
     void	runScheduler();
     void	pokeScheduler(u_short s = 0);
 // job control stuff
