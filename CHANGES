@@ -1,4 +1,4 @@
-#	$Id: CHANGES 156 2006-04-26 04:29:41Z faxguy $	
+#	$Id: CHANGES 158 2006-04-26 16:00:35Z faxguy $	
 
 New Changes
 
@@ -68,7 +68,7 @@ New Changes
 * add support for libtiff-3.8 (17 Jan 2006)
 * add Polish dictionary translations (17 Jan 2006)
 * add French dictionary translations (17 Jan 2006)
-* add Italian dictionary translations (11 Jan 2006)
+* add Italian dictionary translations (11 Jan, 26 Apr 2006)
 * copy localtime to the etc spool directory for hfaxd
   to resolve time issues on some systems (11 Jan 2006)
 * add job owner feature to DestControls (11 Jan 2006)
