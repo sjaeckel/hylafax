@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 124 2006-03-29 02:15:14Z faxguy $
+#	$Id: faxsetup.sh.in 162 2006-04-27 20:52:34Z faxguy $
 #
 # @WARNING@
 #
@@ -233,7 +233,7 @@ EOF
 }
 
 QUIET=no
-INTERACTIVE=no
+INTERACTIVE=yes
 AREACODE=000
 isServer=no
 isClient=no
