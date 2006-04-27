@@ -1,7 +1,9 @@
-#	$Id: CHANGES 158 2006-04-26 16:00:35Z faxguy $	
+#	$Id: CHANGES 163 2006-04-27 22:47:16Z faxguy $	
 
 New Changes
 
+* when dealing with JBIG/JPEG send PPR if we detect no frames
+  received but we're still missing the last frame (27 Apr 2006)
 * change "Job aborted" to "Call aborted" and thereby fix a problem
   with the lead job in a batch being marked as failed if a batched
   job is aborted (24 Apr 2006)
