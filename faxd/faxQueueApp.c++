@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 159 2006-04-26 18:42:54Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 164 2006-05-01 03:54:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -75,6 +75,7 @@ faxQueueApp::SchedTimeout::~SchedTimeout() {}
 void
 faxQueueApp::SchedTimeout::timerExpired(long, long)
 {
+    if (pending && lastRun <= Sys::now()) pending = false;
     if (faxQueueApp::instance().scheduling() ) {
 	start(0);
 	return;
@@ -1411,6 +1412,10 @@ faxQueueApp::sendJobStart(Job& job, FaxRequest* req)
 void
 faxQueueApp::sendJobDone(Job& job, int status)
 {
+    traceQueue(job, "CMD DONE: exit status %#x", status);
+    if (status&0xff)
+	logError("Send program terminated abnormally with exit status %#x", status);
+
     Job* cjob;
     Job* njob;
     DestInfo& di = destJobs[job.dest];
@@ -1430,10 +1435,6 @@ faxQueueApp::sendJobDone(Job& job, int status)
     } else {
 	unblockDestJobs(job, di);
     }
-    traceQueue(job, "CMD DONE: exit status %#x", status);
-    if (status&0xff)
-	logError("Send program terminated abnormally with exit status %#x", status);
-
     for (cjob = &job; cjob != NULL; cjob = njob) {
 	njob = cjob->bnext;
 	if (cjob != &job) req = readRequest(*cjob);	// the first was already read
@@ -1645,29 +1646,12 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 		_exit(255);
 		/*NOTREACHED*/
 	    default:			// parent, read from pipe and wait
-		if (wait) {
-		    /*
-		     * We must wait for JobControl to not defeat batching.
-		     */
-		    fxStr jcibuf;
-		    char data[1024];
-		    int n;
-		    while ((n = Sys::read(pfd[0], data, sizeof(data)-1)) > 0) {
-			data[n] = '\0';
-			jcibuf.append(data, n);
-		    }
-		    job.setJCI(jcibuf);
-		    int estat = -1;
-		    (void) Sys::waitpid(pid, estat);
-		    ctrlJobDone(job, estat);
-		} else {
-		    /*
-		     * This lets processing continue and tasks Dispatcher
-		     * with running ctrlJobDone.
-		     */
-		    job.startControl(pid, pfd[0]);
-		}
+		job.startControl(pid, pfd[0]);	// First, get our child PID handled
 		Sys::close(pfd[1]);
+		if (wait) {
+		    while (job.isEmpty())
+			Dispatcher::instance().dispatch();
+		}
 		break;
 	    }
 	} else {
@@ -1870,7 +1854,8 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
 	setSleep(job, job.tts);
     } else {					// ready to go now
 	job.startKillTimer(req.killtime);
-	setReadyToRun(job, false);
+	setReadyToRun(job, true);
+	pokeScheduler();
     }
     updateRequest(req, job);
     return (true);

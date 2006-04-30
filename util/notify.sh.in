@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 149 2006-04-21 19:30:29Z faxguy $
+#    $Id: notify.sh.in 164 2006-05-01 03:54:55Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -698,7 +698,7 @@ elif [ "$WHY" = "failed" ] ; then
     fi
 elif [ "$WHY" = "rejected" ] ; then 
     putHeaders "$jobtag $DICTTO $DESTINATION $DICTFAILED"
-    printf " $REJECTEDBECAUSE\n    "
+    printf " $DICTREJECTEDBECAUSE\n    "
     printStatus "$faxstatus"
     returnToSender
     if [ -n "$RETURNFILETYPE" ] ; then
