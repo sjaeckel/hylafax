@@ -1,7 +1,10 @@
-#	$Id: CHANGES 163 2006-04-27 22:47:16Z faxguy $	
+#	$Id: CHANGES 165 2006-05-01 15:30:38Z faxguy $	
 
 New Changes
 
+* fix a potential stalled run queue (1 May 2006)
+* fix a potential hang in JobControl parsing (1 May 2006)
+* fix a typo dealing with the dictionary in notify (1 May 2006)
 * when dealing with JBIG/JPEG send PPR if we detect no frames
   received but we're still missing the last frame (27 Apr 2006)
 * change "Job aborted" to "Call aborted" and thereby fix a problem
