@@ -1,7 +1,8 @@
-#	$Id: CHANGES 165 2006-05-01 15:30:38Z faxguy $	
+#	$Id: CHANGES 166 2006-05-01 21:45:09Z faxguy $	
 
 New Changes
 
+* fix TIFF FAXDCS tag encoding in Class 2 reception (1 May 2006)
 * fix a potential stalled run queue (1 May 2006)
 * fix a potential hang in JobControl parsing (1 May 2006)
 * fix a typo dealing with the dictionary in notify (1 May 2006)
