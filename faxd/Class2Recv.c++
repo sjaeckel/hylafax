@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: Class2Recv.c++ 166 2006-05-01 21:45:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -124,6 +124,7 @@ bool
 Class2Modem::recvDCS(const char* cp)
 {
     if (parseClass2Capabilities(skipStatus(cp), params)) {
+	params.update(false);
 	setDataTimeout(60, params.br);
 	FaxModem::recvDCS(params);	// announce session params
 	return (true);

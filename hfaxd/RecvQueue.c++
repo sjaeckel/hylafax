@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 80 2006-02-01 18:57:45Z faxguy $ */
+/*	$Id: RecvQueue.c++ 166 2006-05-01 21:45:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -152,7 +152,7 @@ HylaFAXServer::getRecvDocStatus(RecvInfo& ri)
 #endif
     char* cp;
 #ifdef TIFFTAG_FAXDCS
-    if (TIFFGetField(tif, TIFFTAG_FAXDCS, &cp)) {
+    if (TIFFGetField(tif, TIFFTAG_FAXDCS, &cp) && strncmp(cp, "00 00 00", 8) != 0) {
 	// cannot trust br from faxdcs as V.34-Fax does not provide it there
 	u_int brhold = ri.params.br;
 	fxStr faxdcs(cp);
