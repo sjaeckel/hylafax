@@ -1,4 +1,4 @@
-/*	$Id: Job.h 146 2006-04-20 23:15:21Z faxguy $ */
+/*	$Id: Job.h 169 2006-05-03 23:49:29Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -171,8 +171,6 @@ public:
     void startControl(pid_t pid, int fd);
     void startPrepare(pid_t pid);
     void startSend(pid_t pid);
-
-    void setJCI(fxStr jcibuf);
 
     void encode(fxStackBuffer&) const;	// encode in JobExt format
 

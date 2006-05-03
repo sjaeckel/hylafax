@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 168 2006-05-03 16:18:02Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 169 2006-05-03 23:49:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1646,8 +1646,8 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 		_exit(255);
 		/*NOTREACHED*/
 	    default:			// parent, read from pipe and wait
+		job.startControl(pid, pfd[0]);	// get our child PID handled first!
 		Sys::close(pfd[1]);
-		job.startControl(pid, pfd[0]);	// get our child PID handled
 		if (wait) {
 		    while (job.isEmpty())
 			Dispatcher::instance().dispatch();
