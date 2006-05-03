@@ -1,4 +1,4 @@
-/*	$Id: Job.c++ 168 2006-05-03 16:18:02Z faxguy $ */
+/*	$Id: Job.c++ 169 2006-05-03 23:49:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -212,24 +212,16 @@ Job::startControl(pid_t p, int fd)
     // 2) We want our child pid noted as soon as possible (once we're sure
     //    jci is taken care of)
     // And then we can worry about deleting and linking fd...
-    JobControlInfo* tmp_jci = jci;
+    JobControlInfo *tmp_jci = jci;
     jci = NULL;
     Dispatcher::instance().startChild(pid = p, &ctrlHandler);
-    if (tmp_jci) {
-	delete jci;
-    }
+
+    if (tmp_jci)
+	delete tmp_jci;
+
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
     ctrlHandler.fd = fd;
     Dispatcher::instance().link(fd, Dispatcher::ReadMask, &ctrlHandler);
-}
-
-void
-Job::setJCI(fxStr jcibuf)
-{
-    if (jci) {
-	delete jci;
-	jci = NULL;
-    }
-    jci = new JobControlInfo(jcibuf);
 }
 
 fxStr
