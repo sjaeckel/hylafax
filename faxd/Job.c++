@@ -1,4 +1,4 @@
-/*	$Id: Job.c++ 164 2006-05-01 03:54:55Z faxguy $ */
+/*	$Id: Job.c++ 168 2006-05-03 16:18:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,10 +60,8 @@ JobCtrlHandler::inputReady (int f)
     fxAssert(f == fd, "Reading from a FD which is not our own");
 
     int n;
-    while ((n = Sys::read(fd, data, sizeof(data)-1)) > 0)
-    {
+    while ((n = Sys::read(fd, data, sizeof(data))) > 0) {
 	buf.append(data, n);
-    	if (data[n] == EOF) break;
     }
     return 0;
 }
