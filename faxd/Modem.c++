@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 152 2006-04-24 04:03:14Z faxguy $ */
+/*	$Id: Modem.c++ 167 2006-05-03 15:37:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -136,7 +136,7 @@ Modem::isInGroup(const fxStr& mgroup)
 {
     RE* c = ModemGroup::find(mgroup);
     if (c)
-	return (c->Find(mgroup));
+	return (c->Find(devID));
     return ((devID == mgroup));
 }
 
