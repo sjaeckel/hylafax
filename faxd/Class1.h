@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: Class1.h 170 2006-05-05 01:21:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -139,7 +139,7 @@ protected:
 		    u_int f3, const fxStr& nsf,
 		    u_int f4, const fxStr& id,
 		    u_int f5, FaxParams& dics,
-		    u_int timer, fxStr& emsg);
+		    u_int timer, bool notransmit, fxStr& emsg);
     bool	recvDCSFrames(HDLCFrame& frame);
     bool	recvTraining();
     bool	recvPPM(int& ppm, fxStr& emsg);
