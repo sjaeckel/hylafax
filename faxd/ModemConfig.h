@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: ModemConfig.h 170 2006-05-05 01:21:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -57,6 +57,7 @@ private:
     u_int	getSpeed(const char* value);
     u_int	getDataFormat(const char* value);
     u_int       getRTNHandling(const char* cp);
+    u_int       getBadPageHandling(const char* cp);
     u_int       getJBIGSupport(const char* cp);
     ECMType	getECMType(const char* cp);
 
@@ -228,6 +229,7 @@ public:
     u_int	recvDataFormat;		// received facsimile data format
 
     RTNHandling rtnHandling;            // RTN signal handling method
+    BadPageHandling badPageHandling;	// bad page (received) handling method
     JBIGSupport	class1JBIGSupport;	// monochrome JBIG support
     bool	saveUnconfirmedPages;	// don't delete unconfirmed pages
     

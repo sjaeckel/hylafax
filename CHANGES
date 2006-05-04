@@ -1,7 +1,9 @@
-#	$Id: CHANGES 166 2006-05-01 21:45:09Z faxguy $	
+#	$Id: CHANGES 170 2006-05-05 01:21:03Z faxguy $	
 
 New Changes
 
+* add BadPageHandlingMethod feature, and use default of
+  RTN-SAVE, which is a different behavior than before (4 May 2006)
 * fix TIFF FAXDCS tag encoding in Class 2 reception (1 May 2006)
 * fix a potential stalled run queue (1 May 2006)
 * fix a potential hang in JobControl parsing (1 May 2006)

@@ -1,4 +1,4 @@
-/*	$Id: Class1Poll.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class1Poll.c++ 170 2006-05-05 01:21:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -66,5 +66,5 @@ Class1Modem::pollBegin(const fxStr& cig0,
 	    0, fxStr::null,
 	    FCF_CIG, cig,
 	    FCF_DTC, dtc,
-	    conf.t1Timer, emsg);
+	    conf.t1Timer, false, emsg);
 }
