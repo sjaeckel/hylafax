@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 169 2006-05-03 23:49:29Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 175 2006-05-12 22:47:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1625,6 +1625,7 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 	traceJob(job, "CONTROL");
 	int pfd[2];
 	if (pipe(pfd) >= 0) {
+	    fcntl(pfd[0], F_SETFL, fcntl(pfd[0], F_GETFL, 0) | O_NONBLOCK);
 	    pid_t pid = fork();
 	    switch (pid) {
 	    case -1:			// error - continue with no JCI

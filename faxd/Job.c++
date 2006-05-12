@@ -1,4 +1,4 @@
-/*	$Id: Job.c++ 169 2006-05-03 23:49:29Z faxguy $ */
+/*	$Id: Job.c++ 175 2006-05-12 22:47:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -219,7 +219,6 @@ Job::startControl(pid_t p, int fd)
     if (tmp_jci)
 	delete tmp_jci;
 
-    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
     ctrlHandler.fd = fd;
     Dispatcher::instance().link(fd, Dispatcher::ReadMask, &ctrlHandler);
 }
