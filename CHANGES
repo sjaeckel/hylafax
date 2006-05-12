@@ -1,7 +1,8 @@
-#	$Id: CHANGES 172 2006-05-05 20:06:46Z faxguy $	
+#	$Id: CHANGES 174 2006-05-12 22:43:18Z faxguy $	
 
 New Changes
 
+* add faxalter "-r" (resubmit) feature (12 May 2006)
 * fix hfaxd ouput error when a queried job file is moved (5 May 2006)
 * add BadPageHandlingMethod feature, and use default of
   RTN-SAVE, which is a different behavior than before (4 May 2006)

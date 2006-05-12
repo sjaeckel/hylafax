@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxalter.c++ 174 2006-05-12 22:43:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -45,6 +45,47 @@ public:
 faxAlterApp::faxAlterApp() { groups = false; }
 faxAlterApp::~faxAlterApp() {}
 
+static bool
+parseQFile(int isgroup, const char* buf, int cc, fxStr& morescript)
+{
+    int pos = 0;
+    u_short colons = 0;
+    while (pos < cc) {
+	if (strncmp(buf, "postscript:", 11) == 0 || 
+	    strncmp(buf, "!postscript:", 12) == 0 ||
+	    strncmp(buf, "pdf:", 4) == 0 ||
+	    strncmp(buf, "!pdf:", 5) == 0 ||
+	    strncmp(buf, "tiff:", 5) == 0 ||
+	    strncmp(buf, "!tiff:", 6) == 0 ||
+	    strncmp(buf, "pcl:", 4) == 0 ||
+	    strncmp(buf, "!pcl:", 5) == 0 ||
+	    strncmp(buf, "data:", 5) == 0 ||
+	    strncmp(buf, "!data:", 6) == 0) {
+	    colons = 0;
+	    while (colons < 3 && *buf != '\r' && *buf != '\n' && pos < cc) {
+		if (*buf == ':') colons++;
+		buf++; pos++;
+	    }
+	    if (colons == 3) {
+		morescript.append(isgroup ? "JGPARM " : "JPARM ");
+		morescript.append("DOCUMENT ");
+		while (*buf != '\r' && *buf != '\n' && pos < cc) {
+		    morescript.append(buf, 1);
+		    buf++; pos++;
+		}
+		morescript.append("\n");
+	    }
+	}
+	while (*buf != '\r' && *buf != '\n' && pos < cc) {
+	    buf++; pos++;
+	}
+	if (pos < cc) {
+	    buf++; pos++;
+	}
+    }
+    return (true);
+}
+
 void
 faxAlterApp::run(int argc, char** argv)
 {
@@ -56,10 +97,10 @@ faxAlterApp::run(int argc, char** argv)
     time_t now = Sys::now();
     struct tm tts = *localtime(&now);
     struct tm when;
-    bool useadmin = false;
+    bool useadmin = false, dupejob = false;
 
     int c;
-    while ((c = getopt(argc, argv, "a:d:h:k:m:n:P:t:ADQRgpv")) != -1)
+    while ((c = getopt(argc, argv, "a:d:h:k:m:n:P:t:ADQRrgpv")) != -1)
 	switch (c) {
 	case 'A':			// connect with administrative privileges
 	    useadmin = true;
@@ -168,6 +209,9 @@ faxAlterApp::run(int argc, char** argv)
 	    script.append(optarg);
             script.append("\n");
 	    break;
+	case 'r':
+	    dupejob = true;
+	    break;
 	case 't':			// set max number of retries
 	    if (atoi(optarg) < 0)
 		fxFatal("Bad number of retries for -t option: %s", optarg);
@@ -191,14 +235,27 @@ faxAlterApp::run(int argc, char** argv)
 	    (!useadmin || admin(NULL, emsg))) {
 	    for (; optind < argc; optind++) {
 		const char* jobid = argv[optind];
-		if (setCurrentJob(jobid) && jobSuspend(jobid)) {
-		    if (!runScript(script, script.length(), "<stdin>", emsg))
-			break;			// XXX???
-		    if (!jobSubmit(jobid)) {
-			emsg = getLastResponse();
-			break;
+		if (setCurrentJob(jobid)) {
+		    if (dupejob || jobSuspend(jobid)) {
+			if (dupejob) {
+			    /*
+			     * This is a resubmission attempt.
+			     */
+			    script.insert("JNEW\n");
+			    fxStr parseresult;
+			    if (recvData(parseQFile, groups ? 1 : 0, parseresult, 0, "RETR sendq/q%s", jobid) ||
+				recvData(parseQFile, groups ? 1 : 0, parseresult, 0, "RETR doneq/q%s", jobid)) {
+				script.append(parseresult);
+			    }
+			}
+			if (!runScript(script, script.length(), "<stdin>", emsg))
+			    break;			// XXX???
+			if (!jobSubmit(jobid)) {
+			    emsg = getLastResponse();
+			    break;
+			}
+			printf("Job %s: done.\n", jobid);
 		    }
-		    printf("Job %s: done.\n", jobid);
 		}
 	    }
 	}
