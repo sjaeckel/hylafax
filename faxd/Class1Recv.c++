@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 170 2006-05-05 01:21:03Z faxguy $ */
+/*	$Id: Class1Recv.c++ 173 2006-05-12 22:38:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -720,7 +720,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		/*
 		 * [Re]transmit post page response.
 		 */
-		if (pageGood || conf.badPageHandling == FaxModem::BADPAGE_RTNSAVE) {
+		if (pageGood || (conf.badPageHandling == FaxModem::BADPAGE_RTNSAVE && getRecvEOLCount())) {
 		    if (!pageGood) lastPPM = FCF_MPS;	// FaxModem::BADPAGE_RTNSAVE
 		    /*
 		     * If post page message confirms the page
