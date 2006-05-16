@@ -258,6 +258,18 @@ inline bool ChildQueue::isReady() const { return _ready; }
 
 void ChildQueue::insert(pid_t p, IOHandler* handler) {
     /*
+     * There's a race between the insertion of the pid
+     * into the queue and the termination of the child
+     * process.  If the child exits before the insertion
+     * occurs, then dispatcher will miss the signal.  So we
+     * test whether or not the pid is still running both
+     * before and after the insertion.
+     */
+    bool gotstatus = false;
+    int status;
+    if (waitpid(p, &status, WNOHANG) > 0) gotstatus = true;
+
+    /*
      * Place the entry at the end.  This is intentional
      * so that the work done in the notify method below
      * functions correctly when entries are added by
@@ -272,6 +284,9 @@ void ChildQueue::insert(pid_t p, IOHandler* handler) {
     while (*prev != NULL)
 	prev = &(*prev)->next;
     *prev = new Child(p, handler, NULL);
+
+    if (gotstatus || waitpid(p, &status, WNOHANG) > 0)
+	setStatus(p, status);
 }
 
 void ChildQueue::remove(IOHandler* handler) {

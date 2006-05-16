@@ -1,4 +1,4 @@
-/*	$Id: Job.c++ 175 2006-05-12 22:47:47Z faxguy $ */
+/*	$Id: Job.c++ 176 2006-05-16 21:26:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -206,21 +206,21 @@ Job::startSend(pid_t p)
 void
 Job::startControl(pid_t p, int fd)
 {
-    // Order is important here.
-    // 1) We need to guarantee that jci is NULL and not needed, in case
-    //  our SIGCHLD comes before we get to delete it.
-    // 2) We want our child pid noted as soon as possible (once we're sure
-    //    jci is taken care of)
-    // And then we can worry about deleting and linking fd...
+    /*
+     * Order is important here.
+     *
+     * The fd link needs to be handled before startChild is called
+     * so that the child process exit is not handled before the fd
+     * link occurs.  Otherwise, jobcontrol output may not get noticed.
+     */
     JobControlInfo *tmp_jci = jci;
     jci = NULL;
+    ctrlHandler.fd = fd;
+    Dispatcher::instance().link(fd, Dispatcher::ReadMask, &ctrlHandler);
     Dispatcher::instance().startChild(pid = p, &ctrlHandler);
 
     if (tmp_jci)
 	delete tmp_jci;
-
-    ctrlHandler.fd = fd;
-    Dispatcher::instance().link(fd, Dispatcher::ReadMask, &ctrlHandler);
 }
 
 fxStr

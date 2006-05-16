@@ -1,7 +1,8 @@
-#	$Id: CHANGES 174 2006-05-12 22:43:18Z faxguy $	
+#	$Id: CHANGES 176 2006-05-16 21:26:34Z faxguy $	
 
 New Changes
 
+* fix child process exit race in the dispatcher (16 May 2006)
 * add faxalter "-r" (resubmit) feature (12 May 2006)
 * fix hfaxd ouput error when a queried job file is moved (5 May 2006)
 * add BadPageHandlingMethod feature, and use default of
