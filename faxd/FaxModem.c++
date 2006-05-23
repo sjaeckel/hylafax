@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 143 2006-04-19 05:27:12Z faxguy $ */
+/*	$Id: FaxModem.c++ 177 2006-05-23 22:58:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -73,6 +73,32 @@ FaxModem::sendSetup(FaxRequest& req, const Class2Params&, fxStr&)
     else
 	setupTagLine(req, req.tagline);
     curreq = &req;
+    if (conf.setOriginCmd != "") {
+	fxStr origincmd = conf.setOriginCmd;
+	u_int numpos = origincmd.find(0, "%d");
+	u_int nampos = origincmd.find(0, "%s");
+	if (numpos == origincmd.length() && nampos == origincmd.length()) {
+	    // neither %d nor %s appear in the cmd
+	    if (!atCmd(origincmd)) return (false);
+	} else if (numpos == origincmd.length()) {
+	    // just %s appears in the cmd
+	    if (!atCmd(fxStr::format((const char*) origincmd, (const char*) req.faxname))) return (false);
+	} else if (nampos == origincmd.length()) {
+	    // just %d appears in the cmd
+	    origincmd[numpos+1] = 's';	// change %d to %s
+	    if (!atCmd(fxStr::format((const char*) origincmd, (const char*) req.faxnumber))) return (false);
+	} else {
+	    // both %d and %s appear in the cmd
+	    origincmd[numpos+1] = 's';	// change %d to %s
+	    if (numpos < nampos) {
+		// %d appears before %s
+		if (!atCmd(fxStr::format((const char*) origincmd, (const char*) req.faxnumber, (const char*) req.faxname))) return (false);
+	    } else {
+		// %s appears before %d
+		if (!atCmd(fxStr::format((const char*) origincmd, (const char*) req.faxname, (const char*) req.faxnumber))) return (false);
+	    }
+	}
+    }
     return (true);
 }
 /*

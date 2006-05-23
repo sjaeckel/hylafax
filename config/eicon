@@ -1,4 +1,4 @@
-# $Id: eicon 2 2005-11-11 21:32:03Z faxguy $
+# $Id: eicon 177 2006-05-23 22:58:03Z faxguy $
 #
 # prototype config for Eicon Diva
 #
@@ -9,3 +9,8 @@
 # END-SERVER
 
 ModemType:		Class1		# use this to supply a hint
+
+#
+# Enable this to set Caller*ID Number
+#
+#ModemSetOriginCmd:	AT+iO%d		

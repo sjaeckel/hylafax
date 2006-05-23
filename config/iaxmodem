@@ -1,4 +1,4 @@
-# $Id: iaxmodem 93 2006-02-20 22:05:48Z faxguy $
+# $Id: iaxmodem 177 2006-05-23 22:58:03Z faxguy $
 
 #
 # prototype config for the IAXmodem softmodem which uses
@@ -23,6 +23,11 @@ ModemType:		Class1		# use this to supply a hint
 #
 ModemResetCmds:		"ATH1\nAT+VCID=1"	# enables CallID display
 ModemReadyCmds:		ATH0
+
+#
+# Enable this to set Caller*ID
+#
+#ModemSetOriginCmd:     AT+VSID="%s","%d"
 
 Class1AdaptRecvCmd:	AT+FAR=1
 Class1TMConnectDelay:	400		# counteract quick CONNECT response

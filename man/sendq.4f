@@ -1,4 +1,4 @@
-.\"	$Id: sendq.4f 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: sendq.4f 177 2006-05-23 22:58:03Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -89,6 +89,7 @@ doneop	string	operation to perform when job is reaped
 external	string	external form of dialstring
 fax	string	document ready for transmission
 faxnumber	string	faxnumber to use sending
+faxname	string	origin name to use sending
 groupid	integer	\*(Fx job group identifier
 jobid	integer	\*(Fx job identifier
 jobtag	string	user-specified job identifier
@@ -272,6 +273,9 @@ at zero).
 .B faxnumber
 The number to use when sending a fax.  Parallel's FAXNumber device config
 option.
+.TP 14
+.B faxname
+The originating name to use when sending a fax.
 .TP 14
 .B groupid
 The job group identifier, an integer number in the range

@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: SendFaxJob.h 177 2006-05-23 22:58:03Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -77,6 +77,8 @@ private:
     fxStr	subaddr;		// subaddress for routing (opt)
     fxStr	passwd;			// password (opt)
     fxStr	external;		// displayable version of number (opt)
+    fxStr	faxnumber;		// originating number for setting Caller*ID Number
+    fxStr	faxname;		// originating name for setting Caller*ID Name
 
     bool	autoCover;		// if true, auto-generate cover sheet
     bool	coverIsTemp;		// if true, remove coverFile on exit
@@ -183,6 +185,8 @@ public:
     const fxStr& getPasswd() const;
     void setExternalNumber(const char*);// displayable version of fax number
     const fxStr& getExternalNumber() const;
+    void setFaxNumber(const char*);	// Caller*ID Number, also tagline
+    void setFaxName(const char*);	// Caller*ID Name
 
     /*
      * Cover page support.

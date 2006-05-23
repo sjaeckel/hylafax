@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxRequest.h 177 2006-05-23 22:58:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -145,6 +145,7 @@ public:
     fxStr	notice;		// message to send for notification
     fxStr	modem;		// outgoing modem to use
     fxStr	faxnumber;	// Sender's number to advertise to phone company
+    fxStr	faxname;	// Sender's name to advertise to phone company
     fxStr	tsi;		// TSI to use instead of LocalIdentifier
     fxStr	pagehandling;	// page analysis information
     fxStr	receiver;	// receiver's identity for cover page generation
