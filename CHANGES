@@ -1,52 +1,102 @@
-#	$Id: CHANGES 177 2006-05-23 22:58:03Z faxguy $	
+#	$Id: CHANGES 178 2006-05-24 04:10:43Z faxguy $	
 
 New Changes
 
-* add ModemSetOriginCmd config option, FAXNAME job parameter, and
-  -e "name" and -u "number" sendfax options (23 May 2006)
+* add ModemSetOriginCmd config option, FAXNAME job parameter, 
+  and -e "name" and -u "number" sendfax options (23 May 2006)
 * fix child process exit race in the dispatcher (16 May 2006)
 * add faxalter "-r" (resubmit) feature (12 May 2006)
-* fix hfaxd ouput error when a queried job file is moved (5 May 2006)
 * add BadPageHandlingMethod feature, and use default of
   RTN-SAVE, which is a different behavior than before (4 May 2006)
-* fix TIFF FAXDCS tag encoding in Class 2 reception (1 May 2006)
+
+(4.3.0.2)
+
 * fix a potential stalled run queue (1 May 2006)
 * fix a potential hang in JobControl parsing (1 May 2006)
 * fix a typo dealing with the dictionary in notify (1 May 2006)
 * when dealing with JBIG/JPEG send PPR if we detect no frames
   received but we're still missing the last frame (27 Apr 2006)
-* change "Job aborted" to "Call aborted" and thereby fix a problem
-  with the lead job in a batch being marked as failed if a batched
-  job is aborted (24 Apr 2006)
-* undo modem I/O flush on receptions before sending any data (24 Apr 2006)
-* fix batching to check modem selection before batching (24 Apr 2006)
+
+(4.3.0.1)
+
 * change Class 1 ECM sending behavior when retransmitting a single
   frame to avoid triggering problems on some receivers (20 Apr 2006)
-* replace DestControls with JobControl feature (20, 25 Apr 2006)
 * fix variable naming collission in faxd/Trigger.c++ (19 Apr 2006)
 * fix send buffer when transmitting non-ECM data with a non-zero
   scanline-time value (18 Apr 2006)
 * improve error handling in faxaddmodem -nointeractive (18 Apr 2006)
 * fix a lot of compile warnings (18 Apr 2006)
-* improve the decoding of corrupt MMR image data (14 Apr 2006)
-* fix subaddress sending with sendfax (14 Apr 2006)
-* fix encoding of quoted-printable text (14 Apr 2006)
+
+(4.2.5.6)
+
 * fix incorrect hfaxd SENDTIME and SNPP parsing when local time 
   was in daylight time (13 Apr 2006)
+* fix batching from sleep queue to limit to MaxBatchJobs (11, 21 Apr 2006)
+* add -nointeractive option to faxsetup, faxaddmodem (28 Mar 2006)
+* fix faxgetty hang in ECM due to missing timeouts (13 Mar 2006)
+
+(4.2.5.5)
+
+* improve and extend JPEG parsing (8 Mar 2006)
+* fix indicator when 100% non-zero TCF data is received (1 Mar 2006)
+* correct CIELAB to be ITULAB (28 Feb 2006)
+
+(4.2.5.4)
+
+* do Class1SwitchingCmd before sending MCF after PPS-NULL (16 Feb 2006)
+* on TCF retransmissions don't fallback to V.17 9600 or
+  V.17 7200 as it's only likely to be more problematic (16 Feb 2006)
+* replace Class1SendMsgDelay with Class1SwitchingCmd (15 Feb 2006)
+* compensate for sender who send 1728 pixel width data
+  when they signal another size in DCS (7 Feb, 3 Mar 2006)
+* compensate for senders who send MMR, JBIG, or JPEG without
+  signalling ECM (6 Feb 2006)
+
+(4.2.5.2)
+
+* don't use tiffcp "-r" option on JBIG TIFFs (30 Jan 2006)
+* remove HTML from configure also (30 Jan 2006)
+* fix a potential faxgetty hang due to misuse of 
+  waitpid (26 Jan 2006)
+
+(4.2.4.2)
+
+* enable and fix Solaris DSO (5 Jan 2006)
+* fix SHIELDED_DTMF to work per IS-101 (4 Jan 2006)
+
+(4.2.3.2)
+
+* add support for etc/FaxAccounting database hook (15 Nov 2005)
+* add SUBMIT xferfaxlog records upon job submission (15 Nov 2005)
+
+(4.2.3.1)
+
+* improve useability of SHIELDED_DTMF functions (11 Nov 2005)
+* add "play" option for modem config commands for voice (11 Nov 2005)
+
+
+Changelog for HylaFAX 4.3.0
+
+* fix hfaxd ouput error when a queried job file is moved (5 May 2006)
+* fix TIFF FAXDCS tag encoding in Class 2 reception (1 May 2006)
+* change "Job aborted" to "Call aborted" and thereby fix a problem
+  with the lead job in a batch being marked as failed if a batched
+  job is aborted (24 Apr 2006)
+* fix batching to check modem selection before batching (24 Apr 2006)
+* undo modem I/O flush on receptions before sending any data (24 Apr 2006)
+* replace DestControls with JobControl feature (20, 25 Apr 2006)
+* fix encoding of quoted-printable text (14 Apr 2006)
+* fix subaddress sending with sendfax (14 Apr 2006)
+* improve the decoding of corrupt MMR image data (14 Apr 2006)
 * fix incorrect hfaxd time calculations when local time was
   in daylight time (12 Apr 2006)
-* fix batching from sleep queue to limit to MaxBatchJobs (11, 21 Apr 2006)
 * update config.guess and config.sub (29 Mar 2006)
-* add -nointeractive option to faxsetup, faxaddmodem (28 Mar 2006)
 * fix batch sending of page jobs (23 Mar 2006)
-* flush modem I/O on receptions before sending any data (21 Mar 2006)
 * add German NSFs and correct HylaFAX NSF bit order (21 Mar 2006)
-* add linux-isdn-2 prototype config file (16 Mar 2006)
+* flush modem I/O on receptions before sending any data (21 Mar 2006)
 * remove QualifyCID in lieu of DynamicConfig RejectCall (15 Mar 2006)
 * extend timeout in V.21 HDLC frame reception to T2 (14, 23 Mar 2006)
-* fix faxgetty hang in ECM due to missing timeouts (13 Mar 2006)
 * fix parsing error in DICTDOCSTEXT4 (10 Mar 2006)
-* improve and extend JPEG parsing (8 Mar 2006)
 * set minimum V.34 constrain threshold to 4800 bps (6 Mar 2006)
 * improve the reaction to a V.34 control channel retrain (6 Mar 2006)
 * fix SNPP login reply to say 250 instead of 230 (3, 27 Mar 2006)
@@ -54,56 +104,37 @@ New Changes
 * fix %1z RcvFmt output (3 Mar 2006)
 * expand Class1JBIGSupport to allow for differentiation
   between full, none, send, and receive support (2 Mar 2006)
-* fix indicator when 100% non-zero TCF data is received (1 Mar 2006)
-* correct CIELAB to be ITULAB (28 Feb 2006)
 * add iaxmodem prototype config file (20 Feb 2006)
-* do Class1SwitchingCmd before sending MCF after PPS-NULL (16 Feb 2006)
-* on TCF retransmissions don't fallback to V.17 9600 or
-  V.17 7200 as it's only likely to be more problematic (16 Feb 2006)
-* replace Class1SendMsgDelay with Class1SwitchingCmd (15 Feb 2006)
+* add linux-isdn-2 prototype config file (16 Mar 2006)
 * fix buffer overrun in NSF parsing (14 Feb 2006)
 * fix incorrect "Fax protocol error" in ECM mode (8 Feb 2006)
-* compensate for sender who send 1728 pixel width data
-  when they signal another size in DCS (7 Feb, 3 Mar 2006)
-* compensate for senders who send MMR, JBIG, or JPEG without
-  signalling ECM (6 Feb 2006)
 * ignore MESSAGE-WAITING after dial (3 Feb 2006)
 * fix problem with blocked jobs not unblocking (2 Feb 2006)
 * fix hfaxd to recognize JBIG and JPEG faxes (1 Feb 2006)
-* don't use tiffcp "-r" option on JBIG TIFFs (30 Jan 2006)
-* remove HTML from configure also (30 Jan 2006)
 * fix EOFB on the end of MMR images, which should address
   a variety of sending issues related with MMR data (28, 30 Jan 2006)
-* fix a potential faxgetty hang due to miuse of 
-  waitpid (26 Jan 2006)
 * fix a rare segfault in Class 1 receiving when, for example,
   CTC is received instead of PPS (25 Jan 2006)
 * add support for libtiff-3.8 (17 Jan 2006)
 * add Polish dictionary translations (17 Jan 2006)
 * add French dictionary translations (17 Jan 2006)
 * add Italian dictionary translations (11 Jan, 26 Apr 2006)
+* add job owner feature to DestControls (11 Jan 2006)
 * copy localtime to the etc spool directory for hfaxd
   to resolve time issues on some systems (11 Jan 2006)
-* add job owner feature to DestControls (11 Jan 2006)
 * improve German, Portuguese, and Spanish translations (9 Jan 2006)
 * fix formatting of e-mails (9 Jan 2006)
 * add dictionary for notify, faxrcvd, and pollrcvd
   internationalization support (6 Jan 2006)
-* enable and fix Solaris DSO (5 Jan 2006)
 * fix build for SUNWSpro (5 Jan 2006)
-* fix SHIELDED_DTMF to work per IS-101 (4 Jan 2006)
 * fix configure in vsnprintf detection (21 Dec 2005)
 * use PDF in q-files when appropriate (20-21 Dec 2005)
 * fix rare occassion where TCF fails following an unexpected
   receipt of prologue frames (7 Dec 2005, 9 Jan 2006)
-* add support for etc/FaxAccounting database hook (15 Nov 2005)
-* add SUBMIT xferfaxlog records upon job submission (15 Nov 2005)
 * use To-Company and To-Name coverpage entries in the notification
   message if they are available to use (12 Nov 2005)
 * add CHARSET config option for mailing scripts (12 Nov 2005)
 * disable usage of AT+FRS in USR prototype config (11 Nov 2005)
-* improve useability of SHIELDED_DTMF functions (11 Nov 2005)
-* add "play" option for modem config commands for voice (11 Nov 2005)
 
 Changelog for HylaFAX 4.2.5
 
