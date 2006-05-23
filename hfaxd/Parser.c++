@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: Parser.c++ 177 2006-05-23 22:58:03Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -131,6 +131,7 @@ static const tab parmtab[] = {
 { "DONEOP",       T_DONEOP,	  false, true, "[<string>]" },
 { "EXTERNAL",     T_EXTERNAL,	  false, true, "[<string>]" },
 { "FAXNUMBER",    T_FAXNUMBER,	  false, true, "[<string>]" },
+{ "FAXNAME",      T_FAXNAME,	  false, true, "[<string>]" },
 { "FROMCOMPANY",  T_FROM_COMPANY, false, true, "[<string>]" },
 { "FROMLOCATION", T_FROM_LOCATION,false, true, "[<string>]" },
 { "FROMUSER",     T_FROM_USER,	  false, true, "[<string>]" },
@@ -1118,6 +1119,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_REGARDING:
     case T_COMMENTS:
     case T_FAXNUMBER:
+    case T_FAXNAME:
     case T_TSI:
 	if (opt_CRLF()) {
 	    replyJobParamValue(*curJob, 213, t);

@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 177 2006-05-23 22:58:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -295,6 +295,8 @@ SendFaxJob::setPriority(const char* pri)
 void SendFaxJob::setPriority(int p)			{ priority = p; }
 
 void SendFaxJob::setTSI(const char* s)			{ tsi = s; }
+void SendFaxJob::setFaxNumber(const char* s)		{ faxnumber = s; }
+void SendFaxJob::setFaxName(const char* s)		{ faxname = s; }
 void SendFaxJob::setDialString(const char* s)		{ number = s; }
 void SendFaxJob::setSubAddress(const char* s)		{ subaddr = s; }
 void SendFaxJob::setPassword(const char* s)		{ passwd = s; }
@@ -477,6 +479,8 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
      * displayable number then pass both.
      */
     IFPARM("TSI", tsi, "")
+    IFPARM("FAXNUMBER", faxnumber, "")
+    IFPARM("FAXNAME", faxname, "")
     IFPARM("EXTERNAL", external, number)
     CHECKPARM("DIALSTRING", number)
     IFPARM("SUBADDR", subaddr, "")

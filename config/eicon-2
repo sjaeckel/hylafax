@@ -1,4 +1,4 @@
-# $Id: eicon-2 2 2005-11-11 21:32:03Z faxguy $
+# $Id: eicon-2 177 2006-05-23 22:58:03Z faxguy $
 #
 # prototype config file for the Eicon Diva ISDN Modem
 #
@@ -17,6 +17,11 @@ ModemFlowControl:	rtscts
 ModemNoFlowCmd:		AT&K0
 ModemSoftFlowCmd:	AT&K4
 ModemHardFlowCmd:	AT&K3
+
+#
+# Enable this to set Caller*ID Number
+#
+#ModemSetOriginCmd:     AT+iO%d
 
 Class2APQueryCmd:	none
 Class2SPLCmd:		none

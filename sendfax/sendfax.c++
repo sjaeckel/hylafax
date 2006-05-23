@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 138 2006-04-15 06:48:42Z faxguy $ */
+/*	$Id: sendfax.c++ 177 2006-05-23 22:58:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -92,7 +92,7 @@ sendFaxApp::run(int argc, char** argv)
     int verbose = 0;
     SendFaxJob& proto = getProtoJob();
     db = new FaxDB(tildeExpand(dbName));
-    while ((c = Sys::getopt(argc, argv, "a:b:B:c:C:d:f:F:h:i:I:k:M:o:P:r:s:S:t:T:U:V:W:x:X:y:Y:z:123lmnpvwADEGNR")) != -1) {
+    while ((c = Sys::getopt(argc, argv, "a:b:B:c:C:d:e:f:F:h:i:I:k:M:o:P:r:s:S:t:T:u:U:V:W:x:X:y:Y:z:123lmnpvwADEGNR")) != -1) {
         if (c != 'h')
             optionsUsed = false;
         switch (c) {
@@ -130,6 +130,9 @@ sendFaxApp::run(int argc, char** argv)
             optionsUsed = true;
             addDestination(optarg);
             break;
+	case 'e':			// sender's Caller*ID Name
+	    proto.setFaxName(optarg);
+	    break;
         case 'E':			// disable use of ECM
             proto.setDesiredEC(false);
             break;
@@ -196,6 +199,9 @@ sendFaxApp::run(int argc, char** argv)
         case 'T':			// times to dial telephone
             proto.setMaxDials(atoi(optarg));
             break;
+	case 'u':			// sender's Caller*ID Number (for tagline also)
+	    proto.setFaxNumber(optarg);
+	    break;
         case 'U':			// cover page: sender's voice number
             proto.setCoverFromVoice(optarg);
             break;

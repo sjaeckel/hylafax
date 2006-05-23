@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: sendfax.1 177 2006-05-23 22:58:03Z faxguy $
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -323,6 +323,11 @@ Note that international calls are sometimes faster when
 Beware also that some modems and/or facsimile devices do not
 properly implement \s-1ECM\s+1 causing transmission failures.
 .TP 12
+.B \-e " name"
+Use
+.I name
+as the name value in the outbound call identification.
+.TP 12
 .BI \-f " from"
 Use
 .I from
@@ -602,6 +607,11 @@ Pass
 to the
 .IR faxcover (1)
 program as the sender's voice number.
+.TP 12
+.B \-u " number"
+Use
+.I number
+as the number value in the outbound call identification and in tagline generation.
 .TP 12
 .BI \-V " voice-no"
 Pass

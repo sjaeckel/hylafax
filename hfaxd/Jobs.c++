@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 172 2006-05-05 20:06:46Z faxguy $ */
+/*	$Id: Jobs.c++ 177 2006-05-23 22:58:03Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -116,6 +116,7 @@ static const struct {
     { T_DONEOP,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_EXTERNAL,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_FAXNUMBER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_FAXNAME,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_FROM_COMPANY,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_FROM_LOCATION,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_FROM_USER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
@@ -211,6 +212,7 @@ static struct {
     { T_PASSWD,		&Job::passwd },
     { T_CLIENT,		&Job::client },
     { T_FAXNUMBER,	&Job::faxnumber },
+    { T_FAXNAME,	&Job::faxname },
     { T_TSI,		&Job::tsi },
     { T_TAGLINE,	&Job::tagline },
     { T_SUBADDR,	&Job::subaddr },
@@ -871,6 +873,7 @@ HylaFAXServer::initDefaultJob(void)
     defJob.external	= "";
     defJob.modem	= MODEM_ANY;
     defJob.faxnumber	= "";
+    defJob.faxname	= "";
     defJob.tsi		= "";
     defJob.receiver	= "";
     defJob.company	= "";
@@ -961,6 +964,7 @@ HylaFAXServer::newJob(fxStr& emsg)
     job->external = curJob->external;
     job->modem = curJob->modem;
     job->faxnumber = curJob->faxnumber;
+    job->faxname = curJob->faxname;
     job->tsi = curJob->tsi;
     job->receiver = curJob->receiver;
     job->company = curJob->company;

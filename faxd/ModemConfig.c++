@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 170 2006-05-05 01:21:03Z faxguy $ */
+/*	$Id: ModemConfig.c++ 177 2006-05-23 22:58:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -85,6 +85,7 @@ static struct {
 { "modemresetcmds",		&ModemConfig::resetCmds },
 { "modemreadycmds",		&ModemConfig::readyCmds },
 { "modemdialcmd",		&ModemConfig::dialCmd,		"ATDT%s" },
+{ "modemsetorigincmd",		&ModemConfig::setOriginCmd },
 { "modemnoflowcmd",		&ModemConfig::noFlowCmd },
 { "modemsoftflowcmd",		&ModemConfig::softFlowCmd },
 { "modemhardflowcmd",		&ModemConfig::hardFlowCmd },
