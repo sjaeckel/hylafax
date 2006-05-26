@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh.in 180 2006-05-27 00:06:28Z faxguy $
+#	$Id: faxrcvd.sh.in 181 2006-05-27 01:26:06Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -57,7 +57,7 @@ ENCODING=base64
 MIMENCODE=mimencode
 TIFF2PDF=bin/tiff2pdf
 TTYCMD=tty
-CHARSET=us-ascii
+CHARSET=UTF-8		# this really gets set in dictionary
 
 . etc/setup.cache
 . bin/common-functions
