@@ -1,7 +1,9 @@
-#	$Id: CHANGES 180 2006-05-27 00:06:28Z faxguy $	
+#	$Id: CHANGES 181 2006-05-27 01:26:06Z faxguy $	
 
 New Changes
 
+* move CHARSET declaration to dictionary, encode non-ASCII
+  dictionary characters into quoted-printable (26 May 2006)
 * more consolidation into common-functions (26 May 2006)
 
 (4.3.0.3)
