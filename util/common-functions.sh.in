@@ -1,10 +1,33 @@
 #!/bin/sh
-#    $Id: common-functions.sh.in 149 2006-04-21 19:30:29Z faxguy $
+#    $Id: common-functions.sh.in 180 2006-05-27 00:06:28Z faxguy $
 
 #
 # This holds various functions that are common to the
 # various bin scripts.
 #
+
+#
+# Produce mailable encoding for binary files.
+#
+encode()
+{
+    if [ ! -f "$1" ]; then
+	return	# encode what?
+    fi
+    if [ -x "$MIMENCODE" ]; then
+	$MIMENCODE < $1 2>$ERRORSTO
+    elif [ -x "$UUENCODE" ]; then
+	if [ "$ENCODING" = "base64" ]; then
+	    $UUENCODE -m $1 $1 | $GREP -E -v "^begin|^====$" 2>$ERRORSTO
+	else
+	    $UUENCODE $1 $1 | $GREP -E -v "^begin|^====$" 2>$ERRORSTO
+	fi
+    else
+	# Do not use "-x" for backward compatibility; even if it fails
+	# this is last chance to encode data, so there's nothing to lose.
+	$MIMENCODE < $1 2>$ERRORSTO
+    fi
+}
 
 #
 # For getting all of the "faxinfo" items to line up.

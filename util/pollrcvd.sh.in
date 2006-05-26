@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: pollrcvd.sh.in 41 2006-01-07 01:43:18Z faxguy $
+#	$Id: pollrcvd.sh.in 180 2006-05-27 00:06:28Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -105,26 +105,6 @@ COMMID="$4"
 MSG="$5"
 
 FILENAME=`echo $FILE | $SED -e 's/\.tif//' -e 's/recvq\///'`
-
-#
-# Produce mailable encoding for binary files.
-# 
-encode()
-{
-    if [ -x "$MIMENCODE" ]; then
-	$MIMENCODE < $1 2>$ERRORSTO
-    elif [ -x "$UUENCODE" ]; then
-	if [ "$ENCODING" = "base64" ]; then
-	    $UUENCODE -m $1 $1 | grep -E -v "^begin|^====$" 2>$ERRORSTO
-	else
-	    $UUENCODE $1 $1 | grep -E -v "^begin|^====$" 2>$ERRORSTO
-	fi
-    else
-	# Do not use "-x" for backward compatibility; even if it fails
-	# this is last chance to encode data, so there's nothing to lose.
-	$MIMENCODE < $1 2>$ERRORSTO
-    fi
-}
 
 if [ -f $FILE ]; then
     SENDER="`$INFO $FILE | $AWK -F: '/Sender/ { print $2 }' 2>/dev/null`"

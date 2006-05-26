@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh.in 136 2006-04-15 06:34:29Z faxguy $
+#	$Id: faxrcvd.sh.in 180 2006-05-27 00:06:28Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -134,26 +134,6 @@ if [ -f etc/FaxDictionary ]; then
     . etc/FaxDictionary
 fi
 setInfoSize
-
-#
-# Produce mailable encoding for binary files.
-#
-encode()
-{
-    if [ -x "$MIMENCODE" ]; then
-	$MIMENCODE < $1 2>$ERRORSTO
-    elif [ -x "$UUENCODE" ]; then
-	if [ "$ENCODING" = "base64" ]; then
-	    $UUENCODE -m $1 $1 | grep -E -v "^begin|^====$" 2>$ERRORSTO
-	else
-	    $UUENCODE $1 $1 | grep -E -v "^begin|^====$" 2>$ERRORSTO
-	fi
-    else
-	# Do not use "-x" for backward compatibility; even if it fails
-	# this is last chance to encode data, so there's nothing to lose.
-	$MIMENCODE < $1 2>$ERRORSTO
-    fi
-}
 
 if [ -f $FILE ]; then
     #

@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 164 2006-05-01 03:54:55Z faxguy $
+#    $Id: notify.sh.in 180 2006-05-27 00:06:28Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -275,7 +275,7 @@ putPdfEncodedImage()
     CONVERTFROM=$2
     OUTFILE="tmp/conv2pdf$$.out" ;
     if [ "$CONVERTFROM" = "PDF" ] ; then
-        mimeEncode "$SOURCEFILE"
+        encode "$SOURCEFILE"
         return # all done here
     elif [ "$CONVERTFROM" = "TIFF" ] ; then
         CONVERTCMD="$TIFF2PDF -o $OUTFILE $SOURCEFILE" 
@@ -285,7 +285,7 @@ putPdfEncodedImage()
         return # unknow convert from format
     fi
     $CONVERTCMD > $ERRORSTO 2>&1
-    mimeEncode "$OUTFILE"
+    encode "$OUTFILE"
     $RM -f $OUTFILE > $ERRORSTO 2>&1
 }
 
@@ -297,7 +297,7 @@ putPsEncodedImage()
     CONVERTFROM=$2
     OUTFILE="tmp/conv2ps$$.out" ;
     if [ "$CONVERTFROM" = "PostScript" ] ; then
-        mimeEncode "$SOURCEFILE"
+        encode "$SOURCEFILE"
         return # all done here
     elif [ "$CONVERTFROM" = "TIFF" ] ; then
         #  tiff2ps -a for all pages, 
@@ -308,7 +308,7 @@ putPsEncodedImage()
         return # unknow convert from format
     fi
     $CONVERTCMD > $ERRORSTO 2>&1
-    mimeEncode "$OUTFILE"
+    encode "$OUTFILE"
     $RM -f $OUTFILE > $ERRORSTO 2>&1
 }
 
@@ -320,7 +320,7 @@ putTifEncodedImage()
     CONVERTFROM=$2
     OUTFILE="tmp/conv2tif$$.out" ;
     if [ $CONVERTFROM = "TIFF" ] ; then 
-        mimeEncode "$SOURCEFILE"
+        encode "$SOURCEFILE"
         return # all done here
     elif [ $CONVERTFROM = "PDF" ] ; then 
         CONVERTCMD="$PDF2FAX -r $resolution -o $OUTFILE $SOURCEFILE" 
@@ -330,7 +330,7 @@ putTifEncodedImage()
         return # unknow convert from format
     fi
     $CONVERTCMD > $ERRORSTO 2>&1
-    mimeEncode "$OUTFILE"
+    encode "$OUTFILE"
     $RM -f $OUTFILE > $ERRORSTO 2>&1
 }
 
@@ -410,31 +410,6 @@ putMimeImageTIFHeader()
     echo "Content-Transfer-Encoding: $ENCODING"
     echo "Content-Disposition: attachment; filename=\"$1\""
     echo ""
-}
-
-mimeEncode()
-# out put a mime encoded form of the given file
-{
-    FILENAME=$1
-    if [ ! -f "$FILENAME" ] ; then
-        return # cannot do much more without a file
-    fi
-    if [ -x "$MIMENCODE" ]; then
-        $MIMENCODE < $FILENAME 2>$ERRORSTO
-    elif [ -x "$UUENCODE" ]; then
-        if [ "$ENCODING" = "base64" ]; then
-            $UUENCODE -m $FILENAME $FILENAME \
-	    	| $GREP -v "^begin" \
-		| $GREP -v "^====$" \
-		2>$ERRORSTO
-        else
-            $UUENCODE $FILENAME $FILENAME 2>$ERRORSTO
-        fi
-    else
-	# Do not use "-x" for backward compatibility; even if it fails
-	# this is last chance to encode data, so there's nothing to lose.
-	$MIMENCODE < $FILENAME 2>$ERRORSTO
-    fi
 }
 
 printItem()
@@ -594,7 +569,6 @@ putHeaders()
 #export -f returnTranscript
 #export -f putMimeAppPDFHeader
 #export -f putMimeImageTIFHeader
-#export -f mimeEncode
 #export -f printItem
 #export -f putTifEncodedImage
 #export -f putMimeSetup

@@ -1,6 +1,10 @@
-#	$Id: CHANGES 178 2006-05-24 04:10:43Z faxguy $	
+#	$Id: CHANGES 180 2006-05-27 00:06:28Z faxguy $	
 
 New Changes
+
+* more consolidation into common-functions (26 May 2006)
+
+(4.3.0.3)
 
 * add ModemSetOriginCmd config option, FAXNAME job parameter, 
   and -e "name" and -u "number" sendfax options (23 May 2006)
