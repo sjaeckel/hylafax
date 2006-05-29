@@ -1,7 +1,8 @@
-#	$Id: CHANGES 181 2006-05-27 01:26:06Z faxguy $	
+#	$Id: CHANGES 182 2006-05-29 18:54:07Z faxguy $	
 
 New Changes
 
+* add JobUseTagline config option (29 May 2006)
 * move CHARSET declaration to dictionary, encode non-ASCII
   dictionary characters into quoted-printable (26 May 2006)
 * more consolidation into common-functions (26 May 2006)
