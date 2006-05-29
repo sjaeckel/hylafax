@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: FaxModem.c++ 182 2006-05-29 18:54:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -68,10 +68,10 @@ FaxModem::sendSetup(FaxRequest& req, const Class2Params&, fxStr&)
     minsp = fxmax((u_int) req.minbr, fxmax((u_int) conf.minSpeed, modemParams.getMinSpeed()));
     pageNumber = 1;
     pageNumberOfJob = req.npages + 1;
-    if (req.desiredtl == 0)
-	setupTagLine(req, conf.tagLineFmt);
-    else
+    if (conf.useJobTagLine && req.desiredtl != 0)
 	setupTagLine(req, req.tagline);
+    else
+	setupTagLine(req, conf.tagLineFmt);
     curreq = &req;
     if (conf.setOriginCmd != "") {
 	fxStr origincmd = conf.setOriginCmd;

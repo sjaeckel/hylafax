@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: ModemConfig.h 182 2006-05-29 18:54:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -228,6 +228,7 @@ public:
     fxStr	tagLineFmt;		// format string for tag lines
     fxStr	tagLineFontFile;	// font file for imaging tag lines
     u_int	recvDataFormat;		// received facsimile data format
+    bool	useJobTagLine;		// Use Job tagline or use conf taglineformat
 
     RTNHandling rtnHandling;            // RTN signal handling method
     BadPageHandling badPageHandling;	// bad page (received) handling method
