@@ -1,7 +1,8 @@
-#	$Id: CHANGES 183 2006-06-01 15:16:34Z faxguy $	
+#	$Id: CHANGES 185 2006-06-01 15:54:23Z faxguy $	
 
 New Changes
 
+* improve french translation (1 Jun 2006)
 * add continuation support to FaxClient in libfaxutil (1 Jun 2006)
 * add JobUseTagline config option (29 May 2006)
 * move CHARSET declaration to dictionary, encode non-ASCII
