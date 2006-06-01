@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.h 31 2005-12-21 01:17:11Z faxguy $ */
+/*	$Id: FaxClient.h 183 2006-06-01 15:16:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -113,6 +113,7 @@ private:
     int		code;		// code from last server repsonse
     fxStr	proto;		// protocol to use for service query
     fxStr	lastResponse;	// text message from last server response
+    fxStr	lastContinuation; // continuation message from last server response
     u_int	port;		// server port to connect to
     u_int	type;		// data transfer type
     u_int	stru;		// file structure
@@ -216,6 +217,7 @@ public:
     int vcommand(const char* fmt, va_list ap);
     int getReply(bool expectEOF);
     const fxStr& getLastResponse(void) const;
+    const fxStr& getLastContinuation(void) const;
     int getLastCode(void) const;
     /*
      * Job control support.
@@ -320,6 +322,8 @@ inline FILE* FaxClient::getCtrlFd(void) const		{ return fdOut; }
 inline int FaxClient::getDataFd(void) const		{ return fdData; }
 inline const fxStr& FaxClient::getLastResponse(void) const
     { return lastResponse; }
+inline const fxStr& FaxClient::getLastContinuation(void) const
+    { return lastContinuation; }
 inline int FaxClient::getLastCode(void) const		{ return code; }
 inline bool FaxClient::isLoggedIn(void) const
     { return (state&FS_LOGGEDIN) != 0; }
