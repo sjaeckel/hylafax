@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1 177 2006-05-23 22:58:03Z faxguy $
+.\"	$Id: sendfax.1 186 2006-06-02 00:16:35Z faxguy $
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -574,22 +574,18 @@ used, for example, in tagline imaging and fax protocol.
 .BI \-t " tries"
 Make no more than
 .I tries
-attempts to send the facsimile.
-By default, \*(Fx will terminate a job if
-3 consecutive attempts to send a particular page fail, or
-it appears the receiver is not a facsimile machine.
-Otherwise \*(Fx places no limit on the
-.I number
-of attempts to send a facsimile, instead terminating a job
-if it is not completed within a 
+attempts to send the facsimile.  (A try is a call in which carrier is 
+established and the facsimile protocol is commenced; this is contrasted 
+with a call attempt that might have failed because the line was busy.)  
+Without specifying a "tries" value to the server \*(Fx will, with some 
+exceptions, make an unlimited 
+.I number 
+of attempts to completely send the facsimile before the 
 .I "kill time"
-timeout interval.
-Note that a try
-is a call in which carrier is established and the facsimile
-protocol is commenced; this is contrasted with a call
-attempt that might have failed because the line was busy.
-Use ``-1'' to indicate that no
-.I tries
+expires.  (The exceptions are that \*(Fx will terminate a job if 3 
+consecutive attempts to send a particular page fail, or if it appears 
+the receiver is not a facsimile machine.)  Use ``-1'' to indicate that no 
+.I tries 
 value should be specified to the server.
 .TP 12
 .BI \-T " maxdials"
