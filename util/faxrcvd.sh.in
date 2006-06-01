@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh.in 181 2006-05-27 01:26:06Z faxguy $
+#	$Id: faxrcvd.sh.in 184 2006-06-01 15:41:38Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -145,7 +145,7 @@ if [ -f $FILE ]; then
 	errors)		NOTIFY_FAXMASTER=no;;
 	*)		NOTIFY_FAXMASTER=yes;;
     esac
-    if [ "$TOADDR" != "$SENDTO" -a "$NOTIFY_FAXMASTER" != "no" ]; then
+    if [ "$TOADDR" != "$SENDTO" ] && [ "$NOTIFY_FAXMASTER" != "no" ]; then
 	(echo "Mime-Version: 1.0"
 	 echo "Content-Type: text/plain; charset=$CHARSET"
 	 echo "Content-Transfer-Encoding: quoted-printable"
