@@ -1,4 +1,4 @@
-# $Id: lucent-mt-20 2 2005-11-11 21:32:03Z faxguy $
+# $Id: lucent-mt-20 189 2006-06-02 22:19:20Z faxguy $
 #
 # prototype config file for MultiTech MT5634ZBA-V.92-NAM
 #
@@ -55,3 +55,4 @@ ModemDialCmd:		AT+FCC=,,,,,,,,0;DT%s
 # ModemReadyCmds:	AT*DS1*DD0*DF1*DN4	# enable DTMF-DID, wink-start, 4 digits
 # CallIDPattern:	"DTMF"		# format of AT*DF1
 # CallIDAnswerLength:	4		# four DTMF-DID digits then ATA
+# ModemResetCmds:	AT*DP1		# to reverse the polarity

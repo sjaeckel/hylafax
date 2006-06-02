@@ -1,4 +1,4 @@
-# $Id: lucent 26 2005-12-16 00:47:13Z faxguy $
+# $Id: lucent 189 2006-06-02 22:19:20Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -62,3 +62,4 @@ Class1TMConnectDelay:	400		# counteract quick CONNECT response
 # ModemReadyCmds:	AT*DS1*DD0*DF1*DN4	# enable DTMF-DID, wink-start, 4 digits
 # CallIDPattern:	"DTMF"		# format of AT*DF1
 # CallIDAnswerLength:	4		# four DTMF-DID digits then ATA
+# ModemResetCmds:	AT*DP1		# to reverse the polarity
