@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: tiff2fax.sh.in 77 2006-01-31 03:04:42Z faxguy $
+#	$Id: tiff2fax.sh.in 188 2006-06-02 18:57:58Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -146,7 +146,7 @@ REFORMAT)			# only need format conversion (e.g. g4->g3)
     $TIFFCP -i -c $df -f lsb2msb $rowsperstrip$fil $out
 
     # libtiff 3.5.7 gives exit status 9 when there are unknown tags...
-    if [ $? != 0 -a $? != 9 ]; then {
+    if [ $? != 0 ] && [ $? != 9 ]; then {
 	$CAT<<EOF
 Unexpected failure converting TIFF document; the command
 

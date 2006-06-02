@@ -1,7 +1,8 @@
-#	$Id: CHANGES 187 2006-06-02 01:04:20Z faxguy $	
+#	$Id: CHANGES 188 2006-06-02 18:57:58Z faxguy $	
 
 New Changes
 
+* make shell code ands and ors be POSIX compliant (2 Jun 2006)
 * fix potential faxgetty loop due to bogus JBIG marker (1 Jun 2006)
 * improve french translation (1 Jun 2006)
 * add continuation support to FaxClient in libfaxutil (1 Jun 2006)

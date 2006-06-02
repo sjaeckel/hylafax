@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: wedged.sh.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: wedged.sh.in 188 2006-06-02 18:57:58Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -187,7 +187,7 @@ EOF
     # Disable faxgetty
     # NB: this is for an System V-style system.
     #
-    if [ -f /etc/inittab -a -n "$WEDGED_DISABLE_FAXGETTY" ]; then
+    if [ -f /etc/inittab ] && [ -n "$WEDGED_DISABLE_FAXGETTY" ]; then
 	ed - /etc/inittab<<EOF
 /^[^#].*:respawn:.*faxgetty .*$tty/s/respawn/off/
 w
