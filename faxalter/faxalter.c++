@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 174 2006-05-12 22:43:18Z faxguy $ */
+/*	$Id: faxalter.c++ 190 2006-06-02 22:44:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -41,49 +41,45 @@ public:
     ~faxAlterApp();
 
     void run(int argc, char** argv);
+    bool duplicate ();
 };
 faxAlterApp::faxAlterApp() { groups = false; }
 faxAlterApp::~faxAlterApp() {}
 
-static bool
-parseQFile(int isgroup, const char* buf, int cc, fxStr& morescript)
+bool faxAlterApp::duplicate ()
 {
-    int pos = 0;
-    u_short colons = 0;
-    while (pos < cc) {
-	if (strncmp(buf, "postscript:", 11) == 0 || 
-	    strncmp(buf, "!postscript:", 12) == 0 ||
-	    strncmp(buf, "pdf:", 4) == 0 ||
-	    strncmp(buf, "!pdf:", 5) == 0 ||
-	    strncmp(buf, "tiff:", 5) == 0 ||
-	    strncmp(buf, "!tiff:", 6) == 0 ||
-	    strncmp(buf, "pcl:", 4) == 0 ||
-	    strncmp(buf, "!pcl:", 5) == 0 ||
-	    strncmp(buf, "data:", 5) == 0 ||
-	    strncmp(buf, "!data:", 6) == 0) {
-	    colons = 0;
-	    while (colons < 3 && *buf != '\r' && *buf != '\n' && pos < cc) {
-		if (*buf == ':') colons++;
-		buf++; pos++;
-	    }
-	    if (colons == 3) {
-		morescript.append(isgroup ? "JGPARM " : "JPARM ");
-		morescript.append("DOCUMENT ");
-		while (*buf != '\r' && *buf != '\n' && pos < cc) {
-		    morescript.append(buf, 1);
-		    buf++; pos++;
-		}
-		morescript.append("\n");
-	    }
-	}
-	while (*buf != '\r' && *buf != '\n' && pos < cc) {
-	    buf++; pos++;
-	}
-	if (pos < cc) {
-	    buf++; pos++;
-	}
+    /*
+     * Before we dup the job, we need to get the list of documents
+     * Documents are sent as continuations to the 213, like:
+     * -> JPARM document
+     * 213-PS docq/doc281.ps
+     * 213-PS docq/doc283.ps
+     * 213-PS docq/doc284.ps
+     * 213 End of documents.
+     */
+    command("JPARM document");
+    fxStr docs = getLastContinuation();
+
+    fxStr jid, gid, emsg;
+    if (! newJob(jid, gid, emsg) ) {
+	printError("%s", (const char*) emsg);
+	return false;
     }
-    return (true);
+
+    for ( int pos = 0, next; (next = docs.next(pos, '\n')) < docs.length(); )
+    {
+	/*
+	 * The document is in the form "<TYPE> <filename>"
+	 * - separate it and resubmit the document
+	 */
+	fxStr tmp = docs.extract(pos, next-pos);
+	int c = tmp.find(0, " ");
+	if (c)
+	    jobDocument(&tmp[c+1]);
+	pos = next+1;
+    }
+
+    return true;
 }
 
 void
@@ -97,10 +93,11 @@ faxAlterApp::run(int argc, char** argv)
     time_t now = Sys::now();
     struct tm tts = *localtime(&now);
     struct tm when;
-    bool useadmin = false, dupejob = false;
+    bool useadmin = false;
+    bool resubmit = false;
 
     int c;
-    while ((c = getopt(argc, argv, "a:d:h:k:m:n:P:t:ADQRrgpv")) != -1)
+    while ((c = getopt(argc, argv, "a:d:h:k:m:n:P:t:ADQRgprv")) != -1)
 	switch (c) {
 	case 'A':			// connect with administrative privileges
 	    useadmin = true;
@@ -210,7 +207,7 @@ faxAlterApp::run(int argc, char** argv)
             script.append("\n");
 	    break;
 	case 'r':
-	    dupejob = true;
+	    resubmit = true;
 	    break;
 	case 't':			// set max number of retries
 	    if (atoi(optarg) < 0)
@@ -228,34 +225,34 @@ faxAlterApp::run(int argc, char** argv)
 	}
     if (optind >= argc)
 	usage();
-    if (script == "")
+    if (script == "" && !resubmit)
 	fxFatal("No job parameters specified for alteration.");
     if (callServer(emsg)) {
 	if (login(NULL, emsg) &&
 	    (!useadmin || admin(NULL, emsg))) {
 	    for (; optind < argc; optind++) {
 		const char* jobid = argv[optind];
-		if (setCurrentJob(jobid)) {
-		    if (dupejob || jobSuspend(jobid)) {
-			if (dupejob) {
-			    /*
-			     * This is a resubmission attempt.
-			     */
-			    script.insert("JNEW\n");
-			    fxStr parseresult;
-			    if (recvData(parseQFile, groups ? 1 : 0, parseresult, 0, "RETR sendq/q%s", jobid) ||
-				recvData(parseQFile, groups ? 1 : 0, parseresult, 0, "RETR doneq/q%s", jobid)) {
-				script.append(parseresult);
-			    }
-			}
-			if (!runScript(script, script.length(), "<stdin>", emsg))
-			    break;			// XXX???
-			if (!jobSubmit(jobid)) {
-			    emsg = getLastResponse();
-			    break;
-			}
-			printf("Job %s: done.\n", jobid);
+		if (setCurrentJob(jobid) ) {
+		    /*
+		     * We take the approach that if we can't do the work on a
+		     * job, we continue on to the next
+		     */
+		    if (resubmit) {
+			if (! duplicate())
+			    continue;
+			const char* old_job = jobid;
+			jobid = getCurrentJob();
+			printf("Job %s: duplicated as job %s.\n", old_job, jobid);
+		    } else if (! jobSuspend(jobid)) 
+			continue;
+		
+		    if (!runScript(script, script.length(), "<stdin>", emsg))
+			break;			// XXX???
+		    if (!jobSubmit(jobid)) {
+			emsg = getLastResponse();
+			break;
 		    }
+		    printf("Job %s: done.\n", jobid);
 		}
 	    }
 	}
