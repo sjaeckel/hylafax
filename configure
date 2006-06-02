@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 181 2006-05-27 01:26:06Z faxguy $
+#	$Id: configure 188 2006-06-02 18:57:58Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -385,7 +385,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 181 $"
+	echo "This is HylaFAX configure $Revision: 188 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -544,7 +544,7 @@ elif [ "$CONFIG_FILES" ]; then
     REASON=`find $CONFIG_FILES -newer config.cache -print 2>/dev/null`
     test "$REASON" && REASON="$REASON has been updated"
 fi
-if [ "$REASON" -a -f config.cache ]; then
+if [ "$REASON" ] && [ -f config.cache ]; then
    Note "Flushing cached parameters because $REASON."
    Note ""
    rm -f config.cache
@@ -641,11 +641,11 @@ findApp()
 {
     t="$1"; app=$1; path=$2;
     case $app in
-    /*) eval test -x $app  -a  ! -d $app  && { echo $app; return; };;
+    /*) eval test -x $app && test ! -d $app && { echo $app; return; };;
     esac
     IFS=:
     for i in $path; do
-	eval  test -x $i/$app  -a  ! -d $i/$app && { echo $i/$app; return 0; }
+	eval  test -x $i/$app && test ! -d $i/$app && { echo $i/$app; return 0; }
     done
     return 1
 }
@@ -794,7 +794,7 @@ checkGCCVersion()
         if [ ${GCCmajor} -gt $2 ]; then
             return 0
         fi
-        if [ ${GCCmajor} -eq $2 -a ${GCCminor} -ge $3 ]; then
+        if [ ${GCCmajor} -eq $2 ] && [ ${GCCminor} -ge $3 ]; then
             return 0
         fi
     fi
@@ -3256,7 +3256,7 @@ fi
 Note "Done checking TIFF support."
 
 # NB: only check if we have the MLA tools
-if [ -f $SRCDIR/MLA/VERSION -a $DBLIB = no ]; then
+if [ -f $SRCDIR/MLA/VERSION ] && [ $DBLIB = no ]; then
     Note ""
     Note "Checking LIBDB support."
     #
@@ -4020,7 +4020,7 @@ CheckRIP
 
 getGSFonts()
 {
-	if [ ! "$PS" = gs -a -n $PATH_PSRIP ];then
+	if [ ! "$PS" = gs ] && [ -n $PATH_PSRIP ];then
 		return 1
 	fi
 	$PATH_PSRIP -h | $AWK -F '[ ]' '
@@ -4537,7 +4537,7 @@ checkForExecutable()
     test -x $1 || bitchExecutable $1
 }
 
-if [ $QUIET = no -a $INTERACTIVE != no ]; then
+if [ $QUIET = no ] && [ $INTERACTIVE != no ]; then
 	Note "Press Return to Continue "
 	read ok
 fi
@@ -4890,7 +4890,7 @@ if [ "$MAKEDEPINCLUDE" != "sinclude" ]; then
     test $REGEX = yes	&& DEPEND="$DEPEND regex"
     test $DBLIB = yes	&& DEPEND="$DEPEND dblib"
     test -f $SRCDIR/MLA/VERSION && DEPEND="$DEPEND MLA"
-    test -d $SRCDIR/faxview -a -d faxview && DEPEND="$DEPEND faxview"
+    test -d $SRCDIR/faxview && test -d faxview && DEPEND="$DEPEND faxview"
     for i in $DEPEND; do
 	test -f $i/Makedepend || cp /dev/null $i/Makedepend
     done

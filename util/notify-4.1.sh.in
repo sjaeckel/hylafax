@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: notify-4.1.sh.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: notify-4.1.sh.in 188 2006-06-02 18:57:58Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -32,7 +32,7 @@
 #
 # Return mail to the submitter of a job when notification is needed.
 #
-if [ $# != 3 -a $# != 4 ]; then
+if [ $# != 3 ] && [ $# != 4 ]; then
     echo "Usage: $0 qfile why jobtime [nextTry]"
     exit 1
 fi

@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: hylafax.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: hylafax.in 188 2006-06-02 18:57:58Z faxguy $
 #
 # chkconfig: 2345 97 05
 #
@@ -173,7 +173,7 @@ case $1 in
 		fi
 		$HFAXD ; printf "$HFAXMSG"
             fi
-	    if test $FAXQ_SERVER != yes -a $HFAXD_SERVER != yes ; then
+	    if test $FAXQ_SERVER != yes && test $HFAXD_SERVER != yes ; then
 		printf " not started (script disabled by configure)"
 	    fi
 	    $ECHO "."
