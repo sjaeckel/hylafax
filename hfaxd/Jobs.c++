@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: Jobs.c++ 192 2006-06-06 05:01:05Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -177,11 +177,16 @@ static const struct {
 bool
 HylaFAXServer::checkAccess(const Job& job, Token t, u_int op)
 {
-    u_int n = N(params)-1;
-    u_int i = 0;
-    while (i < n && params[i].t != t)
-	i++;
-    u_int m = params[i].protect;
+    u_int m = 0;
+    if (t == T_JOB) {
+    	m = jobProtection;
+    } else {
+	u_int n = N(params)-1;
+	u_int i = 0;
+	while (i < n && params[i].t != t)
+	    i++;
+	m = params[i].protect;
+    }
     if (m&op)					// other/public access
 	return (true);
     if (IS(PRIVILEGED) && ((m>>3)&op))		// administrative access
@@ -1044,7 +1049,11 @@ HylaFAXServer::findJobOnDisk(const char* jid, fxStr& emsg)
 	bool reject;
 	if (req->readQFile(reject) && !reject) {
 	    Sys::close(req->fd), req->fd = -1;
-	    return (req);
+	    if (checkAccess(*req, T_JOB, A_READ) )
+		return (req);
+	    emsg = "Permission denied";
+	    delete req;
+	    return (NULL);
 	}
 	emsg = "invalid or corrupted job description file";
 	delete req;			// NB: closes fd
@@ -1609,7 +1618,13 @@ HylaFAXServer::addPollOp(Job& job, const char* sep, const char* pwd)
 bool
 HylaFAXServer::isVisibleSendQFile(const char* filename, const struct stat&)
 {
-    return (filename[0] == 'q');
+    if (filename[0] == 'q') {
+    	fxStr emsg;
+    	Job* job = findJob(&filename[1], emsg);
+	if (job && checkAccess(*job, T_JOB, A_READ))
+	    return true;
+    }
+    return false;
 }
 
 #ifdef roundup

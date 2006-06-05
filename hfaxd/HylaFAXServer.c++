@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 133 2006-04-13 04:34:02Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 192 2006-06-06 05:01:05Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -612,6 +612,7 @@ HylaFAXServer::numbertag HylaFAXServer::numbers[] = {
 { "maxloginattempts",	&HylaFAXServer::maxLoginAttempts,	5 },
 { "maxadminattempts",	&HylaFAXServer::maxAdminAttempts,	5 },
 { "maxconsecutivebadcmds",&HylaFAXServer::maxConsecutiveBadCmds,10 },
+{ "jobprotection",	&HylaFAXServer::jobProtection,		0444 },
 };
 
 void
