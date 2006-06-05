@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 101 2006-03-04 00:14:46Z faxguy $
+.\"	$Id: hfaxd.1m 192 2006-06-06 05:01:05Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -405,6 +405,7 @@ FaxContact	string	\s-1\fIsee below\fP\s+1	contact address to show in help text
 FileFmt	string	\s-1\fIsee below\fP\s+1	format string for file status results
 IdleTimeout	integer	\s-1900\s+1	client idle timeout in seconds
 JobFmt	string	\s-1\fIsee below\fP\s+1	format string for job status results
+JobProtection	octal	\s-10444\s+1	permissions for client access to jobs
 KillTimeMap	string	\s-1\fIsee below\fP\s+1	mapping from service level to job kill time (\s-1SNPP\s+1)
 LogFacility	string	\s-1daemon\s+1	\fIsyslog\fP facility name for tracing messages
 MaxAdminAttempts	integer	\s-15\s+1	maximum admin attempts before disconnecting
@@ -559,6 +560,13 @@ applications, such as
 .IR faxstat (1)
 that construct headers from the format string can constrain the width of
 column title strings.
+.TP 10
+.B JobProtection
+The permissions setting for administrator, owners, and users for viewing jobs in
+the \*(Fx queues.  The default setting of ``0444'' allows all users to view all
+jobs in the queues.  A setting of ``0440'' allows only the administrator and
+the job owner to view jobs.  A setting of ``0400'' allows only the administrator
+to view the jobs once they are submitted.
 .TP 10
 .B KillTimeMap
 The mapping from \s-1SNPP\s+1 service level (0-11) to job expiration time

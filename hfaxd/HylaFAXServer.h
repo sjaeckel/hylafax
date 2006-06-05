@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: HylaFAXServer.h 192 2006-06-06 05:01:05Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -146,6 +146,7 @@ struct tab {			// protocol command table entry
 };
 
 class SpoolDir;
+struct ParamProtection;
 
 struct stat;
 typedef struct tiff TIFF;
@@ -211,6 +212,7 @@ protected:
     time_t	lastTime;		// time of last shutdown notification
     time_t	discTime;		// time to disconnect service
     time_t	denyTime;		// time to deny service
+    u_int	jobProtection;		// Protection to use on Jobs
     /*
      * User authentication and login-related state.
      */
@@ -390,11 +392,11 @@ protected:
     SpoolDir* fileAccess(const char* path, int op, struct stat&);
     bool fileVisible(const SpoolDir&, const char*, const struct stat&);
 
-    static bool isVisibleRecvQFile(const char*, const struct stat&);
+    bool isVisibleRecvQFile(const char*, const struct stat&);
     void listRecvQ(FILE* fd, const SpoolDir& sd, DIR* dir);
     void listRecvQFile(FILE*, const SpoolDir&, const char*, const struct stat&);
 
-    static bool isVisibleSendQFile(const char*, const struct stat&);
+    bool isVisibleSendQFile(const char*, const struct stat&);
     void listSendQ(FILE* fd, const SpoolDir& sd, DIR* dir);
     void listSendQFile(FILE*, const SpoolDir&, const char*, const struct stat&);
     void nlstSendQ(FILE* fd, const SpoolDir& sd, DIR* dir);
@@ -404,9 +406,9 @@ protected:
     void listStatusFile(FILE*, const SpoolDir&, const char*, const struct stat&);
     void nlstStatus(FILE* fd, const SpoolDir& sd, DIR* dir);
 
-    static bool isVisibletrue(const char*, const struct stat&);
-    static bool isVisibleDocQFile(const char*, const struct stat&);
-    static bool isVisibleRootFile(const char*, const struct stat&);
+    bool isVisibletrue(const char*, const struct stat&);
+    bool isVisibleDocQFile(const char*, const struct stat&);
+    bool isVisibleRootFile(const char*, const struct stat&);
 
     void listDirectory(FILE* fd, const SpoolDir& sd, DIR* dir);
     void listUnixFile(FILE*, const SpoolDir&, const char*, const struct stat&);
@@ -603,7 +605,7 @@ struct SpoolDir {
     bool storAble;	// unprivileged clients may STOR files
     bool deleAble;	// unprivileged clients may DELE files
     ino_t ino;		// directory inode number
-    bool (*isVisibleFile)(const char*, const struct stat&);
+    bool (HylaFAXServer::*isVisibleFile)(const char*, const struct stat&);
     void (HylaFAXServer::*listDirectory)(FILE*, const SpoolDir&, DIR*);
     void (HylaFAXServer::*listFile)(FILE*, const SpoolDir&,
         const char*, const struct stat&);
