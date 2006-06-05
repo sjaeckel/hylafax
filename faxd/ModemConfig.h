@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 182 2006-05-29 18:54:07Z faxguy $ */
+/*	$Id: ModemConfig.h 191 2006-06-05 19:12:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -163,6 +163,7 @@ public:
     u_int	class1TCFMinRun;	// min length of zero run for TCF check
     u_int	class1TMConnectDelay;	// delay (ms) after +FTM CONNECT
     u_int	class1ECMFrameSize;	// ECM frame size for transmission
+    u_int	class1PageLengthSupport;// page length support
     bool	class1GreyJPEGSupport;	// Greyscale JPEG support
     bool	class1ColorJPEGSupport;	// Full-color JPEG support
     bool	class1ECMSupport;	// support T.30-A ECM

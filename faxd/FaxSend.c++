@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 154 2006-04-24 16:57:31Z faxguy $ */
+/*	$Id: FaxSend.c++ 191 2006-06-05 19:12:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -794,7 +794,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
      * to take into account sloppy coding practice (e.g.
      * using 200 dpi for high-res facsimile.
      */
-    if (clientInfo.getMaxPageLengthInMM() != (u_short)-1) {
+    if (clientInfo.getMaxPageLengthInMM() != (u_short) -1 || !modem->supportsPageLength((u_int) -1)) {
 	u_long h = 0;
 	(void) TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
 	float len = h / yres;			// page length in mm

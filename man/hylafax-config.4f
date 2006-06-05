@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 182 2006-05-29 18:54:07Z faxguy $
+.\"	$Id: hylafax-config.4f 191 2006-06-05 19:12:55Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-05-29 11:54:07 -0700 (Mon, 29 May 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-06-05 12:12:55 -0700 (Mon, 05 Jun 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -294,6 +294,7 @@ Class1FrameOverhead	integer	\s-14\s+1	Class 1/1.0: extra bytes in a received \s-
 Class1GreyJPEGSupport	boolean	\s-1No\s+1	Class 1/1.0: to enable grey JPEG fax support
 Class1JBIGSupport	string	\s-1\fIsee below\fP\s+1	Class 1/1.0: to enable monochrome JBIG fax support
 Class1NFLOCmd	string	\-	Class 1/1.0: command to set no flow control
+Class1PageLengthSupport	integer	\s-17\s+1	Class 1/1.0: coded value for modem page length support
 Class1RecvAbortOK	integer	\s-1200\s+1	Class 1/1.0: max wait (ms) for ``\s-1OK\s+1'' after recv abort
 Class1RecvIdentTimer	integer	\s-140000\s+1	Class 1/1.0: max wait (ms) for initial ident frame
 Class1RMPersistence	integer	\s-12\s+1	Class 1/1.0: times to attempt high-speed carrier recv
@@ -2354,6 +2355,11 @@ when operating in Class 1.
 This command is issued immediately after sending the
 .B Class1Cmd
 to switch the modem to Class 1 operation.
+.TP
+.B Class1PageLengthSupport
+The coded value for page lengths supported by the modem.  The only
+correct values and meanings are these: ``1'', A4 page length; ``3'', both 
+A4 and B4 page length; ``7'', unlimited page length.
 .TP
 .B Class1PPMWaitCmd
 The command used to stop and wait before sending the post page message,

@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 131 2006-04-11 04:06:04Z faxguy $ */
+/*	$Id: Class1.c++ 191 2006-06-05 19:12:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -173,7 +173,7 @@ Class1Modem::setupModem(bool isSend)
 	modemParams.br |= BIT(primaryV34Rate) - 1;
     }
     modemParams.wd = BIT(WD_A4) | BIT(WD_B4) | BIT(WD_A3);
-    modemParams.ln = LN_ALL;
+    modemParams.ln = conf.class1PageLengthSupport;
     modemParams.df = BIT(DF_1DMH) | BIT(DF_2DMR);
     modemParams.bf = BF_DISABLE;
     modemParams.st = ST_ALL;
