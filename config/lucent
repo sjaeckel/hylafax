@@ -1,4 +1,4 @@
-# $Id: lucent 189 2006-06-02 22:19:20Z faxguy $
+# $Id: lucent 193 2006-06-06 20:45:14Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -51,6 +51,7 @@
 
 ModemType:		Class1		# use this to supply a hint
 ModemFlowControl:	rtscts		# many firmwares have broken software flow control
+ModemSetupDTRCmd:	AT&D3		# hang up and reset on DTR drop
 Class1TMConnectDelay:	400		# counteract quick CONNECT response
 
 # If your line supports Caller-ID, you may want to uncomment this...

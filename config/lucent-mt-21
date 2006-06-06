@@ -1,4 +1,4 @@
-# $Id: lucent-mt-21 189 2006-06-02 22:19:20Z faxguy $
+# $Id: lucent-mt-21 193 2006-06-06 20:45:14Z faxguy $
 #
 # prototype config file for MultiTech MT5634ZBA-V.92-NAM
 #
@@ -18,6 +18,7 @@ ModemRate:		57600		# for V.34 faxing
 ModemNoFlowCmd:		AT&K0
 ModemSoftFlowCmd:	AT&K4
 ModemHardFlowCmd:	AT&K3
+ModemSetupDTRCmd:	AT&D3		# hang up and reset on DTR drop
 
 Class2APCmd:		AT+FAP=1,1,1
 Class2BUGCmd:		AT+FBU=0	# early firmware is buggy
