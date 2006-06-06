@@ -1,4 +1,4 @@
-# $Id: agere-mp-21 26 2005-12-16 00:47:13Z faxguy $
+# $Id: agere-mp-21 193 2006-06-06 20:45:14Z faxguy $
 #
 # prototype config file for Mainpine Ltd. RockForce
 #
@@ -16,6 +16,7 @@ ModemNoFlowCmd:		AT&K0
 ModemSoftFlowCmd:	AT&K4
 ModemHardFlowCmd:	AT&K3
 ModemRecvFillOrder:	MSB2LSB
+ModemSetupDTRCmd:	AT&D3		# hang up and reset on DTR drop
 
 Class2APCmd:		AT+FAP=1,1,1
 Class2BUGCmd:		AT+FBU=0	# early firmware is buggy
