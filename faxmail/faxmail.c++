@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: faxmail.c++ 196 2006-06-10 18:44:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -440,8 +440,10 @@ faxMailApp::formatText(FILE* fd, MIMEState& mime)
 void
 faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 {
+    bool isLastPart = false;
     discardPart(fd, mime);			// prologue
     if (!mime.isLastPart()) {
+	
 	do {
 	    int c = getc(fd);
 	    if (c == EOF) {
@@ -455,7 +457,8 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 
 	    MIMEState bodyMime(mime);		// state for sub-part
 	    formatMIME(fd, bodyMime, bodyHdrs);
-	} while (!mime.isLastPart());
+	    isLastPart = bodyMime.isLastPart();
+	} while (!isLastPart);
     }
 }
 

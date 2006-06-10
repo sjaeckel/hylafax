@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: MIMEState.c++ 196 2006-06-10 18:44:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -71,7 +71,6 @@ MIMEState::MIMEState(MIMEState& other, const char* t, const char* st)
 MIMEState::~MIMEState()
 {
     if (parent) {
-	parent->lastPart = lastPart;
 	parent->lineno = lineno;
     }
 }
