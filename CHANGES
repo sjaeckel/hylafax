@@ -1,7 +1,8 @@
-#	$Id: CHANGES 195 2006-06-10 18:28:52Z faxguy $	
+#	$Id: CHANGES 196 2006-06-10 18:44:21Z faxguy $	
 
 New Changes
 
+* fix faxmail multipart mail handling (10 Jun 2006)
 * add jobcount to xferfaxstats output (10 Jun 2006)
 * fix timeout on AT command sending to modem (8 Jun 2006)
 * add hfaxd JobPermission config option (5 Jun 2006)
