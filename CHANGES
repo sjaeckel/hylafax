@@ -1,7 +1,8 @@
-#	$Id: CHANGES 194 2006-06-08 17:34:39Z faxguy $	
+#	$Id: CHANGES 195 2006-06-10 18:28:52Z faxguy $	
 
 New Changes
 
+* add jobcount to xferfaxstats output (10 Jun 2006)
 * fix timeout on AT command sending to modem (8 Jun 2006)
 * add hfaxd JobPermission config option (5 Jun 2006)
 * add Class1PageLengthSupport config option (5 Jun 2006)
