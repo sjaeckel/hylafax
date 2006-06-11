@@ -1,7 +1,8 @@
-#	$Id: CHANGES 196 2006-06-10 18:44:21Z faxguy $	
+#	$Id: CHANGES 197 2006-06-12 03:01:21Z faxguy $	
 
 New Changes
 
+* document LANG in faxrcvd, notify, pollrcvd man pages (11 Jun 2006)
 * fix faxmail multipart mail handling (10 Jun 2006)
 * add jobcount to xferfaxstats output (10 Jun 2006)
 * fix timeout on AT command sending to modem (8 Jun 2006)

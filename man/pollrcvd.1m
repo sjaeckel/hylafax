@@ -1,4 +1,4 @@
-.\"	$Id: pollrcvd.1m 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: pollrcvd.1m 197 2006-06-12 03:01:21Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -66,6 +66,13 @@ an error message that is non-null if an error was encountered
 during the receive operation.
 .SH NOTES
 The default script delivers facsimile as PostScript wrapped in \s-1MIME\s+1.
+This script can be customized for the intended receipient.
+To do this create a shell script
+.B etc/PollDispatch
+in the spooling area that sets
+.TP
+.I LANG
+controls the localization of the text of the received poll notification.
 .SH FILES
 .nf
 .ta \w'${SBIN}/faxinfo    'u
