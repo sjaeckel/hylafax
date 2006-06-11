@@ -1,4 +1,4 @@
-.\"	$Id: notify.1m 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: notify.1m 197 2006-06-12 03:01:21Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -140,6 +140,9 @@ any problems before those problems are reported by the users.
 Possible settings are ``yes'', ``always'', ``no'', ``never'', and ``errors''.
 If ``errors'' is used then the notification message is only sent to FaxMaster
 when the job experienced an error.  The default is ``no''.
+.TP
+.I LANG
+controls the localization of the text of the job notification messages.
 .SH FILES
 .nf
 .ta \w'${SENDMAIL}    'u
