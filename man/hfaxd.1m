@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 192 2006-06-06 05:01:05Z faxguy $
+.\"	$Id: hfaxd.1m 198 2006-06-13 04:46:24Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -564,9 +564,10 @@ column title strings.
 .B JobProtection
 The permissions setting for administrator, owners, and users for viewing jobs in
 the \*(Fx queues.  The default setting of ``0444'' allows all users to view all
-jobs in the queues.  A setting of ``0440'' allows only the administrator and
-the job owner to view jobs.  A setting of ``0400'' allows only the administrator
-to view the jobs once they are submitted.
+jobs in the queues.  A setting of ``0440'' allows only the job owner and the 
+administrator to view jobs.  A setting of ``0040'' allows only the administrator 
+to view the jobs once they are submitted.  If a user doesn't have permissions 
+on the job, the job will not be visible to them when viewing the queues.
 .TP 10
 .B KillTimeMap
 The mapping from \s-1SNPP\s+1 service level (0-11) to job expiration time
