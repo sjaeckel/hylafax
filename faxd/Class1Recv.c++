@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 173 2006-05-12 22:38:58Z faxguy $ */
+/*	$Id: Class1Recv.c++ 200 2006-06-14 17:18:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -401,15 +401,17 @@ Class1Modem::recvTraining()
 	    protoTrace("RECV: reject TCF (zero run too short, min %u)", minrun);
 	    ok = false;
 	}
-	/*
-	 * We expect the message carrier to drop.  However, some senders will
-	 * transmit garbage after we see <DLE><ETX> but before we see NO CARRIER.
-	 */
-	time_t nocarrierstart = Sys::now();
-	bool gotnocarrier = false;
-	do {
-	    gotnocarrier = waitFor(AT_NOCARRIER, 2*1000);
-	} while (!gotnocarrier && Sys::now() < (nocarrierstart + 5));
+	if (!wasTimeout()) {
+	    /*
+	     * We expect the message carrier to drop.  However, some senders will
+	     * transmit garbage after we see <DLE><ETX> but before we see NO CARRIER.
+	     */
+	    time_t nocarrierstart = Sys::now();
+	    bool gotnocarrier = false;
+	    do {
+		gotnocarrier = waitFor(AT_NOCARRIER, 2*1000);
+	    } while (!gotnocarrier && Sys::now() < (nocarrierstart + 5));
+	}
     } else {
 	// the CONNECT is waited for later...
 	if (lastResponse == AT_FCERROR && atCmd(rhCmd, AT_NOTHING)) lastResponse = AT_FRH3;
