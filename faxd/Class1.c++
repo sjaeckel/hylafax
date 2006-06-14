@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 191 2006-06-05 19:12:55Z faxguy $ */
+/*	$Id: Class1.c++ 204 2006-06-14 21:05:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -462,20 +462,24 @@ Class1Modem::decodePWD(fxStr& ascii, const HDLCFrame& binary)
  * Pass data to modem, filtering DLE's and
  * optionally including the end-of-data
  * marker <DLE><ETX>.
+ *
+ * If the data transfer is aborted by the user
+ * then we must take care to send <DLE><ETX>
+ * in order to exit gracefully.
  */
 bool
 Class1Modem::sendClass1Data(const u_char* data, u_int cc,
-    const u_char* bitrev, bool eod)
+    const u_char* bitrev, bool eod, long ms)
 {
-    if (!putModemDLEData(data, cc, bitrev, getDataTimeout()))
-	return (false);
-    if (eod) {
+    bool ok = putModemDLEData(data, cc, bitrev, ms);
+    if (eod || abortRequested()) {
 	u_char buf[2];
 	buf[0] = DLE;
 	buf[1] = ETX;
-	return (putModemData(buf, 2));
+	ok = putModemData(buf, 2);
+	return (ok && !abortRequested());
     } else
-	return (true);
+	return (ok);
 }
 
 /*
@@ -1131,13 +1135,11 @@ Class1Modem::sendRawFrame(HDLCFrame& frame)
     }
     signalSent = "";
     for (u_int i = 0; i < frame.getLength(); i++) signalSent.append(frame[i]);
-    static u_char buf[2] = { DLE, ETX };
     /*
      * sendFrame() is always called with a timeout set.
      * Let's keep it that way
      */
-    return (putModemDLEData(frame, frame.getLength(), frameRev, 0) &&
-	putModem(buf, 2, 0) &&
+    return (sendClass1Data(frame, frame.getLength(), frameRev, true, 0) &&
 	(useV34 ? true : waitFor(frame.moreFrames() ? AT_CONNECT : AT_OK, 0)));
 }
 
@@ -1291,7 +1293,7 @@ Class1Modem::transmitData(int br, u_char* data, u_int cc,
 	// This delay will vary depending on the modem's adherence to T.31.
 	pause(conf.class1TMConnectDelay);
 
-	ok = sendClass1Data(data, cc, bitrev, eod);
+	ok = sendClass1Data(data, cc, bitrev, eod, getDataTimeout());
 	if (ok && eod) {
 	    ok = false;
 	    u_short attempts = 0;
