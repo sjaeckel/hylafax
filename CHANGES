@@ -1,6 +1,8 @@
-#	$Id: CHANGES 200 2006-06-14 17:18:07Z faxguy $	
+#	$Id: CHANGES 202 2006-06-14 18:04:17Z faxguy $	
 
 New Changes
+
+(4.3.0.4)
 
 * improve recovery after Class 1 TCF receipt times out (14 Jun 2006)
 * document LANG in faxrcvd, notify, pollrcvd man pages (11 Jun 2006)
