@@ -1,6 +1,8 @@
-#	$Id: CHANGES 202 2006-06-14 18:04:17Z faxguy $	
+#	$Id: CHANGES 203 2006-06-14 19:28:43Z faxguy $	
 
 New Changes
+
+* fix an "Interrupted job timed out" assertion error (14 Jun 2006)
 
 (4.3.0.4)
 
