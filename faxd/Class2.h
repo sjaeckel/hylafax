@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: Class2.h 206 2006-06-16 22:33:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -127,7 +127,7 @@ protected:
     bool	class2Cmd(const fxStr& cmd, const Class2Params&,
 		    ATResponse =AT_OK, long ms = 30*1000);
 // parsing routines for capability&parameter strings
-    bool	parseClass2Capabilities(const char* cap, Class2Params&);
+    bool	parseClass2Capabilities(const char* cap, Class2Params&, bool isDIS);
     bool	parseRange(const char*, Class2Params&);
     const char* skipStatus(const char*);
 
