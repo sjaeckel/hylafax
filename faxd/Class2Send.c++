@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class2Send.c++ 206 2006-06-16 22:33:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -141,7 +141,7 @@ Class2Modem::getPrologue(Class2Params& dis, bool& hasDoc, fxStr& emsg, u_int& ba
 		protoTrace("REMOTE has document to POLL");
 		break;
 	    case AT_FDIS:
-		gotParams = parseClass2Capabilities(skipStatus(rbuf), dis);
+		gotParams = parseClass2Capabilities(skipStatus(rbuf), dis, true);
 		break;
 	    case AT_FNSF:
 		recvNSF(NSF(skipStatus(rbuf), conf.class2HexNSF));
