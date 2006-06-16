@@ -1,4 +1,4 @@
-# $Id: conexant-1.0 57 2006-01-11 17:27:16Z faxguy $
+# $Id: conexant-1.0 205 2006-06-16 18:24:30Z faxguy $
 
 #
 # Configuration for a Rockwell/Conexant K56 Class 1.0 modem using
@@ -13,7 +13,7 @@
 #
 # CONFIG:CLASS1.0:56000:.*:.*: Manufacturer=Rockwell/Conexant Model=AC/K56
 # CONFIG:CLASS1.0:MT5600ZDX:.*:.*: Manufacturer=MultiTech Model=MT5600ZDX
-# CONFIG:CLASS1.0:.*:*LEONARDO*:.*: Manufacturer=Digicom Model=Leonardo
+# CONFIG:CLASS1.0:.*:.*LEONARDO.*:.*: Manufacturer=Digicom Model=Leonardo
 #
 # BEGIN-SERVER
 # END-SERVER
