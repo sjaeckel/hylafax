@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 206 2006-06-16 22:33:30Z faxguy $ */
+/*	$Id: Class2Send.c++ 208 2006-06-17 18:31:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,7 +60,7 @@ Class2Modem::sendSetup(FaxRequest& req, const Class2Params& dis, fxStr& emsg)
 	return (false);
     }
     if (conf.class2DDISCmd != "") {
-	if (!class2Cmd(conf.class2DDISCmd, dis)) {
+	if (!class2Cmd(conf.class2DDISCmd, dis, false)) {
 	    emsg = fxStr::format("Unable to setup session parameters "
 		"prior to call%s", cmdFailed);
 	    return (false);
@@ -258,7 +258,7 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 	 * current T.30 session parameters.
 	 */
 	if (pageInfoChanged(params, next)) {
-	    if (!class2Cmd(disCmd, next)) {
+	    if (!class2Cmd(disCmd, next, false)) {
 		emsg = "Unable to set session parameters";
 		break;
 	    }
@@ -518,6 +518,8 @@ Class2Modem::sendPageData(TIFF* tif, u_int pageChop)
 bool
 Class2Modem::sendRTC(Class2Params params)
 {
+    if (params.df == DF_JBIG) return (true);	// nothing to do
+
     // determine the number of trailing zeros on the last byte of data
     u_short zeros = 0;
     for (short i = 7; i >= 0; i--) {

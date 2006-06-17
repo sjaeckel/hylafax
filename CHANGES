@@ -1,7 +1,9 @@
-#	$Id: CHANGES 206 2006-06-16 22:33:30Z faxguy $	
+#	$Id: CHANGES 208 2006-06-17 18:31:34Z faxguy $	
 
 New Changes
 
+* support some data format presentation changes in new
+  MultiTech modem firmware (17 Jun 2006)
 * fix Class 2 data format parsing of +FIS response (16 Jun 2006)
 * fix faxaddmodem config parsing (16 Jun 2006)
 * improve the modem handling of user aborts in 
