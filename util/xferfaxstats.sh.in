@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: xferfaxstats.sh.in 195 2006-06-10 18:28:52Z faxguy $
+#	$Id: xferfaxstats.sh.in 207 2006-06-17 11:22:19Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -518,7 +518,7 @@ $CAT<<'EOF'
     dest = cleanup(dest);
 
     sendpages[key] += pages;
-	sendjobs[key] += 1;
+	sendcalls[key] += 1;
     time = cleanup(time);
     if (pages == 0 && time > 60)
 	time = 0;
@@ -575,7 +575,7 @@ END		{ OFS="\t"; setupDigits();
 		      if (addrs[key] != "") {
 			  fullkey = key "@" addrs[key];
 			  sendpages[fullkey] += sendpages[key];
-			  sendjobs[fullkey] += sendjobs[key];
+			  sendcalls[fullkey] += sendcalls[key];
 			  sendtime[fullkey] += sendtime[key];
 			  senderrs[fullkey] += senderrs[key];
 			  sendrate[fullkey] = \
@@ -596,7 +596,7 @@ END		{ OFS="\t"; setupDigits();
 		  qsort(sorted, 0, nsorted-1);
 		  fmt = "%-" maxlen "." maxlen "s";	# e.g. %-24.24s
                   printf fmt " %6s %6s %9s %6s %5s %7s %7s\n",
-		      KeyTitle, "Pages", "Jobs", "Time", "Pg/min",
+		      KeyTitle, "Pages", "Calls", "Time", "Pg/min",
 		      "Errs", "TypRate", "TypData";
 		  tpages = 0;
 		  ttime = 0;
@@ -607,19 +607,19 @@ END		{ OFS="\t"; setupDigits();
 		      n = sendpages[i]; if (n == 0) n = 1;
 		      brate = best
 		      printf fmt " %6d %6d %9s %6.1f %5d %7d %7.7s\n",
-			  i, sendpages[i], sendjobs[i], fmtTime(sendtime[i]),
+			  i, sendpages[i], sendcalls[i], fmtTime(sendtime[i]),
 			  sendpages[i] / t, senderrs[i],
 			  bestInMap(sendrate[i], rates),
 			  bestInMap(senddata[i], datas);
 			tpages += sendpages[i];
-			tjobs += sendjobs[i];
+			tcalls += sendcalls[i];
 			ttime += sendtime[i];
 			terrs += senderrs[i];
 		  }
 		  printRule(maxlen+1+6+1+6+1+9+6+1+5+1+7+1+7, "-");
 		  t = ttime/60; if (t == 0) t = 1;
 		  printf fmt " %6d %6d %9s %6.1f %5d\n",
-		      "Total", tpages, tjobs, fmtTime(ttime), tpages/t, terrs;
+		      "Total", tpages, tcalls, fmtTime(ttime), tpages/t, terrs;
 		}
 EOF
 echo "$AWKRULES"
