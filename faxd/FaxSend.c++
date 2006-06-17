@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 191 2006-06-05 19:12:55Z faxguy $ */
+/*	$Id: FaxSend.c++ 208 2006-06-17 18:31:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -613,7 +613,8 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	    bits >>= 1;
 	    if (bits) params.df++;
 	}
-	if (params.df == DF_JBIG && (!modem->supportsJBIG() || (params.ec == EC_DISABLE)))
+	// Class 2 RTFCC doesn't support JBIG
+	if (params.df == DF_JBIG && (!modem->supportsJBIG() || (params.ec == EC_DISABLE) || class2RTFCC))
 		params.df = DF_2DMMR;
 	// even if RTFCC supported uncompressed mode (and it doesn't)
 	// it's likely that the remote was incorrect in telling us it does

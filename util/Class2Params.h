@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class2Params.h 208 2006-06-17 18:31:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -79,7 +79,7 @@ public:
     int operator==(const Class2Params&) const;
     int operator!=(const Class2Params&) const;
 
-    fxStr cmd(bool class2UseHex, bool ecm20 = false) const;	// format AT+F cmd string
+    fxStr cmd(bool class2UseHex, bool ecm20 = false, bool doDFbitmap = false) const;	// format AT+F cmd string
     void setFromDIS(FaxParams& dis);
     void setFromDIS(u_int dis, u_int xinfo = 0);
     void setFromDCS(FaxParams& dcs);

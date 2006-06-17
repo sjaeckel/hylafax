@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 182 2006-05-29 18:54:07Z faxguy $ */
+/*	$Id: FaxModem.c++ 208 2006-06-17 18:31:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -421,7 +421,7 @@ FaxModem::getBestPageLength() const
 u_int
 FaxModem::getBestDataFormat() const
 {
-    return bestBit(modemParams.df, DF_2DMMR, DF_1DMH);
+    return bestBit(modemParams.df, DF_JBIG, DF_1DMH);
 }
 
 /*
