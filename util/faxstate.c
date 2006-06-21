@@ -1,4 +1,4 @@
-/*	$Id: faxstate.c 145 2006-04-19 23:49:59Z faxguy $ */
+/*	$Id: faxstate.c 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -98,7 +98,7 @@ main(int argc, char** argv)
 	appname++;
     else
 	appname = argv[0];
-    while ((c = getopt(argc, argv, "s:q:n")) != -1)
+    while ((c = Sys::getopt(argc, argv, "s:q:n")) != -1)
 	switch (c) {
 	case 'n':
 	    nofaxgetty = 1;

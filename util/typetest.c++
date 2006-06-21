@@ -1,4 +1,4 @@
-/*	$Id: typetest.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: typetest.c++ 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -101,7 +101,7 @@ main(int argc, char* argv[])
 
     appName = argv[0];
     file = FAX_LIBDATA "/" FAX_TYPERULES;
-    while ((c = getopt(argc, argv, "f:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "f:")) != -1)
 	switch (c) {
 	case 'f':
 	    file = optarg;

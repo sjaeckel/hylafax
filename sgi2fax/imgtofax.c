@@ -1,4 +1,4 @@
-/*	$Id: imgtofax.c 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: imgtofax.c 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -284,7 +284,7 @@ main(argc, argv)
     w = getPageWidth(info);
     h = getPageHeight(info);
     delPageSize(info);
-    while ((c = getopt(argc, argv, "o:r:g:b:h:s:v:w:12")) != -1)
+    while ((c = Sys::getopt(argc, argv, "o:r:g:b:h:s:v:w:12")) != -1)
 	switch (c) {
 	case '1':
 	    g3opts &= ~GROUP3OPT_2DENCODING;

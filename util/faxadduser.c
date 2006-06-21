@@ -1,4 +1,4 @@
-/*	$Id: faxadduser.c 51 2006-01-09 21:56:38Z faxguy $ */
+/*	$Id: faxadduser.c 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *
@@ -65,7 +65,7 @@ main(int argc, char** argv)
     char* hostname = NULL;
     int uid = FAX_DEFAULT_UID;
     
-    while ((c = getopt(argc, argv, "a:f:h:p:u:")) != -1) {
+    while ((c = Sys::getopt(argc, argv, "a:f:h:p:u:")) != -1) {
         switch (c) {
         case 'a':
             adminword = optarg;

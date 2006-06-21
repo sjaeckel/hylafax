@@ -1,4 +1,4 @@
-/*	$Id: faxfetch.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxfetch.c++ 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -70,7 +70,7 @@ faxFetchApp::run(int argc, char** argv)
     fxStr op = "RETR ";
     u_int mode = MODE_S;
     u_long page = 0;
-    while ((c = getopt(argc, argv, "h:o:p:svz")) != -1)
+    while ((c = Sys::getopt(argc, argv, "h:o:p:svz")) != -1)
 	switch (c) {
 	case 'h':			// server's host
 	    setHost(optarg);

@@ -1,4 +1,4 @@
-/*	$Id: faxmodem.c 145 2006-04-19 23:49:59Z faxguy $ */
+/*	$Id: faxmodem.c 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -263,7 +263,7 @@ main(int argc, char** argv)
      *	st	scan time/line
      */
     parseCapabilities("(0,1),(0-3),(0-4),(0-2),(0),(0),(0),(0-7)", &caps);
-    while ((c = getopt(argc, argv, "c:q:u:pP")) != -1)
+    while ((c = Sys::getopt(argc, argv, "c:q:u:pP")) != -1)
 	switch (c) {
 	case 'c':
 	    if (!parseCapabilities(optarg, &caps))

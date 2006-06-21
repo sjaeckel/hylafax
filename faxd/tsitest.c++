@@ -1,4 +1,4 @@
-/*	$Id: tsitest.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: tsitest.c++ 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -143,7 +143,7 @@ main(int argc, char* argv[])
     int c;
 
     appName = argv[0];
-    while ((c = getopt(argc, argv, ":q")) != -1)
+    while ((c = Sys::getopt(argc, argv, ":q")) != -1)
 	switch (c) {
 	case 'q':
 	    verbose = false;

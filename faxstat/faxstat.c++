@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxstat.c++ 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -62,7 +62,7 @@ faxStatApp::run(int argc, char** argv)
     dirs.append(FAX_STATUSDIR);		// server status
     bool checkInfo = false;
     int c;
-    while ((c = getopt(argc, argv, "h:adgfilrsv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "h:adgfilrsv")) != -1)
 	switch (c) {
 	case 'a':			// display archived jobs
 	    dirs.append(FAX_ARCHDIR);

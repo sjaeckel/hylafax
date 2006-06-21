@@ -1,4 +1,4 @@
-/*	$Id: faxcover.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxcover.c++ 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -108,7 +108,7 @@ faxCoverApp::initialize(int argc, char** argv)
 	cover = cp;
 
     setupPageSize("default");
-    while ((c = getopt(argc, argv, "C:D:L:N:V:X:n:t:f:c:p:l:m:r:s:v:x:z:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "C:D:L:N:V:X:n:t:f:c:p:l:m:r:s:v:x:z:")) != -1)
 	switch (c) {
 	case 's':			// page size
 	    setupPageSize(optarg);
