@@ -1,4 +1,4 @@
-/*	$Id: faxrm.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxrm.c++ 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -58,7 +58,7 @@ faxRmApp::run(int argc, char** argv)
     bool docs = false;
     bool useadmin = false;
 
-    while ((c = getopt(argc, argv, "ah:dv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "ah:dv")) != -1)
 	switch (c) {
 	case 'a':
 	    useadmin = true;

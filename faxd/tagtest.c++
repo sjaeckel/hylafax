@@ -1,4 +1,4 @@
-/*	$Id: tagtest.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: tagtest.c++ 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -413,7 +413,7 @@ main(int argc, char* argv[])
     setlocale(LC_TIME, "");			// for strftime calls
 #endif
     appName = argv[0];
-    while ((c = getopt(argc, argv, "f:m:o:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "f:m:o:")) != -1)
 	switch (c) {
 	case 'f':
 	    tagLineFontFile = optarg;

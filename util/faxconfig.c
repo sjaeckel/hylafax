@@ -1,4 +1,4 @@
-/*	$Id: faxconfig.c 145 2006-04-19 23:49:59Z faxguy $ */
+/*	$Id: faxconfig.c 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -67,7 +67,7 @@ main(int argc, char** argv)
 
     (void) cvtFacility(LOG_FAX, &facility);
     openlog(argv[0], LOG_PID|LOG_ODELAY, facility);
-    while ((c = getopt(argc, argv, "m:q:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "m:q:")) != -1)
 	switch (c) {
 	case 'q':
 	    spooldir = optarg;

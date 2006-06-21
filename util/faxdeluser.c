@@ -1,4 +1,4 @@
-/*	$Id: faxdeluser.c 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxdeluser.c 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *
@@ -52,7 +52,7 @@ main(int argc, char** argv)
     const char* usage = "faxdeluser [ -f hosts-file] username";
     struct passwd* pw;
     
-    while ((c = getopt(argc, argv, "f:?:")) != -1) {
+    while ((c = Sys::getopt(argc, argv, "f:?:")) != -1) {
         switch (c) {
         case 'f':
             hostfile = optarg;

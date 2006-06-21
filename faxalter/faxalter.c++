@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 190 2006-06-02 22:44:02Z faxguy $ */
+/*	$Id: faxalter.c++ 214 2006-06-22 04:11:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -97,7 +97,7 @@ faxAlterApp::run(int argc, char** argv)
     bool resubmit = false;
 
     int c;
-    while ((c = getopt(argc, argv, "a:d:h:k:m:n:P:t:ADQRgprv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "a:d:h:k:m:n:P:t:ADQRgprv")) != -1)
 	switch (c) {
 	case 'A':			// connect with administrative privileges
 	    useadmin = true;
