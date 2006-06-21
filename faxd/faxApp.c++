@@ -1,4 +1,4 @@
-/*	$Id: faxApp.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxApp.c++ 211 2006-06-21 21:49:52Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -92,9 +92,9 @@ faxApp::close(void)
 	Sys::close(faxqfifo);
 }
 
-fxStr faxApp::getopts;
+const char* faxApp::getopts;
 void faxApp::setOpts(const char* s) { getopts = s; }
-const fxStr& faxApp::getOpts() { return getopts; }
+const char* faxApp::getOpts() { return getopts; }
 
 void
 faxApp::fatal(const char* fmt ...)

@@ -1,4 +1,4 @@
-/*	$Id: faxApp.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxApp.h 211 2006-06-21 21:49:52Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -36,7 +36,7 @@
 
 class faxApp : public SystemLog {
 private:
-    static fxStr getopts;		// main arguments
+    static const char* getopts;		// main arguments
 
     bool	running;		// server running
     int		faxqfifo;		// cached descriptor to faxq
@@ -72,7 +72,7 @@ public:
     bool vsendQueuer(const char* fmt, va_list ap);
 
     static void setOpts(const char*);
-    static const fxStr& getOpts(void);
+    static const char* getOpts(void);
 
     static fxStr idToDev(const fxStr& id);
     static fxStr devToID(const fxStr& dev);
