@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 146 2006-04-20 23:15:21Z faxguy $
+#	$Id: Makefile.in 209 2006-06-21 17:46:52Z faxguy $
 #
 # @WARNING@
 #
@@ -181,29 +181,29 @@ faxQueueApp.o FaxRecv.o:
 incdepend: hash.h
 
 faxq:	${FAXQOBJS} libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ ${FAXQOBJS} ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ ${FAXQOBJS} ${LIBFAXSERVER} ${LDFLAGS}
 faxsend: ${FAXSENDOBJS} libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ ${FAXSENDOBJS} ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ ${FAXSENDOBJS} ${LIBFAXSERVER} ${LDFLAGS}
 faxgetty: ${FAXGETTYOBJS} libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ ${FAXGETTYOBJS} ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ ${FAXGETTYOBJS} ${LIBFAXSERVER} ${LDFLAGS}
 faxqclean: ${FAXQCLEANOBJS} libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ ${FAXQCLEANOBJS} ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ ${FAXQCLEANOBJS} ${LIBFAXSERVER} ${LDFLAGS}
 
 PAGESENDOBJS=\
 	pageSendApp.o
 pagesend:${PAGESENDOBJS} libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ ${PAGESENDOBJS} ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ ${PAGESENDOBJS} ${LIBFAXSERVER} ${LDFLAGS}
 
 tagtest: tagtest.o libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ tagtest.o ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ tagtest.o ${LIBFAXSERVER} ${LDFLAGS}
 cqtest:	cqtest.o libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ cqtest.o ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ cqtest.o ${LIBFAXSERVER} ${LDFLAGS}
 choptest: choptest.o libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ choptest.o ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ choptest.o ${LIBFAXSERVER} ${LDFLAGS}
 tsitest: tsitest.o libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ tsitest.o ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ tsitest.o ${LIBFAXSERVER} ${LDFLAGS}
 trigtest: trigtest.o libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ trigtest.o ${LDFLAGS} ${LIBFAXSERVER}
+	${C++F} -o $@ trigtest.o ${LIBFAXSERVER} ${LDFLAGS}
 
 PUTSERV=${INSTALL} -idb ${PRODUCT}.sw.server
 
