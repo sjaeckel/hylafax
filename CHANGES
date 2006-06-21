@@ -1,8 +1,8 @@
-#	$Id: CHANGES 209 2006-06-21 17:46:52Z faxguy $	
+#	$Id: CHANGES 213 2006-06-22 00:31:57Z faxguy $	
 
 New Changes
 
-* fix non-DSO build on Solaris 8 (21 Jun 2006)
+* fix DSO and non-DSO builds on Solaris 8 (21 Jun 2006)
 * support some data format presentation changes in new
   MultiTech modem firmware (17 Jun 2006)
 * fix Class 2 data format parsing of +FIS response (16 Jun 2006)

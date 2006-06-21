@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 203 2006-06-14 19:28:43Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 213 2006-06-22 00:31:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -176,7 +176,7 @@ faxQueueApp::scanForModems()
 	logError("Could not scan directory for modems");
 	return;
     }
-    fxStr fifoMatch(fifoName | ".");
+    fxStr fifoMatch(fxStr(fifoName) | ".");
     for (dirent* dp = readdir(dir); dp; dp = readdir(dir)) {
 	if (dp->d_name[0] != fifoName[0])
 	    continue;

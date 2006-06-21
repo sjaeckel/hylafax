@@ -1,4 +1,4 @@
-/*	$Id: faxApp.h 211 2006-06-21 21:49:52Z faxguy $ */
+/*	$Id: faxApp.h 213 2006-06-22 00:31:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -47,7 +47,7 @@ public:
     faxApp();
     virtual ~faxApp();
 
-    static const fxStr fifoName;
+    static const char* fifoName;
 
     static void setupPermissions(void);
     static void setRealIDs();
