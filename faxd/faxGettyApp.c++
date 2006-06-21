@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 213 2006-06-22 00:31:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -878,7 +878,7 @@ faxGettyApp::sendModemStatus(const char* msg)
 void
 faxGettyApp::openFIFOs()
 {
-    devfifo = openFIFO(fifoName | "." | getModemDeviceID(), 0600, true);
+    devfifo = openFIFO(fxStr(fifoName) | "." | getModemDeviceID(), 0600, true);
     Dispatcher::instance().link(devfifo, Dispatcher::ReadMask, this);
 }
 

@@ -1,4 +1,4 @@
-/*	$Id: faxApp.c++ 211 2006-06-21 21:49:52Z faxguy $ */
+/*	$Id: faxApp.c++ 213 2006-06-22 00:31:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -109,7 +109,7 @@ faxApp::fatal(const char* fmt ...)
 /*
  * FIFO-related support.
  */
-const fxStr faxApp::fifoName = FAX_FIFO;
+const char* faxApp::fifoName = FAX_FIFO;
 
 /*
  * Open the requisite FIFO special files.
