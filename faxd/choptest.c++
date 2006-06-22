@@ -1,4 +1,4 @@
-/*	$Id: choptest.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: choptest.c++ 216 2006-06-22 15:06:36Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -32,6 +32,7 @@
 #include "Class2.h"
 #include "MemoryDecoder.h"
 #include "tiffio.h"
+#include "Sys.h"
 
 const char* appName;
 
