@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 159 2006-04-26 18:42:54Z faxguy $ */
+/*	$Id: faxQueueApp.h 219 2006-06-22 22:35:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -66,6 +66,8 @@ public:
 	u_int		 def;
     };
 private:
+    time_t	lastCall;		// time of last call
+
     class SchedTimeout : public IOHandler {
     private:
 	bool	started;
@@ -98,6 +100,7 @@ private:
     mode_t	uucpLockMode;		// UUCP lock file creation mode
     u_int	uucpLockTimeout;	// UUCP stale lock file timeout
     u_int	pollLockWait;		// polling interval in lock wait state
+    u_int	staggerCalls;		// time to wait between initiating calls
     u_int	tracingLevel;		// tracing level w/o session
     u_int	tracingMask;		// tracing level control mask
     fxStr	logFacility;		// syslog facility to direct trace msgs

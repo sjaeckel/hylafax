@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 191 2006-06-05 19:12:55Z faxguy $
+.\"	$Id: hylafax-config.4f 219 2006-06-22 22:35:15Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-06-05 12:12:55 -0700 (Mon, 05 Jun 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-06-22 15:35:15 -0700 (Thu, 22 Jun 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -209,6 +209,7 @@ SendUUCPCmd\(S1	string	\s-1bin/uucpsend\s+1	\s-1UUCP\s+1 transmit command script
 ServerTracing\(S2	integer	\s-11\s+1	non-session server tracing
 SessionTracing\(S2	integer	\s-11\s+1	send and receive session tracing
 SpeakerVolume	string	\s-1Quiet\s+1	volume level for modem speaker
+StaggerCalls\(S1	integer	\s-10\s+1	time to delay between starting outbound calls
 TagLineFont	string	\-	tag line font filename
 TagLineFormat	string	\s-1\fIsee below\fP\s+1	tag line format string
 TIFF2FaxCmd\(S1	string	\s-1bin/tiff2fax\s+1	\s-1TIFF\s+1 converter command script
@@ -1470,6 +1471,14 @@ Note that the speaker is always turned off once carrier is established.
 Also beware that some modems support fewer volume settings;
 see
 .BR ModemSetVolumeCmd .
+.TP
+.B StaggerCalls\(S1
+The time, in seconds, to delay between initiating outbound job calls.  If \*(Fx
+is using a single phone line shared for both sending and receiving of faxes using a
+.B StaggerCalls
+setting of, for example, 300 would ensure that outbound calls be made in succession
+no more frequently than every 5 minutes, thus allowing time between jobs for incoming
+calls to be received.
 .TP
 .B TagLineFont
 The filename of the font to use in imaging 
