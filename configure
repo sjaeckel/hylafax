@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 188 2006-06-02 18:57:58Z faxguy $
+#	$Id: configure 218 2006-06-22 17:39:55Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -385,7 +385,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 188 $"
+	echo "This is HylaFAX configure $Revision: 218 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3346,11 +3346,11 @@ EOF
     Note "Done checking LIBDB support."
 fi
 
-if [ "$DSO" = auto ]; then
+if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
     Note ""
     Note "Checking for Dynamic Shared Object (DSO) support."
-    case $TARGET in
-    *-irix*)
+    case $DSO-$TARGET in
+    *-*-irix*)
 	if (findApp rld /lib:/usr/lib:$PATH) >/dev/null 2>&1; then
 	    DSOSUF=so
 	    DSOOPTS="${CVERSION} -shared -rdata_shared -check_registry \${DEPTH}/${SRCDIR}/port/irix/so_locations -quickstart_info"
@@ -3380,7 +3380,7 @@ if [ "$DSO" = auto ]; then
 	    DSO=no
 	fi
 	;;
-    *-linux*)
+    *-*-linux*)
 	if [ "X${DIR_LIB}" != "X/usr/lib" ]; then
 	    USE_RPATH=' -Wl,-rpath,${LIBDIR}'
 	else
@@ -3414,7 +3414,11 @@ if [ "$DSO" = auto ]; then
 	    "t:t.o; \${C++F} ${DSOOPTS} -o t.${DSOSUF} t.o"
 	}
 	;;
-    *-solaris*)
+    auto-*-solaris*)
+	Note "Automatic DSO usage on Solaris is disabled.  Use --with-DSO=yes to enable."
+	DSO=no
+	;;
+    yes-*-solaris*)
 	if [ "X${DIR_LIB}" != "X/usr/lib" ]; then
 	    USE_RPATH=' -R${LIBDIR}'
 	else
