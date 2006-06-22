@@ -1,4 +1,4 @@
-/*	$Id: faxmsg.c 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: faxmsg.c 216 2006-06-22 15:06:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -101,7 +101,7 @@ main(int argc, char** argv)
     } else {
 	fatal("Unrecognized command name %s", appname);
     }
-    while ((c = Sys::getopt(argc, argv, opts)) != -1)
+    while ((c = getopt(argc, argv, opts)) != -1)
 	switch (c) {
 	case 'h':
 	    arg = optarg;
