@@ -1,4 +1,4 @@
-/*	$Id: FaxDB.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxDB.h 217 2006-06-22 15:28:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -68,11 +68,11 @@ public:
     FaxDB* dup() { referenceCount++; return this; }
     const char* className() const;
 
-    static fxStr nameKey;
-    static fxStr numberKey;
-    static fxStr locationKey;
-    static fxStr phoneKey;
-    static fxStr companyKey;
+    static const char* nameKey;
+    static const char* numberKey;
+    static const char* locationKey;
+    static const char* phoneKey;
+    static const char* companyKey;
 
     FaxDBRecord* find(const fxStr& pat, fxStr* name = 0);
     FaxDBRecord* operator[](const fxStr& name);
