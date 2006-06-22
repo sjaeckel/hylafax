@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: TextFormat.c++ 215 2006-06-22 14:21:41Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -1131,8 +1131,8 @@ TextFormat::setConfigItem(const char* tag, const char* value)
 
 #define	NCHARS	(sizeof (widths) / sizeof (widths[0]))
 
-fxStr TextFont::fontMap = _PATH_FONTMAP;
-fxStr TextFont::fontPath = _PATH_AFM;
+const char* TextFont::fontMap = _PATH_FONTMAP;
+const char* TextFont::fontPath = _PATH_AFM;
 u_int TextFont::fontID = 0;
 
 TextFont::TextFont(const char* cp) : family(cp)
@@ -1147,7 +1147,7 @@ bool
 TextFont::decodeFontName(const char* name, fxStr& filename, fxStr& emsg)
 {
     struct stat junk;
-    fxStr path = fontMap;
+    fxStr path = fxStr(fontMap);
     u_int index = path.next(0, ':');
     while (index > 0) {
 
@@ -1217,7 +1217,7 @@ TextFont::decodeFontName(const char* name, fxStr& filename, fxStr& emsg)
 			val.remove(pos, val.length() - pos);
 			val.append(".afm");
 			//move through dirs looking for font
-			fxStr fpath = fontPath;
+			fxStr fpath = fxStr(fontPath);
                         int index2 = fpath.next(0, ':');
                         filename = fpath.head(index2) | "/" | val;
                         fpath.remove(0, index2);
@@ -1242,7 +1242,7 @@ TextFont::decodeFontName(const char* name, fxStr& filename, fxStr& emsg)
     }
     //decoding using fontmap has failed
     //now try plain filename with/without afm extension
-    path = fontPath;
+    path = fxStr(fontPath);
     index = path.next(0, ':');
     while (index > 0) {
         filename = path.head(index) | "/" | name | ".afm";
