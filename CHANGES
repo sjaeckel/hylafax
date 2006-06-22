@@ -1,7 +1,8 @@
-#	$Id: CHANGES 218 2006-06-22 17:39:55Z faxguy $	
+#	$Id: CHANGES 219 2006-06-22 22:35:15Z faxguy $	
 
 New Changes
 
+* add faxq StaggerCalls feature (22 Jun 2006)
 * disable DSO on Solaris by default (22 Jun 2006)
 * improve DSO build and fix non-DSO build on Solaris 8 (21 Jun 2006)
 * support some data format presentation changes in new

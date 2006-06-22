@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 213 2006-06-22 00:31:57Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 219 2006-06-22 22:35:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -133,6 +133,7 @@ faxQueueApp::~faxQueueApp()
 {
     HylaClient::purge();
     delete dialRules;
+    lastCall = Sys::now() - 3600;
 }
 
 faxQueueApp& faxQueueApp::instance() { return *_instance; }
@@ -2439,7 +2440,17 @@ faxQueueApp::runScheduler()
 		    job.remove();			// remove from run queue
 		    delayJob(job, *req, "Delayed by time-of-day restrictions", tts);
 		    delete req;
+		} else if (lastCall + staggerCalls > now) {
+		    /*
+		     * This job may not be started now because we last started
+		     * another job too recently and we're staggering jobs.
+		     * Reschedule it for the time when next okay.
+		     */
+		    job.remove();
+		    delayJob(job, *req, "Delayed by outbound call staggering", lastCall + staggerCalls);
+		    delete req;
 		} else if (assignModem(job)) {
+		    lastCall = now;
 		    job.remove();			// remove from run queue
 		    job.breq = req;
 		    /*
@@ -3114,6 +3125,7 @@ faxQueueApp::numbertag faxQueueApp::numbers[] = {
 { "maxdials",		&faxQueueApp::maxDials,		(u_int) FAX_REDIALS },
 { "jobreqother",	&faxQueueApp::requeueInterval,	FAX_REQUEUE },
 { "polllockwait",	&faxQueueApp::pollLockWait,	30 },
+{ "staggercalls",	&faxQueueApp::staggerCalls,	0 },
 };
 
 void
