@@ -1,7 +1,8 @@
-#	$Id: CHANGES 220 2006-06-23 19:30:13Z faxguy $	
+#	$Id: CHANGES 221 2006-06-24 01:18:27Z faxguy $	
 
 New Changes
 
+* improve error-handling and add return values to faxalter (23 Jun 2006)
 * add and enhance faxinfo output format options (23 Jun 2006)
 * add faxq StaggerCalls feature (22 Jun 2006)
 * disable DSO on Solaris by default (22 Jun 2006)

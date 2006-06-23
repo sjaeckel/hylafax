@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: faxalter.c++ 221 2006-06-24 01:18:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -40,7 +40,7 @@ public:
     faxAlterApp();
     ~faxAlterApp();
 
-    void run(int argc, char** argv);
+    int run(int argc, char** argv);
     bool duplicate ();
 };
 faxAlterApp::faxAlterApp() { groups = false; }
@@ -82,7 +82,7 @@ bool faxAlterApp::duplicate ()
     return true;
 }
 
-void
+int
 faxAlterApp::run(int argc, char** argv)
 {
     resetConfig();
@@ -96,7 +96,7 @@ faxAlterApp::run(int argc, char** argv)
     bool useadmin = false;
     bool resubmit = false;
 
-    int c;
+    int c, rc = 0;
     while ((c = Sys::getopt(argc, argv, "a:d:h:k:m:n:P:t:ADQRgprv")) != -1)
 	switch (c) {
 	case 'A':			// connect with administrative privileges
@@ -118,7 +118,7 @@ faxAlterApp::run(int argc, char** argv)
 	    if (strcasecmp(optarg, "NOW")) {
 		if (!parseAtSyntax(optarg, *localtime(&now), tts, emsg)) {
 		    printError("%s", (const char*) emsg);
-		    return;
+		    return (1);
 		}
 		now = mktime(&tts);
 		when = *gmtime(&now);	// NB: must be relative to GMT
@@ -160,7 +160,7 @@ faxAlterApp::run(int argc, char** argv)
 	case 'k':			// kill job at specified time
 	    if (!parseAtSyntax(optarg, tts, when, emsg)) {
 		printError("%s", optarg, (const char*) emsg);
-		return;
+		return (1);
 	    }
 	    { time_t tv = mktime(&when) - now;
           script.append(groups ? "JGPARM " : "JPARM ");
@@ -232,34 +232,54 @@ faxAlterApp::run(int argc, char** argv)
 	    (!useadmin || admin(NULL, emsg))) {
 	    for (; optind < argc; optind++) {
 		const char* jobid = argv[optind];
-		if (setCurrentJob(jobid) ) {
+		if (setCurrentJob(jobid)) {
 		    /*
 		     * We take the approach that if we can't do the work on a
 		     * job, we continue on to the next
 		     */
 		    if (resubmit) {
-			if (! duplicate())
+			if (! duplicate()) {
+			    rc = 3;
 			    continue;
+			}
 			const char* old_job = jobid;
 			jobid = getCurrentJob();
 			printf("Job %s: duplicated as job %s.\n", old_job, jobid);
-		    } else if (! jobSuspend(jobid)) 
+		    } else if (! jobSuspend(jobid)) {
+			emsg = getLastResponse();
+			printError("%s", (const char*) emsg);
+			rc = 3;
 			continue;
-		
-		    if (!runScript(script, script.length(), "<stdin>", emsg))
-			break;			// XXX???
+		    }
+		    if (!runScript(script, script.length(), "<stdin>", emsg)) {
+			printError("%s", (const char*) emsg);
+			rc = 3;
+			continue;
+		    }
 		    if (!jobSubmit(jobid)) {
 			emsg = getLastResponse();
-			break;
+			printError("%s", (const char*) emsg);
+			rc = 3;
+			continue;
 		    }
 		    printf("Job %s: done.\n", jobid);
+		} else {
+		    emsg = getLastResponse();
+		    printError("%s", (const char*) emsg);
+		    rc = 3;
+		    continue;
 		}
 	    }
+	} else {
+	    printError("%s", (const char*) emsg);
+	    rc = 2;
 	}
 	hangupServer();
-    }
-    if (emsg != "")
+    } else {
 	printError("%s", (const char*) emsg);
+	rc = 2;
+    }
+    return (rc);
 }
 
 void
@@ -285,6 +305,5 @@ int
 main(int argc, char** argv)
 {
     faxAlterApp app;
-    app.run(argc, argv);
-    return 0;
+    return (app.run(argc, argv));
 }

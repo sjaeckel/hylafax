@@ -1,4 +1,4 @@
-.\"	$Id: faxalter.1 174 2006-05-12 22:43:18Z faxguy $
+.\"	$Id: faxalter.1 221 2006-06-24 01:18:27Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -210,6 +210,14 @@ Control protocol tracing.
 (Equivalent to the
 .B \-v
 option.)
+.SH RETURN VALUE
+On complete success
+.I faxalter
+returns 0.  If there is a user-supplied syntax error then 1 is returned.
+If a login to the server was unsuccessful then 2 is returned.  If
+some client-server job processing error occured then
+.I faxalter
+returns 3.
 .SH NOTES
 Setting a job's killtime without also setting the time to send
 may cause the wrong value for the killtime to be sent.
