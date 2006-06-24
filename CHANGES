@@ -1,4 +1,4 @@
-#	$Id: CHANGES 221 2006-06-24 01:18:27Z faxguy $	
+#	$Id: CHANGES 222 2006-06-25 03:59:30Z faxguy $	
 
 New Changes
 
@@ -6,7 +6,7 @@ New Changes
 * add and enhance faxinfo output format options (23 Jun 2006)
 * add faxq StaggerCalls feature (22 Jun 2006)
 * disable DSO on Solaris by default (22 Jun 2006)
-* improve DSO build and fix non-DSO build on Solaris 8 (21 Jun 2006)
+* fix non-DSO build on Solaris 8 (21 Jun 2006)
 * support some data format presentation changes in new
   MultiTech modem firmware (17 Jun 2006)
 * fix Class 2 data format parsing of +FIS response (16 Jun 2006)

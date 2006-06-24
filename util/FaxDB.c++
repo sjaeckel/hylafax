@@ -1,4 +1,4 @@
-/*	$Id: FaxDB.c++ 217 2006-06-22 15:28:21Z faxguy $ */
+/*	$Id: FaxDB.c++ 222 2006-06-25 03:59:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -78,11 +78,11 @@ FaxDB::~FaxDB()
 
 const char* FaxDB::className() const { return "FaxDB"; }
 
-const char* FaxDB::nameKey = "Name";
-const char* FaxDB::numberKey = "FAX-Number";
-const char* FaxDB::companyKey = "Company";
-const char* FaxDB::locationKey = "Location";
-const char* FaxDB::phoneKey = "Voice-Number";
+fxStr FaxDB::nameKey("Name");
+fxStr FaxDB::numberKey("FAX-Number");
+fxStr FaxDB::companyKey("Company");
+fxStr FaxDB::locationKey("Location");
+fxStr FaxDB::phoneKey("Voice-Number");
 
 FaxDBRecord*
 FaxDB::find(const fxStr& s, fxStr* name)
@@ -138,7 +138,7 @@ FaxDB::parseDatabase(FILE* fd, FaxDBRecord* parent)
 	if (!getToken(fd, value))
 	    break;
 	rec->set(key, value);
-	if (key == fxStr(nameKey))			// XXX what about duplicates?
+	if (key == nameKey)			// XXX what about duplicates?
 	    add(value, rec);
     }
 }
