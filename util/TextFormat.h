@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.h 215 2006-06-22 14:21:41Z faxguy $ */
+/*	$Id: TextFormat.h 222 2006-06-25 03:59:30Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -41,8 +41,8 @@ private:
     fxStr	showproc;		// PostScript show procedure
     TextCoord	widths[256];		// width table
 
-    static const char* fontMap;		// location of Fontmap file
-    static const char* fontPath;	// path for afm files
+    static fxStr fontMap;		// location of Fontmap file
+    static fxStr fontPath;		// path for afm files
     static u_int fontID;		// font identifier number
 
     friend class TextFormat;

@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 217 2006-06-22 15:28:21Z faxguy $ */
+/*	$Id: sendfax.c++ 222 2006-06-25 03:59:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -43,7 +43,7 @@ private:
     fxStr	stdinTemp;		// temp file for collecting from pipe
     FaxDB*	db;
 
-    static const char* dbName;
+    static fxStr dbName;
 
     void addDestination(const char* cp);
     void addDestinationsFromFile(const char* filename);
@@ -57,7 +57,7 @@ public:
     bool run(int argc, char** argv);
 };
 
-const char* sendFaxApp::dbName = "~/.faxdb";
+fxStr sendFaxApp::dbName("~/.faxdb");
 
 sendFaxApp::sendFaxApp()
 {
@@ -91,7 +91,7 @@ sendFaxApp::run(int argc, char** argv)
     bool waitForJob = false;
     int verbose = 0;
     SendFaxJob& proto = getProtoJob();
-    db = new FaxDB(tildeExpand(fxStr(dbName)));
+    db = new FaxDB(tildeExpand(dbName));
     while ((c = Sys::getopt(argc, argv, "a:b:B:c:C:d:e:f:F:h:i:I:k:M:o:P:r:s:S:t:T:u:U:V:W:x:X:y:Y:z:123lmnpvwADEGNR")) != -1) {
         if (c != 'h')
             optionsUsed = false;
