@@ -1,7 +1,8 @@
-#	$Id: CHANGES 224 2006-06-26 16:08:11Z faxguy $	
+#	$Id: CHANGES 225 2006-06-26 16:56:53Z faxguy $	
 
 New Changes
 
+* handle +FCERROR after most +FRH=3 commands (26 Jun 2006)
 * stop using CRP in Phase D in Class 1 sending (26 Jun 2006)
 * improve error-handling and add return values to faxalter (23 Jun 2006)
 * add and enhance faxinfo output format options (23 Jun 2006)
