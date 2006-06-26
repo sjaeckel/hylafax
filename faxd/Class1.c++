@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 224 2006-06-26 16:08:11Z faxguy $ */
+/*	$Id: Class1.c++ 225 2006-06-26 16:56:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1334,7 +1334,17 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 	return (gotframe);
     }
     startTimeout(ms);
-    if (!readPending) readPending = atCmd(rhCmd, AT_NOTHING, 0) && waitFor(AT_CONNECT, 0);
+    if (!readPending) {
+	/*
+	 * Hopefully the modem is smart enough to *not* do +FCERROR after +FRH=3,
+	 * as it is only a stumbling-block for us and cannot be beneficial.  But,
+	 * in case it adheres blindly to the spec, we'll repeat ourselves here
+	 * until we timeout or we do get the V.21 carrier.
+	 */
+	do {
+	    readPending = atCmd(rhCmd, AT_NOTHING, 0) && waitFor(AT_CONNECT, 0);
+	} while (lastResponse == AT_FCERROR && !wasTimeout());
+    }
     if (readPending) {
         stopTimeout("waiting for HDLC flags");
         if (wasTimeout()){
