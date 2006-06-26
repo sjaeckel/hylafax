@@ -1,7 +1,8 @@
-#	$Id: CHANGES 222 2006-06-25 03:59:30Z faxguy $	
+#	$Id: CHANGES 224 2006-06-26 16:08:11Z faxguy $	
 
 New Changes
 
+* stop using CRP in Phase D in Class 1 sending (26 Jun 2006)
 * improve error-handling and add return values to faxalter (23 Jun 2006)
 * add and enhance faxinfo output format options (23 Jun 2006)
 * add faxq StaggerCalls feature (22 Jun 2006)
