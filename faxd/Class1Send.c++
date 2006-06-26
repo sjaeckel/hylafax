@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 204 2006-06-14 21:05:31Z faxguy $ */
+/*	$Id: Class1Send.c++ 224 2006-06-26 16:08:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1219,7 +1219,9 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 		// hang up.  So, using T4 here is imperative so that our second PPS
 		// message happens before the remote decides to hang up. As we're in
 		// a "RESPONSE REC" operation, anyway, this is correct behavior.
-		if (gotppr = recvFrame(pprframe, FCF_SNDR, conf.t4Timer)) {
+		//
+		// We don't use CRP here, because it isn't well-received.
+		if (gotppr = recvFrame(pprframe, FCF_SNDR, conf.t4Timer, false, false)) {
 		    tracePPR("SEND recv", pprframe.getFCF());
 		    if (pprframe.getFCF() == FCF_CRP) {
 			gotppr = false;
@@ -1983,7 +1985,8 @@ Class1Modem::sendPPM(u_int ppm, HDLCFrame& mcf, fxStr& emsg)
 {
     for (int t = 0; t < 3; t++) {
 	tracePPM("SEND send", ppm);
-	if (transmitFrame(ppm|FCF_SNDR) && recvFrame(mcf, FCF_SNDR, conf.t4Timer))
+	// don't use CRP here because it isn't well-received
+	if (transmitFrame(ppm|FCF_SNDR) && recvFrame(mcf, FCF_SNDR, conf.t4Timer, false, false))
 	    return (true);
 	if (abortRequested())
 	    return (false);

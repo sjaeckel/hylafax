@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 204 2006-06-14 21:05:31Z faxguy $ */
+/*	$Id: Class1.c++ 224 2006-06-26 16:08:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1321,7 +1321,7 @@ Class1Modem::transmitData(int br, u_char* data, u_int cc,
  * retransmit the frame. 
  */
 bool
-Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending)
+Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, bool docrp)
 {
     bool gotframe;
     u_short crpcnt = 0;
@@ -1330,7 +1330,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending)
 	    if (crpcnt) tracePPR(dir == FCF_SNDR ? "SEND send" : "RECV send", FCF_CRP);
 	    frame.reset();
 	    gotframe = recvRawFrame(frame);
-	} while (!gotframe && !gotRTNC && !gotEOT && crpcnt++ < 3 && !wasTimeout() && transmitFrame(dir|FCF_CRP));
+	} while (!gotframe && !gotRTNC && !gotEOT && docrp && crpcnt++ < 3 && !wasTimeout() && transmitFrame(dir|FCF_CRP));
 	return (gotframe);
     }
     startTimeout(ms);
@@ -1354,7 +1354,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending)
 	    }
 	    frame.reset();
             gotframe = recvRawFrame(frame);
-	} while (!gotframe && crpcnt++ < 3 && !wasTimeout() &&
+	} while (!gotframe && docrp && crpcnt++ < 3 && !wasTimeout() &&
 		atCmd(conf.class1SwitchingCmd, AT_OK) && transmitFrame(dir|FCF_CRP));
 	return (gotframe);
     } else if (lastResponse == AT_ERROR) gotEOT = true;		// on hook

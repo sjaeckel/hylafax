@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 204 2006-06-14 21:05:31Z faxguy $ */
+/*	$Id: Class1.h 224 2006-06-26 16:08:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -179,7 +179,7 @@ protected:
     bool	sendClass1Data(const u_char* data, u_int cc, const u_char* bitrev, bool eod, long ms);
     bool	sendClass1ECMData(const u_char* data, u_int cc,
 		     const u_char* bitrev, bool eod, u_int ppmcmd, fxStr& emsg);
-    bool	recvFrame(HDLCFrame& frame, u_char dir, long ms = 10*1000, bool readPending = false);
+    bool	recvFrame(HDLCFrame& frame, u_char dir, long ms = 10*1000, bool readPending = false, bool docrp = true);
     bool	recvTCF(int br, HDLCFrame&, const u_char* bitrev, long ms);
     bool	recvRawFrame(HDLCFrame& frame);
     bool	recvECMFrame(HDLCFrame& frame);
