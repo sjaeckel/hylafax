@@ -1,6 +1,10 @@
-#	$Id: CHANGES 225 2006-06-26 16:56:53Z faxguy $	
+#	$Id: CHANGES 227 2006-06-28 22:36:08Z faxguy $	
 
 New Changes
+
+* undo dictionary quoted-printable encoding (28 Jun 2006)
+
+(4.3.0.5)
 
 * handle +FCERROR after most +FRH=3 commands (26 Jun 2006)
 * stop using CRP in Phase D in Class 1 sending (26 Jun 2006)
