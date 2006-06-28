@@ -1,4 +1,4 @@
-/*	$Id: faxinfo.c++ 220 2006-06-23 19:30:13Z faxguy $ */
+/*	$Id: faxinfo.c++ 228 2006-06-28 22:45:12Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -30,7 +30,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include "tiffio.h"
 
 #include "PageSize.h"
@@ -83,14 +82,8 @@ sanitize(fxStr& s)
 static void
 usage (const char* app)
 {
-    char *p, *f;
-    p = strdup(app);
-    f = basename(p);
-    printf("Usage: %s [-D] [-b][-n] [-S fmt] [-s fmt] [-e fmt] [-E fmt]\n\n",
-      f);
-    free(p);
-    printf("\t-n\tPrint FAX pathname\n");
-    printf("\t-b\tPrint FAX basename (does _not_ imply -n)\n");
+    printf("usage: %s [-n] [-S fmt] [-s fmt] [-e fmt] [-E fmt] [-D]\n\n", app);
+    printf("\t-n\tPrint FAX filename\n");
     printf("\t-C d\tQuoted CSV-style output with <d> as the deliminator\n");
     printf("\t-c d\tCSV-style output with <d> as the deliminator\n");
     printf("\t-r\traw format - values outputed with no names\n");
@@ -100,8 +93,6 @@ usage (const char* app)
     printf("\t-s fmt\tUse fmt for the field start format\n");
     printf("\t-e fmt\tUse fmt for the field end format\n");
     printf("\t-E fmt\tUse fmt for the fax end format\n");
-
-    printf("\t-D\tDebug - print on stderr SseE fmt strings\n");
 }
 
 static const char*
@@ -110,46 +101,42 @@ escapedString (const char*src)
     char* res;
     int len;
     len = strlen(src);
-    res = (char*)calloc(len+1, sizeof(char));
+    res = (char*)malloc(len+1);
     if (res)
     {
 	char* dst = res;
-	for (int i = 0; i < len; i++)
+	for (int i = 0; i <= len; i++)
 	{
-	  if (i < len-1) 
-	  {
 	    switch (src[i])
 	    {
-	      case '\\':
-		switch (src[++i])
-		{
-		    case 'n':	*dst++ = '\n';	break;
-		    case 'r':	*dst++ = '\r';	break;
-		    case 't':	*dst++ = '\t';	break;
-		    default:
-			*dst++ = src[i];
-		}
-		break;
-	      case '%':
-	        *dst++ = src[i];
-		switch (src[++i])
-		{
-		    // don't ever want %n, let's squash it to %%
-		    case 'n':	*dst++ = '%';	break;
-		    default:
-			*dst++ = src[i];
-		}
-		break;
-	      default:
-	        *dst++ = src[i];
+	    	case '\\':
+		    switch (src[++i])
+		    {
+			case 'n':	*dst++ = '\n';	break;
+			case 'r':	*dst++ = '\r';	break;
+			case 't':	*dst++ = '\t';	break;
+			default:
+			    *dst++ = src[i];
+		    }
+		    break;
+		case '%':
+		    *dst++ = src[i];
+		    switch (src[++i])
+		    {
+			case 'n':	*dst++ = '%';	break;
+			default:
+			    *dst++ = src[i];
+		    }
+		    break;
+
+		default:
+		    *dst++ = src[i];
 	    }
-	  } else
-	  {
-	    *dst++ = src[i];
-	  }
 	}
     } else
-      exit (ENOMEM);
+    {
+    	exit(ENOMEM);
+    }
     return res;
 }
 
@@ -186,11 +173,11 @@ int
 main(int argc, char** argv)
 {
     const char* appName = argv[0];
-    int c, debug, base_name;
+    bool debug = false;
+    bool baseName = false;
+    int c;
 
-    debug = base_name = 0;
-
-    while ((c = getopt(argc, argv, "C:c:bDrnS:s:e:E:")) != -1)
+    while ((c = getopt(argc, argv, "C:c:rnbS:s:e:E:D")) != -1)
 	switch (c) {
 	    case '?':
 	    	usage(appName);
@@ -216,6 +203,9 @@ main(int argc, char** argv)
 	    case 'n':
 		faxStart = "%s:\n";
 		break;
+	    case 'b':
+	    	baseName = true;
+		break;
 	    case 'S':
 		faxStart = escapedString(optarg);
 	    	break;
@@ -228,38 +218,37 @@ main(int argc, char** argv)
 	    case 'E':
 		faxEnd = escapedString(optarg);
 	    	break;
-	    case 'b':
-		base_name = 1;
-	    	break;
 	    case 'D':
-		debug = 1;
-	    	break;
+	    	debug = true;
+		break;
 	}
+
     if (debug)
-      fprintf(stderr,"base_name=%d\n" 
-        "faxStart='%s'\nfieldStart='%s'\nfieldEnd='%s'\nfaxEnd'%s'\n",
-        base_name,faxStart,fieldStart,fieldEnd,faxEnd);
+	fprintf(stderr, "faxStart='%s'\nfieldStart='%s'\nfieldEnd='%s'\nfaxEnd'%s'\n",
+		faxStart,fieldStart,fieldEnd,faxEnd);
+
     while (optind < argc) {
-	char *p = NULL, *f = NULL;
-	if (base_name)
-	{
-	  p = strdup(argv[optind]);
-	  f = basename(p);
-	} else
-	  f = argv[optind];
-	printStart(f);
+	const char* name = argv[optind];
+
+	if (baseName) {
+	    const char* r = strrchr(name, '/');
+	    if (r)
+		name = r+1;
+	}
+
+	printStart(name);
 	TIFFSetErrorHandler(NULL);
 	TIFFSetWarningHandler(NULL);
 	TIFF* tif = TIFFOpen(argv[optind], "r");
 	if (tif == NULL) {
 	    printf("Could not open %s; either not TIFF or corrupted.\n",
 		    argv[optind]);
-	    return (1);
+	    return (0);
 	}
 	bool ok = isFAXImage(tif);
 	if (!ok) {
 	    printf("Does not look like a facsimile?\n");
-	    return (2);
+	    return (0);
 	}
 
 	Class2Params params;
@@ -411,13 +400,11 @@ main(int argc, char** argv)
 	printField("%s", "SignalRate", params.bitRateName());
 	printField("%s", "DataFormat", params.dataFormatName());
 	printField("%s", "ErrCorrect", params.ec == EC_DISABLE ? "No" : "Yes");
-	char callidstring[16];
 	for (u_int i = 0; i < callid.size(); i++) {
-	    snprintf(callidstring, 15, "CallID%u", i+1);
-	    printField("%s", callidstring, (const char*) callid.id(i));
+	    fxStr fmt(fxStr::format("CallID%u", i+1));
+	    printField("%s", (const char*)fmt, (const char*) callid.id(i));
 	}
-	printEnd(f);
-	if (base_name) free(p);
+	printEnd(name);
 	optind++;
     }
     return (0);
