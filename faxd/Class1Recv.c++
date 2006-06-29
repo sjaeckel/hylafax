@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 200 2006-06-14 17:18:07Z faxguy $ */
+/*	$Id: Class1Recv.c++ 229 2006-06-29 16:27:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -713,7 +713,22 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		if (!getRecvEOLCount()) {
 		    // We have a null page, don't save it because it makes readers fail.
 		    pageGood = false;
-		    if (params.ec != EC_DISABLE) return (false);
+		    if (params.ec != EC_DISABLE) {
+			if (emsg == "") {
+			    /*
+			     * We negotiated ECM, got no valid ECM image data, and the 
+			     * ECM page reception routines did not set an error message.
+			     * The empty emsg is due to the ECM routines detecting a 
+			     * non-ECM-specific partial-page signal and wants it to
+			     * be handled here.  The sum total of all of this, and the 
+			     * fact that we got MPS/EOP/EOM tells us that the sender
+			     * is not using ECM.  In an effort to salvage the session we'll
+			     * disable ECM now and try to continue.
+			     */
+			    params.ec = EC_DISABLE;
+			} else
+			    return (false);
+		    }
 		}
 		if (!pageGood && conf.badPageHandling == FaxModem::BADPAGE_RTN)
 		    recvResetPage(tif);

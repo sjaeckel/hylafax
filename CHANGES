@@ -1,7 +1,9 @@
-#	$Id: CHANGES 227 2006-06-28 22:36:08Z faxguy $	
+#	$Id: CHANGES 229 2006-06-29 16:27:15Z faxguy $	
 
 New Changes
 
+* handle instances where ECM is negotiated but the sender
+  transmits non-ECM data and signalling (29 Jun 2006)
 * undo dictionary quoted-printable encoding (28 Jun 2006)
 
 (4.3.0.5)
