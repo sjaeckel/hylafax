@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 199 2006-06-14 13:58:55Z faxguy $
+#    $Id: notify.sh.in 232 2006-06-29 22:32:10Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -362,6 +362,7 @@ putMimeTextHeader()
     echo "This is a multi-part message in MIME format."
     echo ""
     echo "--$MIMEBOUNDARY"
+    echo "Mime-Version: 1.0"
     echo "Content-Type: text/plain; charset=$CHARSET"
     echo "Content-Transfer-Encoding: quoted-printable"
     echo ""
@@ -530,7 +531,9 @@ returnTranscript()
         COMFILE="log/c$commid"
         if [ -f "$COMFILE" ] ; then
             # dump the comfile to output except for '-- data' lines
-            cat $COMFILE | $GREP -v "\-\- data"
+            cat $COMFILE | $SED -e '/-- data/d' \
+		-e '/start.*timer/d' -e '/stop.*timer/d' \
+		-e 's/=/=3D/g'
         else 
             printf "$DICTNOLOGAVAIL"
             if [ -n "$commid" ] ; then  # non 0 len commid value
@@ -765,6 +768,9 @@ if [ "$NOTIFY_FAXMASTER" = "yes" ]; then
 	if [ -z "$jobtag" ] ; then
 	    jobtag="$jobtype job $jobid"
 	fi
+	echo "Mime-Version: 1.0"
+	echo "Content-Type: text/plain; charset=$CHARSET"
+	echo "Content-Transfer-Encoding: quoted-printable"
 	echo "To: $TOADDR"
 	echo "From: $FROMADDR"
 	echo "Subject: $jobtag to $number $WHY"
