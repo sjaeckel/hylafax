@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 229 2006-06-29 16:27:15Z faxguy $ */
+/*	$Id: Class1Recv.c++ 230 2006-06-29 16:38:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -299,6 +299,7 @@ Class1Modem::recvDCSFrames(HDLCFrame& frame)
 	    recvTSI(decodeTSI(s, frame));
 	    break;
 	case FCF_DCS:
+	    if (frame.getFrameDataLength() < 4) return (false);	// minimum acceptable DCS frame size
 	    processDCSFrame(frame);
 	    break;
 	}
@@ -443,7 +444,6 @@ Class1Modem::recvTraining()
 void
 Class1Modem::processDCSFrame(const HDLCFrame& frame)
 {
-    if (frame.getFrameDataLength() < 4) return;	// minimum acceptable DCS frame size
     FaxParams dcs_caps = frame.getDIS();			// NB: really DCS
 
     if (dcs_caps.isBitEnabled(FaxParams::BITNUM_FRAMESIZE_DCS)) frameSize = 64;
