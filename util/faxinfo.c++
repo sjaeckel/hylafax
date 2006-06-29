@@ -1,4 +1,4 @@
-/*	$Id: faxinfo.c++ 228 2006-06-28 22:45:12Z faxguy $ */
+/*	$Id: faxinfo.c++ 231 2006-06-29 17:28:38Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -140,7 +140,7 @@ escapedString (const char*src)
     return res;
 }
 
-static const char* faxStart = "";
+static const char* faxStart = "%s:\n";
 static const char* fieldStart = "%10s: ";
 static const char* fieldEnd = "\n";
 static const char* faxEnd = "";
@@ -201,7 +201,7 @@ main(int argc, char** argv)
 		faxEnd = "";
 		break;
 	    case 'n':
-		faxStart = "%s:\n";
+		faxStart = "";
 		break;
 	    case 'b':
 	    	baseName = true;

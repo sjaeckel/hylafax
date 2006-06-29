@@ -1,7 +1,8 @@
-#	$Id: CHANGES 230 2006-06-29 16:38:14Z faxguy $	
+#	$Id: CHANGES 231 2006-06-29 17:28:38Z faxguy $	
 
 New Changes
 
+* return 'faxinfo -n' to its traditional behavior (29 Jun 2006)
 * fix error of accepting too-short of DCS signal (29 Jun 2006)
 * handle instances where ECM is negotiated but the sender
   transmits non-ECM data and signalling (29 Jun 2006)
