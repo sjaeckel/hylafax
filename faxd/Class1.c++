@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 225 2006-06-26 16:56:53Z faxguy $ */
+/*	$Id: Class1.c++ 233 2006-06-30 15:25:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1339,10 +1339,14 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 	 * Hopefully the modem is smart enough to *not* do +FCERROR after +FRH=3,
 	 * as it is only a stumbling-block for us and cannot be beneficial.  But,
 	 * in case it adheres blindly to the spec, we'll repeat ourselves here
-	 * until we timeout or we do get the V.21 carrier.
+	 * until we timeout or we do get the V.21 carrier.  We do slow the looping
+	 * with a pause to prevent unwanted massive amounts of tracing.  The pause 
+	 * needs to be short enough, though, that the modem will still pick up
+	 * any V.21 signalling if it misses that much of the startup.
 	 */
 	do {
 	    readPending = atCmd(rhCmd, AT_NOTHING, 0) && waitFor(AT_CONNECT, 0);
+	    if (lastResponse == AT_FCERROR) pause(200);
 	} while (lastResponse == AT_FCERROR && !wasTimeout());
     }
     if (readPending) {

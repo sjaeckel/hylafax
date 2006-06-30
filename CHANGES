@@ -1,7 +1,8 @@
-#	$Id: CHANGES 231 2006-06-29 17:28:38Z faxguy $	
+#	$Id: CHANGES 233 2006-06-30 15:25:34Z faxguy $	
 
 New Changes
 
+* slow down fast looping in +FRH=3/+FCERROR loop (30 Jun 2006)
 * return 'faxinfo -n' to its traditional behavior (29 Jun 2006)
 * fix error of accepting too-short of DCS signal (29 Jun 2006)
 * handle instances where ECM is negotiated but the sender
