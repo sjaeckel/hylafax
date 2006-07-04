@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 238 2006-07-04 13:28:05Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 239 2006-07-04 13:36:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2263,7 +2263,10 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
     while ((jb = di.nextBlocked())) {
 	if (isOKToCall(di, jb->getJCI(), n)) {
 	    FaxRequest* req = readRequest(*jb);
-	    if (!req) continue;
+	    if (!req) {
+		setDead(*jb);
+		continue;
+	    }
 	    setReadyToRun(*jb, false);
 	    if (!di.supportsBatching()) n++;
 	    req->notice = "";
