@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 222 2006-06-25 03:59:30Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 238 2006-07-04 13:28:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -457,7 +457,7 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		 */
 		removeDestInfoJob(job);		// release destination block
 		DestInfo& di = destJobs[job.dest];
-		unblockDestJobs(job, di);	// release any blocked jobs
+		unblockDestJobs(di);		// release any blocked jobs
 		pokeScheduler();
 	    }
 	}
@@ -1434,7 +1434,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
 	    }
 	}
     } else {
-	unblockDestJobs(job, di);
+	unblockDestJobs(di);
     }
     for (cjob = &job; cjob != NULL; cjob = njob) {
 	njob = cjob->bnext;
@@ -2250,7 +2250,7 @@ faxQueueApp::runJob(Job& job)
     (di.getCalls()+n <= dci.getMaxConcurrentCalls())
 
 void
-faxQueueApp::unblockDestJobs(Job& job, DestInfo& di)
+faxQueueApp::unblockDestJobs(DestInfo& di)
 {
     /*
      * Check if there are blocked jobs waiting to run
@@ -2261,18 +2261,19 @@ faxQueueApp::unblockDestJobs(Job& job, DestInfo& di)
     Job* jb;
     u_int n = 1;
     while ((jb = di.nextBlocked())) {
-	FaxRequest* req = readRequest(*jb);
-	if (!req) continue;
-	if (isOKToCall(di, job.getJCI(), n)) {
+	if (isOKToCall(di, jb->getJCI(), n)) {
+	    FaxRequest* req = readRequest(*jb);
+	    if (!req) continue;
 	    setReadyToRun(*jb, false);
 	    if (!di.supportsBatching()) n++;
 	    req->notice = "";
 	    updateRequest(*req, *jb);
+	    delete req;
 	} else {
-	    traceJob(job, "Continue BLOCK, current calls: %d, max concurrent calls: %d", 
-		di.getCalls(), job.getJCI().getMaxConcurrentCalls());
+	    traceQueue("Continue BLOCK on jobs to %s, current calls: %d, max concurrent calls: %d", 
+		(const char*) jb->dest, di.getCalls(), jb->getJCI().getMaxConcurrentCalls());
+	    break;
 	}
-	delete req;
     }
 }
 
@@ -2476,7 +2477,7 @@ faxQueueApp::runScheduler()
 			 * allowed on this modem which are not of a lesser priority than
 			 * jobs to other destinations.
 			 */
-			unblockDestJobs(job, di);
+			unblockDestJobs(di);
 
 			/*
 			 * Since job files are passed to the send program as command-line
