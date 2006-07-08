@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 166 2006-05-01 21:45:09Z faxguy $ */
+/*	$Id: RecvQueue.c++ 241 2006-07-08 17:22:32Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -316,7 +316,7 @@ static const char rformat[] = {
     's',		// a (subaddr)
     'u',		// b (bitrate)
     'c',		// c
-    'd',		// d (data format)
+    's',		// d (data format)
     's',		// e (error a.k.a. reason)
     's',		// f (filename)
     'g',		// g
