@@ -1,4 +1,4 @@
-.\"	$Id: faxinfo.1m 237 2006-07-03 17:12:18Z faxguy $
+.\"	$Id: faxinfo.1m 240 2006-07-08 16:27:13Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -176,7 +176,7 @@ to printf, with basic \\<char> sequences being interpreted, including \\n, \\r,
 and \\t, and can be used to make the output conform to specific requirements,
 like peculiar CVS, tables, HTML, etc.
 .PP
-The order of the options is important.  They are parsed from left to right, and any
+The order of the options is important.  They are parsed from first to last, and any
 later options will override settings of previous ones.
 .SH "SEE ALSO"
 .IR hylafax-server (${MANNUM4_5}),
