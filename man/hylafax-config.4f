@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 236 2006-06-30 22:18:36Z faxguy $
+.\"	$Id: hylafax-config.4f 242 2006-07-10 18:30:18Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-06-30 15:18:36 -0700 (Fri, 30 Jun 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-07-10 11:30:18 -0700 (Mon, 10 Jul 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -882,7 +882,7 @@ the number has not been successfully dialed before.
 .TP
 .B JobRetryNoCarrier
 The number of times to redial a phone number after the
-dialing attempt failed because of NO ANSWER when
+dialing attempt failed because of NO CARRIER when
 the number has not been successfully dialed before.
 In normal operation the fax server will treat this result code
 to mean that a facsimile modem/machine did not answer the
