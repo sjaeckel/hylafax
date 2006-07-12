@@ -1,6 +1,11 @@
-#	$Id: CHANGES 241 2006-07-08 17:22:32Z faxguy $	
+#	$Id: CHANGES 245 2006-07-12 18:07:03Z faxguy $	
 
 New Changes
+
+* don't skip initial NSF bytes in station ID search when no
+  known T.35 manufacturer ID was used (12 Jul 2006)
+
+(4.3.0.6)
 
 * fix hfaxd %d "data format" presentation (8 Jul 2006)
 * slow down fast looping in +FRH=3/+FCERROR loop (30 Jun 2006)

@@ -1,4 +1,4 @@
-/* $Id: NSF.c++ 244 2006-07-12 17:41:29Z faxguy $ */
+/* $Id: NSF.c++ 245 2006-07-12 18:07:03Z faxguy $ */
 /* 
  * This file does not exist in the original HylaFAX distribution.
  * Created by Dmitry Bely, April 2000
@@ -480,7 +480,7 @@ void NSF::decode()
         }
     }
     if( !vendorFound() )
-	findStationId( 0, 3 );	// most vendorIDSize will be 3
+	findStationId( 0, 0 );	// don't skip initial bytes in search
 }
 
 void NSF::findStationId( bool reverseOrder, u_int vendorIdSize )
