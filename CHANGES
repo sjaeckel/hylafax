@@ -1,7 +1,8 @@
-#	$Id: CHANGES 245 2006-07-12 18:07:03Z faxguy $	
+#	$Id: CHANGES 246 2006-07-12 21:06:46Z faxguy $	
 
 New Changes
 
+* fix race condition in faxq JobControl exit detection (12 Jul 2006)
 * don't skip initial NSF bytes in station ID search when no
   known T.35 manufacturer ID was used (12 Jul 2006)
 

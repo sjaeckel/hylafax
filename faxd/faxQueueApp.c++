@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 239 2006-07-04 13:36:03Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 246 2006-07-12 21:06:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1630,7 +1630,7 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 	    case -1:			// error - continue with no JCI
 		jobError(job, "JOB CONTROL: fork: %m");
 		Sys::close(pfd[1]);
-		// When fork fails we need to run jobCtrlDone, since there
+		// When fork fails we need to run ctrlJobDone, since there
 		// will be no child signal to start it.
 		ctrlJobDone(job, -1);
 		break;
@@ -1647,16 +1647,17 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 		/*NOTREACHED*/
 	    default:			// parent, read from pipe and wait
 		Sys::close(pfd[1]);
+		job.pid = pid;
 		job.startControl(pid, pfd[0]);
 		if (wait) {
-		    while (job.isEmpty())
+		    while (job.pid == pid)
 			Dispatcher::instance().dispatch();
 		}
 		break;
 	    }
 	} else {
 	    // If our pipe fails, we can't run the child, but we still
-	    // Need jobCtrlDone to be called to proceed this job
+	    // Need ctrlJobDone to be called to proceed this job
 	    ctrlJobDone(job, -1);
 	}
     } else {
@@ -1683,6 +1684,7 @@ faxQueueApp::ctrlJobDone(Job& job, int status)
       (iter.job().pri == job.pri && iter.job().tts <= job.tts)); iter++)
 	;
     job.insert(iter.job());
+    job.pid = 0;
 }
 
 /*
