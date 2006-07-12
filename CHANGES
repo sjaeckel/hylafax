@@ -1,7 +1,8 @@
-#	$Id: CHANGES 246 2006-07-12 21:06:46Z faxguy $	
+#	$Id: CHANGES 247 2006-07-12 23:06:37Z faxguy $	
 
 New Changes
 
+* set O_NONBLOCK on FIFOs (12 Jul 2006)
 * fix race condition in faxq JobControl exit detection (12 Jul 2006)
 * don't skip initial NSF bytes in station ID search when no
   known T.35 manufacturer ID was used (12 Jul 2006)
