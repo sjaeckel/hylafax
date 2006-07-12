@@ -1,4 +1,4 @@
-/* $Id: NSF.c++ 171 2006-05-05 15:23:30Z faxguy $ */
+/* $Id: NSF.c++ 244 2006-07-12 17:41:29Z faxguy $ */
 /* 
  * This file does not exist in the original HylaFAX distribution.
  * Created by Dmitry Bely, April 2000
@@ -177,7 +177,7 @@ static const ModelData Muratec48[] =
  *
  * For the most part it should be safe to identify a manufacturer
  * both with the MSB and LSB ordered bits, as the "masqueraded" country
- * is likely to not be actively assigning T.38 manufacturer codes.
+ * is likely to not be actively assigning T.35 manufacturer codes.
  * However, some manufacturers (e.g. Microsoft) may use MSB for the
  * country code and LSB for the rest of the NSF, and so basically this
  * table must be verified and corrected against actual real-world
