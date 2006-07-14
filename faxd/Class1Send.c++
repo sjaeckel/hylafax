@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 224 2006-06-26 16:08:11Z faxguy $ */
+/*	$Id: Class1Send.c++ 248 2006-07-14 15:32:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1358,7 +1358,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 				blockgood = true;
 				signalRcvd = FCF_MCF;
 			    }
-			    if (!useV34 && curcap->mod == V17 && badframes == frameNumber) {
+			    if (!useV34 && curcap->mod == V17 && badframes == frameNumber && FaxModem::getPageNumberOfCall() == 1) {
 				// looks like a V.17 modulator incompatibility that managed to pass TCF
 				// we set hasV17Trouble to help future calls to this destination
 				protoTrace("The destination appears to have trouble with V.17.");
@@ -1574,8 +1574,11 @@ Class1Modem::sendClass1ECMData(const u_char* data, u_int cc, const u_char* bitre
 	}
 	ecmFrame[ecmFramePos++] = frameRev[data[i]];
 	if (ecmFramePos == (frameSize + 4)) {
-	    if (!blockFrame(bitrev, ((i == (cc - 1)) && eod), ppmcmd, emsg))
+	    bool lastframe = ((i == (cc - 1)) && eod);
+	    if (!blockFrame(bitrev, lastframe, ppmcmd, emsg))
 		return (false);
+	    if (lastframe)
+		return (true);
 	}
     }
     if (eod) {
