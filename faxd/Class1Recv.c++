@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 234 2006-06-30 16:13:42Z faxguy $ */
+/*	$Id: Class1Recv.c++ 248 2006-07-14 15:32:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -257,13 +257,15 @@ Class1Modem::recvIdentification(
 	 */
 	if (Sys::now()+trecovery-start >= t1)
 	    break;
-	/*
-	 * Delay long enough to miss any training that the
-	 * other side might have sent us.  Otherwise the
-	 * caller will miss our retransmission since it'll
-	 * be in the process of sending training.
-	 */
-	pause(conf.class1TrainingRecovery);
+	if (frame.getFCF() != FCF_CRP) {
+	    /*
+	     * Delay long enough to miss any training that the
+	     * other side might have sent us.  Otherwise the
+	     * caller will miss our retransmission since it'll
+	     * be in the process of sending training.
+	     */
+	    pause(conf.class1TrainingRecovery);
+	}
 	if (!notransmit) {
 	    /*
 	     * Retransmit ident frames.
