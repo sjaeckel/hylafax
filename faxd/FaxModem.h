@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 170 2006-05-05 01:21:03Z faxguy $ */
+/*	$Id: FaxModem.h 250 2006-07-18 18:52:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -121,8 +121,7 @@ protected:
     void	recvTrace(const char* fmt, ...);
     void	copyQualityTrace(const char* fmt, ...);
     void	traceModemParams();
-    void	tracePPR(const char* dir, u_int ppr);
-    void	tracePPM(const char* dir, u_int ppm);
+    void	traceFCF(const char* dir, u_int fcf);
 // server-related stuff
     bool	getHDLCTracing();
     bool	getECMTracing();

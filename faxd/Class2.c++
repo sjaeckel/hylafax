@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 208 2006-06-17 18:31:34Z faxguy $ */
+/*	$Id: Class2.c++ 250 2006-07-18 18:52:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -834,7 +834,7 @@ Class2Modem::tracePPM(const char* dir, u_int ppm)
 	FCF_PRI_EOP,
 	0
     };
-    FaxModem::tracePPM(dir, ppm2fcf[ppm&7]);
+    FaxModem::traceFCF(dir, ppm2fcf[ppm&7]);
 }
 
 void
@@ -850,5 +850,5 @@ Class2Modem::tracePPR(const char* dir, u_int ppr)
 	0,
 	0
     };
-    FaxModem::tracePPR(dir, ppr2fcf[ppr&7]);
+    FaxModem::traceFCF(dir, ppr2fcf[ppr&7]);
 }

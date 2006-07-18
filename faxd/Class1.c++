@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 233 2006-06-30 15:25:34Z faxguy $ */
+/*	$Id: Class1.c++ 250 2006-07-18 18:52:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1327,7 +1327,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
     u_short crpcnt = 0;
     if (useV34) {
 	do {
-	    if (crpcnt) tracePPR(dir == FCF_SNDR ? "SEND send" : "RECV send", FCF_CRP);
+	    if (crpcnt) traceFCF(dir == FCF_SNDR ? "SEND send" : "RECV send", FCF_CRP);
 	    frame.reset();
 	    gotframe = recvRawFrame(frame);
 	} while (!gotframe && !gotRTNC && !gotEOT && docrp && crpcnt++ < 3 && !wasTimeout() && transmitFrame(dir|FCF_CRP));
@@ -1357,7 +1357,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
         }
 	do {
 	    if (crpcnt) {
-		tracePPR(dir == FCF_SNDR ? "SEND send" : "RECV send", FCF_CRP);
+		traceFCF(dir == FCF_SNDR ? "SEND send" : "RECV send", FCF_CRP);
 		startTimeout(ms);
 		if (!(atCmd(rhCmd, AT_NOTHING, 0) && waitFor(AT_CONNECT,0))) {
 		    stopTimeout("waiting for v.21 carrier");
