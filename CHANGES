@@ -1,7 +1,8 @@
-#	$Id: CHANGES 248 2006-07-14 15:32:09Z faxguy $	
+#	$Id: CHANGES 250 2006-07-18 18:52:55Z faxguy $	
 
 New Changes
 
+* unify and simplify FCF tracing routines (18 Jul 2006)
 * don't wait Class1TrainingRecovery when CRP was received (13 Jul 2006)
 * fix error of sending a block twice, empty the 2nd time (13 Jul 2006)
 * don't trigger hasV17Trouble for pages other than the first (13 Jul 2006)
