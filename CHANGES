@@ -1,7 +1,8 @@
-#	$Id: CHANGES 250 2006-07-18 18:52:55Z faxguy $	
+#	$Id: CHANGES 251 2006-07-20 16:48:04Z faxguy $	
 
 New Changes
 
+* flush modem input after NO CARRIER result in Class 1 Phase C send (20 Jul 2006)
 * unify and simplify FCF tracing routines (18 Jul 2006)
 * don't wait Class1TrainingRecovery when CRP was received (13 Jul 2006)
 * fix error of sending a block twice, empty the 2nd time (13 Jul 2006)
