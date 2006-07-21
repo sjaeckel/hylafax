@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 194 2006-06-08 17:34:39Z faxguy $ */
+/*	$Id: ClassModem.c++ 253 2006-07-21 17:06:48Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -1306,7 +1306,7 @@ ClassModem::parseRange(const char* cp, u_int& a0)
 void
 ClassModem::setSpeakerVolume(SpeakerVolume l)
 {
-    atCmd(conf.setVolumeCmd[l]);
+    atCmd(conf.setVolumeCmd[l], AT_OK, 5000);
 }
 
 void
