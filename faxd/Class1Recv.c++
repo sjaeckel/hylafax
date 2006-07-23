@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 250 2006-07-18 18:52:55Z faxguy $ */
+/*	$Id: Class1Recv.c++ 254 2006-07-24 04:39:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1355,7 +1355,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		     * high-speed data.  So we wait T1 instead.
 		     */
 		    gotpps = recvFrame(ppsframe, FCF_RCVR, conf.t1Timer);	// wait longer
-		} while (!gotpps && !wasTimeout() && lastResponse != AT_NOCARRIER && ++recvFrameCount < 5);
+		} while (!gotpps && !wasTimeout() && !gotEOT && ++recvFrameCount < 5);
 		if (gotpps) {
 		    traceFCF("RECV recv", ppsframe.getFCF());
 		    if (ppsframe.getFCF() == FCF_PPS) {
