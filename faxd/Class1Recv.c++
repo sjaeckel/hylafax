@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 254 2006-07-24 04:39:30Z faxguy $ */
+/*	$Id: Class1Recv.c++ 255 2006-07-24 21:38:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1476,7 +1476,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					else signalRcvd = 0;		// reset it, we're in-sync now
 					recvFrameCount = 0;
 					lastResponse = AT_NOTHING;
-					while (rtnframe.getFCF() == FCF_PPS && lastResponse != AT_NOCARRIER && recvFrameCount < 5 && gotrtnframe) {
+					while (rtnframe.getFCF() == FCF_PPS && !gotEOT && recvFrameCount < 5 && gotrtnframe) {
 					    // we sent PPR, but got PPS again...
 					    if (!useV34 && !atCmd(conf.class1SwitchingCmd, AT_OK)) {
 						emsg = "Failure to receive silence.";
