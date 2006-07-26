@@ -1,6 +1,11 @@
-#	$Id: CHANGES 251 2006-07-20 16:48:04Z faxguy $	
+#	$Id: CHANGES 256 2006-07-27 00:40:34Z faxguy $	
 
 New Changes
+
+* fix error of forgotten faxgetty child processes occuring when sender
+  performs flawed ECM protocol (26 Jul 2006)
+
+(4.3.0.7)
 
 * flush modem input after NO CARRIER result in Class 1 Phase C send (20 Jul 2006)
 * unify and simplify FCF tracing routines (18 Jul 2006)

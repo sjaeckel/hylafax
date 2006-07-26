@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 255 2006-07-24 21:38:59Z faxguy $ */
+/*	$Id: Class1Recv.c++ 256 2006-07-27 00:40:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -972,6 +972,19 @@ Class1Modem::raiseRecvCarrier(bool& dolongtrain, fxStr& emsg)
     return (true);
 }
 
+void
+Class1Modem::abortPageECMRecv(TIFF* tif, const Class2Params& params, u_char* block, u_int fcount, u_short seq, bool pagedataseen)
+{
+    if (pagedataseen) {
+	writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
+	if (conf.saveUnconfirmedPages) {
+	    protoTrace("RECV keeping unconfirmed page");
+	    prevPage++;
+	}
+    }
+    free(block);
+}
+
 /*
  * Receive Phase C data in T.30-A ECM mode.
  */
@@ -1016,12 +1029,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			gotRTNC = true;
 		    } else {
 			if (wasTimeout()) abortReceive();
-			if (conf.saveUnconfirmedPages && pagedataseen) {
-			    protoTrace("RECV keeping unconfirmed page");
-			    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-			    prevPage++;
-			}
-			free(block);
+			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 			return (false);
 		    }
 		}
@@ -1071,12 +1079,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    case FCF_PRI_EOP:
 						if (!useV34 && !atCmd(conf.class1SwitchingCmd, AT_OK)) {
 						    emsg = "Failure to receive silence.";
-						    if (conf.saveUnconfirmedPages && pagedataseen) {
-							protoTrace("RECV keeping unconfirmed page");
-							writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-							prevPage++;
-						    }
-						    free(block);
+						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						    return (false);
 						}
 						if (frameRev[rtncframe[4]] > prevPage || (frameRev[rtncframe[4]] == prevPage && frameRev[rtncframe[5]] >= prevBlock)) {
@@ -1114,12 +1117,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						} else {
 						    if (!useV34 && !atCmd(conf.class1SwitchingCmd, AT_OK)) {
 							emsg = "Failure to receive silence.";
-							if (conf.saveUnconfirmedPages && pagedataseen) {
-							    protoTrace("RECV keeping unconfirmed page");
-							    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-							    prevPage++;
-							}
-							free(block);
+							abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 							return (false);
 						    }
 						    (void) transmitFrame(FCF_ERR|FCF_RCVR);
@@ -1135,12 +1133,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					if (useV34) {
 					    // T.30 F.3.4.5 Note 1 does not permit CTC in V.34-fax
 					    emsg = "Received invalid CTC signal in V.34-Fax.";
-					    if (conf.saveUnconfirmedPages && pagedataseen) {
-						protoTrace("RECV keeping unconfirmed page");
-						writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-						prevPage++;
-					    }
-					    free(block);
+					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					    return (false);
 					}
 					/*
@@ -1153,12 +1146,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					// requisite pause before sending response (CTR)
 					if (!atCmd(conf.class1SwitchingCmd, AT_OK)) {
 					    emsg = "Failure to receive silence.";
-					    if (conf.saveUnconfirmedPages && pagedataseen) {
-						protoTrace("RECV keeping unconfirmed page");
-						writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-						prevPage++;
-					    }
-					    free(block);
+					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					    return (false);
 					}
 					(void) transmitFrame(FCF_CTR|FCF_RCVR);
@@ -1171,12 +1159,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    // command repeat... just repeat whatever we last sent
 				    if (!useV34 && !atCmd(conf.class1SwitchingCmd, AT_OK)) {
 					emsg = "Failure to receive silence.";
-					if (conf.saveUnconfirmedPages && pagedataseen) {
-					    protoTrace("RECV keeping unconfirmed page");
-					    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-					    prevPage++;
-					}
-					free(block);
+					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					return (false);
 				    }
 				    transmitFrame(signalSent);
@@ -1192,9 +1175,14 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    // the earlier message-handling routines try to cope with the signal.
 				    signalRcvd = rtncframe.getFCF();
 				    messageReceived = true;
-				    prevPage--;		// counteract the forthcoming increment
-				    // maybe we should save an unconfirmed page here?
-				    return (true);
+				    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+				    if (getRecvEOLCount() == 0) {
+					prevPage--;		// counteract the forthcoming increment
+					return (true);
+				    } else {
+					emsg = "COMREC invalid response received";	// plain ol' error
+					return (false);
+				    }
 			    }
 			    if (!sendERR) {	// as long as we're not trying to send the ERR signal (set above)
 			        if (useV34) gotprimary = waitForDCEChannel(false);
@@ -1211,12 +1199,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    gotRTNC = true;
 					} else {
 					    if (wasTimeout()) abortReceive();
-					    if (conf.saveUnconfirmedPages && pagedataseen) {
-						protoTrace("RECV keeping unconfirmed page");
-						writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-						prevPage++;
-					    }
-					    free(block);
+					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					    return (false);
 					}
 				    } else gotprimary = true;
@@ -1240,24 +1223,14 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    else emsg = "Failed to properly detect high-speed data carrier.";
 			}
 			protoTrace(emsg);
-			if (conf.saveUnconfirmedPages && pagedataseen) {
-			    protoTrace("RECV keeping unconfirmed page");
-			    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-			    prevPage++;
-			}
-			free(block);
+			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 			return (false);
 		    }
 		}
 		if (gotEOT) {		// intentionally not an else of the previous if
 		    if (useV34 && emsg == "") emsg = "Received premature V.34 termination.";
 		    protoTrace(emsg);
-		    if (conf.saveUnconfirmedPages && pagedataseen) {
-			protoTrace("RECV keeping unconfirmed page");
-			writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-			prevPage++;
-		    }
-		    free(block);
+		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 		    return (false);
 		}
 	    }
@@ -1312,23 +1285,13 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    if (!gotEOT && !gotCTRL && !waitForDCEChannel(true)) {
 			emsg = "Failed to properly open V.34 control channel.";
 			protoTrace(emsg);
-			if (conf.saveUnconfirmedPages && pagedataseen) {
-			    protoTrace("RECV keeping unconfirmed page");
-			    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-			    prevPage++;
-			}
-			free(block);
+			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 			return (false);
 		    }
 		    if (gotEOT) {
 			emsg = "Received premature V.34 termination.";
 			protoTrace(emsg);
-			if (conf.saveUnconfirmedPages && pagedataseen) {
-			    protoTrace("RECV keeping unconfirmed page");
-			    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-			    prevPage++;
-			}
-			free(block);
+			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 			return (false);
 		    }
 		} else {
@@ -1435,12 +1398,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				// requisite pause before sending response (PPR/MCF)
 				if (!blockgood && !useV34 && !atCmd(conf.class1SwitchingCmd, AT_OK)) {
 				    emsg = "Failure to receive silence.";
-				    if (conf.saveUnconfirmedPages && pagedataseen) {
-					protoTrace("RECV keeping unconfirmed page");
-					writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-					prevPage++;
-				    }
-				    free(block);
+				    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 				    return (false);
 				}
 			    }
@@ -1480,12 +1438,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    // we sent PPR, but got PPS again...
 					    if (!useV34 && !atCmd(conf.class1SwitchingCmd, AT_OK)) {
 						emsg = "Failure to receive silence.";
-						if (conf.saveUnconfirmedPages && pagedataseen) {
-						    protoTrace("RECV keeping unconfirmed page");
-						    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-						    prevPage++;
-						}
-						free(block);
+						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						return (false);
 					    }
 					    transmitFrame(FCF_PPR, fxStr(ppr, 32));
@@ -1499,12 +1452,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						if (useV34) {
 						    // T.30 F.3.4.5 Note 1 does not permit CTC in V.34-fax
 						    emsg = "Received invalid CTC signal in V.34-Fax.";
-						    if (conf.saveUnconfirmedPages && pagedataseen) {
-							protoTrace("RECV keeping unconfirmed page");
-							writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-							prevPage++;
-						    }
-						    free(block);
+						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						    return (false);
 						}
 						// use 16-bit FIF to alter speed, curcap
@@ -1513,12 +1461,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						// requisite pause before sending response (CTR)
 						if (!atCmd(conf.class1SwitchingCmd, AT_OK)) {
 						    emsg = "Failure to receive silence.";
-						    if (conf.saveUnconfirmedPages && pagedataseen) {
-							protoTrace("RECV keeping unconfirmed page");
-							writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-							prevPage++;
-						    }
-						    free(block);
+						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						    return (false);
 						}
 						(void) transmitFrame(FCF_CTR|FCF_RCVR);
@@ -1551,12 +1494,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 							break;
 						    default:
 							emsg = "COMREC invalid response to repeated PPR received";
-							if (conf.saveUnconfirmedPages && pagedataseen) {
-							    protoTrace("RECV keeping unconfirmed page");
-							    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-							    prevPage++;
-							}
-							free(block);
+							abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 							return (false);
 						}
 						sendERR = true;		// do it later
@@ -1567,22 +1505,12 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						recvdDCN = true;  
 					    default:
 						if (emsg == "") emsg = "COMREC invalid response to repeated PPR received";
-						if (conf.saveUnconfirmedPages && pagedataseen) {
-						    protoTrace("RECV keeping unconfirmed page");
-						    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-						    prevPage++;
-						}
-						free(block);
+						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						return (false);
 					}
 				    } else {
 					emsg = "T.30 T2 timeout, expected signal not received";
-					if (conf.saveUnconfirmedPages && pagedataseen) {
-					    protoTrace("RECV keeping unconfirmed page");
-					    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-					    prevPage++;
-					}
-					free(block);
+					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					return (false);
 				    }
 				}
@@ -1603,12 +1531,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					break;
 				    default:
 					emsg = "COMREC invalid post-page signal received";
-					if (conf.saveUnconfirmedPages && pagedataseen) {
-					    protoTrace("RECV keeping unconfirmed page");
-					    writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-					    prevPage++;
-					}
-					free(block);
+					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					return (false);
 				}
 			    }
@@ -1616,43 +1539,33 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			case FCF_DCN:
 			    emsg = "COMREC received DCN";
 			    gotEOT = true;
-			    recvdDCN = true;  
-			    if (conf.saveUnconfirmedPages && pagedataseen) {
-				protoTrace("RECV keeping unconfirmed page");
-				writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-				prevPage++;
-			    }
-			    free(block);
+			    recvdDCN = true;
+			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 			    return (false);
 			default:
 			    // The message is not ECM-specific: fall out of ECM receive, and let
 			    // the earlier message-handling routines try to cope with the signal.
 			    signalRcvd = ppsframe.getFCF();
 			    messageReceived = true;
-			    prevPage--;		// counteract the forthcoming increment
-			    // maybe we should save an unconfirmed page here?
-			    return (true);
+			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			    if (getRecvEOLCount() == 0) {
+				 prevPage--;		// counteract the forthcoming increment
+				return (true);
+			    } else {
+				emsg = "COMREC invalid response received";	// plain ol' error
+				return (false);
+			    }
 		    }
 		} else {
 		    emsg = "T.30 T2 timeout, expected signal not received";
-		    if (conf.saveUnconfirmedPages && pagedataseen) {
-			protoTrace("RECV keeping unconfirmed page");
-			writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-			prevPage++;
-		    }
-		    free(block);
+		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 		    return (false);
 		}
 	    } else {
 		if (wasTimeout()) abortReceive();
 		if (syncattempts++ > 20) {
 		    emsg = "Cannot synchronize ECM frame reception.";
-		    if (conf.saveUnconfirmedPages) {
-			protoTrace("RECV keeping unconfirmed page");
-			writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
-			prevPage++;
-		    }
-		    free(block);
+		    abortPageECMRecv(tif, params, block, fcount, seq, true);
 		    return(false);
 		}
 	    }
