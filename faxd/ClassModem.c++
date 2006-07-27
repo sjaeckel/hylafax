@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 253 2006-07-21 17:06:48Z faxguy $ */
+/*	$Id: ClassModem.c++ 258 2006-07-27 20:57:06Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -772,6 +772,10 @@ ClassModem::atResponse(char* buf, long ms)
 	case 'C':
 	    if (strneq(buf, "CONNECT", 7))
 		lastResponse = AT_CONNECT;
+	    break;
+	case 'D':
+	    if (strneq(buf, "DTMF", 4))
+		lastResponse = AT_DTMF;
 	    break;
 	case 'E':
 	    if (strneq(buf, "ERROR", 5))

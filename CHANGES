@@ -1,7 +1,8 @@
-#	$Id: CHANGES 257 2006-07-27 19:36:20Z faxguy $	
+#	$Id: CHANGES 258 2006-07-27 20:57:06Z faxguy $	
 
 New Changes
 
+* add IAXmodem DTMF detection tolerance (27 Jul 2006)
 * improve handling when receving in Class 1 when prologue frames fail
   after EOM (27 Jul 2006)
 * fix error of forgotten faxgetty child processes occuring when sender
