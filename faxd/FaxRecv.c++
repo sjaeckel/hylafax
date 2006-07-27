@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 153 2006-04-24 04:46:30Z faxguy $ */
+/*	$Id: FaxRecv.c++ 257 2006-07-27 19:36:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -253,8 +253,12 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, f
 	if (tif == NULL)
 	    return (false);
 	fileStart = pageStart = Sys::now();
-	if (!modem->recvEOMBegin(emsg))
+	if (!modem->recvEOMBegin(emsg)) {
+	    info.reason = emsg;
+	    docs[docs.length()-1] = info;
+	    TIFFClose(tif);
 	    return (false);
+	}
     }
     /*NOTREACHED*/
 }

@@ -1,7 +1,9 @@
-#	$Id: CHANGES 256 2006-07-27 00:40:34Z faxguy $	
+#	$Id: CHANGES 257 2006-07-27 19:36:20Z faxguy $	
 
 New Changes
 
+* improve handling when receving in Class 1 when prologue frames fail
+  after EOM (27 Jul 2006)
 * fix error of forgotten faxgetty child processes occuring when sender
   performs flawed ECM protocol (26 Jul 2006)
 
