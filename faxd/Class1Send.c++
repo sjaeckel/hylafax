@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 251 2006-07-20 16:48:04Z faxguy $ */
+/*	$Id: Class1Send.c++ 259 2006-07-28 16:28:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -873,7 +873,7 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 		 * failed TCFs.
 		 */
 		again = dropToNextBR(params);
-	    } while ((params.br == BR_9600 || params.br == BR_7200) && curcap->mod != V29);
+	    } while (again && (params.br == BR_9600 || params.br == BR_7200) && curcap->mod != V29);
 	}
     } while (!useV34 && again);
 failed:

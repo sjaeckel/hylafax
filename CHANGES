@@ -1,7 +1,9 @@
-#	$Id: CHANGES 258 2006-07-27 20:57:06Z faxguy $	
+#	$Id: CHANGES 259 2006-07-28 16:28:04Z faxguy $	
 
 New Changes
 
+* fix a potential faxsend hang on training failure when the modem
+  is not supporting V.27ter (28 Jul 2006)
 * add IAXmodem DTMF detection tolerance (27 Jul 2006)
 * improve handling when receving in Class 1 when prologue frames fail
   after EOM (27 Jul 2006)
