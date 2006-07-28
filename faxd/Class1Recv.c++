@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 256 2006-07-27 00:40:34Z faxguy $ */
+/*	$Id: Class1Recv.c++ 260 2006-07-29 00:34:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1316,8 +1316,11 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		     * then, that T2 will not be long enough to receive the
 		     * partial-page signal because the sender is still transmitting
 		     * high-speed data.  So we wait T1 instead.
+		     *
+		     * It's also not a good idea to use CRP here, either, mostly
+		     * due to the same reasons.  Be patient and wait for a valid PPS.
 		     */
-		    gotpps = recvFrame(ppsframe, FCF_RCVR, conf.t1Timer);	// wait longer
+		    gotpps = recvFrame(ppsframe, FCF_RCVR, conf.t1Timer, false, false);
 		} while (!gotpps && !wasTimeout() && !gotEOT && ++recvFrameCount < 5);
 		if (gotpps) {
 		    traceFCF("RECV recv", ppsframe.getFCF());
