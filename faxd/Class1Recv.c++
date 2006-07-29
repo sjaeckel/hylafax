@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 262 2006-07-29 16:01:45Z faxguy $ */
+/*	$Id: Class1Recv.c++ 263 2006-07-29 16:13:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -583,7 +583,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			} while (!messageReceived && Sys::now() < (nocarrierstart + 5));
 			if (messageReceived)
 			    prevPage++;
-			timer = conf.t1Timer;		// wait longer for PPM
+		        timer = (64*1024*8) / ((curcap->br+1)*2400);	// wait longer for PPM (estimate 64KB)
 		    }
 		} else {
 		    if (wasTimeout()) {
@@ -591,8 +591,9 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			setTimeout(false);
 		    }
 		    bool getframe = false;
+		    long wait = (64*1024*8) / ((curcap->br+1)*2400);
 		    if (rmResponse == AT_FRH3) getframe = waitFor(AT_CONNECT, 0);
-		    else if (rmResponse != AT_NOCARRIER) getframe = atCmd(rhCmd, AT_CONNECT, conf.t1Timer);	// wait longer
+		    else if (rmResponse != AT_NOCARRIER) getframe = atCmd(rhCmd, AT_CONNECT, wait);	// wait longer
 		    if (getframe) {
 			HDLCFrame frame(conf.class1FrameOverhead);
 			if (recvFrame(frame, FCF_RCVR, conf.t2Timer, true)) {
@@ -1021,7 +1022,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			abortReceive();		// return to command mode
 			setTimeout(false);
 		    }
-		    if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, conf.t1Timer)) {	// wait longer
+		    long wait = (64*1024*8) / ((curcap->br+1)*2400);
+		    if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, wait)) {	// wait longer
 			// sender is transmitting V.21 instead, we may have
 			// missed the first signal attempt, but should catch
 			// the next attempt.  This "simulates" adaptive receive.
@@ -1193,7 +1195,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    abortReceive();	// return to command mode
 					    setTimeout(false);
 					}
-					if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, conf.t1Timer)) {	// wait longer
+					long wait = (64*1024*8) / ((curcap->br+1)*2400);
+					if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, wait)) {	// wait longer
 					    // simulate adaptive receive
 					    emsg = "";		// clear the failure
 					    gotRTNC = true;
@@ -1315,12 +1318,11 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		     * that the sender has not disconnected.  It is possible
 		     * then, that T2 will not be long enough to receive the
 		     * partial-page signal because the sender is still transmitting
-		     * high-speed data.  So we wait T1 instead.
-		     *
-		     * It's also not a good idea to use CRP here, either, mostly
-		     * due to the same reasons.  Be patient and wait for a valid PPS.
+		     * high-speed data.  So we calculate the wait for 64KB at
+		     * the current bitrate.
 		     */
-		    gotpps = recvFrame(ppsframe, FCF_RCVR, conf.t1Timer, false, false);
+		    long wait = (64*1024*8) / ((curcap->br+1)*2400);
+		    gotpps = recvFrame(ppsframe, FCF_RCVR, wait);	// wait longer
 		} while (!gotpps && !wasTimeout() && !gotEOT && ++recvFrameCount < 5);
 		if (gotpps) {
 		    traceFCF("RECV recv", ppsframe.getFCF());
