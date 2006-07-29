@@ -1,8 +1,8 @@
-#	$Id: CHANGES 260 2006-07-29 00:34:05Z faxguy $	
+#	$Id: CHANGES 261 2006-07-29 15:12:31Z faxguy $	
 
 New Changes
 
-* don't use CRP when waiting for PPS (28 Jul 2006)
+* don't use CRP when waiting for PPS/PPM (28, 29 Jul 2006)
 * fix a potential faxsend hang on training failure when the modem
   is not supporting V.27ter (28 Jul 2006)
 * add IAXmodem DTMF detection tolerance (27 Jul 2006)

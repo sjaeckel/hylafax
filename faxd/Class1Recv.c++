@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 260 2006-07-29 00:34:05Z faxguy $ */
+/*	$Id: Class1Recv.c++ 261 2006-07-29 15:12:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -509,6 +509,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 
     do {
 	u_int timer = conf.t2Timer;
+	bool docrp = true;
 	if (!messageReceived) {
 	    if (sendCFR ) {
 		transmitFrame(FCF_CFR|FCF_RCVR);
@@ -584,6 +585,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			if (messageReceived)
 			    prevPage++;
 			timer = conf.t1Timer;		// wait longer for PPM
+			docrp = false;			// no CRP waiting for PPM
 		    }
 		} else {
 		    if (wasTimeout()) {
@@ -667,7 +669,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	    for (u_int i = 0; i < frameRcvd.length(); i++) frame.put(frameRcvd[i]);
 	    frame.setOK(true);
 	} else {
-	    ppmrcvd = recvFrame(frame, FCF_RCVR, timer);
+	    ppmrcvd = recvFrame(frame, FCF_RCVR, timer, false, docrp);
 	    if (ppmrcvd) lastPPM = frame.getFCF();
 	}
 	/*
