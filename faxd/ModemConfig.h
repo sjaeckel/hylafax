@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 191 2006-06-05 19:12:55Z faxguy $ */
+/*	$Id: ModemConfig.h 265 2006-08-07 16:53:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -153,7 +153,6 @@ public:
     fxStr	class1SwitchingCmd;	// after recv HDLC and before sending
     fxStr	class1MsgRecvHackCmd;	// cmd to avoid +FCERROR before image
     u_int	class1TCFRecvTimeout;	// timeout receiving TCF
-    u_int	class1TrainingRecovery;	// delay (ms) after failed training
     u_int	class1RecvAbortOK;	// if non-zero, OK sent after recv abort
     u_int	class1RMPersistence;	// how many times to persist through +FCERROR
     u_int	class1Resolutions;	// resolutions support

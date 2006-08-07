@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 235 2006-06-30 21:03:07Z faxguy $
+#	$Id: faxaddmodem.sh.in 265 2006-08-07 16:53:14Z faxguy $
 #
 # @WARNING@
 #
@@ -1424,7 +1424,6 @@ Class1Parameters="
     Class1TCFMaxNonZero
     Class1TCFMinRun
     Class1TCFRecvTimeout
-    Class1TrainingRecovery
 "
 Class2Parameters="
     Class2AbortCmd
@@ -1701,7 +1700,6 @@ AT	Class1EOPWaitCmd	\
 #	Class1SwitchingCmd	\
 	Command to ensure silence after receiving HDLC and before sending
 #	Class1TCFRecvTimeout	Timeout for receiving TCF (ms)
-#	Class1TrainingRecovery	Delay after failed training (ms)
 EOF
 	;;
     Class2*)
