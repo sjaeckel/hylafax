@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 246 2006-07-12 21:06:46Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 266 2006-08-08 02:10:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1677,14 +1677,14 @@ faxQueueApp::ctrlJobDone(Job& job, int status)
 	    (const char*) job.jobid, status);
     }
     job.state = FaxRequest::state_ready;
-    traceJob(job, "READY");
-    Trigger::post(Trigger::JOB_READY, job);
     JobIter iter(runqs[JOBHASH(job.pri)]);
     for (; iter.notDone() && (iter.job().pri < job.pri || 
       (iter.job().pri == job.pri && iter.job().tts <= job.tts)); iter++)
 	;
     job.insert(iter.job());
     job.pid = 0;
+    traceJob(job, "READY");
+    Trigger::post(Trigger::JOB_READY, job);
 }
 
 /*
