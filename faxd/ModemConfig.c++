@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 191 2006-06-05 19:12:55Z faxguy $ */
+/*	$Id: ModemConfig.c++ 265 2006-08-07 16:53:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -200,7 +200,6 @@ static struct {
 { "modemringsbeforeresponse",	&ModemConfig::ringsBeforeResponse,   0 },
 { "modemsoftresetcmddelay",	&ModemConfig::softResetCmdDelay,     3000 },
 { "class1tcfrecvtimeout",	&ModemConfig::class1TCFRecvTimeout,  4500 },
-{ "class1trainingrecovery",	&ModemConfig::class1TrainingRecovery,1500 },
 { "class1recvabortok",		&ModemConfig::class1RecvAbortOK,     200 },
 { "class1rmpersistence",	&ModemConfig::class1RMPersistence,   2 },
 { "class1frameoverhead",	&ModemConfig::class1FrameOverhead,   4 },

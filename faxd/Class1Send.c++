@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 259 2006-07-28 16:28:04Z faxguy $ */
+/*	$Id: Class1Send.c++ 265 2006-08-07 16:53:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -855,8 +855,19 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 		    goto done;
 		}
 	    } else {
-		// delay to give other side time to reset
-		pause(conf.class1TrainingRecovery);
+		/*
+		 * Historically we waited "Class1TrainingRecovery" (1500 ms)
+		 * at this point to try to try to avoid retransmitting while
+		 * the receiver is also transmitting.  Sometimes it proved to be
+		 * a faulty approach.  Really what we're trying to do is to
+		 * not be transmitting at the same time as the other end is.
+		 * The best way to do that is to make sure that there is
+		 * silence on the line, and  we do that with Class1SwitchingCmd.
+		 */
+		if (!atCmd(conf.class1SwitchingCmd, AT_OK)) {
+		    emsg = "Failure to receive silence.";
+		    return (false);
+		}
 	    }
 	} while (--t > 0);
 	/*
