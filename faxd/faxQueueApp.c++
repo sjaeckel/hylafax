@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 266 2006-08-08 02:10:43Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 267 2006-08-08 07:15:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2529,11 +2529,11 @@ faxQueueApp::runScheduler()
 			 * of the sleep queue and batch them directly.
 			 */
 			for (JobIter sleepiter(sleepq); batchedjobs < maxBatchJobs && sleepiter.notDone(); sleepiter++) {
-			    if (sleepiter.job().dest != job.dest || sleepiter.job().state != FaxRequest::state_sleeping)
-				continue;
 			    cjob = sleepiter;
+			    if (cjob->dest != job.dest || cjob->state != FaxRequest::state_sleeping)
+				continue;
 			    FaxRequest* creq = readRequest(*cjob);
-			    if (!areBatchable(*req, *creq, job)) {
+			    if (!(req && areBatchable(*req, *creq, job))) {
 				delete creq;
 				continue;
 			    }
@@ -2546,14 +2546,12 @@ faxQueueApp::runScheduler()
 			    cjob->modem = job.modem;
 			    bjob->bnext = cjob;
 			    cjob->bprev = bjob;
-			    bjob = cjob;
 			    cjob->breq = creq;
-			    if (creq->tts > now) {
-				// This job was batched from sleeping, things have
-				// changed; Update the queue file for onlookers.
-				creq->tts = now;
-				updateRequest(*creq, *cjob);
-			    }
+			    bjob = cjob;
+			    // This job was batched from sleeping, things have
+			    // changed; Update the queue file for onlookers.
+			    creq->tts = now;
+			    updateRequest(*creq, *cjob);
 			    batchedjobs++;
 			}
 			bjob->bnext = NULL;
