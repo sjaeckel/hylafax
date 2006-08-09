@@ -1,7 +1,8 @@
-#	$Id: CHANGES 265 2006-08-07 16:53:14Z faxguy $	
+#	$Id: CHANGES 268 2006-08-09 15:36:34Z faxguy $	
 
 New Changes
 
+* change many exit() calls with _exit() (9 Aug 2006)
 * replace Class1TrainingRecovery with Class1SwitchingCmd (7 Aug 2006)
 * calculate PPM/PPS waiter instead of using T1 (29 Jul 2006)
 * fix a potential faxsend hang on training failure when the modem

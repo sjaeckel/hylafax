@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 265 2006-08-07 16:53:14Z faxguy $ */
+/*	$Id: Class1Recv.c++ 268 2006-08-09 15:36:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -819,7 +819,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 					}
 				    } while (!gotEOT && !recvdDCN && tbuf[0] != 0 && Sys::now()-rrstart < 60);
 				    Sys::read(fcfd[0], NULL, 1);
-				    exit(0);
+				    _exit(0);
 				default:	// parent
 				    Sys::close(fcfd[0]);
 				    TIFFWriteDirectory(tif);
@@ -1647,7 +1647,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			} else tbuf[0] = 0;	// parent finished writeECMData
 		    } while (!gotEOT && !recvdDCN && tbuf[0] != 0 && Sys::now()-rrstart < 60);
 		    Sys::read(fcfd[0], NULL, 1);
-		    exit(0);
+		    _exit(0);
 		default:	// parent
 		    Sys::close(fcfd[0]);
 		    writeECMData(tif, block, cc, params, seq);

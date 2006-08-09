@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 257 2006-07-27 19:36:20Z faxguy $ */
+/*	$Id: FaxRecv.c++ 268 2006-08-09 15:36:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -76,7 +76,7 @@ FaxServer::recvFax(const CallID& callid, fxStr& emsg)
 		    // NB: partially fill in info for notification call
 		    notifyRecvBegun(info);
 		    sleep(1);		// XXX give parent time
-		    exit(0);
+		    _exit(0);
 		case -1:
 		    logError("Can not fork for non-priority processing.");
 		    notifyRecvBegun(info);
@@ -227,7 +227,7 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, f
 	    case 0:
 		notifyDocumentRecvd(info);
 		sleep(1);		// XXX give parent time
-		exit(0);
+		_exit(0);
 	    case -1:
 		logError("Can not fork for non-priority logging.");
 		notifyDocumentRecvd(info);
@@ -295,7 +295,7 @@ FaxServer::recvFaxPhaseD(TIFF* tif, FaxRecvInfo& info, u_int& ppm, fxStr& emsg)
 	    case 0:
 		notifyPageRecvd(tif, info, ppm);
 		sleep(1);		// XXX give parent time
-		exit(0);
+		_exit(0);
 	    case -1:
 		logError("Can not fork for non-priority logging.");
 		notifyPageRecvd(tif, info, ppm);
