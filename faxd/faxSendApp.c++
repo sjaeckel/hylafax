@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 146 2006-04-20 23:15:21Z faxguy $ */
+/*	$Id: faxSendApp.c++ 268 2006-08-09 15:36:34Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -329,7 +329,7 @@ faxSendApp::notifyPageSent(FaxRequest& req, const char* filename)
 	case 0:
 	    sendJobStatus(req.jobid, "d%s", (const char*) si.encode());
 	    sleep(1);		// XXX give parent time
-	    exit(0);
+	    _exit(0);
 	case -1:
 	    logError("Can not fork for non-priority logging.");
 	    sendJobStatus(req.jobid, "d%s", (const char*) si.encode());

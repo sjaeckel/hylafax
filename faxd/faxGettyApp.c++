@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 222 2006-06-25 03:59:30Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 268 2006-08-09 15:36:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -363,7 +363,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
 		Sys::close(pipefd[1]);
 		execl("/bin/sh", "sh", "-c", (const char*) cmd, (char*) NULL);
 		sleep(1);
-		exit(1);
+		_exit(1);
 	    default:
 		Sys::close(pipefd[1]);
 		{

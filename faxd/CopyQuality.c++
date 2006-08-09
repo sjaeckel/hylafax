@@ -1,4 +1,4 @@
-/*	$Id: CopyQuality.c++ 187 2006-06-02 01:04:20Z faxguy $ */
+/*	$Id: CopyQuality.c++ 268 2006-08-09 15:36:34Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -555,7 +555,7 @@ FaxModem::writeECMData(TIFF* tif, u_char* buf, u_int cc, const Class2Params& par
 				}
 				// write the line count to the pipe
 				Sys::write(counterFd[1], (const char*) &recvEOLCount, sizeof(recvEOLCount));
-				exit(0);
+				_exit(0);
 			    default:	// parent
 				Sys::close(decoderFd[0]);
 				Sys::close(counterFd[1]);
