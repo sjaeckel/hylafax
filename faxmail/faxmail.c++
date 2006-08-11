@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 196 2006-06-10 18:44:21Z faxguy $ */
+/*	$Id: faxmail.c++ 274 2006-08-12 00:26:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -829,6 +829,7 @@ faxMailApp::usage()
 	" [-s pagesize]"
 	" [-W pagewidth]"
 	" [-M margins]"
-	" [-12crRv]"
+	" [-u user]"
+	" [-12cdnrRv]"
     );
 }

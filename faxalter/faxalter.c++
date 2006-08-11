@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 221 2006-06-24 01:18:27Z faxguy $ */
+/*	$Id: faxalter.c++ 274 2006-08-12 00:26:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -295,8 +295,10 @@ faxAlterApp::usage()
       " [-P priority]"
       " [-t tries]"
       " [-A]"
-      " [-p]"
       " [-g]"
+      " [-p]"
+      " [-r]"
+      " [-v]"
       " [-DQR]"
       " jobID...");
 }

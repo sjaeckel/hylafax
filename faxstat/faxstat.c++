@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 273 2006-08-11 22:05:50Z faxguy $ */
+/*	$Id: faxstat.c++ 274 2006-08-12 00:26:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -98,7 +98,7 @@ faxStatApp::run(int argc, char** argv)
 	    setVerbose(true);
 	    break;
 	case '?':
-	    fxFatal("usage: faxstat [-h server-host] [-adfglnrsv]");
+	    fxFatal("usage: faxstat [-h server-host] [-adfgilnrsv]");
 	}
     if (checkStatus) dirs.insert(FAX_STATUSDIR, 0);	// server status
     fxStr emsg;

@@ -1,4 +1,4 @@
-/*	$Id: faxadduser.c 216 2006-06-22 15:06:36Z faxguy $ */
+/*	$Id: faxadduser.c 274 2006-08-12 00:26:53Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *
@@ -49,7 +49,7 @@ extern char* optarg;
 const char passwd_salts[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
 
 const char* usage = "faxadduser [-a admin-password] [-f hosts-file] \
-[ -p password] [-u uid] username";
+[-h host-name] [-p password] [-u uid] username";
 
 int
 main(int argc, char** argv)
