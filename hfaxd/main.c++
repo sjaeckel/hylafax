@@ -1,4 +1,4 @@
-/*	$Id: main.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: main.c++ 274 2006-08-12 00:26:53Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -177,7 +177,7 @@ detachFromTTY(void)
 static void
 usage(const char* appName)
 {
-    fatal("usage: %s [-o port] [-h port] [-l bindaddress] [-i port] [-u socket] [-q queue-directory]",
+    fatal("usage: %s [-d] [-o port] [-O] [-h port] [-H] [-l bindaddress] [-i port] [-I] [-s port] [-S] [-u socket] [-q queue-directory]",
 	appName);
 }
 
