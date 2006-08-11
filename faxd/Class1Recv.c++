@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 268 2006-08-09 15:36:34Z faxguy $ */
+/*	$Id: Class1Recv.c++ 270 2006-08-11 18:35:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -598,7 +598,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		    bool getframe = false;
 		    long wait = (64*1024*8) / ((curcap->br+1)*2400) * 1000;
 		    if (rmResponse == AT_FRH3) getframe = waitFor(AT_CONNECT, 0);
-		    else if (rmResponse != AT_NOCARRIER) getframe = atCmd(rhCmd, AT_CONNECT, wait);	// wait longer
+		    else if (rmResponse != AT_NOCARRIER && rmResponse != AT_ERROR) getframe = atCmd(rhCmd, AT_CONNECT, wait);	// wait longer
 		    if (getframe) {
 			HDLCFrame frame(conf.class1FrameOverhead);
 			if (recvFrame(frame, FCF_RCVR, conf.t2Timer, true)) {
