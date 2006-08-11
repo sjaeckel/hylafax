@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 267 2006-08-08 07:15:21Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 269 2006-08-11 17:30:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -159,6 +159,24 @@ faxQueueApp::open()
     Modem::broadcast("HELLO");		// announce queuer presence
     scanClientDirectory();		// announce queuer presence
     pokeScheduler();
+}
+
+void
+faxQueueApp::blockSignals()
+{
+    sigset_t block;
+    sigemptyset(&block);
+    sigaddset(&block, SIGCHLD);
+    sigprocmask(SIG_BLOCK, &block, NULL);
+}
+
+void
+faxQueueApp::releaseSignals()
+{
+    sigset_t release;
+    sigemptyset(&release);
+    sigaddset(&release, SIGCHLD);
+    sigprocmask (SIG_UNBLOCK, &release, NULL);
 }
 
 /*
@@ -1676,13 +1694,15 @@ faxQueueApp::ctrlJobDone(Job& job, int status)
 	logError("JOB %s: bad exit status %#x from sub-fork",
 	    (const char*) job.jobid, status);
     }
-    job.state = FaxRequest::state_ready;
+    blockSignals();
     JobIter iter(runqs[JOBHASH(job.pri)]);
     for (; iter.notDone() && (iter.job().pri < job.pri || 
       (iter.job().pri == job.pri && iter.job().tts <= job.tts)); iter++)
 	;
+    job.state = FaxRequest::state_ready;
     job.insert(iter.job());
     job.pid = 0;
+    releaseSignals();
     traceJob(job, "READY");
     Trigger::post(Trigger::JOB_READY, job);
 }
@@ -1694,13 +1714,15 @@ faxQueueApp::ctrlJobDone(Job& job, int status)
 void
 faxQueueApp::setSleep(Job& job, time_t tts)
 {
-    traceJob(job, "SLEEP FOR " | strTime(tts - Sys::now()));
-    Trigger::post(Trigger::JOB_SLEEP, job);
+    blockSignals();
     JobIter iter(sleepq);
     for (; iter.notDone() && iter.job().tts <= tts; iter++)
 	;
     job.insert(iter.job());
     job.startTTSTimer(tts);
+    releaseSignals();
+    traceJob(job, "SLEEP FOR " | strTime(tts - Sys::now()));
+    Trigger::post(Trigger::JOB_SLEEP, job);
 }
 
 /*
@@ -2496,6 +2518,7 @@ faxQueueApp::runScheduler()
 
 			u_int batchedjobs = 1;
 			for (u_int j = 0; batchedjobs < maxBatchJobs && j < NQHASH; j++) {
+			    blockSignals();
 			    for (JobIter joblist(runqs[j]); batchedjobs < maxBatchJobs && joblist.notDone(); joblist++) {
 				if (joblist.job().dest != cjob->dest)
 				    continue;
@@ -2521,6 +2544,7 @@ faxQueueApp::runScheduler()
 				cjob->breq = creq;
 				batchedjobs++;
 			    }
+			    releaseSignals();
 			}
 			/*
 			 * Jobs that are on the sleep queue with state_sleeping
@@ -2528,6 +2552,7 @@ faxQueueApp::runScheduler()
 			 * is known to have passed already.  So we pull these jobs out
 			 * of the sleep queue and batch them directly.
 			 */
+			blockSignals();
 			for (JobIter sleepiter(sleepq); batchedjobs < maxBatchJobs && sleepiter.notDone(); sleepiter++) {
 			    cjob = sleepiter;
 			    if (cjob->dest != job.dest || cjob->state != FaxRequest::state_sleeping)
@@ -2555,6 +2580,7 @@ faxQueueApp::runScheduler()
 			    batchedjobs++;
 			}
 			bjob->bnext = NULL;
+			releaseSignals();
 		    } else
 			job.bnext = NULL;
 		    di.call();			// mark as called to correctly block other jobs
@@ -2567,6 +2593,7 @@ faxQueueApp::runScheduler()
     /*
      * Reap dead jobs.
      */
+    blockSignals();
     for (JobIter iter(deadq); iter.notDone(); iter++) {
 	Job* job = iter;
 	job->remove();
@@ -2574,6 +2601,7 @@ faxQueueApp::runScheduler()
 	Trigger::post(Trigger::JOB_REAP, *job);
 	delete job;
     }
+    releaseSignals();
     /*
      * Reclaim resources associated with clients
      * that terminated without telling us.
