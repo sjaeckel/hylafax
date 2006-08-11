@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: faxstat.c++ 272 2006-08-11 21:19:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -59,10 +59,10 @@ faxStatApp::run(int argc, char** argv)
     readConfig(FAX_USERCONF);
 
     fxStrArray dirs;
-    dirs.append(FAX_STATUSDIR);		// server status
     bool checkInfo = false;
+    bool checkStatus = true;
     int c;
-    while ((c = Sys::getopt(argc, argv, "h:adgfilrsv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "h:adgfilnrsv")) != -1)
 	switch (c) {
 	case 'a':			// display archived jobs
 	    dirs.append(FAX_ARCHDIR);
@@ -85,6 +85,9 @@ faxStatApp::run(int argc, char** argv)
 	case 'l':			// use local timezone for dates & times
 	    setTimeZone(TZ_LOCAL);
 	    break;
+	case 'n':			// do not display server status
+	    checkStatus = false;
+	    break;
 	case 'r':			// display receive queue
 	    dirs.append(FAX_RECVDIR);
 	    break;
@@ -95,8 +98,9 @@ faxStatApp::run(int argc, char** argv)
 	    setVerbose(true);
 	    break;
 	case '?':
-	    fxFatal("usage: faxstat [-h server-host] [-adfglrsv]");
+	    fxFatal("usage: faxstat [-h server-host] [-adfglnrsv]");
 	}
+    if (checkStatus) dirs.append(FAX_STATUSDIR);	// server status
     fxStr emsg;
     if (callServer(emsg)) {
 	if (login(NULL, emsg)) {
