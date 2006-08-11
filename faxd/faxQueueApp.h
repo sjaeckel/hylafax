@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 238 2006-07-04 13:28:05Z faxguy $ */
+/*	$Id: faxQueueApp.h 269 2006-08-11 17:30:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -179,6 +179,8 @@ private:
     void	startTimeout(long ms);
     void	stopTimeout(const char* whichdir);
     const fxStr& pickCmd(const FaxRequest& req);
+    void	blockSignals();
+    void	releaseSignals();
 // FIFO-related stuff
     void	childStatus(pid_t, int);	// Dispatcher hook
     int		inputReady(int);		// Dispatcher hook

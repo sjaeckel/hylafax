@@ -1,7 +1,9 @@
-#	$Id: CHANGES 268 2006-08-09 15:36:34Z faxguy $	
+#	$Id: CHANGES 269 2006-08-11 17:30:31Z faxguy $	
 
 New Changes
 
+* add signal blocking to faxq to avoid job alterations while
+  iterating through job lists (11 Aug 2006)
 * change many exit() calls with _exit() (9 Aug 2006)
 * replace Class1TrainingRecovery with Class1SwitchingCmd (7 Aug 2006)
 * calculate PPM/PPS waiter instead of using T1 (29 Jul 2006)
