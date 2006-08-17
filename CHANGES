@@ -1,6 +1,10 @@
-#	$Id: CHANGES 272 2006-08-11 21:19:37Z faxguy $	
+#	$Id: CHANGES 277 2006-08-17 19:34:50Z faxguy $	
 
 New Changes
+
+* add support for gmime-uuencode (17 Aug 2006)
+
+(4.3.0.8)
 
 * add faxstat -n option (11 Aug 2006)
 * add signal blocking to faxq to avoid job alterations while

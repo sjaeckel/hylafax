@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 188 2006-06-02 18:57:58Z faxguy $
+#	$Id: faxsetup.sh.in 277 2006-08-17 19:34:50Z faxguy $
 #
 # @WARNING@
 #
@@ -797,6 +797,9 @@ test -x "$MIMENCODE" || {
 }
 test -x "$UUENCODE" || {
     UUENCODE=`findAppDef uuencode $PATH uuencode`
+    test -x $UUENCODE || {
+	UUENCODE=`findAppDef gmime-uuencode $PATH gmime-uuencode`
+    }
     test -x "$UUENCODE" && Note "Found encoder: $UUENCODE"
 }
 if [ -x "$MIMENCODE" ]; then
