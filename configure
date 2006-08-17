@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 218 2006-06-22 17:39:55Z faxguy $
+#	$Id: configure 277 2006-08-17 19:34:50Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -385,7 +385,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 218 $"
+	echo "This is HylaFAX configure $Revision: 277 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3581,6 +3581,7 @@ test "$STRIP"	|| STRIP=`findAppDef strip $PATH strip`
 test "$TIFF2PDF" || TIFF2PDF=`findAppDef tiff2pdf $PATH bin/tiff2pdf`
 test "$TTYCMD"	|| TTYCMD=`findAppDef tty $PATH tty`
 test "$UUENCODE" || UUENCODE=`findAppDef uuencode $PATH uuencode`
+test "$UUENCODE" || UUENCODE=`findAppDef gmime-uuencode $PATH gmime-uuencode`
 
 #
 # Test/verify we know how to create FIFO special files.
