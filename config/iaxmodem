@@ -1,4 +1,4 @@
-# $Id: iaxmodem 177 2006-05-23 22:58:03Z faxguy $
+# $Id: iaxmodem 279 2006-08-23 22:25:11Z faxguy $
 
 #
 # prototype config for the IAXmodem softmodem which uses
@@ -18,16 +18,30 @@
 ModemType:		Class1		# use this to supply a hint
 
 #
-# The modem is taken off-hook during initialization, and then
-# placed back on-hook when done to prevent glare.
+#             *** Caller-ID settings ***
 #
-ModemResetCmds:		"ATH1\nAT+VCID=1"	# enables CallID display
-ModemReadyCmds:		ATH0
-
+# Enabling this will use the hfaxd-protocol to set Caller*ID
 #
-# Enable this to set Caller*ID
+#ModemSetOriginCmd:	AT+VSID="%s","%d"
 #
-#ModemSetOriginCmd:     AT+VSID="%s","%d"
+# If "glare" during initialization becomes a problem then take
+# the modem off-hook during initialization, and then place it
+# back on-hook when done.
+#
+#ModemResetCmds:	"ATH1\nAT+VCID=1"	# enables CallID display
+#ModemReadyCmds:	ATH0
+#
+# You'll likely want Caller*ID display (also displays DID) enabled.
+#
+ModemResetCmds:		AT+VCID=1	# enables CallID display
+#
+# If you are "missing" Caller*ID data on some calls (but not all)
+# and if you do not have adequate glare protection you may want to
+# not answer based on RINGs, but rather enable the CallIDAnswerLength
+# for NDID, disable AT+VCID=1 and do this:
+#
+#RingsBeforeAnswer: 0
+#ModemRingResponse: AT+VRID=1
 
 Class1AdaptRecvCmd:	AT+FAR=1
 Class1TMConnectDelay:	400		# counteract quick CONNECT response
@@ -37,6 +51,7 @@ CallIDPattern:          "NMBR="
 CallIDPattern:          "NAME="
 CallIDPattern:		"ANID="
 CallIDPattern:          "NDID="
+#CallIDAnswerLength:	4
 # Uncomment these if you really want them, but you probably don't.
 #CallIDPattern:          "DATE="
 #CallIDPattern:          "TIME="
