@@ -1,4 +1,4 @@
-# $Id: iaxmodem 279 2006-08-23 22:25:11Z faxguy $
+# $Id: iaxmodem 280 2006-08-23 22:43:01Z faxguy $
 
 #
 # prototype config for the IAXmodem softmodem which uses
@@ -6,6 +6,7 @@
 #
 
 # CONFIG:CLASS1:spandsp:.*:.*: Manufacturer=spandsp Model=IAXmodem
+# CONFIG:CLASS1.0:spandsp:.*:.*: Manufacturer=spandsp Model=IAXmodem
 #
 # BEGIN-SERVER
 # END-SERVER
