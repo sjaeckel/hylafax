@@ -1,7 +1,8 @@
-#	$Id: CHANGES 277 2006-08-17 19:34:50Z faxguy $	
+#	$Id: CHANGES 281 2006-08-25 21:51:47Z faxguy $	
 
 New Changes
 
+* fix lastCall initialization to prevent staggerCalls from misfiring (25 Aug 2006)
 * add support for gmime-uuencode (17 Aug 2006)
 
 (4.3.0.8)

@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 269 2006-08-11 17:30:31Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 281 2006-08-25 21:51:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -133,7 +133,6 @@ faxQueueApp::~faxQueueApp()
 {
     HylaClient::purge();
     delete dialRules;
-    lastCall = Sys::now() - 3600;
 }
 
 faxQueueApp& faxQueueApp::instance() { return *_instance; }
@@ -2468,7 +2467,7 @@ faxQueueApp::runScheduler()
 		    job.remove();			// remove from run queue
 		    delayJob(job, *req, "Delayed by time-of-day restrictions", tts);
 		    delete req;
-		} else if (lastCall + staggerCalls > now) {
+		} else if (staggerCalls && lastCall + staggerCalls > now) {
 		    /*
 		     * This job may not be started now because we last started
 		     * another job too recently and we're staggering jobs.
@@ -3178,6 +3177,7 @@ faxQueueApp::setupConfig()
     ModemGroup::set(MODEM_ANY, new RE(".*"));
     pageChop = FaxRequest::chop_last;
     pageChopThreshold = 3.0;		// minimum of 3" of white space
+    lastCall = Sys::now() - 3600;
 }
 
 void
