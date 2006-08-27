@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 265 2006-08-07 16:53:14Z faxguy $
+.\"	$Id: hylafax-config.4f 285 2006-08-27 23:41:26Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-08-07 09:53:14 -0700 (Mon, 07 Aug 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-08-27 16:41:26 -0700 (Sun, 27 Aug 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -634,6 +634,15 @@ would be sent to the modem immediately following the "NDID" response, and the "N
 "NAME" responses would be ignored.  Generally only one
 .B CallIDAnswerLength
 item should be in a modem configuration file.
+
+Call identification data is usually only sent once by the telco or PBX, and the timing of 
+its arrival varies upon the telco or PBX and the type of line.  If HylaFAX is configured 
+to answer via 
+.B RingsBeforeAnswer 
+prior to the arrival of the data, then all CallID values will be null.  For example, on US 
+analog lines, caller-ID data is usually sent between RINGs 1 and 2.  In this situation, 
+.B RingsBeforeAnswer 
+should be set to ``2'' or greater.
 .TP
 .B CallIDAnswerLength
 An integer indicating the minimum number of characters in a
