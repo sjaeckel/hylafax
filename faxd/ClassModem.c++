@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 258 2006-07-27 20:57:06Z faxguy $ */
+/*	$Id: ClassModem.c++ 286 2006-08-28 17:56:45Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -940,7 +940,11 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
 			resp = (u_char) cmd[++i];
 		        if (resp != AT_NOTHING) {
 			    // XXX check return?
-			    (void) waitFor(resp, ms);	// XXX ms
+			    // The timeout setting here (60*1000) used to be "ms" (which
+			    // defaults to 30 s), but we find that's too short, especially 
+			    // for long-running escape sequences.  It really needs to be
+			    // escape-configurable, but for now we just make it 60 s.
+			    (void) waitFor(resp, 60*1000);
 			    respPending = false;
 			}
 			break;
