@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 288 2006-08-30 00:58:43Z faxguy $ */
+/*	$Id: Class1Recv.c++ 290 2006-08-30 04:50:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1326,7 +1326,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		     * high-speed data.  So we calculate the wait for 64KB at
 		     * the current bitrate.
 		     */
-		    long wait = (64*1024*8) / (useV34 ? primaryV34Rate : (curcap->br+1)*2400) * 1000;
+		    long wait = (64*1024*8) / ((useV34 ? primaryV34Rate : curcap->br+1)*2400) * 1000;
 		    gotpps = recvFrame(ppsframe, FCF_RCVR, wait);	// wait longer
 		} while (!gotpps && !wasTimeout() && !gotEOT && ++recvFrameCount < 5);
 		if (gotpps) {
