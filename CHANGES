@@ -1,7 +1,8 @@
-#	$Id: CHANGES 287 2006-08-29 21:48:18Z faxguy $	
+#	$Id: CHANGES 288 2006-08-30 00:58:43Z faxguy $	
 
 New Changes
 
+* fix V.34 Class 1 reception error due to error in calculated waiter (29 Aug 2006)
 * fix JobControl from stalling faxq (29 Aug 2006)
 * restrict the usage of sending EOR, even when using MH and MR (26 Aug 2006)
 
