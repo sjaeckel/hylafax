@@ -1,4 +1,4 @@
-/*	$Id: Job.h 169 2006-05-03 23:49:29Z faxguy $ */
+/*	$Id: Job.h 287 2006-08-29 21:48:18Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -77,23 +77,6 @@ public:
     void childStatus(pid_t, int);
 };
 
-/*
- * This does slightly more than the other PID handlers.
- * It also collects on a fd and stores it for JobControl.
- */
-class JobCtrlHandler : public IOHandler {
-private:
-    Job& job;
-    fxStr buf;
-    int fd;
-public:
-    JobCtrlHandler(Job&);
-    ~JobCtrlHandler();
-    int inputReady (int fd);
-    void childStatus(pid_t, int);
-    friend class Job;
-};
-
 fxDECLARE_StrKeyDictionary(JobDict, Job*)
 
 /*
@@ -105,7 +88,6 @@ private:
     JobTTSHandler	ttsHandler;	// Dispatcher handler for tts timeout
     JobPrepareHandler	prepareHandler;	// Dispatcher handler for job prep work
     JobSendHandler	sendHandler;	// Dispatcher handler for job send work
-    JobCtrlHandler	ctrlHandler;	// Dispatcher handler for job control work
 
     static JobDict registry;
     static JobControlInfo defJCI;
