@@ -1,6 +1,10 @@
-#	$Id: CHANGES 288 2006-08-30 00:58:43Z faxguy $	
+#	$Id: CHANGES 291 2006-09-07 16:52:32Z faxguy $	
 
 New Changes
+
+* fix doubling of AT+FRS command when sending (7 Sep 2006)
+
+(4.3.0.10)
 
 * fix V.34 Class 1 reception error due to error in calculated waiter (29 Aug 2006)
 * fix JobControl from stalling faxq (29 Aug 2006)
