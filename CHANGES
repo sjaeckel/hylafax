@@ -1,8 +1,6 @@
-#	$Id: CHANGES 291 2006-09-07 16:52:32Z faxguy $	
+#	$Id: CHANGES 292 2006-09-07 18:02:39Z faxguy $	
 
 New Changes
-
-* fix doubling of AT+FRS command when sending (7 Sep 2006)
 
 (4.3.0.10)
 
