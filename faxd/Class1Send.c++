@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 284 2006-08-26 16:57:51Z faxguy $ */
+/*	$Id: Class1Send.c++ 291 2006-09-07 16:52:32Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -421,7 +421,7 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		    pph.remove(0,2+5+1);// discard page-chop+handling info
 		else
 		    pph.remove(0,3);	// discard page-handling info
-		if (params.ec == EC_DISABLE) atCmd(conf.class1SwitchingCmd, AT_OK);
+		if (cmd == FCF_EOP && params.ec == EC_DISABLE) atCmd(conf.class1SwitchingCmd, AT_OK);
 		ntrys = 0;
 		if (morePages) {	// meaning, more pages in this file, but there may be other files
 		    if (!TIFFReadDirectory(tif)) {
@@ -1259,7 +1259,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 		}
 	    } while (!gotppr && (++ppscnt < 3) && (crpcnt < 3) && !(useV34 && gotEOT));
 	    if (gotppr) {
-		if (!useV34 && !atCmd(conf.class1SwitchingCmd, AT_OK)) {
+		if (ppmcmd == FCF_EOP && !useV34 && !atCmd(conf.class1SwitchingCmd, AT_OK)) {
 		    emsg = "Failure to receive silence.";
 		    protoTrace(emsg);
 		    return (false);
