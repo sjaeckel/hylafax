@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 256 2006-07-27 00:40:34Z faxguy $ */
+/*	$Id: Class1.h 293 2006-09-07 18:59:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -77,6 +77,7 @@ protected:
     bool	recvdDCN;		// received DCN frame
     bool	messageReceived;	// expect/don't expect message carrier
     bool	repeatPhaseB;		// return to beginning of Phase B before next page
+    bool	silenceHeard;		// indicates whether the last command was +FRS
     u_int	lastPPM;		// last PPM during receive
     bool	sendCFR;		// received TCF was not confirmed
     u_short	ecmBitPos;		// bit position to populate on ecmByte
@@ -155,6 +156,8 @@ protected:
     };
     virtual ATResponse atResponse(char* buf, long ms = 30*1000);
     virtual bool waitFor(ATResponse wanted, long ms = 30*1000);
+    virtual bool atCmd(const fxStr& cmd, ATResponse = AT_OK, long ms = 30*1000);
+    bool	switchingPause(fxStr& emsg);
     void	encodeTSI(fxStr& binary, const fxStr& ascii);
     void	encodeNSF(fxStr& binary, const fxStr& ascii);
     const fxStr& decodeTSI(fxStr& ascii, const HDLCFrame& binary);
