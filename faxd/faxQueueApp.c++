@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 287 2006-08-29 21:48:18Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 298 2006-09-11 16:39:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1672,6 +1672,7 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 		    while ((n = Sys::read(pfd[0], data, sizeof(data))) > 0) {
 			buf.append(data, n);
 		    }
+		    Sys::close(pfd[0]);
 		    job.jci = new JobControlInfo(buf);
                     (void) Sys::waitpid(pid, estat);
 		    ctrlJobDone(job, estat);

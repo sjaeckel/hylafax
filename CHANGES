@@ -1,7 +1,8 @@
-#	$Id: CHANGES 297 2006-09-11 15:46:46Z faxguy $	
+#	$Id: CHANGES 298 2006-09-11 16:39:54Z faxguy $	
 
 New Changes
 
+* close JobControl pipe when done with it (11 Sep 2006)
 * unset O_NONBLOCK on FIFOs (11 Sep 2006)
 * simplify Class1SwitchingCmd code and prevent duplication of the
   command in-session (7 Sep 2006)
