@@ -1,4 +1,4 @@
-/*	$Id: faxApp.c++ 247 2006-07-12 23:06:37Z faxguy $ */
+/*	$Id: faxApp.c++ 297 2006-09-11 15:46:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -134,8 +134,7 @@ faxApp::openFIFO(const char* fifoName, int mode, bool okToExist)
 	if (errno != EEXIST || !okToExist)
 	    faxApp::fatal("Could not create %s: %m.", fifoName);
     }
-    // O_NONBLOCK added to prevent a seized faxq from blocking writes
-    int fd = Sys::open(fifoName, CONFIG_OPENFIFO|O_NDELAY|O_NONBLOCK, 0);
+    int fd = Sys::open(fifoName, CONFIG_OPENFIFO|O_NDELAY, 0);
     if (fd == -1)
 	faxApp::fatal("Could not open FIFO file %s: %m.", fifoName);
     if (!Sys::isFIFOFile(fd))
