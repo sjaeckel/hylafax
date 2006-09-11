@@ -1,7 +1,8 @@
-#	$Id: CHANGES 294 2006-09-08 13:07:34Z faxguy $	
+#	$Id: CHANGES 297 2006-09-11 15:46:46Z faxguy $	
 
 New Changes
 
+* unset O_NONBLOCK on FIFOs (11 Sep 2006)
 * simplify Class1SwitchingCmd code and prevent duplication of the
   command in-session (7 Sep 2006)
 
