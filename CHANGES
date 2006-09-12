@@ -1,7 +1,8 @@
-#	$Id: CHANGES 300 2006-09-12 21:28:24Z faxguy $	
+#	$Id: CHANGES 301 2006-09-13 00:27:03Z faxguy $	
 
 New Changes
 
+* improve modem resetting for modems stuck in transmit (12 Sep 2006)
 * fix cosmetic logging problem when sending to a receiver that signals
   support for V.8 handshaking but not ECM (12 Sep 2006)
 * show cover pages in file listings (11 Sep 2006)
