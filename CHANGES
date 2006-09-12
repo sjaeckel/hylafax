@@ -1,7 +1,9 @@
-#	$Id: CHANGES 299 2006-09-12 04:33:24Z faxguy $	
+#	$Id: CHANGES 300 2006-09-12 21:28:24Z faxguy $	
 
 New Changes
 
+* fix cosmetic logging problem when sending to a receiver that signals
+  support for V.8 handshaking but not ECM (12 Sep 2006)
 * show cover pages in file listings (11 Sep 2006)
 * close JobControl pipe when done with it (11 Sep 2006)
 * unset O_NONBLOCK on FIFOs (11 Sep 2006)
