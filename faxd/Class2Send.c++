@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 208 2006-06-17 18:31:34Z faxguy $ */
+/*	$Id: Class2Send.c++ 302 2006-09-15 00:39:38Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -200,9 +200,9 @@ Class2Modem::dataTransfer()
     do {
 	atCmd("AT+FDT", AT_NOTHING, conf.pageStartTimeout);
 	do {
-	    r = FaxModem::atResponse(rbuf, conf.pageStartTimeout);
-	} while (r == AT_OTHER);
-    } while (r == AT_OK && tries++ < 3);
+	    r = atResponse(rbuf, conf.pageStartTimeout);
+	} while (r == AT_OTHER || r > AT_FHNG);	// ignore all Class 2-specific other than +FHNG
+    } while (!hadHangup && r == AT_OK && tries++ < 3);
     status = (r == AT_CONNECT);
     if (xmitWaitForXON) {
 	if (status) {
