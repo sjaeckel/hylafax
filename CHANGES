@@ -1,7 +1,8 @@
-#	$Id: CHANGES 302 2006-09-15 00:39:38Z faxguy $	
+#	$Id: CHANGES 303 2006-09-15 17:31:08Z faxguy $	
 
 New Changes
 
+* fix bad_alloc RE.c++ error on PPC (15 Sep 2006)
 * handle +FHNG/+FNG after AT+FDT in Class 2 (14 Sep 2006)
 * improve modem resetting for modems stuck in transmit (12 Sep 2006)
 * fix cosmetic logging problem when sending to a receiver that signals

@@ -1,4 +1,4 @@
-/*	$Id: RE.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: RE.c++ 303 2006-09-15 17:31:08Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -53,6 +53,7 @@ RE::~RE()
 void
 RE::init(int flags)
 {
+    memset(&c_pattern, 0, sizeof(c_pattern));
     compResult = regcomp(&c_pattern, _pattern, flags);
     if (compResult == 0) {
 	matches = new regmatch_t[c_pattern.re_nsub+1];
