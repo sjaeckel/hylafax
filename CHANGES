@@ -1,6 +1,10 @@
-#	$Id: CHANGES 303 2006-09-15 17:31:08Z faxguy $	
+#	$Id: CHANGES 305 2006-09-20 16:44:02Z faxguy $	
 
 New Changes
+
+* restart Class 1 TCF reception timer after zeros start (20 Sep 2006)
+
+(4.3.0.11)
 
 * fix bad_alloc RE.c++ error on PPC (15 Sep 2006)
 * handle +FHNG/+FNG after AT+FDT in Class 2 (14 Sep 2006)
