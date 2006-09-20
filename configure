@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 277 2006-08-17 19:34:50Z faxguy $
+#	$Id: configure 306 2006-09-20 18:24:19Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -385,7 +385,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 277 $"
+	echo "This is HylaFAX configure $Revision: 306 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -1597,6 +1597,9 @@ EOF
     else
 	echo '#define STRUCT_PAM_MESSAGE struct pam_message'
     fi
+    case $TARGET in
+	*-hpux11*)	echo '#define PAM_MSG_VERSION';;
+    esac
 }
 
 HAVE_PAM="/*#define HAVE_PAM 1*/"
@@ -2554,6 +2557,7 @@ BuildPortDotH()
         case $TARGET in
 	    # XXX fill in for busted systems
         *-aix4*)	CONFIG_SOCKARGLENTYPE=size_t;;
+        *-hpux11.11*)	CONFIG_SOCKARGLENTYPE=size_t;;
         *-hpux11*)  # this is really broken, has a defined 
                     # socklen_t but does *not* use it
                 echo "#define CONFIG_HPUX_SOCKLEN_T_BRAINDAMAGE";;
