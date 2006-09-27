@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: Parser.c++ 308 2006-09-27 19:53:24Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -362,14 +362,14 @@ HylaFAXServer::cmd(Token t)
 
     switch (t) {
     case T_USER:			// user name
-	if (string_param(s, "user name")) {
+	if (multi_string_param(s, "user name")) {
 	    logcmd(t, "%s", (const char*) s);
 	    userCmd(s);
 	    return (true);
 	}
 	break;
     case T_PASS:			// user password
-	if (string_param(s, "password")) {
+	if (multi_string_param(s, "password")) {
 	    logcmd(t, "<password>");
 	    passCmd(s);
 	    return (true);
@@ -378,7 +378,7 @@ HylaFAXServer::cmd(Token t)
     case T_ADMIN:			// administrator password
 	if (opt_CRLF())
 	    s = "";
-	else if (!string_param(s, "password"))
+	else if (!multi_string_param(s, "password"))
 	    break;
 	logcmd(t, "<password>");
 	adminCmd(s);
@@ -1213,6 +1213,15 @@ HylaFAXServer::param_cmd(Token t)
 }
 
 /*
+ * Collect a password.
+ */
+bool
+HylaFAXServer::multi_string_param(fxStr& s, const char* what)
+{
+    return SPACE() && multi_STRING(s, what) && CRLF();
+}
+
+/*
  * Collect a single string parameter.
  */
 bool
@@ -1407,9 +1416,9 @@ HylaFAXServer::STRING(fxStr& s, const char* what)
 	return (false);
 }
 bool
-HylaFAXServer::multi_STRING(fxStr& s)
+HylaFAXServer::multi_STRING(fxStr& s, const char* what)
 {
-    if (!STRING(s))
+    if (!STRING(s, what))
 	return (false);
     for (;;) {
 	switch (nextToken()) {

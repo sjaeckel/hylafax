@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 192 2006-06-06 05:01:05Z faxguy $ */
+/*	$Id: HylaFAXServer.h 308 2006-09-27 19:53:24Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -440,6 +440,7 @@ protected:
     bool cmd(Token t);
     bool site_cmd(Token t);
     bool param_cmd(Token t);
+    bool multi_string_param(fxStr&, const char* what = NULL);
     bool string_param(fxStr&, const char* what = NULL);
     bool number_param(long&);
     bool boolean_param(bool&);
@@ -460,7 +461,7 @@ protected:
     bool checkNUMBER(const char* s);
     bool opt_CRLF();
     bool opt_STRING(fxStr& s);
-    bool multi_STRING(fxStr& s);
+    bool multi_STRING(fxStr& s, const char* what = NULL);
     static u_int twodigits(const char* cp, u_int range);
     static u_int fourdigits(const char* cp);
     virtual void syntaxError(const char* msg);
