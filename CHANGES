@@ -1,7 +1,8 @@
-#	$Id: CHANGES 306 2006-09-20 18:24:19Z faxguy $	
+#	$Id: CHANGES 307 2006-09-27 19:52:30Z faxguy $	
 
 New Changes
 
+* add prototype support for Apple/Motorola USB Modem (26 Sep 2006)
 * configure properly for HP-UX 11.11 (20 Sep 2006)
 * restart Class 1 TCF reception timer after zeros start (20 Sep 2006)
 
