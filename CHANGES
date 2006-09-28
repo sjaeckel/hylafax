@@ -1,7 +1,8 @@
-#	$Id: CHANGES 310 2006-09-28 18:36:32Z faxguy $	
+#	$Id: CHANGES 311 2006-09-29 04:19:40Z faxguy $	
 
 New Changes
 
+* give more clear typerules error messages (28 Sep 2006)
 * in faxsetup don't delete TMPDIR before it's created (28 Sep 2006)
 * add Romanian dictionary translations (27 Sep 2006)
 * accept whitespace in hfaxd passwords and usernames (27 Sep 2006)
