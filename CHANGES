@@ -1,7 +1,8 @@
-#	$Id: CHANGES 309 2006-09-27 21:54:55Z faxguy $	
+#	$Id: CHANGES 310 2006-09-28 18:36:32Z faxguy $	
 
 New Changes
 
+* in faxsetup don't delete TMPDIR before it's created (28 Sep 2006)
 * add Romanian dictionary translations (27 Sep 2006)
 * accept whitespace in hfaxd passwords and usernames (27 Sep 2006)
 * add prototype support for Apple/Motorola USB Modem (26 Sep 2006)
