@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 296 2006-09-08 19:38:00Z faxguy $ */
+/*	$Id: Class1Recv.c++ 314 2006-09-30 02:19:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -606,7 +606,6 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			    signalRcvd = frame.getFCF();
 			    messageReceived = true;
 			}
-			if (wasTimeout()) abortReceive();
 		    }
 		}
 	    }
@@ -1321,7 +1320,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		     */
 		    long wait = (80*1024*8) / ((useV34 ? primaryV34Rate : curcap->br+1)*2400) * 1000;
 		    gotpps = recvFrame(ppsframe, FCF_RCVR, wait);	// wait longer
-		} while (!gotpps && !wasTimeout() && !gotEOT && ++recvFrameCount < 5);
+		} while (!gotpps && gotCONNECT && !wasTimeout() && !gotEOT && ++recvFrameCount < 5);
 		if (gotpps) {
 		    traceFCF("RECV recv", ppsframe.getFCF());
 		    if (ppsframe.getFCF() == FCF_PPS) {

@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 293 2006-09-07 18:59:29Z faxguy $ */
+/*	$Id: Class1.h 314 2006-09-30 02:19:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -111,6 +111,7 @@ protected:
 // V.34 indicators
     bool	useV34;		// whether or not V.8 handhaking was used
     bool	gotEOT;		// V.34-fax heard EOT signal
+    bool	gotCONNECT;	// whether or not CONNECT was seen
     bool	gotCTRL;	// current channel indicator
     bool	gotRTNC;	// retrain control channel
     u_short	primaryV34Rate;	// rate indication for primary channel
