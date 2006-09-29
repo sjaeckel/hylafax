@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: dictionary.sh.in 309 2006-09-27 21:54:55Z faxguy $
+#    $Id: dictionary.sh.in 313 2006-09-29 18:41:21Z faxguy $
 case "$LANG" in
     pl_*)
 	CHARSET=iso-8859-2;
@@ -828,7 +828,7 @@ case "$LANG" in
 	DICTPAGELENGTH="Lungime pagină";
 	DICTRES="Rezoluţie";
 	DICTNOTHINGAVAIL="nimc disponibil";
-	DICTSTATUS="Statut";
+	DICTSTATUS="Stare";
 	DICTREMOTEEXCHANGES="schimburi cu dispozitivul conectat";
 	DICTDIALOGS="Dialoguri";
 	DICTFAILEDCALLS="eşuări consecutive apel destinaţie";
