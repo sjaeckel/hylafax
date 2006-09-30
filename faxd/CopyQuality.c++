@@ -1,4 +1,4 @@
-/*	$Id: CopyQuality.c++ 268 2006-08-09 15:36:34Z faxguy $ */
+/*	$Id: CopyQuality.c++ 316 2006-09-30 16:11:54Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -401,6 +401,7 @@ FaxModem::recvSetupTIFF(TIFF* tif, long, int fillOrder, const fxStr& id)
 {
     TIFFSetField(tif, TIFFTAG_SUBFILETYPE,	FILETYPE_PAGE);
     TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,	(uint32) params.pageWidth());
+#ifdef PHOTOMETRIC_ITULAB
     if (params.df == DF_JPEG_COLOR || params.df == DF_JPEG_GREY) {
 	TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,	8);
 	TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,		PHOTOMETRIC_ITULAB);
@@ -410,11 +411,14 @@ FaxModem::recvSetupTIFF(TIFF* tif, long, int fillOrder, const fxStr& id)
 	TIFFSetField(tif, TIFFTAG_IMAGELENGTH,		2000);	// we adjust this later
 	TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,	params.df == DF_JPEG_GREY ? 1 : 3);
     } else {
+#endif
 	TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,	1);
 	TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,		PHOTOMETRIC_MINISWHITE);
 	TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,	1);
 	TIFFSetField(tif, TIFFTAG_FILLORDER,		(uint16) fillOrder);
+#ifdef PHOTOMETRIC_ITULAB
     }
+#endif
     TIFFSetField(tif, TIFFTAG_ORIENTATION,	ORIENTATION_TOPLEFT);
     TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,	(uint32) -1);
     TIFFSetField(tif, TIFFTAG_PLANARCONFIG,	PLANARCONFIG_CONTIG);
