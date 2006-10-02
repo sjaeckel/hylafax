@@ -1,7 +1,8 @@
-#	$Id: CHANGES 311 2006-09-29 04:19:40Z faxguy $	
+#	$Id: CHANGES 317 2006-10-02 18:05:09Z faxguy $	
 
 New Changes
 
+* fix faxqclean from removing referenced coverpages (2 Oct 2006)
 * give more clear typerules error messages (28 Sep 2006)
 * in faxsetup don't delete TMPDIR before it's created (28 Sep 2006)
 * add Romanian dictionary translations (27 Sep 2006)
