@@ -1,4 +1,4 @@
-#	$Id: distrules 320 2006-10-03 18:36:35Z faxguy $
+#	$Id: distrules 321 2006-10-03 18:40:19Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -362,7 +362,6 @@ HYLAFAXSRC=\
 	util/faxstate.c				\
 	util/fxassert.c				\
 	util/pagesizes.in			\
-	util/notify.awk				\
 	util/faxcron.sh.in			\
 	util/archive.sh.in			\
 	util/common-functions.sh.in		\

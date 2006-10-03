@@ -130,7 +130,6 @@ f none @SPOOL@/bin/pcl2fax=../util/pcl2fax.sh 0755 @SYSUID@ @SYSGID@
 f none @SPOOL@/bin/tiff2fax=../util/tiff2fax.sh 0755 @SYSUID@ @SYSGID@
 f none @SPOOL@/bin/tiff2pdf=../util/tiff2pdf.sh 0755 @SYSUID@ @SYSGID@
 f none @SPOOL@/bin/notify=../util/notify.sh 0755 @SYSUID@ @SYSGID@
-f none @SPOOL@/bin/notify.awk=../@SRCDIR@/util/notify.awk 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/bin/archive=../util/archive.sh 0755 @SYSUID@ @SYSGID@
 f none @SPOOL@/bin/common-functions=../util/common-functions.sh 0755 @SYSUID@ @SYSGID@
 f none @SPOOL@/bin/dictionary=../util/dictionary.sh 0755 @SYSUID@ @SYSGID@
