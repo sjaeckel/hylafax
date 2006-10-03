@@ -1,4 +1,4 @@
-#	$Id: distrules 116 2006-03-17 00:00:15Z faxguy $
+#	$Id: distrules 320 2006-10-03 18:36:35Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -370,7 +370,6 @@ HYLAFAXSRC=\
 	util/faxrcvd.sh.in			\
 	util/mkcover.sh.in			\
 	util/notify.sh.in			\
-	util/notify-4.1.sh.in			\
 	util/pollrcvd.sh.in			\
 	util/pcl2fax.sh.in			\
 	util/ps2fax.dps.sh.in			\
