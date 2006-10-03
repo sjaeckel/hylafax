@@ -1,5 +1,20 @@
 #! /bin/sh
-#    $Id: notify.sh.in 232 2006-06-29 22:32:10Z faxguy $
+#    $Id: notify.sh.in 319 2006-10-03 18:31:54Z faxguy $
+#
+# ============================================
+#
+# A NOTE ON CUSTOMIZING this script:
+#
+# You are welcome (even encouraged) to customize this script to suit the
+# needs of the deployment.  However, be advised that this script is
+# considered part of the package distribution and is subject to being
+# overwritten by subsequent upgrades.  Please consider copying this file
+# to something like "etc/notify-custom", modifying that copy of the file,
+# and then setting "NotifyCmd: etc/notify-custom" in your faxq config
+# file to prevent your customizations from being overwritten during an
+# upgrade process.
+#
+# ============================================
 #
 # HylaFAX Facsimile Software
 #
