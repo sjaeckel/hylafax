@@ -1,5 +1,20 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh.in 184 2006-06-01 15:41:38Z faxguy $
+#	$Id: faxrcvd.sh.in 319 2006-10-03 18:31:54Z faxguy $
+#
+# ============================================
+#
+# A NOTE ON CUSTOMIZING this script:
+#
+# You are welcome (even encouraged) to customize this script to suit the
+# needs of the deployment.  However, be advised that this script is
+# considered part of the package distribution and is subject to being
+# overwritten by subsequent upgrades.  Please consider copying this file
+# to something like "etc/faxrcvd-custom", modifying that copy of the file,
+# and then setting "FaxRcvdCmd: etc/faxrcvd-custom" in your modem config
+# file to prevent your customizations from being overwritten during an
+# upgrade process.
+#
+# ============================================
 #
 # HylaFAX Facsimile Software
 #
