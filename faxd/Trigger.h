@@ -1,4 +1,4 @@
-/*	$Id: Trigger.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Trigger.h 322 2006-10-05 01:11:16Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -120,7 +120,8 @@ public:
 	MODEM_DATA_END	= MODEM_BASE+8,	// inbound data call finished
 	MODEM_VOICE_BEGIN= MODEM_BASE+9,// inbound voice call begun
 	MODEM_VOICE_END	= MODEM_BASE+10,// inbound voice call finished
-	MODEM_CID	= MODEM_BASE+11	// inbound caller-ID information
+	MODEM_CID	= MODEM_BASE+11,// inbound caller-ID information
+	MODEM_EXEMPT	= MODEM_BASE+12	// modem marked exempt
     };
 #define	TRIGGER_MAXEVENT (MODEM_BASE+16)
 private:

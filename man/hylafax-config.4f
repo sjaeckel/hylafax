@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 305 2006-09-20 16:44:02Z faxguy $
+.\"	$Id: hylafax-config.4f 322 2006-10-05 01:11:16Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-09-20 09:44:02 -0700 (Wed, 20 Sep 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-04 18:11:16 -0700 (Wed, 04 Oct 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -1125,7 +1125,7 @@ transmitted to the \*(Fx scheduler process each time a modem
 is made ready by a
 .I faxgetty
 process.
-State is one of: ``R'' (ready for use), ``B'' (busy), or ``D'' (down).
+State is one of: ``R'' (ready for use), ``B'' (busy), ``D'' (down), or ``E'' (exempt).
 The modem state can be used to control whether or not modems are assigned
 to outbound jobs.
 A modem's state is initially set to ``R'' (ready).
@@ -1133,7 +1133,19 @@ Modem state can be dynamically changed with the
 .IR faxstate (${MANNUM1_8})
 program or by setting this configuration parameter with the
 .IR faxconfig (${MANNUM1_8})
-program.
+program.  The \*(Fx scheduler process will not assign jobs to a modem with a
+.B ModemReadyState
+of anything other than ``R''.  The differences between ``B'', ``D'', and ``E'' are that
+``B'' refers to a temporary condition that will automatically clear in
+the passing of time (as if the modem were in-use with receiving a fax); ``D'' refers 
+to a condition that will not automatically clear (such as a wedged condition);
+and ``E'' refers to a permanent condition as configured by the administrator (as for a 
+send-only modem).  If a user submits a job to a specific modem that has a
+.B ModemReadyState
+of ``B'' or ``D'' then the job will wait in the queue until the modem is made available
+or until the job times out.  In contrast, jobs submitted to a specific modem with a
+.B ModemReadyState
+of ``E'' will be rejected outright.
 .TP
 .B ModemRingResponse
 This can be used

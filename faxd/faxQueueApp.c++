@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 298 2006-09-11 16:39:54Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 322 2006-10-05 01:11:16Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2591,6 +2591,10 @@ faxQueueApp::runScheduler()
 			job.bnext = NULL;
 		    di.call();			// mark as called to correctly block other jobs
 		    processJob(job, req, di);
+		} else if (job.state == FaxRequest::state_failed) {
+		    rejectJob(job, *req, fxStr::format("REJECT: Modem is configured as exempt from accepting jobs"));
+		    deleteRequest(job, req, Job::rejected, true);
+		    continue;
 		} else				// leave job on run queue
 		    delete req;
 	    }
@@ -2642,6 +2646,10 @@ faxQueueApp::assignModem(Job& job)
 	retryModemLookup = false;
 	Modem* modem = Modem::findModem(job);
 	if (modem) {
+	    if (modem->getState() == Modem::EXEMPT) {
+		job.state = FaxRequest::state_failed;
+		return (false);
+	    }
 	    if (modem->assign(job)) {
 		Trigger::post(Trigger::MODEM_ASSIGN, *modem);
 		return (true);
@@ -3009,6 +3017,12 @@ faxQueueApp::FIFOModemMessage(const fxStr& devid, const char* msg)
 	traceModem(modem, "DOWN");
 	modem.setState(Modem::DOWN);
 	Trigger::post(Trigger::MODEM_DOWN, modem);
+	break;
+    case 'E':			// modem exempt from sending use
+	modem.stopLockPolling();
+	traceModem(modem, "EXEMPT");
+	modem.setState(Modem::EXEMPT);
+	Trigger::post(Trigger::MODEM_EXEMPT, modem);
 	break;
     case 'N':			// modem phone number updated
 	traceModem(modem, "NUMBER %s", msg+1);
