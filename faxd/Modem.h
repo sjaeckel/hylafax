@@ -1,4 +1,4 @@
-/*	$Id: Modem.h 152 2006-04-24 04:03:14Z faxguy $ */
+/*	$Id: Modem.h 322 2006-10-05 01:11:16Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -75,7 +75,8 @@ public:
     enum {
 	DOWN  = 0,		// modem identified, but offline
 	READY = 1,		// modem ready for use
-	BUSY  = 2		// modem in use
+	BUSY  = 2,		// modem in use
+	EXEMPT = 3		// modem exempt from sending use
     };
 private:
     int		fd;		// cached open FIFO file

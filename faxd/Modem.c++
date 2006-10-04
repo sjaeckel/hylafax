@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 167 2006-05-03 15:37:04Z faxguy $ */
+/*	$Id: Modem.c++ 322 2006-10-05 01:11:16Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -207,11 +207,14 @@ Modem::findModem(const Job& job)
 	/*
 	 * Job is assigned to an explicit modem or to an
 	 * invalid class or modem.  Look for the modem
-	 * in the list of known modems. 
+	 * in the list of known modems.
+	 *
+	 * Here we deliberately return a modem that is EXEMPT
+	 * so that the caller can process accordingly.
 	 */
 	for (ModemIter iter(list); iter.notDone(); iter++) {
 	    Modem& modem = iter;
-	    if (modem.getState() != Modem::READY)
+	    if (modem.getState() != Modem::READY && modem.getState() != Modem::EXEMPT)
 		continue;
 	    if (job.device != modem.devID)
 		continue;
