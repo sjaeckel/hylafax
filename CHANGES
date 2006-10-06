@@ -1,8 +1,8 @@
-#	$Id: CHANGES 322 2006-10-05 01:11:16Z faxguy $	
+#	$Id: CHANGES 323 2006-10-06 17:36:48Z faxguy $	
 
 New Changes
 
-* add ModemReadyState "E" feature option (4 Oct 2006)
+* add ModemReadyState "E" feature option (4, 6 Oct 2006)
 * get rid of old notify-4.1 script (3 Oct 2006)
 
 (4.3.0.12)

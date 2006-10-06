@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 322 2006-10-05 01:11:16Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 323 2006-10-06 17:36:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1816,7 +1816,7 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
 	timeoutJob(job, req);
 	return (false);
     }
-    if (!Modem::modemExists(req.modem) && !ModemGroup::find(req.modem)) {
+    if (!Modem::modemExists(req.modem, true) && !ModemGroup::find(req.modem)) {
 	rejectSubmission(job, req,
 	    "REJECT: Requested modem " | req.modem | " is not registered");
 	return (false);
@@ -3023,6 +3023,8 @@ faxQueueApp::FIFOModemMessage(const fxStr& devid, const char* msg)
 	traceModem(modem, "EXEMPT");
 	modem.setState(Modem::EXEMPT);
 	Trigger::post(Trigger::MODEM_EXEMPT, modem);
+	// clear any pending jobs for this modem
+	pokeScheduler();
 	break;
     case 'N':			// modem phone number updated
 	traceModem(modem, "NUMBER %s", msg+1);

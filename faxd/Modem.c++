@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 322 2006-10-05 01:11:16Z faxguy $ */
+/*	$Id: Modem.c++ 323 2006-10-06 17:36:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -91,12 +91,14 @@ Modem::~Modem()
 }
 
 Modem*
-Modem::modemExists(const fxStr& id)
+Modem::modemExists(const fxStr& id, bool notexempt)
 {
     for (ModemIter iter(list); iter.notDone(); iter++) {
 	Modem& modem = iter;
-	if (modem.devID == id)
+	if (modem.devID == id) {
+	    if (notexempt && modem.getState() == Modem::EXEMPT) return (NULL);
 	    return (&modem);
+	}
     }
     return (NULL);
 }

@@ -1,4 +1,4 @@
-/*	$Id: Modem.h 322 2006-10-05 01:11:16Z faxguy $ */
+/*	$Id: Modem.h 323 2006-10-06 17:36:48Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -107,7 +107,7 @@ public:
     virtual ~Modem();
 
     static Modem& getModemByID(const fxStr& id);
-    static Modem* modemExists(const fxStr& id);
+    static Modem* modemExists(const fxStr& id, bool notexempt = false);
     static Modem* findModem(const Job& job);
     bool isInGroup(const fxStr& mgroup);
 
