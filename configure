@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 320 2006-10-03 18:36:35Z faxguy $
+#	$Id: configure 325 2006-10-12 18:37:28Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -385,7 +385,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 320 $"
+	echo "This is HylaFAX configure $Revision: 325 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3419,9 +3419,10 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	}
 	;;
     auto-*-solaris*)
-	Note "Automatic DSO usage on Solaris is disabled.  Use --with-DSO=yes to enable."
-	DSO=no
-	;;
+	# supposedly DSOs are now working on Solaris, so pass "auto" through to "yes"
+	#Note "Automatic DSO usage on Solaris is disabled.  Use --with-DSO=yes to enable."
+	#DSO=no
+	#;;
     yes-*-solaris*)
 	if [ "X${DIR_LIB}" != "X/usr/lib" ]; then
 	    USE_RPATH=' -R${LIBDIR}'
@@ -3433,12 +3434,13 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	FAXD='${DEPTH}/faxd'
 	LIBFAXSERVER='-L${FAXD} -lfaxserver'
 	# options here are passed directly to ld, not through g++ first
-	DSOOPTS='-G -h $@'
 	if [ ${ISGCC} = "yes" ] ; then
+	    DSOOPTS='-shared -wl,-G,-h,$@'
 	    LLDOPTS='-L${UTIL} -L${FAXD} -R${LIBDIR} -lfaxutil -lstdc++'
 	    GCOPTS="${GCOPTS} -fpic"
 	    GCXXOPTS="${GCXXOPTS} -fpic"
 	else
+	    DSOOPTS='-G -h $@'
 	    LLDOPTS='-L${UTIL} -L${FAXD} -R${LIBDIR} -lfaxutil -lCrun'
 	    GCOPTS="${GCOPTS} -Kpic"
 	    GCXXOPTS="${GCXXOPTS} -Kpic"

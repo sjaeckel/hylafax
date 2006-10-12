@@ -1,4 +1,4 @@
-#	$Id: Makefile.SOLARISdso 212 2006-06-21 22:21:13Z faxguy $
+#	$Id: Makefile.SOLARISdso 325 2006-10-12 18:37:28Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -31,7 +31,7 @@
 #
 
 libfaxutil.${DSO}: ${OBJECTS}
-	ld ${DSOOPTS} -o libfaxutil.${DSO}.${LIBVERSION} ${OBJECTS}
+	${C++} ${DSOOPTS} -o libfaxutil.${DSO}.${LIBVERSION} ${OBJECTS}
 	ln -fs libfaxutil.${DSO}.${LIBVERSION} libfaxutil.${DSO}
 
 ../util/libfaxutil.${DSO}: libfaxutil.${DSO}
