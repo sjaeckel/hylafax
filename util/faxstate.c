@@ -1,4 +1,4 @@
-/*	$Id: faxstate.c 216 2006-06-22 15:06:36Z faxguy $ */
+/*	$Id: faxstate.c 327 2006-10-12 23:15:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -58,7 +58,7 @@ modemstate(const char* arg)
 	const char* tag;
 	const char* state;
     } modemstates[] = {
-	{ "busy",  "B" },
+	{ "busy",  "B" }, { "exempt",  "E" },
 	{ "ready", "R" }, { "up",      "R" },
 	{ "down",  "D" }, { "disable", "D" },
 	{ NULL }
@@ -68,7 +68,7 @@ modemstate(const char* arg)
     for (i = 0; modemstates[i].tag != NULL; i++)
 	if (strcmp(modemstates[i].tag, arg) == 0)
 	    return (modemstates[i].state);
-    fatal("Bad modem ready state `%s'; use one of busy, ready, and down", arg);
+    fatal("Bad modem ready state `%s'; use one of busy, ready, down, and exempt", arg);
     /*NOTREACHED*/
     return (NULL);
 }
