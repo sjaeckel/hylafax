@@ -1,4 +1,4 @@
-.\"	$Id: faxstate.1m 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: faxstate.1m 327 2006-10-12 23:15:11Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -52,10 +52,16 @@ telling it to use the specified state when notifying the
 \*(Fx scheduler that a modem is ready and available for use.
 This is useful for controlling outbound use of a modem; by
 marking a modem's state as 
-.I busy
+.IR busy ,
+.IR down , 
 or
-.I down
+.I exempt
 the \*(Fx scheduler will not assign any outbound jobs to the modem.
+See
+.IR hylafax-config (${MANNUM4_5})
+under
+.B ModemReadyState
+for a description of the differences between these states.
 .PP
 The specified
 .I modem
