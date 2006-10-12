@@ -1,7 +1,8 @@
-#	$Id: CHANGES 323 2006-10-06 17:36:48Z faxguy $	
+#	$Id: CHANGES 325 2006-10-12 18:37:28Z faxguy $	
 
 New Changes
 
+* enable Solaris DSOs again (12 Oct 2006)
 * add ModemReadyState "E" feature option (4, 6 Oct 2006)
 * get rid of old notify-4.1 script (3 Oct 2006)
 
