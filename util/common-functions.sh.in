@@ -1,5 +1,5 @@
 #!/bin/sh
-#    $Id: common-functions.sh.in 180 2006-05-27 00:06:28Z faxguy $
+#    $Id: common-functions.sh.in 324 2006-10-12 18:04:23Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -18,9 +18,9 @@ encode()
 	$MIMENCODE < $1 2>$ERRORSTO
     elif [ -x "$UUENCODE" ]; then
 	if [ "$ENCODING" = "base64" ]; then
-	    $UUENCODE -m $1 $1 | $GREP -E -v "^begin|^====$" 2>$ERRORSTO
+	    $UUENCODE -m $1 ==== | $GREP -v "====$" 2>$ERRORSTO
 	else
-	    $UUENCODE $1 $1 | $GREP -E -v "^begin|^====$" 2>$ERRORSTO
+	    $UUENCODE $1 $1 2>$ERRORSTO
 	fi
     else
 	# Do not use "-x" for backward compatibility; even if it fails
