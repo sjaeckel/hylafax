@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 265 2006-08-07 16:53:14Z faxguy $ */
+/*	$Id: ModemConfig.c++ 328 2006-10-13 19:53:16Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -27,6 +27,7 @@
 
 #include "t.30.h"
 #include "config.h"
+#include "tiffio.h"
 
 #include <ctype.h>
 
@@ -730,10 +731,12 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	class2SendRTC = getBoolean(value);
     else if (streq(tag, "class1ecmsupport"))
 	class1ECMSupport = getBoolean(value);
+#ifdef PHOTOMETRIC_ITULAB
     else if (streq(tag, "class1greyjpegsupport"))
 	class1GreyJPEGSupport = getBoolean(value);
     else if (streq(tag, "class1colorjpegsupport"))
 	class1ColorJPEGSupport = getBoolean(value);
+#endif
     else if (streq(tag, "class1jbigsupport"))
         class1JBIGSupport = getJBIGSupport(value);
     else if (streq(tag, "class1persistentecm"))
