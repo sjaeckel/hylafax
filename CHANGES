@@ -1,7 +1,8 @@
-#	$Id: CHANGES 326 2006-10-12 18:58:37Z faxguy $	
+#	$Id: CHANGES 332 2006-10-17 18:56:07Z faxguy $	
 
 New Changes
 
+* change observable job state at pending tts expiry (17 Oct 2006)
 * simplify faxrcvd for easier customization (12 Oct 2006)
 * enable Solaris DSOs again (12 Oct 2006)
 * add ModemReadyState "E" feature option (4, 6 Oct 2006)
