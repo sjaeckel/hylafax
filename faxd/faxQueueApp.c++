@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 323 2006-10-06 17:36:48Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 332 2006-10-17 18:56:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2261,6 +2261,11 @@ faxQueueApp::runJob(Job& job)
 {
     job.remove();
     setReadyToRun(job, true);
+    FaxRequest* req = readRequest(job);
+    if (req) {
+	updateRequest(*req, job);
+	delete req;
+    }
     /*
      * In order to deliberately batch jobs by using a common
      * time-to-send we need to give time for the other jobs'
