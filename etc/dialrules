@@ -1,4 +1,4 @@
-! $Id: dialrules 2 2005-11-11 21:32:03Z faxguy $
+! $Id: dialrules 333 2006-10-17 22:34:42Z faxguy $
 !
 ! HylaFAX (tm) Dialing String Processing Rules.
 !
@@ -49,6 +49,8 @@ CanonicalNumber := [
 !
 DialString := [
 [-${WS}.]+		=			! strip syntactic sugar
+\(			=
+\)			=
 [abcABC]		= 2			! these convert alpha to numbers
 [defDEF]		= 3
 [ghiGHI]		= 4
