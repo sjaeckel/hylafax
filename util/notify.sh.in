@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 337 2006-10-20 00:04:11Z faxguy $
+#    $Id: notify.sh.in 338 2006-10-20 00:12:04Z faxguy $
 #
 # ============================================
 #
@@ -66,7 +66,7 @@ notify_mail()
     MAILSUBJECT="$1"
     MAILTO="$2"
 
-    echo "MIME-Version: 1.0"
+   (echo "MIME-Version: 1.0"
     echo "Content-Type: Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\""
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $mailaddr"
@@ -324,6 +324,7 @@ notify_mail()
     # put out a terminating MIME boundary
     echo ""
     echo "--$MIMEBOUNDARY--"
+   ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi -t
 }
 
 test -f etc/setup.cache || {
@@ -586,7 +587,7 @@ setCustomValues
 # possibly in the q file.
 adjustNotifyFaxMaster 
 
-(if [ -z "$jobtag" ] ; then
+if [ -z "$jobtag" ] ; then
     THISJOBTYPE=`eval echo "$"DICT$jobtype`
     jobtag="`eval echo $DICTJOB`"
 fi
@@ -636,8 +637,6 @@ case "$WHY" in
     *)
 	notify_mail "$DICTNOTICEABOUT $jobtag" "$mailaddr";;
 esac
-) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi -t
-
 if [ "$NOTIFY_FAXMASTER" = "yes" ]; then
     # make sure that FAXMASTER gets all information in email by forcing some RETURN values
     # and then reset them later
@@ -647,12 +646,10 @@ if [ "$NOTIFY_FAXMASTER" = "yes" ]; then
     RETURNTRANSCRIPT="yes"
     RETURNTECHINFO="yes"
     RETURNFILETYPE=""
-    (
-	if [ -z "$jobtag" ] ; then
-	    jobtag="$jobtype job $jobid"
-	fi
-	notify_mail "$jobtag to $number $WHY" "$TOADDR"
-    ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi -t
+    if [ -z "$jobtag" ] ; then
+	jobtag="$jobtype job $jobid"
+    fi
+    notify_mail "$jobtag to $number $WHY" "$TOADDR"
     RETURNTRANSCRIPT=$origRETURNTRANSCRIPT
     RETURNTECHINFO=$origRETURNTECHINFO
     RETURNFILETYPE=$origRETURNFILETYPE
