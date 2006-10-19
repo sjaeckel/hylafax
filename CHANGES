@@ -1,7 +1,8 @@
-#	$Id: CHANGES 332 2006-10-17 18:56:07Z faxguy $	
+#	$Id: CHANGES 335 2006-10-19 21:17:06Z faxguy $	
 
 New Changes
 
+* simplify notify for easier customization (19 Oct 2006)
 * change observable job state at pending tts expiry (17 Oct 2006)
 * simplify faxrcvd for easier customization (12 Oct 2006)
 * enable Solaris DSOs again (12 Oct 2006)
