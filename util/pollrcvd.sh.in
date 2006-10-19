@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: pollrcvd.sh.in 339 2006-10-20 01:48:04Z faxguy $
+#	$Id: pollrcvd.sh.in 340 2006-10-20 02:04:46Z faxguy $
 #
 # ============================================
 #
@@ -51,6 +51,11 @@ then
     exit 1
 fi
 
+#
+# If you want to change the presentation of the e-mail notification
+# then this is the place to change that.  We put it here, up-front,
+# because this is most likely what most customizations will deal with.
+#
 pollrcvd_mail ()
 {
     MAILTO="$1"
