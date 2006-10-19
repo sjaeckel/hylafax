@@ -1,7 +1,9 @@
-#	$Id: CHANGES 335 2006-10-19 21:17:06Z faxguy $	
+#	$Id: CHANGES 336 2006-10-19 23:35:27Z faxguy $	
 
 New Changes
 
+* add CallID data to receiving modem status string (19 Oct 2006)
+* add non-ready ModemReadyState to modem status string (19 Oct 2006)
 * simplify notify for easier customization (19 Oct 2006)
 * change observable job state at pending tts expiry (17 Oct 2006)
 * simplify faxrcvd for easier customization (12 Oct 2006)

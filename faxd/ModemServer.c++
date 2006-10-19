@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: ModemServer.c++ 336 2006-10-19 23:35:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -217,7 +217,13 @@ ModemServer::changeState(ModemServerState s, long timeout)
 	if (modemFd >= 0)
 	    setInputBuffering(state != RUNNING && state != SENDING &&
 		state != ANSWERING && state != RECEIVING && state != LISTENING);
-	setServerStatus(stateStatus[state]);
+	if (state == RUNNING) {
+	    fxStr statusmsg = fxStr(stateStatus[state]);
+	    if (readyStateMsg) statusmsg.append(readyStateMsg);
+	    setServerStatus(statusmsg);
+	} else {
+	    setServerStatus(stateStatus[state]);
+	}
 	switch (state) {
 	case RUNNING:
 	    notifyModemReady();			// notify surrogate

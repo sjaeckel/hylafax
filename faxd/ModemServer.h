@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.h 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: ModemServer.h 336 2006-10-19 23:35:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -194,6 +194,8 @@ protected:
     virtual void abortSession();
     bool	abortRequested();
 public:
+    const char* readyStateMsg;
+
     virtual ~ModemServer();
 
     virtual void open();
