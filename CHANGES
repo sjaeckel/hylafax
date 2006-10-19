@@ -1,7 +1,8 @@
-#	$Id: CHANGES 336 2006-10-19 23:35:27Z faxguy $	
+#	$Id: CHANGES 339 2006-10-20 01:48:04Z faxguy $	
 
 New Changes
 
+* simplify pollrcvd for easier customization (19 Oct 2006)
 * add CallID data to receiving modem status string (19 Oct 2006)
 * add non-ready ModemReadyState to modem status string (19 Oct 2006)
 * simplify notify for easier customization (19 Oct 2006)
