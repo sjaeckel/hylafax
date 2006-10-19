@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 268 2006-08-09 15:36:34Z faxguy $ */
+/*	$Id: FaxRecv.c++ 336 2006-10-19 23:35:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -211,7 +211,14 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, f
 	    TIFFClose(tif);
 	    return (false);
 	}
-	setServerStatus("Receiving from \"%s\"", (const char*) info.sender);
+	fxStr statusmsg = fxStr::format("Receiving from \"%s\"", (const char*) info.sender);
+	for (u_int i = 0; i < info.callid.size(); i++) {
+	    if (info.callid[i].length()) {
+		statusmsg.append(" / ");
+		statusmsg.append(info.callid[i]);
+	    }
+	}
+	setServerStatus((const char*) statusmsg);
 	recvOK = recvFaxPhaseD(tif, info, ppm, emsg);
 	TIFFClose(tif);
 	info.time = (u_int) getFileTransferTime();

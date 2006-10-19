@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 268 2006-08-09 15:36:34Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 336 2006-10-19 23:35:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1055,6 +1055,14 @@ faxGettyApp::setConfigItem(const char* tag, const char* value)
 	    if (state == FaxServer::RUNNING)
 		notifyModemReady();
 	}
+	if (readyState == "B")
+	    ModemServer::readyStateMsg = " (busy)";
+	else if (readyState == "D")
+	    ModemServer::readyStateMsg = " (down)";
+	else if (readyState == "E")
+	    ModemServer::readyStateMsg = " (exempt)";
+	else
+	    ModemServer::readyStateMsg = "";
     } else
 	return (FaxServer::setConfigItem(tag, value));
     return (true);
