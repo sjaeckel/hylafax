@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: dictionary.sh.in 313 2006-09-29 18:41:21Z faxguy $
+#    $Id: dictionary.sh.in 337 2006-10-20 00:04:11Z faxguy $
 case "$LANG" in
     pl_*)
 	CHARSET=iso-8859-2;
@@ -55,6 +55,7 @@ case "$LANG" in
 	DICTSIZE="Rozmiar";
 	DICTTYPE="Typ";
 	DICTUNSENTPAGES="Niewys³ane stront przeznaczone do transmisji";
+        DICTUNSENTJOBSTATUS="Unsent job status";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Tre¶æ wiadomo¶ci";
 	DICTNOREASON="nie zarejestrowano powodu";
@@ -168,6 +169,7 @@ case "$LANG" in
 	DICTSIZE="Taille";
 	DICTTYPE="Type";
 	DICTUNSENTPAGES="Unsent pages submitted for transmission";
+        DICTUNSENTJOBSTATUS="Statut du travail d'Unsent";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Message";
 	DICTNOREASON="aucune raison n'a Ã©tÃ© enregistrÃ©";
@@ -282,6 +284,7 @@ case "$LANG" in
 	DICTSIZE="Dimensione";
 	DICTTYPE="Tipo";
 	DICTUNSENTPAGES="Pagine da trasmettere non inviate";
+        DICTUNSENTJOBSTATUS="Condizione di lavoro non inviate";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Testo messaggio";
 	DICTNOREASON="nessun motivo registrato";
@@ -396,6 +399,7 @@ case "$LANG" in
 	DICTSIZE="Tamanho";
 	DICTTYPE="Tipo";
 	DICTUNSENTPAGES="Páginas não enviadas que foram submetidas para envio";
+        DICTUNSENTJOBSTATUS="Status do trabalho não enviado";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Texto da mensagem";
 	DICTNOREASON="nenhuma razão registada";
@@ -510,6 +514,7 @@ case "$LANG" in
 	DICTSIZE="Tamanho";
 	DICTTYPE="Tipo";
 	DICTUNSENTPAGES="Páginas não enviadas que foram submetidas para envio";
+        DICTUNSENTJOBSTATUS="Status do trabalho não enviado";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Texto da mensagem";
 	DICTNOREASON="nenhuma razão registada";
@@ -624,6 +629,7 @@ case "$LANG" in
 	DICTSIZE="Tamaño";
 	DICTTYPE="Tipo";
 	DICTUNSENTPAGES="Páginas no enviadas sometidas para envio";
+        DICTUNSENTJOBSTATUS="Estado del trabajo no enviado";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Texto del mensaje";
 	DICTNOREASON="ninguna razón registrada";
@@ -738,6 +744,7 @@ case "$LANG" in
 	DICTSIZE="Grösse";
 	DICTTYPE="Typ";
 	DICTUNSENTPAGES="Nicht gesendete Seiten zum Versand übermittelt";
+        DICTUNSENTJOBSTATUS="Nicht gesendete Jobstatus";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Nachrichtentext";
 	DICTNOREASON="kein Grund aufgezeichnet";
@@ -852,6 +859,7 @@ case "$LANG" in
 	DICTSIZE="MÄƒrime";
 	DICTTYPE="Tip";
 	DICTUNSENTPAGES="Pagini netrimise pregÄƒtite pentru transmitere";
+        DICTUNSENTJOBSTATUS="Starea sesiunii netransmise";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Text mesaj";
 	DICTNOREASON="nici un motiv Ã®nregistrat";
@@ -966,6 +974,7 @@ case "$LANG" in
 	DICTSIZE="Size";
 	DICTTYPE="Type";
 	DICTUNSENTPAGES="Unsent pages submitted for transmission";
+        DICTUNSENTJOBSTATUS="Unsent job status";
 	DICTPIN="PIN ";
 	DICTMESSAGETEXT="Message text";
 	DICTNOREASON="no reason recorded";
