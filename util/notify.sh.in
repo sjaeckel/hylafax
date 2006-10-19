@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 319 2006-10-03 18:31:54Z faxguy $
+#    $Id: notify.sh.in 335 2006-10-19 21:17:06Z faxguy $
 #
 # ============================================
 #
@@ -55,6 +55,276 @@ if [ $# != 3 ] && [ $# != 4 ]; then
     echo "Usage: $0 qfile why jobtime [nextTry]"
     exit 1
 fi
+
+#
+# If you want to change the presentation of the e-mail notification
+# then this is the place to change that.  We put it here, up-front,
+# because this is most likely what most customizations will deal with.
+#
+notify_mail()
+{
+    MAILSUBJECT="$1"
+    MAILTO="$2"
+
+    echo "MIME-Version: 1.0"
+    echo "Content-Type: Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\""
+    echo "Content-Transfer-Encoding: 7bit"
+    echo "To: $mailaddr"
+    echo "From: $FROMADDR"
+    echo "Subject: $MAILSUBJECT"
+    echo ""
+    echo "This is a multi-part message in MIME format."
+    echo ""
+    echo "--$MIMEBOUNDARY"
+    echo "Mime-Version: 1.0"
+    echo "Content-Type: text/plain; charset=$CHARSET"
+    echo "Content-Transfer-Encoding: quoted-printable"
+    echo ""
+    eval printf \"$DICTYOURJOBTO\"
+    if [ "$WHY" = "done" ]; then
+	echo "$DICTCOMPLETEDSUCCESSFULLY"
+	echo ""
+    else
+	case "$WHY" in
+	    failed)
+		printf " $DICTFAILEDBECAUSE\n    "
+		echo "$FAXSTATUSMSG";;
+	    rejected)
+		printf " $DICTREJECTEDBECAUSE\n    "
+		echo "$FAXSTATUSMSG";;
+	    blocked)
+		printf " $DICTDELAYEDBECAUSE\n    "
+		echo "$FAXSTATUSMSG"
+		echo ""
+		echo "$DICTASSOONASPOSSIBLE";;
+	    requeued)
+		printf " $DICTWASNOTSENT\n    "
+		echo "$FAXSTATUSMSG"
+		echo ""
+		echo "$DICTWILLBERETRIED $NEXT.";;
+	    killed|removed)
+		echo " $DICTWASDELETED";;
+	    timedout)
+		echo " $DICTTIMEDOUT";;
+	    format_failed)
+		echo " $DICTCONVERSION1"
+		echo "$DICTCONVERSION2"
+		echo ""
+		echo "$FAXSTATUSMSG"
+		echo ""
+		echo "$DICTCONVERSION3";;
+	    no_formatter)
+		echo " $DICTNOFORMATTER1"
+		echo "$DICTNOFORMATTER2";;
+	    poll_*)
+		printf "$DICTPOLLINGFAILED"
+		if [ "$WHY" = "poll_rejected" ] ; then
+		    echo "$DICTREMOTEREJECTED"
+		elif [ "$WHY" = "poll_no_document" ] ; then
+		    echo "$DICTNODOCTOPOLL"
+		elif [ "$WHY" = "poll_failed" ] ; then
+		    echo "$DICTUNSPECIFIEDPROBLEM"
+		fi;;
+	    *)
+		echo " $DICTUNKNOWNREASON1"
+		echo "$DICTUNKNOWNREASON2"
+		echo "$DICTUNKNOWNREASON3"
+		echo ""
+		echo "why: $WHY"
+		echo "jobTime: $JTIME"
+		echo "nextTry: $NEXT"
+		echo  ""
+		echo "$DICTUNKNOWNREASON4";;
+	esac
+	echo ""
+	echo "    ---- Unsent job status ----"
+	echo ""
+    fi
+    printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTDESTINATION" "$number"
+    printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTSENDER" "$sender"
+    printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTMAILADDR" "$mailaddr"
+    if [ "$jobtype" = "facsimile" ] ; then
+	if [ "$npages" -gt 0 ]; then
+	    printf "`echo %$ITEMSIZE\s: %u`\n" "$DICTPAGES" "$npages"
+	fi
+	if [ -n "$faxstatus" ] && [ -n "$dirnum" ]; then
+	    printf "`echo %$ITEMSIZE\s: %u` ($DICTDIRNEXTPAGE)\n" "$DICTDIRNUM" "$dirnum"
+	fi
+	if [ -n "$csi" ]; then
+	    printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTRECEIVER" "$csi"
+	fi
+        if [ "$RETURNTECHINFO" = "yes" ] && [ "$totdials" -gt 0 ]; then
+	    case "$resolution" in
+		196) printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTQUALITY" "$DICTFINE";;
+		98) printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTQUALITY" "$DICTNORMAL";;
+		*) printf "`echo %$ITEMSIZE\s %.0f` (lpi)\n" "$DICTRES" "$resolution";;
+            esac
+            printf "`echo %$ITEMSIZE\s: %u` (mm)\n" "$DICTPAGEWIDTH" "$pagewidth"
+            printf "`echo %$ITEMSIZE\s: %.0f` (mm)\n" "$DICTPAGELENGTH" "$pagelength"
+            printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTSIGNALRATE" "$signalrate"
+            printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTDATAFORMAT" "$dataformat"
+	    if [ -n "$equipment" ]; then
+		printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTREMOTEEQUIPMENT" "$equipment"
+	    fi
+	    if [ -n "$station" ]; then
+		printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTREMOTESTATION" "$station"
+	    fi
+        fi
+    fi
+    if [ "$RETURNTECHINFO" = "yes" ] ; then
+        if [ "$tottries" != "1" ] ; then 
+            printf "`echo %$ITEMSIZE\s: %s` ($DICTREMOTEEXCHANGES)\n" "$DICTDIALOGS" "$tottries"
+        fi
+        if [ "$totdials" != "1" ] ; then 
+            printf "`echo %$ITEMSIZE\s: %s` ($DICTTOTALCALLS)\n" "$DICTCALLS" "$totdials"
+        fi
+	if [ "$ndials" != "0" ]; then
+	    printf "`echo %$ITEMSIZE\s: %s` ($DICTFAILEDCALLS)\n" "$DICTDIALS" "$ndials"
+	fi
+        if [ "$modem" != "any" ] ; then 
+            printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTMODEM" "$modem"
+        fi
+	if [ -n "$faxstatus" ]; then
+	    printf "`echo %$ITEMSIZE\s: %b`\n" "$DICTSTATUS" "$FAXSTATUSMSG"
+	fi
+        printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTSUBMITTEDFROM" "$client"
+        printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTJOBID" "$jobid"
+        printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTGROUPID" "$groupid"
+	if [ -n "$commid" ]; then
+            printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTCOMMID" "c$commid"
+	fi
+	if [ -n "$JTIME" ]; then
+	    printf "\n$DICTPROCESSINGTIME %s.\n" "$JTIME"
+	fi
+    fi
+    if [ "$jobtype" = "facsimile" ]; then
+	if [ $nfiles -gt 0 ] && [ "$RETURNTECHINFO" = "yes" ] ; then
+	    echo ""
+	    echo "    ---- $DICTDOCSSUBMITTED ----"
+	    echo ""
+            eval echo "$DICTDOCSTEXT1"
+            eval echo "$DICTDOCSTEXT2"
+            eval echo "$DICTDOCSTEXT3"
+            eval echo "$DICTDOCSTEXT4"
+            echo ""
+            printf "%-20s %8s %s\n" "$DICTFILENAME" "$DICTSIZE" "$DICTTYPE"
+            for i in `local_seq 1 $nfiles`; do
+                name="files_$i"
+                eval filename=`echo "$"$name`
+                if [ -f $filename ] ; then
+                        set - `wc -c "$filename"`
+                    FILESIZE=$1
+                    type="filetype_$i"
+                    eval filetype=`echo "$"$type`
+                    #
+                    # Because Ghostscript accepts PDF identically to PostScript
+                    # and because HylaFAX has historically handled PDF named as
+                    # "postscript" we have to double-check the PostScript filetype.
+                    #
+                    if [ "$filetype" = "PostScript" ]; then
+                        if [ "`fileType $filename`" != "PostScript" ]; then
+                            filetype=PDF
+                        fi
+                    fi
+                    printf "%-20s %8d %s\n" "$filename" "$FILESIZE" "$filetype"
+                fi
+            done
+        fi
+    elif [ "$jobtype" = "pager" ] && [ "$WHY" != "done" ]; then
+        if [ $npins -ne 0 ] ; then
+	    echo ""
+	    echo "    ---- $DICTUNSENTPAGES ----"
+	    echo ""
+            for i in `local_seq 1 $npins`; do
+                name="files_$i"
+                eval pin=`echo "$"$name`
+                printf "%15s\n" "$DICTPIN" $pin
+            done
+        fi
+        if [ $nfiles -ne 0 ] && [ -s $files_0 ] ; then
+	    echo ""
+	    echo "    ---- $DICTMESSAGETEXT ----"
+	    echo ""
+            cat $files_0
+        fi
+    fi
+    if [ -n "$faxstatus" ] && [ "$RETURNTRANSCRIPT" = "yes" ] ; then
+        # use -e in echo to interpret escape characters in faxstatus
+	echo ""
+	echo "$DICTADDITIONALINFO"
+	echo ""
+	# we need to change the '\n' in the strings to real newlines
+	echo "     $faxstatus" | sed -e 's/\\n/\n/g'
+	echo ""
+	echo "    ---- $DICTLOGFOLLOWS2 ----"
+	echo ""
+        COMFILE="log/c$commid"
+        if [ -f "$COMFILE" ] ; then
+            # dump the comfile to output except for '-- data' lines
+            cat $COMFILE | $SED -e '/-- data/d' \
+		-e '/start.*timer/d' -e '/stop.*timer/d' \
+		-e 's/=/=3D/g'
+        else 
+            printf "$DICTNOLOGAVAIL"
+            if [ -n "$commid" ] ; then  # non 0 len commid value
+                    printf "($DICTCOMMID c$commid)"
+            fi
+            echo "."
+        fi
+    fi
+    if [ -n "$RETURNFILETYPE" ] ; then 
+	if [ $nfiles -gt 0 ] ; then
+	    for i in `local_seq 1 $nfiles`; do 
+		name="files_$i"
+		eval filename=`echo "$"$name`
+		if [ -s $filename ] ; then # file is > 0 size
+		    type="filetype_$i"
+		    eval FROMFMT=`echo "$"$type`
+		    #
+		    # Because Ghostscript accepts PDF identically to PostScript
+		    # and because HylaFAX has historically handled PDF named as
+		    # "postscript" we have to double-check the PostScript filetype.
+		    #
+		    if [ "$FROMFMT" = "PostScript" ]; then
+			if [ "`fileType $filename`" != "PostScript" ]; then
+			    FROMFMT=PDF
+			fi
+		    fi
+		    FILEEXTEN="$RETURNFILETYPE"
+		    if [ "$FILEEXTEN" = "original" ]; then
+			case "$FROMFMT" in
+			    "TIFF") FILEEXTEN=tif;;
+			    "PostScript") FILEEXTEN=ps;;
+			    "PDF") FILEEXTEN=pdf;;
+			esac
+		    fi
+		    MIMETYPE="application/octet-stream"
+		    case "$FILEEXTEN" in
+			tif) MIMETYPE="image/tiff";;
+			ps) MIMETYPE="application/postscript";;
+			pdf) MIMETYPE="application/pdf";;
+		    esac
+		    echo ""
+		    echo "--$MIMEBOUNDARY"
+		    echo "Content-Type: $MIMETYPE; name=\"$number-$i.$FILEEXTEN\""
+		    echo "Content-Description: FAX document"
+		    echo "Content-Transfer-Encoding: $ENCODING"
+		    echo "Content-Disposition: attachment; filename=\"$number-$i.$FILEEXTEN\""
+		    echo ""
+		    case "$FILEEXTEN" in
+			tif) putTifEncodedImage "$filename" "$FROMFMT";;
+			ps) putPsEncodedImage "$filename" "$FROMFMT";;
+			pdf) putPdfEncodedImage "$filename" "$FROMFMT";;
+			*) encode "$filename";;
+		    esac
+	        fi
+	    done
+	fi
+    fi
+    # put out a terminating MIME boundary
+    echo ""
+    echo "--$MIMEBOUNDARY--"
+}
 
 test -f etc/setup.cache || {
     SPOOL=`pwd`
@@ -212,76 +482,6 @@ fileType()
     fi
 }
 
-returnFaxImage()
-# output a mime encoded set of file attachments with mime headers
-# for each file listed in the files_XX set, make sure that it is 
-# a valid, non zero file.  Then test the file format of the source
-# file we are encoding that is is a known file type that we can 
-# convert from.  Out put to standard out the appropriate mime header.
-# Then based on the argument passed to this function,
-# convert the source file to the file format given as the argument.
-# finally, encode this converted file and put it out on std out.
-# Supported values of RETURNFORMAT are "tif","pdf", and "ps"
-# A ReturnFomat=original reutns the file in its original format.
-# Supported file formats of the source are "tiff", "pdf" and "ps" 
-{
-   RETURNFORMAT=$1
-   if [ $nfiles -gt 0 ] ; then
-    for i in `local_seq 1 $nfiles`; do 
-        name="files_$i"
-	eval filename=`echo "$"$name`
-	if [ -s $filename ] ; then # file is > 0 size
-	    type="filetype_$i"
-	    eval FROMFMT=`echo "$"$type`
-	    #
-	    # Because Ghostscript accepts PDF identically to PostScript
-	    # and because HylaFAX has historically handled PDF named as
-	    # "postscript" we have to double-check the PostScript filetype.
-	    #
-	    if [ "$FROMFMT" = "PostScript" ]; then
-		if [ "`fileType $filename`" != "PostScript" ]; then
-		    FROMFMT=PDF
-		fi
-	    fi
-            case "$FROMFMT" in "PostScript" | "TIFF" | "PDF" ) # test we know the source format
-                if [ "$RETURNFORMAT" = "tif" ] ; then
-                    ENCODEDFILENAME="$number-$i.tif"
-                    putMimeImageTIFHeader "$ENCODEDFILENAME"
-		    putTifEncodedImage "$filename" "$FROMFMT"
-                elif [ "$RETURNFORMAT" = "pdf" ] ; then
-                    ENCODEDFILENAME="$number-$i.pdf"
-                    putMimeAppPDFHeader "$ENCODEDFILENAME"
-		    putPdfEncodedImage "$filename" "$FROMFMT"
-                elif [ "$RETURNFORMAT" = "ps" ] ; then
-                    ENCODEDFILENAME="$number-$i.ps"
-                    putMimeAppPSHeader "$ENCODEDFILENAME"
-		    putPsEncodedImage "$filename" "$FROMFMT"
-                elif [ "$RETURNFORMAT" = "original" ] ; then
-                    case "$FROMFMT" in
-                    "TIFF")
-			ENCODEDFILENAME="$number-$i.tif"
-                        putMimeImageTIFHeader "$ENCODEDFILENAME"
-			putTifEncodedImage "$filename" "$FROMFMT"
-                        ;;
-                    "PostScript")
-			ENCODEDFILENAME="$number-$i.ps"
-                        putMimeAppPSHeader "$ENCODEDFILENAME"
-			putPsEncodedImage "$filename" "$FROMFMT"
-                        ;;
-                    "PDF")
-			ENCODEDFILENAME="$number-$i.pdf"
-                        putMimeAppPDFHeader "$ENCODEDFILENAME"
-			putPdfEncodedImage "$filename" "$FROMFMT"
-                        ;;
-                    esac
-                fi
-            ;;
-            esac
-        fi # file[i] exists
-    done # for each nfiles
-   fi  # nfiles > 0
-}
-
 putPdfEncodedImage()
 # Convert the source file from the CONVERTFROM type into a pdf file and 
 # then do a mimeEndode of the file
@@ -349,101 +549,6 @@ putTifEncodedImage()
     $RM -f $OUTFILE > $ERRORSTO 2>&1
 }
 
-putMimeSetup()
-# write out the setup portions of the mime encoded message
-#
-# NOTES ABOUT MIME that I have figured out thus far since I am not a mime expert in any way.
-# The mimeboundary is defined in the setup of the email.
-# Mimeboundary, as defined, with a leading "--" must be used to seperate mime sections.
-# The mime email must be terminated by a mimeboundary with a leading AND trailing "--"
-# A MimeBoundary must immediately preceed the mime content definition section for each
-# of the mime sections. No blank lines between the mimeboundary and the content definition.
-# I think a blank line in front of the mimeboundary is required.
-# So, the code here is organized such that all functions putting out a mime contect section
-# are respnosible for putting in their own leading mimeboundary. But they are NOT to put in 
-# any mime boundary trailers.
-# The last thing of the action section is to put in terminating mime boundary.
-#
-{
-    echo "MIME-Version: 1.0"
-    echo "Content-Type: Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\""
-    echo "Content-Transfer-Encoding: 7bit"
-}
-
-putMimeTextHeader()
-# write out the beginning mime boundary for plain/text part
-{
-    echo ""
-    echo "This is a multi-part message in MIME format."
-    echo ""
-    echo "--$MIMEBOUNDARY"
-    echo "Mime-Version: 1.0"
-    echo "Content-Type: text/plain; charset=$CHARSET"
-    echo "Content-Transfer-Encoding: quoted-printable"
-    echo ""
-}
-
-putMimeAppPDFHeader()
-# filename passed should already include the proper .pdf extension
-# write out the beginning mime boundary for the pdf file application part
-# filename is just the name of the file for mime header encoding and is what is
-# shown as the name of the attahced file.
-{
-    echo ""
-    echo "--$MIMEBOUNDARY"
-    echo "Content-Type: application/pdf; name=\"$1\""
-    echo "Content-Description: FAX document"
-    echo "Content-Transfer-Encoding: $ENCODING"
-    echo "Content-Disposition: attachment; filename=\"$1\""
-    echo ""
-}
-
-putMimeAppPSHeader()
-# filename passed should already include the proper .ps extension
-# write out the beginning mime boundary for the ps file application part
-# filename is just the name of the file for mime header encoding and is what is
-# shown as the name of the attahced file.
-{
-    echo ""
-    echo "--$MIMEBOUNDARY"
-    echo "Content-Type: application/postscript; name=\"$1\""
-    echo "Content-Description: FAX document"
-    echo "Content-Transfer-Encoding: $ENCODING"
-    echo "Content-Disposition: attachment; filename=\"$1\""
-    echo ""
-}
-
-putMimeImageTIFHeader()
-# filename passed should already include the proper .tif extension
-# write out the beginning mime boundary for the tif file image  part
-# filename is just the name of the file for mime header encoding and is what is
-# shown as the name of the attahced file.
-{
-    echo ""
-    echo "--$MIMEBOUNDARY"
-    echo "Content-Type: image/tiff; name=\"$1\""
-    echo "Content-Description: FAX document"
-    echo "Content-Transfer-Encoding: $ENCODING"
-    echo "Content-Disposition: attachment; filename=\"$1\""
-    echo ""
-}
-
-printItem()
-{
-    FMT="`echo %$ITEMSIZE\s: $1`"
-    TAG="$2"
-    VALUE="$3"
-    printf "$FMT\n" "$TAG" "$VALUE"
-}
-
-
-printBanner()
-{
-    echo ""
-    echo "    ---- $1 ----"
-    echo ""
-}
-
 match()
 #  look for substring in fullsting.  substring can be a regular expression or plain string
 #  if the substring is found anywhere in the full string, true(0) is returned.
@@ -458,146 +563,13 @@ match()
     fi
 }
 
-#
-# Construct a return-to-sender message.
-#
-returnToSender()
-{
-    printBanner "Unsent job status"
-    printItem "%s" "$DICTDESTINATION" "$number"
-    printItem "%s" "$DICTJOBID" "$jobid"
-    printItem "%s" "$DICTGROUPID" "$groupid"
-    printItem "%s" "$DICTSENDER" "$sender"
-    printItem "%s" "$DICTMAILADDR" "$mailaddr"
-    if [ -n "$commid" ] ; then
-        printItem "%s" "$DICTCOMMID" "$commid"
-    fi
-    if [ "$modem" != "any" ] && [ "$RETURNTECHINFO" = "yes" ] ; then
-        printItem "%s" "$DICTMODEM" "$modem"
-    fi
-    printItem "%s" "$DICTSUBMITTEDFROM" "$client"
-    if [ "$jobtype" = "facsimile" ] && [ "$RETURNTECHINFO" = "yes" ] ; then
-        printItem "%u (mm)" "$DICTPAGEWIDTH" "$pagewidth"
-        printItem "%.0f (mm)" "$DICTPAGELENGTH" "$pagelength"
-        printItem "%.0f (lpi)" "$DICTRES" "$resolution"
-    fi
-    if [ -z "$faxstatus" ] ; then faxstatus="  ($DICTNOTHINGAVAIL)" ; fi
-    # we need to use the %b (instead of the %s) so the embedded escape characters will
-    # be interpreted. 
-    printItem "%b" "$DICTSTATUS" "$faxstatus"
-    printItem "%u ($DICTREMOTEEXCHANGES)" "$DICTDIALOGS" "$tottries"
-    printItem "%u ($DICTFAILEDCALLS)" "$DICTDIALS" "$ndials"
-    printItem "%u ($DICTTOTALCALLS)" "$DICTCALLS" "$totdials"
-    if [ "$jobtype" = "facsimile" ] ; then
-        printItem "%u ($DICTPAGESTRANSMITTED)" "$DICTPAGES" "$npages"
-        printItem "%u ($DICTTOTALPAGES)" "$DICTTOTPAGES" "$totpages"
-        printItem "%u ($DICTATTEMPTSPAGE)" "$DICTATTEMPTS" "$ntries"
-        printItem "%u ($DICTDIRNEXTPAGE)" "$DICTDIRNUM" "$dirnum"
-        if [ $nfiles -gt 0 ] && [ "$RETURNTECHINFO" = "yes" ] ; then
-            printBanner "$DICTDOCSSUBMITTED"
-            eval echo "$DICTDOCSTEXT1"
-            eval echo "$DICTDOCSTEXT2"
-            eval echo "$DICTDOCSTEXT3"
-            eval echo "$DICTDOCSTEXT4"
-            echo ""
-            printf "%-20s %8s %s\n" "$DICTFILENAME" "$DICTSIZE" "$DICTTYPE"
-	    for i in `local_seq 1 $nfiles`; do
-                name="files_$i"
-                eval filename=`echo "$"$name`
-		if [ -f $filename ] ; then
-			set - `wc -c "$filename"`
-                    FILESIZE=$1
-		    type="filetype_$i"
-		    eval filetype=`echo "$"$type`
-		    #
-		    # Because Ghostscript accepts PDF identically to PostScript
-		    # and because HylaFAX has historically handled PDF named as
-		    # "postscript" we have to double-check the PostScript filetype.
-		    #
-		    if [ "$filetype" = "PostScript" ]; then
-			if [ "`fileType $filename`" != "PostScript" ]; then
-			    filetype=PDF
-			fi
-		    fi
-		    printf "%-20s %8d %s\n" "$filename" "$FILESIZE" "$filetype"
-                fi
-            done
-        fi
-    elif [ "$jobtype" = "pager" ] ; then
-        if [ $npins -ne 0 ] ; then
-            printBanner "$DICTUNSENTPAGES"
-	    for i in `local_seq 1 $npins`; do
-                name="files_$i"
-		eval pin=`echo "$"$name`
-                printf "%15s\n" "$DICTPIN" $pin
-            done
-        fi
-        if [ $nfiles -ne 0 ] && [ -s $files_0 ] ; then
-            printBanner "$DICTMESSAGETEXT"
-            cat $files_0
-        fi
-    fi
-}
-
-returnTranscript()
-{
-    if [ "$RETURNTRANSCRIPT" = "yes" ] ; then
-        printBanner "$DICTLOGFOLLOWS2"
-        COMFILE="log/c$commid"
-        if [ -f "$COMFILE" ] ; then
-            # dump the comfile to output except for '-- data' lines
-            cat $COMFILE | $SED -e '/-- data/d' \
-		-e '/start.*timer/d' -e '/stop.*timer/d' \
-		-e 's/=/=3D/g'
-        else 
-            printf "$DICTNOLOGAVAIL"
-            if [ -n "$commid" ] ; then  # non 0 len commid value
-                    printf "($DICTCOMMID c$commid)"
-            fi
-            echo "."
-        fi
-    fi
-}
-
-printStatus()
-{
-    if [ -z "$1" ] ; then # 0 string len
-        echo "<$DICTNOREASON>"
-    else
-	# we need to change the '\n' in the strings to real newlines
-	echo "$1" | sed -e 's/\\n/\n/g'
-    fi
-}
-
-putHeaders()
-{
-    putMimeSetup
-    echo "To: $mailaddr"
-    echo "From: $FROMADDR"
-    echo "Subject: $1"
-    putMimeTextHeader
-    THISJOBTYPE=`eval echo "$"DICT$jobtype`
-    eval printf \"$DICTYOURJOBTO\"
-}
-
 ##########
 ##  MAIN
 ##########
 
 #  exports used for debug tracing
-#export -f returnTranscript
-#export -f putMimeAppPDFHeader
-#export -f putMimeImageTIFHeader
-#export -f printItem
 #export -f putTifEncodedImage
-#export -f putMimeSetup
-#export -f printStatus
-#export -f putHeaders
-#export -f returnFaxImage
 #export -f putPdfEncodedImage
-#export -f putMimeTextHeader
-#export -f printBanner
-#export -f returnToSender
 #export -f parseQfile
 #export -f match
 # sh -x
@@ -634,142 +606,36 @@ if [ -n "$DESTINATION" ]; then
 else
     DESTINATION="$number"
 fi
-if [ "$WHY" = "done" ] ; then
-    putHeaders "$jobtag $DICTTO $DESTINATION $DICTCOMPLETED"
-    echo "$DICTCOMPLETEDSUCCESSFULLY";
-    echo "";
-    if [ "$jobtype" = "facsimile" ] ; then
-        printItem "%u" "$DICTPAGES" "$npages"
-        printItem "%s" "$DICTRECEIVER" "$csi"
-        if [ "$RETURNTECHINFO" = "yes" ] ; then
-            if [ "$resolution" = "196" ] ; then 
-                printItem "%s" "$DICTQUALITY" "$DICTFINE"
-            else
-                printItem "%s" "$DICTQUALITY" "$DICTNORMAL"
-            fi
-            printItem "%u (mm)" "$DICTPAGEWIDTH" "$pagewidth"
-            printItem "%.0f (mm)" "$DICTPAGELENGTH" "$pagelength"
-            printItem "%s" "$DICTSIGNALRATE" "$signalrate"
-            printItem "%s" "$DICTDATAFORMAT" "$dataformat"
-            printItem "%s" "$DICTREMOTEEQUIPMENT" "$equipment"
-            printItem "%s" "$DICTREMOTESTATION" "$station"
-        fi
-    fi
-    if [ "$RETURNTECHINFO" = "yes" ] ; then
-        if [ "$tottries" != "1" ] ; then 
-            printItem "%s ($DICTREMOTEEXCHANGES)" "$DICTDIALOGS" "$tottries"
-        fi
-        if [ "$totdials" != "1" ] ; then 
-            printItem "%s ($DICTTOTALCALLS)" "$DICTCALLS" "$totdials"
-        fi
-        if [ "$modem" != "any" ] ; then 
-            printItem "%s" "$DICTMODEM" "$modem"
-        fi
-        printItem "%s" "$DICTSUBMITTEDFROM" "$client"
-        printItem "%s" "$DICTJOBID" "$jobid"
-        printItem "%s" "$DICTGROUPID" "$groupid"
-        printItem "%s" "$DICTCOMMID" "c$commid"
-        printf "\n$DICTPROCESSINGTIME %s.\n" "$JTIME"
-    fi
-    if [ -n "$faxstatus" ] && [ "$RETURNTRANSCRIPT" = "yes" ] ; then
-        # use -e in echo to interpret escape characters in faxstatus
-	echo "$DICTADDITIONALINFO"
-	printStatus "     $faxstatus"
-        returnTranscript
-    fi
-    if [ -n "$RETURNFILETYPE" ] ; then 
-        returnFaxImage "$RETURNFILETYPE"
-    fi
-elif [ "$WHY" = "failed" ] ; then 
-    putHeaders "$jobtag $DICTTO $DESTINATION $DICTFAILED"
-    printf " $DICTFAILEDBECAUSE\n    "
-    printStatus "$faxstatus"
-    returnTranscript
-    returnToSender
-    if [ -n "$RETURNFILETYPE" ] ; then 
-        returnFaxImage "$RETURNFILETYPE"
-    fi
-elif [ "$WHY" = "rejected" ] ; then 
-    putHeaders "$jobtag $DICTTO $DESTINATION $DICTFAILED"
-    printf " $DICTREJECTEDBECAUSE\n    "
-    printStatus "$faxstatus"
-    returnToSender
-    if [ -n "$RETURNFILETYPE" ] ; then
-        returnFaxImage "$RETURNFILETYPE"
-    fi
-elif [ "$WHY" = "blocked" ] ; then
-    putHeaders "$jobtag $DICTTO $DESTINATION $DICTBLOCKED"
-    printf " $DICTDELAYEDBECAUSE\n    "
-    printStatus "$faxstatus" 
-    echo ""
-    echo "$DICTASSOONASPOSSIBLE"
-elif [ "$WHY" = "requeued" ] ; then
-    putHeaders "$jobtag $DICTTO $DESTINATION $DICTREQUEUED" 
-    printf " $DICTWASNOTSENT\n    "
-    printStatus "$faxstatus" 
-    echo ""
-    echo "$DICTWILLBERETRIED $NEXT."
-    returnTranscript
-elif [ "$WHY" = "removed" ] || [ "$WHY" = "killed" ] ; then 
-    putHeaders "$jobtag $DICTTO $DESTINATION $DICTREMOVEDFROMQUEUE" 
-    echo " $DICTWASDELETED"
-    if [ "$WHY" = "killed" ] ; then
-        returnToSender
-    fi
-    if [ -n "$RETURNFILETYPE" ] ; then
-	returnFaxImage "$RETURNFILETYPE"
-    fi
-elif [ "$WHY" = "timedout" ]; then 
-    putHeaders "$jobtag $DICTTO $DESTINATION $DICTFAILED" 
-    echo " $DICTTIMEDOUT"
-    returnToSender
-    if [ -n "$RETURNFILETYPE" ] ; then
-        returnFaxImage "$RETURNFILETYPE"
-    fi
-elif [ "$WHY" = "format_failed" ] ; then 
-    putHeaders "$jobtag to $DESTINATION $DICTFAILED" 
-    echo " $DICTCONVERSION1"
-    echo "$DICTCONVERSION2"
-    echo ""
-    printStatus "$faxstatus"
-    echo ""
-    echo "$DICTCONVERSION3"
-    returnToSender
-elif [ "$WHY" = "no_formatter" ] ; then 
-    putHeaders "$jobtag $DICTTO $DESTINATION $DICTFAILED"
-    echo " $DICTNOFORMATTER1"
-    echo "$DICTNOFORMATTER2"
-    returnToSender
-elif (match "$WHY"  "poll_*") ; then 
-    putHeaders "$DICTNOTICEABOUT $jobtag" 
-    printf "$DICTPOLLINGFAILED"
-    if [ "$WHY" = "poll_rejected" ] ; then
-        echo "$DICTREMOTEREJECTED"
-    elif [ "$WHY" = "poll_no_document" ] ; then
-        echo "$DICTNODOCTOPOLL"
-    elif [ "$WHY" = "poll_failed" ] ; then
-        echo "$DICTUNSPECIFIEDPROBLEM"
-    fi
-    echo "";
-    printf "$DICTPROCESSINGTIME %s.\n" "$JTIME"
-    returnTranscript
-else 
-    putHeaders "$DICTNOTICEABOUT $jobtag" 
-    echo " $DICTUNKNOWNREASON1"
-    echo "$DICTUNKNOWNREASON2"
-    echo "$DICTUNKNOWNREASON3"
-    echo ""
-    echo "why: $WHY"
-    echo "jobTime: $JTIME"
-    echo "nextTry: $NEXT"
-    echo  ""
-    echo "$DICTUNKNOWNREASON4"
-    returnTranscript
-    returnToSender
+if [ -z "$faxstatus" ] ; then # 0 string len
+    FAXSTATUSMSG="<$DICTNOREASON>"
+else
+    # we need to change the '\n' in the strings to real newlines
+    FAXSTATUSMSG=`echo "$faxstatus" | sed -e 's/\\n/\n/g'`
 fi
-# put out a terminating MIME boundary
-echo ""
-echo "--$MIMEBOUNDARY--"
+case "$WHY" in
+    done)
+	notify_mail "$jobtag $DICTTO $DESTINATION $DICTCOMPLETED" "$mailaddr";;
+    failed)
+	notify_mail "$jobtag $DICTTO $DESTINATION $DICTFAILED" "$mailaddr";;
+    rejected)
+	notify_mail "$jobtag $DICTTO $DESTINATION $DICTFAILED" "$mailaddr";;
+    blocked)
+	notify_mail "$jobtag $DICTTO $DESTINATION $DICTBLOCKED" "$mailaddr";;
+    requeued)
+	notify_mail "$jobtag $DICTTO $DESTINATION $DICTREQUEUED" "$mailaddr";;
+    removed|killed)
+	notify_mail "$jobtag $DICTTO $DESTINATION $DICTREMOVEDFROMQUEUE" "$mailaddr";;
+    timedout)
+	notify_mail "$jobtag $DICTTO $DESTINATION $DICTFAILED" "$mailaddr";;
+    format_failed)
+	notify_mail "$jobtag to $DESTINATION $DICTFAILED" "$mailaddr";;
+    no_formatter)
+	notify_mail "$jobtag $DICTTO $DESTINATION $DICTFAILED" "$mailaddr";;
+    poll_*)
+	notify_mail "$DICTNOTICEABOUT $jobtag" "$mailaddr";;
+    *)
+	notify_mail "$DICTNOTICEABOUT $jobtag" "$mailaddr";;
+esac
 ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi -t
 
 if [ "$NOTIFY_FAXMASTER" = "yes" ]; then
@@ -777,22 +643,17 @@ if [ "$NOTIFY_FAXMASTER" = "yes" ]; then
     # and then reset them later
     origRETURNTRANSCRIPT=$RETURNTRANSCRIPT
     origRETURNTECHINFO=$RETURNTECHINFO
+    origRETURNFILETYPE=$RETURNFILETYPE
     RETURNTRANSCRIPT="yes"
     RETURNTECHINFO="yes"
+    RETURNFILETYPE=""
     (
 	if [ -z "$jobtag" ] ; then
 	    jobtag="$jobtype job $jobid"
 	fi
-	echo "Mime-Version: 1.0"
-	echo "Content-Type: text/plain; charset=$CHARSET"
-	echo "Content-Transfer-Encoding: quoted-printable"
-	echo "To: $TOADDR"
-	echo "From: $FROMADDR"
-	echo "Subject: $jobtag to $number $WHY"
-	echo
-	returnTranscript
-	returnToSender
+	notify_mail "$jobtag to $number $WHY" "$TOADDR"
     ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi -t
     RETURNTRANSCRIPT=$origRETURNTRANSCRIPT
     RETURNTECHINFO=$origRETURNTECHINFO
+    RETURNFILETYPE=$origRETURNFILETYPE
 fi
