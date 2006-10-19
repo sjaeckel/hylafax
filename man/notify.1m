@@ -1,4 +1,4 @@
-.\"	$Id: notify.1m 197 2006-06-12 03:01:21Z faxguy $
+.\"	$Id: notify.1m 340 2006-10-20 02:04:46Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -43,6 +43,16 @@ notify \- \*(Fx user notification script
 .B bin/notify
 is the command script invoked by the facsimile server to notify a
 user about the status of an outbound job.
+It is designed to be customizable by the
+administrator.  (Ideally this is done by creating a customized notify script
+in a different filename or by copying the default script to a different filename,
+customizing that new file, and then using
+.B NotifyCmd
+in the scheduler config file to point
+.IR faxq (${MANNUM1_8})
+at the customized script.  See
+.IR hylafax-config (${MANNUM4_5}).)
+.P
 The default notification script sends the user
 electronic mail describing the event or action.
 The arguments are:

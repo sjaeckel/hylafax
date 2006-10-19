@@ -1,4 +1,4 @@
-.\"	$Id: pollrcvd.1m 197 2006-06-12 03:01:21Z faxguy $
+.\"	$Id: pollrcvd.1m 340 2006-10-20 02:04:46Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -41,6 +41,16 @@ pollrcvd \- \*(Fx script for delivering facsimile received by polling
 .B bin/pollrcvd
 is the command script invoked by the \*(Fx server whenever
 a facsimile is received as a result of a polling operation.
+It is designed to be customizable by the
+administrator.  (Ideally this is done by creating a customized pollrcvd script
+in a different filename or by copying the default script to a different filename,
+customizing that new file, and then using
+.B PollRcvdCmd
+in the modem config file to point
+.IR faxgetty (${MANNUM1_8})
+at the customized script.  See
+.IR hylafax-config (${MANNUM4_5}).)
+.P
 The default script uses electronic mail to
 deliver the facsimile
 to the user that submitted the poll request.
