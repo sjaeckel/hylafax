@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 312 2006-09-29 16:03:17Z faxguy $
+#	$Id: faxsetup.sh.in 341 2006-10-20 17:52:10Z faxguy $
 #
 # @WARNING@
 #
@@ -553,7 +553,7 @@ EOF
     # Functions required by faxaddmodem.
     #
     case $TARGET in
-    *-sunos*|*-linux*|*-ultrix*|*-hpux*|*-freebsd*|*-netbsd*)
+    *-sunos*|*-linux*|*-ultrix*|*-hpux*|*-freebsd*|*-netbsd*|*-sysv5SCO_SV6*)
 	dumpTTYFuncs()
 	{
 	    cat<<'EOF'
