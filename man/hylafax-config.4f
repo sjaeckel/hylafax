@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 334 2006-10-18 18:45:40Z faxguy $
+.\"	$Id: hylafax-config.4f 343 2006-10-20 23:50:52Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-18 11:45:40 -0700 (Wed, 18 Oct 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-20 16:50:52 -0700 (Fri, 20 Oct 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -123,7 +123,9 @@ AreaCode\(S2	string	\-	local area code
 BadPageHandlingMethod	string	\s-1RTN-SAVE\s+1	bad page received handling method	
 BatchLogs\(S1	boolean	\s-1Yes\s+1	keep all session logs of a batch in a single log
 CallIDAnswerLength	integer	\-	answer call when CallIDPattern received
-CallIDPattern	strint	\-	call identification pattern string
+CallIDDisplay	boolean	\s-1No\s+1	display match in modem status
+CallIDLabel	string	\-	label to use in presentation of the match
+CallIDPattern	string	\-	call identification pattern string
 CIDName	string	\-	equivalent to CallIDPattern (2)
 CIDNameAnswerLength	integer	\s-10\s+1	equivalent to CallIDAnswerLength (2)
 CIDNumber	string	\-	equivalent to CallIDPattern (1)
@@ -666,6 +668,16 @@ reached a length of seven digits.
 A value of zero for
 .B CallIDAnswerLength
 disables this feature.
+.TP
+.B CallIDDisplay
+Whether or not to display the
+.B CallIDPattern
+match in the modem status line.
+.TP
+.B CallIDLabel
+The label to use in the presentation of any
+.B CallIDPattern
+match.
 .TP
 .B ClocalAsRoot
 Control whether operations that set the

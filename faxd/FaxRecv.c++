@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 336 2006-10-19 23:35:27Z faxguy $ */
+/*	$Id: FaxRecv.c++ 343 2006-10-20 23:50:52Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -213,8 +213,9 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, f
 	}
 	fxStr statusmsg = fxStr::format("Receiving from \"%s\"", (const char*) info.sender);
 	for (u_int i = 0; i < info.callid.size(); i++) {
-	    if (info.callid[i].length()) {
-		statusmsg.append(" / ");
+	    if (info.callid[i].length() && modem->doCallIDDisplay(i)) {
+		statusmsg.append(", ");
+		statusmsg.append(modem->getCallIDLabel(i));
 		statusmsg.append(info.callid[i]);
 	    }
 	}
