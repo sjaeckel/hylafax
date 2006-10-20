@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 331 2006-10-17 18:02:41Z faxguy $
+#	$Id: configure 341 2006-10-20 17:52:10Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -385,7 +385,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 331 $"
+	echo "This is HylaFAX configure $Revision: 341 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3906,6 +3906,7 @@ if [ "$LOCKS" = auto ]; then
     *-sysv2*)	LOCKS=binary;;
     *-hpux*)	LOCKS=binary;;
     *-sysv4*)	LOCKS="+ascii";;
+    *-sysv5SCO_SV6*)	LOCKS="-ascii";;
     *-sysv5*)	LOCKS="+ascii";;
     *-solaris*)	LOCKS="+ascii";;
     *-freebsd*)	LOCKS=ascii;;
