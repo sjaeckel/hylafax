@@ -1,7 +1,9 @@
-#	$Id: CHANGES 341 2006-10-20 17:52:10Z faxguy $	
+#	$Id: CHANGES 343 2006-10-20 23:50:52Z faxguy $	
 
 New Changes
 
+* add CallIDDisplay and CallIDLabel to modify how CallID presentation
+  is made in the modem status line (20 Oct 2006)
 * Use old style lock files for OpenServer 6 (20 Oct 2006)
 * simplify pollrcvd for easier customization (19 Oct 2006)
 * add CallID data to receiving modem status string (19 Oct 2006)

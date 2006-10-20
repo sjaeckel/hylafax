@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 328 2006-10-13 19:53:16Z faxguy $ */
+/*	$Id: ModemConfig.c++ 343 2006-10-20 23:50:52Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -775,22 +775,38 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	saveUnconfirmedPages = getBoolean(value);
     else if (streq(tag, "distinctiverings"))
     	parseDR(value);
-    else if (streq(tag, "callidpattern") || streq(tag, "callidanswerlength") ) {
+    else if (streq(tag, "callidpattern") || streq(tag, "callidanswerlength") || streq(tag, "calliddisplay") || streq(tag, "callidlabel")) {
 	if (tag[6] == 'p') callidIndex++;	// only increment on instances of "Pattern"
 	if (idConfig.length() < callidIndex+1 && callidIndex != (u_int) -1)
 	    idConfig.resize(callidIndex+1);
 	if (tag[6] == 'p') {
 	    idConfig[callidIndex].answerlength = 0;	// we must initialize this
+	    idConfig[callidIndex].display = false;	// we must initialize this
+	    idConfig[callidIndex].label = "";		// we must initialize this
 	    idConfig[callidIndex].pattern = value;
 	    configTrace("CallID[%d].pattern = \"%s\"", callidIndex,
 		    (const char*)idConfig[callidIndex].pattern);
 	} else {
 	    if (callidIndex != (u_int) -1) {
-		idConfig[callidIndex].answerlength = atoi(value);
-		configTrace("CallID[%d].answerlength = %d", callidIndex,
-		    idConfig[callidIndex].answerlength);
+		switch (tag[6]) {
+		    case 'a':
+			idConfig[callidIndex].answerlength = atoi(value);
+			configTrace("CallID[%d].answerlength = %d", callidIndex,
+			    idConfig[callidIndex].answerlength);
+			break;
+		    case 'd':
+			idConfig[callidIndex].display = getBoolean(value);
+			configTrace("CallID[%d].display = %s", callidIndex,
+			    idConfig[callidIndex].display ? "true" : "false");
+			break;
+		    case 'l':
+			idConfig[callidIndex].label = value;
+			configTrace("CallID[%d].label = \"%s\"", callidIndex,
+			    (const char*) idConfig[callidIndex].label);
+			break;
+		}
 	    } else
-		configError("No index for Call ID Answer Length");
+		configError("No index for Call ID attribute");
 	}
     } else if (streq(tag, "cidnumber")) {
 	if (idConfig.length() < CallID::NUMBER+1)

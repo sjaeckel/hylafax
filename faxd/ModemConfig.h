@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 265 2006-08-07 16:53:14Z faxguy $ */
+/*	$Id: ModemConfig.h 343 2006-10-20 23:50:52Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -38,6 +38,8 @@ class id_config
     public:
 	fxStr	pattern;
 	int	answerlength;
+	bool	display;
+	fxStr	label;
 
 	int compare (const id_config* n) const
 	{
