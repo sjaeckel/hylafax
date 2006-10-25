@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 268 2006-08-09 15:36:34Z faxguy $ */
+/*	$Id: faxSendApp.c++ 344 2006-10-25 19:55:51Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -198,6 +198,8 @@ faxSendApp::send(const char** filenames, int num)
 			    ai.status = req->notice;
 			    retrybatchtts = req->tts;
 			}
+			ai.jobinfo = fxStr::format("%u/%u/%u/%u/%u/%u/%u", 
+			    req->totpages, req->ntries, req->ndials, req->totdials, req->maxdials, req->tottries, req->maxtries);
 			if (!ai.record("SEND"))
 			    logError("Error writing SEND accounting record, dest=%s",
 				(const char*) ai.dest);
@@ -387,6 +389,8 @@ faxSendApp::notifyPollRecvd(FaxRequest& req, FaxRecvInfo& ri)
     CallID empty_callid;
     ai.callid = empty_callid;
     ri.params.asciiEncode(ai.faxdcs);
+    ai.jobinfo = fxStr::format("%u/%u/%u/%u/%u/%u/%u", 
+	req.totpages, req.ntries, req.ndials, req.totdials, req.maxdials, req.tottries, req.maxtries);
     if (!ai.record("POLL"))
 	logError("Error writing POLL accounting record, dest=%s",
 	    (const char*) ai.dest);

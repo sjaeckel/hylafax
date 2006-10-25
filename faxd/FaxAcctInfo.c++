@@ -1,4 +1,4 @@
-/*	$Id: FaxAcctInfo.c++ 13 2005-11-15 23:34:48Z faxguy $ */
+/*	$Id: FaxAcctInfo.c++ 344 2006-10-25 19:55:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -90,6 +90,7 @@ FaxAcctInfo::record(const char* cmd)
 	record.fput("\t\"%s\"", (const char*) callid_formatted);	// $17 = CallID3 -> CallIDn
 	record.fput("\t\"%s\"", owner);					// $18 = owner
 	record.fput("\t\"%s\"", (const char*) faxdcs);			// $19 = DCS
+	record.fput("\t%s", (const char*) jobinfo);			// $20 = jobinfo
 	record.put('\n');
 	flock(fd, LOCK_EX);
 	ok = (Sys::write(fd, record, record.getLength()) == (ssize_t)record.getLength());
@@ -121,7 +122,8 @@ FaxAcctInfo::record(const char* cmd)
     argv[17] = (const char*) callid_formatted;
     argv[18] = owner;
     argv[19] = (const char*) faxdcs;
-    argv[20] = NULL;
+    argv[20] = (const char*) jobinfo;
+    argv[21] = NULL;
     pid_t pid = fork();		// signal handling in some apps seems to require a fork here
     switch (pid) {
 	case 0:

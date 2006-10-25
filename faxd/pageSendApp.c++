@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.c++ 154 2006-04-24 16:57:31Z faxguy $ */
+/*	$Id: pageSendApp.c++ 344 2006-10-25 19:55:51Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -165,6 +165,8 @@ pageSendApp::send(const char** filenames, int num)
 				ai.status = "";
 			    else
 				ai.status = req->notice;
+			    ai.jobinfo = fxStr::format("%u/%u/%u/%u/%u/%u/%u", 
+				req->totpages, req->ntries, req->ndials, req->totdials, req->maxdials, req->tottries, req->maxtries);
 			    if (!ai.record("PAGE"))
 				logError("Error writing %s accounting record, dest=%s",
 				    "PAGE", (const char*) ai.dest);

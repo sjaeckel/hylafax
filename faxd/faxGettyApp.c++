@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 336 2006-10-19 23:35:27Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 344 2006-10-25 19:55:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -460,6 +460,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid,
     ai.status = emsg;
     ai.duration = Sys::now() - ai.start;
     ai.conntime = ai.duration;
+    ai.jobinfo = "";
     if (logCalls && !ai.record("CALL"))
 	logError("Error writing CALL accounting record, dest=%s",
 	    (const char*) ai.dest);
@@ -828,6 +829,7 @@ faxGettyApp::notifyDocumentRecvd(FaxRecvInfo& ri)
     ai.jobtag = "";
     ai.callid = ri.callid;
     ai.owner = "";
+    ai.jobinfo = "";
     ri.params.asciiEncode(ai.faxdcs);
     if (!ai.record("RECV"))
 	logError("Error writing RECV accounting record, dest=%s",
