@@ -1,7 +1,8 @@
-#	$Id: CHANGES 343 2006-10-20 23:50:52Z faxguy $	
+#	$Id: CHANGES 344 2006-10-25 19:55:51Z faxguy $	
 
 New Changes
 
+* add "jobinfo" field to xferfaxlog (25 Oct 2006)
 * add CallIDDisplay and CallIDLabel to modify how CallID presentation
   is made in the modem status line (20 Oct 2006)
 * Use old style lock files for OpenServer 6 (20 Oct 2006)

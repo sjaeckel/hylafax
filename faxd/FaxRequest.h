@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: FaxRequest.h 344 2006-10-25 19:55:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -108,7 +108,7 @@ public:
     u_short	state;		// job scheduling state
     u_short	lineno;		// line number when reading queue file
     FaxSendStatus status;	// request status indicator
-    u_short	totpages;	// total cummulative pages in documents
+    u_short	totpages;	// total cumulative pages in documents
     u_short	npages;		// total pages sent/received
     u_short	ntries;		// # tries to send current page
     u_short	ndials;		// # consecutive failed tries to call dest

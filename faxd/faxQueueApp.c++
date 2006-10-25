@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 332 2006-10-17 18:56:07Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 344 2006-10-25 19:55:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2091,9 +2091,13 @@ faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
     ai.device = "";
     ai.dest = (const char*) req.external;
     ai.csi = "";
-    ai.npages = 0;
+    ai.npages = req.npages;
     ai.params = 0;
-    ai.status = "";
+    if (req.status == send_done)
+	ai.status = "";
+    else {
+	ai.status = req.notice;
+    }
     if (strstr(type, "UNSENT"))
 	ai.status = "Kill time expired";
     else if (strstr(type, "SUBMIT"));
@@ -2102,6 +2106,8 @@ faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
     ai.callid = empty_callid;
     ai.owner = (const char*) req.owner;
     ai.faxdcs = "";
+    ai.jobinfo = fxStr::format("%u/%u/%u/%u/%u/%u/%u", 
+	req.totpages, req.ntries, req.ndials, req.totdials, req.maxdials, req.tottries, req.maxtries);
     pid_t pid = fork();
     switch (pid) {
 	case -1:			// error

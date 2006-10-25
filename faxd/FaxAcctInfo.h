@@ -1,4 +1,4 @@
-/*	$Id: FaxAcctInfo.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxAcctInfo.h 344 2006-10-25 19:55:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -47,6 +47,7 @@ struct FaxAcctInfo {
     CallID	callid;		// call identification
     const char* owner;		// job owner (uid)
     fxStr	faxdcs;		// negotiated DCS parameters
+    fxStr	jobinfo;	// totpages, ntries, ndials, totdials, maxdials, tottries, maxtries
 
     bool record(const char* cmd);
 };
