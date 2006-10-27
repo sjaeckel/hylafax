@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 343 2006-10-20 23:50:52Z faxguy $ */
+/*	$Id: ModemConfig.c++ 346 2006-10-28 03:07:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -775,13 +775,15 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	saveUnconfirmedPages = getBoolean(value);
     else if (streq(tag, "distinctiverings"))
     	parseDR(value);
-    else if (streq(tag, "callidpattern") || streq(tag, "callidanswerlength") || streq(tag, "calliddisplay") || streq(tag, "callidlabel")) {
+    else if (streq(tag, "callidpattern") || streq(tag, "callidanswerlength") || streq(tag, "calliddisplay") 
+	     || streq(tag, "callidlabel") || streq(tag, "callidrecord")) {
 	if (tag[6] == 'p') callidIndex++;	// only increment on instances of "Pattern"
 	if (idConfig.length() < callidIndex+1 && callidIndex != (u_int) -1)
 	    idConfig.resize(callidIndex+1);
 	if (tag[6] == 'p') {
 	    idConfig[callidIndex].answerlength = 0;	// we must initialize this
 	    idConfig[callidIndex].display = false;	// we must initialize this
+	    idConfig[callidIndex].record = true;	// we must initialize this
 	    idConfig[callidIndex].label = "";		// we must initialize this
 	    idConfig[callidIndex].pattern = value;
 	    configTrace("CallID[%d].pattern = \"%s\"", callidIndex,
@@ -798,6 +800,11 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 			idConfig[callidIndex].display = getBoolean(value);
 			configTrace("CallID[%d].display = %s", callidIndex,
 			    idConfig[callidIndex].display ? "true" : "false");
+			break;
+		    case 'r':
+			idConfig[callidIndex].record = getBoolean(value);
+			configTrace("CallID[%d].record = %s", callidIndex,
+			    idConfig[callidIndex].record ? "true" : "false");
 			break;
 		    case 'l':
 			idConfig[callidIndex].label = value;

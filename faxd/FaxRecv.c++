@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 343 2006-10-20 23:50:52Z faxguy $ */
+/*	$Id: FaxRecv.c++ 346 2006-10-28 03:07:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -216,6 +216,7 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, f
 	    if (info.callid[i].length() && modem->doCallIDDisplay(i)) {
 		statusmsg.append(", ");
 		statusmsg.append(modem->getCallIDLabel(i));
+		statusmsg.append(":");
 		statusmsg.append(info.callid[i]);
 	    }
 	}
@@ -279,8 +280,14 @@ FaxServer::recvFaxPhaseD(TIFF* tif, FaxRecvInfo& info, u_int& ppm, fxStr& emsg)
 {
     fxStr id = info.sender;
     for (u_int i = 0; i < info.callid.size(); i++) {
-	id.append('\n');
-	id.append(info.callid[i]);
+	if (modem->doCallIDRecord(i)) {
+	    id.append('\n');
+	    if (modem->getCallIDLabel(i).length()) {
+		id.append(modem->getCallIDLabel(i));
+		id.append('\t');
+	    }
+	    id.append(info.callid[i]);
+	}
     }
     do {
 	if (++recvPages > maxRecvPages) {

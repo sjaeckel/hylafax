@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 241 2006-07-08 17:22:32Z faxguy $ */
+/*	$Id: RecvQueue.c++ 346 2006-10-28 03:07:41Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -174,6 +174,11 @@ HylaFAXServer::getRecvDocStatus(RecvInfo& ri)
 	u_int i = 0;
 	while (cp[0] == '\n') {
 	    cp++;
+	    if (strchr(cp, '\t') && (!strchr(cp, '\n') || strchr(cp, '\t') < strchr(cp, '\n'))) {
+		// skip over the label part
+		while (cp[0] != '\0' && cp[0] != '\t') cp++;
+		if (cp[0] == '\t') cp++;
+	    }
 	    ri.callid.resize(i+1);
 	    while (cp[0] != '\0' && cp[0] != '\n') {
 		ri.callid[i].append(cp[0]);

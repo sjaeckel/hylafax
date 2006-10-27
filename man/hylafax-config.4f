@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 343 2006-10-20 23:50:52Z faxguy $
+.\"	$Id: hylafax-config.4f 346 2006-10-28 03:07:41Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-20 16:50:52 -0700 (Fri, 20 Oct 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-27 20:07:41 -0700 (Fri, 27 Oct 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -126,6 +126,7 @@ CallIDAnswerLength	integer	\-	answer call when CallIDPattern received
 CallIDDisplay	boolean	\s-1No\s+1	display match in modem status
 CallIDLabel	string	\-	label to use in presentation of the match
 CallIDPattern	string	\-	call identification pattern string
+CallIDRecord	boolean	\s-1Yes\s+1	record match in recvq image file
 CIDName	string	\-	equivalent to CallIDPattern (2)
 CIDNameAnswerLength	integer	\s-10\s+1	equivalent to CallIDAnswerLength (2)
 CIDNumber	string	\-	equivalent to CallIDPattern (1)
@@ -677,7 +678,16 @@ match in the modem status line.
 .B CallIDLabel
 The label to use in the presentation of any
 .B CallIDPattern
-match.
+match.  (For example, when
+.B CallIDDisplay
+or
+.B CallIDRecord
+indicate to diplay or record the match.)
+.TP
+.B CallIDRecord
+Whether or not to record the
+.B CallIDPattern
+match in the received image file.
 .TP
 .B ClocalAsRoot
 Control whether operations that set the

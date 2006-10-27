@@ -1,5 +1,5 @@
 #!/bin/sh
-#    $Id: common-functions.sh.in 324 2006-10-12 18:04:23Z faxguy $
+#    $Id: common-functions.sh.in 346 2006-10-28 03:07:41Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -30,11 +30,12 @@ encode()
 }
 
 #
-# For getting all of the "faxinfo" items to line up.
+# For getting all of the "faxinfo" items to line up.  As the CallID tags
+# can be customized we must take unmodified faxinfo output into account.
 #
 setInfoSize()
 {
-    INFOSIZE=0
+    INFOSIZE=`$INFO -n $1 | $SED 's/:.*//g' | $SED q | wc -m`
     for ITEM in DICTSENDER DICTPAGES DICTQUALITY DICTSIZE DICTRECEIVED \
 		DICTTIMETORECV DICTSIGNALRATE DICTDATAFORMAT DICTERRCORRECT \
 		DICTCALLID1 DICTCALLID2 DICTCALLID3 DICTCALLID4 DICTCALLID \
@@ -63,26 +64,28 @@ setItemSize()
 
 faxInfo()
 {
-    $INFO -n $1 | $SED -e "s/^ *Sender:/`printf %$INFOSIZE\s "$DICTSENDER"`:/g" \
-		-e "s/^ *Pages:/`printf %$INFOSIZE\s "$DICTPAGES"`:/g" \
-		-e "s/^ *Quality:/`printf %$INFOSIZE\s "$DICTQUALITY"`:/g" \
-		-e "s/^ *Page:/`printf %$INFOSIZE\s "$DICTSIZE"`:/g" \
-		-e "s/^ *Received:/`printf %$INFOSIZE\s "$DICTRECEIVED"`:/g" \
-		-e "s/^ *TimeToRecv:/`printf %$INFOSIZE\s "$DICTTIMETORECV"`:/g" \
-		-e "s/^ *SignalRate:/`printf %$INFOSIZE\s "$DICTSIGNALRATE"`:/g" \
-		-e "s/^ *DataFormat:/`printf %$INFOSIZE\s "$DICTDATAFORMAT"`:/g" \
-		-e "s/^ *ErrCorrect:/`printf %$INFOSIZE\s "$DICTERRCORRECT"`:/g" \
-		-e "s/^ *CallID1:/`printf %$INFOSIZE\s "$DICTCALLID1"`:/g" \
-		-e "s/^ *CallID2:/`printf %$INFOSIZE\s "$DICTCALLID2"`:/g" \
-		-e "s/^ *CallID3:/`printf %$INFOSIZE\s "$DICTCALLID3"`:/g" \
-		-e "s/^ *CallID4:/`printf %$INFOSIZE\s "$DICTCALLID4"`:/g" \
-		-e "s/^ *CallID5:/`printf %$INFOSIZE\s "$DICTCALLID5"`:/g" \
-		-e "s/^ *CallID6:/`printf %$INFOSIZE\s "$DICTCALLID6"`:/g" \
-		-e "s/^ *CallID7:/`printf %$INFOSIZE\s "$DICTCALLID7"`:/g" \
-		-e "s/ Yes$/ $DICTYES/g" \
-		-e "s/ No$/ $DICTNO/g" \
-		-e "s/ Normal$/ $DICTNORMAL/g" \
-		-e "s/ Fine$/ $DICTFINE/g"
+    $INFO -n $1 | $SED -e "s/^ *Sender:/$DICTSENDER:/" \
+		-e "s/^ *Pages:/$DICTPAGES:/" \
+		-e "s/^ *Quality:/$DICTQUALITY:/" \
+		-e "s/^ *Page:/$DICTSIZE:/" \
+		-e "s/^ *Received:/$DICTRECEIVED:/" \
+		-e "s/^ *TimeToRecv:/$DICTTIMETORECV:/" \
+		-e "s/^ *SignalRate:/$DICTSIGNALRATE:/" \
+		-e "s/^ *DataFormat:/$DICTDATAFORMAT:/" \
+		-e "s/^ *ErrCorrect:/$DICTERRCORRECT:/" \
+		-e "s/^ *CallID1:/$DICTCALLID1:/" \
+		-e "s/^ *CallID2:/$DICTCALLID2:/" \
+		-e "s/^ *CallID3:/$DICTCALLID3:/" \
+		-e "s/^ *CallID4:/$DICTCALLID4:/" \
+		-e "s/^ *CallID5:/$DICTCALLID5:/" \
+		-e "s/^ *CallID6:/$DICTCALLID6:/" \
+		-e "s/^ *CallID7:/$DICTCALLID7:/" \
+		-e "s/ Yes$/ $DICTYES/" \
+		-e "s/ No$/ $DICTNO/" \
+		-e "s/ Normal$/ $DICTNORMAL/" \
+		-e "s/ Fine$/ $DICTFINE/" \
+		-e 's/:/|/' | \
+		$AWK -F\| -v s=$INFOSIZE 'BEGIN { size = s; } { printf "%"size"s:%s\n",$1,$2 }'
 }
 
 parseQfile()
