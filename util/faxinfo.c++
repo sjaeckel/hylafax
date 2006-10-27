@@ -1,4 +1,4 @@
-/*	$Id: faxinfo.c++ 231 2006-06-29 17:28:38Z faxguy $ */
+/*	$Id: faxinfo.c++ 346 2006-10-28 03:07:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -312,6 +312,7 @@ main(int argc, char** argv)
 #endif
 	fxStr sender = "";
 	CallID callid;
+	fxStrArray callidLabels;
 	if (TIFFGetField(tif, TIFFTAG_IMAGEDESCRIPTION, &cp)) {
 	    while (cp[0] != '\0' && cp[0] != '\n') {	// sender
 		sender.append(cp[0]);
@@ -322,6 +323,14 @@ main(int argc, char** argv)
 	    while (cp[0] == '\n') {
 		cp++;
 		callid.resize(i+1);
+		callidLabels.resize(i+1);
+		if (strchr(cp, '\t') && (!strchr(cp, '\n') || strchr(cp, '\t') < strchr(cp, '\n'))) {
+		    while (cp[0] != '\0' && cp[0] != '\t') {
+			callidLabels[i].append(cp[0]);
+			cp++;
+		    }
+		    if (cp[0] == '\t') cp++;
+		} else callidLabels[i] = fxStr::format("CallID%u", i+1);
 		while (cp[0] != '\0' && cp[0] != '\n') {
 		    callid[i].append(cp[0]);
 		    cp++;
@@ -401,8 +410,7 @@ main(int argc, char** argv)
 	printField("%s", "DataFormat", params.dataFormatName());
 	printField("%s", "ErrCorrect", params.ec == EC_DISABLE ? "No" : "Yes");
 	for (u_int i = 0; i < callid.size(); i++) {
-	    fxStr fmt(fxStr::format("CallID%u", i+1));
-	    printField("%s", (const char*)fmt, (const char*) callid.id(i));
+	    printField("%s", (const char*) callidLabels[i], (const char*) callid.id(i));
 	}
 	printEnd(name);
 	optind++;

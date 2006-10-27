@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: faxrcvd.sh.in 326 2006-10-12 18:58:37Z faxguy $
+#	$Id: faxrcvd.sh.in 346 2006-10-28 03:07:41Z faxguy $
 #
 # ============================================
 #
@@ -291,7 +291,7 @@ fi
 if [ -f etc/FaxDictionary ]; then
     . etc/FaxDictionary
 fi
-setInfoSize
+setInfoSize $FILE
 
 #
 # Don't send FaxMaster duplicates, and FaxMaster may not even

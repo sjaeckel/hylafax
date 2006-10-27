@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id: pollrcvd.sh.in 340 2006-10-20 02:04:46Z faxguy $
+#	$Id: pollrcvd.sh.in 346 2006-10-28 03:07:41Z faxguy $
 #
 # ============================================
 #
@@ -221,7 +221,7 @@ fi
 if [ -f etc/FaxDictionary ]; then
     . etc/FaxDictionary
 fi
-setInfoSize
+setInfoSize $FILE
 
 if [ "$TOADDR" != "$MAILADDR" ]; then # don't send FaxMaster duplicate
     pollrcvd_mail "$TOADDR" "no"
