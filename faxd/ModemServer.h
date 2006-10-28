@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.h 336 2006-10-19 23:35:27Z faxguy $ */
+/*	$Id: ModemServer.h 348 2006-10-28 19:26:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -165,7 +165,7 @@ protected:
     void	modemFlushInput();
     void	modemHangup();
 // server state and related control interfaces
-    void	changeState(ModemServerState, long timeout = 0);
+    void	changeState(ModemServerState, long timeout = 0, const char* msg = NULL);
     void	setServerStatus(const char* fmt, ...);
     void	setProcessPriority(ModemServerState s);
 // system logging interfaces

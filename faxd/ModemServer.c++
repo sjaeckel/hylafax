@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 336 2006-10-19 23:35:27Z faxguy $ */
+/*	$Id: ModemServer.c++ 348 2006-10-28 19:26:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -201,7 +201,7 @@ const char* ModemServer::stateStatus[9] = {
  * start a timer running for timeout seconds.
  */
 void
-ModemServer::changeState(ModemServerState s, long timeout)
+ModemServer::changeState(ModemServerState s, long timeout, const char* msg)
 {
     if (s != state) {
 	if (timeout)
@@ -218,11 +218,11 @@ ModemServer::changeState(ModemServerState s, long timeout)
 	    setInputBuffering(state != RUNNING && state != SENDING &&
 		state != ANSWERING && state != RECEIVING && state != LISTENING);
 	if (state == RUNNING) {
-	    fxStr statusmsg = fxStr(stateStatus[state]);
+	    fxStr statusmsg = msg ? fxStr(msg) : fxStr(stateStatus[state]);
 	    if (readyStateMsg) statusmsg.append(readyStateMsg);
 	    setServerStatus(statusmsg);
 	} else {
-	    setServerStatus(stateStatus[state]);
+	    setServerStatus(msg ? msg : stateStatus[state]);
 	}
 	switch (state) {
 	case RUNNING:

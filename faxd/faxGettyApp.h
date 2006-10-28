@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.h 114 2006-03-15 16:49:41Z faxguy $ */
+/*	$Id: faxGettyApp.h 348 2006-10-28 19:26:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -106,7 +106,7 @@ private:
     bool	setupModem(bool isSend);
     void	discardModem(bool dropDTR);
 // inbound call handling
-    bool	processCall(CallType ctype, fxStr& emsg, const CallID& callid);
+    bool	processCall(CallType ctype, fxStr& emsg, CallID& callid);
     CallType	runGetty(const char* what,
 		    Getty* (*newgetty)(const fxStr&, const fxStr&),
 		    const char* args, fxStr &emsg,
@@ -116,9 +116,9 @@ private:
     void	listenBegin();
     void	listenForRing();
     void	answerPhoneCmd(AnswerType, const char* dialnumber = NULL);
-    void	answerPhone(AnswerType, CallType, const CallID& callid, const char* dialnumber = NULL);
+    void	answerPhone(AnswerType, CallType, CallID& callid, const char* dialnumber = NULL);
     void	answerCleanup();
-    bool	answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, const CallID& callid, const char* dialnumber = NULL);
+    bool	answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, CallID& callid, const char* dialnumber = NULL);
 
     friend void AnswerTimeoutHandler::timerExpired(long, long);
 // miscellaneous stuff
