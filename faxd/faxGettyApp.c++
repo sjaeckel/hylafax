@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 344 2006-10-25 19:55:51Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 348 2006-10-28 19:26:48Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -298,9 +298,19 @@ faxGettyApp::answerPhoneCmd(AnswerType atype, const char* dialnumber)
  * user (sending an "ANSWER" command through the FIFO).
  */
 void
-faxGettyApp::answerPhone(AnswerType atype, CallType ctype, const CallID& callid, const char* dialnumber)
+faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const char* dialnumber)
 {
-    changeState(ANSWERING);
+    FaxModem* modem = (FaxModem*) ModemServer::getModem();
+    fxStr statusmsg = "Answering the phone";
+    for (u_int i = 0; i < callid.size(); i++) {
+	if (callid[i].length() && modem->doCallIDDisplay(i)) {
+	    statusmsg.append(", ");
+	    statusmsg.append(modem->getCallIDLabel(i));
+	    statusmsg.append(":");
+	    statusmsg.append(callid[i]);
+	}
+    }
+    changeState(ANSWERING, 0, (const char*) statusmsg);
     beginSession(FAXNumber);
     sendModemStatus("I" | getCommID());
 
@@ -516,7 +526,7 @@ faxGettyApp::answerCleanup()
  * the modem layer arrives at as the call type.
  */
 bool
-faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, const CallID& callid, const char* dialnumber)
+faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, CallID& callid, const char* dialnumber)
 {
     bool callResolved;
     if (atype == ClassModem::ANSTYPE_EXTERN) {
@@ -556,7 +566,7 @@ faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, const Ca
  * to recondition the modem for incoming calls (if configured).
  */
 bool
-faxGettyApp::processCall(CallType ctype, fxStr& emsg, const CallID& callid)
+faxGettyApp::processCall(CallType ctype, fxStr& emsg, CallID& callid)
 {
     bool callHandled = false;
 
@@ -570,13 +580,24 @@ faxGettyApp::processCall(CallType ctype, fxStr& emsg, const CallID& callid)
     }
     switch (ctype) {
     case ClassModem::CALLTYPE_FAX:
-	traceServer("ANSWER: FAX CONNECTION  DEVICE '%s'"
-	    , (const char*) getModemDevice()
-	);
-	changeState(RECEIVING);
-	sendRecvStatus(getModemDeviceID(), "B");
-	callHandled = recvFax(callid, emsg);
-	sendRecvStatus(getModemDeviceID(), "E");
+	{
+	    traceServer("ANSWER: FAX CONNECTION  DEVICE '%s'"
+		, (const char*) getModemDevice());
+	    FaxModem* modem = (FaxModem*) ModemServer::getModem();
+	    fxStr statusmsg = "Receiving facsimile";
+	    for (u_int i = 0; i < callid.size(); i++) {
+		if (callid[i].length() && modem->doCallIDDisplay(i)) {
+		    statusmsg.append(", ");
+		    statusmsg.append(modem->getCallIDLabel(i));
+		    statusmsg.append(":");
+		    statusmsg.append(callid[i]);
+		}
+	    }
+	    changeState(RECEIVING, 0, (const char*) statusmsg);
+	    sendRecvStatus(getModemDeviceID(), "B");
+	    callHandled = recvFax(callid, emsg);
+	    sendRecvStatus(getModemDeviceID(), "E");
+	}
 	break;
     case ClassModem::CALLTYPE_DATA:
 	traceServer("ANSWER: DATA CONNECTION");
