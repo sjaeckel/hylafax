@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 295 2006-09-08 17:12:27Z faxguy $ */
+/*	$Id: Class1Send.c++ 347 2006-10-28 18:45:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1277,7 +1277,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 			    stopTimeout("sending RR frame");
 			    traceFCF("SEND send", FCF_RR);
 			    // T.30 states that we must wait no more than T4 between unanswered RR signals.
-			    if (gotmsg = recvFrame(pprframe, FCF_SNDR, conf.t4Timer)) {
+			    if (gotmsg = recvFrame(pprframe, FCF_SNDR, conf.t4Timer, false, false)) {	// no CRP, stick to RR only
 				traceFCF("SEND recv", pprframe.getFCF());
 				if (pprframe.getFCF() == FCF_CRP) {
 				    gotmsg = false;
@@ -1288,7 +1288,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 				    }
 				}
 			    }
-			} while (!gotmsg && (++rrcnt < 3) && (crpcnt < 3));
+			} while (!gotmsg && (++rrcnt < 3) && (crpcnt < 3) && switchingPause(emsg));
 			if (!gotmsg) {
 			    emsg = "No response to RR repeated 3 times.";
 			    protoTrace(emsg);
@@ -1495,7 +1495,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 					    stopTimeout("sending RR frame");
 					    traceFCF("SEND send", FCF_RR);
 					    // T.30 states that we must wait no more than T4 between unanswered RR signals.
-					    if (gotmsg = recvFrame(errframe, FCF_SNDR, conf.t4Timer)) {
+					    if (gotmsg = recvFrame(errframe, FCF_SNDR, conf.t4Timer, false, false)) {	// no CRP, stick to RR only
 						traceFCF("SEND recv", errframe.getFCF());
 						if (errframe.getFCF() == FCF_CRP) {
 						    gotmsg = false;
@@ -1506,7 +1506,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 						    }
 						}
 					    }
-					} while (!gotmsg && (++rrcnt < 3) && (crpcnt < 3));
+					} while (!gotmsg && (++rrcnt < 3) && (crpcnt < 3) && switchingPause(emsg));
 					if (!gotmsg) {
 					    emsg = "No response to RR repeated 3 times.";
 					    protoTrace(emsg);
