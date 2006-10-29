@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 346 2006-10-28 03:07:41Z faxguy $
+.\"	$Id: hylafax-config.4f 349 2006-10-29 21:47:08Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-27 20:07:41 -0700 (Fri, 27 Oct 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-29 13:47:08 -0800 (Sun, 29 Oct 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -265,6 +265,7 @@ ModemResultCodesCmd	string	\s-1ATQ0\s+1	command for enabling result codes
 ModemRevQueryCmd	string	\s-1\fIsee below\fP\s+1	command for querying modem firmware revision
 ModemSendBeginCmd	string	\-	command to send on establishing carrier
 ModemSendFillOrder	string	\s-1LSB2MSB\s+1	bit order for sending facsimile data
+ModemSetOriginCmd	string	\-	command to set call origin information
 ModemSetVolumeCmd	string	\s-1\fIsee below\fP\s+1	commands for setting modem speaker volume level
 ModemSetupAACmd	string	\-	command for setting up adaptive answer
 ModemSetupDCDCmd	string	\-	command for setting up \s-1DCD\s+1 handling
@@ -2193,6 +2194,13 @@ above.)
 Virtually all modems expect transmitted facsimile data in
 .SM LSB2MSB
 bit order.
+.TP
+.B ModemSetOriginCmd
+The command to use to set the call origin information before placing
+a call.  The command may include a single ``%d'' where the job request
+``faxnumber'' string is to be substituted.  The command may also include
+a single ``%s'' where the job request ``faxname'' string is to be
+subsituted.
 .TP
 .B ModemSetVolumeCmd
 The commands to use to set the modem speaker volume levels.
