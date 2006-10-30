@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 315 2006-09-30 15:56:55Z faxguy $ */
+/*	$Id: Class1Recv.c++ 351 2006-10-30 22:38:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1444,7 +1444,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    }
 					    transmitFrame(FCF_PPR, fxStr(ppr, 32));
 					    traceFCF("RECV send", FCF_PPR);
-					    gotrtnframe = recvFrame(rtnframe, FCF_RCVR, conf.t2Timer);
+					    if (gotrtnframe = recvFrame(rtnframe, FCF_RCVR, conf.t2Timer))
+						traceFCF("RECV recv", rtnframe.getFCF());
 					    recvFrameCount++;
 					}
 					u_int dcs;			// possible bits 1-16 of DCS in FIF
