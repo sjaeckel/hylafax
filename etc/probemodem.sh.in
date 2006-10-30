@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: probemodem.sh.in 188 2006-06-02 18:57:58Z faxguy $
+#	$Id: probemodem.sh.in 350 2006-10-30 18:24:59Z faxguy $
 #
 # @WARNING@
 #
@@ -227,7 +227,7 @@ SendToModem()
     # NB: [*&\\\\$] must have the "$" last for AIX (yech)
     pat=`echo "$i"|$SED -e 's/[*&\\\\$]/\\\\&/g'` # escape regex metacharacters
     RESPONSE=`tr -ds '\015' '\012' < $OUT | \
-	$SED -n "/$pat/{n;s/ *$//;p;q;}" | $SED 's/+F.*=//'`
+	$SED -n "/$pat/{n;s/ *$//;p;q;}"`
 }
 
 echo ""
