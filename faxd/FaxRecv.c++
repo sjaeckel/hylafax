@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 346 2006-10-28 03:07:41Z faxguy $ */
+/*	$Id: FaxRecv.c++ 352 2006-10-31 04:34:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -357,7 +357,7 @@ FaxServer::notifyPageRecvd(TIFF*, FaxRecvInfo& ri, int)
 void
 FaxServer::notifyDocumentRecvd(FaxRecvInfo& ri)
 {
-    traceServer("RECV FAX (%s): %s from %s, route to %s, %u pages in %s"
+    traceServer("RECV FAX (%s): %s from %s, subaddress %s, %u pages in %s"
 	, (const char*) ri.commid
 	, (const char*) ri.qfile
 	, (const char*) ri.sender
