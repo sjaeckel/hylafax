@@ -1,7 +1,9 @@
-#	$Id: CHANGES 347 2006-10-28 18:45:15Z faxguy $	
+#	$Id: CHANGES 351 2006-10-30 22:38:36Z faxguy $	
 
 New Changes
 
+* add logging for instances where a sender transmits PPS again
+  after our fourth PPR signal (30 Oct 2006)
 * improve sender-side RNR/RR flow control interaction (28 Oct 2006)
 * add CallIDRecord to prevent CallID from being stored in the
   image file (27 Oct 2006)
