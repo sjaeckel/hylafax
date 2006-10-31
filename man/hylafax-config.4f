@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 349 2006-10-29 21:47:08Z faxguy $
+.\"	$Id: hylafax-config.4f 353 2006-10-31 22:00:28Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-29 13:47:08 -0800 (Sun, 29 Oct 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-31 14:00:28 -0800 (Tue, 31 Oct 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -1933,6 +1933,8 @@ as a parameter to the
 function; so the ``%'' character should be escaped as ``%%''.
 The dial command must include a single ``%s'' where the number
 that is to be dialed is to be substituted.
+The command may include a single ``%d'' where the origin number
+is to be substituted.
 Facilities such as tone or pulse dialing, outgoing prefixes
 to route though a \s-1PBX\s+1,
 and so on should be included in the

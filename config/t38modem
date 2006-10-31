@@ -1,4 +1,4 @@
-# $Id: t38modem 2 2005-11-11 21:32:03Z faxguy $
+# $Id: t38modem 353 2006-10-31 22:00:28Z faxguy $
 #
 # HylaFAX configuration for a T38FAX Pseudo Modem
 #
@@ -44,12 +44,11 @@ ModemRevQueryCmd:	AT+FREV?
 #
 # calling/called number dial modifiers
 #
-# L - reset and begin of calling number
+# L - reset and begin of calling number (ModemDialCmd %d option)
 # D - continue of called number
 #
 #ModemDialCmd:		ATDF%s		# user can override F by dial V
 #ModemDialCmd:		ATDV%s		# user can override V by dial F
 #ModemDialCmd:		ATD%sF		# user can't override F
 #ModemDialCmd:		ATD%sV		# user can't override V
-#ModemDialCmd:		ATD%sVL		# user can't override V or calling number
-
+#ModemDialCmd:		ATD%sVL%d	# user can't override V or calling number

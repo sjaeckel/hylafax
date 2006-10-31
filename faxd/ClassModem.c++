@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 346 2006-10-28 03:07:41Z faxguy $ */
+/*	$Id: ClassModem.c++ 353 2006-10-31 22:00:28Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -127,13 +127,35 @@ ClassModem::dataService()
 }
 
 CallStatus
-ClassModem::dial(const char* number, fxStr& emsg)
+ClassModem::dial(const char* number, const char* origin, fxStr& emsg)
 {
     dialedNumber = fxStr(number);
     protoTrace("DIAL %s", number);
-    fxStr buf = fxStr::format((const char*) conf.dialCmd, number);
+    fxStr dialcmd = conf.dialCmd;
+    u_int destpos = dialcmd.find(0, "%s");
+    u_int origpos = dialcmd.find(0, "%d");
+    if (destpos == dialcmd.length() && origpos == dialcmd.length()) {
+	// neither %d nor %s appear in the cmd, use dialcmd as-is
+    } else if (origpos == dialcmd.length()) {
+	// just %s appears in the cmd
+	dialcmd = fxStr::format((const char*) dialcmd, number);
+    } else if (destpos == dialcmd.length()) {
+	// just %d appears in the cmd
+	dialcmd[origpos+1] = 's';  // change %d to %s
+	dialcmd = fxStr::format((const char*) dialcmd, origin);
+    } else {
+	// both %d and %s appear in the cmd
+	dialcmd[origpos+1] = 's';  // change %d to %s
+	if (origpos < destpos) {
+	    // %d appears before %s
+	    dialcmd = fxStr::format((const char*) dialcmd, origin, number);
+	} else {
+	    // %s appears before %d
+	    dialcmd = fxStr::format((const char*) dialcmd, number, origin);
+	}
+    }
     emsg = "";
-    CallStatus cs = (atCmd(buf, AT_NOTHING) ? dialResponse(emsg) : FAILURE);
+    CallStatus cs = (atCmd(dialcmd, AT_NOTHING) ? dialResponse(emsg) : FAILURE);
     if (cs != OK && emsg == "") {
         emsg = callStatus[cs];
     }
@@ -274,7 +296,7 @@ ClassModem::answerCall(AnswerType atype, fxStr& emsg, const char* number)
     case ANSTYPE_VOICE:	answerCmd = conf.answerVoiceCmd; break;
     case ANSTYPE_DIAL:
 			answerCmd = conf.answerDialCmd;
-			dial(number, emsg);	// no error-checking
+			dial(number, NULL, emsg);	// no error-checking
 			break;
     }
     if (answerCmd == "")

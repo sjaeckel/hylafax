@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 250 2006-07-18 18:52:55Z faxguy $ */
+/*	$Id: FaxModem.h 353 2006-10-31 22:00:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -222,7 +222,7 @@ public:
     /*
      * Fax send protocol.  The expected sequence is:
      *
-     * if (faxService() && sendSetup(req, params, emsg) && dial(number, emsg) == OK) {
+     * if (faxService() && sendSetup(req, params, emsg) && dial(number, origin, emsg) == OK) {
      *	  sendBegin();
      *	  if (getPrologue() == send_ok and parameters acceptable) {
      *	     select send parameters

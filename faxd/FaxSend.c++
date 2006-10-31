@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 208 2006-06-17 18:31:34Z faxguy $ */
+/*	$Id: FaxSend.c++ 353 2006-10-31 22:00:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -200,7 +200,7 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
     notifyCallPlaced(fax);
     CallStatus callstat;
     if (batched & BATCH_FIRST)
-	callstat = modem->dial(number, notice);
+	callstat = modem->dial(number, fax.faxnumber, notice);
     else
 	callstat = ClassModem::OK;
     if (callstat == ClassModem::OK)

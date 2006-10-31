@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 346 2006-10-28 03:07:41Z faxguy $ */
+/*	$Id: ClassModem.h 353 2006-10-31 22:00:28Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -303,13 +303,13 @@ public:
     /*
      * Send support:
      *
-     * if (dial(number, params, emsg) == OK) {
+     * if (dial(number, origin, emsg) == OK) {
      *	  ...do stuff...
      * }
      * hangup();
      */
     virtual bool dataService();
-    virtual CallStatus dial(const char* number, fxStr& emsg);
+    virtual CallStatus dial(const char* number, const char* origin, fxStr& emsg);
 
     /*
      * Receive support:
