@@ -1,4 +1,4 @@
-/*	$Id: Class0.c++ 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: Class0.c++ 353 2006-10-31 22:00:28Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -89,9 +89,9 @@ Class0Modem::setupFlowControl(FlowControl fc)
 }
 
 CallStatus
-Class0Modem::dial(const char* number, fxStr& emsg)
+Class0Modem::dial(const char* number, const char* origin, fxStr& emsg)
 {
-    return (ClassModem::dial(number, emsg));
+    return (ClassModem::dial(number, origin, emsg));
 }
 
 /*

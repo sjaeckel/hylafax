@@ -1,4 +1,4 @@
-/*	$Id: Class0.h 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: Class0.h 353 2006-10-31 22:00:28Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -37,7 +37,7 @@ public:
 
     bool setupModem(bool isSend = true);
     virtual bool setupFlowControl(FlowControl fc);
-    CallStatus	dial(const char* number, fxStr& emsg);
+    CallStatus	dial(const char* number, const char* origin, fxStr& emsg);
     CallStatus dialResponse(fxStr& emsg);
 
     bool isFaxModem() const;			// XXX safe to cast

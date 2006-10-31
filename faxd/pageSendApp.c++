@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.c++ 344 2006-10-25 19:55:51Z faxguy $ */
+/*	$Id: pageSendApp.c++ 353 2006-10-31 22:00:28Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -342,7 +342,7 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number
     CallStatus callstat;
 
     if (batched & BATCH_FIRST)
-        callstat = getModem()->dial(number, notice);
+        callstat = getModem()->dial(number, req.faxnumber, notice);
     else
         callstat = ClassModem::OK;
     if (callstat == ClassModem::OK)
