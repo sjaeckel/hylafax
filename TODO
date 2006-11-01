@@ -1,4 +1,4 @@
-#	$Id: TODO 354 2006-11-01 19:31:01Z faxguy $
+#	$Id: TODO 356 2006-11-01 20:16:41Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -9,6 +9,7 @@ abort more quickly when client SUSP or DELE
 speed up probemodem and faxaddmodem modem queries
 teach hfaxd to use /etc/hosts.allow
 encrypted communications would be nice, at least an MD5'ed password or something
+Unfortunately, FaxModem::recvResetPage(TIFF) doesn't really work (anymore?).
 
 If HylaFAX doesn't standardize internally on a particular bit orientation we will see problems on MSB2LSB systems 
 in cutExtraEOFB as well as in the lastbyte zerobit counting because we'd come at the data from the wrong 
