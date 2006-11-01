@@ -1,9 +1,9 @@
-#	$Id: CHANGES 353 2006-10-31 22:00:28Z faxguy $	
+#	$Id: CHANGES 354 2006-11-01 19:31:01Z faxguy $	
 
 New Changes
 
-* add %d option for ModemDialCmd (allows t38modem to set
-  the origin number (31 Oct 2006)
+* add %d option for ModemDialCmd, allows t38modem to set the 
+  origin number (31 Oct 2006)
 * add logging for instances where a sender transmits PPS again
   after our fourth PPR signal (30 Oct 2006)
 * improve sender-side RNR/RR flow control interaction (28 Oct 2006)
