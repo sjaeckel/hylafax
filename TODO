@@ -1,4 +1,4 @@
-#	$Id: TODO 358 2006-11-03 05:47:15Z faxguy $
+#	$Id: TODO 359 2006-11-03 05:49:38Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -157,11 +157,6 @@ L      report#: 0016
                 in parrent proc
           refs: -
           file: -
----------------
-O      report#: 0017
-       problem: possible bug in FaxQueuer dealing with jobs
-          refs: 29/09/1997 greg@pocketscience.com
-          file: problemReports/0017
 ---------------
 B      report#: 0018
        problem: 3 bugs in hfaxd/faxq dealing with the job file
