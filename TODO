@@ -1,4 +1,4 @@
-#	$Id: TODO 359 2006-11-03 05:49:38Z faxguy $
+#	$Id: TODO 360 2006-11-03 06:11:01Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -109,32 +109,10 @@ B      report#: 0003
                 03/02/1997 sam@sgi.com
           file: problemReports/0003
 ---------------
-BH     report#: 0004
-       problem: Bug in faxqclean
-                the TIFF version of the document has a ";31" or ";71"
-                or some such appended to it, NOT the "q file" number.
-                The faxqclean program looks at these files,
-                thinks the "q file" number is 0, and removes the
-                file since the "q file" does not exist.
-          refs: 20/02/1997 john@BlueSkyTours.COM
-          file: problemReports/0004
----------------
-B      report#: 0005
-       problem: hp-ux 10.20 has no ut_xtime
-                GettySysV.c++:215: `struct utmpx' has no member
-                named `ut_xtime' in /usr/include/utmpx.h
-          refs: 12/05/1997 meyer-jark@anaesthesie.klinik.uni-mainz.de
-          file: problemReports/0005
----------------
 B      report#: 0007
        problem: spaces in typerules file not allowed, only TABs
           refs: 26/08/1997 stenny@troja.stuttgart.netsurf.de
           file: problemReports/0007
----------------
-B      report#: 0010
-       problem: compiling HylafAX on HP-UX 10.x
-          refs: 01/05/1997 meyer-jark@anaesthesie.klinik.uni-mainz.de
-          file: problemReports/0010
 ---------------
 L      report#: 0011
        problem: gettimeofday(a,b) for older SVR4
@@ -182,23 +160,5 @@ L      report#: 0022
        problem: LineWrap: at word boundaries
           refs: 19/11/1997 patrick@cre8tivegroup.com
           file: problemReports/0022
----------------
-OH     report#: 0023
-       problem: documents in the docq directory being over writen
-          refs: 25/11/1997 jared@4websites.com
-          file: problemReports/0023
----------------
-B      report#: 0026
-       problem: wrong sendmail rules for faxmail
-          refs: 07/02/1998 david@djwhome.demon.co.uk
-          file: problemReports/0026
 
 --
-
-B = outright bug
-O = observe (seen at least once but cannot reproduce)
-C = change request
-H = high priority
-M = medium priority
-L = low priority
-X = resolved
