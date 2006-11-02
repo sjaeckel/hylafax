@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 351 2006-10-30 22:38:36Z faxguy $ */
+/*	$Id: Class1Recv.c++ 357 2006-11-02 19:33:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -585,7 +585,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			 */
 			time_t nocarrierstart = Sys::now();
 			do {
-			    messageReceived = waitFor(AT_NOCARRIER, 2*1000);
+			    messageReceived = waitFor(AT_NOCARRIER, 5*1000);
 			} while (!messageReceived && Sys::now() < (nocarrierstart + 5));
 			if (messageReceived)
 			    prevPage++;
