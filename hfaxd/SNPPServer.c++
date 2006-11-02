@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: SNPPServer.c++ 359 2006-11-03 05:49:38Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1130,6 +1130,7 @@ SNPPServer::pagerCmd(const char* pagerID, const char* pin)
 	    , (const char*) curJob->jobid
 	);
 	msgs.append(curJob->jobid);
+	updateJobOnDisk(*curJob, emsg);
     } else
 	reply(554, "%s.", (const char*) emsg);
     initSNPPJob();				// reset job-related state
