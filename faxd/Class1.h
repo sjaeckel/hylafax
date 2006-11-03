@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 314 2006-09-30 02:19:11Z faxguy $ */
+/*	$Id: Class1.h 361 2006-11-04 00:38:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -78,6 +78,7 @@ protected:
     bool	messageReceived;	// expect/don't expect message carrier
     bool	repeatPhaseB;		// return to beginning of Phase B before next page
     bool	silenceHeard;		// indicates whether the last command was +FRS
+    time_t	lastMCF;		// indicates the time of the last MCF signal
     u_int	lastPPM;		// last PPM during receive
     bool	sendCFR;		// received TCF was not confirmed
     u_short	ecmBitPos;		// bit position to populate on ecmByte
