@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 361 2006-11-04 00:38:58Z faxguy $ */
+/*	$Id: Class1Recv.c++ 362 2006-11-04 02:19:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -886,7 +886,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			return (false);
 		    }
 		    signalRcvd = 0;
-		    if (params.ec == EC_DISABLE && !getRecvEOLCount() && (Sys::now() - lastMCF < conf.t4Timer)) {
+		    if (params.ec == EC_DISABLE && !getRecvEOLCount() && (Sys::now() - lastMCF < 4)) {
 			/*
 			 * We last transmitted MCF a very, very short time ago, received no image data
 			 * since then, and now we're seeing a PPM again.  In non-ECM mode the chances of 
