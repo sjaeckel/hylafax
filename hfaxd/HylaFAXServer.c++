@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 192 2006-06-06 05:01:05Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 363 2006-11-06 00:48:10Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -592,7 +592,7 @@ HylaFAXServer::stringtag HylaFAXServer::strings[] = {
 { "faxcontact",		&HylaFAXServer::faxContact,	"FaxMaster" },
 { "useraccessfile",	&HylaFAXServer::userAccessFile,	"/" FAX_PERMFILE },
 { "shutdownfile",	&HylaFAXServer::shutdownFile,	"/etc/shutdown" },
-{ "xferfaxlogfile",	&HylaFAXServer::xferfaxLogFile,	"/etc/clientlog" },
+{ "xferlogfile",	&HylaFAXServer::xferfaxLogFile,	"/etc/clientlog" },
 { "jobfmt",		&HylaFAXServer::jobFormat,
   "%-4j %3i %1a %6.6o %-12.12e %5P %5D %7z %.25s" },
 { "rcvfmt",		&HylaFAXServer::recvFormat,
