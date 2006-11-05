@@ -1,4 +1,4 @@
-# $Id: lucent 193 2006-06-06 20:45:14Z faxguy $
+# $Id: lucent 364 2006-11-06 00:54:19Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -45,6 +45,7 @@
 # CONFIG:CLASS1:Zoom V.90 USB*:.*:.*: Manufacturer=Zoom Model=2980
 # CONFIG:CLASS1:EFM560 VER*:.*:.*: Manufacturer=AboCom Model=EFM560
 # CONFIG:CLASS1:Mainpine Venus V.92*:.*:.*: Manufacturer=Mainpine Model=RockForce
+# CONFIG:CLASS1:Agere OCM V.92*:.*:.*: Manufacturer=Agere Model=OCM
 #
 # BEGIN-SERVER
 # END-SERVER
