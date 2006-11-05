@@ -1,7 +1,8 @@
-#	$Id: CHANGES 363 2006-11-06 00:48:10Z faxguy $	
+#	$Id: CHANGES 364 2006-11-06 00:54:19Z faxguy $	
 
 New Changes
 
+* add default config support for "Agere OCM V.92" modems (5 Nov 2006)
 * fix hfaxd XferFaxLog option name to agree with documentation (5 Nov 2006)
 * add more intelligence to the Class 1 receiver in sending RTN (3 Nov 2006)
 
