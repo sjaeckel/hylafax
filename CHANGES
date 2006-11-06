@@ -1,7 +1,9 @@
-#	$Id: CHANGES 364 2006-11-06 00:54:19Z faxguy $	
+#	$Id: CHANGES 365 2006-11-07 00:51:20Z faxguy $	
 
 New Changes
 
+* improve ECM HDLC frame decoder to recover more quickly from data
+  corruption and possibly find frames where it couldn't before (6 Nov 2006)
 * add default config support for "Agere OCM V.92" modems (5 Nov 2006)
 * fix hfaxd XferFaxLog option name to agree with documentation (5 Nov 2006)
 * add more intelligence to the Class 1 receiver in sending RTN (3 Nov 2006)

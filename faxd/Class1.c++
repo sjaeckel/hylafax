@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 314 2006-09-30 02:19:11Z faxguy $ */
+/*	$Id: Class1.c++ 365 2006-11-07 00:51:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1044,13 +1044,6 @@ Class1Modem::recvECMFrame(HDLCFrame& frame)
 		frame.put(byte);
 		bitpos = 8;
 		byte = 0;
-		/*
-		 * Ensure that a corrupt frame doesn't overflow the frame buffer.
-		 */
-		if (frame.getLength() > ((frameSize+6)*4)) {	//  4 times valid size
-		    protoTrace("HDLC frame length invalid.");
-		    return (false);
-		}
 	    }
 	}
 	if (bit == 0) ones = 0;
@@ -1066,20 +1059,13 @@ Class1Modem::recvECMFrame(HDLCFrame& frame)
 	    frame.put(0xff); frame.put(0xc0); frame.put(0x61); frame.put(0x96); frame.put(0xd3);
 	    rcpframe = true;
 	}
-    } while (ones != 6 && bit != EOF && !rcpframe);
-    bit = getModemBit(60000);			// trailing bit on flag
-    if (!rcpframe) {
-	if (frame.getLength() > 0)
-	    traceHDLCFrame("-->", frame, true);
-	if (bit) {				// should have been zero
-	    protoTrace("Bad HDLC terminating flag received.");
-	    return (false);
-	}
-	if (byte != 0x7e) {			// trailing byte should be flag
-	    protoTrace("HDLC frame not byte-oriented.  Trailing byte: %#x", byte);
-	    return (false);
-	}
-    }
+    } while (ones != 6 && bit != EOF && !rcpframe && frame.getLength() < frameSize+6);
+    if (ones == 6) bit = getModemBit(60000);			// trailing bit on flag
+    if (!rcpframe && frame.getLength() < frameSize+6) {
+	protoTrace("HDLC frame size mismatch: got %d, expected %d.", frame.getLength(), frameSize+6);
+	return (false);
+    } else
+	traceHDLCFrame("-->", frame, true);
     if (bit == EOF) {
 	protoTrace("EOF received.");
 	return (false);
