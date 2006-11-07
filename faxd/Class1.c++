@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 365 2006-11-07 00:51:20Z faxguy $ */
+/*	$Id: Class1.c++ 366 2006-11-07 16:58:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1062,10 +1062,29 @@ Class1Modem::recvECMFrame(HDLCFrame& frame)
     } while (ones != 6 && bit != EOF && !rcpframe && frame.getLength() < frameSize+6);
     if (ones == 6) bit = getModemBit(60000);			// trailing bit on flag
     if (!rcpframe && frame.getLength() < frameSize+6) {
-	protoTrace("HDLC frame size mismatch: got %d, expected %d.", frame.getLength(), frameSize+6);
-	return (false);
-    } else
-	traceHDLCFrame("-->", frame, true);
+	/*
+	 * The HDLC frame was terminated early by a flag.  T.30 A.3.5 states that
+	 * frame size cannot change during one page, and T.4 A.3.6.2 seems to provide
+	 * for padding in order to get that last frame on a block to always line up
+	 * on a byte and frame boundary.  However, the NOTE 2 there seemse to give
+	 * leniency to that requirement, and in fact many senders will send short
+	 * frames on the last frame of a block.  So we run a couple of additional
+	 * checks here (in addition to FCS checking) to limit the remote chance
+	 * of FCS actually checking out on corrupt data (although that may be very
+	 * remote indeed).  We don't do these "trailing flag" tests on normal-sized
+	 * frames because we deliberately don't look for a trailing flag when we
+	 * get enough data.
+	 */
+	if (bit) {				// should have been zero
+	    protoTrace("Bad HDLC terminating flag received.");
+	    return (false);
+	}
+	if (byte != 0x7e) {			// trailing byte should be flag
+	    protoTrace("HDLC frame not byte-oriented.  Trailing byte: %#x", byte);
+	    return (false);
+	}
+    }
+    traceHDLCFrame("-->", frame, true);
     if (bit == EOF) {
 	protoTrace("EOF received.");
 	return (false);
