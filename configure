@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 341 2006-10-20 17:52:10Z faxguy $
+#	$Id: configure 367 2006-11-09 22:22:54Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -385,7 +385,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 341 $"
+	echo "This is HylaFAX configure $Revision: 367 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -1513,6 +1513,7 @@ CheckForLibrary()
     f=$1; shift
     libs="$@";
     cat>t.c<<EOF
+extern int $f();
 int t() { $f(); return 0; }
 int main(){ t(); return 0; }
 EOF
