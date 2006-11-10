@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 353 2006-10-31 22:00:28Z faxguy $
+.\"	$Id: hylafax-config.4f 368 2006-11-10 19:06:06Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-10-31 14:00:28 -0800 (Tue, 31 Oct 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-11-10 11:06:06 -0800 (Fri, 10 Nov 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -2233,7 +2233,7 @@ handling.
 On most systems the facsimile server will enable
 the \s-1CLOCAL\s+1 flag on the tty device to which
 the modem is connected.
-This should insure that the system does not close an open
+This should ensure that the system does not close an open
 file descriptor associated with the modem if carrier is dropped.
 Thus, for most systems and modems 
 .B ModemSetupDCDCmd
@@ -2247,7 +2247,7 @@ The command to setup
 handling so that the modem is reset when the
 .SM DTR
 signal is lowered by the host.
-The facsimile server uses this facility to insure that modems
+The facsimile server uses this facility to ensure that modems
 are not left in a ``locked up'' state.
 .TP
 .B ModemSoftFlowCmd
