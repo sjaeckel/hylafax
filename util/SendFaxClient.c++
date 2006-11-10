@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++ 31 2005-12-21 01:17:11Z faxguy $ */
+/*	$Id: SendFaxClient.c++ 369 2006-11-10 23:26:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -797,7 +797,8 @@ SendFaxClient::estimatePostScriptPages(const char* filename)
                     endbuf = cp+len;    // Will only change on the last pass.
 	            cp = line;
 	            while ((cp = (char *) memchr((const char*) cp, '/', endbuf-cp-slen))) {
-	                if (((memcmp(cp, "/Type /Page", slen-1) == 0) || (memcmp(cp, "/Type/Page", slen-2) == 0)) && (*(cp+slen-1) != 's'))
+	                if ((memcmp(cp, "/Type /Page", slen-1) == 0 && *(cp+slen-1) != 's') || 
+			    (memcmp(cp, "/Type/Page",  slen-2) == 0 && *(cp+slen-2) != 's'))
 	                    npages++;
 			cp++;
 	            }

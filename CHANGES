@@ -1,7 +1,8 @@
-#	$Id: CHANGES 365 2006-11-07 00:51:20Z faxguy $	
+#	$Id: CHANGES 369 2006-11-10 23:26:49Z faxguy $	
 
 New Changes
 
+* fix some errors with PDF page counting (10 Nov 2006)
 * improve ECM HDLC frame decoder to recover more quickly from data
   corruption and possibly find frames where it couldn't before (6 Nov 2006)
 * add default config support for "Agere OCM V.92" modems (5 Nov 2006)
