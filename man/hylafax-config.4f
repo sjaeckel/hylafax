@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 368 2006-11-10 19:06:06Z faxguy $
+.\"	$Id: hylafax-config.4f 370 2006-11-14 00:29:58Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-11-10 11:06:06 -0800 (Fri, 10 Nov 2006) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2006-11-13 16:29:58 -0800 (Mon, 13 Nov 2006) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -61,6 +61,17 @@ for
 .I term_10
 for
 .IR /dev/term/10 .
+.PP
+Entries from additional configuration files may be included at any point
+within a configuration file by using an ``include'' line within the
+configuration file like this:
+.sp .5
+.ti +0.5i
+\fB#include etc/config.more\fP
+.br
+.sp .5
+where ``etc/config.more'' is a file containing the desired additional
+configuration entires.
 .PP
 Configuration files have a simple format and are entirely
 .SM ASCII.
