@@ -1,4 +1,4 @@
-/*	$Id: FaxConfig.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxConfig.c++ 370 2006-11-14 00:29:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -54,9 +54,17 @@ FaxConfig::readConfig(const fxStr& filename)
     if (fd) {
 	configTrace("Read config file %s", (const char*) filename);
 	char line[1024];
-	while (fgets(line, sizeof (line)-1, fd)){
+	while (fgets(line, sizeof (line)-1, fd)) {
 	    line[strlen(line)-1]='\0';		// Nuke \r at end of line
-	    (void) readConfigItem(line);
+	    while (strlen(line) && isspace(line[strlen(line)-1])) line[strlen(line)-1]='\0';	// strip trailing white space
+	    if (strncmp(line, "#include", 8) == 0 && isspace(line[8])) {
+		int ptr = 9;
+		for (; isspace(line[ptr]) && ptr < 1024; ptr++);	// skip leading white space
+		configTrace("Including configuration entries from \"%s\".", line+ptr);
+		readConfig(line+ptr);
+	    } else {
+		(void) readConfigItem(line);
+	    }
 	}
 	fclose(fd);
     }
