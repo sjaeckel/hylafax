@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 250 2006-07-18 18:52:55Z faxguy $ */
+/*	$Id: Class2.c++ 372 2006-11-15 06:09:01Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -32,7 +32,7 @@ Class2Modem::Class2Modem(FaxServer& s, const ModemConfig& c) : FaxModem(s,c)
 {
     hangupCode[0] = '\0';
     serviceType = 0;			// must be set in derived class
-    useMTextDF = false;			// MultiTech extension for data format is detectable
+    useExtendedDF = false;		// T.32 Amendment 1 extension for data format is detectable
 }
 
 Class2Modem::~Class2Modem()
@@ -374,7 +374,7 @@ Class2Modem::setupDCC()
     params.br = getBestSignallingRate();
     params.wd = getBestPageWidth();
     params.ln = getBestPageLength();
-    params.df = useMTextDF ? modemParams.df : getBestDataFormat();
+    params.df = useExtendedDF ? modemParams.df : getBestDataFormat();
     params.df &= ~BIT(DF_JBIG);		// let's not actually do JBIG yet
     params.ec = getBestECM();
     params.bf = BF_DISABLE;
@@ -412,9 +412,9 @@ Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params, bool
 	params.br = fxmin(params.br, (u_int) BR_33600);
 	params.wd = fxmin(params.wd, (u_int) WD_A3);
 	params.ln = fxmin(params.ln, (u_int) LN_INF);
-	if (useMTextDF) {
+	if (useExtendedDF) {
 	    /*
-	     * The MultiTech DF extension presents us with a bitmap-like presentation
+	     * The T.32-A1 DF extension presents us with a bitmap-like presentation
 	     * similar to VR here... but leaves 2D-MMR = 3 for backwards-compatibility.
 	     *
 	     * 0 = 1D-MH, 1 = 2D-MR, 3 = 2D-MMR, 4 = JBIG-L0, 8 = JBIG
@@ -618,7 +618,7 @@ Class2Modem::class2Cmd(const fxStr& cmd, const Class2Params& p, bool isDCC, ATRe
     if (conf.class2ECMType == ClassModem::ECMTYPE_CLASS20 ||
        (conf.class2ECMType == ClassModem::ECMTYPE_UNSET && serviceType != SERVICE_CLASS2))
 	ecm20 = true;
-    return atCmd(cmd | "=" | p.cmd(conf.class2UseHex, ecm20, (isDCC && useMTextDF)), r, ms);
+    return atCmd(cmd | "=" | p.cmd(conf.class2UseHex, ecm20, (isDCC && useExtendedDF)), r, ms);
 }
 
 /*
@@ -649,19 +649,20 @@ Class2Modem::parseRange(const char* cp, Class2Params& p)
     p.br &= BR_ALL;
     p.wd &= WD_ALL;
     p.ln &= LN_ALL;
-    if ((p.df & 0x10) && (p.df & 0x100)) {	// supports JBIG via MultiTech extension
+    if ((p.df & 0x10) && (p.df & 0x100)) {	// supports JBIG via T.32-A1 extension
 	/*
-	 * T.32 Table 21 does not provide for JBIG data formats.
-	 * MultiTech has extended the DF parameter to include JBIG by
-	 * assigning "4" to JBIG L0 and "8" to JBIG.  The +FCC
-	 * response for DF will look like (00-01,03-05,07-09,0B-0D,0F)
-	 * because MultiTech has also extended the DF parameter to a 
-	 * bitmap.  However, a response for DF of "(5DDD)" or "(0F)" 
-	 * is not backwards-compatible with T.32.  So the +FCC response
-	 * is in this backwards-compatible presentation, however +FCS 
-	 * and +FIS responses are not.
+	 * Old T.32 Table 21 does not provide for JBIG data formats.
+	 * In amendment 1 the ITU has extended the DF parameter to include JBIG by 
+	 * assigning "4" to JBIG L0 and "8" to JBIG.  The +FCC response for DF may  
+	 * look like (00-0F) or possibly even (00-01,03-05,07-09,0B-0D,0F).  However, 
+	 * in so doing the ITU has also changed the DF parameter (in +FIS and +FCS 
+	 * responses) into a bitmap.  Yet, an +FCC response for DF of "(5DDD)" or "(0F)" 
+	 * is not backwards-compatible with older T.32.  So the +FCC response is in 
+	 * this backwards-compatible presentation (00-0F), and +FCS and +FIS responses 
+	 * are not.
 	 */
-	useMTextDF = true;
+	useExtendedDF = true;
+	// No Class 2 modem is known to actually *work* with JBIG yet.
 	//p.df = BIT(DF_1DMH) | BIT(DF_2DMR) | BIT(DF_2DMMR) | BIT(DF_JBIG);
 	p.df = BIT(DF_1DMH) | BIT(DF_2DMR) | BIT(DF_2DMMR);
     } else

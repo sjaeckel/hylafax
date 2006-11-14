@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 208 2006-06-17 18:31:34Z faxguy $ */
+/*	$Id: Class2.h 372 2006-11-15 06:09:01Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -66,7 +66,7 @@ protected:
     bool	xmitWaitForXON;		// if true, wait for XON when sending
     bool	hostDidCQ;		// if true, copy quality done on host
     bool	hasPolling;		// if true, modem does polled recv
-    bool	useMTextDF;		// if true, modem has MultiTech data format extension
+    bool	useExtendedDF;		// if true, modem has Agere data format extension
     char	recvDataTrigger;	// char to send to start recv'ing data
     char	hangupCode[4];		// hangup reason (from modem)
     bool	hadHangup;		// true if +FHNG:/+FHS: received
