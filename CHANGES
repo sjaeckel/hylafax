@@ -1,7 +1,8 @@
-#	$Id: CHANGES 370 2006-11-14 00:29:58Z faxguy $	
+#	$Id: CHANGES 373 2006-11-15 19:12:37Z faxguy $	
 
 New Changes
 
+* again, fix faxqclean from removing referenced cover pages (15 Nov 2006)
 * add #include feature for config files (13 Nov 2006)
 * fix some errors with PDF page counting (10 Nov 2006)
 * improve ECM HDLC frame decoder to recover more quickly from data
