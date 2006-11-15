@@ -1,4 +1,4 @@
-/*	$Id: faxQCleanApp.c++ 317 2006-10-02 18:05:09Z faxguy $ */
+/*	$Id: faxQCleanApp.c++ 373 2006-11-15 19:12:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -330,7 +330,8 @@ faxQCleanApp::expungeCruft(void)
 	 * than the threshold (checked above).
 	 */
 	u_int l = file.nextR(file.length(), '.');
-	if (l != 0 && l < file.length()) {
+	u_int k = file.nextR(file.length(), '/');
+	if ((l != 0 && l < file.length()) || strncmp(&file[k], "cover", 5) == 0) {
 	    if (isdigit(file[l])) {
 		/*
 		 * Filename has a jobid suffix (or should);
@@ -404,7 +405,6 @@ faxQCleanApp::expungeCruft(void)
 
 		free(base);
 	    }
-
 	}
 
 	if (nowork || Sys::unlink(file) >= 0) {
