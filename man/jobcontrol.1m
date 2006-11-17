@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 146 2006-04-20 23:15:21Z faxguy $
+.\"	$Id: jobcontrol.1m 374 2006-11-18 02:36:18Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -65,8 +65,11 @@ consult
 .IR hylafax-config (${MANNUM4_5})
 for a description of each parameter
 (except
+.BR Modem ,
+.BR Priority ,
+and
 .B RejectNotice
-which is described below).
+which are described below).
 .sp .5
 .nf
 .ta \w'MaxConcurrentCalls    'u +\w'integer    'u +\w'\fIunlimited\fP    'u
@@ -76,6 +79,7 @@ MaxDials	integer	\s-1\fIunlimited\fP\s+1	max phone calls to make to transmit a j
 MaxSendPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a send
 MaxTries	integer	\s-13\s+1	max attempts to transmit a job
 Modem	string	\s-1Any\s+1	ModemGroup to use for destination
+Priority	integer	\-	priority to use for job
 RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
@@ -102,6 +106,11 @@ included in this
 matching a destination, then the value of
 .B Modem
 is overridden by the inclusive set of modems found in both.
+.PP
+The
+.B Priority
+parameter controls the priority to assign to the job.  This
+overrides any priority requested by the submitter.
 .PP
 The
 .B RejectNotice
@@ -193,6 +202,14 @@ in this.  For example:
 .ft P
 .fi
 .SH NOTES
+.B JobControlCmd
+is run each time the job moves into the run-queue ("READY" state), and all
+output is effective on each instance.  If the administrator wishes to vary
+output based on the attempt sequence, then the q-file values should be
+consulted in the process.  Furthermore, blind usage of options such as
+.B Priority
+could be confusing as it would essentially prevent a job from increasing or
+decreasing in job priority as usually expected after call attempts.
 .SH "SEE ALSO"
 .IR faxq (${MANNUM1_8}),
 .IR hylafax-config (${MANNUM4_5}),

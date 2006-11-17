@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 146 2006-04-20 23:15:21Z faxguy $ */
+/*	$Id: JobControl.c++ 374 2006-11-18 02:36:18Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -38,6 +38,7 @@
 #define	DCI_MAXTRIES		0x0010
 #define	DCI_USEXVRES		0x0020
 #define	DCI_VRES		0x0040
+#define	DCI_PRIORITY		0x0080
 
 #define	isDefined(b)		(defined & b)
 #define	setDefined(b)		(defined |= b)
@@ -56,6 +57,7 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     maxTries = other.maxTries;
     usexvres = other.usexvres;
     vres = other.vres;
+    priority = other.priority;
 }
 
 JobControlInfo::JobControlInfo (const fxStr& buffer)
@@ -128,6 +130,9 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
     } else if (streq(tag, "vres")) {
 	vres = getNumber(value);
 	setDefined(DCI_VRES);
+    } else if (streq(tag, "priority")) {
+	priority = getNumber(value);
+	setDefined(DCI_PRIORITY);
     } else {
 	if( args != "" )
 	    args.append('\0');
@@ -210,4 +215,13 @@ JobControlInfo::getVRes() const
 	return vres;
     else
 	return 0;
+}
+
+int
+JobControlInfo::getPriority() const
+{
+    if (isDefined(DCI_PRIORITY))
+	return priority;
+    else
+	return -1;
 }
