@@ -1,7 +1,8 @@
-#	$Id: CHANGES 373 2006-11-15 19:12:37Z faxguy $	
+#	$Id: CHANGES 374 2006-11-18 02:36:18Z faxguy $	
 
 New Changes
 
+* add "Priority" JobControl option feature to modify job priority (17 Nov 2006)
 * again, fix faxqclean from removing referenced cover pages (15 Nov 2006)
 * add #include feature for config files (13 Nov 2006)
 * fix some errors with PDF page counting (10 Nov 2006)

@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 269 2006-08-11 17:30:31Z faxguy $ */
+/*	$Id: faxQueueApp.h 374 2006-11-18 02:36:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -210,7 +210,7 @@ private:
     void	blockJob(Job&, FaxRequest&, const char*);
     void	delayJob(Job&, FaxRequest&, const char*, time_t);
     void	rejectJob(Job& job, FaxRequest& req, const fxStr& reason);
-    bool	submitJob(const fxStr& jobid, bool checkState = false, bool doaccounting = false);
+    bool	submitJob(const fxStr& jobid, bool checkState = false, bool nascent = false);
     bool	suspendJob(const fxStr& jobid, bool abortActive);
     void	rejectSubmission(Job&, FaxRequest&, const fxStr& reason);
     bool	areBatchable(FaxRequest& reqa, FaxRequest& reqb, Job& job);

@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 344 2006-10-25 19:55:51Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 374 2006-11-18 02:36:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1675,6 +1675,16 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 		    Sys::close(pfd[0]);
 		    job.jci = new JobControlInfo(buf);
                     (void) Sys::waitpid(pid, estat);
+
+		    /*
+		     * JobControl modification of job priority must be
+		     * handled before ctrlJobDone, as that's where the
+		     * job is placed into runq based on the priority.
+		     */
+		    if (job.getJCI().getPriority() != -1) {
+			job.pri = job.getJCI().getPriority();
+		    }
+
 		    ctrlJobDone(job, estat);
 		}
 		break;
@@ -2179,7 +2189,7 @@ faxQueueApp::timeoutJob(Job& job, FaxRequest& req)
  * using the specified job description file.
  */
 bool
-faxQueueApp::submitJob(const fxStr& jobid, bool checkState, bool doaccounting)
+faxQueueApp::submitJob(const fxStr& jobid, bool checkState, bool nascent)
 {
     Job* job = Job::getJobByID(jobid);
     if (job) {
@@ -2233,7 +2243,7 @@ faxQueueApp::submitJob(const fxStr& jobid, bool checkState, bool doaccounting)
 	      req.state != FaxRequest::state_done &&
 	      req.state != FaxRequest::state_failed) {
 		status = submitJob(req, checkState);
-		if (doaccounting) queueAccounting(*job, req, "SUBMIT");
+		if (nascent) queueAccounting(*job, req, "SUBMIT");
 	    } else if (reject) {
 		Job job(req);
 		job.state = FaxRequest::state_failed;

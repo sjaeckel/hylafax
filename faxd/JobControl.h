@@ -1,4 +1,4 @@
-/*	$Id: JobControl.h 146 2006-04-20 23:15:21Z faxguy $ */
+/*	$Id: JobControl.h 374 2006-11-18 02:36:18Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -54,6 +54,7 @@ private:
     int		usexvres;		// use extended resolution
     u_int	vres;			// use extended resolution
     fxStr	args;			// arguments for subprocesses
+    int		priority;		// override submission priority with this
 
     // default returned on no match
     static const JobControlInfo defControlInfo;
@@ -77,6 +78,7 @@ public:
     time_t nextTimeToSend(time_t) const;
     int getUseXVRes() const;
     u_int getVRes() const;
+    int getPriority() const;
     const fxStr& getArgs() const;
 
     virtual bool setConfigItem(const char*, const char*);
