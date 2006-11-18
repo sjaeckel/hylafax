@@ -1,4 +1,4 @@
-.\"	$Id: typerules.4f 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: typerules.4f 377 2006-11-19 06:47:05Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -132,7 +132,7 @@ If no operation is specified then ``='' is used.
 
 For ``string'' and ``ascii'' no operator is allowed; the implicit
 operation is always ``=''.  In these cases, the field is terminated by
-a tab or end of line, not by ``#''.  Characters in the field have
+a tab or end of line, not by ``#'' or `` ''.  Characters in the field have
 their literal value; there are no C-style character escapes.
 .fi
 .TP 10
