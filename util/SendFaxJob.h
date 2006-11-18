@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.h 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: SendFaxJob.h 375 2006-11-18 18:50:13Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -127,6 +127,7 @@ public:
     SendFaxJob(const SendFaxJob& other);
     virtual ~SendFaxJob();
 
+    virtual bool initJobs(SendFaxClient& client, fxStr& emsg);
     virtual bool createJob(SendFaxClient& client, fxStr& emsg);
 
     virtual void setupConfig();

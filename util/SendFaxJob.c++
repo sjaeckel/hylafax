@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 375 2006-11-18 18:50:13Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -436,12 +436,18 @@ parseAtSyntax(const char* s, const struct tm& ref, struct tm& at0, fxStr& emsg);
 #define	IFPARM(a,b,v)	{ if ((b) != (v)) CHECKPARM(a,b) }
 
 bool
-SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
+SendFaxJob::initJobs(SendFaxClient& client, fxStr& emsg)
 {
     if (!client.setCurrentJob("DEFAULT")) {	// inherit from default
 	emsg = client.getLastResponse();
 	return (false);
     }
+    return (true);
+}
+
+bool
+SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
+{
     if (!client.newJob(jobid, groupid, emsg))	// create new job on server
 	return (false);
 
