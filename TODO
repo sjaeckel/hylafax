@@ -1,4 +1,4 @@
-#	$Id: TODO 376 2006-11-18 18:50:53Z faxguy $
+#	$Id: TODO 377 2006-11-19 06:47:05Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -72,7 +72,6 @@ H  polled transmission of documents (use SEP and PWD; add registration
 H  use PWD in TSI qualification
 H  voice support integration
 H  VOICE/ANSWER button support for ZyXEL
-H  silent answer support?
 M  optionally replace info directory with a hashed database file to
    reduce overhead on busy systems
 M  add faxq lock to avoid naive users starting multiple queuers
@@ -108,11 +107,6 @@ B      report#: 0003
                 02/02/1997 Matthias.Apitz@SOFTCON.de
                 03/02/1997 sam@sgi.com
           file: problemReports/0003
----------------
-B      report#: 0007
-       problem: spaces in typerules file not allowed, only TABs
-          refs: 26/08/1997 stenny@troja.stuttgart.netsurf.de
-          file: problemReports/0007
 ---------------
 L      report#: 0011
        problem: gettimeofday(a,b) for older SVR4
