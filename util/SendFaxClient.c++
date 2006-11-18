@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++ 369 2006-11-10 23:26:49Z faxguy $ */
+/*	$Id: SendFaxClient.c++ 375 2006-11-18 18:50:13Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -431,6 +431,8 @@ SendFaxClient::submitJobs(fxStr& emsg)
     /*
      * Construct jobs and submit them.
      */
+    if (!(*jobs)[0].initJobs(*this, emsg))
+	return (false);
     for (u_int i = 0, n = jobs->length(); i < n; i++) {
 	SendFaxJob& job = (*jobs)[i];
 	if (!job.createJob(*this, emsg))

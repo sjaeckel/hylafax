@@ -1,7 +1,8 @@
-#	$Id: CHANGES 374 2006-11-18 02:36:18Z faxguy $	
+#	$Id: CHANGES 375 2006-11-18 18:50:13Z faxguy $	
 
 New Changes
 
+* enable sendfax to submit job "groups" with a groupid (18 Nov 2006)
 * add "Priority" JobControl option feature to modify job priority (17 Nov 2006)
 * again, fix faxqclean from removing referenced cover pages (15 Nov 2006)
 * add #include feature for config files (13 Nov 2006)
