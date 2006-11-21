@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 374 2006-11-18 02:36:18Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 381 2006-11-21 20:57:13Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -388,7 +388,7 @@ faxQueueApp::prepareJobStart(Job& job, FaxRequest* req,
 	_exit(prepareJob(job, *req, info));
 	/*NOTREACHED*/
     case -1:				// fork failed, sleep and retry
-	job.remove();			// Remove from active queue
+	if (job.isOnList()) job.remove(); // Remove from active queue
 	delayJob(job, *req, "Could not fork to prepare job for transmission",
 	    Sys::now() + random() % requeueInterval);
 	delete req;
@@ -454,7 +454,7 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		    processnext = true;
 		}
 		if (status == Job::requeued) {
-		    job.remove();
+		    if (job.isOnList()) job.remove();
 		    delayJob(job, *req, "Cannot fork to prepare job for transmission",
 			Sys::now() + random() % requeueInterval);
 		    delete req;
@@ -1590,7 +1590,7 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 	    FaxRequest::state_sleeping : FaxRequest::state_ready;
 	updateRequest(*req, job);		// update on-disk status
 	if (!job.suspendPending) {
-	    job.remove();			// remove from active list
+	    if (job.isOnList()) job.remove();	// remove from active list
 	    if (req->tts > now) {
 		traceQueue(job, "SEND INCOMPLETE: requeue for "
 		    | strTime(req->tts - now)
@@ -1978,7 +1978,7 @@ faxQueueApp::suspendJob(Job& job, bool abortActive)
      * will be the same
      */
     removeDestInfoJob(job);
-    job.remove();				// remove from old queue
+    if (job.isOnList()) job.remove();		// remove from old queue
     job.stopKillTimer();			// clear kill timer
     return (true);
 }
@@ -2149,7 +2149,8 @@ faxQueueApp::timeoutJob(Job& job)
     traceQueue(job, "KILL TIME EXPIRED");
     Trigger::post(Trigger::JOB_TIMEDOUT, job);
     if (job.state != FaxRequest::state_active) {
-	job.remove();				// remove from sleep queue
+	if (job.isOnList())
+	    job.remove();			// i.e. remove from sleep queue
 	job.state = FaxRequest::state_failed;
 	FaxRequest* req = readRequest(job);
 	if (req) {
@@ -2275,7 +2276,7 @@ faxQueueApp::submitJob(const fxStr& jobid, bool checkState, bool nascent)
 void
 faxQueueApp::runJob(Job& job)
 {
-    job.remove();
+    if (job.isOnList()) job.remove();
     setReadyToRun(job, true);
     FaxRequest* req = readRequest(job);
     if (req) {
@@ -2325,7 +2326,7 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
 	    delete req;
 	} else {
 	    traceQueue("Continue BLOCK on jobs to %s, current calls: %d, max concurrent calls: %d", 
-		(const char*) jb->dest, di.getCalls(), jb->getJCI().getMaxConcurrentCalls());
+		(const char*) jb->dest, di.getCalls()+n, jb->getJCI().getMaxConcurrentCalls());
 	    break;
 	}
     }
@@ -2484,7 +2485,7 @@ faxQueueApp::runScheduler()
 		     * jobs terminates.
 		     */
 		    blockJob(job, *req, "Blocked by concurrent calls");
-		    job.remove();			// remove from run queue
+		    if (job.isOnList()) job.remove();	// remove from run queue
 		    di.block(job);			// place at tail of di queue
 		    delete req;
 		} else if ((tts = job.getJCI().nextTimeToSend(now)) != now) {
@@ -2492,7 +2493,7 @@ faxQueueApp::runScheduler()
 		     * This job may not be started now because of time-of-day
 		     * restrictions.  Reschedule it for the next possible time.
 		     */
-		    job.remove();			// remove from run queue
+		    if (job.isOnList()) job.remove();	// remove from run queue
 		    delayJob(job, *req, "Delayed by time-of-day restrictions", tts);
 		    delete req;
 		} else if (staggerCalls && lastCall + staggerCalls > now) {
@@ -2501,12 +2502,12 @@ faxQueueApp::runScheduler()
 		     * another job too recently and we're staggering jobs.
 		     * Reschedule it for the time when next okay.
 		     */
-		    job.remove();
+		    if (job.isOnList()) job.remove();
 		    delayJob(job, *req, "Delayed by outbound call staggering", lastCall + staggerCalls);
 		    delete req;
 		} else if (assignModem(job)) {
 		    lastCall = now;
-		    job.remove();			// remove from run queue
+		    if (job.isOnList()) job.remove();	// remove from run queue
 		    job.breq = req;
 		    /*
 		     * We have a modem and have assigned it to the

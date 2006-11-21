@@ -1,7 +1,8 @@
-#	$Id: CHANGES 380 2006-11-21 19:46:32Z faxguy $	
+#	$Id: CHANGES 381 2006-11-21 20:57:13Z faxguy $	
 
 New Changes
 
+* prevent faxq from failing an assert over mishandling a job list (21 Nov 2006)
 * fix faxqclean to remove hard links (used in job groups)
   appropriately (21 Nov 2006)
 * rework faxqclean fix to also work with coverpages as previously
