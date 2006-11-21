@@ -1,4 +1,4 @@
-/*	$Id: faxQCleanApp.c++ 379 2006-11-21 06:20:21Z faxguy $ */
+/*	$Id: faxQCleanApp.c++ 380 2006-11-21 19:46:32Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -57,11 +57,13 @@ private:
     static const fxStr archDir;
     static const fxStr doneDir;
     static const fxStr docDir;
+    static const fxStr tmpDir;
 
     void scanDirectory(void);
     void collectRefs(const FaxRequest&);
     void archiveJob(const FaxRequest& req);
     void expungeCruft(void);
+    bool findTmpInode(ino_t inode);
 public:
     faxQCleanApp();
     ~faxQCleanApp();
@@ -80,6 +82,7 @@ public:
 const fxStr faxQCleanApp::archDir	= FAX_ARCHDIR;
 const fxStr faxQCleanApp::doneDir	= FAX_DONEDIR;
 const fxStr faxQCleanApp::docDir	= FAX_DOCDIR;
+const fxStr faxQCleanApp::tmpDir	= FAX_TMPDIR;
 
 faxQCleanApp::faxQCleanApp()
 {
@@ -254,6 +257,43 @@ faxQCleanApp::archiveJob(const FaxRequest& req)
 }
 
 /*
+ * Scan the tmp directory and look for a specific
+ * inode being used.
+ */
+bool
+faxQCleanApp::findTmpInode(ino_t inode)
+{
+    if (trace)
+	printf("Scan %s directory for links to inode %d.\n",
+	    (const char*) tmpDir, inode);
+
+    DIR* dir = Sys::opendir(tmpDir);
+    if (dir == NULL) {
+	printf("%s: Could not scan directory for links.\n",
+	    (const char*) tmpDir);
+	return (false);
+    }
+    for (dirent* dp = readdir(dir); dp; dp = readdir(dir)) {
+	fxStr file(tmpDir | "/" | dp->d_name);
+	struct stat sb;
+	if (Sys::stat(file, sb) < 0 || !S_ISREG(sb.st_mode)) {
+	    if (trace)
+		printf("%s: ignored, cannot stat or not a regular file\n",
+		    (const char*) file);
+	    continue;
+	}
+	if (sb.st_ino == inode) {		// found our match
+	    if (trace)
+		printf("%s: inode %d match found\n",
+		    (const char*) file, inode);
+	    return (true);
+	}
+    }
+    if (trace) printf("inode %d match not found\n", inode);
+    return (false);
+}
+
+/*
  * Scan the document directory and look for stuff
  * that has no references in the sendq or doneq.
  * These documents are removed if they are older
@@ -295,19 +335,21 @@ faxQCleanApp::expungeCruft(void)
 	    continue;
 	}
 	/*
-	 * Document files should only have one link to them except
-	 * during the job preparation stage (i.e. when hfaxd has
-	 * original in the tmp directory and a link in the docq
-	 * directory).  Therefore if file has multiple links then
-	 * it's not a candidate for removal.  Note that this assumes
-	 * the hard links are not created by any imaging work such
-	 * as done by tiff2fax.
+	 * During job preparation stage (i.e. when hfaxd has the original 
+	 * in the tmp directory and a link in the docq directory) document 
+	 * files will have multiple hard links to them, and we don't want 
+	 * to remove those links as the job may not even have an associated
+	 * sendq file yet.  So if the file has multiple links then we check
+	 * do see if the original is in the tmp directory, and if not, then
+	 * we ignore the fact that there are multiple hard links - as they
+	 * get used in job grouping.
 	 */
 	if (sb.st_nlink > 1) {			// can't be orphaned yet
 	    if (trace)
-		printf("%s: ignored, file has %u links\n",
+		printf("%s: file has %u links, check for associated tmp file\n",
 		    (const char*) file, sb.st_nlink);
-	    continue;
+	    if (findTmpInode(sb.st_ino))
+		continue;
 	}
 	if (docrefs.find(file)) {		// referenced from doneq
 	    if (trace)
