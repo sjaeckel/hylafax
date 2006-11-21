@@ -1,7 +1,9 @@
-#	$Id: CHANGES 379 2006-11-21 06:20:21Z faxguy $	
+#	$Id: CHANGES 380 2006-11-21 19:46:32Z faxguy $	
 
 New Changes
 
+* fix faxqclean to remove hard links (used in job groups)
+  appropriately (21 Nov 2006)
 * rework faxqclean fix to also work with coverpages as previously
   named (20 Nov 2006)
 * enable sendfax to submit job "groups" with a groupid (18 Nov 2006)
