@@ -1,4 +1,4 @@
-#	$Id: TODO 377 2006-11-19 06:47:05Z faxguy $
+#	$Id: TODO 382 2006-11-21 21:22:09Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -17,43 +17,6 @@ in cutExtraEOFB as well as in the lastbyte zerobit counting because we'd come at
 direction.  Check up on this.
 
 Add the mimeconverters for faxmail-PDF by default.
-
-This was triggered by a usage error on faxsend-custom:
-Jun 23 12:35:40 gollum FaxQueuer[25027]: JOB 2685 (ready dest +1415400 pri 127 tts 0:00 killtime 1:43:57): READY
-Jun 23 12:35:43 gollum FaxQueuer[25027]: JOB 2685 (ready dest +1415400 pri 127 tts 0:00 killtime 1:43:54): PROCESS
-Jun 23 12:35:43 gollum FaxQueuer[25027]: JOB 2685 (blocked dest +1415400 pri 127 tts 0:00 killtime 1:43:54): Blocked by concurrent calls
-Jun 23 12:36:16 gollum FaxQueuer[25027]: JOB 2685 (blocked dest +1415400 pri 127 tts 0:00 killtime 1:43:21): CONTROL
-Jun 23 12:36:16 gollum FaxQueuer[22854]: JOB 2685 (blocked dest +1415400 pri 127 tts 0:00 killtime 1:43:21): JOB CONTROL: etc/jobcontrol 2685
-Jun 23 12:36:25 gollum FaxQueuer[25027]: JOB 2685 (ready dest +1415400 pri 127 tts 0:00 killtime 1:43:12): READY
-Jun 23 12:36:27 gollum FaxQueuer[25027]: JOB 2685 (ready dest +1415400 pri 127 tts 0:00 killtime 1:43:10): PROCESS
-Jun 23 12:36:27 gollum FaxQueuer[25027]: JOB 2685 (blocked dest +1415400 pri 127 tts 0:00 killtime 1:43:10): Blocked by concurrent calls
-Jun 23 12:36:40 gollum FaxQueuer[25027]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 26:47): Delayed by prior call: requeue for 0:00
-Jun 23 12:36:40 gollum FaxQueuer[25027]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 26:47): SLEEP FOR 0:00
-Jun 23 12:36:50 gollum FaxQueuer[25027]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 26:37): CONTROL
-Jun 23 12:36:50 gollum FaxQueuer[24703]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 26:37): JOB CONTROL: etc/jobcontrol 2685
-Jun 23 12:37:06 gollum FaxQueuer[25027]: JOB 2685 (ready dest +1415400 pri 127 tts 0:00 killtime 26:21): READY
-Jun 23 12:37:12 gollum FaxQueuer[25027]: JOB 2685 (ready dest +1415400 pri 127 tts 0:00 killtime 26:15): PROCESS
-Jun 23 12:37:12 gollum FaxQueuer[25027]: JOB 2685 (blocked dest +1415400 pri 127 tts 0:00 killtime 26:15): Blocked by concurrent calls
-Jun 23 12:37:31 gollum FaxQueuer[25027]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 0:00): Delayed by prior call: requeue for 0:00
-Jun 23 12:37:31 gollum FaxQueuer[25027]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 0:00): SLEEP FOR 0:00
-Jun 23 12:37:33 gollum FaxQueuer[25027]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 0:00): CONTROL
-Jun 23 12:37:33 gollum FaxQueuer[27258]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 0:00): JOB CONTROL: etc/jobcontrol 2685
-Jun 23 12:37:44 gollum FaxQueuer[25027]: JOB 2685 (sleeping dest +1415400 pri 127 tts 0:00 killtime 0:00): KILL TIME EXPIRED
-Jun 23 12:37:45 gollum FaxQueuer[25027]: Assertion failed "QLink::remove: item not on a list", file "QLink.c++" line 53.
-
-Sep  5 19:11:57 gollum FaxSend[18932]: MODEM Supports 12000 bit/s
-Sep  5 19:11:57 gollum FaxSend[18932]: MODEM Supports 14400 bit/s
-Sep  5 19:11:57 gollum FaxSend[18932]: MODEM Supports A4 page width (215 mm)
-Sep  5 19:11:57 gollum FaxSend[18932]: MODEM Supports B4 page width (255 mm)
-Sep  5 19:11:57 gollum FaxQueuer[3090]: FIFO RECV "Kclient/18936:3003"
-Sep  5 19:11:57 gollum FaxSend[18932]: MODEM Supports A3 page width (303 mm)
-Sep  5 19:11:57 gollum FaxQueuer[3090]: KILL JOB 3003
-Sep  5 19:15:46 gollum FaxQueuer[3090]: FIFO RECV "Kclient/18942:3003"
-Sep  5 19:15:46 gollum FaxQueuer[3090]: KILL JOB 3003
-Sep  5 19:15:46 gollum FaxQueuer[3090]: FIFO SEND client/18942 msg "K!"
-[root@gollum log]# strace -p 18932
-Process 18932 attached - interrupt to quit
-futex(0x22b20c, FUTEX_WAIT, 2, NULL
 
 #
 # These are old (ancient, really) entries that deserve some investigation
