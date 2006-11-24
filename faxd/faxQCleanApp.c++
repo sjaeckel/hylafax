@@ -1,4 +1,4 @@
-/*	$Id: faxQCleanApp.c++ 380 2006-11-21 19:46:32Z faxguy $ */
+/*	$Id: faxQCleanApp.c++ 384 2006-11-24 21:27:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -251,7 +251,7 @@ faxQCleanApp::archiveJob(const FaxRequest& req)
 {
     // hand the archiving task off to the archiving command
     fxStr cmd("bin/archive"
-	| quote |             req.jobid	| enquote
+	| quote |             quoted(req.jobid)	| enquote
     );
     runCmd(cmd, true);
 }

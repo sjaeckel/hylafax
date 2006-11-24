@@ -1,4 +1,4 @@
-/*	$Id: faxApp.h 222 2006-06-25 03:59:30Z faxguy $ */
+/*	$Id: faxApp.h 384 2006-11-24 21:27:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -79,6 +79,7 @@ public:
 
     static const fxStr quote;
     static const fxStr enquote;
+    fxStr  quoted(const fxStr& s);
 
     bool runCmd(const char* cmd, bool changeIDs = false, IOHandler* waiter = NULL);
 };
