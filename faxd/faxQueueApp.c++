@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 381 2006-11-21 20:57:13Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 384 2006-11-24 21:27:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3004,8 +3004,8 @@ faxQueueApp::notifyModemWedged(Modem& modem)
     fxStr dev(idToDev(modem.getDeviceID()));
     logError("MODEM " | dev | " appears to be wedged");
     fxStr cmd(wedgedCmd
-	| quote |  modem.getDeviceID() | enquote
-	| quote |                  dev | enquote
+	| quote | quoted(modem.getDeviceID()) | enquote
+	| quote |                 quoted(dev) | enquote
     );
     traceServer("MODEM WEDGED: %s", (const char*) cmd);
     runCmd(cmd, true, this);
@@ -3464,9 +3464,9 @@ void
 faxQueueApp::notifySender(Job& job, JobStatus why, const char* duration)
 {
     fxStr cmd(notifyCmd
-	| quote |		 job.file | enquote
-	| quote | Job::jobStatusName(why) | enquote
-	| quote |		 duration | enquote
+	| quote |		 quoted(job.file) | enquote
+	| quote | quoted(Job::jobStatusName(why)) | enquote
+	| quote |		 quoted(duration) | enquote
     );
     if (why == Job::requeued) {
 	/*

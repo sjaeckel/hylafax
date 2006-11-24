@@ -1,4 +1,4 @@
-/*	$Id: faxApp.c++ 297 2006-09-11 15:46:46Z faxguy $ */
+/*	$Id: faxApp.c++ 384 2006-11-24 21:27:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -367,8 +367,19 @@ detachIO(void)
 	    (void) Sys::close(fd);
 }
 
-const fxStr faxApp::quote	= " \"";
-const fxStr faxApp::enquote	= "\"";
+const fxStr faxApp::quote	= " \'";
+const fxStr faxApp::enquote	= "\'";
+
+fxStr
+faxApp::quoted(const fxStr& s)
+{
+    fxStr q;
+    for (u_int i = 0; i < s.length(); i++) {
+	if (s[i] == '\'') q.append("\'\\\'");
+	q.append(s[i]);
+    }
+    return (q);
+}
 
 /*
  * Run the specified shell command.  If changeIDs is

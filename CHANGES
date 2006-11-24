@@ -1,6 +1,10 @@
-#	$Id: CHANGES 381 2006-11-21 20:57:13Z faxguy $	
+#	$Id: CHANGES 384 2006-11-24 21:27:42Z faxguy $	
 
 New Changes
+
+* change shell command quoting to prevent double-quotes problem (24 Nov 2006)
+
+(5.0.1)
 
 * prevent faxq from failing an assert over mishandling a job list (21 Nov 2006)
 * fix faxqclean to remove hard links (used in job groups)
