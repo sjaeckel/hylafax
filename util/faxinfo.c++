@@ -1,4 +1,4 @@
-/*	$Id: faxinfo.c++ 346 2006-10-28 03:07:41Z faxguy $ */
+/*	$Id: faxinfo.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -154,7 +154,6 @@ printStart (const char* filename)
 static void
 printField (const char* val_fmt, const char* name, ...)
 {
-    char fmt[256];
     printf(fieldStart, name);
     va_list ap;
     va_start(ap,name);

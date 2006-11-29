@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 274 2006-08-12 00:26:53Z faxguy $ */
+/*	$Id: faxmail.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -522,7 +522,7 @@ faxMailApp::formatApplication(FILE* fd, MIMEState& mime)
 	FILE* fout = getOutputFile();
 	fxStackBuffer buf;
 	while (mime.getLine(fd, buf))
-	    fwrite((const char*) buf, buf.getLength(), 1, fout);
+	    (void) fwrite((const char*) buf, buf.getLength(), 1, fout);
 	if (!withinFile) beginFile();
 	withinFile = true;
     } else if (mime.getSubType() == "x-faxmail-prolog") {

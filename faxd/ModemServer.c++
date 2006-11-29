@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 348 2006-10-28 19:26:48Z faxguy $ */
+/*	$Id: ModemServer.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -438,7 +438,7 @@ ModemServer::setServerStatus(const char* fmt, ...)
     va_end(ap);
     fprintf(statusFile, "\n");
     fflush(statusFile);
-    ftruncate(fileno(statusFile), ftell(statusFile));
+    (void) ftruncate(fileno(statusFile), ftell(statusFile));
     flock(fileno(statusFile), LOCK_UN);
 }
 

@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 274 2006-08-12 00:26:53Z faxguy $ */
+/*	$Id: faxalter.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -66,7 +66,7 @@ bool faxAlterApp::duplicate ()
 	return false;
     }
 
-    for ( int pos = 0, next; (next = docs.next(pos, '\n')) < docs.length(); )
+    for ( u_int pos = 0, next; (next = docs.next(pos, '\n')) < docs.length(); )
     {
 	/*
 	 * The document is in the form "<TYPE> <filename>"

@@ -1,4 +1,4 @@
-/*	$Id: Timeout.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Timeout.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -82,7 +82,7 @@ void
 Timeout::stopTimeout()
 {
 #ifdef ITIMER_REAL
-    static itimerval itv = { 0, 0, 0, 0 };
+    static itimerval itv = { { 0, 0 }, { 0, 0 } };
     (void) setitimer(ITIMER_REAL, &itv, (itimerval*) 0);
 #else
     (void) alarm(0);

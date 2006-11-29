@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: FaxRequest.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -526,7 +526,7 @@ FaxRequest::writeQFile()
     }
     lseek(fd, 0L, SEEK_SET);
     Sys::write(fd, sb, sb.getLength());
-    ftruncate(fd, sb.getLength());
+    (void) ftruncate(fd, sb.getLength());
     // XXX maybe should fsync, but not especially portable
 }
 
