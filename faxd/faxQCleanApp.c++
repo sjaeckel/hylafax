@@ -1,4 +1,4 @@
-/*	$Id: faxQCleanApp.c++ 384 2006-11-24 21:27:42Z faxguy $ */
+/*	$Id: faxQCleanApp.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -265,7 +265,7 @@ faxQCleanApp::findTmpInode(ino_t inode)
 {
     if (trace)
 	printf("Scan %s directory for links to inode %d.\n",
-	    (const char*) tmpDir, inode);
+	    (const char*) tmpDir, (int) inode);
 
     DIR* dir = Sys::opendir(tmpDir);
     if (dir == NULL) {
@@ -285,11 +285,11 @@ faxQCleanApp::findTmpInode(ino_t inode)
 	if (sb.st_ino == inode) {		// found our match
 	    if (trace)
 		printf("%s: inode %d match found\n",
-		    (const char*) file, inode);
+		    (const char*) file, (int) inode);
 	    return (true);
 	}
     }
-    if (trace) printf("inode %d match not found\n", inode);
+    if (trace) printf("inode %d match not found\n", (int) inode);
     return (false);
 }
 
@@ -414,7 +414,7 @@ faxQCleanApp::expungeCruft(void)
 	    // suffix, when the PS.jobid version of the file still
 	    // exists.
 	    char        *base;
-	    int         sl=k-docDir.length()-1-1;	// removing docDir,'/' and trailing ';'
+	    u_int         sl=k-docDir.length()-1-1;	// removing docDir,'/' and trailing ';'
 	    base=(char *)malloc(sl+1);
 	    strncpy(base, &file[docDir.length()+1], sl);
 	    base[sl]=0;

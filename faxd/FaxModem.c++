@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 250 2006-07-18 18:52:55Z faxguy $ */
+/*	$Id: FaxModem.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -689,8 +689,8 @@ FaxModem::traceFCF(const char* dir, u_int fcf)
 	    fcfname = "PPR (partial page request)";
 	    break;
 	default:
-	    (void) snprintf(fcfname, 18, "unknown FCF 0x%X", fcf);
-	    break;
+	    protoTrace("unknown FCF 0x%X", fcf);
+	    return;
     }
     protoTrace("%s %s", dir, (const char*) fcfname);
 }

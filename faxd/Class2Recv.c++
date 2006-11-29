@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 206 2006-06-16 22:33:30Z faxguy $ */
+/*	$Id: Class2Recv.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -343,7 +343,7 @@ Class2Modem::recvPPM(TIFF* tif, int& ppr)
 bool
 Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
 {
-    uint32 lc = 0;
+    u_long lc = 0;
     int blc = 0;
     int cblc = 0;
     ppr = 0;

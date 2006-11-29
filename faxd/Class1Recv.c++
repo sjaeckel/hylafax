@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 362 2006-11-04 02:19:37Z faxguy $ */
+/*	$Id: Class1Recv.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -255,7 +255,7 @@ Class1Modem::recvIdentification(
 	 * DCS from the other side.  First verify there is
 	 * time to make another attempt...
 	 */
-	if (Sys::now()-start >= t1)
+	if ((u_int) Sys::now()-start >= t1)
 	    break;
 	if (frame.getFCF() != FCF_CRP) {
 	    /*

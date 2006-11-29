@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 384 2006-11-24 21:27:42Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -358,42 +358,45 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 	fxStr localid = "";
 	int pipefd[2], status;
 	char line[1024];
-	pipe(pipefd);
-	pid_t pid = fork();
-	switch (pid) {
-	    case -1:
-		emsg = "Could not fork for local ID.";
-		logError("%s", (const char*)emsg);
-		Sys::close(pipefd[0]);
-		Sys::close(pipefd[1]);
-		break;
-	    case  0:
-		dup2(pipefd[1], STDOUT_FILENO);
-		Sys::close(pipefd[0]);
-		Sys::close(pipefd[1]);
-		execl("/bin/sh", "sh", "-c", (const char*) cmd, (char*) NULL);
-		sleep(1);
-		_exit(1);
-	    default:
-		Sys::close(pipefd[1]);
-		{
-		    FILE* fd = fdopen(pipefd[0], "r");
-		    while (fgets(line, sizeof (line)-1, fd)){
-			line[strlen(line)-1]='\0';		// Nuke \n at end of line
-			(void) readConfigItem(line);
-		    }
-		    Sys::waitpid(pid, status);
-		    if (status != 0)
+	if (pipe(pipefd) == 0) {
+	    pid_t pid = fork();
+	    switch (pid) {
+		case -1:
+		    emsg = "Could not fork for local ID.";
+		    logError("%s", (const char*)emsg);
+		    Sys::close(pipefd[0]);
+		    Sys::close(pipefd[1]);
+		    break;
+		case  0:
+		    dup2(pipefd[1], STDOUT_FILENO);
+		    Sys::close(pipefd[0]);
+		    Sys::close(pipefd[1]);
+		    execl("/bin/sh", "sh", "-c", (const char*) cmd, (char*) NULL);
+		    sleep(1);
+		    _exit(1);
+		default:
+		    Sys::close(pipefd[1]);
 		    {
-			emsg = fxStr::format("Bad exit status %#o for \'%s\'", status, (const char*) cmd);
-			logError("%s", (const char*)emsg);
+			FILE* fd = fdopen(pipefd[0], "r");
+			while (fgets(line, sizeof (line)-1, fd)) {
+			    line[strlen(line)-1]='\0';		// Nuke \n at end of line
+			    (void) readConfigItem(line);
+			}
+			Sys::waitpid(pid, status);
+			if (status != 0) {
+			    emsg = fxStr::format("Bad exit status %#o for \'%s\'", status, (const char*) cmd);
+			    logError("%s", (const char*)emsg);
+			}
+			// modem settings may have changed...
+			FaxModem* modem = (FaxModem*) ModemServer::getModem();
+			modem->pokeConfig(false);
 		    }
-		    // modem settings may have changed...
-		    FaxModem* modem = (FaxModem*) ModemServer::getModem();
-		    modem->pokeConfig(false);
-		}
-		Sys::close(pipefd[0]);
-		break;
+		    Sys::close(pipefd[0]);
+		    break;
+	    }
+	} else {
+	    emsg = "Could not open a pipe for local ID.";
+	    logError("%s", (const char*) emsg);
 	}
     }
 

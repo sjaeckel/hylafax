@@ -1,4 +1,4 @@
-/*	$Id: OldProtocol.c++ 17 2005-11-29 21:04:30Z faxguy $ */
+/*	$Id: OldProtocol.c++ 386 2006-11-30 03:12:40Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1129,7 +1129,7 @@ OldProtocolServer::decodeLZW(FILE* fin, FILE* fout)
 	    do {
 		*--tp = codep->value;
 	    } while ((codep = codep->next));
-	    fwrite(tp, len, 1, fout);
+	    (void) fwrite(tp, len, 1, fout);
 	    total += len;
 	    if (tp != buf)
 		free(tp);
