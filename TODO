@@ -1,4 +1,4 @@
-#	$Id: TODO 385 2006-11-28 15:35:32Z faxguy $
+#	$Id: TODO 387 2006-11-30 22:01:56Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -11,7 +11,8 @@ teach hfaxd to use /etc/hosts.allow
 encrypted communications would be nice, at least an MD5'ed password or something
 Unfortunately, FaxModem::recvResetPage(TIFF) doesn't really work (anymore?).
 sendfax -d -d -d or -z uses job groups now, but shouldn't repeat params
-reports of faxmodem losing the modem after a while
+credible reports of faxmodem losing the modem after a while
+PAM support doesn't include conversation interaction (pam_unix) or PAM_INCOMPLETE
 
 If HylaFAX doesn't standardize internally on a particular bit orientation we will see problems on MSB2LSB systems 
 in cutExtraEOFB as well as in the lastbyte zerobit counting because we'd come at the data from the wrong 
