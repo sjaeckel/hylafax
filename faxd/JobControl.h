@@ -1,4 +1,4 @@
-/*	$Id: JobControl.h 374 2006-11-18 02:36:18Z faxguy $ */
+/*	$Id: JobControl.h 389 2006-12-02 00:08:51Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -55,6 +55,7 @@ private:
     u_int	vres;			// use extended resolution
     fxStr	args;			// arguments for subprocesses
     int		priority;		// override submission priority with this
+    int		desireddf;		// if set, desireddf value
 
     // default returned on no match
     static const JobControlInfo defControlInfo;
@@ -67,7 +68,6 @@ public:
     ~JobControlInfo();
 
     int compare(const JobControlInfo*) const;
-    void parseEntry(const char* tag, const char* value, bool quoted);
 
     u_int getMaxConcurrentCalls() const;
     u_int getMaxSendPages() const;
@@ -79,6 +79,7 @@ public:
     int getUseXVRes() const;
     u_int getVRes() const;
     int getPriority() const;
+    int getDesiredDF() const;
     const fxStr& getArgs() const;
 
     virtual bool setConfigItem(const char*, const char*);
