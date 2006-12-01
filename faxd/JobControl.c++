@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 374 2006-11-18 02:36:18Z faxguy $ */
+/*	$Id: JobControl.c++ 389 2006-12-02 00:08:51Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -39,6 +39,7 @@
 #define	DCI_USEXVRES		0x0020
 #define	DCI_VRES		0x0040
 #define	DCI_PRIORITY		0x0080
+#define	DCI_DESIREDDF		0x0100
 
 #define	isDefined(b)		(defined & b)
 #define	setDefined(b)		(defined |= b)
@@ -58,6 +59,7 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     usexvres = other.usexvres;
     vres = other.vres;
     priority = other.priority;
+    desireddf = other.desireddf;
 }
 
 JobControlInfo::JobControlInfo (const fxStr& buffer)
@@ -134,10 +136,14 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
 	priority = getNumber(value);
 	setDefined(DCI_PRIORITY);
     } else {
+	if (streq(tag, "desireddf")) {		// need to pass desireddf to faxsend, also
+	    desireddf = getNumber(value);
+	    setDefined(DCI_DESIREDDF);
+	}
 	if( args != "" )
 	    args.append('\0');
 	args.append(fxStr::format("-c%c%s:\"%s\"",
-	    '\0', tag, value));
+	    '\0', tag, (const char*) value));
     }
     return true;
 }
@@ -222,6 +228,15 @@ JobControlInfo::getPriority() const
 {
     if (isDefined(DCI_PRIORITY))
 	return priority;
+    else
+	return -1;
+}
+
+int
+JobControlInfo::getDesiredDF() const
+{
+    if (isDefined(DCI_DESIREDDF))
+	return desireddf;
     else
 	return -1;
 }

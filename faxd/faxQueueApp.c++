@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 384 2006-11-24 21:27:42Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 389 2006-12-02 00:08:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -680,6 +680,8 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
      * o the remote side is known to be capable of it, and
      * o the user hasn't specified a desire to send 1D data.
      */
+    int jcdf = job.getJCI().getDesiredDF();
+    if (jcdf != -1) req.desireddf = jcdf;
     if (req.desireddf == DF_2DMMR && (req.desiredec != EC_DISABLE) && 
 	use2D && job.modem->supportsMMR() &&
 	 (! info.getCalledBefore() || info.getSupportsMMR()) )

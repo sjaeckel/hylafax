@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 384 2006-11-24 21:27:42Z faxguy $ */
+/*	$Id: faxSendApp.c++ 389 2006-12-02 00:08:51Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -161,8 +161,11 @@ faxSendApp::send(const char** filenames, int num)
 			 * user-specification.
 			 */
 
-			if (desiredDF != (u_int) -1)
+			bool usedf = false;			// to limit RTFCC application
+			if (desiredDF != (u_int) -1) {
 			    req->desireddf = desiredDF;
+			    usedf = true;
+			}
 			if (desiredBR != (u_int) -1)
 			    req->desiredbr = desiredBR;
 			if (desiredEC != (u_int) -1)
@@ -175,7 +178,7 @@ faxSendApp::send(const char** filenames, int num)
 			if (useJobTSI && req->tsi != "")
 			    FaxServer::setLocalIdentifier(req->tsi);
 
-			FaxServer::sendFax(*req, info, ai, batched);
+			FaxServer::sendFax(*req, info, ai, batched, usedf);
 
 			batchcommid = req->commid;		// ... to all batched jobs
 

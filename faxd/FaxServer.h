@@ -1,4 +1,4 @@
-/*	$Id: FaxServer.h 98 2006-03-03 05:36:46Z faxguy $ */
+/*	$Id: FaxServer.h 389 2006-12-02 00:08:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -63,6 +63,8 @@ private:
 
     friend class FaxModem;
 
+    bool	useDF;			// limits application of RTFCC
+
 // FAX transmission protocol support
     void	sendFax(FaxRequest& fax, FaxMachineInfo&, const fxStr& number, u_int&);
     bool	sendClientCapabilitiesOK(FaxRequest&, FaxMachineInfo&, fxStr&);
@@ -93,7 +95,7 @@ protected:
     void	readConfig(const fxStr& filename);
     void	setLocalIdentifier(const fxStr& lid);
 
-    void	sendFax(FaxRequest&, FaxMachineInfo&, FaxAcctInfo&, u_int&);
+    void	sendFax(FaxRequest&, FaxMachineInfo&, FaxAcctInfo&, u_int&, bool);
     bool	recvFax(const CallID& callid, fxStr& emsg);
 
     time_t	getFileTransferTime() const;
