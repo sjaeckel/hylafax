@@ -1,4 +1,4 @@
-#	$Id: TODO 388 2006-11-30 23:05:49Z faxguy $
+#	$Id: TODO 391 2006-12-07 00:34:10Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -12,7 +12,6 @@ encrypted communications would be nice, at least an MD5'ed password or something
 Unfortunately, FaxModem::recvResetPage(TIFF) doesn't really work (anymore?).
 sendfax -d -d -d or -z uses job groups now, but shouldn't repeat params
 credible reports of faxmodem losing the modem after a while
-PAM support doesn't include conversation interaction (pam_unix) or PAM_INCOMPLETE
 if you abort a job during a call the "calls" notify report still says 0
 
 If HylaFAX doesn't standardize internally on a particular bit orientation we will see problems on MSB2LSB systems 
