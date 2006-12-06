@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++ 359 2006-11-03 05:49:38Z faxguy $ */
+/*	$Id: SNPPServer.c++ 390 2006-12-07 00:30:08Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -997,12 +997,12 @@ SNPPServer::loginCmd(const char* loginID, const char* pass)
         end_login();
     the_user = loginID;
     state &= ~S_PRIVILEGED;
-    adminwd = "*";			// make sure no admin privileges
-    passwd = "*";			// just in case...
+    adminWd = "*";			// make sure no admin privileges
+    passWd = "*";			// just in case...
 
     if (checkUser(loginID)) {
-	if (passwd != "") {
-	    if (pass[0] == '\0' || !(streq(crypt(pass, passwd), passwd) || pamCheck(the_user, pass))) {
+	if (passWd != "") {
+	    if (pass[0] == '\0' || !(streq(crypt(pass, passWd), passWd) || pamCheck(the_user, pass))) {
 		if (++loginAttempts >= maxLoginAttempts) {
 		    reply(421, "Login incorrect (closing connection).");
 		    logNotice("Repeated SNPP login failures for user %s from %s [%s]"

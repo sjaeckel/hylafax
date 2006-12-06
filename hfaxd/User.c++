@@ -1,4 +1,4 @@
-/*	$Id: User.c++ 25 2005-12-16 00:42:22Z faxguy $ */
+/*	$Id: User.c++ 390 2006-12-07 00:30:08Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -102,26 +102,46 @@ HylaFAXServer::checkuser(const char* name)
 	    logNotice("PAM authentication for %s can't be used for a re-issuance of USER command because of chroot jail\n", name);
 	    return false;
 	}
+	/*
+	 * The effective uid must be privileged enough to
+	 * handle whatever the PAM module may require.
+	 */
+	uid_t ouid = geteuid();
+	(void) seteuid(0);
 
-	int pamret;
-	struct pam_conv conv = {pamconv, NULL};		
 
-	pamret = pam_start(FAX_SERVICE, name, &conv, &pamh);
+	pam_handle_t *pamh;
+	struct pam_conv conv = { pamconv, NULL };
 
-	if (pamret == PAM_SUCCESS)
-		pamret = pam_authenticate(pamh, 0);
-
-	if (pamret == PAM_SUCCESS)
-		pamret = pam_acct_mgmt(pamh, 0);
-
+	int pamret = pam_start(FAX_SERVICE, name, &conv, &pamh);
 	if (pamret == PAM_SUCCESS) {
-		passwd = "";
-		pamEnd(pamret);
-	} else {
-	    passwd = "*";
-	    adminwd = "*";
+	    pamret = pam_set_item(pamh, PAM_RHOST, remoteaddr);
+	    if (pamret == PAM_SUCCESS) {
+		pamret = pam_authenticate(pamh, 0);
+		/* We deliberately ignore PAM_INCOMPLETE here. */
+		if (pamret == PAM_SUCCESS) {
+		    pamret = pam_acct_mgmt(pamh, 0);
+		    if (pamret == PAM_SUCCESS) {
+			passWd = "";
+		    } else
+			logNotice("pam_acct_mgmt failed in checkuser with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
+		} else
+#ifdef PAM_INCOMPLETE
+		    if (pamret != PAM_INCOMPLETE) /* PAM_INCOMPLETE is deliberately anticipated and ignored here. */
+#endif
+			logNotice("pam_authenticate failed in checkuser with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
+	    } else
+		logNotice("pam_set_item failed in checkuser with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
+	} else
+	    logNotice("pam_start failed in checkuser with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
+
+	if (pamret != PAM_SUCCESS) {
+	    passWd = "*";
+	    adminWd = "*";
 	}
 	retval = true;
+	pamEnd(pamh, pamret);
+	(void) seteuid(ouid);
 
 #endif //HAVE_PAM
 	return(retval);
@@ -143,7 +163,7 @@ HylaFAXServer::checkuser(FILE* db, const char* name)
 	return (false);
     }
     uid = FAXUID_ANON;		// anonymous user
-    adminwd = "*";		// disallow privileged access
+    adminWd = "*";		// disallow privileged access
 
     fxStr dotform  = fxStr::format("%s@%s", name, (const char*) remoteaddr);
     fxStr hostform = fxStr::format("%s@%s", name, (const char*) remotehost);
@@ -190,7 +210,7 @@ HylaFAXServer::checkuser(FILE* db, const char* name)
 		return (false);
 	} else {			// allow access on match
 	    if (pat.Find(dotform) || pat.Find(hostform)) {
-		passwd = "";		// no password required
+		passWd = "";		// no password required
 		if (*cp == ':') {	// :uid[:passwd[:adminwd]]
 		    if (isdigit(*++cp)) {
 			uid = atoi(cp);
@@ -201,18 +221,18 @@ HylaFAXServer::checkuser(FILE* db, const char* name)
 			for (base = ++cp; *cp && *cp != ':'; cp++)
 			    ;
 			if (*cp == ':') {
-			    passwd = fxStr(base, cp-base);
-			    adminwd = cp+1;
+			    passWd = fxStr(base, cp-base);
+			    adminWd = cp+1;
 			} else
-			    passwd = base;
+			    passWd = base;
 		    } else
-			passwd = "";	// no password required
+			passWd = "";	// no password required
 		}
 		return (true);
 	    }
 	}
     }
-    passwd = "*";
+    passWd = "*";
     return (false);
 }
 

@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 308 2006-09-27 19:53:24Z faxguy $ */
+/*	$Id: HylaFAXServer.h 390 2006-12-07 00:30:08Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -217,12 +217,11 @@ protected:
      * User authentication and login-related state.
      */
 #ifdef HAVE_PAM
-	pam_handle_t *pamh;		// handle to current pam session
 	bool	pam_chrooted;	// if already chrooted, PAM gets disabled
 #endif
 
-    fxStr	passwd;			// encrypted user password
-    fxStr	adminwd;		// encrypted passwd for admin privileges
+    fxStr	passWd;			// encrypted user password
+    fxStr	adminWd;		// encrypted passwd for admin privileges
     u_int	uid;			// client's ID
     u_int	loginAttempts;		// number of failed login attempts
     u_int	maxLoginAttempts;	// login failures before server exits
@@ -351,7 +350,7 @@ protected:
     void loginRefused(const char* why);
 	bool pamCheck(const char* user=NULL, const char* pass=NULL);
 	bool pamIsAdmin(const char* user=NULL);
-	void pamEnd(int pamret);
+	void pamEnd(pam_handle_t *pamh, int pamret);
     bool checkUser(const char*);
     bool checkuser(FILE*, const char *name);
     bool checkuser(const char *name);
