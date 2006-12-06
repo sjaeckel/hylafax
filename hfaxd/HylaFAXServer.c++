@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 363 2006-11-06 00:48:10Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 390 2006-12-07 00:30:08Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -62,7 +62,6 @@ HylaFAXServer::HylaFAXServer()
     idcache = NULL;
 
 #ifdef HAVE_PAM
-	pamh = NULL;
 	pam_chrooted = false;
 #endif
 

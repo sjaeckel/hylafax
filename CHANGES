@@ -1,7 +1,8 @@
-#	$Id: CHANGES 389 2006-12-02 00:08:51Z faxguy $	
+#	$Id: CHANGES 390 2006-12-07 00:30:08Z faxguy $	
 
 New Changes
 
+* fix largely dysfunctional PAM support (6 Dec 2006)
 * fix and improve JobControl application of DesiredDF (1 Dec 2006)
 * change shell command quoting to prevent double-quotes problem (24 Nov 2006)
 

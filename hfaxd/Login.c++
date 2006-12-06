@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 123 2006-03-27 23:27:53Z faxguy $ */
+/*	$Id: Login.c++ 390 2006-12-07 00:30:08Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -77,15 +77,15 @@ HylaFAXServer::userCmd(const char* name)
     }
     the_user = name;
     state &= ~S_PRIVILEGED;
-    adminwd = "*";			// make sure no admin privileges
-    passwd = "*";			// just in case...
+    adminWd = "*";			// make sure no admin privileges
+    passWd = "*";			// just in case...
 
     if (checkUser(name)) {
-	if (passwd != "") {
+	if (passWd != "") {
 	    state |= S_WAITPASS;
 	    reply(331, "Password required for %s.", name);
 	    /*
-	     * Delay before reading passwd after first failed
+	     * Delay before reading passWd after first failed
 	     * attempt to slow down password-guessing programs.
 	     */
 	    if (loginAttempts)
@@ -100,13 +100,20 @@ HylaFAXServer::userCmd(const char* name)
 int
 pamconv(int num_msg, STRUCT_PAM_MESSAGE **msg, struct pam_response **resp, void *appdata)
 {
+	/*
+	 * This PAM conversation function expects that the PAM modules
+	 * being used will only have one message.  If this expectation
+	 * is not met then this will fail, and this will need modification
+	 * in order to work.
+	 */
+
 	char *password =(char*) appdata;
 	struct pam_response* replies;
 
 	if (num_msg != 1 || msg[0]->msg_style != PAM_PROMPT_ECHO_OFF)
 	    return PAM_CONV_ERR;
 
-	if (password == NULL)
+	if (password == NULL) {
 	    /*
 	     * Solaris doesn't have PAM_CONV_AGAIN defined.
 	     */
@@ -115,14 +122,15 @@ pamconv(int num_msg, STRUCT_PAM_MESSAGE **msg, struct pam_response **resp, void 
 	    #else
 		return PAM_CONV_ERR;
 	    #endif
+	}
 
 	replies=(struct pam_response*)calloc(num_msg, sizeof(struct pam_response));
 
-	replies[0].resp = strdup(password);
+	replies[0].resp = password;
 	replies[0].resp_retcode = 0;
 	*resp = replies;
 
-	return PAM_SUCCESS;
+	return (PAM_SUCCESS);
 }
 #endif //HAVE_PAM
 
@@ -148,46 +156,65 @@ HylaFAXServer::pamCheck(const char* user, const char* pass)
 {
 	bool retval = false;
 #ifdef HAVE_PAM
-	if (pamh == NULL)
-	    return false;
 
 	if (user == NULL) user = the_user;
-	if (pass == NULL) pass = passwd.c_str();
-
-	struct pam_conv conv = {
-		pamconv,
-		(void*)pass
-	};
-       
-
-	int pamret;
+	if (pass == NULL) pass = passWd.c_str();
 
 	/*
-	 * Solaris has proprietary pam_[sg]et_item() extension.
-	 * Sun defines PAM_MSG_VERSION therefore is possible to use
-	 * it in order to recognize the extensions of Solaris
+	 * The effective uid must be privileged enough to
+	 * handle whatever the PAM module may require.
 	 */
-	#ifdef PAM_MSG_VERSION
-	    pamret = pam_set_item(pamh, PAM_CONV, (const void *)&conv);
-	#else
-	    pamret = pam_set_item(pamh, PAM_CONV, &conv);
-	#endif
+	uid_t ouid = geteuid();
+	(void) seteuid(0);
 
-	if (pamret == PAM_SUCCESS)
-	    pamret = pam_authenticate(pamh, 0);
+	pam_handle_t *pamh;
+	struct pam_conv conv = {pamconv, NULL};
+	conv.appdata_ptr = strdup(pass);
 
-	if (pamret == PAM_SUCCESS)
-	    pamret = pam_acct_mgmt(pamh, 0);
+	int pamret = pam_start(FAX_SERVICE, user, &conv, &pamh);
+	if (pamret == PAM_SUCCESS) {
+	    pamret = pam_set_item(pamh, PAM_RHOST, remoteaddr);
+	    if (pamret == PAM_SUCCESS) {
+		pamret = pam_set_item(pamh, PAM_CONV, (const void*)&conv);
+		if (pamret == PAM_SUCCESS) {
+#ifdef PAM_INCOMPLETE
+		    u_int tries = 10;
+		    do {
+			/*
+			 * PAM supports event-driven applications by returning PAM_INCOMPLETE
+			 * and requiring the application to recall pam_authenticate after the
+			 * underlying PAM module is ready.  The application is supposed to
+			 * utilize the pam_conv structure to determine when the authentication
+			 * module is ready.  However, in our case we're not event-driven, and
+			 * so we can wait, and a call to sleep saves us the headache.
+			 */
+#endif // PAM_INCOMPLETE
+			pamret = pam_authenticate(pamh, 0);
+#ifdef PAM_INCOMPLETE
+		    } while (pamret == PAM_INCOMPLETE && --tries && !sleep(1));
+#endif // PAM_INCOMPLETE
+		    if (pamret == PAM_SUCCESS) {
+			pamret = pam_acct_mgmt(pamh, 0);
+			if (pamret == PAM_SUCCESS) {
+			    retval = true;
+			} else
+			    logNotice("pam_acct_mgmt failed in pamCheck with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
+		    } else
+			logNotice("pam_authenticate failed in pamCheck with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
+		} else
+		    logNotice("pam_set_item (PAM_CONV) failed in pamCheck with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
+	    } else
+		logNotice("pam_set_item (PAM_RHOST) failed in pamCheck with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
+	} else
+	    logNotice("pam_start failed in pamCheck with 0x%X: %s", pamret, pam_strerror(pamh, pamret));
 
-	if (pamret == PAM_SUCCESS)
-		retval = true;
-
-	pamEnd(pamret);
+	pamEnd(pamh, pamret);
+	(void) seteuid(ouid);
 #endif
 	return retval;
 }
 
-void HylaFAXServer::pamEnd(int pamret)
+void HylaFAXServer::pamEnd(pam_handle_t *pamh, int pamret)
 {
 #ifdef HAVE_PAM
     if (pamret == PAM_SUCCESS)
@@ -246,7 +273,7 @@ HylaFAXServer::passCmd(const char* pass)
 	pass++;
     } else
 	state |= S_LREPLIES;
-    if (pass[0] == '\0' || !(strcmp(crypt(pass, passwd), passwd) == 0 || pamCheck(the_user, pass))) {
+    if (pass[0] == '\0' || !(strcmp(crypt(pass, passWd), passWd) == 0 || pamCheck(the_user, pass))) {
 	if (++loginAttempts >= maxLoginAttempts) {
 	    reply(530, "Login incorrect (closing connection).");
 	    logNotice("Repeated login failures for user %s from %s [%s]"
@@ -321,8 +348,8 @@ void
 HylaFAXServer::adminCmd(const char* pass)
 {
     fxAssert(IS(LOGGEDIN), "ADMIN command permitted when not logged in");
-    // NB: null adminwd is permitted
-    if ((strcmp(crypt(pass, adminwd), adminwd) != 0) && !pamIsAdmin()) {
+    // NB: null adminWd is permitted
+    if ((strcmp(crypt(pass, adminWd), adminWd) != 0) && !pamIsAdmin()) {
 	if (++adminAttempts >= maxAdminAttempts) {
 	    reply(530, "Password incorrect (closing connection).");
 	    logNotice("Repeated admin failures from %s [%s]"
@@ -365,8 +392,8 @@ HylaFAXServer::end_login(void)
 	seteuid(ouid);
     }
     state &= ~(S_LOGGEDIN|S_PRIVILEGED|S_WAITPASS);
-    passwd = "*";
-    adminwd = "*";
+    passWd = "*";
+    adminWd = "*";
 }
 
 /*
