@@ -1,7 +1,8 @@
-#	$Id: CHANGES 390 2006-12-07 00:30:08Z faxguy $	
+#	$Id: CHANGES 392 2006-12-07 19:27:54Z faxguy $	
 
 New Changes
 
+* increase the wait time for AT+FCLASS=? response (7 Dec 2006)
 * fix largely dysfunctional PAM support (6 Dec 2006)
 * fix and improve JobControl application of DesiredDF (1 Dec 2006)
 * change shell command quoting to prevent double-quotes problem (24 Nov 2006)

@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 372 2006-11-15 06:09:01Z faxguy $ */
+/*	$Id: Class2.c++ 392 2006-12-07 19:27:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -52,7 +52,7 @@ Class2Modem::setupModem(bool isSend)
 	return (false);
     // Query service support information
     fxStr s;
-    if (doQuery(conf.classQueryCmd, s, 500) && FaxModem::parseRange(s, modemServices))
+    if (doQuery(conf.classQueryCmd, s, 5000) && FaxModem::parseRange(s, modemServices))
 	traceBits(modemServices & SERVICE_ALL, serviceNames);
     if ((modemServices & serviceType) == 0)
 	return (false);
