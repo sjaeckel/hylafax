@@ -1,4 +1,4 @@
-/*	$Id: Class0.c++ 353 2006-10-31 22:00:28Z faxguy $ */
+/*	$Id: Class0.c++ 392 2006-12-07 19:27:54Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -47,7 +47,7 @@ Class0Modem::setupModem(bool isSetup)
 	return (false);
     // Query service support information
     fxStr s;
-    if (doQuery(conf.classQueryCmd, s, 500) && parseRange(s, modemServices))
+    if (doQuery(conf.classQueryCmd, s, 5000) && parseRange(s, modemServices))
 	traceBits(modemServices & SERVICE_ALL, serviceNames);
     if ((modemServices & SERVICE_DATA) == 0)
 	return (false);
