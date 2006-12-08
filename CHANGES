@@ -1,7 +1,9 @@
-#	$Id: CHANGES 392 2006-12-07 19:27:54Z faxguy $	
+#	$Id: CHANGES 393 2006-12-08 19:09:01Z faxguy $	
 
 New Changes
 
+* pad LocalIdentifier in Class 2 to keep the modem from filling the
+  void with garbage (8 Dec 2006)
 * increase the wait time for AT+FCLASS=? response (7 Dec 2006)
 * fix largely dysfunctional PAM support (6 Dec 2006)
 * fix and improve JobControl application of DesiredDF (1 Dec 2006)
