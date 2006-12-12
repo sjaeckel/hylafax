@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 192 2006-06-06 05:01:05Z faxguy $ */
+/*	$Id: Jobs.c++ 394 2006-12-13 00:52:25Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1457,8 +1457,15 @@ HylaFAXServer::submitJob(const char* jobid)
 	else if (job->client == "")
 	    replyBadJob(*job, T_CLIENT);
 	else {
-	    if (job->external == "")
+	    /*
+	     * If the client doesn't specify external then use number.  So
+	     * temporarily alter job->external as the job is updated on disk.
+	     */
+	    bool defaultexternal = false;
+	    if (job->external == "") {
 		job->external = job->number;
+		defaultexternal = true;
+	    }
 	    if (updateJobOnDisk(*job, emsg)) {
 		/*
 		 * NB: we don't mark the lastmod time for the
@@ -1476,6 +1483,8 @@ HylaFAXServer::submitJob(const char* jobid)
 			jobid, (const char*) emsg);
 	    } else
 		reply(450, "%s.", (const char*) emsg);	// XXX 550?
+	    if (defaultexternal)
+		job->external = "";
 	}
     }
 }
