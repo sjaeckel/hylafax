@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 390 2006-12-07 00:30:08Z faxguy $ */
+/*	$Id: Login.c++ 396 2006-12-13 19:14:08Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -214,9 +214,9 @@ HylaFAXServer::pamCheck(const char* user, const char* pass)
 	return retval;
 }
 
+#ifdef HAVE_PAM
 void HylaFAXServer::pamEnd(pam_handle_t *pamh, int pamret)
 {
-#ifdef HAVE_PAM
     if (pamret == PAM_SUCCESS)
     {
 	if (pamIsAdmin())
@@ -246,9 +246,8 @@ void HylaFAXServer::pamEnd(pam_handle_t *pamh, int pamret)
     }
     pamret = pam_end(pamh, pamret);
     pamh = NULL;
-
-#endif //HAVE_PAM
 }
+#endif //HAVE_PAM
 
 void
 HylaFAXServer::passCmd(const char* pass)
