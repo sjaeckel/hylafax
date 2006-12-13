@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 390 2006-12-07 00:30:08Z faxguy $ */
+/*	$Id: HylaFAXServer.h 396 2006-12-13 19:14:08Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -348,9 +348,11 @@ protected:
     void setFileOwner(const char* filename);
 
     void loginRefused(const char* why);
-	bool pamCheck(const char* user=NULL, const char* pass=NULL);
-	bool pamIsAdmin(const char* user=NULL);
-	void pamEnd(pam_handle_t *pamh, int pamret);
+    bool pamCheck(const char* user=NULL, const char* pass=NULL);
+    bool pamIsAdmin(const char* user=NULL);
+#ifdef HAVE_PAM
+    void pamEnd(pam_handle_t *pamh, int pamret);
+#endif
     bool checkUser(const char*);
     bool checkuser(FILE*, const char *name);
     bool checkuser(const char *name);
