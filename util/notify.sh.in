@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 398 2006-12-18 19:44:32Z faxguy $
+#    $Id: notify.sh.in 399 2006-12-19 00:23:54Z faxguy $
 #
 # ============================================
 #
@@ -81,7 +81,7 @@ notify_mail()
     echo "Content-Transfer-Encoding: quoted-printable"
     echo ""
     if [ -z "$THISJOBTYPE" ]; then
-	printf "$jobtag $DICTTO"
+	printf "$jobtag $DICTTO $number"
     else
 	eval printf \"$DICTYOURJOBTO\"
     fi
