@@ -1,5 +1,5 @@
 #! /bin/sh
-#    $Id: notify.sh.in 338 2006-10-20 00:12:04Z faxguy $
+#    $Id: notify.sh.in 398 2006-12-18 19:44:32Z faxguy $
 #
 # ============================================
 #
@@ -80,7 +80,11 @@ notify_mail()
     echo "Content-Type: text/plain; charset=$CHARSET"
     echo "Content-Transfer-Encoding: quoted-printable"
     echo ""
-    eval printf \"$DICTYOURJOBTO\"
+    if [ -z "$THISJOBTYPE" ]; then
+	printf "$jobtag $DICTTO"
+    else
+	eval printf \"$DICTYOURJOBTO\"
+    fi
     if [ "$WHY" = "done" ]; then
 	echo "$DICTCOMPLETEDSUCCESSFULLY"
 	echo ""
@@ -587,6 +591,7 @@ setCustomValues
 # possibly in the q file.
 adjustNotifyFaxMaster 
 
+THISJOBTYPE=""
 if [ -z "$jobtag" ] ; then
     THISJOBTYPE=`eval echo "$"DICT$jobtype`
     jobtag="`eval echo $DICTJOB`"
