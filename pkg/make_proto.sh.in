@@ -1,5 +1,5 @@
-#!/bin/sh
-# $Id: make_proto.sh.in 2 2005-11-11 21:32:03Z faxguy $
+#! @SCRIPT_SH@
+# $Id: make_proto.sh.in 400 2006-12-19 18:07:09Z faxguy $
 #
 #	Tim Rice	Wed Sep 24 18:19:04 PDT 1997
 #

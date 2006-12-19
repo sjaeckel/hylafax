@@ -1,6 +1,10 @@
-#	$Id: CHANGES 394 2006-12-13 00:52:25Z faxguy $	
+#	$Id: CHANGES 400 2006-12-19 18:07:09Z faxguy $	
 
 New Changes
+
+* change all fixed /bin/sh shebang references to SCRIPT_SH (19 Dec 2006)
+
+(5.0.2)
 
 * prevent an unspecified external number from causing the first number
   in a job group from being used with other jobs (12 Dec 2006)

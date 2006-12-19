@@ -1,5 +1,5 @@
-#! /bin/sh
-#	$Id: hylafax.in 188 2006-06-02 18:57:58Z faxguy $
+#! @SCRIPT_SH@
+#	$Id: hylafax.in 400 2006-12-19 18:07:09Z faxguy $
 #
 # chkconfig: 2345 97 05
 #
