@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 400 2006-12-19 18:07:09Z faxguy $
+#    $Id: notify.sh.in 401 2006-12-19 18:29:13Z faxguy $
 #
 # ============================================
 #
@@ -619,7 +619,7 @@ else
     FAXSTATUSMSG=`echo "$faxstatus" | sed -e 's/\\n/\n/g'`
 fi
 case "$WHY" in
-    done)
+    "done")
 	notify_mail "$jobtag $DICTTO $DESTINATION $DICTCOMPLETED" "$mailaddr";;
     failed)
 	notify_mail "$jobtag $DICTTO $DESTINATION $DICTFAILED" "$mailaddr";;
