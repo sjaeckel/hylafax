@@ -1,5 +1,5 @@
-#! /bin/sh
-#	$Id: tiff2fax.sh.in 188 2006-06-02 18:57:58Z faxguy $
+#! @SCRIPT_SH@
+#	$Id: tiff2fax.sh.in 400 2006-12-19 18:07:09Z faxguy $
 #
 # HylaFAX Facsimile Software
 #

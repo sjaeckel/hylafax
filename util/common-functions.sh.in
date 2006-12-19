@@ -1,5 +1,5 @@
-#!/bin/sh
-#    $Id: common-functions.sh.in 346 2006-10-28 03:07:41Z faxguy $
+#! @SCRIPT_SH@
+#    $Id: common-functions.sh.in 400 2006-12-19 18:07:09Z faxguy $
 
 #
 # This holds various functions that are common to the

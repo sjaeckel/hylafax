@@ -1,5 +1,5 @@
-#! /bin/sh
-#	$Id: mkcover.sh.in 2 2005-11-11 21:32:03Z faxguy $
+#! @SCRIPT_SH@
+#	$Id: mkcover.sh.in 400 2006-12-19 18:07:09Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
