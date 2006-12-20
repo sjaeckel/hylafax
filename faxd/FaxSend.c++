@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 389 2006-12-02 00:08:51Z faxguy $ */
+/*	$Id: FaxSend.c++ 402 2006-12-21 00:25:24Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -774,7 +774,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
     double rf = (params.vr == VR_R16 ? 2 : params.vr == VR_300X300 ? 1.5 : 1);
     if (w > (clientInfo.getMaxPageWidthInPixels()*rf)) {
 	emsg = fxStr::format("Client does not support document page width"
-		", max remote page width %u pixels, image width %lu pixels",
+		", max remote page width %g pixels, image width %lu pixels",
 		(uint32) (clientInfo.getMaxPageWidthInPixels()*rf), w);
 	return (send_reformat);
     }
@@ -790,7 +790,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	    0,
 	};
 	emsg = fxStr::format("Modem does not support document page width"
-		", max page width %u pixels, image width %lu pixels",
+		", max page width %g pixels, image width %lu pixels",
 		widths[modem->getBestPageWidth()&7]*rf, w);
 	return (send_reformat);
     }
