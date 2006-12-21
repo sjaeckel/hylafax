@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: Class1Recv.c++ 403 2006-12-21 22:07:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -210,12 +210,23 @@ Class1Modem::recvIdentification(
 		    bool gotframe = true;
 		    while (gotframe) {
 			if (!recvDCSFrames(frame)) {
-			    if (frame.getFCF() == FCF_DCN) {
-				emsg = "RSPREC error/got DCN";
-				recvdDCN = true;
-				return (false);
-			    } else		// XXX DTC/DIS not handled
-				emsg = "RSPREC invalid response received";
+			    switch (frame.getFCF()) {
+				case FCF_DCN:
+				    emsg = "RSPREC error/got DCN";
+				    recvdDCN = true;
+				    return (false);
+				case FCF_CRP:
+				case FCF_MPS:
+				case FCF_EOP:
+				case FCF_EOM:
+				    if (!useV34 && !switchingPause(emsg)) return (false);
+				    transmitFrame(signalSent);
+				    traceFCF("RECV send", (u_char) signalSent[2]);
+				    break;
+				default:	// XXX DTC/DIS not handled
+				    emsg = "RSPREC invalid response received";
+				    break;
+			    }
 			    break;
 			}
 			gotframe = false;

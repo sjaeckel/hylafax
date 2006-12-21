@@ -1,7 +1,8 @@
-#	$Id: CHANGES 400 2006-12-19 18:07:09Z faxguy $	
+#	$Id: CHANGES 403 2006-12-21 22:07:30Z faxguy $	
 
 New Changes
 
+* handle MPS/EOP/EOM/CRP when expecting DCS, i.e. after RTN (21 Dec 2006)
 * change all fixed /bin/sh shebang references to SCRIPT_SH (19 Dec 2006)
 
 (5.0.2)
