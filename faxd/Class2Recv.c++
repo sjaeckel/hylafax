@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: Class2Recv.c++ 404 2006-12-23 00:31:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -351,7 +351,12 @@ Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
 
 	/*
 	 * In practice we cannot trust the modem line count when we're 
-	 * not using ECM due to transmission errors.
+	 * not using ECM due to transmission errors and also due to
+	 * bugs in the modems' own decoders (like MMR).
+	 *
+	 * Furthermore, there exists a discrepancy between many modem's
+	 * behaviors and the specification.  Some give lc in hex and 
+	 * others in decimal, and so this would further complicate things.
 	 */
 	if (!conf.class2UseLineCount) {
 	    lc = getRecvEOLCount();
