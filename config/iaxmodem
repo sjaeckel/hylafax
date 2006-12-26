@@ -1,4 +1,4 @@
-# $Id: iaxmodem 280 2006-08-23 22:43:01Z faxguy $
+# $Id: iaxmodem 405 2006-12-27 03:56:35Z faxguy $
 
 #
 # prototype config for the IAXmodem softmodem which uses
@@ -43,6 +43,9 @@ ModemResetCmds:		AT+VCID=1	# enables CallID display
 #
 #RingsBeforeAnswer: 0
 #ModemRingResponse: AT+VRID=1
+
+# The pty apparently does not support changing parity.
+PagerTTYParity:		none
 
 Class1AdaptRecvCmd:	AT+FAR=1
 Class1TMConnectDelay:	400		# counteract quick CONNECT response

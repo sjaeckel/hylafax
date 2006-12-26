@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: ModemServer.c++ 405 2006-12-27 03:56:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1175,9 +1175,11 @@ ModemServer::setParity(Parity parity)
     if (!tcgetattr("setParity", term))
 	return (false);
     setParity(term, parity);
-    curParity = parity;				// used above
     flushModemInput();
-    return (tcsetattr(TCSANOW, term));
+    if (!tcsetattr(TCSANOW, term))
+	return (false);
+    curParity = parity;				// used above
+    return (true);
 }
 
 /*
