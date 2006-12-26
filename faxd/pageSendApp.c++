@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.c++ 353 2006-10-31 22:00:28Z faxguy $ */
+/*	$Id: pageSendApp.c++ 405 2006-12-27 03:56:35Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -247,7 +247,7 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, u_int& batched)
 	if (info.getPagerTTYParity() != "")
 	    pagerTTYParity = info.getPagerTTYParity();
 	// NB: may need to set tty baud rate here XXX
-    if (!(batched & BATCH_FIRST) || setupModem(true)) {
+        if (!(batched & BATCH_FIRST) || setupModem(true)) {
 	    changeState(SENDING);
 	    setServerStatus("Sending page " | req.jobid);
 	    /*
@@ -256,7 +256,7 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, u_int& batched)
 	     */
 	    fxStr msg;
 	    if (prepareMsg(req, info, msg))
-	       sendPage(req, info, prepareDialString(req.number), msg, batched);
+		sendPage(req, info, prepareDialString(req.number), msg, batched);
         } else
 	       sendFailed(req, send_retry, "Can not setup modem", 4*pollModemWait);
 
