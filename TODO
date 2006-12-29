@@ -1,4 +1,4 @@
-#	$Id: TODO 397 2006-12-13 21:52:41Z faxguy $
+#	$Id: TODO 406 2006-12-29 15:14:19Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -29,9 +29,6 @@ Add the mimeconverters for faxmail-PDF by default.
 BH job group support is broken
 B  file write errors during receive are not processed correctly
 B  polling bug in Class 1 driver (reset FCF sndr/rcvr bit at start of Phase B)
-B  no timeout in Class 1 receive if data is received when waiting for OK
-   after transmit of TSI (happens easily if wrong receive baud rate setup)
-B  sloppy processing of +FHNG: response to AT+FDT (extra read+timeout)
 H  fill-in VRFY op to support least-cost routing over a WAN
 H  polled transmission of documents (use SEP and PWD; add registration
    tools and query status support)
@@ -63,16 +60,6 @@ B      report#: 0002
           refs: 23/09/1996 Matthias.Apitz@SOFTCON.de
                 23/09/1996 sam@cthulhu.engr.sgi.com
           file: problemReports/0001
----------------
-B      report#: 0003
-       problem: MCF/RTN bug in the Class 2/2.0 driver
-                the modem says "+FPTS: 2,2219,0,0" which means
-                the page isn't good, ends phase C and ends phase C
-                and reports "+FET: 2"; HylaFAX just ignores the PPR value
-          refs: 28/01/1997 Stefan Pettersson <spp@lysator.liu.se>
-                02/02/1997 Matthias.Apitz@SOFTCON.de
-                03/02/1997 sam@sgi.com
-          file: problemReports/0003
 ---------------
 L      report#: 0011
        problem: gettimeofday(a,b) for older SVR4
