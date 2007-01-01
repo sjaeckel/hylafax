@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.c++ 222 2006-06-25 03:59:30Z faxguy $ */
+/*	$Id: TextFormat.c++ 408 2007-01-01 18:44:29Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -295,7 +295,7 @@ TextFormat::beginFormatting(FILE* o)
 }
 
 void
-TextFormat::endFormatting(void)
+TextFormat::endFormatting(bool skiptrailer)
 {
     emitPrologue();
     /*
@@ -320,7 +320,7 @@ TextFormat::endFormatting(void)
     if (fclose(tf))
 	fatal("Close failure on temporary file: %s", strerror(errno));
     tf = NULL;
-    emitTrailer();
+    if (!skiptrailer) emitTrailer();
     fflush(output);
     workStarted = false;
 }
@@ -954,12 +954,22 @@ TextFormat::endCol(void)
 	    pageHeight-bm-tm,		-col_width, 0);
     }
     if (column == numcol) {		// columns filled, start new page
-	pageNum++;
-	fputs("showpage\nend restore\n", tf);
-	flush();
-	newPage();
+	if (!bop) {
+	    pageNum++;
+	    fputs("showpage\nend restore\n", tf);
+	    flush();
+	    newPage();
+	}
     } else
-	newCol();
+	if (!boc)
+	    newCol();
+}
+
+void
+TextFormat::endPage(void)
+{
+    column = numcol;
+    endCol();
 }
 
 void

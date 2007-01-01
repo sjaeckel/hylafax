@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: Makefile.in 408 2007-01-01 18:44:29Z faxguy $
 #
 # @WARNING@
 #
@@ -60,3 +60,18 @@ install: default
 	${INSTALL} -F ${BIN} -m 755 -idb ${PRODUCT}.sw.client -O faxmail
 	${INSTALL} -F ${LIBDATA} -m 444 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/faxmail.ps -O faxmail.ps
+	-${INSTALL} -u ${SYSUSER} -g ${SYSGROUP} -m ${DIRMODE} \
+	    -idb hylafax.sw.client -dir ${LIBEXEC}/faxmail ${LIBEXEC}/faxmail/application ${LIBEXEC}/faxmail/image
+	${INSTALL} -F ${LIBEXEC}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
+	    -src ${SRCDIR}/application-pdf.sh -O pdf
+	${INSTALL} -F ${LIBEXEC}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
+	    -src ${SRCDIR}/application-octet-stream.sh -O octet-stream
+	${INSTALL} -F ${LIBEXEC}/faxmail/image -m 755 -idb ${PRODUCT}.sw.client \
+	    -src ${SRCDIR}/image-tiff.sh -O tiff
+
+#
+# These targets are created during the configuration procedure.
+#
+clobberconfig:
+	-${RM} -f application-pdf.sh image-tiff.sh application-octet-stream.sh
+

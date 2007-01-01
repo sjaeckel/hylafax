@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: faxmail.c++ 408 2007-01-01 18:44:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -79,6 +79,7 @@ private:
     SendFaxJob*	job;			// reference to outbound job
     fxStr	mailUser;		// user ID for contacting server
     bool	autoCoverPage;		// make cover page for direct delivery
+    bool	formatEnvHeaders;	// format envelope headers
 
     void formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg);
     void formatText(FILE* fd, MIMEState& mime);
@@ -138,7 +139,7 @@ faxMailApp::run(int argc, char** argv)
     readConfig(FAX_USERCONF);
 
     bool deliver = false;
-    while ((c = Sys::getopt(argc, argv, "12b:cdf:H:i:M:np:rRs:u:vW:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "12b:cdf:H:i:M:nNp:rRs:u:vW:")) != -1)
 	switch (c) {
 	case '1': case '2':		// format in 1 or 2 columns
 	    setNumberOfColumns(c - '0');
@@ -166,6 +167,9 @@ faxMailApp::run(int argc, char** argv)
 	    break;
 	case 'n':			// suppress cover page
 	    autoCoverPage = false;
+	    break;
+	case 'N':			// suppress formatting envelope headers
+	    formatEnvHeaders = false;
 	    break;
 	case 'p':			// point size
 	    setTextPointSize(TextFormat::inch(optarg));
@@ -244,11 +248,11 @@ faxMailApp::run(int argc, char** argv)
 	    client->setFromIdentity(*s);
 	} else {
 	    fxFatal("No From/Sender identity specified");
-    }
+	}
 
-    if (pageSize != "") {
-        job->setPageSize(pageSize);
-    }
+	if (pageSize != "") {
+	    job->setPageSize(pageSize);
+	}
 
 	/*
 	 * Scan envelope for any meta-headers that
@@ -334,20 +338,19 @@ faxMailApp::run(int argc, char** argv)
     if (version && *version == "1.0") {
         beginFile();
 	withinFile = true;
-        formatHeaders(*this);		// format top-level headers
+        if (formatEnvHeaders) formatHeaders(*this);	// format top-level headers
 	formatMIME(stdin, mime, *this);	// parse MIME format
         if (withinFile) endFile();
 	withinFile = false;
     } else {
         beginFile();
 	withinFile = true;
-        formatHeaders(*this);		// format top-level headers
+	if (formatEnvHeaders) formatHeaders(*this);	// format top-level headers
 	formatText(stdin, mime);	// treat body as text/plain
         if (withinFile) endFile();
 	withinFile = false;
     }
-
-    endFormatting();
+    endFormatting(mime.external);
 
     if (client) {			// complete direct delivery
 	bool status = false;
@@ -402,12 +405,24 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	 * the script.  Otherwise we fallback on some builtin
 	 * body part handlers that process the most common
 	 * content types we expect to encounter.
+	 *
+	 * We expect externally formatted documents to be 
+	 * complete Postscript pages in and of themselves.
+	 * (Otherwise either the formatter would need to know
+	 * numerous details about the current state and settings
+	 * of the existing Postscript formatting and would need
+	 * to make careful use of them, or we would need to 
+	 * implement our own Postscript interpreter to filter 
+	 * the external formatter output to suit.)
 	 */
+	mime.external = false;
 	const fxStr& type = mime.getType();
 	fxStr app = mimeConverters | "/" | type | "/" | mime.getSubType();
-	if (Sys::access(app, X_OK) >= 0)
+	if (Sys::access(app, X_OK) >= 0) {
+	    mime.external = true;
+	    if (mime.lineno > 1) endPage();	// new page
 	    formatWithExternal(fd, app, mime);
-	else if (type == "text")
+	} else if (type == "text")
 	    formatText(fd, mime);
 	else if (type == "application")
 	    formatApplication(fd, mime);
@@ -440,11 +455,10 @@ faxMailApp::formatText(FILE* fd, MIMEState& mime)
 void
 faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 {
-    bool isLastPart = false;
     discardPart(fd, mime);			// prologue
     if (!mime.isLastPart()) {
-	
-	do {
+	bool last = false;
+	while (!last) {
 	    int c = getc(fd);
 	    if (c == EOF) {
 		error("Badly formatted MIME; premature EOF");
@@ -457,8 +471,9 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 
 	    MIMEState bodyMime(mime);		// state for sub-part
 	    formatMIME(fd, bodyMime, bodyHdrs);
-	    isLastPart = bodyMime.isLastPart();
-	} while (!isLastPart);
+	    last = bodyMime.isLastPart();
+	    mime.external = bodyMime.external;
+	}
     }
 }
 
@@ -708,6 +723,7 @@ faxMailApp::setupConfig()
     pageSize = "";
     mailUser = "";			// default to real uid
     autoCoverPage = true;		// a la sendfax
+    formatEnvHeaders = true;		// format envelope headers by default
 
     setPageHeaders(false);		// disable normal page headers
     setNumberOfColumns(1);		// 1 input page per output page
@@ -735,6 +751,8 @@ faxMailApp::setConfigItem(const char* tag, const char* value)
 	markDiscarded = getBoolean(value);
     else if (streq(tag, "autocoverpage"))
 	autoCoverPage = getBoolean(value);
+    else if (streq(tag, "formatenvheaders"))
+	formatEnvHeaders = getBoolean(value);
     else if (streq(tag, "mimeconverters"))
 	mimeConverters = value;
     else if (streq(tag, "prologfile"))
@@ -830,6 +848,6 @@ faxMailApp::usage()
 	" [-W pagewidth]"
 	" [-M margins]"
 	" [-u user]"
-	" [-12cdnrRv]"
+	" [-12cdnNrRv]"
     );
 }

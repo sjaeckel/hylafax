@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: MsgFmt.c++ 408 2007-01-01 18:44:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -73,9 +73,19 @@ MsgFmt::getLine(FILE* fd, fxStackBuffer& buf)
     buf.reset();
     for (;;) {
 	int c = getc(fd);
+	c &= 0xff;
 	if (c == EOF)
 	    return (buf.getLength() > 0);
-	c &= 0xff;
+	if (c == '\r') {
+	    c = getc(fd);
+	    if (c == EOF)
+		return (buf.getLength() > 0);
+	    c &= 0xff;
+	    if (c != '\n') {
+		ungetc(c, fd);
+		c = '\r';
+	    }
+	}
 	if (c == '\n')
 	    break;
 	buf.put(c);
@@ -99,6 +109,17 @@ MsgFmt::parseHeaders(FILE* fd, u_int& lineno)
 	 */ 
 	fxStr line(&buf[0], buf.getLength());
 	u_int len = line.length();
+	// trim any RFC 822 comment strings
+	u_int colon = line.next(0, ':');
+	if (colon < len) {
+	    u_int paren = line.next(colon, '(');
+	    while (paren < len) {
+		u_int csize = line.next(paren, ')') - paren + 1;
+		line.remove(paren, csize);
+		len -= csize;
+		paren = line.next(colon, '(');
+	    }
+	}
 	if (len > 0 && !isspace(line[0])) { 
 	    u_int l = 0;
 	    field = line.token(l, ':');
@@ -278,6 +299,7 @@ MsgFmt::showItalic(TextFormat& fmt, const char* cp)
     FILE* tf = fmt.getOutputFile();		// output stream
     const char* tp = cp;
     for (; *tp != '\0'; tp++) {
+	if (*tp == '\r' && *(tp+1) == '\n') tp++;
 	TextCoord hm = italic->charwidth(*tp);
 	if (*tp == '\n' || x+hm > fmt.getRHS()) {// text would overflow line
 	    italic->show(tf, cp, tp-cp), cp = tp;// flush pending text

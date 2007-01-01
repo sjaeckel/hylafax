@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 367 2006-11-09 22:22:54Z faxguy $
+#	$Id: configure 408 2007-01-01 18:44:29Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -144,6 +144,7 @@ FAXD
 FAXGID
 FAXUID
 FAXQ_SERVER
+FILECMD
 FILLORDER
 FONTMAP
 FONTPATH	PATH_AFM
@@ -385,7 +386,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 367 $"
+	echo "This is HylaFAX configure $Revision: 408 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3573,6 +3574,7 @@ test "$CMP"	|| CMP=`findAppDef cmp $PATH cmp`
 test "$COL"	|| COL=`findAppDef col $PATH col`
 test "$CP"	|| CP=`findAppDef cp $PATH cp`
 test "$ECHO"	|| ECHO=`findAppDef echo $PATH echo`
+test "$FILECMD"	|| FILECMD=`findAppDef file $PATH file`
 test "$FUSER"	|| FUSER=`findAppDef fuser /sbin:$PATH fuser`
 test "$GENDIST"	|| GENDIST=`findAppDef gendist $PATH gendist`
 test "$GREP"	|| GREP=`findAppDef grep $PATH grep`
@@ -4814,7 +4816,6 @@ CONF_FILES="
     etc/Makefile
     faxalter/Makefile
     faxcover/Makefile
-    faxcover/edit-faxcover.sh
     faxd/Makefile
     faxmail/Makefile
     faxrm/Makefile
@@ -4824,6 +4825,11 @@ CONF_FILES="
     sendfax/Makefile
     sendpage/Makefile
     util/Makefile
+
+    faxcover/edit-faxcover.sh
+    faxmail/application-pdf.sh
+    faxmail/application-octet-stream.sh
+    faxmail/image-tiff.sh
 
     port/install.sh
 
