@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: MIMEState.h 408 2007-01-01 18:44:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -84,6 +84,7 @@ public:
     virtual ~MIMEState();
 
     u_int	lineno;			// input line number
+    bool	external;		// true if part was formatted externally
     bool parse(const MsgFmt&, fxStr& emsg);
 
     const fxStr& getType(void) const;

@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.c++ 196 2006-06-10 18:44:21Z faxguy $ */
+/*	$Id: MIMEState.c++ 408 2007-01-01 18:44:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -41,6 +41,7 @@ MIMEState::MIMEState(const char* t, const char* st) : type(t), subtype(st)
     charset = CS_USASCII;
     blen = (u_int) -1;			// NB: should insure no matches
     lineno = 1;
+    external = false;
 }
 MIMEState::MIMEState(MIMEState& other)
     : parent(&other)
@@ -55,6 +56,7 @@ MIMEState::MIMEState(MIMEState& other)
     charset = other.charset;
     blen = other.blen;
     lineno = other.lineno;
+    external = other.external;
 }
 MIMEState::MIMEState(MIMEState& other, const char* t, const char* st)
     : parent(&other)
@@ -67,6 +69,7 @@ MIMEState::MIMEState(MIMEState& other, const char* t, const char* st)
     charset = other.charset;
     blen = other.blen;
     lineno = other.lineno;
+    external = other.external;
 }
 MIMEState::~MIMEState()
 {
@@ -309,6 +312,17 @@ MIMEState::getLine(FILE* fd, fxStackBuffer& buf)
                 return (buf.getLength() > 0);
             }
             c &= 0xff;
+	    if (c == '\r') {
+		c = getc(fd);
+		if (c == EOF) {
+		    return (buf.getLength() > 0);
+		}
+		c &= 0xff;
+		if (c != '\n') {
+		    ungetc(c, fd);
+		    c = '\r';
+		}
+	    }
             if (c == '\n') {			// check for boundary marker
 	            lineno++;
 	            u_int cc = buf.getLength();
@@ -335,6 +349,17 @@ MIMEState::getLine(FILE* fd, fxStackBuffer& buf)
 	            return (buf.getLength() > 0);
             }
             c &= 0xff;
+	    if (c == '\r') {
+		c = getc(fd);
+		if (c == EOF) {
+		    return (buf.getLength() > 0);
+		}
+		c &= 0xff;
+		if (c != '\n') {
+		    ungetc(c, fd);
+		    c = '\r';
+		}
+	    }
             if (c == '\n') {			// check for boundary marker
 	            lineno++;
                 u_int cc = buf.getLength();
@@ -398,6 +423,18 @@ MIMEState::getQuotedPrintableLine(FILE* fd, fxStackBuffer& buf)
 	    return (buf.getLength() > 0);
 	}
 	c &= 0xff;
+	if (c == '\r') {
+	    c = getc(fd);
+	    if (c == EOF) {
+		copyQP(buf, line, cc);
+		return (buf.getLength() > 0);
+	    }
+	    c &= 0xff;
+	    if (c != '\n') {
+		ungetc(c, fd);
+		c = '\r';
+	    }
+	}
 	if (c == '\n') {			// check for boundary marker
 	    lineno++;
 	    if (cc > 0 && line[cc-1] == '=') {	// soft line break
@@ -482,6 +519,18 @@ MIMEState::getBase64Line(FILE* fd, fxStackBuffer& buf)
 	    return (buf.getLength() > 0);
 	}
 	c &= 0x7f;
+	if (c == '\r') {
+	    c = getc(fd);
+	    if (c == EOF) {
+		copyBase64(buf, line, cc);
+		return (buf.getLength() > 0);
+	    }
+	    c &= 0x7f;
+	    if (c != '\n') {
+		ungetc(c, fd);
+		c = '\r';
+	    }
+	}
 	if (c == '\n') {			// check for boundary marker
 	    lineno++;
 	    if (cc >= blen && line[0] == '-') {
@@ -540,6 +589,18 @@ MIMEState::getUUDecodeLine(FILE* fd, fxStackBuffer& buf)
 	    return (buf.getLength() > 0);
 	}
 	c &= 0x7f;
+	if (c == '\r') {
+	    c = getc(fd);
+	    if (c == EOF) {
+		copyUUDecode(buf, line, cc);
+		return (buf.getLength() > 0);
+	    }
+	    c &= 0x7f;
+	    if (c != '\n') {
+		ungetc(c, fd);
+		c = '\r';
+	    }
+	}
 	if (c == '\n') {
 	    lineno++;
 	    if (cc >= blen && line[0] == '-') {	// check for boundary marker

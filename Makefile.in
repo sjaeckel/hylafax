@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 129 2006-03-29 21:58:24Z faxguy $
+#	$Id: Makefile.in 408 2007-01-01 18:44:29Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -181,6 +181,7 @@ clobber::
 	(cd util; ${MAKE} clobberconfig)
 	(cd etc; ${MAKE} clobberconfig)
 	(cd faxcover; ${MAKE} clobberconfig)
+	(cd faxmail; ${MAKE} clobberconfig)
 	@if [ "@PORT@" = yes ]; then \
 	    ${ECHO} "= "port; cd port; ${MAKE} clobberconfig; ${MAKE} clobber; \
 	else \

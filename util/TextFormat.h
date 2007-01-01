@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.h 222 2006-06-25 03:59:30Z faxguy $ */
+/*	$Id: TextFormat.h 408 2007-01-01 18:44:29Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -189,7 +189,7 @@ public:
     void flush(void);
 
     void beginFormatting(FILE* output);
-    void endFormatting(void);
+    void endFormatting(bool skiptrailer = false);
     void beginFile(void);
     void formatFile(const char*);
     void formatFile(FILE*);
@@ -201,6 +201,7 @@ public:
     void newCol(void);
     void beginCol(void);
     void endCol(void);
+    void endPage(void);
     void beginLine();
     void endLine(void);
     void beginText(void);

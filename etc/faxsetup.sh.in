@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 341 2006-10-20 17:52:10Z faxguy $
+#	$Id: faxsetup.sh.in 408 2007-01-01 18:44:29Z faxguy $
 #
 # @WARNING@
 #
@@ -56,6 +56,7 @@ CHOWN=@CHOWN@			# change file owner for use below
 CP=@CP@				# cp command for use below
 ECHO=@ECHO@			# echo command for use below
 ENCODING=@ENCODING@		# encoding style for uuencode/mimencode
+FILECMD=@FILECMD@		# command for determining filetypes
 FUSER=@FUSER@			# fuser command to dump in setup.cache
 GREP=@GREP@			# grep command for use below
 LN=@LN@				# ln command for use below
@@ -138,6 +139,7 @@ DPSRIP		PATH_DPSRIP
 ECHO
 ENCODING
 FAXQ_SERVER
+FILECMD
 FUSER
 GREP
 GSRIP		PATH_GSRIP
