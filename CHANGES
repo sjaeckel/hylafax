@@ -1,6 +1,8 @@
-#	$Id: CHANGES 408 2007-01-01 18:44:29Z faxguy $	
+#	$Id: CHANGES 410 2007-01-02 17:18:45Z faxguy $	
 
 New Changes
+
+(5.0.3)
 
 * properly handle multipart MIME messages in faxmail (1 Jan 2007)
 * add faxmail -N "formatEnvHeaders" option (1 Jan 2007)
