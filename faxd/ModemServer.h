@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.h 348 2006-10-28 19:26:48Z faxguy $ */
+/*	$Id: ModemServer.h 412 2007-01-03 03:20:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -137,6 +137,7 @@ protected:
     virtual fxStr getModemCapabilities() const;
 // modem i/o support
     void	timerExpired(long, long);
+    void	sendDLEETX();
     int		getModemLine(char buf[], u_int bufSize, long ms = 0);
     int		getModemChar(long ms = 0);
     int		getModemBit(long ms = 0);
