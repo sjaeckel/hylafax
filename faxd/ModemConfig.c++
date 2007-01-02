@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 346 2006-10-28 03:07:41Z faxguy $ */
+/*	$Id: ModemConfig.c++ 411 2007-01-02 19:22:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -210,6 +210,7 @@ static struct {
 { "class1tmconnectdelay",	&ModemConfig::class1TMConnectDelay,  0 },
 { "class1ecmframesize",		&ModemConfig::class1ECMFrameSize,    256 },
 { "class1pagelengthsupport",	&ModemConfig::class1PageLengthSupport, LN_ALL },
+{ "class1pagewidthsupport",	&ModemConfig::class1PageWidthSupport, WD_ALL },
 };
 static struct {
     const char*		 name;

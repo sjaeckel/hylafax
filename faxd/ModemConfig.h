@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 346 2006-10-28 03:07:41Z faxguy $ */
+/*	$Id: ModemConfig.h 411 2007-01-02 19:22:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -166,6 +166,7 @@ public:
     u_int	class1TMConnectDelay;	// delay (ms) after +FTM CONNECT
     u_int	class1ECMFrameSize;	// ECM frame size for transmission
     u_int	class1PageLengthSupport;// page length support
+    u_int	class1PageWidthSupport;	// page width support
     bool	class1GreyJPEGSupport;	// Greyscale JPEG support
     bool	class1ColorJPEGSupport;	// Full-color JPEG support
     bool	class1ECMSupport;	// support T.30-A ECM

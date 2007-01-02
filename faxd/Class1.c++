@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 392 2006-12-07 19:27:54Z faxguy $ */
+/*	$Id: Class1.c++ 411 2007-01-02 19:22:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -180,7 +180,7 @@ Class1Modem::setupModem(bool isSend)
 	    primaryV34Rate = atoi(conf.class1EnableV34Cmd.extract(pos, conf.class1EnableV34Cmd.next(pos, ',') - pos));
 	modemParams.br |= BIT(primaryV34Rate) - 1;
     }
-    modemParams.wd = BIT(WD_A4) | BIT(WD_B4) | BIT(WD_A3);
+    modemParams.wd = conf.class1PageWidthSupport;
     modemParams.ln = conf.class1PageLengthSupport;
     modemParams.df = BIT(DF_1DMH) | BIT(DF_2DMR);
     modemParams.bf = BF_DISABLE;
