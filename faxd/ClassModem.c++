@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 353 2006-10-31 22:00:28Z faxguy $ */
+/*	$Id: ClassModem.c++ 412 2007-01-03 03:20:22Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -682,30 +682,6 @@ ClassModem::trimModemLine(char buf[], int& cc)
 bool
 ClassModem::reset(long ms)
 {
-    /*
-     * Sometimes a modem may get interrupted while in a
-     * "transmit" state such as AT+VTX (voice mode) or
-     * AT+FTM=146 (fax mode) or similar.  Now, the modem
-     * should be smart enough to return to command-mode
-     * after a short period of inactivity, but it's
-     * conceivable that some don't (and we've seen some
-     * that are this way).  Furthermore, it is likely
-     * possible to configure a modem in such a way so as
-     * to never provide for that short period of inactivity.
-     * Further complicating matters, some modems are not 
-     * sensitive to DTR.
-     *
-     * So we send DLE+ETX to the modem just in case we
-     * happen to have a modem in this kind of state, waiting
-     * for DLE+ETX before returning to command mode.  If
-     * it causes trouble here then we'll want to do it
-     * between reset attempts, after the first one fails.
-     */
-    u_char buf[2];
-    buf[0] = DLE;
-    buf[1] = ETX;
-    (void) putModemData(buf, 2);
-
     setDTR(false);
     pause(conf.dtrDropDelay);		// required DTR OFF-to-ON delay
     setDTR(true);
@@ -1379,6 +1355,7 @@ ClassModem::waitForRings(u_short rings, CallType& type, CallID& callid)
     time_t start = Sys::now();
     do {
 	switch (atResponse(rbuf, conf.ringTimeout)) {
+	case AT_DTMF:
 	case AT_OTHER:			// check distinctive ring
 	    if (streq(conf.ringData, rbuf))
 		type = CALLTYPE_DATA;
