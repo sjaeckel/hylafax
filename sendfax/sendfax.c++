@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 222 2006-06-25 03:59:30Z faxguy $ */
+/*	$Id: sendfax.c++ 413 2007-01-04 02:10:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -134,7 +134,7 @@ sendFaxApp::run(int argc, char** argv)
 	    proto.setFaxName(optarg);
 	    break;
         case 'E':			// disable use of ECM
-            proto.setDesiredEC(false);
+            proto.setDesiredEC(EC_DISABLE);
             break;
         case 'F':			// override tag line format string
             proto.setTagLineFormat(optarg);
@@ -327,7 +327,7 @@ sendFaxApp::addDestination(const char* cp)
     job.setDialString(dest);
     job.setCoverName(recipient);
     job.setSubAddress(subaddress);
-    if(job.getDesiredSpeed() > BR_14400 && job.getDesiredEC() == false) {
+    if(job.getDesiredSpeed() > BR_14400 && job.getDesiredEC() == EC_DISABLE) {
         printWarning("ECM disabled, limiting job to 14400 bps.");
         job.setDesiredSpeed(BR_14400);
     }

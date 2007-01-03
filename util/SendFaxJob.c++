@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 375 2006-11-18 18:50:13Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 413 2007-01-04 02:10:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -187,7 +187,7 @@ SendFaxJob::setConfigItem(const char* tag, const char* value)
     else if (streq(tag, "desiredmst"))
 	setDesiredMST(value);
     else if (streq(tag, "desiredec"))
-	setDesiredEC(FaxConfig::getBoolean(value));
+	setDesiredEC(value);
     else if (streq(tag, "usexvres"))
 	setUseXVRes(FaxConfig::getBoolean(value));
     else if (streq(tag, "desireddf"))
@@ -387,7 +387,12 @@ SendFaxJob::setDesiredMST(const char* v)
 	desiredst = atoi(v);
 }
 void SendFaxJob::setDesiredMST(int v)			{ desiredst = v; }
-void SendFaxJob::setDesiredEC(bool b)			{ desiredec = b; }
+void
+SendFaxJob::setDesiredEC(const char* e)
+{
+    desiredec = atoi(e); 
+}
+void SendFaxJob::setDesiredEC(int e)			{ desiredec = e; }
 void SendFaxJob::setUseXVRes(bool b)			{ useXVRes = b; }
 void
 SendFaxJob::setDesiredDF(const char* v)
@@ -507,8 +512,17 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     IFPARM("MINBR", minsp, (u_int) -1)
     IFPARM("BEGBR", desiredbr, (u_int) -1)
     IFPARM("BEGST", desiredst, (u_int) -1)
-    if (desiredec != (u_int) -1)
-	CHECKPARM("USEECM", (bool) desiredec)
+    if (desiredec != (u_int) -1) {
+	CHECKPARM("USEECM", (bool) (desiredec != 0 ? true : false))
+	if (desiredec) {
+	    CHECKPARM("ECMTYPE", 
+		desiredec == 1	? "64bit" :
+		desiredec == 2	? "256bit" :
+		desiredec == 3	? "halfduplex" :
+		desiredec == 4	? "fullduplex" :
+				  "256bit");
+	}
+    }
     if (desireddf != (u_int) -1) {
 	CHECKPARM("DATAFORMAT",
 	    desireddf == 0	? "g31d" :

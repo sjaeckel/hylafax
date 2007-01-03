@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 396 2006-12-13 19:14:08Z faxguy $ */
+/*	$Id: HylaFAXServer.h 413 2007-01-04 02:10:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -126,7 +126,7 @@ enum Token {
     T_RETRYTIME, T_SCHEDPRI,	T_SENDTIME,	T_STATE,	T_STATUS,
     T_SUBADDR,	 T_TAGLINE,	T_TOTDIALS,	T_TOTPAGES,	T_TOTTRIES,
     T_TO_COMPANY,T_TO_LOCATION,	T_TO_USER,	T_TO_VOICE,	T_TSI,		T_USE_CONTCOVER,
-    T_USE_ECM,	 T_USE_TAGLINE,	T_USE_XVRES,	T_USRKEY,	T_VRES,
+    T_USE_ECM,	 T_ECMTYPE,	T_USE_TAGLINE,	T_USE_XVRES,	T_USRKEY,	T_VRES,
     /*
      * SNPP tokens.
      */
