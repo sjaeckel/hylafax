@@ -1,7 +1,9 @@
-#	$Id: CHANGES 412 2007-01-03 03:20:22Z faxguy $	
+#	$Id: CHANGES 413 2007-01-04 02:10:22Z faxguy $	
 
 New Changes
 
+* fix DesiredEC support in sendfax.conf (3 Jan 2007)
+* add hfaxd JPARM ECMTYPE option (3 Jan 2007)
 * use DLE+ETX in resetting more carefully, sparingly (2 Jan 2007)
 * add Class1PageWidthSupport modem config option (2 Jan 2007)
 

@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 394 2006-12-13 00:52:25Z faxguy $ */
+/*	$Id: Jobs.c++ 413 2007-01-04 02:10:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -160,6 +160,7 @@ static const struct {
     { T_TSI,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USE_CONTCOVER,	A_RUSR|A_RADM|A_WADM|A_ROTH },
     { T_USE_ECM,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_ECMTYPE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USE_TAGLINE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USE_XVRES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USRKEY,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
@@ -268,6 +269,13 @@ static const char* dataVals[] = {
     "G32D",		// Group 3, 2-D
     "G32DUNC",		// Group 3, 2-D (w/ uncompressed)
     "G4"		// Group 4
+};
+static const char* ecmVals[] = {
+    "NONE",		// 0 = no ECM
+    "64BIT",		// 64-bit T.30-A ECM
+    "256BIT",		// 256-bit T.30-A ECM
+    "HALFDUPLEX",	// Half Duplex T.30-C ECM
+    "FULLDUPLEX"	// Full Duplex T.30-C ECM
 };
 static const char* stateVals[] = {
     "UNDEFINED",	// undefined state (should never be used)
@@ -416,8 +424,11 @@ HylaFAXServer::replyJobParamValue(Job& job, int code, Token t)
     case T_DATAFORMAT:
 	reply(code, "%s", dataVals[job.desireddf]);
 	return;
+    case T_ECMTYPE:
+	reply(code, "%s", ecmVals[job.desiredec]);
+	return;
     case T_USE_ECM:
-	replyBoolean(code, job.desiredec);
+	replyBoolean(code, (job.desiredec != EC_DISABLE ? 1 : 0));
 	return;
     case T_USE_TAGLINE:
 	replyBoolean(code, job.desiredtl);
@@ -548,8 +559,10 @@ HylaFAXServer::jstatCmd(const Job& job)
 	jstatLine(T_CHOPTHRESH,	"%g", job.chopthreshold);
     if (checkAccess(job, T_DATAFORMAT, A_READ))
 	jstatLine(T_DATAFORMAT,	"%s", dataVals[job.desireddf]);
+    if (checkAccess(job, T_ECMTYPE, A_READ))
+	jstatLine(T_ECMTYPE,	"%s", ecmVals[job.desiredec]);
     if (checkAccess(job, T_USE_ECM, A_READ))
-	jstatLine(T_USE_ECM,	"%s", boolString(job.desiredec));
+	jstatLine(T_USE_ECM,	"%s", boolString(job.desiredec != EC_DISABLE ? 1 : 0));
     if (checkAccess(job, T_USE_TAGLINE, A_READ))
 	jstatLine(T_USE_TAGLINE,"%s", boolString(job.desiredtl));
     if (checkAccess(job, T_USE_XVRES, A_READ))
@@ -690,6 +703,12 @@ HylaFAXServer::setJobParameter(Job& job, Token t, const fxStr& value)
 		return (true);
 	    } else
 		return (false);
+	case T_ECMTYPE:
+	    if (setValue(job.desiredec, value, parmToken(t),
+	      ecmVals, N(ecmVals))) {
+		return (true);
+	    } else
+		return (false);
 	default:
 	    break;
 	}
@@ -796,7 +815,7 @@ HylaFAXServer::setJobParameter(Job& job, Token t, bool b)
     if (checkParm(job, t, A_WRITE|A_MODIFY)) {
 	switch (t) {
 	case T_USE_ECM:
-	    job.desiredec = b;
+	    job.desiredec = (b ? (job.desiredec == EC_DISABLE ? EC_ENABLE256 : job.desiredec) : EC_DISABLE);
 	    return (true);
 	case T_USE_TAGLINE:
 	    job.desiredtl = b;

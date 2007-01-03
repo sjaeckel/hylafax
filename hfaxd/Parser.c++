@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 308 2006-09-27 19:53:24Z faxguy $ */
+/*	$Id: Parser.c++ 413 2007-01-04 02:10:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -177,6 +177,7 @@ static const tab parmtab[] = {
 { "USECONTCOVER", T_USE_CONTCOVER,false, true, "[YES|NO]" },
 { "USEXVRES",     T_USE_XVRES,	  false, true, "[YES|NO]" },
 { "USEECM",       T_USE_ECM,	  false, true, "[YES|NO]" },
+{ "ECMTYPE",      T_ECMTYPE,	  false, true, "[64BIT|256BIT|HALFDUPLEX|FULLDUPLEX]" },
 { "USETAGLINE",   T_USE_TAGLINE,  false, true, "[YES|NO]" },
 { "USRKEY",       T_USRKEY,	  false, true, "[<string>]" },
 { "VRES",         T_VRES,	  false, true, "[lines-per-inch]" },
@@ -1121,6 +1122,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_FAXNUMBER:
     case T_FAXNAME:
     case T_TSI:
+    case T_ECMTYPE:
 	if (opt_CRLF()) {
 	    replyJobParamValue(*curJob, 213, t);
 	    return (true);

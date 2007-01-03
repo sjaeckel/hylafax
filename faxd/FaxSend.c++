@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 402 2006-12-21 00:25:24Z faxguy $ */
+/*	$Id: FaxSend.c++ 413 2007-01-04 02:10:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -522,13 +522,25 @@ FaxServer::sendClientCapabilitiesOK(FaxRequest& fax, FaxMachineInfo& clientInfo,
      * peer implements and our modem is also capable.
      */
     if ((clientCapabilities.ec != EC_DISABLE) && modem->supportsECM() && fax.desiredec) {
-	// Technically, if the remote reports either type of T.30-A ECM, then they
-	// must therefore support the other (so we could pick), but we should follow
-	// the advice in T.30-C to honor the remote's bytes/frame request.
-	if (modem->supportsECM(EC_ENABLE256) && clientCapabilities.ec == EC_ENABLE256)
-	    clientParams.ec = EC_ENABLE256;
-	else
+	/*
+	 * 1) The receiver expresses a preference one type of T.30-A ECM. In nearly 
+	 *    all circumstances 256-bit is the default.
+	 * 2) We allow the fax job also to express a preference for one type or the 
+	 *    other to be used.  Our default is also 256-bit.
+	 * 3) We allow the Class 1 modem to specify a preference between them.  Again,
+	 *    the default it 256-bit.
+	 * 4) Although T.30-C advises us to honor remote preferences (although 
+	 *    discussing a different ECM type than these) the receiver is required to 
+	 *    support both if either are supported at all.
+	 *
+	 * So, to respond to all of these preferences we basically say that if any
+	 * of these preferences indicate 64-bit then use 64-bit.  Otherwise, use
+	 * 256-bit.
+	 */
+	if (!modem->supportsECM(EC_ENABLE256) || clientCapabilities.ec != EC_ENABLE256 || fax.desiredec != EC_ENABLE256)
 	    clientParams.ec = EC_ENABLE64;
+	else
+	    clientParams.ec = EC_ENABLE256;
     } else
 	clientParams.ec = EC_DISABLE;
     clientParams.bf = BF_DISABLE;

@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 347 2006-10-28 18:45:15Z faxguy $ */
+/*	$Id: Class1Send.c++ 413 2007-01-04 02:10:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -660,7 +660,7 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
     params.update(false);
     // we should respect the frame-size preference indication by the remote (DIS_FRAMESIZE)
     if (params.ec != EC_DISABLE && 
-	(conf.class1ECMFrameSize == 64 || dis_caps.isBitEnabled(FaxParams::BITNUM_FRAMESIZE_DIS))) {
+	(params.ec == EC_ENABLE64 || conf.class1ECMFrameSize == 64 || dis_caps.isBitEnabled(FaxParams::BITNUM_FRAMESIZE_DIS))) {
 	params.setBit(FaxParams::BITNUM_FRAMESIZE_DCS, true); // we don't want to add this bit if not using ECM
 	frameSize = 64;
     } else

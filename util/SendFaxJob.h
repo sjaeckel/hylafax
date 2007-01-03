@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.h 375 2006-11-18 18:50:13Z faxguy $ */
+/*	$Id: SendFaxJob.h 413 2007-01-04 02:10:22Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -257,8 +257,9 @@ public:
     void setDesiredMST(int);		// desired/initial min-scanline time
     void setDesiredMST(const char* v);
     int getDesiredMST() const;
-    void setDesiredEC(bool b);	// desired use of Error Correction mode
-    bool getDesiredEC() const;
+    void setDesiredEC(int e);		// desired use of Error Correction mode
+    void setDesiredEC(const char* e);
+    int getDesiredEC() const;
     void setUseXVRes(bool b);		// desired use of extended resolutions
     bool getUseXVRes() const;
     void setDesiredDF(int);		// desired data format
@@ -314,7 +315,7 @@ inline float SendFaxJob::getHResolution() const		{ return hres; }
 inline int SendFaxJob::getMinSpeed() const		{ return minsp; }
 inline int SendFaxJob::getDesiredSpeed() const		{ return desiredbr; }
 inline int SendFaxJob::getDesiredMST() const		{ return desiredst; }
-inline bool SendFaxJob::getDesiredEC() const		{ return desiredec; }
+inline int SendFaxJob::getDesiredEC() const		{ return desiredec; }
 inline bool SendFaxJob::getUseXVRes() const		{ return useXVRes; }
 inline int SendFaxJob::getDesiredDF() const		{ return desireddf; }
 inline const fxStr& SendFaxJob::getTagLineFormat() const{ return tagline; }
