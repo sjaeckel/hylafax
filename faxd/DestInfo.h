@@ -1,4 +1,4 @@
-/*	$Id: DestInfo.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: DestInfo.h 414 2007-01-05 21:57:24Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,6 +60,7 @@ public:
     ~DestInfo();
 
     u_int getActive() const;		// return count of active jobs
+    u_int getBlocked() const;		// return count of blocked jobs
     u_int getCount() const;		// return count of active+blocked jobs
     bool isEmpty() const;		// true if any jobs referenced
     u_int getCalls() const;		// return count of active calls
@@ -79,6 +80,7 @@ public:
 };
 
 inline u_int DestInfo::getActive() const	{ return activeCount; }
+inline u_int DestInfo::getBlocked() const	{ return blockedCount; }
 inline u_int DestInfo::getCount() const
     { return activeCount + blockedCount; }
 inline bool DestInfo::isEmpty() const		{ return getCount() == 0; }
