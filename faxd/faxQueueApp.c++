@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 389 2006-12-02 00:08:51Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 414 2007-01-05 21:57:24Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1441,6 +1441,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
     DestInfo& di = destJobs[job.dest];
     di.hangup();				// do before unblockDestJobs
     releaseModem(job);				// done with modem
+    removeDestInfoJob(job);
     FaxRequest* req = readRequest(job);
     if (req && req->status == send_retry) {
 	// prevent turnaround-redialing, delay any blocked jobs
@@ -2326,12 +2327,23 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
 	    req->notice = "";
 	    updateRequest(*req, *jb);
 	    delete req;
+	    if (di.getBlocked() && !isOKToCall(di, jb->getJCI(), n))
+		break;
 	} else {
-	    traceQueue("Continue BLOCK on jobs to %s, current calls: %d, max concurrent calls: %d", 
-		(const char*) jb->dest, di.getCalls()+n, jb->getJCI().getMaxConcurrentCalls());
+	    /*
+	     * unblockDestJobs was called, but a new
+	     * call cannot be placed.  This would be
+	     * unusual, but because di.nextBlocked
+	     * removed jb from the di list, we need
+	     * to put it back.
+	     */
+	    di.block(*jb);
 	    break;
 	}
     }
+    if (di.getBlocked())
+	traceQueue("Continue BLOCK on %d job(s) to %s, current calls: %d, max concurrent calls: %d", 
+	    di.getBlocked(), (const char*) jb->dest, di.getCalls()+n-1, jb->getJCI().getMaxConcurrentCalls());
 }
 
 void
