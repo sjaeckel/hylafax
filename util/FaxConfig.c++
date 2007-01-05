@@ -1,4 +1,4 @@
-/*	$Id: FaxConfig.c++ 370 2006-11-14 00:29:58Z faxguy $ */
+/*	$Id: FaxConfig.c++ 415 2007-01-05 22:24:10Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -56,15 +56,7 @@ FaxConfig::readConfig(const fxStr& filename)
 	char line[1024];
 	while (fgets(line, sizeof (line)-1, fd)) {
 	    line[strlen(line)-1]='\0';		// Nuke \r at end of line
-	    while (strlen(line) && isspace(line[strlen(line)-1])) line[strlen(line)-1]='\0';	// strip trailing white space
-	    if (strncmp(line, "#include", 8) == 0 && isspace(line[8])) {
-		int ptr = 9;
-		for (; isspace(line[ptr]) && ptr < 1024; ptr++);	// skip leading white space
-		configTrace("Including configuration entries from \"%s\".", line+ptr);
-		readConfig(line+ptr);
-	    } else {
-		(void) readConfigItem(line);
-	    }
+	    (void) readConfigItem(line);
 	}
 	fclose(fd);
     }
@@ -215,6 +207,14 @@ FaxConfig::readConfigItem(const char* b)
 	for (value = cp; *cp && !isspace(*cp); cp++)
 	    ;
 	*cp = '\0';
+    }
+    if (streq(tag, "include")) {
+	u_int old_lineno = lineno;
+	configTrace("%s = %s (line %u)", tag, value, lineno);
+	lineno = 0;
+	readConfig(value);
+	lineno = old_lineno;
+	return (true);
     }
     if (!setConfigItem(tag, value)) {
 	configTrace("Unknown configuration parameter \"%s\" ignored at line %u",
