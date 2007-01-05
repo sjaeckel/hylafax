@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 411 2007-01-02 19:22:54Z faxguy $
+.\"	$Id: hylafax-config.4f 415 2007-01-05 22:24:10Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-01-02 11:22:54 -0800 (Tue, 02 Jan 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-01-05 14:24:10 -0800 (Fri, 05 Jan 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -61,17 +61,6 @@ for
 .I term_10
 for
 .IR /dev/term/10 .
-.PP
-Entries from additional configuration files may be included at any point
-within a configuration file by using an ``include'' line within the
-configuration file like this:
-.sp .5
-.ti +0.5i
-\fB#include etc/config.more\fP
-.br
-.sp .5
-where ``etc/config.more'' is a file containing the desired additional
-configuration entires.
 .PP
 Configuration files have a simple format and are entirely
 .SM ASCII.
@@ -156,6 +145,7 @@ DynamicConfig	string	\-	script for dynamic receive configuration
 FAXNumber	string	\-	facsimile modem phone number
 FaxRcvdCmd	string	\s-1bin/faxrcvd\s+1	notification script for received facsimile
 GettyArgs	string	\-	arguments passed to getty program
+Include²	string	\-	include another config file
 InternationalPrefix²	string	\-	dialing prefix for international calls
 JobControlCmd¹	string	\-	job control command
 JobReqBusy	integer	\s-1180\s+1	requeue interval for \s-1BUSY\s+1 dial result
@@ -865,6 +855,9 @@ are used to generate the transmitted
 .SM CSI
 and
 .SM TSI.
+.TP
+.B Include²
+Include the specified config file as if it were part of this config file.
 .TP
 .B InternationalPrefix²
 The string to use to place an international phone call.
