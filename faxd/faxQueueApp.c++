@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 414 2007-01-05 21:57:24Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 416 2007-01-08 17:43:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1441,7 +1441,6 @@ faxQueueApp::sendJobDone(Job& job, int status)
     DestInfo& di = destJobs[job.dest];
     di.hangup();				// do before unblockDestJobs
     releaseModem(job);				// done with modem
-    removeDestInfoJob(job);
     FaxRequest* req = readRequest(job);
     if (req && req->status == send_retry) {
 	// prevent turnaround-redialing, delay any blocked jobs
@@ -1456,6 +1455,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
     } else {
 	unblockDestJobs(di);
     }
+    removeDestInfoJob(job);
     for (cjob = &job; cjob != NULL; cjob = njob) {
 	njob = cjob->bnext;
 	if (cjob != &job) req = readRequest(*cjob);	// the first was already read
@@ -2327,8 +2327,17 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
 	    req->notice = "";
 	    updateRequest(*req, *jb);
 	    delete req;
-	    if (di.getBlocked() && !isOKToCall(di, jb->getJCI(), n))
+	    /*
+	     * We check isOKToCall again here now to avoid di.nextBlocked
+	     * which would pull jb from the blocked list and then possibly
+	     * require us to re-block it, and restoring the blocked order
+	     * would be troublesome.
+	     */
+	    if (di.getBlocked() && !isOKToCall(di, jb->getJCI(), n)) {
+		traceQueue("Continue BLOCK on %d job(s) to %s, current calls: %d, max concurrent calls: %d", 
+		    di.getBlocked(), (const char*) jb->dest, di.getCalls()+n-1, jb->getJCI().getMaxConcurrentCalls());
 		break;
+	    }
 	} else {
 	    /*
 	     * unblockDestJobs was called, but a new
@@ -2338,12 +2347,11 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
 	     * to put it back.
 	     */
 	    di.block(*jb);
+	    traceQueue("Continue BLOCK on %d job(s) to %s, current calls: %d, max concurrent calls: %d", 
+		di.getBlocked(), (const char*) jb->dest, di.getCalls()+n-1, jb->getJCI().getMaxConcurrentCalls());
 	    break;
 	}
     }
-    if (di.getBlocked())
-	traceQueue("Continue BLOCK on %d job(s) to %s, current calls: %d, max concurrent calls: %d", 
-	    di.getBlocked(), (const char*) jb->dest, di.getCalls()+n-1, jb->getJCI().getMaxConcurrentCalls());
 }
 
 void
