@@ -1,7 +1,9 @@
-#	$Id: CHANGES 418 2007-01-11 18:36:24Z faxguy $	
+#	$Id: CHANGES 420 2007-01-11 20:38:02Z faxguy $	
 
 New Changes
 
+* log correctly when a receiver DIS indicates no V.8 bit but
+  V.8 was already known to have succeeded (11 Jan 2006)
 * change default SessionTracing to 0xFFF (11 Jan 2006)
 * don't clobber tiffcp exit code data in tiff2fax (9 Jan 2006)
 * change #include config file feature to be uniform colon-delimited
