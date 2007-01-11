@@ -1,4 +1,4 @@
-# $Id: class1.0 265 2006-08-07 16:53:14Z faxguy $
+# $Id: class1.0 418 2007-01-11 18:36:24Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -40,7 +40,7 @@
 #FAXNumber:		+1.999.555.1212
 #LocalIdentifier:	"NothingSetup"	# default is canonical FAXNumber
 #ServerTracing:		1		# log server-related operations
-#SessionTracing:		11		# log server-related operations
+#SessionTracing:	0xFFF		# log session-related operations
 #RecvFileMode:		0600		# recvd facsimile are not public
 #LogFileMode:		0600		# private log files
 #DeviceMode:		0600		# device is accessible only to uucp/fax

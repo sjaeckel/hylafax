@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 350 2006-10-30 18:24:59Z faxguy $
+#	$Id: faxaddmodem.sh.in 418 2007-01-11 18:36:24Z faxguy $
 #
 # @WARNING@
 #
@@ -464,7 +464,7 @@ defaultLongDistancePrefix=\"\"
 defaultInternationalPrefix=\"\"
 defaultDialStringRules=\"\"
 defaultServerTracing=1
-defaultSessionTracing=1
+defaultSessionTracing=0xFFF
 defaultRecvFileMode=0600
 defaultLogFileMode=0600
 defaultDeviceMode=0600
@@ -1909,7 +1909,7 @@ defaultPS2FaxCmd=\"bin/ps2fax\"
 defaultSendFaxCmd=\"bin/faxsend\"
 defaultSendPageCmd=\"bin/pagesend\"
 defaultSendUUCPCmd=\"bin/uucpsend\"
-defaultSessionTracing=0xffffffff
+defaultSessionTracing=0xFFF
 defaultTimeOfDay=\"Any\"
 defaultUse2D=Yes
 #

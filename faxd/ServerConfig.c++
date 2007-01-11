@@ -1,4 +1,4 @@
-/*	$Id: ServerConfig.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: ServerConfig.c++ 418 2007-01-11 18:36:24Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -96,7 +96,7 @@ ServerConfig::S_stringtag ServerConfig::strings[] = {
 ServerConfig::S_numbertag ServerConfig::numbers[] = {
 { "tracingmask",	&ServerConfig::tracingMask,	// NB: must be first
    FAXTRACE_MODEMIO|FAXTRACE_TIMEOUTS },
-{ "sessiontracing",	&ServerConfig::logTracingLevel,	FAXTRACE_SERVER },
+{ "sessiontracing",	&ServerConfig::logTracingLevel,	0xFFF },
 { "servertracing",	&ServerConfig::tracingLevel,	FAXTRACE_SERVER },
 { "uucplocktimeout",	&ServerConfig::uucpLockTimeout,	0 },
 { "jobreqproto",	&ServerConfig::requeueProto,	FAX_REQPROTO },
