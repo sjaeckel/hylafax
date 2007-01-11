@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 361 2006-11-04 00:38:58Z faxguy $ */
+/*	$Id: Class1.h 420 2007-01-11 20:38:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -125,6 +125,7 @@ protected:
     virtual bool setupFlowControl(FlowControl fc);
 // transmission support
     bool	sendPrologue(FaxParams& dcs_caps, const fxStr& tsi);
+    void	checkReceiverDIS(Class2Params&);
     bool	dropToNextBR(Class2Params&);
     bool	raiseToNextBR(Class2Params&);
     bool	sendTraining(Class2Params&, int, fxStr& emsg);

@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 419 2007-01-11 20:05:11Z faxguy $ */
+/*	$Id: Class1Send.c++ 420 2007-01-11 20:38:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -123,6 +123,21 @@ Class1Modem::sendBegin()
 #define BATCH_FIRST 1
 #define BATCH_LAST  2
 
+void
+Class1Modem::checkReceiverDIS(Class2Params& params)
+{
+    if (useV34) {
+	if (params.ec == EC_DISABLE) {
+	    protoTrace("V.34-Fax session, but DIS signal contains no ECM bit; ECM forced.");
+	    params.ec = EC_ENABLE256;
+	}
+	if (params.br != BR_33600) {
+	    protoTrace("V.34-Fax session, but DIS signal contains no V.8 bit.");
+	    params.br = BR_33600;
+	}
+    }
+}
+
 /*
  * Get the initial DIS command.
  */
@@ -164,10 +179,7 @@ Class1Modem::getPrologue(Class2Params& params, bool& hasDoc, fxStr& emsg, u_int&
 		    dis_caps = frame.getDIS();
 		    params.setFromDIS(dis_caps);
 		    curcap = NULL;			// force initial setup
-		    if (useV34 && params.ec == EC_DISABLE) {
-			protoTrace("V.34-Fax session, but DIS signal contains no ECM bit; ECM forced.");
-			params.ec = EC_ENABLE256;
-		    }
+		    checkReceiverDIS(params);
 		    break;
 		}
 	    } while (frame.moreFrames() && recvFrame(frame, FCF_SNDR, conf.t2Timer));
@@ -812,25 +824,23 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 		case FCF_FTT:		// failure to train, retry
 		    break;
 		case FCF_DIS:		// new capabilities, maybe
-		    { FaxParams newDIS = frame.getDIS();
-		      if (newDIS != dis_caps) {
-			/*
-			dis_caps = newDIS;
-			params.setFromDIS(dis_caps);
-			 *
-			 * The above code was commented because to
-			 * use the newDIS we need to do more work like
-			 *     sendClientCapabilitiesOK()
-			 *     sendSetupParams()
-			 * So we ignore newDIS.
-			 * It will work if old dis 'less' then newDIS.
-			 */
-			curcap = NULL;
-			if (useV34 && params.ec == EC_DISABLE) {
-			    protoTrace("V.34-Fax session, but DIS signal contains no ECM bit; ECM forced.");
-			    params.ec = EC_ENABLE256;
+		    {
+			FaxParams newDIS = frame.getDIS();
+			if (newDIS != dis_caps) {
+			    /*
+			       dis_caps = newDIS;
+			       params.setFromDIS(dis_caps);
+			     *
+			     * The above code was commented because to
+			     * use the newDIS we need to do more work like
+			     *     sendClientCapabilitiesOK()
+			     *     sendSetupParams()
+			     * So we ignore newDIS.
+			     * It will work if old dis 'less' then newDIS.
+			     */
+			    curcap = NULL;
+			    checkReceiverDIS(params);
 			}
-		      }
 		    }
 		    return (sendTraining(params, --tries, emsg));
 		default:
