@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 408 2007-01-01 18:44:29Z faxguy $
+#	$Id: faxsetup.sh.in 418 2007-01-11 18:36:24Z faxguy $
 #
 # @WARNING@
 #
@@ -721,7 +721,7 @@ EOF
     defaultSendFaxCmd=\"bin/faxsend\"
     defaultSendPageCmd=\"bin/pagesend\"
     defaultSendUUCPCmd=\"bin/uucpsend\"
-    defaultSessionTracing=0xffffffff
+    defaultSessionTracing=0xFFF
     defaultTimeOfDay=\"Any\"
     defaultUse2D=Yes
     defaultNotifyCmd=\"bin/notify\"

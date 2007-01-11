@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 415 2007-01-05 22:24:10Z faxguy $
+.\"	$Id: hylafax-config.4f 418 2007-01-11 18:36:24Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-01-05 14:24:10 -0800 (Fri, 05 Jan 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-01-11 10:36:24 -0800 (Thu, 11 Jan 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -211,7 +211,7 @@ SendFaxCmd¹	string	\s-1bin/faxsend\s+1	fax transmit command script
 SendPageCmd¹	string	\s-1bin/pagesend\s+1	pager transmit command script
 SendUUCPCmd¹	string	\s-1bin/uucpsend\s+1	\s-1UUCP\s+1 transmit command script
 ServerTracing²	integer	\s-11\s+1	non-session server tracing
-SessionTracing²	integer	\s-11\s+1	send and receive session tracing
+SessionTracing²	integer	\s-10xFFF\s+1	send and receive session tracing
 SpeakerVolume	string	\s-1Quiet\s+1	volume level for modem speaker
 StaggerCalls¹	integer	\s-10\s+1	time to delay between starting outbound calls
 TagLineFont	string	\-	tag line font filename
