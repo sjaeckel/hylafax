@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 420 2007-01-11 20:38:02Z faxguy $ */
+/*	$Id: Class1Send.c++ 422 2007-01-13 01:11:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -132,7 +132,7 @@ Class1Modem::checkReceiverDIS(Class2Params& params)
 	    params.ec = EC_ENABLE256;
 	}
 	if (params.br != BR_33600) {
-	    protoTrace("V.34-Fax session, but DIS signal contains no V.8 bit.");
+	    protoTrace("V.34-Fax session, but DIS signal contains no V.8 bit; compensating.");
 	    params.br = BR_33600;
 	}
     }
@@ -178,8 +178,8 @@ Class1Modem::getPrologue(Class2Params& params, bool& hasDoc, fxStr& emsg, u_int&
 		case FCF_DIS:
 		    dis_caps = frame.getDIS();
 		    params.setFromDIS(dis_caps);
-		    curcap = NULL;			// force initial setup
 		    checkReceiverDIS(params);
+		    curcap = NULL;			// force initial setup
 		    break;
 		}
 	    } while (frame.moreFrames() && recvFrame(frame, FCF_SNDR, conf.t2Timer));
@@ -838,8 +838,8 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 			     * So we ignore newDIS.
 			     * It will work if old dis 'less' then newDIS.
 			     */
-			    curcap = NULL;
 			    checkReceiverDIS(params);
+			    curcap = NULL;
 			}
 		    }
 		    return (sendTraining(params, --tries, emsg));
