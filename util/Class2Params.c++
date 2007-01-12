@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++ 300 2006-09-12 21:28:24Z faxguy $ */
+/*	$Id: Class2Params.c++ 422 2007-01-13 01:11:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -240,7 +240,7 @@ Class2Params::setFromDIS(u_int dis, u_int xinfo)
      * layers select appropriate signalling rate knowing that
      * we'll fall back to something that the modem will support.
      */
-    if ((dis & DIS_V8) && (dis & DIS_ECMODE))
+    if ((dis & DIS_V8) && (xinfo & DIS_ECMODE))
 	br = BR_33600;	// Is V.8 only used by V.34 (SuperG3) faxes?
     else
 	br = DISbrTab[(dis & DIS_SIGRATE) >> 10];
