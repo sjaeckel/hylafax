@@ -1,7 +1,8 @@
-#	$Id: CHANGES 420 2007-01-11 20:38:02Z faxguy $	
+#	$Id: CHANGES 423 2007-01-16 18:05:11Z faxguy $	
 
 New Changes
 
+* extend "awaiting ECM synchronization" timeout (16 Jan 2006)
 * log correctly when a receiver DIS indicates no V.8 bit but
   V.8 was already known to have succeeded (11 Jan 2006)
 * change default SessionTracing to 0xFFF (11 Jan 2006)
