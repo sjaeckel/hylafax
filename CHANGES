@@ -1,6 +1,10 @@
-#	$Id: CHANGES 423 2007-01-16 18:05:11Z faxguy $	
+#	$Id: CHANGES 424 2007-01-26 21:48:26Z faxguy $	
 
 New Changes
+
+* improve job.tts sync with req.tts (26 Jan 2006)
+
+(5.0.4)
 
 * extend "awaiting ECM synchronization" timeout (16 Jan 2006)
 * log correctly when a receiver DIS indicates no V.8 bit but
