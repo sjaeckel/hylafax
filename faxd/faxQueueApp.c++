@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 416 2007-01-08 17:43:14Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 424 2007-01-26 21:48:26Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1571,6 +1571,7 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 	    req->tts = now + (req->retrytime != 0
 		? req->retrytime
 		: (requeueInterval>>1) + (random()%requeueInterval));
+	    job.tts = req->tts;
 	}
 	/*
 	 * Bump the job priority if is not bulk-style in which case
@@ -2073,6 +2074,7 @@ faxQueueApp::delayJob(Job& job, FaxRequest& req, const char* mesg, time_t tts)
 {
     job.state = FaxRequest::state_sleeping;
     fxStr reason(mesg);
+    job.tts = tts;
     req.tts = tts;
     time_t delay = tts - Sys::now();
     // adjust kill time so job isn't removed before it runs
@@ -2856,6 +2858,7 @@ faxQueueApp::deleteRequest(Job& job, FaxRequest& req, JobStatus why,
 	    req.state = FaxRequest::state_failed;// job is definitely done
 	req.pri = job.pri;			// just in case someone cares
 	req.tts = Sys::now();			// mark job termination time
+	job.tts = req.tts;
 	req.writeQFile();
 	if (force || req.isNotify(FaxRequest::notify_any))
 	    notifySender(job, why, duration);
