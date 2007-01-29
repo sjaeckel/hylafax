@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++ 299 2006-09-12 04:33:24Z faxguy $ */
+/*	$Id: FileSystem.c++ 425 2007-01-29 23:55:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -416,7 +416,7 @@ HylaFAXServer::isVisibletrue(const char*, const struct stat&)
     { return (true); }
 bool
 HylaFAXServer::isVisibleDocQFile(const char* filename, const struct stat&)
-    { return (strncmp(filename, "doc", 3) == 0 || strncmp(filename, "cover", 5) == 0); }
+    { return (strncmp(filename, "doc", 3) == 0 || strncmp(filename, "cover", 5) == 0 || strncmp(filename, FAX_SEQF, 4) == 0); }
 bool
 HylaFAXServer::isVisibleRootFile(const char*, const struct stat& sb)
     { return (S_ISREG(sb.st_mode) || S_ISDIR(sb.st_mode)); }

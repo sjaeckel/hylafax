@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineLog.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxMachineLog.c++ 425 2007-01-29 23:55:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -39,13 +39,9 @@ extern void logError(const char* fmt ...);
 
 FaxMachineLog::FaxMachineLog(int f, const fxStr& number, const fxStr& commid)
 {
-    fxStr canon(number);
-    for (int i = canon.length()-1; i >= 0; i--)
-	if (!isdigit(canon[i]))
-	    canon.remove(i,1);
     fd = f;
     pid = getpid();
-    log("SESSION BEGIN %s %s", (const char*) commid, (const char*) canon);
+    log("SESSION BEGIN %s %s", (const char*) commid, (const char*) number);
     log("%s", HYLAFAX_VERSION);
 }
 

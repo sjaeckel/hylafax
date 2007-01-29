@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 346 2006-10-28 03:07:41Z faxguy $ */
+/*	$Id: RecvQueue.c++ 425 2007-01-29 23:55:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -217,7 +217,7 @@ HylaFAXServer::getRecvDocStatus(RecvInfo& ri)
 bool
 HylaFAXServer::isVisibleRecvQFile(const char* filename, const struct stat&)
 {
-    return (strncmp(filename, "fax", 3) == 0);
+    return (strncmp(filename, "fax", 3) == 0 || strncmp(filename, FAX_SEQF, 4) == 0);
 }
 
 RecvInfo*

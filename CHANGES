@@ -1,16 +1,19 @@
-#	$Id: CHANGES 424 2007-01-26 21:48:26Z faxguy $	
+#	$Id: CHANGES 425 2007-01-29 23:55:22Z faxguy $	
 
 New Changes
 
-* improve job.tts sync with req.tts (26 Jan 2006)
+* add faxstat -q "show sequence numbers" feature (29 Jan 2007)
+* allow authenticated clients access to seqf files (29 Jan 2007)
+* fix logging of FAXNumber in "SESSION BEGIN" line (29 Jan 2007)
+* improve job.tts sync with req.tts (26 Jan 2007)
 
 (5.0.4)
 
-* extend "awaiting ECM synchronization" timeout (16 Jan 2006)
+* extend "awaiting ECM synchronization" timeout (16 Jan 2007)
 * log correctly when a receiver DIS indicates no V.8 bit but
-  V.8 was already known to have succeeded (11 Jan 2006)
-* change default SessionTracing to 0xFFF (11 Jan 2006)
-* don't clobber tiffcp exit code data in tiff2fax (9 Jan 2006)
+  V.8 was already known to have succeeded (11 Jan 2007)
+* change default SessionTracing to 0xFFF (11 Jan 2007)
+* don't clobber tiffcp exit code data in tiff2fax (9 Jan 2007)
 * change #include config file feature to be uniform colon-delimited
   format like other config options (5 Jan 2007)
 * fix blocked jobs from getting ignored (5 Jan 2007)
