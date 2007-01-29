@@ -43,9 +43,9 @@ u_long Sequence::getNext(const char* name, fxStr& emsg)
     int fd;
     int rtn = lstat(name, &sb);
     if (rtn != 0 && errno == ENOENT) {
-        fd = Sys::open(name, O_CREAT | O_RDWR | O_EXCL, 0600);
+        fd = Sys::open(name, O_CREAT | O_RDWR | O_EXCL, 0644);
     } else if (rtn == 0 && S_ISREG(sb.st_mode)) {
-        fd = Sys::open(name, O_RDWR, 0600);
+        fd = Sys::open(name, O_RDWR, 0644);
         struct stat sb2;
         if (fd < 0 || fstat(fd, &sb2)) {
             //XXX some kind of error opening file
