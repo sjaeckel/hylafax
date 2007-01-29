@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 274 2006-08-12 00:26:53Z faxguy $ */
+/*	$Id: faxstat.c++ 425 2007-01-29 23:55:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -61,8 +61,9 @@ faxStatApp::run(int argc, char** argv)
     fxStrArray dirs;
     bool checkInfo = false;
     bool checkStatus = true;
+    bool showSeqfs = false;
     int c;
-    while ((c = Sys::getopt(argc, argv, "h:adgfilnrsv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "h:adgfilnqrsv")) != -1)
 	switch (c) {
 	case 'a':			// display archived jobs
 	    dirs.append(FAX_ARCHDIR);
@@ -88,6 +89,9 @@ faxStatApp::run(int argc, char** argv)
 	case 'n':			// do not display server status
 	    checkStatus = false;
 	    break;
+	case 'q':			// display sequence numbers
+	    showSeqfs = true;
+	    break;
 	case 'r':			// display receive queue
 	    dirs.append(FAX_RECVDIR);
 	    break;
@@ -107,6 +111,17 @@ faxStatApp::run(int argc, char** argv)
 	    if (checkInfo)
 		(void) recvData(writeStdout, 0, emsg, 0,
 		    "RETR " FAX_STATUSDIR "/any." FAX_INFOSUF);
+	    if (showSeqfs) {
+		writeStdout(0, " Receive queue sequence number: ", 32, emsg);
+		(void) recvData(writeStdout, 0, emsg, 0, "RETR " FAX_RECVDIR "/" FAX_SEQF);
+		writeStdout(0, "\n    Send queue sequence number: ", 33, emsg);
+		(void) recvData(writeStdout, 0, emsg, 0, "RETR " FAX_SENDDIR "/" FAX_SEQF);
+		writeStdout(0, "\nDocument queue sequence number: ", 33, emsg);
+		(void) recvData(writeStdout, 0, emsg, 0, "RETR " FAX_DOCDIR "/" FAX_SEQF);
+		writeStdout(0, "\n     Log queue sequence number: ", 33, emsg);
+		(void) recvData(writeStdout, 0, emsg, 0, "RETR " FAX_LOGDIR "/" FAX_SEQF);
+		writeStdout(0, "\n", 1, emsg);
+	    }
 	    for (u_int i = 0, n = dirs.length(); i < n; i++) {
 		header = (i > 0 ? "\n" : "");
 		if (dirs[i] == FAX_SENDDIR || dirs[i] == FAX_DONEDIR) {

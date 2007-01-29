@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 413 2007-01-04 02:10:22Z faxguy $ */
+/*	$Id: Jobs.c++ 425 2007-01-29 23:55:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1652,6 +1652,7 @@ HylaFAXServer::isVisibleSendQFile(const char* filename, const struct stat&)
 	if (job && checkAccess(*job, T_JOB, A_READ))
 	    return true;
     }
+    if (strncmp(filename, FAX_SEQF, 4) == 0) return true;
     return false;
 }
 
