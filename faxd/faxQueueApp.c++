@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 424 2007-01-26 21:48:26Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 427 2007-02-02 22:18:24Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2424,6 +2424,7 @@ faxQueueApp::runScheduler()
      * insures the highest priority job is always processed
      * first.
      */
+    blockSignals();
     if (! quit) {
 	for (u_int i = 0; i < NQHASH; i++) {
 	    for (JobIter iter(runqs[i]); iter.notDone(); iter++) {
@@ -2649,7 +2650,6 @@ faxQueueApp::runScheduler()
     /*
      * Reap dead jobs.
      */
-    blockSignals();
     for (JobIter iter(deadq); iter.notDone(); iter++) {
 	Job* job = iter;
 	job->remove();
