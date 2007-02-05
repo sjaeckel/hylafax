@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 408 2007-01-01 18:44:29Z faxguy $
+#	$Id: configure 429 2007-02-06 02:53:03Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -386,7 +386,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 408 $"
+	echo "This is HylaFAX configure $Revision: 429 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3438,7 +3438,7 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	LIBFAXSERVER='-L${FAXD} -lfaxserver'
 	# options here are passed directly to ld, not through g++ first
 	if [ ${ISGCC} = "yes" ] ; then
-	    DSOOPTS='-shared -wl,-G,-h,$@'
+	    DSOOPTS='-shared -Wl,-G,-h,$@'
 	    LLDOPTS='-L${UTIL} -L${FAXD} -R${LIBDIR} -lfaxutil -lstdc++'
 	    GCOPTS="${GCOPTS} -fpic"
 	    GCXXOPTS="${GCXXOPTS} -fpic"
