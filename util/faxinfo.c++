@@ -1,4 +1,4 @@
-/*	$Id: faxinfo.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: faxinfo.c++ 428 2007-02-06 02:36:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -242,12 +242,12 @@ main(int argc, char** argv)
 	if (tif == NULL) {
 	    printf("Could not open %s; either not TIFF or corrupted.\n",
 		    argv[optind]);
-	    return (0);
+	    return (1);
 	}
 	bool ok = isFAXImage(tif);
 	if (!ok) {
 	    printf("Does not look like a facsimile?\n");
-	    return (0);
+	    return (1);
 	}
 
 	Class2Params params;
