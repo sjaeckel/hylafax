@@ -1,4 +1,4 @@
-#	$Id: Makefile.SOLARISdso 325 2006-10-12 18:37:28Z faxguy $
+#	$Id: Makefile.SOLARISdso 430 2007-02-07 00:01:05Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -39,6 +39,10 @@ libfaxutil.${DSO}: ${OBJECTS}
 installDSO: libfaxutil.${DSO}
 	${PUTCLIENT} -F ${LIBDIR} -m 755 -O libfaxutil.${DSO}.${LIBVERSION}
 	(cd ${LIBDIR}; ln -fs libfaxutil.${DSO}.${LIBVERSION} libfaxutil.${DSO})
+
+uninstallDSO::
+	${RM} -f ${LIBDIR}/libfaxutil.${DSO}.${LIBVERSION}
+	${RM} -f ${LIBDIR}/libfaxutil.${DSO}
 
 cleanDSO::
 	-${RM} -f libfaxutil.${DSO}.${LIBVERSION} libfaxutil.${DSO}

@@ -1,7 +1,8 @@
-#	$Id: CHANGES 428 2007-02-06 02:36:47Z faxguy $	
+#	$Id: CHANGES 430 2007-02-07 00:01:05Z faxguy $	
 
 New Changes
 
+* add 'make uninstall' option (6 Feb 2007)
 * make faxinfo exit status meaningful (5 Feb 2007)
 * add faxstat -q "show sequence numbers" feature (29 Jan 2007)
 * allow authenticated clients access to seqf files (29 Jan 2007)

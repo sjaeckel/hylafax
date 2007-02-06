@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 408 2007-01-01 18:44:29Z faxguy $
+#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -249,9 +249,17 @@ makeServerDirs::
 	    -F ${SPOOL} sendq doneq docq tmp pollq archive
 makeDirs: makeClientDirs makeServerDirs
 
+rmDirs::
+	-rmdir ${SPOOL}/bin ${SPOOL}/client ${SPOOL}/config ${SPOOL}/dev ${SPOOL}/etc ${SPOOL}/info ${SPOOL}/log ${SPOOL}/recvq ${SPOOL}/status
+	-rmdir ${SPOOL}/sendq ${SPOOL}/doneq ${SPOOL}/docq ${SPOOL}/tmp ${SPOOL}/pollq ${SPOOL}/archive
+	-rmdir ${SPOOL}
+
 makeDevices::
 	${INSTALL} -u ${FAXUSER} -g ${FAXGROUP} -m 600 -fifo \
 	    -idb hylafax.sw.server -F ${SPOOL} FIFO
+
+rmDevices::
+	${RM} -f ${SPOOL}/FIFO
 
 install: makeDirs makeDevices
 	${INSTALL} -m 444 -F ${SPOOL} -idb hylafax.sw.server \
@@ -297,6 +305,25 @@ install: makeDirs makeDevices
 	else \
 	    true; \
 	fi
+
+uninstall: rmDirs rmDevices
+	${RM} -f ${SPOOL}/COPYRIGHT
+	@for i in ${DIRS}; do \
+	    (${ECHO} "= "$$i; cd $$i; ${MAKE} uninstall)  ||  exit 1; \
+	done
+	@if [ "@SGI2FAX@" = yes ]; then \
+	    ${ECHO} "= "sgi2fax; cd sgi2fax; ${MAKE} uninstall  ||  exit 1; \
+	else \
+	    true; \
+	fi
+	@if [ "@DSO@" != no ]; then \
+	    for i in ${DSODIRS}; do \
+		(${ECHO} "= "$$i; cd $$i; ${MAKE} uninstallDSO)  ||  exit 1; \
+	    done; \
+	else \
+	    true; \
+	fi
+	@${ECHO} "= "etc; cd etc; ${MAKE} uninstallSysVInit;
 
 CLIENTDIRS=\
 	faxalter \
