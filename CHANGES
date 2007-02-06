@@ -1,7 +1,8 @@
-#	$Id: CHANGES 430 2007-02-07 00:01:05Z faxguy $	
+#	$Id: CHANGES 431 2007-02-07 07:34:05Z faxguy $	
 
 New Changes
 
+* fix messy faxstatus entries in notify messages (6 Feb 2007)
 * add 'make uninstall' option (6 Feb 2007)
 * make faxinfo exit status meaningful (5 Feb 2007)
 * add faxstat -q "show sequence numbers" feature (29 Jan 2007)

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 400 2006-12-19 18:07:09Z faxguy $
+#    $Id: common-functions.sh.in 431 2007-02-07 07:34:05Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -96,16 +96,11 @@ parseQfile()
     # (') with ('\'') which terminates the current string, adds a single
     # quote and starts a new string.
     #
-    # New lines in eval could cause problems so we escape them. As with
-    # single quotes above, we must first close the current string, add
-    # the escaped new line (double quoted) and start a new string.
-    #
     # print out variable name and value so we can eval it in the shell
-    eval `($AWK -F: ' 
+    AWK_OUTPUT=`$AWK -F: ' 
     function p(varname,val)
     {
         gsub(/\\047/, "\047\\\\\047\047", val);
-        gsub(/\n/, "\047\042\\\\n\042\047", val);
         printf "%s=\\047%s\\047\n",varname,val
     }
     BEGIN {
@@ -169,5 +164,6 @@ parseQfile()
     /^page:/    { p("pins_"++npins, $4); }
     /^data:/    { p("files_"++nfiles, $4); }
     /^poll/        { p("poll", " -p"); }
-    END { p("nfiles", nfiles); p("npins", npins) } ' $QFILE )`
+    END { p("nfiles", nfiles); p("npins", npins) } ' $QFILE `
+    eval "$AWK_OUTPUT"
 }
