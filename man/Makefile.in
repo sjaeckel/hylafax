@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 342 2006-10-20 23:16:33Z faxguy $
+#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
 #
 # @WARNING@
 #
@@ -221,6 +221,12 @@ cman.apps/Makefile: ${DEPTH}/defs cman.apps ${MANCAPP}
 	    f=${MANCAPPNAME};						\
 	    ${ECHO} '	$${INSTALL} -m 444 -F $${MAN}/$${MANAPPS}	\
 		-idb $${PRODUCT}.man.client -src' "$$i" '-O' "$$f";	\
+	 done);								\
+	${ECHO};							\
+	${ECHO} 'uninstall:';						\
+	 (cd cman.apps; for i in *.1; do				\
+	    f=${MANCAPPNAME};						\
+	    ${ECHO} '	$${RM} -f $${MAN}/$${MANAPPS}/'"$$f";		\
 	 done)								\
 	)>cman.apps/Makefile
 cman.files/Makefile: ${DEPTH}/defs cman.files ${MANCFILE}
@@ -233,6 +239,12 @@ cman.files/Makefile: ${DEPTH}/defs cman.files ${MANCFILE}
 	    f=${MANCFILENAME};						\
 	    ${ECHO} '	$${INSTALL} -m 444 -F $${MAN}/$${MANFILES}	\
 		-idb $${PRODUCT}.man.client -src' "$$i" '-O' "$$f";	\
+	 done);								\
+	 ${ECHO};							\
+	 ${ECHO} 'uninstall:';						\
+	 (cd cman.files; for i in *.4f; do				\
+	    f=${MANCFILENAME};						\
+	    ${ECHO} '	$${RM} -f $${MAN}/$${MANFILES}/'"$$f";		\
 	 done)								\
 	)>cman.files/Makefile
 sman.apps/Makefile: ${DEPTH}/defs sman.apps ${MANSAPP}
@@ -245,6 +257,12 @@ sman.apps/Makefile: ${DEPTH}/defs sman.apps ${MANSAPP}
 	    f=${MANSAPPNAME};						\
 	    ${ECHO} '	$${INSTALL} -m 444 -F $${MAN}/$${MANSYS}	\
 		-idb $${PRODUCT}.man.server -src' "$$i" '-O' "$$f";	\
+	 done);								\
+	 ${ECHO};							\
+	 ${ECHO} 'uninstall:';						\
+	 (cd sman.apps; for i in *.1m; do				\
+	    f=${MANSAPPNAME};						\
+	    ${ECHO} '	$${RM} -f $${MAN}/$${MANSYS}/'"$$f";		\
 	 done)								\
 	)>sman.apps/Makefile
 sman.files/Makefile: ${DEPTH}/defs sman.files ${MANSFILE}
@@ -257,6 +275,12 @@ sman.files/Makefile: ${DEPTH}/defs sman.files ${MANSFILE}
 	    f=${MANSFILENAME};						\
 	    ${ECHO} '	$${INSTALL} -m 444 -F $${MAN}/$${MANFILES}	\
 		-idb $${PRODUCT}.man.server -src' "$$i" '-O' "$$f";	\
+	 done);								\
+	 ${ECHO};							\
+	 ${ECHO} 'uninstall:';						\
+	 (cd sman.files; for i in *.4f; do				\
+	    f=${MANSFILENAME};						\
+	    ${ECHO} '	$${RM} -f $${MAN}/$${MANFILES}/'"$$f";		\
 	 done)								\
 	)>sman.files/Makefile
 
@@ -266,11 +290,20 @@ installClientManPages:: cman.apps/Makefile cman.files/Makefile
 	cd cman.apps; ${MAKE} install
 	cd cman.files; ${MAKE} install
 
+uninstallClientManPages:: cman.apps/Makefile cman.files/Makefile
+	cd cman.apps; ${MAKE} uninstall
+	cd cman.files; ${MAKE} uninstall
+
 installServerManPages:: sman.apps/Makefile sman.files/Makefile
 	-${INSTALL} -m ${DIRMODE} -dir -idb hylafax.man.server \
 	    ${MAN} ${MAN}/${MANSYS} ${MAN}/${MANFILES}
 	cd sman.apps; ${MAKE} install
 	cd sman.files; ${MAKE} install
 
+uninstallServerManPages:: sman.apps/Makefile sman.files/Makefile
+	cd sman.apps; ${MAKE} uninstall
+	cd sman.files; ${MAKE} uninstall
+
 installClient: targets installClientManPages
 install: installClient installServerManPages
+uninstall: uninstallClientManPages uninstallServerManPages

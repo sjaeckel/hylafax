@@ -1,4 +1,4 @@
-#	$Id: Makefile.IRIXdso 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: Makefile.IRIXdso 430 2007-02-07 00:01:05Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -37,6 +37,9 @@ libfaxserver.${DSO}: ${SERVER_OBJS} ${MODEM_OBJS}
 
 installDSO: libfaxserver.${DSO}
 	${PUTSERV} -F ${LIBEXEC} -m 444 -O libfaxserver.${DSO}
+
+uninstallDSO::
+	${RM} -f ${LIBEXEC}/libfaxserver.${DSO}
 
 cleanDSO::
 	-${RM} -f libfaxserver.${DSO}

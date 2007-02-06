@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
 #
 # @WARNING@
 #
@@ -95,6 +95,21 @@ install: default
 	${PUTSAMPLE} -F ${SPOOL}/etc -m 644 -idb nostrip \
 	    -src ${SRCDIR}/lutRS18.pcf -O lutRS18.pcf
 
+uninstall::
+	${RM} -f ${SBIN}/faxaddmodem
+	${RM} -f ${SBIN}/faxsetup
+	for i in bsdi irix linux; do \
+	    ${RM} -f ${SBIN}/faxsetup.$$i; \
+	done
+	${RM} -f ${SBIN}/probemodem
+	${RM} -f ${SPOOL}/etc/xferfaxlog
+	${RM} -f ${SPOOL}/etc/hosts.hfaxd
+	for i in ${DIALRULES}; do \
+	    ${RM} -f ${SPOOL}/etc/$$i; \
+	done
+	${RM} -f ${LIBEXEC}/lockname ${LIBEXEC}/ondelay
+	${RM} -f ${SPOOL}/etc/lutRS18.pcf
+
 #
 # System V-specific init support.
 #
@@ -118,6 +133,28 @@ installSysVInit: hylafax
 	fi
 	if test -d /etc/config; then \
 	    ${PUTSERVER} -F /etc/config -m 644 -src config.fax -O fax; \
+	fi
+
+uninstallSysVInit::
+	if [ "@SYSVINIT@" = yes ]; then \
+	    ${RM} -f ${DIR_SYSVINIT}/hylafax; \
+	    echo "checking ${DIR_SYSVINITSTART} directories"; \
+	    for i in ${DIR_SYSVINITSTART}; do \
+		if test -d ${DIR_SYSVINIT}/$$i; then \
+		    ${RM} -f ${DIR_SYSVINIT}/$$i/${NAME_SYSVINITSTART}; \
+		fi; \
+	    done; \
+	    echo "checking ${DIR_SYSVINITSTOP} directories"; \
+	    for i in ${DIR_SYSVINITSTOP}; do \
+		if test -d ${DIR_SYSVINIT}/$$i; then \
+		    ${RM} -f ${DIR_SYSVINIT}/$$i/${NAME_SYSVINITSTOP}; \
+		fi; \
+	    done; \
+	else \
+	    ${RM} -f ${SBIN}/hylafax; \
+	fi
+	if test -d /etc/config; then \
+	    ${RM} -f /etc/config/fax; \
 	fi
 
 installClient: default

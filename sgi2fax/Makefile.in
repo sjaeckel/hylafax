@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
 #
 # @WARNING@
 #
@@ -60,3 +60,6 @@ sgi2fax: ${OBJECTS} ${LIBS}
 
 install: default
 	${INSTALL} -F ${LIBEXEC} -m 755 -idb ${PRODUCT}.sw.client -O sgi2fax
+
+uninstall::
+	${RM} -f ${LIBEXEC}/sgi2fax

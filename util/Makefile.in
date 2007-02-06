@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 321 2006-10-03 18:40:19Z faxguy $
+#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
 #
 # @WARNING@
 #
@@ -195,6 +195,35 @@ install: installClient
 	    -src ${SRCDIR}/dpsprinter.ps -O dpsprinter.ps
 	${PUTSERVER} -F ${SPOOL}/etc -idb "config(suggest)" \
 	    -m 444 -src ${SRCDIR}/cover.templ -O cover.templ
+
+uninstall::
+	${RM} -f ${LIBEXEC}/textfmt
+	${RM} -f ${LIBDATA}/pagesizes
+	${RM} -f ${LIBDATA}/typerules
+	${RM} -f ${SBIN}/faxmsg ${SBIN}/faxadduser ${SBIN}/faxconfig ${SBIN}/faxdeluser ${SBIN}/faxmodem \
+        ${SBIN}/faxstate ${SBIN}/faxwatch ${SBIN}/faxinfo ${SBIN}/tiffcheck
+	${RM} -f ${SBIN}/faxabort ${SBIN}/faxanswer ${SBIN}/faxquit ${SBIN}/faxlock
+	${RM} -f ${SBIN}typetest
+	${RM} -f ${SBIN}/xferfaxstats
+	${RM} -f ${SBIN}/recvstats
+	${RM} -f ${SBIN}/faxcron
+	${RM} -f ${SPOOL}/bin/ps2fax.gs
+	${RM} -f ${SPOOL}/bin/ps2fax.dps
+	${RM} -f ${SPOOL}/bin/ps2fax.imp
+	${RM} -f ${SPOOL}/bin/pdf2fax.gs
+	${RM} -f ${SPOOL}/bin/pcl2fax
+	${RM} -f ${SPOOL}/bin/tiff2fax
+	${RM} -f ${SPOOL}/bin/tiff2pdf
+	${RM} -f ${SPOOL}/bin/notify
+	${RM} -f ${SPOOL}/bin/archive
+	${RM} -f ${SPOOL}/bin/common-functions
+	${RM} -f ${SPOOL}/bin/dictionary
+	${RM} -f ${SPOOL}/bin/faxrcvd
+	${RM} -f ${SPOOL}/bin/pollrcvd
+	${RM} -f ${SPOOL}/bin/mkcover
+	${RM} -f ${SPOOL}/bin/wedged
+	${RM} -f ${SPOOL}/etc/dpsprinter.ps
+	${RM} -f ${SPOOL}/etc/cover.templ
 
 @MAKEDSOINCLUDE@ @MAKELQUOTE@${SRCDIR}/Makefile.@DSO@dso@MAKERQUOTE@
 
