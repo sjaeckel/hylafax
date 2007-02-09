@@ -1,7 +1,8 @@
-#	$Id: CHANGES 431 2007-02-07 07:34:05Z faxguy $	
+#	$Id: CHANGES 432 2007-02-10 00:43:54Z faxguy $	
 
 New Changes
 
+* fix premature disconnection in Class 2 reception (9 Feb 2007)
 * fix messy faxstatus entries in notify messages (6 Feb 2007)
 * add 'make uninstall' option (6 Feb 2007)
 * make faxinfo exit status meaningful (5 Feb 2007)
