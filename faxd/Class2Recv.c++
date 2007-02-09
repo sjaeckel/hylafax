@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 404 2006-12-23 00:31:40Z faxguy $ */
+/*	$Id: Class2Recv.c++ 432 2007-02-10 00:43:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -386,8 +386,7 @@ Class2Modem::recvEnd(fxStr&)
 {
     if (!hadHangup) {
 	if (isNormalHangup()) {
-	    if (atCmd("AT+FDR", AT_NOTHING))	// wait for DCN
-		(void) atResponse(rbuf, conf.t1Timer);
+	    (void) atCmd("AT+FDR", AT_FHNG);	// wait for DCN
 	} else
 	    (void) atCmd(abortCmd);		// abort session
     }
