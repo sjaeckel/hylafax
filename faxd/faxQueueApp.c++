@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 434 2007-02-12 19:01:50Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 435 2007-02-12 19:36:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2437,7 +2437,6 @@ faxQueueApp::runScheduler()
 		    pokeScheduler();
 		    break;
 		}
-		fxAssert(job.tts <= Sys::now(), "Sleeping job on run queue");
 		fxAssert(job.modem == NULL, "Job on run queue holding modem");
 
 		/*
@@ -2456,6 +2455,23 @@ faxQueueApp::runScheduler()
 		    setDead(job);
 		    continue;
 		}
+
+		time_t tts;
+		time_t now = Sys::now();
+		/*
+		 * A computer's clock can jump backwards.  For example, if 
+		 * the system runs ntp and regularly syncs the system clock
+		 * with some outside source it is possible that the local
+		 * clock will move backwards.  We cannot die, then, simply
+		 * because we find a job on the run queue that has a future 
+		 * tts.  The possibility exists that it is due to some 
+		 * adjustment in the system clock.
+		 */
+		if (job.tts > now) {
+		    traceJob(job, "WARNING: Job tts is %d seconds in the future.  Proceeding anyway.", job.tts - now);
+		    job.tts = now;
+		}
+
 		/*
 		 * Do per-destination processing and checking.
 		 */
@@ -2499,8 +2515,6 @@ faxQueueApp::runScheduler()
 		    deleteRequest(job, req, Job::rejected, true);
 		    continue;
 		}
-		time_t now = Sys::now();
-		time_t tts;
 		if (!isOKToCall(di, job.getJCI(), 1)) {
 		    /*
 		     * This job would exceed the max number of concurrent
