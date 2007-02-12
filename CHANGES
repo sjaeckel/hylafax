@@ -1,7 +1,8 @@
-#	$Id: CHANGES 435 2007-02-12 19:36:22Z faxguy $	
+#	$Id: CHANGES 436 2007-02-13 05:15:07Z faxguy $	
 
 New Changes
 
+* make faxrm produce a meaningful exit code (12 Feb 2007)
 * prevent backwards jumps in time, i.e. clock adjustement, from 
   stalling or crashing faxq (12 Feb 2007)
 * prevent picking up again on the receiver's MCF signal when

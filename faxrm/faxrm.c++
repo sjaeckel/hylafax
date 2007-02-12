@@ -1,4 +1,4 @@
-/*	$Id: faxrm.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: faxrm.c++ 436 2007-02-13 05:15:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -37,13 +37,13 @@ public:
     faxRmApp();
     ~faxRmApp();
 
-    void run(int argc, char** argv);
+    bool run(int argc, char** argv);
 };
 
 faxRmApp::faxRmApp() {}
 faxRmApp::~faxRmApp() {}
 
-void
+bool
 faxRmApp::run(int argc, char** argv)
 {
     extern int optind;
@@ -57,6 +57,7 @@ faxRmApp::run(int argc, char** argv)
     bool jobs = true;
     bool docs = false;
     bool useadmin = false;
+    int errcnt = 0; // count how many jobs couldn't be removed
 
     while ((c = Sys::getopt(argc, argv, "ah:dv")) != -1)
 	switch (c) {
@@ -86,11 +87,14 @@ faxRmApp::run(int argc, char** argv)
 	    for (; optind < argc; optind++) {
 		const char* id = argv[optind];
 		if (jobs) {
-		    if (!removeJob(id, emsg))
+		    if (!removeJob(id, emsg)) {
+			errcnt++;
 			break;
+                    }
 		} else if (docs) {
 		    if (!deleteDoc(id)) {
 			emsg = getLastResponse();
+                        errcnt++;
 			break;
 		    }
 		    printf("%s removed.\n", id);
@@ -101,6 +105,9 @@ faxRmApp::run(int argc, char** argv)
     }
     if (emsg != "")
 	printError("%s", (const char*) emsg);
+    if (errcnt != 0)
+        return (false);
+    return(true);
 }
 
 bool
@@ -139,6 +146,7 @@ int
 main(int argc, char** argv)
 {
     faxRmApp app;
-    app.run(argc, argv);
+    if(!app.run(argc, argv))
+        return 1;
     return 0;
 }

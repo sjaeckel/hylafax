@@ -1,4 +1,4 @@
-.\"	$Id: faxrm.1 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: faxrm.1 436 2007-02-13 05:15:07Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -173,6 +173,10 @@ directory; the directory where jobs are placed once they are finished.
 .PP
 .B "%s removed." 
 A confirmation that the document was successfully deleted from the server.
+.PP
+Additionally
+.B faxrm
+returns 0 when all jobs were successfully removed or 1 when one or more jobs couldn't be removed.
 .SH "SEE ALSO"
 .IR hylafax-client (1),
 .IR sendfax (1),
