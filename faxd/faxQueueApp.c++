@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 427 2007-02-02 22:18:24Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 434 2007-02-12 19:01:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -93,7 +93,7 @@ faxQueueApp::SchedTimeout::start(u_short s)
      * So we keep the scheduler from running more than
      * once per second.
      */
-    if (!started && Sys::now() > lastRun) {
+    if (!started && Sys::now() != lastRun) {
 	started = true;
 	pending = false;
 	Dispatcher::instance().startTimer(s, 1, this);
