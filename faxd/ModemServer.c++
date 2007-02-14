@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 412 2007-01-03 03:20:22Z faxguy $ */
+/*	$Id: ModemServer.c++ 437 2007-02-15 00:46:32Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -97,6 +97,7 @@ ModemServer::ModemServer(const fxStr& devName, const fxStr& devID)
     sawBlockEnd = false;
     timeout = false;
     log = NULL;
+    readyStateMsg = NULL;
 }
 
 ModemServer::~ModemServer()
