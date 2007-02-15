@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 429 2007-02-06 02:53:03Z faxguy $
+#	$Id: configure 439 2007-02-15 23:36:39Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -386,7 +386,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 429 $"
+	echo "This is HylaFAX configure $Revision: 439 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3245,8 +3245,9 @@ fi
 HAVE_JBIGTIFF="/*#define HAVE_JBIGTIFF 1*/"
 if [ "$DISABLE_JBIG" != "yes" ]; then
     Note "Checking JBIG-in-TIFF conversion support."
-    if [ -z "`$TIFFBIN/tiffcp -c g4 misc/jbig.tif misc/foo.tif 2>&1`" ]; then
-	$TIFFBIN/tiffcp misc/jbig.tif misc/foo.tif
+    $TIFFBIN/tiffcp -c g4 misc/jbig.tif misc/foo.tif > /dev/null 2>&1
+    if [ $? = 0 ]; then
+	$TIFFBIN/tiffcp misc/jbig.tif misc/foo.tif > /dev/null
 	if [ -n "`$TIFFBIN/tiffinfo misc/foo.tif | grep 'Fax DCS'`" ]; then
 	    HAVE_JBIGTIFF="#define HAVE_JBIGTIFF 1"
 	    Note "JBIG-in-TIFF conversion support found."
