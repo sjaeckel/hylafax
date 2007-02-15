@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 423 2007-01-16 18:05:11Z faxguy $ */
+/*	$Id: Class1.c++ 439 2007-02-15 23:36:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1649,6 +1649,7 @@ Class1Modem::modemDIS() const
 
     // signalling rates
     for (u_short i = 0; i < 4; i++) dis_caps.setBit(11+i, (discap & (0x08>>i)));
+    if (useV34) dis_caps.setBit(FaxParams::BITNUM_V8_CAPABLE, true);
 
     // we set both units preferences to allow the sender to choose
     dis_caps.setBit(FaxParams::BITNUM_METRIC_RES, true);
