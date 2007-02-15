@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 439 2007-02-15 23:36:39Z faxguy $ */
+/*	$Id: Class2.c++ 440 2007-02-16 06:04:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -375,7 +375,6 @@ Class2Modem::setupDCC()
     params.wd = getBestPageWidth();
     params.ln = getBestPageLength();
     params.df = useExtendedDF ? modemParams.df : getBestDataFormat();
-    params.df &= ~BIT(DF_JBIG);		// let's not actually do JBIG yet
     params.ec = getBestECM();
     params.bf = BF_DISABLE;
     params.st = getBestScanlineTime();
@@ -666,8 +665,7 @@ Class2Modem::parseRange(const char* cp, Class2Params& p)
 	 */
 	useExtendedDF = true;
 	// No Class 2 modem is known to actually *work* with JBIG yet.
-	//p.df = BIT(DF_1DMH) | BIT(DF_2DMR) | BIT(DF_2DMMR) | BIT(DF_JBIG);
-	p.df = BIT(DF_1DMH) | BIT(DF_2DMR) | BIT(DF_2DMMR);
+	p.df = BIT(DF_1DMH) | BIT(DF_2DMR) | BIT(DF_2DMMR) | BIT(DF_JBIG);
     } else
 	p.df &= DF_ALL;
     p.ec &= EC_ALL;
