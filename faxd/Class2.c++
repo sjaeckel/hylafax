@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 440 2007-02-16 06:04:17Z faxguy $ */
+/*	$Id: Class2.c++ 441 2007-02-17 01:36:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -427,7 +427,7 @@ Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params, bool
 		if (dfscan & 0x8) params.df |= BIT(DF_JBIG);
 	    } else {
 		params.df = DF_1DMH;
-		if (dfscan & 0x3) params.df = DF_2DMMR;
+		if (dfscan == 0x3) params.df = DF_2DMMR;
 		else if (dfscan & 0x1) params.df = DF_2DMR;
 		else if (dfscan & 0x4) params.df = DF_JBIG;	// JBIG L0 is JBIG to us
 		else if (dfscan & 0x8) params.df = DF_JBIG;
@@ -664,7 +664,6 @@ Class2Modem::parseRange(const char* cp, Class2Params& p)
 	 * are not.
 	 */
 	useExtendedDF = true;
-	// No Class 2 modem is known to actually *work* with JBIG yet.
 	p.df = BIT(DF_1DMH) | BIT(DF_2DMR) | BIT(DF_2DMMR) | BIT(DF_JBIG);
     } else
 	p.df &= DF_ALL;
