@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 439 2007-02-15 23:36:39Z faxguy $ */
+/*	$Id: Class1.c++ 442 2007-02-21 19:23:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -185,6 +185,7 @@ Class1Modem::setupModem(bool isSend)
     modemParams.df = BIT(DF_1DMH) | BIT(DF_2DMR);
     modemParams.bf = BF_DISABLE;
     modemParams.st = ST_ALL;
+    modemParams.jp = 0;
     pokeConfig(isSend);
     traceModemParams();
     /*
@@ -262,6 +263,10 @@ Class1Modem::pokeConfig(bool isSend)
 		break;
 	}
 	if (jbigSupported) modemParams.df |= BIT(DF_JBIG);
+	if (conf.class1GreyJPEGSupport || conf.class1ColorJPEGSupport)
+	    modemParams.jp |= BIT(JP_GREY);
+	if (conf.class1ColorJPEGSupport)
+	    modemParams.jp |= BIT(JP_COLOR);
     } else
 	modemParams.ec = BIT(EC_DISABLE);
 }

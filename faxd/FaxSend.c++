@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 413 2007-01-04 02:10:22Z faxguy $ */
+/*	$Id: FaxSend.c++ 442 2007-02-21 19:23:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -603,6 +603,10 @@ FaxServer::sendSetupParams1(TIFF* tif,
     uint32 g3opts;
     if (!TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts))
 	g3opts = 0;
+    /*
+     * JPEG sending disabled for now
+     */
+    params.jp = 0;
     /*
      * RTFCC lets us ignore our file data format, but our data
      * format may be based upon a requested data format, and without

@@ -1,4 +1,4 @@
-# $Id: lucent-mt-20 193 2006-06-06 20:45:14Z faxguy $
+# $Id: lucent-mt-20 442 2007-02-21 19:23:06Z faxguy $
 #
 # prototype config file for MultiTech MT5634ZBA-V.92-NAM
 #
@@ -32,10 +32,6 @@ Class2CQCmd:		AT+FCQ=1,0
 
 # versions that respond to AT+FFC=? with non-zero data support RTFCC
 # Class2RTFCC:		yes
-
-# unfortunately, HylaFAX can't currently send or receive in color
-ModemAnswerCmd:		AT+FCC=,,,,,,,,0;A
-ModemDialCmd:		AT+FCC=,,,,,,,,0;DT%s
 
 # Some firmware revisions (i.e. 1.25 in ZBAs) report MMR support but
 # corrupt the data.  Enabling the following lines should work around this.

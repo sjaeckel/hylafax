@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 418 2007-01-11 18:36:24Z faxguy $
+.\"	$Id: hylafax-config.4f 442 2007-02-21 19:23:06Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-01-11 10:36:24 -0800 (Thu, 11 Jan 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-02-21 11:23:06 -0800 (Wed, 21 Feb 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -339,6 +339,7 @@ Class2DDISCmd	string	\-	Class 2: command to set session parameters before dialin
 Class2ECMType	string	\s-1``2''\s+1	Class 2: ECM specification type to follow
 Class2HexNSF	boolean	\s-1Yes\s+1	Class 2: parse NSF strings as hex values
 Class2HFLOCmd	string	\-	Class 2: command to set hardware flow control
+Class2JPEGSupport	boolean	\s-1No\s+1	Class 2: use modem JPEG support
 Class2LIDCmd	string	\s-1AT+FLID\s+1	Class 2: command to set local identifier string
 Class2MINSPCmd	string	\s-1AT+FMINSP\s+1	Class 2: command to set minimum transmit speed
 Class2NFLOCmd	string	\-	Class 2: command to set no flow control
@@ -373,6 +374,7 @@ Class2DISCmd	string	\s-1AT+FIS\s+1	Class 2.0: command to set session parameters
 Class2ECMType	string	\s-1``2.0''\s+1	Class 2.0: ECM specification type to follow
 Class2HexNSF	boolean	\s-1Yes\s+1	Class 2.0: parse NSF strings as hex values
 Class2HFLOCmd	string	\s-1AT+FLO=2\s+1	Class 2.0: command to set hardware flow control
+Class2JPEGSupport	boolean	\s-1No\s+1	Class 2.0: use modem JPEG support
 Class2LIDCmd	string	\s-1AT+FLI\s+1	Class 2.0: command to set local identifier string
 Class2MINSPCmd	string	\s-1AT+FMS\s+1	Class 2.0: command to set minimum transmit speed
 Class2NFLOCmd	string	\s-1AT+FLO=0\s+1	Class 2.0: command to set no flow control
@@ -2742,6 +2744,9 @@ This command is issued immediately after sending the
 .B Class2Cmd
 to switch the modem to Class 2/2.0 operation.
 For Class 2.0 operation the default is ``\s-1AT+FLO=2\s+1''.
+.TP
+.B Class2JPEGSupport
+Whether or not to enable and utilize the JPEG support found in the modem.
 .TP
 .B Class2LIDCmd
 The command used to set the local identifier string.

@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 411 2007-01-02 19:22:54Z faxguy $ */
+/*	$Id: ModemConfig.h 442 2007-02-21 19:23:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -198,6 +198,7 @@ public:
     fxStr	class2HFLOCmd;		// cmd to setup hardware flow control
     fxStr	class2MINSPCmd;		// cmd to setup min transmit speed
     fxStr	class2RecvDataTrigger;	// send to start recv
+    bool	class2JPEGSupport;	// use JPEG support as reported by the modem
     bool	class2XmitWaitForXON;	// wait for XON before send
     bool	class2RTFCC;		// real-time fax compression conversion
     bool	class2SendRTC;		// append RTC to page data on transmit

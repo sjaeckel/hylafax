@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 440 2007-02-16 06:04:17Z faxguy $ */
+/*	$Id: FaxModem.h 442 2007-02-21 19:23:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -124,6 +124,8 @@ protected:
     void	copyQualityTrace(const char* fmt, ...);
     void	traceModemParams();
     void	traceFCF(const char* dir, u_int fcf);
+    void	parseJPEGStream(u_char c);
+    void	fixupJPEG(TIFF* tif);
     void	parseJBIGStream(u_char c);
     void	parseJBIGBIH(u_char* buf);
     void	clearSDNORMCount();
