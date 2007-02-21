@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 411 2007-01-02 19:22:54Z faxguy $ */
+/*	$Id: ModemConfig.c++ 442 2007-02-21 19:23:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -254,6 +254,7 @@ ModemConfig::setupConfig()
     class2UseHex	= false;		// historical behavior
     class2HexNSF	= true;			// most modems report NSF in hexadecimal
     class2UseLineCount	= false;		// don't trust firmware decoders
+    class2JPEGSupport	= false;		// disable JPEG by default
     class1ECMSupport	= true;			// support for ECM
     class1GreyJPEGSupport = false;		// support for greyscale JPEG
     class1ColorJPEGSupport = false;		// support for full color JPEG
@@ -737,6 +738,8 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	class1GreyJPEGSupport = getBoolean(value);
     else if (streq(tag, "class1colorjpegsupport"))
 	class1ColorJPEGSupport = getBoolean(value);
+    else if (streq(tag, "class2jpegsupport"))
+	class2JPEGSupport = getBoolean(value);
 #endif
     else if (streq(tag, "class1jbigsupport"))
         class1JBIGSupport = getJBIGSupport(value);

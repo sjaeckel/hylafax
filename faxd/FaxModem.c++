@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: FaxModem.c++ 442 2007-02-21 19:23:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -597,7 +597,8 @@ FaxModem::traceModemParams()
     traceBits(modemParams.br, Class2Params::bitRateNames);
     traceBits(modemParams.wd, Class2Params::pageWidthNames);
     traceBits(modemParams.ln, Class2Params::pageLengthNames);
-    traceBits(modemParams.df, Class2Params::dataFormatNames);
+    u_int dataforms = modemParams.df + ((modemParams.jp & (BIT(JP_GREY) | BIT(JP_COLOR))) << 4);
+    traceBits(dataforms, Class2Params::dataFormatNames);
     if (supportsECM())
 	traceBits(modemParams.ec, Class2Params::ecmNames);
     if (modemParams.bf & BIT(BF_ENABLE))
