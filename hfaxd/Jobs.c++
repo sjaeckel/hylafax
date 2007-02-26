@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 445 2007-02-26 18:03:20Z faxguy $ */
+/*	$Id: Jobs.c++ 446 2007-02-26 21:34:01Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -158,7 +158,7 @@ static const struct {
     { T_TO_USER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_TO_VOICE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_TSI,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
-    { T_USE_CONTCOVER,	A_RUSR|A_RADM|A_WADM|A_ROTH },
+    { T_USE_CONTCOVER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USE_ECM,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_ECMTYPE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USE_TAGLINE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
