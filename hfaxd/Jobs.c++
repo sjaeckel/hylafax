@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 425 2007-01-29 23:55:22Z faxguy $ */
+/*	$Id: Jobs.c++ 445 2007-02-26 18:03:20Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -831,7 +831,7 @@ HylaFAXServer::setJobParameter(Job& job, Token t, bool b)
 	}
 	parmBotch(t);
     }
-    return (true);
+    return (false);
 }
 
 /*
