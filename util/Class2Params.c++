@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++ 442 2007-02-21 19:23:06Z faxguy $ */
+/*	$Id: Class2Params.c++ 448 2007-02-27 21:35:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -882,7 +882,7 @@ const char* Class2Params::dataFormatNames[7] = {
     "JPEG Full-Color"		// JP_COLOR
 };
 const char* Class2Params::dataFormatName() const
-     { return (dataFormatNames[df+(jp ? jp + 4 : 0)]); }
+     { return (dataFormatNames[df+(jp > 0 && jp < (u_int) -1 ? jp + 4 : 0)]); }
 
 fxStr
 Class2Params::dataFormatsName()
