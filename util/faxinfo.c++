@@ -1,4 +1,4 @@
-/*	$Id: faxinfo.c++ 428 2007-02-06 02:36:47Z faxguy $ */
+/*	$Id: faxinfo.c++ 447 2007-02-27 21:14:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -251,6 +251,7 @@ main(int argc, char** argv)
 	}
 
 	Class2Params params;
+	params.jp = 0;
 	uint32 v;
 	float vres = 3.85;					// XXX default
 	float hres = 8.03;
