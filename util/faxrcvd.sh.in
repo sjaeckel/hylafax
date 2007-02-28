@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 400 2006-12-19 18:07:09Z faxguy $
+#	$Id: faxrcvd.sh.in 450 2007-02-28 21:22:24Z faxguy $
 #
 # ============================================
 #
@@ -122,60 +122,62 @@ faxrcvd_mail()
     if [ -f $FILE ]; then
 	case "$MAILTYPE" in
 	    Multipart/Mixed*)
-		echo ""
-		echo "--$MIMEBOUNDARY"
-		if [ "$FILETYPE" = "tif" ]; then
-		     echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
-		     echo "Content-Description: FAX document"
-		     echo "Content-Transfer-Encoding: $ENCODING"
-		     echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
-		     echo ""
-		     encode $FILE;
-		elif [ "$FILETYPE" = "tif-r" ]; then
-		     echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
-		     echo "Content-Description: FAX document"
-		     echo "Content-Transfer-Encoding: $ENCODING"
-		     echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
-		     echo ""
-		     if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
+		for type in $FILETYPE; do
+		    echo ""
+		    echo "--$MIMEBOUNDARY"
+		    if [ "$type" = "tif" ]; then
+		 	echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
+		 	echo "Content-Description: FAX document"
+		 	echo "Content-Transfer-Encoding: $ENCODING"
+		 	echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
+		 	echo ""
+		 	encode $FILE;
+		    elif [ "$type" = "tif-r" ]; then
+			echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
+			echo "Content-Description: FAX document"
+			echo "Content-Transfer-Encoding: $ENCODING"
+			echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
+			echo ""
+			if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
 			    tiffcp -c jpeg:R $FILE $FILE.r.tif
 			    encode $FILE.r.tif
 			    $RM -f $FILE.r.tif 2>$ERRORSTO
-		     else 
-			  encode $FILE
-		     fi
-		 elif [ "$FILETYPE" = "tif-y" ]; then
-		     echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
-		     echo "Content-Description: FAX document"
-		     echo "Content-Transfer-Encoding: $ENCODING"
-		     echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
-		     echo ""
-		     if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
-				tiffcp -c jpeg:Y $FILE $FILE.y.tif
-				encode $FILE.y.tif
-				$RM -f $FILE.y.tif 2>$ERRORSTO
-		     else
-				encode $FILE
-		     fi
-		 elif [ "$FILETYPE" = "pdf" ]; then
-		     echo "Content-Type: application/pdf; name=\"$FILENAME.pdf\""
-		     echo "Content-Description: FAX document"
-		     echo "Content-Transfer-Encoding: $ENCODING"
-		     echo "Content-Disposition: attachment; filename=\"$FILENAME.pdf\""
-		     echo ""
-		     $TIFF2PDF -o $FILE.pdf $FILE
-		     encode $FILE.pdf
-		     $RM -f $FILE.pdf 2>$ERRORSTO
-		 else #  default as Postscript
-		     echo "Content-Type: application/postscript; name=\"$FILENAME.ps\""
-		     echo "Content-Description: FAX document"
-		     echo "Content-Transfer-Encoding: 7bit"
-		     echo "Content-Disposition: attachment; filename=\"$FILENAME.ps\""
-		     echo ""
-		     $FAX2PS $FILE 2>$ERRORSTO
-		 fi
-		 echo ""
-		 echo "--$MIMEBOUNDARY--"
+			else 
+			    encode $FILE
+		 	fi
+		    elif [ "$type" = "tif-y" ]; then
+			echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
+			echo "Content-Description: FAX document"
+			echo "Content-Transfer-Encoding: $ENCODING"
+			echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
+			echo ""
+			if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
+			    tiffcp -c jpeg:Y $FILE $FILE.y.tif
+			    encode $FILE.y.tif
+			    $RM -f $FILE.y.tif 2>$ERRORSTO
+			else
+			    encode $FILE
+			fi
+		    elif [ "$type" = "pdf" ]; then
+			echo "Content-Type: application/pdf; name=\"$FILENAME.pdf\""
+			echo "Content-Description: FAX document"
+			echo "Content-Transfer-Encoding: $ENCODING"
+			echo "Content-Disposition: attachment; filename=\"$FILENAME.pdf\""
+			echo ""
+			$TIFF2PDF -o $FILE.pdf $FILE
+			encode $FILE.pdf
+			$RM -f $FILE.pdf 2>$ERRORSTO
+		    else #  default as Postscript
+			echo "Content-Type: application/postscript; name=\"$FILENAME.ps\""
+			echo "Content-Description: FAX document"
+			echo "Content-Transfer-Encoding: 7bit"
+			echo "Content-Disposition: attachment; filename=\"$FILENAME.ps\""
+			echo ""
+			$FAX2PS $FILE 2>$ERRORSTO
+		    fi
+		done
+		echo ""
+		echo "--$MIMEBOUNDARY--"
 		;;
 	    text/plain*)
 		if [ -n "$SENDTO" ]; then

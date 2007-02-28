@@ -1,4 +1,4 @@
-.\"	$Id: pollrcvd.1m 340 2006-10-20 02:04:46Z faxguy $
+.\"	$Id: pollrcvd.1m 450 2007-02-28 21:22:24Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -83,6 +83,13 @@ in the spooling area that sets
 .TP
 .I LANG
 controls the localization of the text of the received poll notification.
+.TP
+.I FILETYPE
+controls the filetype of the image attachment.  Current
+filetype options are ``ps'', ``tif'', and ``pdf''.
+Multiple values may be specified by separating them with
+whitespace. In that case a separate attachment is created
+for each filetype.
 .SH FILES
 .nf
 .ta \w'${SBIN}/faxinfo    'u
