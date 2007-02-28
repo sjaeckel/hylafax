@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 401 2006-12-19 18:29:13Z faxguy $
+#    $Id: notify.sh.in 450 2007-02-28 21:22:24Z faxguy $
 #
 # ============================================
 #
@@ -276,14 +276,14 @@ notify_mail()
             echo "."
         fi
     fi
-    if [ -n "$RETURNFILETYPE" ] ; then 
+    for type in $RETURNFILETYPE; do 
 	if [ $nfiles -gt 0 ] ; then
 	    for i in `local_seq 1 $nfiles`; do 
 		name="files_$i"
 		eval filename=`echo "$"$name`
 		if [ -s $filename ] ; then # file is > 0 size
-		    type="filetype_$i"
-		    eval FROMFMT=`echo "$"$type`
+		    ftype="filetype_$i"
+		    eval FROMFMT=`echo "$"$ftype`
 		    #
 		    # Because Ghostscript accepts PDF identically to PostScript
 		    # and because HylaFAX has historically handled PDF named as
@@ -294,7 +294,7 @@ notify_mail()
 			    FROMFMT=PDF
 			fi
 		    fi
-		    FILEEXTEN="$RETURNFILETYPE"
+		    FILEEXTEN="$type"
 		    if [ "$FILEEXTEN" = "original" ]; then
 			case "$FROMFMT" in
 			    "TIFF") FILEEXTEN=tif;;
@@ -324,7 +324,7 @@ notify_mail()
 	        fi
 	    done
 	fi
-    fi
+    done
     # put out a terminating MIME boundary
     echo ""
     echo "--$MIMEBOUNDARY--"
@@ -452,7 +452,7 @@ setCustomValues()
     # be set to their non-customized defaults prior to this.
     #
     if [ -f etc/FaxNotify ]; then
-        # source notify preferecnes
+        # source notify preferences
         . etc/FaxNotify
     fi
 
