@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 433 2007-02-10 02:24:10Z faxguy $ */
+/*	$Id: Class1Send.c++ 449 2007-02-28 20:27:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1197,17 +1197,6 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 		protoTrace(emsg);
 		return (false);
 	    }
-
-	    /*
-	     * A pause here helps prevent getting RNR from some receivers.
-	     * In theory (per spec) it should not be longer than the smallest T2.
-	     * In practice it cannot be shorter than the smallest T4.
-	     *
-	     * It is now disabled because our RNR/RR handling now functions and
-	     * pausing 3 seconds needlessly slows down the process quite a bit.
-	     */
-	    //pause (3000);
-
 	    /*
 	     * Build PPS frame and send it.  We don't use I3 = 0xFF when sending
 	     * zero-count frames because some receivers will read it as 256.
