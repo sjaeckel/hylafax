@@ -1,7 +1,8 @@
-#	$Id: CHANGES 451 2007-02-28 21:59:58Z faxguy $	
+#	$Id: CHANGES 452 2007-03-02 19:11:13Z faxguy $	
 
 New Changes
 
+* add Duxbury/IP568x modem prototype config file (2 Mar 2007)
 * prevent faxq usage of traceServer from crashing (28 Feb 2007)
 * support FILETYPE and RETURNFILETYPE to be multiple (28 Feb 2007)
 * add a one-second when sending before hanging up to help the
