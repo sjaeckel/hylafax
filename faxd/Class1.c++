@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 442 2007-02-21 19:23:06Z faxguy $ */
+/*	$Id: Class1.c++ 453 2007-03-04 01:49:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1421,7 +1421,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 	    frame.reset();
             gotframe = recvRawFrame(frame);
 	} while (!gotframe && docrp && crpcnt++ < 3 && !wasTimeout() &&
-		switchingPause(emsg) && transmitFrame(dir|FCF_CRP));
+		switchingPause(emsg) && switchingPause(emsg) && transmitFrame(dir|FCF_CRP));	/* double switchingPause to avoid sending CRP during TCF */
 	return (gotframe);
     } else {
 	gotCONNECT = false;

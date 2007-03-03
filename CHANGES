@@ -1,7 +1,8 @@
-#	$Id: CHANGES 452 2007-03-02 19:11:13Z faxguy $	
+#	$Id: CHANGES 453 2007-03-04 01:49:11Z faxguy $	
 
 New Changes
 
+* wait longer before sending CRP (3 Mar 2007)
 * add Duxbury/IP568x modem prototype config file (2 Mar 2007)
 * prevent faxq usage of traceServer from crashing (28 Feb 2007)
 * support FILETYPE and RETURNFILETYPE to be multiple (28 Feb 2007)
