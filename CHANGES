@@ -1,7 +1,8 @@
-#	$Id: CHANGES 454 2007-03-05 18:40:58Z faxguy $	
+#	$Id: CHANGES 455 2007-03-05 19:57:46Z faxguy $	
 
 New Changes
 
+* improve "modem echoes dialed number" handling (5 Mar 2007)
 * attempt to improve reception when there is bad echo (5 Mar 2007)
 * wait longer before sending CRP (3 Mar 2007)
 * add Duxbury/IP568x modem prototype config file (2 Mar 2007)

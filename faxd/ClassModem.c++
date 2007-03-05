@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 412 2007-01-03 03:20:22Z faxguy $ */
+/*	$Id: ClassModem.c++ 455 2007-03-05 19:57:46Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -182,8 +182,15 @@ ClassModem::isNoise(const char* s)
     for (u_int i = 0; i < NNOISE; i++)
 	if (strneq(s, noiseMsgs[i], strlen(noiseMsgs[i])))
 	    return (true);
-    // some modems echo the dialed number
-    if (fxStr(s) == dialedNumber) return (true);
+    /*
+     * Some modems echoes the DTMF of the dialed number, and this should be
+     * ignored too.
+     * Instead of simply checking if "dialedNumber" is equal to "s" we must
+     * consider the possibility of having more numbers at "conf.dialCmd".
+     * Eg.: conf.dialCmd = atdt0%s (zero will be echoed)
+     * The easiest way is to find if "dialedNumber" is a sub-string of "s".
+     */
+    if (strstr(s, (const char *) dialedNumber) != NULL) return (true);
     return (false);
 }
 #undef NNOISE
