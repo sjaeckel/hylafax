@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 403 2006-12-21 22:07:30Z faxguy $ */
+/*	$Id: Class1Recv.c++ 454 2007-03-05 18:40:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1198,6 +1198,16 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    gotEOT = true;
 				    recvdDCN = true;
 				    continue;
+				case FCF_MCF:
+				case FCF_CFR:
+				    if ((rtncframe[2] & 0x80) == FCF_RCVR) {
+					/*
+					 * Echo on the channel may be so lagged that we're hearing 
+					 * ourselves.  Ignore it.  Try again.
+					 */
+					break;
+				    }
+				    /* intentional pass-through */
 				default:
 				    // The message is not ECM-specific: fall out of ECM receive, and let
 				    // the earlier message-handling routines try to cope with the signal.

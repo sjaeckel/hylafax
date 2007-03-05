@@ -1,7 +1,8 @@
-#	$Id: CHANGES 453 2007-03-04 01:49:11Z faxguy $	
+#	$Id: CHANGES 454 2007-03-05 18:40:58Z faxguy $	
 
 New Changes
 
+* attempt to improve reception when there is bad echo (5 Mar 2007)
 * wait longer before sending CRP (3 Mar 2007)
 * add Duxbury/IP568x modem prototype config file (2 Mar 2007)
 * prevent faxq usage of traceServer from crashing (28 Feb 2007)
