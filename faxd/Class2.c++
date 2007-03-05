@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 442 2007-02-21 19:23:06Z faxguy $ */
+/*	$Id: Class2.c++ 456 2007-03-06 00:07:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -283,7 +283,7 @@ Class2Modem::pokeConfig(bool isSend)
  * followed by setup of receive-specific parameters.
  */
 bool
-Class2Modem::setupClass2Parameters()
+Class2Modem::setupClass2Parameters(bool enableV34)
 {
     if (modemServices & serviceType) {		// when resetting at startup
 	setupFlowControl(flowControl);		// flow control
@@ -316,7 +316,7 @@ Class2Modem::setupClass2Parameters()
 	 * Force the DCC so that we can override
 	 * whatever the modem defaults are.
 	 */
-	setupDCC();
+	setupDCC(enableV34);
     }
     return (true);
 }
@@ -370,10 +370,10 @@ Class2Modem::setupFlowControl(FlowControl fc)
  * Setup DCC to reflect best capabilities of the server.
  */
 bool
-Class2Modem::setupDCC()
+Class2Modem::setupDCC(bool enableV34)
 {
     params.vr = getVRes();
-    params.br = getBestSignallingRate();
+    params.br = enableV34 ? getBestSignallingRate() : fxmin((u_int) BR_14400, getBestSignallingRate());
     params.wd = getBestPageWidth();
     params.ln = getBestPageLength();
     params.df = useExtendedDF ? modemParams.df : getBestDataFormat();
@@ -489,7 +489,7 @@ Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params, bool
 bool
 Class2Modem::faxService(bool enableV34)
 {
-    return setupClass2Parameters();
+    return setupClass2Parameters(enableV34);
 }
 
 bool
