@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++ 448 2007-02-27 21:35:17Z faxguy $ */
+/*	$Id: Class2Params.c++ 457 2007-03-06 01:49:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -373,6 +373,9 @@ Class2Params::update(bool isDIS)
     if (vr & VR_R8 || vr & VR_200X400)   setBit(BITNUM_VR_R8, true);	// R8  x 15.4 l/mm
     if (vr & VR_R16)			 setBit(BITNUM_VR_R16, true);	// R16 x 15.4 l/mm
     if (vr & VR_300X300)		 setBit(BITNUM_VR_300X300, true);// 300 x 300 dpi
+    if (!isDIS && (vr & VR_200X200 || vr & VR_200X400 || vr & VR_300X300)) {
+	setBit(BITNUM_INCH_RES, true);	// indicate inch-based resolution usage
+    }
 
     /*
      * SIGNALING RATE
