@@ -1,8 +1,9 @@
-#	$Id: CHANGES 456 2007-03-06 00:07:37Z faxguy $	
+#	$Id: CHANGES 457 2007-03-06 01:49:07Z faxguy $	
 
 New Changes
 
-* allow job to disable V.34 in Class 2 driver (5 Mar 2006)
+* fix Class 1 DCS in sending of 300 x 300 dpi image (5 Mar 2007)
+* allow job to disable V.34 in Class 2 driver (5 Mar 2007)
 * improve "modem echoes dialed number" handling (5 Mar 2007)
 * attempt to improve reception when there is bad echo (5 Mar 2007)
 * wait longer before sending CRP (3 Mar 2007)
@@ -15,7 +16,7 @@ New Changes
 
 (5.1.0)
 
-* add Class 2.0/2.1 JPEG (color) support (21 Feb 2006)
+* add Class 2.0/2.1 JPEG (color) support (21 Feb 2007)
 * fix MR reception for some Class 2 modems that indicate MR
   with DF=2 (16 Feb 2007)
 * add Class 2.0/2.1 JBIG support (15 Feb 2007)
