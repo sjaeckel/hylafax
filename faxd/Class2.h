@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 458 2007-03-06 20:19:30Z faxguy $ */
+/*	$Id: Class2.h 459 2007-03-06 21:53:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -77,8 +77,8 @@ protected:
     virtual bool setupModem(bool isSend = true);
     virtual bool setupModel(fxStr& model);
     virtual bool setupRevision(fxStr& rev);
-    virtual bool setupDCC(bool enableV34 = true);
-    virtual bool setupClass2Parameters(bool enableV34 = true);
+    virtual bool setupDCC(bool enableV34 = true, bool enableV17 = true);
+    virtual bool setupClass2Parameters(bool enableV34 = true, bool enableV17 = true);
     virtual bool setupFlowControl(FlowControl fc);
 // transmission support
     bool	dataTransfer();

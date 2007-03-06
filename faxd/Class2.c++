@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 458 2007-03-06 20:19:30Z faxguy $ */
+/*	$Id: Class2.c++ 459 2007-03-06 21:53:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -283,7 +283,7 @@ Class2Modem::pokeConfig(bool isSend)
  * followed by setup of receive-specific parameters.
  */
 bool
-Class2Modem::setupClass2Parameters(bool enableV34)
+Class2Modem::setupClass2Parameters(bool enableV34, bool enableV17)
 {
     if (modemServices & serviceType) {		// when resetting at startup
 	setupFlowControl(flowControl);		// flow control
@@ -316,7 +316,7 @@ Class2Modem::setupClass2Parameters(bool enableV34)
 	 * Force the DCC so that we can override
 	 * whatever the modem defaults are.
 	 */
-	setupDCC(enableV34);
+	setupDCC(enableV34, enableV17);
     }
     return (true);
 }
@@ -370,10 +370,11 @@ Class2Modem::setupFlowControl(FlowControl fc)
  * Setup DCC to reflect best capabilities of the server.
  */
 bool
-Class2Modem::setupDCC(bool enableV34)
+Class2Modem::setupDCC(bool enableV34, bool enableV17)
 {
     params.vr = getVRes();
     params.br = enableV34 ? getBestSignallingRate() : fxmin((u_int) BR_14400, getBestSignallingRate());
+    params.br = enableV17 ? params.br : fxmin((u_int) BR_9600, getBestSignallingRate());
     params.wd = getBestPageWidth();
     params.ln = getBestPageLength();
     params.df = useExtendedDF ? modemParams.df : getBestDataFormat();
@@ -490,7 +491,7 @@ bool
 Class2Modem::faxService(bool enableV34, bool enableV17)
 {
     if (!enableV17 && conf.class2DisableV17Cmd != "" && !atCmd(conf.class2DisableV17Cmd)) return (false);
-    return setupClass2Parameters(enableV34);
+    return setupClass2Parameters(enableV34, enableV17);
 }
 
 
