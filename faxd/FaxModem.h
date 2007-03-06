@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 442 2007-02-21 19:23:06Z faxguy $ */
+/*	$Id: FaxModem.h 458 2007-03-06 20:19:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -247,7 +247,7 @@ public:
      * for doing things like keeping cover pages & documents in a
      * single T.30 document.
      */
-    virtual bool faxService(bool enableV34) = 0;
+    virtual bool faxService(bool enableV34, bool enableV17) = 0;
     virtual bool sendSetup(FaxRequest&, const Class2Params& dis, fxStr& emsg);
     virtual void sendBegin();
     virtual FaxSendStatus getPrologue(Class2Params&,

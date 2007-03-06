@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 420 2007-01-11 20:38:02Z faxguy $ */
+/*	$Id: Class1.h 458 2007-03-06 20:19:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -235,7 +235,7 @@ public:
 		    fxStr& emsg);
 
 // miscellaneous
-    bool	faxService(bool enableV34);	// switch to fax mode (send)
+    bool	faxService(bool enableV34, bool enableV17);	// switch to fax mode (send)
     bool	reset(long ms);			// reset modem
     bool	ready(long ms);			// ready modem for receive
     void	setLID(const fxStr& number);	// set local id string

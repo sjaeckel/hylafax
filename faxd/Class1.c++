@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 453 2007-03-04 01:49:11Z faxguy $ */
+/*	$Id: Class1.c++ 458 2007-03-06 20:19:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -327,7 +327,7 @@ Class1Modem::setupFlowControl(FlowControl fc)
  * for sending facsimile.
  */
 bool
-Class1Modem::faxService(bool enableV34)
+Class1Modem::faxService(bool enableV34, bool enableV17)
 {
     if (!atCmd(classCmd)) return (false);
     if (conf.class1EnableV34Cmd != "" && enableV34)

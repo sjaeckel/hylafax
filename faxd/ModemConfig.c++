@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 442 2007-02-21 19:23:06Z faxguy $ */
+/*	$Id: ModemConfig.c++ 458 2007-03-06 20:19:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -124,6 +124,7 @@ static struct {
 { "class1switchingcmd",		&ModemConfig::class1SwitchingCmd, "AT+FRS=7" },
 { "class2cmd",			&ModemConfig::class2Cmd },
 { "class2borcmd",		&ModemConfig::class2BORCmd },
+{ "class2disablev17cmd",	&ModemConfig::class2DisableV17Cmd },
 { "class2relcmd",		&ModemConfig::class2RELCmd },
 { "class2cqcmd",		&ModemConfig::class2CQCmd },
 { "class2abortcmd",		&ModemConfig::class2AbortCmd },
