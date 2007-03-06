@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 449 2007-02-28 20:27:58Z faxguy $ */
+/*	$Id: FaxSend.c++ 458 2007-03-06 20:19:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -178,7 +178,8 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
      * requesting polling.
      */
     if ((batched & BATCH_FIRST) &&
-	!modem->faxService(!clientInfo.getHasV34Trouble() && clientParams.ec != EC_DISABLE && clientParams.br > BR_14400)) {
+	!modem->faxService(!clientInfo.getHasV34Trouble() && clientParams.ec != EC_DISABLE && clientParams.br > BR_14400,
+	    !clientInfo.getHasV17Trouble() && clientParams.br > BR_9600)) {
 	sendFailed(fax, send_failed, "Unable to configure modem for fax use");
 	return;
     }

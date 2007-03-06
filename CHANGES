@@ -1,7 +1,8 @@
-#	$Id: CHANGES 457 2007-03-06 01:49:07Z faxguy $	
+#	$Id: CHANGES 458 2007-03-06 20:19:30Z faxguy $	
 
 New Changes
 
+* add Class2DisableV17Cmd config option (6 Mar 2007)
 * fix Class 1 DCS in sending of 300 x 300 dpi image (5 Mar 2007)
 * allow job to disable V.34 in Class 2 driver (5 Mar 2007)
 * improve "modem echoes dialed number" handling (5 Mar 2007)

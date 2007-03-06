@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 442 2007-02-21 19:23:06Z faxguy $
+.\"	$Id: hylafax-config.4f 458 2007-03-06 20:19:30Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-02-21 11:23:06 -0800 (Wed, 21 Feb 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-03-06 12:19:30 -0800 (Tue, 06 Mar 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -334,6 +334,7 @@ Class2CQCmd	string	\-	Class 2: command to setup copy quality parameters
 Class2CQQueryCmd	string	\s-1AT+FCQ=?\s+1	Class 2: command to query modem copy quality capabilities
 Class2DCCCmd	string	\s-1AT+FDCC\s+1	Class 2: command to set modem capabilities
 Class2DCCQueryCmd	string	\s-1AT+FDCC=?\s+1	Class 2: command to query modem capabilities
+Class2DisableV17Cmd	string \-	Class 2: command to disable V.17 support
 Class2DISCmd	string	\s-1AT+FDIS\s+1	Class 2: command to set session parameters
 Class2DDISCmd	string	\-	Class 2: command to set session parameters before dialing
 Class2ECMType	string	\s-1``2''\s+1	Class 2: ECM specification type to follow
@@ -370,6 +371,7 @@ Class2CQCmd	string	\-	Class 2.0: command to setup copy quality parameters
 Class2CQQueryCmd	string	\s-1AT+FCQ=?\s+1	Class 2.0: command to query modem copy quality capabilities
 Class2DCCCmd	string	\s-1AT+FCC\s+1	Class 2.0: command to set modem capabilities
 Class2DCCQueryCmd	string	\s-1AT+FCC=?\s+1	Class 2.0: command to query modem capabilities
+Class2DisableV17Cmd	string \-	Class 2.0: command to disable V.17 support
 Class2DISCmd	string	\s-1AT+FIS\s+1	Class 2.0: command to set session parameters
 Class2ECMType	string	\s-1``2.0''\s+1	Class 2.0: ECM specification type to follow
 Class2HexNSF	boolean	\s-1Yes\s+1	Class 2.0: parse NSF strings as hex values
