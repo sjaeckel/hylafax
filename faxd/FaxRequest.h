@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 344 2006-10-25 19:55:51Z faxguy $ */
+/*	$Id: FaxRequest.h 460 2007-03-08 02:36:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -143,7 +143,8 @@ public:
     fxStr	passwd;		// transmit password
     fxStr	external;	// displayable phone number for fax machine
     fxStr	notice;		// message to send for notification
-    fxStr	modem;		// outgoing modem to use
+    fxStr	modem;		// outgoing modem (ModemGroup) to use
+    fxStr	modemused;	// specific modem used in last attempt
     fxStr	faxnumber;	// Sender's number to advertise to phone company
     fxStr	faxname;	// Sender's name to advertise to phone company
     fxStr	tsi;		// TSI to use instead of LocalIdentifier

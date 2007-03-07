@@ -1,4 +1,4 @@
-/*	$Id: mkhash.c 177 2006-05-23 22:58:03Z faxguy $ */
+/*	$Id: mkhash.c 460 2007-03-08 02:36:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -78,6 +78,7 @@ main()
     hash("jobtag");
     hash("pagehandling");
     hash("modem");
+    hash("modemused");
     hash("faxnumber");
     hash("faxname");
     hash("tsi");
