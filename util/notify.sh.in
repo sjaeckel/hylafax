@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 450 2007-02-28 21:22:24Z faxguy $
+#    $Id: notify.sh.in 460 2007-03-08 02:36:53Z faxguy $
 #
 # ============================================
 #
@@ -185,9 +185,7 @@ notify_mail()
 	if [ "$ndials" != "0" ]; then
 	    printf "`echo %$ITEMSIZE\s: %s` ($DICTFAILEDCALLS)\n" "$DICTDIALS" "$ndials"
 	fi
-        if [ "$modem" != "any" ] ; then 
-            printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTMODEM" "$modem"
-        fi
+	printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTMODEM" "$modemused"
 	if [ -n "$faxstatus" ]; then
 	    printf "`echo %$ITEMSIZE\s: %b`\n" "$DICTSTATUS" "$FAXSTATUSMSG"
 	fi

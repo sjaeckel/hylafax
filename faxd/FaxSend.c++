@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 458 2007-03-06 20:19:30Z faxguy $ */
+/*	$Id: FaxSend.c++ 460 2007-03-08 02:36:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -243,6 +243,9 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	    fxStr clientdis;
 	    clientCapabilities.asciiEncode(clientdis);
 	    clientInfo.setDIS(clientdis);
+
+	    // modem used
+	    fax.modemused = getModemDeviceID();		// store in queue file also for notify
 
 	    if (!sendClientCapabilitiesOK(fax, clientInfo, notice)) {
 		// NB: mark job completed 'cuz there's no way recover

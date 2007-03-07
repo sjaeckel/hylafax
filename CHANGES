@@ -1,7 +1,8 @@
-#	$Id: CHANGES 458 2007-03-06 20:19:30Z faxguy $	
+#	$Id: CHANGES 460 2007-03-08 02:36:53Z faxguy $	
 
 New Changes
 
+* add modemused doneq/sendq item for use in notify (7 Mar 2007)
 * add Class2DisableV17Cmd config option (6 Mar 2007)
 * fix Class 1 DCS in sending of 300 x 300 dpi image (5 Mar 2007)
 * allow job to disable V.34 in Class 2 driver (5 Mar 2007)

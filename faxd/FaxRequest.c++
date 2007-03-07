@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: FaxRequest.c++ 460 2007-03-08 02:36:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -95,6 +95,7 @@ FaxRequest::stringval FaxRequest::strvals[] = {
     { "jobtag",		&FaxRequest::jobtag },
     { "pagehandling",	&FaxRequest::pagehandling },
     { "modem",		&FaxRequest::modem },
+    { "modemused",	&FaxRequest::modemused },
     { "faxnumber",	&FaxRequest::faxnumber },
     { "faxname",	&FaxRequest::faxname },
     { "tsi",		&FaxRequest::tsi },
@@ -268,6 +269,7 @@ FaxRequest::readQFile(bool& rejectJob)
 	case H_COMMID:		commid = tag; break;
 	case H_PAGEHANDLING:	pagehandling = tag; break;
 	case H_MODEM:		modem = tag; break;
+	case H_MODEMUSED:	modemused = tag; break;
 	case H_FAXNUMBER:	faxnumber = tag; break;
 	case H_FAXNAME:		faxname = tag; break;
 	case H_TSI:			// NB: tsi csi collide

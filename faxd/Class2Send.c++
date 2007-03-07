@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 440 2007-02-16 06:04:17Z faxguy $ */
+/*	$Id: Class2Send.c++ 460 2007-03-08 02:36:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -243,7 +243,7 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
     int ntrys = 0;			// # retraining/command repeats
     u_int ppm, previousppm = 0;
 
-    setDataTimeout(60, next.br);	// 60 seconds for 1024 byte writes
+    setDataTimeout(180, next.br);	// 180 seconds for 1024 byte writes, increased for potential ECM delays
     hangupCode[0] = '\0';
 
     bool transferOK;
