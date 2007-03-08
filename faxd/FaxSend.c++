@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 460 2007-03-08 02:36:53Z faxguy $ */
+/*	$Id: FaxSend.c++ 466 2007-03-08 21:07:12Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -638,7 +638,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	     * JobControls or something similar - that value is now 
 	     * found in clientParams.df.
 	     */
-	    params.df ==  fxmin(clientParams.df, params.df);
+	    params.df = fxmin(clientParams.df, params.df);
 	} else {
 	    params.df = 0;
 	    u_int bits = clientCapabilities.df;
