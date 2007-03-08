@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 451 2007-02-28 21:59:58Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 463 2007-03-08 17:02:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2119,7 +2119,7 @@ faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
     }
     if (strstr(type, "UNSENT"))
 	ai.status = "Kill time expired";
-    else if (strstr(type, "SUBMIT"));
+    else if (strstr(type, "SUBMIT"))
 	ai.status = "Submitted";
     CallID empty_callid;
     ai.callid = empty_callid;
