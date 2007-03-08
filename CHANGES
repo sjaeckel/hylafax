@@ -1,6 +1,10 @@
-#	$Id: CHANGES 465 2007-03-08 20:14:03Z faxguy $	
+#	$Id: CHANGES 467 2007-03-09 02:03:44Z faxguy $	
 
 New Changes
+
+* add Class1ModemHasDLEBug config option (8 Mar 2007)
+
+(5.1.1)
 
 * prevent dead jobs from being run anyway and don't let job sending
   delays adjust killtime, either (8 Mar 2007)
