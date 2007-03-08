@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 464 2007-03-08 18:57:58Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 465 2007-03-08 20:14:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1759,6 +1759,7 @@ faxQueueApp::setSleep(Job& job, time_t tts)
 void
 faxQueueApp::setDead(Job& job)
 {
+    job.stopTTSTimer();
     if (job.state != FaxRequest::state_done 
       && job.state != FaxRequest::state_failed)
 	job.state = FaxRequest::state_failed;
@@ -2083,10 +2084,6 @@ faxQueueApp::delayJob(Job& job, FaxRequest& req, const char* mesg, time_t tts)
     job.tts = tts;
     req.tts = tts;
     time_t delay = tts - Sys::now();
-    // adjust kill time so job isn't removed before it runs
-    job.stopKillTimer();
-    req.killtime += delay;
-    job.startKillTimer(req.killtime);
     req.notice = reason;
     updateRequest(req, job);
     traceQueue(job, "%s: requeue for %s",
@@ -2289,12 +2286,14 @@ faxQueueApp::submitJob(const fxStr& jobid, bool checkState, bool nascent)
 void
 faxQueueApp::runJob(Job& job)
 {
-    if (job.isOnList()) job.remove();
-    setReadyToRun(job, true);
-    FaxRequest* req = readRequest(job);
-    if (req) {
-	updateRequest(*req, job);
-	delete req;
+    if (job.state != FaxRequest::state_failed) {	// don't run a dead job corpus
+	if (job.isOnList()) job.remove();
+	setReadyToRun(job, true);
+	FaxRequest* req = readRequest(job);
+	if (req) {
+	    updateRequest(*req, job);
+	    delete req;
+	}
     }
     /*
      * In order to deliberately batch jobs by using a common
