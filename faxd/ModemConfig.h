@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 458 2007-03-06 20:19:30Z faxguy $ */
+/*	$Id: ModemConfig.h 467 2007-03-09 02:03:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -173,6 +173,7 @@ public:
     bool	class1PersistentECM;	// continue to correct
     bool	class1TCFRecvHack;	// deliberately look for V.21 disconnect
     bool	class1ValidateV21Frames;// check received FCS values in V.21
+    bool	class1ModemHasDLEBug;;	// modem doesn't double-up DLEs in V.21
 					// for class 2 and 2.0:
     fxStr	class2Cmd;		// cmd for setting Class 2/2.0
     fxStr	class2DCCQueryCmd;	// cmd to query modem capabilities

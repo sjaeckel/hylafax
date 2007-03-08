@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 458 2007-03-06 20:19:30Z faxguy $
+.\"	$Id: hylafax-config.4f 467 2007-03-09 02:03:44Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-03-06 12:19:30 -0800 (Tue, 06 Mar 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-03-08 18:03:44 -0800 (Thu, 08 Mar 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -313,6 +313,7 @@ Class1RMQueryCmd	string	\s-1AT+FRM=?\s+1	Class 1/1.0: command to query modem dat
 Class1TCFWaitCmd	string	\s-1AT+FTS=7\s+1	Class 1/1.0: command to stop and wait before TCF
 Class1TMQueryCmd	string	\s-1AT+FTM=?\s+1	Class 1/1.0: command to query modem data transmission rates
 Class1EOPWaitCmd	string	\s-1AT+FTS=9\s+1	Class 1/1.0: command to stop and wait before EOP
+Class1ModemHasDLEBug	boolean	\s-1No\s+1	Class 1/1.0: modem fails to double DLE in V.21
 Class1MsgRecvHackCmd	string	\s-1""\s+1	Class 1/1.0: command to avoid +FCERROR before image data
 Class1TCFMaxNonZero	integer	\s-110\s+1	Class 1/1.0: max% of non-zero data in good \s-1TCF\s+1
 Class1TCFMinRun	integer	\s-11000\s+1	Class 1/1.0: minimum zero run in good \s-1TCF\s+1
@@ -2492,6 +2493,10 @@ similar to
 .B Class1PPMWaitCmd.
 We allow a different setting in the case of EOP, however, because
 empirically some machines may need more time.
+.TP
+.B Class1ModemHasDLEBug
+Used to indicate that the modem does not correctly duplicate DLE characters
+in the V.21 communication to the DTE.
 .TP
 .B Class1MsgRecvHackCmd
 If receive failures occur due to +FCERROR just prior to image data 

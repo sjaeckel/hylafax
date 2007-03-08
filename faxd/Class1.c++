@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 461 2007-03-08 03:17:42Z faxguy $ */
+/*	$Id: Class1.c++ 467 2007-03-09 02:03:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -846,6 +846,14 @@ Class1Modem::recvRawFrame(HDLCFrame& frame)
 			case 0x53:	// <DLE><0x53> => <DC3>
 			    c = 0x13;
 			    break;
+		    }
+		} else {
+		    /*
+		     * Some modems may not double-up the in-data DLEs like they should.
+		     */
+		    if (conf.class1ModemHasDLEBug) frame.put(frameRev[DLE]);
+		    else if (c != DLE) {
+			protoTrace("Odd.  Modem reported meaningless <DLE><0x%X>.  Possible DLE bug indication.", c);
 		    }
 		}
 	    }
