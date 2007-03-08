@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 463 2007-03-08 17:02:55Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 464 2007-03-08 18:57:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1534,6 +1534,9 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 	 * be cleaned up.  Not sure if the user should be
 	 * notified of the requeue as well as the timeout?
 	 */
+	queueAccounting(job, *req, "UNSENT");
+	req->notice = "Kill time expired";
+	updateRequest(*req, job);
 	job.state = FaxRequest::state_failed;
 	deleteRequest(job, req, Job::timedout, true);
 	setDead(job);

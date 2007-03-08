@@ -1,7 +1,9 @@
-#	$Id: CHANGES 460 2007-03-08 02:36:53Z faxguy $	
+#	$Id: CHANGES 464 2007-03-08 18:57:58Z faxguy $	
 
 New Changes
 
+* properly add UNSENT records and update q-file status when a
+  sending job that times out also fails (8 Mar 2007)
 * add modemused doneq/sendq item for use in notify (7 Mar 2007)
 * add Class2DisableV17Cmd config option (6 Mar 2007)
 * fix Class 1 DCS in sending of 300 x 300 dpi image (5 Mar 2007)
