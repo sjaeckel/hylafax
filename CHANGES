@@ -1,7 +1,9 @@
-#	$Id: CHANGES 464 2007-03-08 18:57:58Z faxguy $	
+#	$Id: CHANGES 465 2007-03-08 20:14:03Z faxguy $	
 
 New Changes
 
+* prevent dead jobs from being run anyway and don't let job sending
+  delays adjust killtime, either (8 Mar 2007)
 * properly add UNSENT records and update q-file status when a
   sending job that times out also fails (8 Mar 2007)
 * add modemused doneq/sendq item for use in notify (7 Mar 2007)
