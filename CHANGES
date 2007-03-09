@@ -1,7 +1,8 @@
-#	$Id: CHANGES 469 2007-03-09 22:25:54Z faxguy $	
+#	$Id: CHANGES 470 2007-03-09 22:31:19Z faxguy $	
 
 New Changes
 
+* add a, c, C, g, G, I, S, v, and V options for tagline (9 Mar 2007)
 * add AuditHook config option (9 Mar 2007)
 * add Class1ModemHasDLEBug config option (8 Mar 2007)
 

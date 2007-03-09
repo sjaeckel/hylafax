@@ -1,4 +1,4 @@
-/*	$Id: TagLine.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: TagLine.c++ 470 2007-03-09 22:31:19Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -61,8 +61,14 @@ FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt)
 	if (l >= tagLine.length()-1)
 	    break;
 	switch (tagLine[l+1]) {
+	case 'a': insert(tagLine, l, req.subaddr); break;
+	case 'c': insert(tagLine, l, req.company); break;
+	case 'C': insert(tagLine, l, req.fromcompany); break;
 	case 'd': insert(tagLine, l, req.external); break;
+	case 'g': insert(tagLine, l, req.location); break;
+	case 'G': insert(tagLine, l, req.fromlocation); break;
 	case 'i': insert(tagLine, l, req.jobid); break;
+	case 'I': insert(tagLine, l, req.groupid); break;
 	case 'j': insert(tagLine, l, req.jobtag); break;
 	case 'l': insert(tagLine, l, server.getLocalIdentifier()); break;
 	case 'm': insert(tagLine, l, req.mailaddr); break;
@@ -74,10 +80,13 @@ FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt)
 	    break;
 	case 'r': insert(tagLine, l, req.receiver); break;
 	case 's': insert(tagLine, l, req.sender); break;
+	case 'S': insert(tagLine, l, req.regarding); break;
 	case 't': insert(tagLine, l,
 			fxStr((int)(req.totpages-req.npages), "%u")); break;
 	case 'T': insert(tagLine, l,
 			fxStr((int)(req.totpages), "%u")); break;
+	case 'v': insert(tagLine, l, req.voice); break;
+	case 'V': insert(tagLine, l, req.fromvoice); break;
 	case '%': tagLine.remove(l); break;
 	default:  l += 2; break;
 	}
