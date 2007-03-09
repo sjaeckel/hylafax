@@ -1,7 +1,8 @@
-#	$Id: CHANGES 467 2007-03-09 02:03:44Z faxguy $	
+#	$Id: CHANGES 469 2007-03-09 22:25:54Z faxguy $	
 
 New Changes
 
+* add AuditHook config option (9 Mar 2007)
 * add Class1ModemHasDLEBug config option (8 Mar 2007)
 
 (5.1.1)

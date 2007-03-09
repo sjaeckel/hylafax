@@ -1,4 +1,4 @@
-/*	$Id: Trigger.h 322 2006-10-05 01:11:16Z faxguy $ */
+/*	$Id: Trigger.h 469 2007-03-09 22:25:54Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -137,6 +137,9 @@ private:
     static u_int tidRotor;
     static trid_t tidNextFree();
 
+    static u_short hookInterests[TRIGGER_MAXEVENT>>4];	// bitmask of hook interests
+    static fxStr hookCmd;
+
     friend class TriggerRef;		// for access to reference count
 
     Trigger(trid_t, const fxStr& fifoName);
@@ -149,6 +152,8 @@ private:
 
     static void post(TriggerEvent, const QLink&, const QLink&, fxStackBuffer&);
     void send(const char* fmt ...);
+
+    static void hook (TriggerEvent, const char* id, const char* info);
 public:
     ~Trigger();
 
@@ -159,5 +164,7 @@ public:
 
     static void post(TriggerEvent, const Job&, const char* = NULL);
     static void post(TriggerEvent, const Modem&, const char* = NULL);
+
+    static bool setTriggerHook (const char* prg, const char* spec);
 };
 #endif /* _Trigger_ */

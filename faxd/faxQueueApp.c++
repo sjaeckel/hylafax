@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 465 2007-03-08 20:14:03Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 469 2007-03-09 22:25:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3396,7 +3396,24 @@ faxQueueApp::setConfigItem(const char* tag, const char* value)
 	    pageChop = FaxRequest::chop_last;
     } else if (streq(tag, "pagechopthreshold"))
 	pageChopThreshold = atof(value);
-    else
+    else if (streq(tag, "audithook") )
+    {
+        const char* cp;
+	for (cp = value; *cp && *cp != ':'; cp++)
+	    ;
+	if (*cp == ':') {
+	    fxStr cmd(value, cp-value);
+	    for (cp++; *cp && isspace(*cp); cp++)
+		;
+	    if (*cp != '\0') {
+	    	Trigger::setTriggerHook(cmd, cp);
+	    } else
+		configError("No trigger specification for audit hook");
+	} else
+	    configError("Missing ':' separator in audit hook specification");
+	
+    	
+    } else
 	return (false);
     return (true);
 }
