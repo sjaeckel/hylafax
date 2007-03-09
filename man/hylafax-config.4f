@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 467 2007-03-09 02:03:44Z faxguy $
+.\"	$Id: hylafax-config.4f 469 2007-03-09 22:25:54Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-03-08 18:03:44 -0800 (Thu, 08 Mar 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-03-09 14:25:54 -0800 (Fri, 09 Mar 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -120,6 +120,7 @@ AdminGroup	string	\s-1faxadmin\s+1	System user group for administration (if PAM 
 AnswerRotary	string	\s-1Any\s+1	alternatives for answering calls
 AnswerBias	integer	\-	bias to apply to successful rotary answer 
 AreaCode²	string	\-	local area code
+AuditHook²	string	\-	command to run for faxq event auditing
 BadPageHandlingMethod	string	\s-1RTN-SAVE\s+1	bad page received handling method	
 BatchLogs¹	boolean	\s-1Yes\s+1	keep all session logs of a batch in a single log
 CallIDAnswerLength	integer	\-	answer call when CallIDPattern received
@@ -520,6 +521,33 @@ used, for example,
 to formulate canonical phone numbers for dialing (see
 .B DialStringRules
 below.)
+.TP
+.B AuditHook²
+Specifies a program command and an interest specification indicating which events as
+described in 
+.IR faxwatch (${MANNUM1_8})
+should trigger the execution of the program.  For example, this configuration:
+.nf
+
+    AuditHook: "bin/hook: J*S*M*R*"
+
+.fi
+would cause bin/hook to be executed upon every event.  The arguments passed to the 
+hook program are respectively
+.IR <class> ,
+.IR <mask> ,
+.IR <id> ,
+and optionally
+.IR [info]
+where...
+.nf
+
+    <class> = JOB | SEND | MODEM | RECV
+    <mask>  = the specific event
+    <id>    = id of the job/modem with which the event is associated
+    [info]  = additional information
+
+.fi
 .TP
 .B BadPageHandlingMethod
 (Class 1/1.0 only) Specifies how to react to a bad page received from the remote sender:
