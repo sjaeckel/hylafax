@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 439 2007-02-15 23:36:39Z faxguy $
+#	$Id: configure 468 2007-03-09 16:14:41Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -386,7 +386,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 439 $"
+	echo "This is HylaFAX configure $Revision: 468 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -553,6 +553,7 @@ fi
 if [ -f config.cache ]; then
     Note "Reading cached parameters from config.cache."
     Note ""
+    ODATE="$DATE"; OVERSION="$VERSION"
     OPORTFUNCS="$PORTFUNCS"; OMACHDEPLIBS="$MACHDEPLIBS"
     OTIFFINC="$TIFFINC"; OLIBTIFF="$LIBTIFF"
     OZLIBINC="$ZLIBINC"; OLIBZ="$LIBZ"
@@ -561,6 +562,7 @@ if [ -f config.cache ]; then
     . ./config.cache
     capture . ./config.cache
     # NB: these are calculated each time from scratch
+    DATE="$ODATE"; VERSION="$OVERSION"
     MACHDEPLIBS="$OMACHDEPLIBS"; PORTFUNCS="$OPORTFUNCS"
     # NB: these are relativized each time so beware of cached value
     TIFFINC="$OTIFFINC"; LIBTIFF="$OLIBTIFF"
