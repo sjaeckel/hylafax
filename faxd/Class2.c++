@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 459 2007-03-06 21:53:41Z faxguy $ */
+/*	$Id: Class2.c++ 472 2007-03-12 23:27:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -726,7 +726,7 @@ Class2Modem::skipStatus(const char* s)
  * Hangup codes are broken up according to:
  *   2388/89
  *   2388/90 and 2388-A
- *   2388-B
+ *   2388-B (Class 2.0)
  * The table to search is based on the modem type deduced
  * at modem configuration time.
  *
@@ -795,6 +795,8 @@ static struct HangupCode {
     {{ "71","101", "A1" }, "RSPREC invalid response received" },
     {{ "72","102", "A2" }, "COMREC invalid response received" },
     {{ "73","103", "A3" }, "Unable to continue after PIN or PIP, no PRI-Q" },
+// Agere proprietary error codes
+    {{ NULL, NULL, "E0" }, "Command or signal timeout" },
 // Everex proprietary error codes (9/28/90)
     {{ NULL,"128", NULL }, "Cannot send: +FMINSP > remote's +FDIS(BR) code" },
     {{ NULL,"129", NULL }, "Cannot send: remote is V.29 only,"
