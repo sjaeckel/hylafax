@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1 330 2006-10-17 13:36:18Z faxguy $
+.\"	$Id: sendfax.1 473 2007-03-13 04:03:06Z faxguy $
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -695,7 +695,7 @@ that may have been previously read.
 Configuration files follow the conventions described in
 .IR hylafax-client (1).
 The following configuration parameters are recognized.
-Parameters marked with \(S1 are not available in ${LIBDATA}/hfaxd.conf :
+Parameters marked with ¹ are not available in ${LIBDATA}/hfaxd.conf :
 .sp .5
 .nf
 .ta \w'AutoCoverPage    'u +\w'boolean    'u +\w'\s-1\fIsee below\fP\s+1    'u
@@ -704,15 +704,15 @@ AutoCoverPage	boolean	\s-1Yes\s+1	automatically generate cover page
 ChopThreshold	float	\s-13.0\s+1	page chopping threshold
 CoverCmd	string	\s-1\fIsee below\fP\s+1	pathname of cover sheet program
 Cover-Comments	string	\-	cover page comments string
-Cover-Company\(S1	string	\-	cover page to-company name string
-Cover-Location\(S1	string	\-	cover page to-company location string
+Cover-Company¹	string	\-	cover page to-company name string
+Cover-Location¹	string	\-	cover page to-company location string
 Cover-Regarding	string	\-	cover page regarding string
 Cover-Template	string	\-	cover page template filename
-Cover-Voice\(S1	string	\-	cover page to-voice number string
-Cover-From-Company\(S1	string	\-	cover page from-company string
-Cover-From-Location\(S1	string	\-	cover page from-location string
-Cover-From-Voice\(S1	string	\-	cover page from-voice number string
-Cover-From-Fax\(S1	string	\-	cover page from-fax number string
+Cover-Voice¹	string	\-	cover page to-voice number string
+Cover-From-Company¹	string	\-	cover page from-company string
+Cover-From-Location¹	string	\-	cover page from-location string
+Cover-From-Voice¹	string	\-	cover page from-voice number string
+Cover-From-Fax¹	string	\-	cover page from-fax number string
 DateFormat	string	\-	cover page date format string
 DesiredEC	integer	\s-12\s+1	desired type of \s-1ECM\s+1
 DesiredMST	string	\-	desired minimum scanling time to use

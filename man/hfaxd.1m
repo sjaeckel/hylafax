@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 368 2006-11-10 19:06:06Z faxguy $
+.\"	$Id: hfaxd.1m 473 2007-03-13 04:03:06Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -110,25 +110,25 @@ The
 .I hfaxd
 server currently recognizes the following protocol requests; case
 is not distinguished.
-Entries marked with a \(S1 can be used only when the client has
+Entries marked with a ¹ can be used only when the client has
 established administrative privileges with \s-1ADMIN\s+1.
 .PP
 .nf
-.ta \w'DISABLE\(S1        'u
+.ta \w'DISABLE¹        'u
 \fBRequest	Description\fP
 ABOR	abort previous command
 ACCT	specify account (ignored)
 ADMIN	specify password for administrative privileges
 ALLO	allocate storage (vacuously)
-ANSWER\(S1	request that call be answered
+ANSWER¹	request that call be answered
 APPE	append to a file
 CDUP	change to parent of current working directory
 CHMOD	change mode of a file
-CHOWN\(S1	change owner of a file
+CHOWN¹	change owner of a file
 CWD	change working directory
 DELE	delete a file
-DISABLE\(S1	disable outbound use of modem
-ENABLE\(S1	enable outbound use of modem
+DISABLE¹	disable outbound use of modem
+ENABLE¹	enable outbound use of modem
 HELP	give help information
 FILEFMT	specify/query format for returning file status
 FORM	specify data transfer \fIformat\fP
@@ -189,13 +189,13 @@ The following non-standard or experimental commands are supported
 through the \s-1SITE\s+1 request.
 .PP
 .nf
-.ta \w'ADDMODEM\(S1        'u
+.ta \w'ADDMODEM¹        'u
 \fBRequest	Description\fP
-ADDMODEM\(S1	add/configure new modem for use
-ADDUSER\(S1	add client access control entry
-CONFIG\(S1	send configuration parameter setting to server
-DELMODEM\(S1	deconfigure/remove modem
-DELUSER\(S1	remove client access control entry
+ADDMODEM¹	add/configure new modem for use
+ADDUSER¹	add client access control entry
+CONFIG¹	send configuration parameter setting to server
+DELMODEM¹	deconfigure/remove modem
+DELUSER¹	remove client access control entry
 TRIGGER	register realtime event trigger
 HELP	give help information, e.g., SITE HELP
 .fi
@@ -243,7 +243,7 @@ The
 .I hfaxd
 server currently recognizes the \s-1SNPP\s+1
 protocol requests listed below.
-Requests marked with a \(S1 are non-standard extensions to
+Requests marked with a ¹ are non-standard extensions to
 .SM RFC
 1861 that may be added to
 .SM SNPP
@@ -253,10 +253,10 @@ first four characters of requests are used in identifying
 commands.
 .PP
 .nf
-.ta \w'ABOR\(S1        'u
+.ta \w'ABOR¹        'u
 \fBRequest	Description\fP
 2WAY	preface a 2-way transaction
-ABOR\(S1	abort previous command
+ABOR¹	abort previous command
 ACKR	set read acknowledgement handling for subsequent requests
 ALER	set the alter-level for subsequent requests
 CALL	set the caller-ID for subsequent requests
@@ -278,8 +278,8 @@ QUIT	terminate session
 RESE	reset server state
 RTYP	set the reply type code for subsequent requests
 SEND	send message(s)
-SITE\(S1	site-specific commands (see next section)
-STAT\(S1	return server status
+SITE¹	site-specific commands (see next section)
+STAT¹	return server status
 SUBJ	set the message text for subsequent requests
 .fi
 .PP
