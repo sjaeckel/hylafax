@@ -1,4 +1,4 @@
-.\"	$Id: notify.1m 450 2007-02-28 21:22:24Z faxguy $
+.\"	$Id: notify.1m 473 2007-03-13 04:03:06Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -67,22 +67,22 @@ a string that specifies why the user is being notified; one of:
 .ta  +\w'poll_no_document    'u +\w'Notes    'u
 \fBWhy\fP	\fBNotes\fP	\fBMeaning\fP
 \fIdone\fP		job was completed successfully
-\fIfailed\fP	 \(S1	job was not completed
+\fIfailed\fP	 ¹	job was not completed
 \fIrejected\fP		job was rejected for specified reasons
 \fIblocked\fP		job is blocked by concurrent jobs
-\fIrequeued\fP	\(S1	job was not completed, but was requeued for retry
+\fIrequeued\fP	¹	job was not completed, but was requeued for retry
 \fIremoved\fP		job was deleted from the queue
 \fIkilled\fP		job was deleted from the queue
 \fItimedout\fP		job could not be sent before kill time expired
 \fIformat_failed\fP		document conversion failed
 \fIno_formatter\fP		the document conversion program was not found
-\fIpoll_rejected\fP	\(S1	a polling request was rejected by the remote side
-\fIpoll_no_document\fP	\(S1	a polling request failed because nothing was available
-\fIpoll_failed\fP	\(S1	a polling request failed for an unknown reason
+\fIpoll_rejected\fP	¹	a polling request was rejected by the remote side
+\fIpoll_no_document\fP	¹	a polling request failed because nothing was available
+\fIpoll_failed\fP	¹	a polling request failed for an unknown reason
 .sp .5
 .fi
 .br
-\(S1 A transcript of the failed communication is returned
+¹ A transcript of the failed communication is returned
 to the sender.
 .TP
 .B jobtime
