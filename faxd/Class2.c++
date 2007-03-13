@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 472 2007-03-12 23:27:20Z faxguy $ */
+/*	$Id: Class2.c++ 474 2007-03-13 16:08:24Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -796,7 +796,7 @@ static struct HangupCode {
     {{ "72","102", "A2" }, "COMREC invalid response received" },
     {{ "73","103", "A3" }, "Unable to continue after PIN or PIP, no PRI-Q" },
 // Agere proprietary error codes
-    {{ NULL, NULL, "E0" }, "Command or signal timeout" },
+    {{ NULL, NULL, "E0" }, "Command or signal 10 sec. timeout" },
 // Everex proprietary error codes (9/28/90)
     {{ NULL,"128", NULL }, "Cannot send: +FMINSP > remote's +FDIS(BR) code" },
     {{ NULL,"129", NULL }, "Cannot send: remote is V.29 only,"
