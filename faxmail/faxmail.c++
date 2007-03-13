@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 408 2007-01-01 18:44:29Z faxguy $ */
+/*	$Id: faxmail.c++ 476 2007-03-13 22:10:19Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -80,6 +80,7 @@ private:
     fxStr	mailUser;		// user ID for contacting server
     bool	autoCoverPage;		// make cover page for direct delivery
     bool	formatEnvHeaders;	// format envelope headers
+    bool	formatTexts;		// format MIME text parts
 
     void formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg);
     void formatText(FILE* fd, MIMEState& mime);
@@ -139,7 +140,7 @@ faxMailApp::run(int argc, char** argv)
     readConfig(FAX_USERCONF);
 
     bool deliver = false;
-    while ((c = Sys::getopt(argc, argv, "12b:cdf:H:i:M:nNp:rRs:u:vW:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "12b:cdf:H:i:M:nNp:rRs:Tu:vW:")) != -1)
 	switch (c) {
 	case '1': case '2':		// format in 1 or 2 columns
 	    setNumberOfColumns(c - '0');
@@ -181,8 +182,11 @@ faxMailApp::run(int argc, char** argv)
 	    setPageOrientation(TextFormat::PORTRAIT);
 	    break;
 	case 's':			// page size
-        pageSize = optarg;
+	    pageSize = optarg;
 	    setPageSize(pageSize);
+	    break;
+	case 'T':			// suppress formatting MIME text parts
+	    formatTexts = false;
 	    break;
 	case 'u':			// mail/login user
 	    mailUser = optarg;
@@ -422,8 +426,12 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	    mime.external = true;
 	    if (mime.lineno > 1) endPage();	// new page
 	    formatWithExternal(fd, app, mime);
-	} else if (type == "text")
-	    formatText(fd, mime);
+	} else if (type == "text") {
+	    if (formatTexts)
+		formatText(fd, mime);
+	    else
+		discardPart(fd, mime);
+	}
 	else if (type == "application")
 	    formatApplication(fd, mime);
 	else if (type == "multipart")
@@ -724,6 +732,7 @@ faxMailApp::setupConfig()
     mailUser = "";			// default to real uid
     autoCoverPage = true;		// a la sendfax
     formatEnvHeaders = true;		// format envelope headers by default
+    formatTexts = true;			// format MIME text parts by default
 
     setPageHeaders(false);		// disable normal page headers
     setNumberOfColumns(1);		// 1 input page per output page
@@ -753,6 +762,8 @@ faxMailApp::setConfigItem(const char* tag, const char* value)
 	autoCoverPage = getBoolean(value);
     else if (streq(tag, "formatenvheaders"))
 	formatEnvHeaders = getBoolean(value);
+    else if (streq(tag, "formattexts"))
+	formatTexts = getBoolean(value);
     else if (streq(tag, "mimeconverters"))
 	mimeConverters = value;
     else if (streq(tag, "prologfile"))
@@ -848,6 +859,6 @@ faxMailApp::usage()
 	" [-W pagewidth]"
 	" [-M margins]"
 	" [-u user]"
-	" [-12cdnNrRv]"
+	" [-12cdnNrRTv]"
     );
 }
