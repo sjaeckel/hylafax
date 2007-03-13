@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 418 2007-01-11 18:36:24Z faxguy $
+#	$Id: faxsetup.sh.in 475 2007-03-13 17:04:49Z faxguy $
 #
 # @WARNING@
 #
@@ -794,6 +794,9 @@ test -x "$MIMENCODE" || {
     MIMENCODE=`findAppDef mimencode $PATH mimencode`
     test -x $MIMENCODE || {
 	MIMENCODE=`findAppDef base64-encode $PATH base64-encode`
+	test -x $MIMENCODE || {
+	    MIMENCODE=`findAppDef base64 $PATH base64`
+	}
     }
     test -x "$MIMENCODE" && Note "Found encoder: $MIMENCODE"
 }
