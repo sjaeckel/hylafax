@@ -1,7 +1,8 @@
-#	$Id: CHANGES 475 2007-03-13 17:04:49Z faxguy $	
+#	$Id: CHANGES 476 2007-03-13 22:10:19Z faxguy $	
 
 New Changes
 
+* add faxmail -T option to disable formatting of text parts (13 Mar 2007)
 * add support for John Walker's "base64" encoder (13 Mar 2007)
 * add a, c, C, g, G, I, S, v, and V options for tagline (9 Mar 2007)
 * add AuditHook config option (9 Mar 2007)
