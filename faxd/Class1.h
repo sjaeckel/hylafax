@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 458 2007-03-06 20:19:30Z faxguy $ */
+/*	$Id: Class1.h 479 2007-03-14 23:31:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -160,7 +160,7 @@ protected:
     virtual ATResponse atResponse(char* buf, long ms = 30*1000);
     virtual bool waitFor(ATResponse wanted, long ms = 30*1000);
     virtual bool atCmd(const fxStr& cmd, ATResponse = AT_OK, long ms = 30*1000);
-    bool	switchingPause(fxStr& emsg);
+    bool	switchingPause(fxStr& emsg, u_int times = 1);
     void	encodeTSI(fxStr& binary, const fxStr& ascii);
     void	encodeNSF(fxStr& binary, const fxStr& ascii);
     const fxStr& decodeTSI(fxStr& ascii, const HDLCFrame& binary);
