@@ -1,4 +1,4 @@
-#	$Id: TODO 407 2006-12-29 16:19:33Z faxguy $
+#	$Id: TODO 477 2007-03-14 20:46:45Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -19,7 +19,33 @@ If HylaFAX doesn't standardize internally on a particular bit orientation we wil
 in cutExtraEOFB as well as in the lastbyte zerobit counting because we'd come at the data from the wrong 
 direction.  Check up on this.
 
-Add the mimeconverters for faxmail-PDF by default.
+Killed a job at an untimely moment that hung faxsend.  Had to kill -9 faxsend...
+
+Mar 14 12:24:36 gollum FaxSend[9049]:   "[ghiGHI]" = "4"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "[jklJKL]" = "5"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "[mnoMNO]" = "6"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "[prsPRS]" = "7"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "[tuvTUV]" = "8"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "[wxyWXY]" = "9"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "[^+0-9]+" = ""
+Mar 14 12:24:36 gollum FaxSend[9049]:   "^011" = "+"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "^1" = "+1"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "^[^+]" = "+1360&"
+Mar 14 12:24:36 gollum FaxSend[9049]: ]
+Mar 14 12:24:36 gollum FaxSend[9049]: DialString := [
+Mar 14 12:24:36 gollum FaxSend[9049]:   "[- ^I.]+" = ""
+Mar 14 12:24:36 gollum FaxQueuer[8839]: FIFO RECV "Kclient/9051:989"
+Mar 14 12:24:36 gollum FaxSend[9049]:   "\(" = ""
+Mar 14 12:24:36 gollum FaxQueuer[8839]: KILL JOB 989
+Mar 14 12:24:53 gollum FaxQueuer[8839]: FIFO RECV "Kclient/9055:989"
+Mar 14 12:24:53 gollum FaxQueuer[8839]: KILL JOB 989
+Mar 14 12:24:53 gollum FaxQueuer[8839]: FIFO SEND client/9055 msg "K!"
+Mar 14 12:39:58 gollum FaxQueuer[8839]: JOB 989 (active dest +1360400 pri 126 tts 0:00 killtime 2:42:06): CMD DONE: exit status 0x9
+Mar 14 12:39:58 gollum FaxQueuer[8839]: Send program terminated abnormally with exit status 0x9
+Mar 14 12:39:58 gollum FaxQueuer[8839]: DOC UNREF: docq/doc1032.ps;f0 files docq/doc1032.ps;f0
+Mar 14 12:39:58 gollum FaxQueuer[8839]: DOC UNREF: expunge imaged files
+Mar 14 12:39:58 gollum FaxQueuer[8839]: NOTIFY: bin/notify 'doneq/q989' 'killed' ''
+
 
 #
 # These are old (ancient, really) entries that deserve some investigation
