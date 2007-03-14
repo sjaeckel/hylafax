@@ -1,7 +1,8 @@
-#	$Id: CHANGES 476 2007-03-13 22:10:19Z faxguy $	
+#	$Id: CHANGES 479 2007-03-14 23:31:08Z faxguy $	
 
 New Changes
 
+* fix previous pre-CRP wait implementation (14 Mar 2007)
 * add faxmail -T option to disable formatting of text parts (13 Mar 2007)
 * add support for John Walker's "base64" encoder (13 Mar 2007)
 * add a, c, C, g, G, I, S, v, and V options for tagline (9 Mar 2007)
