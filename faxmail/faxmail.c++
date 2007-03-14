@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 476 2007-03-13 22:10:19Z faxguy $ */
+/*	$Id: faxmail.c++ 480 2007-03-15 00:53:45Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -80,7 +80,7 @@ private:
     fxStr	mailUser;		// user ID for contacting server
     bool	autoCoverPage;		// make cover page for direct delivery
     bool	formatEnvHeaders;	// format envelope headers
-    bool	formatTexts;		// format MIME text parts
+    bool	trimText;		// trim text parts
 
     void formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg);
     void formatText(FILE* fd, MIMEState& mime);
@@ -186,7 +186,7 @@ faxMailApp::run(int argc, char** argv)
 	    setPageSize(pageSize);
 	    break;
 	case 'T':			// suppress formatting MIME text parts
-	    formatTexts = false;
+	    trimText = true;
 	    break;
 	case 'u':			// mail/login user
 	    mailUser = optarg;
@@ -426,12 +426,8 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	    mime.external = true;
 	    if (mime.lineno > 1) endPage();	// new page
 	    formatWithExternal(fd, app, mime);
-	} else if (type == "text") {
-	    if (formatTexts)
-		formatText(fd, mime);
-	    else
-		discardPart(fd, mime);
-	}
+	} else if (type == "text")
+	    formatText(fd, mime);
 	else if (type == "application")
 	    formatApplication(fd, mime);
 	else if (type == "multipart")
@@ -453,8 +449,11 @@ void
 faxMailApp::formatText(FILE* fd, MIMEState& mime)
 {
     fxStackBuffer buf;
-    while (mime.getLine(fd, buf))
-	format(buf, buf.getLength());		// NB: treat as text/plain
+    bool trim = trimText;
+    while (mime.getLine(fd, buf)) {
+	if (trim) trim = ((buf.getLength() == 0) || (buf[0] == 0xA));
+	if (!trim) format(buf, buf.getLength());	// NB: treat as text/plain
+    }
 }
 
 /*
@@ -732,7 +731,7 @@ faxMailApp::setupConfig()
     mailUser = "";			// default to real uid
     autoCoverPage = true;		// a la sendfax
     formatEnvHeaders = true;		// format envelope headers by default
-    formatTexts = true;			// format MIME text parts by default
+    trimText = false;			// don't trim leading CRs from text parts by default
 
     setPageHeaders(false);		// disable normal page headers
     setNumberOfColumns(1);		// 1 input page per output page
@@ -762,8 +761,8 @@ faxMailApp::setConfigItem(const char* tag, const char* value)
 	autoCoverPage = getBoolean(value);
     else if (streq(tag, "formatenvheaders"))
 	formatEnvHeaders = getBoolean(value);
-    else if (streq(tag, "formattexts"))
-	formatTexts = getBoolean(value);
+    else if (streq(tag, "trimtext"))
+	trimText = getBoolean(value);
     else if (streq(tag, "mimeconverters"))
 	mimeConverters = value;
     else if (streq(tag, "prologfile"))

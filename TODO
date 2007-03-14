@@ -1,4 +1,4 @@
-#	$Id: TODO 477 2007-03-14 20:46:45Z faxguy $
+#	$Id: TODO 480 2007-03-15 00:53:45Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
@@ -14,6 +14,7 @@ sendfax -d -d -d or -z uses job groups now, but shouldn't repeat params
 credible reports of faxmodem losing the modem after a while
 if you abort a job during a call the "calls" notify report still says 0
 sendfax should support PASV
+faxmail doesn't cope with RFC2047-encoded Subject lines
 
 If HylaFAX doesn't standardize internally on a particular bit orientation we will see problems on MSB2LSB systems 
 in cutExtraEOFB as well as in the lastbyte zerobit counting because we'd come at the data from the wrong 
