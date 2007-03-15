@@ -1,7 +1,8 @@
-#	$Id: CHANGES 480 2007-03-15 00:53:45Z faxguy $	
+#	$Id: CHANGES 481 2007-03-15 15:15:35Z faxguy $	
 
 New Changes
 
+* add Turkish dictionary translations (15 Mar 2007)
 * fix previous pre-CRP wait implementation (14 Mar 2007)
 * add faxmail -T option to disable formatting of text parts (13, 14 Mar 2007)
 * add support for John Walker's "base64" encoder (13 Mar 2007)
