@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 480 2007-03-15 00:53:45Z faxguy $ */
+/*	$Id: faxmail.c++ 482 2007-03-19 18:24:00Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -71,13 +71,14 @@ private:
     fxStr	mimeConverters;		// pathname to MIME converter scripts
     fxStr	mailProlog;		// site-specific prologue definitions
     fxStr	clientProlog;		// client-specific prologue info
-    fxStr   pageSize;       // record specified page size
+    fxStr	pageSize;		// record specified page size
     fxStr	msgDivider;		// digest message divider
     fxStrArray	tmps;			// temp files
 
     MySendFaxClient* client;		// for direct delivery
     SendFaxJob*	job;			// reference to outbound job
     fxStr	mailUser;		// user ID for contacting server
+    fxStr	notify;			// notification request
     bool	autoCoverPage;		// make cover page for direct delivery
     bool	formatEnvHeaders;	// format envelope headers
     bool	trimText;		// trim text parts
@@ -140,7 +141,7 @@ faxMailApp::run(int argc, char** argv)
     readConfig(FAX_USERCONF);
 
     bool deliver = false;
-    while ((c = Sys::getopt(argc, argv, "12b:cdf:H:i:M:nNp:rRs:Tu:vW:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "12b:cdf:H:i:M:nNp:rRs:t:Tu:vW:")) != -1)
 	switch (c) {
 	case '1': case '2':		// format in 1 or 2 columns
 	    setNumberOfColumns(c - '0');
@@ -184,6 +185,9 @@ faxMailApp::run(int argc, char** argv)
 	case 's':			// page size
 	    pageSize = optarg;
 	    setPageSize(pageSize);
+	    break;
+	case 't':			// job state notification request
+	    notify = optarg;
 	    break;
 	case 'T':			// suppress formatting MIME text parts
 	    trimText = true;
@@ -256,6 +260,10 @@ faxMailApp::run(int argc, char** argv)
 
 	if (pageSize != "") {
 	    job->setPageSize(pageSize);
+	}
+
+	if (notify != "") {
+	    job->setNotification((const char*) notify);
 	}
 
 	/*
@@ -729,6 +737,7 @@ faxMailApp::setupConfig()
     msgDivider = "";
     pageSize = "";
     mailUser = "";			// default to real uid
+    notify = "";
     autoCoverPage = true;		// a la sendfax
     formatEnvHeaders = true;		// format envelope headers by default
     trimText = false;			// don't trim leading CRs from text parts by default
