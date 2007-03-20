@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 482 2007-03-19 18:24:00Z faxguy $ */
+/*	$Id: faxmail.c++ 486 2007-03-21 04:49:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -77,6 +77,7 @@ private:
 
     MySendFaxClient* client;		// for direct delivery
     SendFaxJob*	job;			// reference to outbound job
+    fxStr	coverTempl;		// coverpage template file
     fxStr	mailUser;		// user ID for contacting server
     fxStr	notify;			// notification request
     bool	autoCoverPage;		// make cover page for direct delivery
@@ -141,7 +142,7 @@ faxMailApp::run(int argc, char** argv)
     readConfig(FAX_USERCONF);
 
     bool deliver = false;
-    while ((c = Sys::getopt(argc, argv, "12b:cdf:H:i:M:nNp:rRs:t:Tu:vW:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "12b:cC:df:H:i:M:nNp:rRs:t:Tu:vW:")) != -1)
 	switch (c) {
 	case '1': case '2':		// format in 1 or 2 columns
 	    setNumberOfColumns(c - '0');
@@ -151,6 +152,9 @@ faxMailApp::run(int argc, char** argv)
 	    break;
 	case 'c':			// truncate lines
 	    setLineWrapping(false);
+	    break;
+	case 'C':			// truncate lines
+	    coverTempl = optarg;
 	    break;
 	case 'd':			// enable direct delivery
 	    deliver = true;
@@ -288,6 +292,7 @@ faxMailApp::run(int argc, char** argv)
 	 * from the envelope that might be useful.
 	 */
 	if (job->getAutoCoverPage()) {
+	    if (coverTempl.length()) job->setCoverTemplate(coverTempl);
 	    /*
 	     * If nothing has been specified for a
 	     * regarding field on the cover page and
@@ -738,6 +743,7 @@ faxMailApp::setupConfig()
     pageSize = "";
     mailUser = "";			// default to real uid
     notify = "";
+    coverTempl = "";
     autoCoverPage = true;		// a la sendfax
     formatEnvHeaders = true;		// format envelope headers by default
     trimText = false;			// don't trim leading CRs from text parts by default
