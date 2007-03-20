@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.c++ 31 2005-12-21 01:17:11Z faxguy $ */
+/*	$Id: TypeRules.c++ 485 2007-03-20 22:01:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -63,6 +63,20 @@ static const char* typeNames[] =
 static const char* opNames[] =
     { "<any>", "=", "!=", "<", "<=", ">", ">=", "&", "^", "!" };
 static const char* resultNames[] = { "tiff", "postscript", "pdf", "error" };
+
+fxStr
+quoted(const fxStr& s)
+{
+    fxStr q;
+    q.append(" \'");
+    for (u_int i = 0; i < s.length(); i++) {
+	if (s[i] == '\'') q.append("\'\\\'");
+	q.append(s[i]);
+    }
+    q.append("\'");
+    return (q);
+}
+
 
 bool
 TypeRule::match(const void* data, size_t size, bool verbose) const
@@ -208,8 +222,8 @@ TypeRule::getFmtdCmd(
 	if (c == '%' && i+1 < n) {
 	    i++;
 	    switch (c = cmd[i]) {
-	    case 'i':	fmtd.append(input);			  continue;
-	    case 'o':	fmtd.append(output);			  continue;
+	    case 'i':	fmtd.append(quoted(input));		  continue;
+	    case 'o':	fmtd.append(quoted(output));		  continue;
 	    case 'R':	fmtd.append(fxStr(hr, "%.2f"));		  continue;
 	    case 'r':	fmtd.append(fxStr(hr/25.4, "%.2g"));	  continue;
 	    case 'V':	fmtd.append(fxStr(vr, "%.2f"));		  continue;
