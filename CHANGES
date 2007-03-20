@@ -1,8 +1,8 @@
-#	$Id: CHANGES 483 2007-03-19 19:49:44Z faxguy $	
+#	$Id: CHANGES 485 2007-03-20 22:01:14Z faxguy $	
 
 New Changes
 
-* quote input and output filenames in default typerules (19 Mar 2007)
+* quote input and output filenames in default typerules (19-20 Mar 2007)
 * add faxmail -t option to set notification options (19 Mar 2007)
 * add Turkish dictionary translations (15 Mar 2007)
 * fix previous pre-CRP wait implementation (14 Mar 2007)
