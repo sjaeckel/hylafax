@@ -1,4 +1,4 @@
-/*	$Id: Trigger.c++ 469 2007-03-09 22:25:54Z faxguy $ */
+/*	$Id: Trigger.c++ 487 2007-03-21 15:44:44Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -74,7 +74,8 @@ Trigger::~Trigger()
     triggers[tid] = NULL;
     // NB: we mimic the logic below to avoid byte-order issues
     u_int i = tid / TRIGGER_BPW;
-    ((u_char*) &tidFree[i])[i>>3] &= ~(1<<(i&7));
+    u_int b = tid % TRIGGER_BPW;
+    ((u_char*) &tidFree[i])[b>>3] &= ~(1<<(b&7));
     client->dec();
 }
 
@@ -244,12 +245,12 @@ Trigger::parse(const char* spec0)
 	    id = fxStr(cp, tp-cp);
 	    cp = tp+1;
 	}
-	int c = *cp++;
 	u_short& m = interests[base>>4];
 	if (m != 0) {
 	    syntaxError(spec0, "interests conflict");
 	    return (false);
 	}
+	int c = *cp;
 	if (c == '*') {
 	    m = 0xffff;
 	} else if (isxdigit(c)) {
@@ -258,7 +259,7 @@ Trigger::parse(const char* spec0)
 		u_int bits = isdigit(c) ? c-'0' :
 		    (islower(c) ? 10+(c-'a') : 10+(c-'A'));
 		v = (v<<4) | bits;
-		c = *cp++;
+		c = *++cp;
 	    } 
 	    m = v;
 	} else {
