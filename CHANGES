@@ -1,7 +1,8 @@
-#	$Id: CHANGES 487 2007-03-21 15:44:44Z faxguy $	
+#	$Id: CHANGES 488 2007-03-22 01:49:00Z faxguy $	
 
 New Changes
 
+* fix hfaxd local time display due to DST (21 Mar 2007)
 * fix a couple of Trigger problems (21 Mar 2007)
 * add faxmail -C option to set coverpage template file (20 Mar 2007)
 * quote input and output filenames in default typerules (19-20 Mar 2007)

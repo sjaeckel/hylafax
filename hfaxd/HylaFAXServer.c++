@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 390 2006-12-07 00:30:08Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 488 2007-03-22 01:49:00Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -83,10 +83,24 @@ HylaFAXServer::HylaFAXServer()
      * the local timezone and GMT for adjusting
      * client-specified time values that are given
      * in GMT.
+     *
+     * mktime() gives us the seconds elapsed since the
+     * beginning of calendar time.  And so in a
+     * "daylight savings" condition the clock shows 
+     * a time ahead of calendar time - where that 
+     * amount of time has not elapsed yet - and thus
+     * subtracting mktime(&tm) from mktime(&gmt) will 
+     * not immediately give us the clock offset 
+     * between local time and GMT when DST applies.  To
+     * compensate we set tm.tm_isdst to 0 always, and 
+     * this will force mktime() to believe that the
+     * those seconds have elapsed, and thus we'll get
+     * an accurate gmtoff value.
      */
     time_t now = Sys::now();
     struct tm gmt = *gmtime(&now);
     struct tm tm = *localtime(&now);
+    tm.tm_isdst = 0;
     gmtoff = mktime(&gmt) - mktime(&tm);
 #if HAS_TM_ZONE
     /*
@@ -97,9 +111,16 @@ HylaFAXServer::HylaFAXServer()
     tzname[1] = NULL;
 #endif
 
-    // Latest glibc will revert to UTC in the chroot if it can't
-    // find the zoneinfo file and no TZ is set in the environment.
-    fxStr tz = fxStr::format("%s%d:%02d%s", tzname[0], (gmtoff / 3600), ((gmtoff / 60) % 60), tzname[1]);
+    /*
+     * Some versions of  glibc (like RHEL4) will revert to UTC in
+     * the chroot if it can't find the zoneinfo file and no TZ is
+     * set in the environment.
+     * We'll set the TZ to our crafted TZ to make sure that we
+     * have the right offset even if no timezone DST info is
+     * avaliable in the chroot.
+     */
+    fxStr tz = fxStr::format("CUT%d:%02d", (gmtoff / 3600), ((gmtoff / 60) % 60));
+
     setenv("TZ", tz, 0);
 
     cachedTIFF = NULL;
