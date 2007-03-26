@@ -1,4 +1,4 @@
-/*	$Id: Trigger.c++ 487 2007-03-21 15:44:44Z faxguy $ */
+/*	$Id: Trigger.c++ 490 2007-03-26 23:40:13Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -250,21 +250,23 @@ Trigger::parse(const char* spec0)
 	    syntaxError(spec0, "interests conflict");
 	    return (false);
 	}
-	int c = *cp;
-	if (c == '*') {
+	if (*cp == '*') {
 	    m = 0xffff;
-	} else if (isxdigit(c)) {
+	    cp++;
+	} else {
 	    u_int v = 0;
 	    for (u_int i = 0; i < 4; i++) {
-		u_int bits = isdigit(c) ? c-'0' :
-		    (islower(c) ? 10+(c-'a') : 10+(c-'A'));
-		v = (v<<4) | bits;
-		c = *++cp;
-	    } 
+		int c = *cp++;
+		if (isxdigit(c)) {
+		    u_int bits = isdigit(c) ? c-'0' :
+			(islower(c) ? 10+(c-'a') : 10+(c-'A'));
+		    v = (v<<4) | bits;
+		} else {
+		    syntaxError(spec0, "non-hex event mask");
+		    return (false);
+		}
+	    }
 	    m = v;
-	} else {
-	     syntaxError(spec0, "non-hex event mask");
-	     return (false);
 	}
 	TriggerRef* tr = new TriggerRef(*this);
 	/*
