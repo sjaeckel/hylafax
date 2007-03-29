@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.h 183 2006-06-01 15:16:34Z faxguy $ */
+/*	$Id: FaxClient.h 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -189,7 +189,7 @@ public:
     virtual bool callServer(fxStr& emsg);
     virtual bool hangupServer(void);
     bool isConnected(void) const;
-    bool login(const char* user, fxStr& emsg);
+    bool login(const char* user, const char* pass, fxStr& emsg);
     bool admin(const char* pass, fxStr& emsg);
     virtual const char* getPasswd(const char* prompt);
     bool isLoggedIn(void) const;

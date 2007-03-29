@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1 473 2007-03-13 04:03:06Z faxguy $
+.\"	$Id: sendfax.1 492 2007-03-29 16:56:57Z faxguy $
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -42,6 +42,9 @@ sendfax \- submit a facsimile job for transmission
 .I sendfax
 submits one or more facsimile transmission requests
 to a \*(Fx facsimile server.
+.I sendfax
+may prompt the user for a password and admin password
+depending on the invocation and server configuration.
 Requests are normally processed immediately, although
 they may also be queued for transmission at a later time
 using a syntax identical to the
@@ -462,12 +465,14 @@ are combined with the transmission of one or more files.
 Do not notify the sender by electronic mail when the
 facsimile has been delivered or requeued.
 .TP 12
-.BI \-o " owner"
+.BI \-o " login"
 Specify the fax owner login name, replacing any
 .B FAXUSER
 environment variable that may be set for the same purpose.
 If neither is specified, the user's 
-current login name is used.
+current login name is used.  The login password may also
+be provided by separating it from the owner login name with
+a colon, like ``owner:pass''.
 .TP 12
 .B \-p
 Poll each destination for any available documents.

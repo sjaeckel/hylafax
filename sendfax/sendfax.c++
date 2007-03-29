@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 413 2007-01-04 02:10:22Z faxguy $ */
+/*	$Id: sendfax.c++ 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -77,6 +77,7 @@ sendFaxApp::run(int argc, char** argv)
     extern char* optarg;
     int c;
     char *owner = NULL;
+    char *pass = NULL;
     bool optionsUsed = true;
 
     appName = argv[0];
@@ -172,7 +173,14 @@ sendFaxApp::run(int argc, char** argv)
         case 'N':			// no notification
             proto.setNotification("none");
             break;
-	case 'o':			// specify owner
+	case 'o':			// specify owner:pass
+	    {
+		char* pp = strchr(optarg, ':');
+		if (pp && *(pp + 1) != '\0') {
+		    *pp = '\0';
+		    pass = pp + 1;
+		}
+	    }
 	    owner = optarg;
 	    break;
         case 'p':			// submit polling request
@@ -262,7 +270,7 @@ sendFaxApp::run(int argc, char** argv)
     bool status = false;
     fxStr emsg;
     if (callServer(emsg)) {
-        status = login(owner, emsg)
+        status = login(owner, pass, emsg)
             && prepareForJobSubmissions(emsg)
             && submitJobs(emsg);
         if (status && waitForJob) {

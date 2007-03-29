@@ -1,4 +1,4 @@
-/*	$Id: SNPPClient.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: SNPPClient.h 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -162,7 +162,7 @@ public:
     virtual bool callServer(fxStr& emsg);
     virtual bool hangupServer(void);
     bool isConnected(void) const;
-    bool login(const char* user, fxStr& emsg);
+    bool login(const char* user, const char* pass, fxStr& emsg);
     virtual const char* getPasswd(const char* prompt);
     bool isLoggedIn(void) const;
     void setCtrlFds(int in, int out);

@@ -1,6 +1,10 @@
-#	$Id: CHANGES 488 2007-03-22 01:49:00Z faxguy $	
+#	$Id: CHANGES 492 2007-03-29 16:56:57Z faxguy $	
 
 New Changes
+
+* add "owner:pass" syntax for 'sendfax -o' option (29 Mar 2007)
+
+(5.1.2)
 
 * fix hfaxd local time display due to DST (21 Mar 2007)
 * fix a couple of Trigger problems (21 Mar 2007)
