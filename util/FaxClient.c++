@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 183 2006-06-01 15:16:34Z faxguy $ */
+/*	$Id: FaxClient.c++ 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -374,7 +374,7 @@ FaxClient::setDataFd(int fd)
  * Do login procedure.
  */
 bool
-FaxClient::login(const char* user, fxStr& emsg)
+FaxClient::login(const char* user, const char* pass, fxStr& emsg)
 {
     if (user == NULL) {
 	setupUserIdentity(emsg);
@@ -382,7 +382,7 @@ FaxClient::login(const char* user, fxStr& emsg)
     }
     int n = command("USER %s", user);
     if (n == CONTINUE)
-	n = command("PASS %s", getPasswd("Password:"));
+	n = command("PASS %s", pass ? pass : getPasswd("Password:"));
     if (n == CONTINUE)				// XXX not used
 	n = command("ACCT %s", getPasswd("Account:"));
     if (n == COMPLETE)

@@ -1,4 +1,4 @@
-/*	$Id: SNPPClient.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: SNPPClient.c++ 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -550,7 +550,7 @@ SNPPClient::setCtrlFds(int in, int out)
  * Do login procedure.
  */
 bool
-SNPPClient::login(const char* user, fxStr& emsg)
+SNPPClient::login(const char* user, const char* pass, fxStr& emsg)
 {
     if (user == NULL) {
 	setupSenderIdentity(emsg);		// invokes setupUserIdentity
@@ -558,7 +558,7 @@ SNPPClient::login(const char* user, fxStr& emsg)
     }
     int n = command("LOGI %s", user);
     if (code == 550)
-	n = command("LOGI %s %s", user, getPasswd("Password:"));
+	n = command("LOGI %s %s", user, pass ? pass : getPasswd("Password:"));
     if (n == COMPLETE)
 	state |= SS_LOGGEDIN;
     else

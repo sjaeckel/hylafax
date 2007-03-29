@@ -1,4 +1,4 @@
-/*	$Id: sendpage.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: sendpage.c++ 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -160,7 +160,7 @@ sendPageApp::run(int argc, char** argv)
     }
     bool status = false;
     if (callServer(emsg)) {
-	status = login(NULL, emsg)
+	status = login(NULL, NULL, emsg)
 	      && prepareForJobSubmissions(emsg)
 	      && submitJobs(emsg);
 	hangupServer();

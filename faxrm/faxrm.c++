@@ -1,4 +1,4 @@
-/*	$Id: faxrm.c++ 436 2007-02-13 05:15:07Z faxguy $ */
+/*	$Id: faxrm.c++ 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -81,7 +81,7 @@ faxRmApp::run(int argc, char** argv)
 	usage();
     fxStr emsg;
     if (callServer(emsg)) {
-	if (login(NULL, emsg) &&
+	if (login(NULL, NULL, emsg) &&
 	    (!useadmin || admin (NULL, emsg))) {
 
 	    for (; optind < argc; optind++) {

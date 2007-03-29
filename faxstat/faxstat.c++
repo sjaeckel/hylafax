@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 425 2007-01-29 23:55:22Z faxguy $ */
+/*	$Id: faxstat.c++ 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -107,7 +107,7 @@ faxStatApp::run(int argc, char** argv)
     if (checkStatus) dirs.insert(FAX_STATUSDIR, 0);	// server status
     fxStr emsg;
     if (callServer(emsg)) {
-	if (login(NULL, emsg)) {
+	if (login(NULL, NULL, emsg)) {
 	    if (checkInfo)
 		(void) recvData(writeStdout, 0, emsg, 0,
 		    "RETR " FAX_STATUSDIR "/any." FAX_INFOSUF);

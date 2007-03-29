@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: faxalter.c++ 492 2007-03-29 16:56:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -228,7 +228,7 @@ faxAlterApp::run(int argc, char** argv)
     if (script == "" && !resubmit)
 	fxFatal("No job parameters specified for alteration.");
     if (callServer(emsg)) {
-	if (login(NULL, emsg) &&
+	if (login(NULL, NULL, emsg) &&
 	    (!useadmin || admin(NULL, emsg))) {
 	    for (; optind < argc; optind++) {
 		const char* jobid = argv[optind];
