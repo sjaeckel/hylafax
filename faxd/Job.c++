@@ -1,4 +1,4 @@
-/*	$Id: Job.c++ 287 2006-08-29 21:48:18Z faxguy $ */
+/*	$Id: Job.c++ 494 2007-04-06 22:46:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -76,6 +76,7 @@ Job::Job(const FaxRequest& req)
     breq = NULL;
     suspendPending = false;
     registry[jobid] = this;
+    tod.reset();
 }
 
 Job::~Job()
@@ -107,6 +108,7 @@ Job::update(const FaxRequest& req)
     resolution = req.resolution;
     willpoll = (req.findItem(FaxRequest::send_poll) != fx_invalidArrayIndex);
     device = req.modem;
+    tod.parse(req.timeofday);
 }
 
 /*

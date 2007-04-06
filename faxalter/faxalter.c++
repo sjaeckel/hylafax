@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 492 2007-03-29 16:56:57Z faxguy $ */
+/*	$Id: faxalter.c++ 494 2007-04-06 22:46:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -97,10 +97,14 @@ faxAlterApp::run(int argc, char** argv)
     bool resubmit = false;
 
     int c, rc = 0;
-    while ((c = Sys::getopt(argc, argv, "a:d:h:k:m:n:P:t:ADQRgprv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "a:C:d:h:k:m:n:P:t:ADQRgprv")) != -1)
 	switch (c) {
 	case 'A':			// connect with administrative privileges
 	    useadmin = true;
+	    break;
+	case 'C':			// a user-specified command
+	    script.append(optarg);
+            script.append("\n");
 	    break;
 	case 'D':			// set notification to when done
         script.append(groups ? "JGPARM " : "JPARM ");
@@ -288,6 +292,7 @@ faxAlterApp::usage()
     fxFatal("usage: faxalter"
       " [-h server-host]"
       " [-a time]"
+      " [-C command]"
       " [-d number]"
       " [-k time]"
       " [-m modem]"

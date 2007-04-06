@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 413 2007-01-04 02:10:22Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 494 2007-04-06 22:46:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -457,9 +457,16 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
 	return (false);
 
     time_t now = Sys::now();
+    fxStr tod = "";
+    u_int delim = 0;
 
     CHECKPARM("FROMUSER", client.getSenderName())
 
+    delim = sendTime.next(0, '@');
+    if (delim < sendTime.length()) {
+	tod = sendTime.tail(sendTime.length() - delim - 1);
+	sendTime = sendTime.head(delim);
+    }
     struct tm tts;
     if (sendTime != "") {
 	if (!parseAtSyntax(sendTime, *localtime(&now), tts, emsg)) {
@@ -484,6 +491,7 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     IFPARM("MODEM", client.getModem(), "");	// XXX should be per-job state
     IFPARM("MAXDIALS", maxDials, (u_int) -1)
     IFPARM("MAXTRIES", maxRetries, (u_int) -1)
+    IFPARM("TIMEOFDAY", tod, "")
     CHECKPARM("SCHEDPRI", priority)
     /*
      * If the dialstring is different from the

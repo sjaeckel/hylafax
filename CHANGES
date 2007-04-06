@@ -1,7 +1,10 @@
-#	$Id: CHANGES 493 2007-04-06 20:08:39Z faxguy $	
+#	$Id: CHANGES 494 2007-04-06 22:46:40Z faxguy $	
 
 New Changes
 
+* add faxalter -C command option (6 Apr 2007)
+* add hfaxd JPARM TIMEOFDAY client option, associated job support, 
+  and also expand sendfax -a syntax to include it (6 Apr 2007)
 * add "owner:pass" syntax for 'sendfax -o' option (29 Mar, 6 Apr 2007)
 
 (5.1.2)

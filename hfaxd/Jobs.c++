@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 446 2007-02-26 21:34:01Z faxguy $ */
+/*	$Id: Jobs.c++ 494 2007-04-06 22:46:40Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -109,6 +109,7 @@ static const struct {
     { T_CLIENT,		A_RUSR|A_RADM|A_WADM|A_ROTH },
     { T_COMMID,		A_RUSR|A_RADM|A_ROTH },
     { T_COMMENTS,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_TIMEOFDAY,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_COVER,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_DATAFORMAT,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_DIALSTRING,	A_RUSR|A_WUSR|A_RADM|A_WADM },
@@ -231,6 +232,7 @@ static struct {
     { T_COMMID,		&Job::commid },
     { T_REGARDING,	&Job::regarding },
     { T_COMMENTS,	&Job::comments },
+    { T_TIMEOFDAY,	&Job::timeofday },
 };
 static struct {
     Token	t;
@@ -908,6 +910,7 @@ HylaFAXServer::initDefaultJob(void)
     defJob.fromvoice	= "";
     defJob.regarding	= "";
     defJob.comments	= "";
+    defJob.timeofday	= "";
     defJob.client	= remotehost;
     defJob.tagline	= "";
     defJob.doneop	= "default";
@@ -999,6 +1002,7 @@ HylaFAXServer::newJob(fxStr& emsg)
     job->fromvoice = curJob->fromvoice;
     job->regarding = curJob->regarding;
     job->comments = curJob->comments;
+    job->timeofday = curJob->timeofday;
     job->jobtype = curJob->jobtype;
     job->tagline = curJob->tagline;
     job->client = remotehost;

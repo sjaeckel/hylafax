@@ -1,4 +1,4 @@
-.\"	$Id: sendq.4f 177 2006-05-23 22:58:03Z faxguy $
+.\"	$Id: sendq.4f 494 2007-04-06 22:46:40Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -132,6 +132,7 @@ subaddr	string	info to send in \s-1HDLC SUB\s+1 frame
 tagline	string	tagline format string
 tiff	string	unprocessed \s-1TIFF/F\s0 document
 !tiff	string	processed \s-1TIFF/F\s0 document
+timeofday	string	time of day restrictions
 totdials	integer	total number of phone calls
 totpages	integer	total pages to transmit
 tottries	integer	total number of attempts to send job
@@ -528,6 +529,13 @@ document has been processed by
 it is marked as
 .B !tiff
 so that subsequent retries do not reprocess the document. 
+.TP 14
+.B timeofday
+The time-of-day restrictions to place on the job.  The syntax is
+identical to the similar
+.B TimeOfDay
+server-configuration option found in
+.IR hylafax-config (${MANNUM4_5}).
 .TP 14
 .B totdials
 The total number of times the server has placed a call
