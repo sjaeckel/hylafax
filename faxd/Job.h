@@ -1,4 +1,4 @@
-/*	$Id: Job.h 287 2006-08-29 21:48:18Z faxguy $ */
+/*	$Id: Job.h 494 2007-04-06 22:46:40Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -129,6 +129,7 @@ public:
     Job*	dnext;		// linked list by destination
     Modem*	modem;		// modem/server currently assigned to job
     QLink	triggers;	// waiting specifically on this job
+    TimeOfDay	tod;		// time of day restrictions
 
     Job*	bprev;		// prev in batch
     Job*	bnext;		// next in batch

@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1 492 2007-03-29 16:56:57Z faxguy $
+.\"	$Id: sendfax.1 494 2007-04-06 22:46:40Z faxguy $
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -227,6 +227,8 @@ is specified in the format:
 .I month 
 DD | 
 .I dayofweek 
+] [ @ 
+.I timeofday
 ]\'\' where 
 .I month 
 can be Jan(uary), Feb(ruary), Mar(ch), Apr(il), May, Jun(e), Jul(y), 
@@ -244,6 +246,15 @@ By default,
 .I sendfax
 schedules facsimile for immediate delivery.  Time should be given 
 in the user's local time.
+Conversely, the
+.I timeofday
+field restricts the job from sending at various times
+relative to the server.  The syntax for
+.I timeofday
+is identical to the
+.B TimeOfDay
+syntax found in 
+.IR hylafax-config (${MANNUM4_5}).
 .TP
 .BI \-A
 Archive the job on the server according to the

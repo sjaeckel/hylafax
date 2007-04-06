@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 469 2007-03-09 22:25:54Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 494 2007-04-06 22:46:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2534,7 +2534,7 @@ faxQueueApp::runScheduler()
 		    if (job.isOnList()) job.remove();	// remove from run queue
 		    di.block(job);			// place at tail of di queue
 		    delete req;
-		} else if ((tts = job.getJCI().nextTimeToSend(now)) != now) {
+		} else if (((tts = job.getJCI().nextTimeToSend(now)) != now) || ((tts = job.tod.nextTimeOfDay(now)) != now)) {
 		    /*
 		     * This job may not be started now because of time-of-day
 		     * restrictions.  Reschedule it for the next possible time.
