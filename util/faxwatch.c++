@@ -1,4 +1,4 @@
-/*	$Id: faxwatch.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxwatch.c++ 493 2007-04-06 20:08:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -96,7 +96,7 @@ watchApp::run(int argc, char** argv)
 	usage();
     fxStr emsg;
     if (callServer(emsg)) {
-	if (login(NULL, emsg) && setType(TYPE_A)) {
+	if (login(NULL, NULL, emsg) && setType(TYPE_A)) {
 	    if (getTimeZone() == TZ_GMT)
 		printWarning("time values reported in GMT");
 	    (void) recvData(writeData, STDOUT_FILENO, emsg, 0,
