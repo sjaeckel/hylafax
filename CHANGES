@@ -1,8 +1,8 @@
-#	$Id: CHANGES 492 2007-03-29 16:56:57Z faxguy $	
+#	$Id: CHANGES 493 2007-04-06 20:08:39Z faxguy $	
 
 New Changes
 
-* add "owner:pass" syntax for 'sendfax -o' option (29 Mar 2007)
+* add "owner:pass" syntax for 'sendfax -o' option (29 Mar, 6 Apr 2007)
 
 (5.1.2)
 
