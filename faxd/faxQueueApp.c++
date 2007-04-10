@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 494 2007-04-06 22:46:40Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 495 2007-04-11 00:18:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2323,7 +2323,7 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
      * ready for processing.
      */
     Job* jb;
-    u_int n = 1;
+    u_int n = 1, b = 1;
     while ((jb = di.nextBlocked())) {
 	if (isOKToCall(di, jb->getJCI(), n)) {
 	    FaxRequest* req = readRequest(*jb);
@@ -2333,14 +2333,17 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
 	    }
 	    setReadyToRun(*jb, false);
 	    if (!di.supportsBatching()) n++;
+	    else if (++b > maxBatchJobs) {
+		n++;
+		b -= maxBatchJobs;
+	    }
 	    req->notice = "";
 	    updateRequest(*req, *jb);
 	    delete req;
 	    /*
 	     * We check isOKToCall again here now to avoid di.nextBlocked
 	     * which would pull jb from the blocked list and then possibly
-	     * require us to re-block it, and restoring the blocked order
-	     * would be troublesome.
+	     * require us to re-block it.
 	     */
 	    if (di.getBlocked() && !isOKToCall(di, jb->getJCI(), n)) {
 		traceQueue("Continue BLOCK on %d job(s) to %s, current calls: %d, max concurrent calls: %d", 
@@ -2532,7 +2535,7 @@ faxQueueApp::runScheduler()
 		     */
 		    blockJob(job, *req, "Blocked by concurrent calls");
 		    if (job.isOnList()) job.remove();	// remove from run queue
-		    di.block(job);			// place at tail of di queue
+		    di.block(job);			// place at tail of di queue, honors job priority
 		    delete req;
 		} else if (((tts = job.getJCI().nextTimeToSend(now)) != now) || ((tts = job.tod.nextTimeOfDay(now)) != now)) {
 		    /*
@@ -2567,16 +2570,16 @@ faxQueueApp::runScheduler()
 		     */
 		    (void) di.getInfo(job.dest);	// must read file for supportsBatching
 		    FaxMachineInfo info;
-		    if (di.supportsBatching()
+		    if (di.supportsBatching() && maxBatchJobs > 1
 		    	&& (req->jobtype == "facsimile"
 		    		|| (req->jobtype == "pager" 
 		    			&& streq(info.getPagingProtocol(), "ixo")))) { 
 					// fax and IXO pages only for now
 			/*
-			 * The destination supports batching.  Continue down the queue 
-			 * and build an array of all processable jobs to this destination
-			 * allowed on this modem which are not of a lesser priority than
-			 * jobs to other destinations.
+			 * The destination supports batching and batching is enabled.  
+			 * Continue down the queue and build an array of all processable 
+			 * jobs to this destination allowed on this modem which are not 
+			 * of a lesser priority than jobs to other destinations.
 			 */
 			unblockDestJobs(di);
 
