@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 471 2007-03-09 23:07:10Z faxguy $
+.\"	$Id: hylafax-config.4f 496 2007-04-12 23:52:18Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-03-09 15:07:10 -0800 (Fri, 09 Mar 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-04-12 16:52:18 -0700 (Thu, 12 Apr 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -296,6 +296,7 @@ Class1ECMSupport	boolean	\s-1Yes\s+1	Class 1/1.0: enable T.30-A ECM support
 Class1PersistentECM	boolean	\s-1Yes\s+1	Class 1/1.0: to continue to correct while in ECM
 Class1ECMFrameSize	integer	\s-1256\s+1	Class 1/1.0: image frame size in ECM protocol
 Class1ExtendedRes	boolean	\-	Class 1/1.0: enable extended resolution support
+Class1HasRHConnectBug	boolean	\s-1No\s+1	Class 1/1.0: modem can report CONNECT incorrectly
 Class1HFLOCmd	string	\-	Class 1/1.0: command to set hardware flow control
 Class1FrameOverhead	integer	\s-14\s+1	Class 1/1.0: extra bytes in a received \s-1HDLC\s+1 frame
 Class1GreyJPEGSupport	boolean	\s-1No\s+1	Class 1/1.0: to enable grey JPEG fax support
@@ -2444,6 +2445,14 @@ receiving.  If, during the build process a compatible JBIG library
 was found then send support is enabled by default.  If, during
 the build process the TIFF tools are found to support JBIG then
 receive support is enabled by default.
+.TP
+.B Class1HasRHConnectBug
+A Class 1 modem should only report CONNECT after AT+FRH=3 when
+V.21 HDLC data is detected.  However, some modems will incorrectly
+report CONNECT after AT+FRH=3 whenever any carrier is present. In
+such cases
+.B Class1HasRHConnectBug
+should be set to ``true''.
 .TP
 .B Class1HFLOCmd
 The command to setup hardware (\s-1RTS/CTS\s+1)

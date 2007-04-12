@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 467 2007-03-09 02:03:44Z faxguy $ */
+/*	$Id: ModemConfig.c++ 496 2007-04-12 23:52:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -277,6 +277,7 @@ ModemConfig::setupConfig()
     class1TCFRecvHack	= false;		// historical behavior
     class1ValidateV21Frames = false;		// assume the modem does this
     class1ModemHasDLEBug = false;		// otherwise we'd have trouble
+    class1HasRHConnectBug = false;		// ideally we can trust the modem
     setVolumeCmds("ATM0 ATL0M1 ATL1M1 ATL2M1 ATL3M1");
     recvDataFormat	= DF_ALL;		// default to no transcoding
     rtnHandling         = FaxModem::RTN_RETRANSMITIGNORE; // retransmit until MCF/MPS
@@ -757,6 +758,8 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	class1ValidateV21Frames = getBoolean(value);
     else if (streq(tag, "class1modemhasdlebug"))
 	class1ModemHasDLEBug = getBoolean(value);
+    else if (streq(tag, "class1hasrhconnectbug"))
+	class1HasRHConnectBug = getBoolean(value);
     else if (streq(tag, "modemminspeed"))
 	minSpeed = getSpeed(value);
     else if (streq(tag, "recvdataformat"))
