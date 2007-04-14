@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 496 2007-04-12 23:52:18Z faxguy $ */
+/*	$Id: Class1.c++ 497 2007-04-14 22:08:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -486,7 +486,7 @@ Class1Modem::switchingPause(fxStr& emsg, u_int times)
     if (times != 1) {
 	fxStr ncmd = fxStr(scmd);
 	ncmd.raiseatcmd();
-	if (ncmd.head(7) == "AT+FRS=") {
+	if (ncmd.length() > 7 && ncmd.head(7) == "AT+FRS=") {
 	    int dur = atoi(ncmd.tail(ncmd.length()-7)) * times;
 	    scmd = scmd.head(7) | fxStr(dur, "%d");
 	}

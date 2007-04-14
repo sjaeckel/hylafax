@@ -1,7 +1,8 @@
-#	$Id: CHANGES 496 2007-04-12 23:52:18Z faxguy $	
+#	$Id: CHANGES 497 2007-04-14 22:08:34Z faxguy $	
 
 New Changes
 
+* fix potential faxgetty crash in switchingPause (14 Apr 2007)
 * add Class1HasRHConnectBug workaround option (12 Apr 2007)
 * improve faxq behavior when MaxBatchJobs=1 (10 Apr 2007)
 * add faxalter -C command option (6 Apr 2007)
