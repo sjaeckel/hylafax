@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.c++ 485 2007-03-20 22:01:14Z faxguy $ */
+/*	$Id: TypeRules.c++ 500 2007-04-18 05:26:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -32,9 +32,14 @@
 
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef _XOPEN_SOURCE_EXTENDED
+#include <arpa/inet.h>
+#else
 extern "C" {
 #include <netinet/in.h>
 }
+#endif
 
 #ifndef TRUE
 #define TRUE 1

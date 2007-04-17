@@ -1,7 +1,8 @@
-#	$Id: CHANGES 499 2007-04-18 00:55:49Z faxguy $	
+#	$Id: CHANGES 500 2007-04-18 05:26:49Z faxguy $	
 
 New Changes
 
+* socklen_t adjustments for HP-UX 11 (17 Apr 2007)
 * add errorcodes to all error status notices, put it into the q-file
   and provide a way for clients to query for it (17 Apr 2007)
 * never send RTN in Class 1 after a null-page was received (16 Apr 2007)
