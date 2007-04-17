@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 389 2006-12-02 00:08:51Z faxguy $ */
+/*	$Id: faxSendApp.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -120,7 +120,7 @@ faxSendApp::send(const char** filenames, int num)
 {
     u_int batched = BATCH_FIRST;
     FaxSendStatus status = send_done;
-    fxStr batchcommid, notice;
+    fxStr batchcommid, notice, errorcode;
     time_t retrybatchtts = 0;
 
     for (int i = 0; i < num; i++)
@@ -197,6 +197,7 @@ faxSendApp::send(const char** filenames, int num)
 			if (req->status == send_done)
 			    ai.status = "";
 			else {
+			    errorcode = req->errorcode;
 			    notice = req->notice;
 			    ai.status = req->notice;
 			    retrybatchtts = req->tts;
@@ -224,9 +225,10 @@ faxSendApp::send(const char** filenames, int num)
 			 * don't set the tts, allowing faxq to reschedule the job, expecting that
 			 * to disassemble and "shuffle" the entire batch.
 			 */
-			if (notice == "No carrier detected" || 
-			    notice == "Busy signal detected" || 
-			    notice == "No answer from remote") {
+			if (errorcode == "E001" || 
+			    errorcode == "E002" || 
+			    errorcode == "E003") {
+			    /* busy, no carrier, no answer */
 			    req->notice = notice;
 			    req->status = send_retry;
 			    req->tts = retrybatchtts;

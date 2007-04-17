@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.c++ 405 2006-12-27 03:56:35Z faxguy $ */
+/*	$Id: pageSendApp.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -119,7 +119,7 @@ pageSendApp::send(const char** filenames, int num)
 {
     u_int batched = BATCH_FIRST;
     FaxSendStatus status = send_done;
-    fxStr batchcommid, notice;
+    fxStr batchcommid, notice, errorcode;
     time_t retrybatchtts = 0;
 
     for (int i = 0; i < num; i++) {
@@ -163,8 +163,12 @@ pageSendApp::send(const char** filenames, int num)
 			    ai.owner = req->owner;
 			    if (req->status == send_done)
 				ai.status = "";
-			    else
+			    else {
+				errorcode = req->errorcode;
+				notice = req->notice;
 				ai.status = req->notice;
+				retrybatchtts = req->tts;
+			    }
 			    ai.jobinfo = fxStr::format("%u/%u/%u/%u/%u/%u/%u", 
 				req->totpages, req->ntries, req->ndials, req->totdials, req->maxdials, req->tottries, req->maxtries);
 			    if (!ai.record("PAGE"))
@@ -190,9 +194,10 @@ pageSendApp::send(const char** filenames, int num)
 			 * don't set the tts, allowing faxq to reschedule the job, expecting that
 			 * to disassemble and "shuffle" the entire batch.
 			 */
-			if (notice == "No carrier detected" ||
-			    notice == "Busy signal detected" ||
-			    notice == "No answer from remote") {
+			if (errorcode == "E001" ||
+			    errorcode == "E002" ||
+			    errorcode == "E003") {
+			    /* busy, no carrier, no answer */
 			    req->notice = notice;
 			    req->status = send_retry;
 			    req->tts = retrybatchtts;
@@ -569,7 +574,7 @@ pageSendApp::pagePrologue(FaxRequest& req, const FaxMachineInfo& info, fxStr& em
 	    traceResponse(buf);
     } while (!gotID && (unsigned) Sys::now() - start < ixoIDTimeout);
     if (!gotID) {
-	emsg = "No initial ID response from paging central";
+	emsg = "No initial ID response from paging central {E500}";
 	req.status = send_retry;
 	return (false);
     }
@@ -615,7 +620,7 @@ pageSendApp::pagePrologue(FaxRequest& req, const FaxMachineInfo& info, fxStr& em
 	    case NAK:			// login failed, retry
 		traceIXO("RECV NAK (login unsuccessful)");
 		if (--ntries == 0) {
-		    emsg = "Login failed multiple times";
+		    emsg = "Login failed multiple times {E501}";
 		    req.status = send_retry;
 		    return (false);
 		}
@@ -655,7 +660,7 @@ pageSendApp::pagePrologue(FaxRequest& req, const FaxMachineInfo& info, fxStr& em
 		traceResponse(buf);
 	}
     } while ((unsigned)Sys::now()-start < ixoLoginTimeout && --unknown != 0);
-    emsg = fxStr::format("Protocol failure: %s from paging central",
+    emsg = fxStr::format("Protocol failure: %s from paging central {E502}",
 	(unknown ?
 	    "timeout waiting for response" : "too many unknown responses"));
     req.status = send_retry;
@@ -680,7 +685,7 @@ pageSendApp::pageGoAhead(FaxRequest& req, const FaxMachineInfo&, fxStr& emsg)
 	}
 	traceResponse(buf);
     } while ((unsigned) Sys::now()-start < ixoGATimeout && --unknown != 0);
-    emsg = fxStr::format("Protocol failure: %s waiting for go-ahead message",
+    emsg = fxStr::format("Protocol failure: %s waiting for go-ahead message {E503}",
 	unknown ? "timeout" : "too many unknown responses");
     req.status = send_retry;
     return (false);
@@ -753,7 +758,7 @@ pageSendApp::sendPagerMsg(FaxRequest& req, FaxItem& preq, const fxStr& msg, fxSt
 		if (--ntries == 0) {
 		    req.status = send_retry;
 		    emsg = "Message block not acknowledged by paging central "
-			"after multiple tries";
+			"after multiple tries {E504}";
 		    return (false);
 		}
 		/*
@@ -783,14 +788,14 @@ pageSendApp::sendPagerMsg(FaxRequest& req, FaxItem& preq, const fxStr& msg, fxSt
 		 */
 		req.status = send_failed;
 		emsg = "Message block transmit failed; "
-		    "paging central rejected it";
+		    "paging central rejected it {E505}";
 		return (false);
 	    case ESC:
 		if (len > 1 && cp[1] == EOT) {
 		    traceIXO("RECV EOT (forced disconnect)");
 		    req.status = send_failed;
 		    emsg = "Protocol failure: paging central responded to "
-			"message block transmit with forced disconnect";
+			"message block transmit with forced disconnect {E506}";
 		    return (false);
 		}
 		/* fall thru... */
@@ -802,7 +807,7 @@ pageSendApp::sendPagerMsg(FaxRequest& req, FaxItem& preq, const fxStr& msg, fxSt
 		traceResponse(resp);
 	}
     } while ((unsigned)Sys::now()-start < ixoXmitTimeout && unknown < ixoMaxUnknown);
-    emsg = fxStr::format("Protocol failure: %s to message block transmit",
+    emsg = fxStr::format("Protocol failure: %s to message block transmit {E507}",
 	(unknown ?
 	    "timeout waiting for response" : "too many unknown responses"));
     req.status = send_retry;
@@ -829,7 +834,7 @@ pageSendApp::pageEpilogue(FaxRequest& req, const FaxMachineInfo&, fxStr& emsg)
 		break;
 	    case RS:
 		traceIXO("RECV RS (message content rejected)");
-		emsg = "Paging central rejected content; check PIN";
+		emsg = "Paging central rejected content; check PIN {E508}";
 		req.status = send_failed;
 		return (false);
 	    }
@@ -840,7 +845,7 @@ pageSendApp::pageEpilogue(FaxRequest& req, const FaxMachineInfo&, fxStr& emsg)
     } while ((unsigned)Sys::now() - start < ixoAckTimeout);
     req.status = send_retry;
     emsg = "Protocol failure: timeout waiting for transaction ACK/NAK "
-	"from paging central";
+	"from paging central {E509}";
     return (false);
 }
 

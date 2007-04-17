@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 494 2007-04-06 22:46:40Z faxguy $ */
+/*	$Id: FaxRequest.h 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -168,6 +168,7 @@ public:
     fxStr	csi;		// CSI string from receiving equipment (ASCII representation)
     fxStr	nsf;		// NSF string from receiving equipment (ASCII representation)
     fxStr	timeofday;	// time of day restrictions
+    fxStr	errorcode;	// error code for status
     pid_t	writeQFilePid;	// pid of last writeQFile operation
     FaxItemArray items;	// set of requests
 

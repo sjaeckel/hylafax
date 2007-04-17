@@ -1,4 +1,4 @@
-/*	$Id: Class2Poll.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class2Poll.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -33,8 +33,7 @@ bool
 Class2Modem::requestToPoll(fxStr& emsg)
 {
     if (!class2Cmd(splCmd, 1)) {
-	emsg = "Unable to request polling operation"
-	    " (modem may not support polling)";
+	emsg = "Unable to request polling operation (modem may not support polling) {E200}";
 	return (false);
     } else
 	return (true);
@@ -46,18 +45,18 @@ Class2Modem::requestToPoll(fxStr& emsg)
 bool
 Class2Modem::pollBegin(const fxStr& cig, const fxStr& sep, const fxStr& pwd, fxStr& emsg)
 {
-    const char* cmdFailed = "Unable to setup %s (modem command failed)";
+    const char* cmdFailed = "Unable to setup %s (modem command failed) %s";
 
     if (!class2Cmd(cigCmd, cig)) {		// set polling ID
-	emsg = fxStr::format(cmdFailed, "polling identifer");
+	emsg = fxStr::format(cmdFailed, "polling identifer", "{E201}");
 	return (false);
     }
     if (sep != "" && paCmd != "" && !class2Cmd(paCmd, sep)) {
-	emsg = fxStr::format(cmdFailed, "selective polling address");
+	emsg = fxStr::format(cmdFailed, "selective polling address", "{E202}");
 	return (false);
     }
     if (pwd != "" && pwCmd != "" && !class2Cmd(pwCmd, pwd)) {
-	emsg = fxStr::format(cmdFailed, "polling password");
+	emsg = fxStr::format(cmdFailed, "polling password", "{E203}");
 	return (false);
     }
     return (true);

@@ -1,7 +1,9 @@
-#	$Id: CHANGES 498 2007-04-16 16:51:30Z faxguy $	
+#	$Id: CHANGES 499 2007-04-18 00:55:49Z faxguy $	
 
 New Changes
 
+* add errorcodes to all error status notices, put it into the q-file
+  and provide a way for clients to query for it (17 Apr 2007)
 * never send RTN in Class 1 after a null-page was received (16 Apr 2007)
 * fix potential faxgetty crash in switchingPause (14 Apr 2007)
 * add Class1HasRHConnectBug workaround option (12 Apr 2007)

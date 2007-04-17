@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 442 2007-02-21 19:23:06Z faxguy $ */
+/*	$Id: FaxModem.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -310,7 +310,7 @@ FaxModem::decodePPM(const fxStr& pph, u_int& ppm, fxStr& emsg)
 	what = "unknown";
     } else
 	what = "bad";
-    emsg = fxStr::format( "Internal botch; %s post-page handling string \"%s\"",
+    emsg = fxStr::format( "Internal botch; %s post-page handling string \"%s\" {E303}",
 	what, (const char*) pph);
     return (false);
 }

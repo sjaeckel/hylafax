@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -362,7 +362,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 	    pid_t pid = fork();
 	    switch (pid) {
 		case -1:
-		    emsg = "Could not fork for local ID.";
+		    emsg = "Could not fork for local ID. {E305}";
 		    logError("%s", (const char*)emsg);
 		    Sys::close(pipefd[0]);
 		    Sys::close(pipefd[1]);
@@ -384,7 +384,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 			}
 			Sys::waitpid(pid, status);
 			if (status != 0) {
-			    emsg = fxStr::format("Bad exit status %#o for \'%s\'", status, (const char*) cmd);
+			    emsg = fxStr::format("Bad exit status %#o for \'%s\' {E306}", status, (const char*) cmd);
 			    logError("%s", (const char*)emsg);
 			}
 			// modem settings may have changed...
@@ -395,7 +395,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 		    break;
 	    }
 	} else {
-	    emsg = "Could not open a pipe for local ID.";
+	    emsg = "Could not open a pipe for local ID. {E307}";
 	    logError("%s", (const char*) emsg);
 	}
     }
@@ -405,8 +405,8 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 	/*
 	 * Call was rejected based on Caller ID information.
 	 */
-	emsg = "ANSWER: CALL REJECTED";
-	traceServer("%s", (const char*)emsg);
+	emsg = "ANSWER: CALL REJECTED {E308}";
+	traceServer("%s", (const char*) emsg);
 	callResolved = false;
 	advanceRotary = false;
     } else {
@@ -420,7 +420,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 	     */
 	    if (atype != ClassModem::ANSTYPE_ANY && ctype != atype) {
 	        emsg = fxStr::format("ANSWER: Call deduced as %s,"
-		     "but told to answer as %s; call ignored",
+		     " but told to answer as %s; call ignored {E309}",
 		     ClassModem::callTypes[ctype],
 		     ClassModem::answerTypes[atype]);
 		traceServer("%s", (const char*)emsg);
@@ -548,7 +548,7 @@ faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, CallID& 
 	    if (ctype != ClassModem::CALLTYPE_ERROR)
 		modemAnswerCall(ctype, emsg, dialnumber);
 	} else
-	    emsg = "External getty use is not permitted";
+	    emsg = "External getty use is not permitted {E310}";
     } else
 	ctype = modemAnswerCall(atype, emsg, dialnumber);
     callResolved = processCall(ctype, emsg, callid);
@@ -651,7 +651,7 @@ faxGettyApp::runGetty(
 	dev.remove(0, prefix.length());
     Getty* getty = (*newgetty)(dev, fxStr::format("%u", getModemRate()));
     if (getty == NULL) {
-	emsg = fxStr::format("%s: could not create", what);
+	emsg = fxStr::format("%s: could not create {E311}", what);
 	return (ClassModem::CALLTYPE_ERROR);
     }
     getty->setupArgv(args, 
@@ -673,7 +673,7 @@ faxGettyApp::runGetty(
     bool parentIsInit = (getppid() == 1);
     pid_t pid = fork();
     if (pid == -1) {
-	emsg = fxStr::format("%s: can not fork: %s", what, strerror(errno));
+	emsg = fxStr::format("%s: can not fork: %s {E312}", what, strerror(errno));
 	delete getty;
 	return (ClassModem::CALLTYPE_ERROR);
     }
@@ -728,7 +728,7 @@ faxGettyApp::runGetty(
     getty->wait(status, true);		// wait for getty/login work to complete
     if ( status > 1280 ) { // codes returned larger than 1280 are undefined and must be an error    
         status = 1024;
-        emsg = "ERROR: Unknown status";
+        emsg = "ERROR: Unknown status {E313}";
     }
     /*
      * Retake ownership of the modem.  Note that there's

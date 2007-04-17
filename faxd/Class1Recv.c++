@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 498 2007-04-16 16:51:30Z faxguy $ */
+/*	$Id: Class1Recv.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -123,7 +123,7 @@ Class1Modem::recvEOMBegin(fxStr& emsg)
     if (!useV34) {
 	pause(conf.t2Timer);	// T.30 Fig 5.2B requires T2 to elapse
 	if (!(atCmd(thCmd, AT_NOTHING) && atResponse(rbuf, 0) == AT_CONNECT)) {
-	    emsg = "Failure to raise V.21 transmission carrier.";
+	    emsg = "Failure to raise V.21 transmission carrier. {E101}";
 	    protoTrace(emsg);
 	    return (false);
 	}
@@ -149,7 +149,7 @@ Class1Modem::recvIdentification(
     HDLCFrame frame(conf.class1FrameOverhead);
     bool framesSent = false;
 
-    emsg = "No answer (T.30 T1 timeout)";
+    emsg = "No sender protocol (T.30 T1 timeout) {E102}";
     if (!notransmit) {
 	/*
 	 * Transmit (PWD) (SUB) (CSI) DIS frames when the receiving
@@ -212,7 +212,7 @@ Class1Modem::recvIdentification(
 			if (!recvDCSFrames(frame)) {
 			    switch (frame.getFCF()) {
 				case FCF_DCN:
-				    emsg = "RSPREC error/got DCN";
+				    emsg = "RSPREC error/got DCN (sender abort) {E103}";
 				    recvdDCN = true;
 				    return (false);
 				case FCF_CRP:
@@ -224,7 +224,7 @@ Class1Modem::recvIdentification(
 				    traceFCF("RECV send", (u_char) signalSent[2]);
 				    break;
 				default:	// XXX DTC/DIS not handled
-				    emsg = "RSPREC invalid response received";
+				    emsg = "RSPREC invalid response received {E104}";
 				    break;
 			    }
 			    break;
@@ -243,7 +243,7 @@ Class1Modem::recvIdentification(
 			}
 		    }
 		    if (gotframe) break;	// where recvDCSFrames fails without DCN
-		    emsg = "Failure to train modems";
+		    emsg = "Failure to train modems {E105}";
 		    /*
 		     * Reset the timeout to insure the T1 timer is
 		     * used.  This is done because the adaptive answer
@@ -258,7 +258,7 @@ Class1Modem::recvIdentification(
 	    }
 	}
 	if (gotEOT) {
-	    emsg = "RSPREC error/got EOT";
+	    emsg = "RSPREC error/got EOT {E106}";
 	    return (false);
 	}
 	/*
@@ -552,7 +552,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		 * So, our approach is much like Class1SwitchingCmd.
 		 */
 		if (!atCmd(conf.class1MsgRecvHackCmd, AT_OK)) {
-		    emsg = "Failure to receive silence.";
+		    emsg = "Failure to receive silence (synchronization failure). {E100}";
 		    return (false);
 		}
 		/*
@@ -671,7 +671,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	 */
 	if (abortRequested()) {
 	    // XXX no way to purge TIFF directory
-	    emsg = "Receive aborted due to operator intervention";
+	    emsg = "Receive aborted due to operator intervention {E301}";
 	    return (false);
 	}
 
@@ -697,7 +697,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	    case FCF_DIS:			// XXX no support
 		if (!pageGood) recvResetPage(tif);
 		protoTrace("RECV DIS/DTC");
-		emsg = "Can not continue after DIS/DTC";
+		emsg = "Can not continue after DIS/DTC {E107}";
 		return (false);
 	    case FCF_PWD:
 	    case FCF_SUB:
@@ -815,7 +815,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 						    traceFCF("RECV recv", rrframe.getFCF());
 						    if (rrframe.getFCF() == FCF_DCN) {
 							protoTrace("RECV recv DCN");
-							emsg = "COMREC received DCN";
+							emsg = "COMREC received DCN (sender abort) {E108}";
 							gotEOT = true;
 							recvdDCN = true;
 						    } else if (params.ec != EC_DISABLE && rrframe.getFCF() != FCF_RR) {
@@ -824,7 +824,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 						    if (!useV34) (void) switchingPause(emsg);
 						}
 					    } while (!gotEOT && !recvdDCN && !gotresponse && ++rnrcnt < 2 && Sys::now()-rrstart < 60);
-					    if (!gotresponse) emsg = "No response to RNR repeated 3 times.";
+					    if (!gotresponse) emsg = "No response to RNR repeated 3 times. {E109}";
 					} else {		// parent finished TIFFWriteDirectory
 					    tbuf[0] = 0;
 					}
@@ -852,7 +852,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 				 * processes.
 				 */
 				if (!useV34 && !atCmd(thCmd, AT_CONNECT)) {
-				    emsg = "Failure to raise V.21 transmission carrier.";
+				    emsg = "Failure to raise V.21 transmission carrier. {E101}";
 				    return (false);
 				}
 			    } else {
@@ -930,7 +930,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		break;
 	    case FCF_DCN:			// DCN
 		protoTrace("RECV recv DCN");
-		emsg = "COMREC received DCN";
+		emsg = "COMREC received DCN (sender abort) {E108}";
 		recvdDCN = true;
 		if (prevPage && conf.saveUnconfirmedPages && getRecvEOLCount()) {	// only if there was data
 		    TIFFWriteDirectory(tif);
@@ -940,7 +940,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		return (false);
 	    default:
 		if (!pageGood) recvResetPage(tif);
-		emsg = "COMREC invalid response received";
+		emsg = "COMREC invalid response received {E110}";
 		return (false);
 	    }
 	    t2end = 0;
@@ -961,7 +961,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	    }
 	}
     } while (gotCONNECT && !wasTimeout() && lastResponse != AT_EMPTYLINE);
-    emsg = "T.30 T2 timeout, expected page not received";
+    emsg = "T.30 T2 timeout, expected page not received {E111}";
     if (prevPage && conf.saveUnconfirmedPages && getRecvEOLCount()) {
 	TIFFWriteDirectory(tif);
 	protoTrace("RECV keeping unconfirmed page");
@@ -982,7 +982,7 @@ bool
 Class1Modem::raiseRecvCarrier(bool& dolongtrain, fxStr& emsg)
 {
     if (!atCmd(conf.class1MsgRecvHackCmd, AT_OK)) {
-	emsg = "Failure to receive silence.";
+	emsg = "Failure to receive silence (synchronization failure). {E100}";
 	return (false);
     }
     /*
@@ -1004,7 +1004,7 @@ Class1Modem::raiseRecvCarrier(bool& dolongtrain, fxStr& emsg)
 	gotEOT = false;
     }
     if (lastResponse != AT_CONNECT && !gotRTNC) {
-	emsg = "Failed to properly detect high-speed data carrier.";
+	emsg = "Failed to properly detect high-speed data carrier. {E112}";
 	return (false);
     }
     dolongtrain = false;
@@ -1170,7 +1170,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					u_int dcs;			// possible bits 1-16 of DCS in FIF
 					if (useV34) {
 					    // T.30 F.3.4.5 Note 1 does not permit CTC in V.34-fax
-					    emsg = "Received invalid CTC signal in V.34-Fax.";
+					    emsg = "Received invalid CTC signal in V.34-Fax. {E113}";
 					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					    return (false);
 					}
@@ -1202,7 +1202,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    traceFCF("RECV send", (u_char) signalSent[2]);
 				    break;
 				case FCF_DCN:
-				    emsg = "COMREC received DCN";
+				    emsg = "COMREC received DCN (sender abort) {E108}";
 				    gotEOT = true;
 				    recvdDCN = true;
 				    continue;
@@ -1226,7 +1226,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					prevPage--;		// counteract the forthcoming increment
 					return (true);
 				    } else {
-					emsg = "COMREC invalid response received";	// plain ol' error
+					emsg = "COMREC invalid response received {E110}";	// plain ol' error
 					return (false);
 				    }
 			    }
@@ -1266,8 +1266,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    }
 		    if (!gotprimary && !sendERR) {
 			if (emsg == "") {
-			    if (useV34) emsg = "Failed to properly open V.34 primary channel.";
-			    else emsg = "Failed to properly detect high-speed data carrier.";
+			    if (useV34) emsg = "Failed to properly open V.34 primary channel. {E114}";
+			    else emsg = "Failed to properly detect high-speed data carrier. {E112}";
 			}
 			protoTrace(emsg);
 			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
@@ -1275,7 +1275,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    }
 		}
 		if (gotEOT) {		// intentionally not an else of the previous if
-		    if (useV34 && emsg == "") emsg = "Received premature V.34 termination.";
+		    if (useV34 && emsg == "") emsg = "Received premature V.34 termination. {E115}";
 		    protoTrace(emsg);
 		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 		    return (false);
@@ -1330,13 +1330,13 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		setInputBuffering(false);
 		if (useV34) {
 		    if (!gotEOT && !gotCTRL && !waitForDCEChannel(true)) {
-			emsg = "Failed to properly open V.34 control channel.";
+			emsg = "Failed to properly open V.34 control channel. {E116}";
 			protoTrace(emsg);
 			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 			return (false);
 		    }
 		    if (gotEOT) {
-			emsg = "Received premature V.34 termination.";
+			emsg = "Received premature V.34 termination. {E115}";
 			protoTrace(emsg);
 			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 			return (false);
@@ -1499,7 +1499,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    case FCF_CTC:
 						if (useV34) {
 						    // T.30 F.3.4.5 Note 1 does not permit CTC in V.34-fax
-						    emsg = "Received invalid CTC signal in V.34-Fax.";
+						    emsg = "Received invalid CTC signal in V.34-Fax. {E113}";
 						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						    return (false);
 						}
@@ -1540,23 +1540,23 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 							signalRcvd = rtnframe.getFCF2();
 							break;
 						    default:
-							emsg = "COMREC invalid response to repeated PPR received";
+							emsg = "COMREC invalid response to repeated PPR received {E117}";
 							abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 							return (false);
 						}
 						sendERR = true;		// do it later
 						break;
 					    case FCF_DCN:
-						emsg = "COMREC received DCN";
+						emsg = "COMREC received DCN (sender abort) {E108}";
 						gotEOT = true;
 						recvdDCN = true;  
 					    default:
-						if (emsg == "") emsg = "COMREC invalid response to repeated PPR received";
+						if (emsg == "") emsg = "COMREC invalid response to repeated PPR received {E117}";
 						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						return (false);
 					}
 				    } else {
-					emsg = "T.30 T2 timeout, expected signal not received";
+					emsg = "T.30 T2 timeout, expected signal not received {E118}";
 					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					return (false);
 				    }
@@ -1578,7 +1578,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					break;
 				    default:
 					if (blockgood) {
-					    emsg = "COMREC invalid partial-page signal received";
+					    emsg = "COMREC invalid partial-page signal received {E119}";
 					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 					    return (false);
 					}
@@ -1593,7 +1593,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    }
 			    break;
 			case FCF_DCN:
-			    emsg = "COMREC received DCN";
+			    emsg = "COMREC received DCN (sender abort) {E108}";
 			    gotEOT = true;
 			    recvdDCN = true;
 			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
@@ -1608,19 +1608,19 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				 prevPage--;		// counteract the forthcoming increment
 				return (true);
 			    } else {
-				emsg = "COMREC invalid response received";	// plain ol' error
+				emsg = "COMREC invalid response received {E110}";	// plain ol' error
 				return (false);
 			    }
 		    }
 		} else {
-		    emsg = "T.30 T2 timeout, expected signal not received";
+		    emsg = "T.30 T2 timeout, expected signal not received {E118}";
 		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 		    return (false);
 		}
 	    } else {
 		if (wasTimeout()) abortReceive();
 		if (syncattempts++ > 20) {
-		    emsg = "Cannot synchronize ECM frame reception.";
+		    emsg = "Cannot synchronize ECM frame reception. {E120}";
 		    abortPageECMRecv(tif, params, block, fcount, seq, true);
 		    return(false);
 		}
@@ -1681,7 +1681,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    traceFCF("RECV recv", rrframe.getFCF());
 				    if (rrframe.getFCF() == FCF_DCN) {
 					protoTrace("RECV recv DCN");
-					emsg = "COMREC received DCN";
+					emsg = "COMREC received DCN (sender abort) {E108}";
 					gotEOT = true;
 					recvdDCN = true;
 				    } else if (params.ec != EC_DISABLE && rrframe.getFCF() != FCF_RR) {
@@ -1689,7 +1689,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    }
 				}
 			    } while (!recvdDCN && !gotEOT && !gotresponse && ++rnrcnt < 2 && Sys::now()-rrstart < 60);
-			    if (!gotresponse) emsg = "No response to RNR repeated 3 times.";
+			    if (!gotresponse) emsg = "No response to RNR repeated 3 times. {E109}";
 			} else tbuf[0] = 0;	// parent finished writeECMData
 		    } while (!gotEOT && !recvdDCN && tbuf[0] != 0 && Sys::now()-rrstart < 60);
 		    Sys::read(fcfd[0], NULL, 1);
@@ -1724,7 +1724,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	// Just because image data blocks are received properly doesn't guarantee that
 	// those blocks actually contain image data.  If the decoder finds no image
 	// data at all we send DCN instead of MCF in hopes of a retransmission.
-	emsg = "ECM page received containing no image data.";
+	emsg = "ECM page received containing no image data. {E121}";
 	return (false);
     }
     return (true);   		// signalRcvd is set, full page is received...

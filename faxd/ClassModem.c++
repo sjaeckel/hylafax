@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 455 2007-03-05 19:57:46Z faxguy $ */
+/*	$Id: ClassModem.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -34,16 +34,16 @@
  * Call status description strings.
  */
 const char* ClassModem::callStatus[10] = {
-    "Call successful",				// OK
-    "Busy signal detected",			// BUSY
-    "No carrier detected",			// NOCARRIER
-    "No answer from remote",			// NOANSWER
-    "No local dialtone",			// NODIALTONE
-    "Invalid dialing command",			// ERROR
-    "Unknown problem",				// FAILURE
-    "Carrier established, but Phase A failure",	// NOFCON
-    "Data connection established (wanted fax)",	// DATACONN
-    "Glare - RING detected",			// RING
+    "Call successful {E000}",				// OK
+    "Busy signal detected {E001}",			// BUSY
+    "No carrier detected {E002}",				// NOCARRIER
+    "No answer from remote {E003}",			// NOANSWER
+    "No local dialtone {E004}",				// NODIALTONE
+    "Invalid dialing command {E005}",			// ERROR
+    "Unknown problem {E006}",				// FAILURE
+    "Carrier established, but Phase A failure {E007}",	// NOFCON
+    "Data connection established (wanted fax) {E008}",	// DATACONN
+    "Glare - RING detected {E009}",			// RING
 };
 /*
  * Service class descriptions.  The first three
@@ -283,7 +283,7 @@ again:
 	    return (CALLTYPE_ERROR);
 	}
     } while ((unsigned) Sys::now()-start < conf.answerResponseTimeout);
-    emsg = "Ring detected without successful handshake";
+    emsg = "Ring detected without successful handshake {E012}";
     return (CALLTYPE_ERROR);
 }
 
