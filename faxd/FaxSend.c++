@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 466 2007-03-08 21:07:12Z faxguy $ */
+/*	$Id: FaxSend.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -510,7 +510,7 @@ FaxServer::sendClientCapabilitiesOK(FaxRequest& fax, FaxMachineInfo& clientInfo,
 	modem->selectSignallingRate(
 	    fxmin(clientInfo.getMaxSignallingRate(), fax.desiredbr));
     if (signallingRate == -1) {
-	emsg = "Modem does not support negotiated signalling rate";
+	emsg = "Modem does not support negotiated signalling rate {E400}";
 	return (false);
     }
     clientParams.br = signallingRate;
@@ -521,7 +521,7 @@ FaxServer::sendClientCapabilitiesOK(FaxRequest& fax, FaxMachineInfo& clientInfo,
 	modem->selectScanlineTime(
 	    fxmax(clientInfo.getMinScanlineTime(), fax.desiredst));
     if (minScanlineTime == -1) {
-	emsg = "Modem does not support negotiated min scanline time";
+	emsg = "Modem does not support negotiated min scanline time {E401}";
 	return (false);
     }
     clientParams.st = minScanlineTime;
@@ -604,7 +604,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
     (void) TIFFGetField(tif, TIFFTAG_COMPRESSION, &compression);
     if (compression != COMPRESSION_CCITTFAX3 && compression != COMPRESSION_CCITTFAX4) {
 	emsg = fxStr::format("Document is not in a Group 3 or Group 4 compatible"
-	    " format (compression %u)", compression);
+	    " format (compression %u) {E402}", compression);
 	return (send_failed);
     }
 
@@ -662,30 +662,25 @@ FaxServer::sendSetupParams1(TIFF* tif,
     } else {
 	if (compression == COMPRESSION_CCITTFAX4) {
 	    if (!clientInfo.getSupportsMMR()) {
-		emsg = "Document was encoded with 2DMMR,"
-		    " but client does not support this data format";
+		emsg = "Document was encoded with 2DMMR, but client does not support this data format {E403}";
 		return (send_reformat);
 	    }
 	    if (!modem->supportsMMR()) {
-		emsg = "Document was encoded with 2DMMR,"
-		    " but modem does not support this data format";
+		emsg = "Document was encoded with 2DMMR, but modem does not support this data format {E404}";
 		return (send_reformat);
 	    }
 	    if (params.ec == EC_DISABLE) {
-		emsg = "Document was encoded with 2DMMR,"
-		    " but ECM is not being used.";
+		emsg = "Document was encoded with 2DMMR, but ECM is not being used. {E405}";
 		return (send_reformat);
 	    }
 	    params.df = DF_2DMMR;
 	} else if (g3opts & GROUP3OPT_2DENCODING) {
 	    if (!clientInfo.getSupports2DEncoding()) {
-		emsg = "Document was encoded with 2DMR,"
-		    " but client does not support this data format";
+		emsg = "Document was encoded with 2DMR, but client does not support this data format {E406}";
 		return (send_reformat);
 	    }
 	    if (!modem->supports2D()) {
-		emsg = "Document was encoded with 2DMR,"
-		    " but modem does not support this data format";
+		emsg = "Document was encoded with 2DMR, but modem does not support this data format {E407}";
 		return (send_reformat);
 	    }
 	    params.df = DF_2DMR;
@@ -738,24 +733,24 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	if (xres > 10) {
 	    if (!(clientInfo.getSupportsVRes() & VR_R16)) {
 		emsg = fxStr::format("Hyperfine resolution document is not supported"
-		    " by client, image resolution %g x %g lines/mm", xres, yres);
+		    " by client, image resolution %g x %g lines/mm {E408}", xres, yres);
 		return (send_reformat);
 	    }
 	    if (!modem->supportsVRes(20)) {	// "20" is coded for R16
 		emsg = fxStr::format("Hyperfine resolution document is not supported"
-		    " by modem, image resolution %g x %g lines/mm", xres, yres);
+		    " by modem, image resolution %g x %g lines/mm {E409}", xres, yres);
 		return (send_reformat);
 	    }
 	params.vr = VR_R16;
 	} else {
 	    if (!((clientInfo.getSupportsVRes() & VR_R8) || (clientInfo.getSupportsVRes() & VR_200X400))) {
 		emsg = fxStr::format("Superfine resolution document is not supported"
-		    " by client, image resolution %g lines/mm", yres);
+		    " by client, image resolution %g lines/mm {E410}", yres);
 		return (send_reformat);
 	    }
 	    if (!modem->supportsVRes(yres)) {
 		emsg = fxStr::format("Superfine resolution document is not supported"
-		    " by modem, image resolution %g lines/mm", yres);
+		    " by modem, image resolution %g lines/mm {E411}", yres);
 		return (send_reformat);
 	    }
 	if (clientInfo.getSupportsVRes() & VR_R8) params.vr = VR_R8;
@@ -764,24 +759,24 @@ FaxServer::sendSetupParams1(TIFF* tif,
     } else if (yres >= 10.) {
 	if (!(clientInfo.getSupportsVRes() & VR_300X300)) {
 	    emsg = fxStr::format("300x300 resolution document is not supported"
-		" by client, image resolution %g lines/mm", yres);
+		" by client, image resolution %g lines/mm {E412}", yres);
 	    return (send_reformat);
 	}
 	if (!modem->supportsVRes(yres)) {
 	    emsg = fxStr::format("300x300 resolution document is not supported"
-		" by modem, image resolution %g lines/mm", yres);
+		" by modem, image resolution %g lines/mm {E413}", yres);
 	    return (send_reformat);
 	}
 	params.vr = VR_300X300;
     } else if (yres >= 7.) {
 	if (!((clientInfo.getSupportsVRes() & VR_FINE) || (clientInfo.getSupportsVRes() & VR_200X200))) {
 	    emsg = fxStr::format("High resolution document is not supported"
-		" by client, image resolution %g lines/mm", yres);
+		" by client, image resolution %g lines/mm {E414}", yres);
 	    return (send_reformat);
 	}
 	if (!modem->supportsVRes(yres)) {
 	    emsg = fxStr::format("High resolution document is not supported"
-		" by modem, image resolution %g lines/mm", yres);
+		" by modem, image resolution %g lines/mm {E415}", yres);
 	    return (send_reformat);
 	}
 	if (clientInfo.getSupportsVRes() & VR_FINE) params.vr = VR_FINE;
@@ -799,7 +794,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
     double rf = (params.vr == VR_R16 ? 2 : params.vr == VR_300X300 ? 1.5 : 1);
     if (w > (clientInfo.getMaxPageWidthInPixels()*rf)) {
 	emsg = fxStr::format("Client does not support document page width"
-		", max remote page width %g pixels, image width %lu pixels",
+		", max remote page width %g pixels, image width %lu pixels {E416}",
 		(uint32) (clientInfo.getMaxPageWidthInPixels()*rf), w);
 	return (send_reformat);
     }
@@ -815,7 +810,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	    0,
 	};
 	emsg = fxStr::format("Modem does not support document page width"
-		", max page width %g pixels, image width %lu pixels",
+		", max page width %g pixels, image width %lu pixels {E417}",
 		widths[modem->getBestPageWidth()&7]*rf, w);
 	return (send_reformat);
     }
@@ -837,7 +832,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	if ((int) len > clientInfo.getMaxPageLengthInMM()) {
 	    emsg = fxStr::format("Client does not support document page length"
 			  ", max remote page length %d mm"
-			  ", image length %lu rows (%.2f mm)",
+			  ", image length %lu rows (%.2f mm) {E418}",
 		clientInfo.getMaxPageLengthInMM(), h, len);
 	    return (send_reformat);
 	}
@@ -850,7 +845,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	    };
 	    emsg = fxStr::format("Modem does not support document page length"
 			  ", max page length %s mm"
-			  ", image length %lu rows (%.2f mm)",
+			  ", image length %lu rows (%.2f mm) {E419}",
 		lengths[modem->getBestPageLength()&3], h, len);
 	    return (send_reformat);
 	}

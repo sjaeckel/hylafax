@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 495 2007-04-11 00:18:59Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -316,7 +316,7 @@ bool
 faxQueueApp::prepareJobNeeded(Job& job, FaxRequest& req, JobStatus& status)
 {
     if (!req.items.length()) {
-	req.notice = "Job contains no documents";
+	req.notice = "Job contains no documents {E323}";
 	status = Job::rejected;
 	jobError(job, "SEND REJECT: %s", (const char*) req.notice);
 	return (false);
@@ -330,7 +330,7 @@ faxQueueApp::prepareJobNeeded(Job& job, FaxRequest& req, JobStatus& status)
 	    return (true);
 	case FaxRequest::send_poll:		// verify modem is capable
 	    if (!job.modem->supportsPolling()) {
-		req.notice = "Modem does not support polling";
+		req.notice = "Modem does not support polling {E324}";
 		status = Job::rejected;
 		jobError(job, "SEND REJECT: %s", (const char*) req.notice);
 		return (false);
@@ -391,7 +391,7 @@ faxQueueApp::prepareJobStart(Job& job, FaxRequest* req,
 	/*NOTREACHED*/
     case -1:				// fork failed, sleep and retry
 	if (job.isOnList()) job.remove(); // Remove from active queue
-	delayJob(job, *req, "Could not fork to prepare job for transmission",
+	delayJob(job, *req, "Could not fork to prepare job for transmission {E340}",
 	    Sys::now() + random() % requeueInterval);
 	delete req;
 	return false;
@@ -457,7 +457,7 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		}
 		if (status == Job::requeued) {
 		    if (job.isOnList()) job.remove();
-		    delayJob(job, *req, "Cannot fork to prepare job for transmission",
+		    delayJob(job, *req, "Could not fork to prepare job for transmission {E340}",
 			Sys::now() + random() % requeueInterval);
 		    delete req;
 		} else {
@@ -813,14 +813,14 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 	    const FaxItem& fitem = req.items[i];
 	    tif = TIFFOpen(fitem.item, "r");
 	    if (tif == NULL) {
-		emsg = "Can not open document file " | fitem.item;
+		emsg = "Can not open document file " | fitem.item | " {E314}";
 		if (tif)
 		    TIFFClose(tif);
 		return (false);
 	    }
 	    if (fitem.dirnum != 0 && !TIFFSetDirectory(tif, fitem.dirnum)) {
 		emsg = fxStr::format(
-		    "Can not set directory %u in document file %s"
+		    "Can not set directory %u in document file %s {E315}"
 		    , fitem.dirnum
 		    , (const char*) fitem.item
 		);
@@ -835,7 +835,7 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 	     */
 	    if (!TIFFReadDirectory(tif)) {
 		emsg = fxStr::format(
-		    "Error reading directory %u in document file %s"
+		    "Error reading directory %u in document file %s {E316}"
 		    , TIFFCurrentDirectory(tif)
 		    , TIFFFileName(tif)
 		);
@@ -845,7 +845,7 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 	    }
 	}
 	if (++req.totpages > maxPages) {
-	    emsg = fxStr::format("Too many pages in submission; max %u",
+	    emsg = fxStr::format("Too many pages in submission; max %u {E317}",
 		maxPages);
 	    if (tif)
 		TIFFClose(tif);
@@ -1037,7 +1037,7 @@ faxQueueApp::convertDocument(Job& job,
 	    if (fd != -1) {
 		if (flock(fd, LOCK_SH) == -1) {
 		    status = Job::format_failed;
-		    emsg = "Unable to lock shared document file";
+		    emsg = "Unable to lock shared document file {E318}";
 		} else
 		    status = Job::done;
 		(void) Sys::close(fd);		// NB: implicit unlock
@@ -1048,11 +1048,11 @@ faxQueueApp::convertDocument(Job& job,
 		 * limit or a malformed PostScript submission).
 		 */
 		status = Job::format_failed;
-		emsg = "Unable to open shared document file";
+		emsg = "Unable to open shared document file {E319}";
 	    }
 	} else {
 	    status = Job::format_failed;
-	    emsg = "Unable to create document file";
+	    emsg = "Unable to create document file {E320}";
 	}
 	/*
 	 * We were unable to open, create, or flock
@@ -1118,13 +1118,13 @@ faxQueueApp::convertDocument(Job& job,
 		while (!TIFFLastDirectory(tif))
 		    if (!TIFFReadDirectory(tif)) {
 			status = Job::format_failed;
-			emsg = "Converted document is not valid TIFF";
+			emsg = "Converted document is not valid TIFF {E321}";
 			break;
 		    }
 		TIFFClose(tif);
 	    } else {
 		status = Job::format_failed;
-		emsg = "Could not reopen converted document to verify format";
+		emsg = "Could not reopen converted document to verify format {E322}";
 	    }
 	    if (status == Job::done)	// discard any debugging output
 		emsg = "";
@@ -1406,7 +1406,7 @@ faxQueueApp::sendJobStart(Job& job, FaxRequest* req)
 	    njob = cjob->bnext;
 	    req = cjob->breq;
 	    cjob->remove();			// Remove from active queue
-	    delayJob(*cjob, *req, "Could not fork to start job transmission",
+	    delayJob(*cjob, *req, "Could not fork to start job transmission {E341}",
 		cjob->start + random() % requeueInterval);
 	    delete req;
 	}
@@ -1450,7 +1450,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
 	while ((cjob = di.nextBlocked())) {
 	    FaxRequest* blockedreq = readRequest(*cjob);
 	    if (blockedreq) {
-		delayJob(*cjob, *blockedreq, "Delayed by prior call", newtts);
+		delayJob(*cjob, *blockedreq, "Delayed by prior call {E342}", newtts);
 		delete blockedreq;
 	    }
 	}
@@ -1485,7 +1485,7 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
     job.commid = req->commid;			// passed from subprocess
     if (req->status == 127) {
 	req->notice = "Send program terminated abnormally; unable to exec " |
-	    pickCmd(*req);
+	    pickCmd(*req) | "{E343}";
 	req->status = send_failed;
 	logError("JOB %s: %s",
 		(const char*)job.jobid, (const char*)req->notice);
@@ -1524,7 +1524,7 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
      * it does get rescheduled.
      */
     if (req->status != send_done && job.suspendPending) {
-	req->notice = "Job interrupted by user";
+	req->notice = "Job interrupted by user {E344}";
 	req->status = send_retry;
     }
     if (job.killtime == 0 && !job.suspendPending && req->status == send_retry) {
@@ -1535,7 +1535,7 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 	 * notified of the requeue as well as the timeout?
 	 */
 	queueAccounting(job, *req, "UNSENT");
-	req->notice = "Kill time expired";
+	req->notice = "Kill time expired {E325}";
 	updateRequest(*req, job);
 	job.state = FaxRequest::state_failed;
 	deleteRequest(job, req, Job::timedout, true);
@@ -1828,7 +1828,7 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
 	if (req.external == "")			// NB: for notification logic
 	    req.external = req.number;
 	rejectSubmission(job, req,
-	    "REJECT: Unable to convert dial string to canonical format");
+	    "REJECT: Unable to convert dial string to canonical format {E327}");
 	return (false);
     }
     time_t now = Sys::now();
@@ -1838,16 +1838,16 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
     }
     if (!Modem::modemExists(req.modem, true) && !ModemGroup::find(req.modem)) {
 	rejectSubmission(job, req,
-	    "REJECT: Requested modem " | req.modem | " is not registered");
+	    "REJECT: Requested modem " | req.modem | " is not registered {E328}");
 	return (false);
     }
     if (req.items.length() == 0) {
-	rejectSubmission(job, req, "REJECT: No work found in job file");
+	rejectSubmission(job, req, "REJECT: No work found in job file {E329}");
 	return (false);
     }
     if (req.pagewidth > 303) {
 	rejectSubmission(job, req,
-	    fxStr::format("REJECT: Page width (%u) appears invalid",
+	    fxStr::format("REJECT: Page width (%u) appears invalid {E330}",
 		req.pagewidth));
 	return (false);
     }
@@ -1858,7 +1858,7 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
      */
     if (req.killtime-now > 365*24*60*60) {	// XXX should be based on tts
 	rejectSubmission(job, req,
-	    fxStr::format("REJECT: Job expiration time (%u) appears invalid",
+	    fxStr::format("REJECT: Job expiration time (%u) appears invalid {E331}",
 		req.killtime));
 	return (false);
     }
@@ -1895,7 +1895,7 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
 	 */
 	if (req.tts - now > 365*24*60*60) {
 	    rejectSubmission(job, req,
-		fxStr::format("REJECT: Time-to-send (%u) appears invalid",
+		fxStr::format("REJECT: Time-to-send (%u) appears invalid {E332}",
 		    req.tts));
 	    return (false);
 	}
@@ -2034,7 +2034,7 @@ faxQueueApp::terminateJob(const fxStr& jobid, JobStatus why)
 	Trigger::post(Trigger::JOB_KILL, *job);
 	FaxRequest* req = readRequest(*job);
 	if (req) {
-	    req->notice = "Job aborted by request";
+	    req->notice = "Job aborted by request {E345}";
 	    deleteRequest(*job, req, why, why != Job::removed);
 	}
 	setDead(*job);
@@ -2164,7 +2164,7 @@ faxQueueApp::timeoutJob(Job& job)
 	FaxRequest* req = readRequest(job);
 	if (req) {
 	    queueAccounting(job, *req, "UNSENT");
-	    req->notice = "Kill time expired";
+	    req->notice = "Kill time expired {E325}";
 	    deleteRequest(job, req, Job::timedout, true);
 	}
 	setDead(job);
@@ -2189,7 +2189,7 @@ faxQueueApp::timeoutJob(Job& job, FaxRequest& req)
     traceQueue(job, "KILL TIME EXPIRED");
     Trigger::post(Trigger::JOB_TIMEDOUT, job);
     queueAccounting(job, req, "UNSENT");
-    req.notice = "Kill time expired";
+    req.notice = "Kill time expired {E325}";
     deleteRequest(job, req, Job::timedout, true);
     setDead(job);
 }
@@ -2258,7 +2258,7 @@ faxQueueApp::submitJob(const fxStr& jobid, bool checkState, bool nascent)
 		Job job(req);
 		job.state = FaxRequest::state_failed;
 		req.status = send_failed;
-		req.notice = "Invalid or corrupted job description file";
+		req.notice = "Invalid or corrupted job description file {E326}";
 		traceServer("JOB %s : %s", (const char*)jobid, (const char*) req.notice);
 		// NB: this may not work, but we try...
 		deleteRequest(job, req, Job::rejected, true);
@@ -2494,7 +2494,7 @@ faxQueueApp::runScheduler()
 		u_short maxdials = fxmin((u_short) job.getJCI().getMaxDials(),req->maxdials);
 		if (req->totdials >= maxdials) {
 		    rejectJob(job, *req, fxStr::format(
-			"REJECT: Too many attempts to dial: %u, max %u",
+			"REJECT: Too many attempts to dial {E333}: %u, max %u",
 			req->totdials, maxdials));
 		    deleteRequest(job, req, Job::rejected, true);
 		    continue;
@@ -2502,7 +2502,7 @@ faxQueueApp::runScheduler()
 		u_short maxtries = fxmin((u_short) job.getJCI().getMaxTries(),req->maxtries);
 		if (req->tottries >= maxtries) {
 		    rejectJob(job, *req, fxStr::format(
-			"REJECT: Too many attempts to transmit: %u, max %u",
+			"REJECT: Too many attempts to transmit: %u, max %u {E334}",
 			req->tottries, maxtries));
 		    deleteRequest(job, req, Job::rejected, true);
 		    continue;
@@ -2511,7 +2511,7 @@ faxQueueApp::runScheduler()
 		u_int maxpages = job.getJCI().getMaxSendPages();
 		if (req->totpages > maxpages) {
 		    rejectJob(job, *req, fxStr::format(
-			"REJECT: Too many pages in submission: %u, max %u",
+			"REJECT: Too many pages in submission: %u, max %u {E335}",
 			req->totpages, maxpages));
 		    deleteRequest(job, req, Job::rejected, true);
 		    continue;
@@ -2533,7 +2533,7 @@ faxQueueApp::runScheduler()
 		     * will be made ready to run when one of the existing
 		     * jobs terminates.
 		     */
-		    blockJob(job, *req, "Blocked by concurrent calls");
+		    blockJob(job, *req, "Blocked by concurrent calls {E337}");
 		    if (job.isOnList()) job.remove();	// remove from run queue
 		    di.block(job);			// place at tail of di queue, honors job priority
 		    delete req;
@@ -2543,7 +2543,7 @@ faxQueueApp::runScheduler()
 		     * restrictions.  Reschedule it for the next possible time.
 		     */
 		    if (job.isOnList()) job.remove();	// remove from run queue
-		    delayJob(job, *req, "Delayed by time-of-day restrictions", tts);
+		    delayJob(job, *req, "Delayed by time-of-day restrictions {E338}", tts);
 		    delete req;
 		} else if (staggerCalls && lastCall + staggerCalls > now) {
 		    /*
@@ -2552,7 +2552,7 @@ faxQueueApp::runScheduler()
 		     * Reschedule it for the time when next okay.
 		     */
 		    if (job.isOnList()) job.remove();
-		    delayJob(job, *req, "Delayed by outbound call staggering", lastCall + staggerCalls);
+		    delayJob(job, *req, "Delayed by outbound call staggering {E339}", lastCall + staggerCalls);
 		    delete req;
 		} else if (assignModem(job)) {
 		    lastCall = now;
@@ -2663,7 +2663,7 @@ faxQueueApp::runScheduler()
 		    di.call();			// mark as called to correctly block other jobs
 		    processJob(job, req, di);
 		} else if (job.state == FaxRequest::state_failed) {
-		    rejectJob(job, *req, fxStr::format("REJECT: Modem is configured as exempt from accepting jobs"));
+		    rejectJob(job, *req, fxStr::format("REJECT: Modem is configured as exempt from accepting jobs {E336}"));
 		    deleteRequest(job, req, Job::rejected, true);
 		    continue;
 		} else				// leave job on run queue

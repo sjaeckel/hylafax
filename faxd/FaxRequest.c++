@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 494 2007-04-06 22:46:40Z faxguy $ */
+/*	$Id: FaxRequest.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -123,6 +123,7 @@ FaxRequest::stringval FaxRequest::strvals[] = {
     { "csi",		&FaxRequest::csi },
     { "nsf",		&FaxRequest::nsf },
     { "timeofday",	&FaxRequest::timeofday },
+    { "errorcode",	&FaxRequest::errorcode },
 };
 FaxRequest::shortval FaxRequest::shortvals[] = {
     { "state",		&FaxRequest::state },
@@ -347,6 +348,7 @@ FaxRequest::readQFile(bool& rejectJob)
 	case H_CHOPTHRESHOLD:	chopthreshold = atof(tag); break;
 	case H_NSF:		nsf = tag; break;
 	case H_TIMEOFDAY:	timeofday = tag; break;
+	case H_ERRORCODE:	errorcode = tag; break;
 	case H_DONEOP:		doneop = tag; break;
 	case H_STATUS:
 	    /*
@@ -498,6 +500,16 @@ FaxRequest::writeQFile()
     sb.fput("tts:%u\n", tts);
     sb.fput("killtime:%u\n", killtime);
     sb.fput("retrytime:%u\n", retrytime);
+    /*
+     * Pull errorcode out from notice.
+     */
+    u_int ecodestart = notice.find(0, "{");
+    u_int ecodeend = notice.find(ecodestart, "}");
+    if (ecodestart < notice.length() && ecodeend <= notice.length() && ecodeend == ecodestart + 5) {
+	errorcode = notice.extract(ecodestart+1, 4);
+	notice.remove(ecodestart, 6);
+    } else if (notice == "")
+	errorcode = "";
     DUMP(fp, shortvals,	"%s:%d\n", (int));
     DUMP(fp, strvals,	"%s:%s\n", (const char*));
     /*

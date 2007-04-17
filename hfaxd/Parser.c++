@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 494 2007-04-06 22:46:40Z faxguy $ */
+/*	$Id: Parser.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -129,6 +129,7 @@ static const tab parmtab[] = {
 { "DIALSTRING",   T_DIALSTRING,	  false, true, "[<string>]" },
 { "DOCUMENT",     T_DOCUMENT,	  false, true, "path-name" },
 { "DONEOP",       T_DONEOP,	  false, true, "[<string>]" },
+{ "ERRORCODE",    T_ERRORCODE,    false, true, "[<string>]" },
 { "EXTERNAL",     T_EXTERNAL,	  false, true, "[<string>]" },
 { "FAXNUMBER",    T_FAXNUMBER,	  false, true, "[<string>]" },
 { "FAXNAME",      T_FAXNAME,	  false, true, "[<string>]" },
@@ -163,7 +164,7 @@ static const tab parmtab[] = {
 { "SCHEDPRI",     T_SCHEDPRI,	  false, true, "[<number>]" },
 { "SENDTIME",     T_SENDTIME,	  false, true, "[NOW|YYYYMMDDHHSS]" },
 { "STATE",        T_STATE,	  false, true, "(job state)" },
-{ "STATUS",       T_STATUS,       false, true, "[<string>" },
+{ "STATUS",       T_STATUS,       false, true, "[<string>]" },
 { "SUBADDR",      T_SUBADDR,	  false, true, "[<string>]" },
 { "TAGLINE",      T_TAGLINE,	  false, true, "[<string>]" },
 { "TIMEOFDAY",    T_TIMEOFDAY,	  false, true, "[<string>]" },
@@ -1116,6 +1117,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_OWNER:
     case T_STATE:
     case T_STATUS:
+    case T_ERRORCODE:
     case T_DONEOP:
     case T_COMMID:
     case T_REGARDING:

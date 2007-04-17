@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 494 2007-04-06 22:46:40Z faxguy $ */
+/*	$Id: Jobs.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -149,6 +149,7 @@ static const struct {
     { T_SENDTIME,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_STATE,		A_RUSR|A_RADM|A_ROTH },
     { T_STATUS,		A_RUSR|A_RADM|A_WADM|A_ROTH },
+    { T_ERRORCODE,	A_RUSR|A_RADM|A_WADM|A_ROTH },
     { T_SUBADDR,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_TAGLINE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_TOTDIALS,	A_RUSR|A_RADM|A_ROTH },
@@ -228,6 +229,7 @@ static struct {
     { T_JOBINFO,	&Job::jobtag },
     { T_OWNER,		&Job::owner },
     { T_STATUS,		&Job::notice },
+    { T_ERRORCODE,	&Job::errorcode },
     { T_DONEOP,		&Job::doneop },
     { T_COMMID,		&Job::commid },
     { T_REGARDING,	&Job::regarding },
@@ -911,6 +913,7 @@ HylaFAXServer::initDefaultJob(void)
     defJob.regarding	= "";
     defJob.comments	= "";
     defJob.timeofday	= "";
+    defJob.errorcode	= "";
     defJob.client	= remotehost;
     defJob.tagline	= "";
     defJob.doneop	= "default";

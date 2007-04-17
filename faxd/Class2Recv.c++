@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 432 2007-02-10 00:43:54Z faxguy $ */
+/*	$Id: Class2Recv.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -72,7 +72,7 @@ Class2Modem::recvBegin(fxStr& emsg)
 	case AT_TIMEOUT:
 	case AT_EMPTYLINE:
 	    processHangup("70");
-	    emsg = hangupCause(hangupCode);
+	    emsg = fxStr::format("%s {%s}", hangupCause(hangupCode), hangupCause(hangupCode, true));
 	    return (false);
 	case AT_FNSS:
 	    // XXX parse and pass on to server
@@ -100,7 +100,7 @@ Class2Modem::recvBegin(fxStr& emsg)
 	}
     } while (r != AT_OK);
     if (!status)
-	emsg = hangupCause(hangupCode);
+	emsg = fxStr::format("%s {%s}", hangupCause(hangupCode), hangupCause(hangupCode, true));
     return (status);
 }
 
@@ -229,7 +229,7 @@ Class2Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	 */
 	if (abortRequested()) {
 	    // XXX no way to purge TIFF directory
-	    emsg = "Receive aborted due to operator intervention";
+	    emsg = "Receive aborted due to operator intervention {E301}";
 	    return (false);
 	}
 	// XXX deal with PRI interrupts
@@ -259,7 +259,7 @@ Class2Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 bad:
     if (hangupCode[0] == 0)
 	processHangup("90");			// "Unspecified Phase C error"
-    emsg = hangupCause(hangupCode);
+    emsg = fxStr::format("%s {%s}", hangupCause(hangupCode), hangupCause(hangupCode, true));
     if (prevPage && conf.saveUnconfirmedPages) {
 	TIFFWriteDirectory(tif);
 	protoTrace("RECV keeping unconfirmed page");

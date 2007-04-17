@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 474 2007-03-13 16:08:24Z faxguy $ */
+/*	$Id: Class2.c++ 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -735,80 +735,80 @@ Class2Modem::skipStatus(const char* s)
  * hexadecimal renumbering done in 2388-B!
  */
 static struct HangupCode {
-    const char*	code[3];	// from 2388/89, 2388/90, 2388-A, and 2388-B
+    const char*	code[4];	// from 2388/89, 2388/90, 2388-A, 2388-B, and ours
     const char*	message;	// what code means
 } hangupCodes[] = {
 // Call placement and termination
-    {{  "0",  "0",  "0" }, "Normal and proper end of connection" },
-    {{  "1",  "1",  "1" }, "Ring detect without successful handshake" },
-    {{  "2",  "2",  "2" }, "Call aborted,  from +FK or <CAN>" },
-    {{ NULL,  "3",  "3" }, "No loop current" },
-    {{ NULL, NULL,  "4" }, "Ringback detected, no answer (timeout)" },
-    {{ NULL, NULL,  "5" }, "Ringback detected, no answer without CED" },
+    {{  "0",  "0",  "0", "E211" }, "Normal and proper end of connection" },
+    {{  "1",  "1",  "1", "E212" }, "Ring detect without successful handshake" },
+    {{  "2",  "2",  "2", "E213" }, "Call aborted,  from +FK or <CAN>" },
+    {{ NULL,  "3",  "3", "E214" }, "No loop current" },
+    {{ NULL, NULL,  "4", "E215" }, "Ringback detected, no answer (timeout)" },
+    {{ NULL, NULL,  "5", "E216" }, "Ringback detected, no answer without CED" },
 // Transmit Phase A & miscellaneous errors
-    {{ "10", "10", "10" }, "Unspecified Phase A error" },
-    {{ "11", "11", "11" }, "No answer (T.30 T1 timeout)" },
+    {{ "10", "10", "10", "E217" }, "Unspecified Phase A error" },
+    {{ "11", "11", "11", "E218" }, "No answer (T.30 T1 timeout)" },
 // Transmit Phase B
-    {{ "20", "20", "20" }, "Unspecified Transmit Phase B error" },
-    {{ "21", "21", "21" }, "Remote cannot be polled" },
-    {{ "22", "22", "22" }, "COMREC error in transmit Phase B/got DCN" },
-    {{ "23", "23", "23" }, "COMREC invalid command received/no DIS or DTC" },
-    {{ "24", "24", "24" }, "RSPREC error/got DCN" },
-    {{ "25", "25", "25" }, "DCS sent 3 times without response" },
-    {{ "26", "26", "26" }, "DIS/DTC received 3 times; DCS not recognized" },
-    {{ "27", "27", "27" }, "Failure to train at 2400 bps or +FMINSP value" },
-    {{ "28", "28", "28" }, "RSPREC invalid response received" },
+    {{ "20", "20", "20", "E219" }, "Unspecified Transmit Phase B error" },
+    {{ "21", "21", "21", "E220" }, "Remote cannot be polled" },
+    {{ "22", "22", "22", "E221" }, "COMREC error in transmit Phase B/got DCN" },
+    {{ "23", "23", "23", "E222" }, "COMREC invalid command received/no DIS or DTC" },
+    {{ "24", "24", "24", "E223" }, "RSPREC error/got DCN" },
+    {{ "25", "25", "25", "E224" }, "DCS sent 3 times without response" },
+    {{ "26", "26", "26", "E225" }, "DIS/DTC received 3 times; DCS not recognized" },
+    {{ "27", "27", "27", "E226" }, "Failure to train at 2400 bps or +FMINSP value" },
+    {{ "28", "28", "28", "E227" }, "RSPREC invalid response received" },
 // Transmit Phase C
-    {{ "30", "40", "40" }, "Unspecified Transmit Phase C error" },
-    {{ NULL, NULL, "41" }, "Unspecified Image format error" },
-    {{ NULL, NULL, "42" }, "Image conversion error" },
-    {{ "33", "43", "43" }, "DTE to DCE data underflow" },
-    {{ NULL, NULL, "44" }, "Unrecognized Transparent data command" },
-    {{ NULL, NULL, "45" }, "Image error, line length wrong" },
-    {{ NULL, NULL, "46" }, "Image error, page length wrong" },
-    {{ NULL, NULL, "47" }, "Image error, wrong compression code" },
+    {{ "30", "40", "40", "E228" }, "Unspecified Transmit Phase C error" },
+    {{ NULL, NULL, "41", "E229" }, "Unspecified Image format error" },
+    {{ NULL, NULL, "42", "E230" }, "Image conversion error" },
+    {{ "33", "43", "43", "E231" }, "DTE to DCE data underflow" },
+    {{ NULL, NULL, "44", "E232" }, "Unrecognized Transparent data command" },
+    {{ NULL, NULL, "45", "E233" }, "Image error, line length wrong" },
+    {{ NULL, NULL, "46", "E234" }, "Image error, page length wrong" },
+    {{ NULL, NULL, "47", "E235" }, "Image error, wrong compression code" },
 // Transmit Phase D
-    {{ "40", "50", "50" }, "Unspecified Transmit Phase D error, including"
-			   " +FPHCTO timeout between data and +FET command" },
-    {{ "41", "51", "51" }, "RSPREC error/got DCN" },
-    {{ "42", "52", "52" }, "No response to MPS repeated 3 times" },
-    {{ "43", "53", "53" }, "Invalid response to MPS" },
-    {{ "44", "54", "54" }, "No response to EOP repeated 3 times" },
-    {{ "45", "55", "55" }, "Invalid response to EOP" },
-    {{ "46", "56", "56" }, "No response to EOM repeated 3 times" },
-    {{ "47", "57", "57" }, "Invalid response to EOM" },
-    {{ "48", "58", "58" }, "Unable to continue after PIN or PIP" },
+    {{ "40", "50", "50", "E236" }, "Unspecified Transmit Phase D error, including"
+				   " +FPHCTO timeout between data and +FET command" },
+    {{ "41", "51", "51", "E237" }, "RSPREC error/got DCN" },
+    {{ "42", "52", "52", "E238" }, "No response to MPS repeated 3 times" },
+    {{ "43", "53", "53", "E239" }, "Invalid response to MPS" },
+    {{ "44", "54", "54", "E240" }, "No response to EOP repeated 3 times" },
+    {{ "45", "55", "55", "E241" }, "Invalid response to EOP" },
+    {{ "46", "56", "56", "E242" }, "No response to EOM repeated 3 times" },
+    {{ "47", "57", "57", "E243" }, "Invalid response to EOM" },
+    {{ "48", "58", "58", "E244" }, "Unable to continue after PIN or PIP" },
 // Received Phase B
-    {{ "50", "70", "70" }, "Unspecified Receive Phase B error" },
-    {{ "51", "71", "71" }, "RSPREC error/got DCN" },
-    {{ "52", "72", "72" }, "COMREC error" },
-    {{ "53", "73", "73" }, "T.30 T2 timeout, expected page not received" },
-    {{ "54", "74", "74" }, "T.30 T1 timeout after EOM received" },
+    {{ "50", "70", "70", "E245" }, "Unspecified Receive Phase B error" },
+    {{ "51", "71", "71", "E246" }, "RSPREC error/got DCN" },
+    {{ "52", "72", "72", "E247" }, "COMREC error" },
+    {{ "53", "73", "73", "E248" }, "T.30 T2 timeout, expected page not received" },
+    {{ "54", "74", "74", "E249" }, "T.30 T1 timeout after EOM received" },
 // Receive Phase C
-    {{ "60", "90", "90" }, "Unspecified Phase C error, including too much delay"
-			   " between TCF and +FDR command" },
-    {{ "61", "91", "91" }, "Missing EOL after 5 seconds (section 3.2/T.4)" },
-    {{ "63", "93", "93" }, "DCE to DTE buffer overflow" },
-    {{ "64", "94", "92" }, "Bad CRC or frame (ECM or BFT modes)" },
+    {{ "60", "90", "90", "E250" }, "Unspecified Phase C error, including too much delay"
+				   " between TCF and +FDR command" },
+    {{ "61", "91", "91", "E251" }, "Missing EOL after 5 seconds (section 3.2/T.4)" },
+    {{ "63", "93", "93", "E252" }, "DCE to DTE buffer overflow" },
+    {{ "64", "94", "92", "E253" }, "Bad CRC or frame (ECM or BFT modes)" },
 // Receive Phase D
-    {{ "70","100", "A0" }, "Unspecified Phase D error" },
-    {{ "71","101", "A1" }, "RSPREC invalid response received" },
-    {{ "72","102", "A2" }, "COMREC invalid response received" },
-    {{ "73","103", "A3" }, "Unable to continue after PIN or PIP, no PRI-Q" },
+    {{ "70","100", "A0", "E254" }, "Unspecified Phase D error" },
+    {{ "71","101", "A1", "E255" }, "RSPREC invalid response received" },
+    {{ "72","102", "A2", "E256" }, "COMREC invalid response received" },
+    {{ "73","103", "A3", "E257" }, "Unable to continue after PIN or PIP, no PRI-Q" },
 // Agere proprietary error codes
-    {{ NULL, NULL, "E0" }, "Command or signal 10 sec. timeout" },
+    {{ NULL, NULL, "E0", "E258" }, "Command or signal 10 sec. timeout" },
 // Everex proprietary error codes (9/28/90)
-    {{ NULL,"128", NULL }, "Cannot send: +FMINSP > remote's +FDIS(BR) code" },
-    {{ NULL,"129", NULL }, "Cannot send: remote is V.29 only,"
-			   " local DCE constrained to 2400 or 4800 bps" },
-    {{ NULL,"130", NULL }, "Remote station cannot receive (DIS bit 10)" },
-    {{ NULL,"131", NULL }, "+FK aborted or <CAN> aborted" },
-    {{ NULL,"132", NULL }, "+Format conversion error in +FDT=DF,VR, WD,LN"
-			   " Incompatible and inconvertable data format" },
-    {{ NULL,"133", NULL }, "Remote cannot receive" },
-    {{ NULL,"134", NULL }, "After +FDR, DCE waited more than 30 seconds for"
-			   " XON from DTE after XOFF from DTE" },
-    {{ NULL,"135", NULL }, "In Polling Phase B, remote cannot be polled" },
+    {{ NULL,"128", NULL, "E259" }, "Cannot send: +FMINSP > remote's +FDIS(BR) code" },
+    {{ NULL,"129", NULL, "E260" }, "Cannot send: remote is V.29 only,"
+				   " local DCE constrained to 2400 or 4800 bps" },
+    {{ NULL,"130", NULL, "E261" }, "Remote station cannot receive (DIS bit 10)" },
+    {{ NULL,"131", NULL, "E262" }, "+FK aborted or <CAN> aborted" },
+    {{ NULL,"132", NULL, "E263" }, "+Format conversion error in +FDT=DF,VR, WD,LN"
+				   " Incompatible and inconvertable data format" },
+    {{ NULL,"133", NULL, "E264" }, "Remote cannot receive" },
+    {{ NULL,"134", NULL, "E265" }, "After +FDR, DCE waited more than 30 seconds for"
+				   " XON from DTE after XOFF from DTE" },
+    {{ NULL,"135", NULL, "E266" }, "In Polling Phase B, remote cannot be polled" },
 };
 #define	NCODES	(sizeof (hangupCodes) / sizeof (hangupCodes[0]))
 
@@ -822,14 +822,16 @@ static struct HangupCode {
  * be true.
  */
 const char*
-Class2Modem::hangupCause(const char* code)
+Class2Modem::hangupCause(const char* code, bool codetocode)
 {
     for (u_int i = 0; i < NCODES; i++) {
 	const HangupCode& c = hangupCodes[i];
 	if ((c.code[1] != NULL && strcasecmp(code, c.code[1]) == 0) ||
 	    (c.code[2] != NULL && strcasecmp(code, c.code[2]) == 0))
-	    return (c.message);
+	    if (codetocode) return (c.code[3]);
+	    else return (c.message);
     }
+    if (codetocode) return ("E210");
     return ("Unknown hangup code");
 }
 

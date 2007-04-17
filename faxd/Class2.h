@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 459 2007-03-06 21:53:41Z faxguy $ */
+/*	$Id: Class2.h 499 2007-04-18 00:55:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -69,7 +69,7 @@ protected:
     bool	useExtendedDF;		// if true, modem has T.32-A data format extension
     bool	useJP;			// if true, modem has JP +FCC parameter option
     char	recvDataTrigger;	// char to send to start recv'ing data
-    char	hangupCode[4];		// hangup reason (from modem)
+    char	hangupCode[5];		// hangup reason (from modem)
     bool	hadHangup;		// true if +FHNG:/+FHS: received
     fxStr	lid;			// prepared local identifier string
 
@@ -118,7 +118,7 @@ protected:
 // hangup processing
     void	processHangup(const char*);
     bool	isNormalHangup();
-    const char*	hangupCause(const char* code);
+    const char*	hangupCause(const char* code, bool codetocode = false);
     void	tracePPR(const char* dir, u_int ppr);
     void	tracePPM(const char* dir, u_int ppm);
 // class 2 command support routines
