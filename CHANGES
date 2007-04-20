@@ -1,6 +1,10 @@
-#	$Id: CHANGES 500 2007-04-18 05:26:49Z faxguy $	
+#	$Id: CHANGES 503 2007-04-20 18:34:15Z faxguy $	
 
 New Changes
+
+* fix variable timeouts in Class 1 from behaving badly (20 Apr 2007)
+
+(5.1.3)
 
 * socklen_t adjustments for HP-UX 11 (17 Apr 2007)
 * add errorcodes to all error status notices, put it into the q-file
