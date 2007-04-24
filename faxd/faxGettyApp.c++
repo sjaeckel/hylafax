@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 505 2007-04-25 04:29:26Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -461,11 +461,14 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
     if (callResolved) {
 	if (answerBias != (u_int) -1)
 	    answerRotor = answerBias;
-    } else if (advanceRotary) {
-	if (adaptiveAnswer)
-	    answerRotor = 0;
-	else
-	    answerRotor = (answerRotor+1) % answerRotorSize;
+    } else {
+	if (emsg.length()) traceProtocol((const char*) emsg);
+	if (advanceRotary) {
+	    if (adaptiveAnswer)
+		answerRotor = 0;
+	    else
+		answerRotor = (answerRotor+1) % answerRotorSize;
+	}
     }
     sendModemStatus("I");
     endSession();
@@ -546,7 +549,7 @@ faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, CallID& 
 	    if (ctype == ClassModem::CALLTYPE_DONE)	// NB: call completed
 		return (true);
 	    if (ctype != ClassModem::CALLTYPE_ERROR)
-		modemAnswerCall(ctype, emsg, dialnumber);
+		ctype = modemAnswerCall(ctype, emsg, dialnumber);
 	} else
 	    emsg = "External getty use is not permitted {E310}";
     } else
@@ -654,9 +657,9 @@ faxGettyApp::runGetty(
 	emsg = fxStr::format("%s: could not create {E311}", what);
 	return (ClassModem::CALLTYPE_ERROR);
     }
-    getty->setupArgv(args, 
-	callid.size() > CallID::NUMBER ? callid.id(CallID::NUMBER) : "",
-	callid.size() > CallID::NAME ?  callid.id(CallID::NAME) : "");
+
+    getty->setupArgv(args, callid);
+
     /*
      * The getty process should not inherit the lock file.
      * Remove it here before the fork so that our state is
