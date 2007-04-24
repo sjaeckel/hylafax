@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 503 2007-04-20 18:34:15Z faxguy $ */
+/*	$Id: Class1Recv.c++ 504 2007-04-25 04:26:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -602,7 +602,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			} while (!messageReceived && Sys::now() < (nocarrierstart + 5));
 			if (messageReceived)
 			    prevPage++;
-		        timer = curcap->br >=0 && curcap->br <= 14 ? 273066 / (curcap->br+1) : conf.t2Timer;	// wait longer for PPM (estimate 80KB)
+		        timer = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;	// wait longer for PPM (estimate 80KB)
 		    }
 		} else {
 		    if (wasTimeout()) {
@@ -610,7 +610,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			setTimeout(false);
 		    }
 		    bool getframe = false;
-		    long wait = curcap->br >=0 && curcap->br <= 14 ? 273066 / (curcap->br+1) : conf.t2Timer;
+		    long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
 		    if (rmResponse == AT_FRH3) getframe = waitFor(AT_CONNECT, 0);
 		    else if (rmResponse != AT_NOCARRIER && rmResponse != AT_ERROR) getframe = atCmd(rhCmd, AT_CONNECT, wait);	// wait longer
 		    if (getframe) {
@@ -1060,7 +1060,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			abortReceive();		// return to command mode
 			setTimeout(false);
 		    }
-		    long wait = curcap->br >=0 && curcap->br <= 14 ? 273066 / (curcap->br+1) : conf.t2Timer;
+		    long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
 		    if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, wait)) {	// wait longer
 			// sender is transmitting V.21 instead, we may have
 			// missed the first signal attempt, but should catch
@@ -1239,7 +1239,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    abortReceive();	// return to command mode
 					    setTimeout(false);
 					}
-					long wait = curcap->br >=0 && curcap->br <= 14 ? 273066 / (curcap->br+1) : conf.t2Timer;
+					long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
 					if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, wait)) {	// wait longer
 					    // simulate adaptive receive
 					    emsg = "";		// clear the failure
