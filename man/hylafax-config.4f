@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 496 2007-04-12 23:52:18Z faxguy $
+.\"	$Id: hylafax-config.4f 505 2007-04-25 04:29:26Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-04-12 16:52:18 -0700 (Thu, 12 Apr 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-04-24 21:29:26 -0700 (Tue, 24 Apr 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -143,6 +143,7 @@ DistinctiveRings	string	\-	configuration for distinctive ring cadences
 DRingOff	string	\-	distinctive ring ``off'' cadence indicator
 DRingOn	string	\-	distinctive ring ``on'' cadence indicator
 DynamicConfig	string	\-	script for dynamic receive configuration
+EGettyArgs	string	\-	arguments passed to external getty program
 FAXNumber	string	\-	facsimile modem phone number
 FaxRcvdCmd	string	\s-1bin/faxrcvd\s+1	notification script for received facsimile
 GettyArgs	string	\-	arguments passed to getty program
@@ -865,6 +866,54 @@ modem configurations for different senders.  This program can also set the
 options to cause the current call to be rejected instead of answered.
 Note that this file must be marked as executable by the faxgetty process.
 .TP
+.B EGettyArgs
+A string that indicates whether or not the server should use an
+an external getty application to deduce and possibly handle an incoming call.
+If the string value is not null, then it is interpreted
+as a set of arguments to pass to the getty program.
+Before supplying the arguments, the string is first scanned
+for ``%''-escape sequences: any appearance of ``%l'' is replaced
+with the tty name and any appearance of ``%s'' is replaced with
+the serial port speed (in decimal).
+Any appearance of escaped numbers 1 through 9 (``%1'' through ``%9'') are replaced
+by the match to the corresponding
+.BR CallIDPattern ,
+if present.
+The ``%'' character can be specified with ``%%''.
+If the
+.B EGettyArgs
+parameter is not specified in the configuration file or if
+the string value is null, then ``extern'' connections will be rejected.
+Note that in addition to the specified command line arguments, the
+external getty
+program is invoked with its standard input, output, and error
+descriptors directed to the controlling tty device.
+
+When the external getty application completes, its exit status is evaluated
+and is interpreted to indicate what, if anything, should be done with the call.
+An exit status of ``0'' indicates an unknown call type and that the call should
+be handled as if the external getty program had not been used.  An exit status 
+of ``1'' indicates a data connection and that the
+.IR getty (${MANNUM1_8})
+program should be used to handle the call if configured (see 
+.BR GettyArgs ),
+otherwise it will be answered with
+.B ModemAnswerDataCmd
+An exit status of ``2'' indicates a fax connection which should be answered by
+the modem with
+.BR ModemAnswerFaxCmd .
+An exit status of ``3'' indicates a voice call and 
+that the
+.I vgetty
+program should be used to handle the call if configured (see
+.BR VGettyArgs ),
+otherwise it will be answered with
+.BR ModemAnswerVoiceCmd .
+An exit status of ``4'' is considered to be an error condition.  The session
+will be terminated.  An exit status of ``5'' is used to indicate that the
+external getty program handled the call entirely, is not an error condition, and
+that the session is to be considered terminated.
+.TP
 .B FAXNumber
 The phone number associated with the facsimile modem.
 This string is used to generate the
@@ -985,6 +1034,10 @@ Before supplying the arguments, the string is first scanned
 for ``%''-escape sequences: any appearance of ``%l'' is replaced
 with the tty name and any appearance of ``%s'' is replaced with
 the serial port speed (in decimal).
+Any appearance of escaped numbers 1 through 9 (``%1'' through ``%9'') are replaced
+by the match to the corresponding
+.BR CallIDPattern ,
+if present.
 The ``%'' character can be specified with ``%%''.
 If the
 .B GettyArgs
@@ -1732,6 +1785,10 @@ Before supplying the arguments, the string is first scanned
 for ``%''-escape sequences: any appearance of ``%l'' is replaced
 with the tty name and any appearance of ``%s'' is replaced with
 the serial port speed (in decimal).
+Any appearance of escaped numbers 1 through 9 (``%1'' through ``%9'') are replaced
+by the match to the corresponding
+.BR CallIDPattern ,
+if present.
 The ``%'' character can be specified with ``%%''.
 If the
 .B VGettyArgs

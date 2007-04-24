@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 353 2006-10-31 22:00:28Z faxguy $ */
+/*	$Id: ClassModem.h 505 2007-04-25 04:29:26Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -109,7 +109,7 @@ public:
 	CALLTYPE_ERROR	= 4,	// error deducing type of incoming call
 	CALLTYPE_DONE	= 5	// subprocess completed call handling
     };
-    static const char* callTypes[5];
+    static const char* callTypes[6];
 
     enum {			// ClassModem::SpeakerVolume
 	OFF	= 0,		// nothing
@@ -156,10 +156,10 @@ public:
 	ANSTYPE_DATA	= 1,	// data call
 	ANSTYPE_FAX	= 2,	// fax call
 	ANSTYPE_VOICE	= 3,	// voice call
-	ANSTYPE_EXTERN	= 3,	// any kind of call, but answered externally
-	ANSTYPE_DIAL	= 4	// dial out to receive (pseudo poll)
+	ANSTYPE_DIAL	= 4,	// dial out to receive (pseudo poll)
+	ANSTYPE_EXTERN	= 5	// any kind of call, but answered externally
     };
-    static const char* answerTypes[5];
+    static const char* answerTypes[6];
 
     enum {			// ClassModem::ATResponse
 	AT_NOTHING	= 0,	// for passing as a parameter
