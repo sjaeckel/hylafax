@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 505 2007-04-25 04:29:26Z faxguy $
+.\"	$Id: hylafax-config.4f 506 2007-04-26 21:55:25Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-04-24 21:29:26 -0700 (Tue, 24 Apr 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-04-26 14:55:25 -0700 (Thu, 26 Apr 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -868,9 +868,9 @@ Note that this file must be marked as executable by the faxgetty process.
 .TP
 .B EGettyArgs
 A string that indicates whether or not the server should use an
-an external getty application to deduce and possibly handle an incoming call.
+an external getty application (egetty) to perhaps deduce and possibly handle an incoming call.
 If the string value is not null, then it is interpreted
-as a set of arguments to pass to the getty program.
+as a set of arguments to pass to egetty.
 Before supplying the arguments, the string is first scanned
 for ``%''-escape sequences: any appearance of ``%l'' is replaced
 with the tty name and any appearance of ``%s'' is replaced with
@@ -884,35 +884,53 @@ If the
 .B EGettyArgs
 parameter is not specified in the configuration file or if
 the string value is null, then ``extern'' connections will be rejected.
-Note that in addition to the specified command line arguments, the
-external getty
-program is invoked with its standard input, output, and error
+Note that in addition to the specified command line arguments, egetty 
+is invoked with its standard input, output, and error
 descriptors directed to the controlling tty device.
 
-When the external getty application completes, its exit status is evaluated
+When egetty completes, its exit status is evaluated
 and is interpreted to indicate what, if anything, should be done with the call.
 An exit status of ``0'' indicates an unknown call type and that the call should
-be handled as if the external getty program had not been used.  An exit status 
+be handled as if egetty had not been used.  An exit status 
 of ``1'' indicates a data connection and that the
 .IR getty (${MANNUM1_8})
 program should be used to handle the call if configured (see 
 .BR GettyArgs ),
-otherwise it will be answered with
-.B ModemAnswerDataCmd
-An exit status of ``2'' indicates a fax connection which should be answered by
-the modem with
-.BR ModemAnswerFaxCmd .
+otherwise it will assume that the call has been answered and that a data
+connection is established and that it should proceed by issuing
+.B ModemAnswerDataBeginCmd 
+(if configured) to the modem.
+An exit status of ``2'' indicates a fax connection is established and that it
+should proceed by issuing
+.B ModemAnswerFaxBeginCmd 
+(if configured) to the modem.
 An exit status of ``3'' indicates a voice call and 
 that the
 .I vgetty
 program should be used to handle the call if configured (see
 .BR VGettyArgs ),
-otherwise it will be answered with
-.BR ModemAnswerVoiceCmd .
+otherwise it will assume that the call has been answered and that a voice
+connection is established and that it should proceed by issuing
+.B ModemAnswerVoiceBeginCmd 
+(if configured) to the modem.
 An exit status of ``4'' is considered to be an error condition.  The session
-will be terminated.  An exit status of ``5'' is used to indicate that the
-external getty program handled the call entirely, is not an error condition, and
+will be terminated.  An exit status of ``5'' is used to indicate that 
+egetty handled the call entirely, is not an error condition, and
 that the session is to be considered terminated.
+Exit status values of ``11'', ``12'', and ``13'' correspond to values ``1'', 
+``2'', and ``3'' respectively except that values ``11'', ``12'', and ``13'' 
+indicate that the call has not been answered yet with a data, fax, or voice
+connection.  So if
+.B GettyArgs
+is not configured then
+.B ModemAnswerDataCmd
+is first issued to the modem for an exit status of ``11'', 
+.B ModemAnswerFaxCmd
+is first issued to the modem for an exit status of ``12'', and if
+.B VGettyArgs
+is not configured then
+.B ModemAnswerVoiceCmd
+is first issued to the modem for an exit status of ``13''.
 .TP
 .B FAXNumber
 The phone number associated with the facsimile modem.
