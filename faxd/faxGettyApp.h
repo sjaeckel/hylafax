@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.h 348 2006-10-28 19:26:48Z faxguy $ */
+/*	$Id: faxGettyApp.h 506 2007-04-26 21:55:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -109,7 +109,7 @@ private:
     bool	processCall(CallType ctype, fxStr& emsg, CallID& callid);
     CallType	runGetty(const char* what,
 		    Getty* (*newgetty)(const fxStr&, const fxStr&),
-		    const char* args, fxStr &emsg,
+		    const char* args, fxStr &emsg, int& status,
                     bool keepLock, const CallID& callid, 
 		    bool keepModem = false);
     void	setRingsBeforeAnswer(int rings);

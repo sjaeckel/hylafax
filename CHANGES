@@ -1,9 +1,9 @@
-#	$Id: CHANGES 505 2007-04-25 04:29:26Z faxguy $	
+#	$Id: CHANGES 506 2007-04-26 21:55:25Z faxguy $	
 
 New Changes
 
 * document EGettyArgs, document and enhance CallID support for gettys,
-  and fix issues with egetty usage (24 Apr 2007)
+  and fix issues with egetty usage (24, 26 Apr 2007)
 * fix variable timeouts in Class 1 from behaving badly (20 Apr 2007)
 
 (5.1.3)

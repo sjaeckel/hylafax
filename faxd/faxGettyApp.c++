@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 505 2007-04-25 04:29:26Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 506 2007-04-26 21:55:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -544,12 +544,19 @@ faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, CallID& 
 	     * If the call has not been handled in the subprocess
 	     * then we take action based on the returned call type.
 	     */
+	    int status;
 	    ctype = runGetty("EXTERN GETTY", OSnewEGetty,
-		egettyArgs, emsg, lockExternCalls, callid, true);
+		egettyArgs, emsg, status, lockExternCalls, callid, true);
 	    if (ctype == ClassModem::CALLTYPE_DONE)	// NB: call completed
 		return (true);
-	    if (ctype != ClassModem::CALLTYPE_ERROR)
-		ctype = modemAnswerCall(ctype, emsg, dialnumber);
+	    if (ctype != ClassModem::CALLTYPE_ERROR) {
+		status = (status >> 8) & 0xff;
+		if (status >= 11 && status <= 13) {
+		    /* status 11-13 signals that egetty did not determine the call type */
+		    ctype = modemAnswerCall(ctype, emsg, dialnumber);
+		} else
+		    modemAnswerCallCmd(ctype);
+	    }
 	} else
 	    emsg = "External getty use is not permitted {E310}";
     } else
@@ -609,7 +616,8 @@ faxGettyApp::processCall(CallType ctype, fxStr& emsg, CallID& callid)
 	traceServer("ANSWER: DATA CONNECTION");
 	if (gettyArgs != "") {
 	    sendModemStatus("d");
-	    runGetty("GETTY", OSnewGetty, gettyArgs, emsg, lockDataCalls, callid);
+	    int status;
+	    runGetty("GETTY", OSnewGetty, gettyArgs, emsg, status, lockDataCalls, callid);
 	    sendModemStatus("e");
 	} else
 	    traceServer("ANSWER: Data connections are not permitted");
@@ -619,7 +627,8 @@ faxGettyApp::processCall(CallType ctype, fxStr& emsg, CallID& callid)
 	traceServer("ANSWER: VOICE CONNECTION");
 	if (vgettyArgs != "") {
 	    sendModemStatus("v");
-	    runGetty("VGETTY", OSnewVGetty, vgettyArgs, emsg, lockVoiceCalls, callid);
+	    int status;
+	    runGetty("VGETTY", OSnewVGetty, vgettyArgs, emsg, status, lockVoiceCalls, callid);
 	    sendModemStatus("w");
 	} else
 	    traceServer("ANSWER: Voice connections are not permitted");
@@ -643,6 +652,7 @@ faxGettyApp::runGetty(
     Getty* (*newgetty)(const fxStr&, const fxStr&),
     const char* args,
     fxStr& emsg,
+    int& status,
     bool keepLock,
     const CallID& callid,
     bool keepModem
@@ -727,11 +737,10 @@ faxGettyApp::runGetty(
     if (!keepModem)
 	discardModem(false);
     changeState(GETTYWAIT);
-    int status;
     getty->wait(status, true);		// wait for getty/login work to complete
-    if ( status > 1280 ) { // codes returned larger than 1280 are undefined and must be an error    
+    if (status > 1280 && (status < 2816 || status > 3328)) { // these codes are undefined and must be an error    
+        emsg = fxStr::format("ERROR: Unknown status %#o {E313}", status);
         status = 1024;
-        emsg = "ERROR: Unknown status {E313}";
     }
     /*
      * Retake ownership of the modem.  Note that there's
@@ -750,7 +759,9 @@ faxGettyApp::runGetty(
     seteuid(euid);
     traceServer("%s: exit status %#o", what, status);
     delete getty;
-    return (CallType)((status >> 8) & 0xff);
+    int s = (status >> 8) & 0xff;
+    if (s >= 11 && s <= 13) s -= 10;	// status 11-13 have special meaning
+    return (CallType)(s);
 }
 
 /*

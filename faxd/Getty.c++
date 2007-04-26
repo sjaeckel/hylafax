@@ -1,4 +1,4 @@
-/*	$Id: Getty.c++ 505 2007-04-25 04:29:26Z faxguy $ */
+/*	$Id: Getty.c++ 506 2007-04-26 21:55:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -98,6 +98,20 @@ Getty::setupArgv(const char* args, const CallID& callid)
 	    argbuf.insert(speed, l);
 	    l += speed.length();	// avoid loops
 	    break;
+	case 'a':			// undocumented backwards compatibility, CIDName
+	    argbuf.remove(l-1,3);
+	    if (callid.size() > 1) {
+		argbuf.insert(callid.id(1), l);
+		l += callid.length(1);
+	    }
+	    break;
+	case 'u':			// undocumented backwards compatibility, CIDNumber
+	    argbuf.remove(l-1,3);
+	    if (callid.size()) {
+		argbuf.insert(callid.id(0), l);
+		l += callid.length(0);
+	    }
+	    break;            
 	case '1': case '2': case '3': case '4': case '5': 
 	case '6': case '7': case '8': case '9':
 	    {
