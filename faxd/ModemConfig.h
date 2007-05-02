@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 496 2007-04-12 23:52:18Z faxguy $ */
+/*	$Id: ModemConfig.h 507 2007-05-02 18:06:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -155,6 +155,7 @@ public:
     fxStr	class1EOPWaitCmd;	// cmd to stop and wait prior to EOP
     fxStr	class1SwitchingCmd;	// after recv HDLC and before sending
     fxStr	class1MsgRecvHackCmd;	// cmd to avoid +FCERROR before image
+    fxStr	class1TCFRecvHackCmd;	// cmd to avoid +FCERROR before TCF
     u_int	class1TCFRecvTimeout;	// timeout receiving TCF
     u_int	class1RecvAbortOK;	// if non-zero, OK sent after recv abort
     u_int	class1RMPersistence;	// how many times to persist through +FCERROR
@@ -171,7 +172,6 @@ public:
     bool	class1ColorJPEGSupport;	// Full-color JPEG support
     bool	class1ECMSupport;	// support T.30-A ECM
     bool	class1PersistentECM;	// continue to correct
-    bool	class1TCFRecvHack;	// deliberately look for V.21 disconnect
     bool	class1ValidateV21Frames;// check received FCS values in V.21
     bool	class1ModemHasDLEBug;;	// modem doesn't double-up DLEs in V.21
     bool	class1HasRHConnectBug;;	// modem reports CONNECT after +FRH=3 to non-V.21-HDLC data
