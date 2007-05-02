@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 507 2007-05-02 18:06:33Z faxguy $ */
+/*	$Id: ModemConfig.h 508 2007-05-03 00:27:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -171,6 +171,8 @@ public:
     bool	class1GreyJPEGSupport;	// Greyscale JPEG support
     bool	class1ColorJPEGSupport;	// Full-color JPEG support
     bool	class1ECMSupport;	// support T.30-A ECM
+    bool	class1MRSupport;	// support 2-D MR
+    bool	class1MMRSupport;	// support 2-D MMR
     bool	class1PersistentECM;	// continue to correct
     bool	class1ValidateV21Frames;// check received FCS values in V.21
     bool	class1ModemHasDLEBug;;	// modem doesn't double-up DLEs in V.21

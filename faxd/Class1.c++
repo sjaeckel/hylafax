@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: Class1.c++ 508 2007-05-03 00:27:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -182,7 +182,7 @@ Class1Modem::setupModem(bool isSend)
     }
     modemParams.wd = conf.class1PageWidthSupport;
     modemParams.ln = conf.class1PageLengthSupport;
-    modemParams.df = BIT(DF_1DMH) | BIT(DF_2DMR);
+    modemParams.df = BIT(DF_1DMH) | (conf.class1MRSupport ? BIT(DF_2DMR) : 0);
     modemParams.bf = BF_DISABLE;
     modemParams.st = ST_ALL;
     modemParams.jp = 0;
@@ -247,7 +247,7 @@ Class1Modem::pokeConfig(bool isSend)
     modemParams.vr = conf.class1Resolutions;	// bitmapped by configuration
     if (conf.class1ECMSupport) {
 	modemParams.ec = BIT(EC_DISABLE) | BIT(EC_ENABLE64) | BIT(EC_ENABLE256);
- 	modemParams.df |= BIT(DF_2DMMR);
+ 	modemParams.df |= (conf.class1MMRSupport ? BIT(DF_2DMMR) : 0);
 	switch (conf.class1JBIGSupport) {
 	    case FaxModem::JBIG_FULL:
 		jbigSupported = true; 

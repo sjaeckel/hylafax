@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 507 2007-05-02 18:06:33Z faxguy $ */
+/*	$Id: ModemConfig.c++ 508 2007-05-03 00:27:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -258,6 +258,8 @@ ModemConfig::setupConfig()
     class2UseLineCount	= false;		// don't trust firmware decoders
     class2JPEGSupport	= false;		// disable JPEG by default
     class1ECMSupport	= true;			// support for ECM
+    class1MRSupport	= true;			// support for 2-D MR
+    class1MMRSupport	= true;			// support for 2-D MMR
     class1GreyJPEGSupport = false;		// support for greyscale JPEG
     class1ColorJPEGSupport = false;		// support for full color JPEG
 #ifdef HAVE_JBIG
@@ -736,6 +738,10 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	class2SendRTC = getBoolean(value);
     else if (streq(tag, "class1ecmsupport"))
 	class1ECMSupport = getBoolean(value);
+    else if (streq(tag, "class1mrsupport"))
+	class1MRSupport = getBoolean(value);
+    else if (streq(tag, "class1mmrsupport"))
+	class1MMRSupport = getBoolean(value);
 #ifdef PHOTOMETRIC_ITULAB
     else if (streq(tag, "class1greyjpegsupport"))
 	class1GreyJPEGSupport = getBoolean(value);
