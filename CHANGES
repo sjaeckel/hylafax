@@ -1,7 +1,8 @@
-#	$Id: CHANGES 506 2007-04-26 21:55:25Z faxguy $	
+#	$Id: CHANGES 507 2007-05-02 18:06:33Z faxguy $	
 
 New Changes
 
+* change Class1TCFRecvHack to Class1TCFRecvHackCmd (2 May 2006)
 * document EGettyArgs, document and enhance CallID support for gettys,
   and fix issues with egetty usage (24, 26 Apr 2007)
 * fix variable timeouts in Class 1 from behaving badly (20 Apr 2007)

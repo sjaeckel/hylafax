@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 506 2007-04-26 21:55:25Z faxguy $
+.\"	$Id: hylafax-config.4f 507 2007-05-02 18:06:33Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-04-26 14:55:25 -0700 (Thu, 26 Apr 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-05-02 11:06:33 -0700 (Wed, 02 May 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -318,9 +318,9 @@ Class1TMQueryCmd	string	\s-1AT+FTM=?\s+1	Class 1/1.0: command to query modem dat
 Class1EOPWaitCmd	string	\s-1AT+FTS=9\s+1	Class 1/1.0: command to stop and wait before EOP
 Class1ModemHasDLEBug	boolean	\s-1No\s+1	Class 1/1.0: modem fails to double DLE in V.21
 Class1MsgRecvHackCmd	string	\s-1""\s+1	Class 1/1.0: command to avoid +FCERROR before image data
+Class1TCFRecvHackCmd	string	\s-1""\s+1	Class 1/1.0: command to avoid +FCERROR before TCF
 Class1TCFMaxNonZero	integer	\s-110\s+1	Class 1/1.0: max% of non-zero data in good \s-1TCF\s+1
 Class1TCFMinRun	integer	\s-11000\s+1	Class 1/1.0: minimum zero run in good \s-1TCF\s+1
-Class1TCFRecvHack	boolean	\s-1No\s+1	Class 1/1.0: deliberately look for carrier loss before TCF
 Class1TCFRecvTimeout	integer	\s-14500\s+1	Class 1/1.0: max wait (ms) for \s-1TCF\s+1
 Class1TMConnectDelay	integer	\s-10\s+1	Class 1/1.0: delay between +FTM CONNECT and data transmission
 Class1SwitchingCmd	string	\s-1AT+FRS=7\s+1	Class 1/1.0: command to ensure silence after HDLC reception
@@ -2705,10 +2705,11 @@ transmission of zero data (i.e. it should be between 0 and 1500).
 See also
 .BR Class1TCFMaxNonZero .
 .TP
-.B Class1TCFRecvHack
-Deliberately look for the low-speed carrier loss before
-switching to the high-speed TCF carrier.  Use this if session logs
-consistently show +FCERROR prior to TCF reception.
+.B Class1TCFRecvHackCmd
+If receive failures occur due to +FCERROR just prior to TCF data 
+reception, setting
+.B Class1TCFRecvHackCmd
+to AT+FRS=1 may help.
 .TP
 .B Class1TCFRecvTimeout
 The maximum time to wait, in milliseconds, for the first byte and

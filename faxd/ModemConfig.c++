@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 496 2007-04-12 23:52:18Z faxguy $ */
+/*	$Id: ModemConfig.c++ 507 2007-05-02 18:06:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -121,6 +121,7 @@ static struct {
 { "class1tmquerycmd",		&ModemConfig::class1TMQueryCmd,	"AT+FTM=?" },
 { "class1eopwaitcmd",		&ModemConfig::class1EOPWaitCmd,	"AT+FTS=9" },
 { "class1msgrecvhackcmd",	&ModemConfig::class1MsgRecvHackCmd, "" },
+{ "class1tcfrecvhackcmd",	&ModemConfig::class1TCFRecvHackCmd, "" },
 { "class1switchingcmd",		&ModemConfig::class1SwitchingCmd, "AT+FRS=7" },
 { "class2cmd",			&ModemConfig::class2Cmd },
 { "class2borcmd",		&ModemConfig::class2BORCmd },
@@ -274,7 +275,6 @@ ModemConfig::setupConfig()
 #endif
     class1Resolutions	= VR_ALL;		// resolutions support
     class1PersistentECM	= true;			// continue to correct
-    class1TCFRecvHack	= false;		// historical behavior
     class1ValidateV21Frames = false;		// assume the modem does this
     class1ModemHasDLEBug = false;		// otherwise we'd have trouble
     class1HasRHConnectBug = false;		// ideally we can trust the modem
@@ -752,8 +752,8 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	class1Resolutions = getBoolean(value) ? VR_ALL : (VR_NORMAL | VR_FINE);
     else if (streq(tag, "class1resolutions"))
 	class1Resolutions = getNumber(value);
-    else if (streq(tag, "class1tcfrecvhack"))
-	class1TCFRecvHack = getBoolean(value);
+    else if (streq(tag, "class1tcfrecvhack") && getBoolean(value))
+	class1TCFRecvHackCmd = "AT+FRS=1";	// backwards compatibility
     else if (streq(tag, "class1validatev21frames"))
 	class1ValidateV21Frames = getBoolean(value);
     else if (streq(tag, "class1modemhasdlebug"))
