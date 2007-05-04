@@ -1,4 +1,4 @@
-/*	$Id: Str.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Str.c++ 510 2007-05-04 22:34:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -407,6 +407,8 @@ void fxStr::operator=(const fxTempStr& s)
 
 void fxStr::operator=(const fxStr& s)
 {
+    if (data == s.data && slength == s.slength)
+	return;
     resizeInternal(s.slength-1);
     memcpy(data,s.data,s.slength);
     slength = s.slength;

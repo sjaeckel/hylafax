@@ -1,4 +1,4 @@
-/*	$Id: DestInfo.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: DestInfo.c++ 510 2007-05-04 22:34:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -45,7 +45,11 @@ DestInfo::DestInfo(const DestInfo& other)
     running = other.running;
 }
 
-DestInfo::~DestInfo() {}
+DestInfo::~DestInfo() 
+{
+    if (isOnList())
+	remove();
+}
 
 FaxMachineInfo&
 DestInfo::getInfo(const fxStr& number)

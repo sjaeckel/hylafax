@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 510 2007-05-04 22:34:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3700,5 +3700,9 @@ main(int argc, char** argv)
     app->close();
     delete app;
 
+
+    Modem::CLEANUP();
+    delete &Dispatcher::instance();
+    
     return 0;
 }
