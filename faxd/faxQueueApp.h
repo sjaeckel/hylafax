@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 374 2006-11-18 02:36:18Z faxguy $ */
+/*	$Id: faxQueueApp.h 512 2007-05-04 22:44:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -266,8 +266,11 @@ public:
 
     static faxQueueApp& instance();
 
+
     void	initialize(int argc, char** argv);
     void	open();
+
+    void	showDebugState();
 
     // NB: public for use by Modem class
     UUCPLock*	getUUCPLock(const fxStr& deviceName);
