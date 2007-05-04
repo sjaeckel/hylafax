@@ -1,7 +1,8 @@
-#	$Id: CHANGES 510 2007-05-04 22:34:36Z faxguy $	
+#	$Id: CHANGES 512 2007-05-04 22:44:58Z faxguy $	
 
 New Changes
 
+* add faxq 'Z' FIFO message for debugging use (4 May 2007)
 * make faxq squeaky clean with valgrind --tool=memcheck (4 May 2007)
 * tolerate non-zero data in TCF when we have an uninterrupted 1.5 
   seconds of zero data (4 May 2007)
