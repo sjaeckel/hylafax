@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 507 2007-05-02 18:06:33Z faxguy $ */
+/*	$Id: Class1Recv.c++ 509 2007-05-04 18:31:56Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -409,11 +409,12 @@ Class1Modem::recvTraining()
 	 * do is read the Eye Quality register (or similar)
 	 * and derive an indicator of the real S/N ratio.
 	 */
+	u_int fullrun = params.transferSize(TCF_DURATION);
 	u_int minrun = params.transferSize(conf.class1TCFMinRun);
 	nonzero = (100*nonzero) / (n == 0 ? 1 : n);
 	protoTrace("RECV: TCF %u bytes, %u%% non-zero, %u zero-run",
 	    n, nonzero, zerorun);
-	if (nonzero > conf.class1TCFMaxNonZero) {
+	if (zerorun < fullrun && nonzero > conf.class1TCFMaxNonZero) {
 	    protoTrace("RECV: reject TCF (too many non-zero, max %u%%)",
 		conf.class1TCFMaxNonZero);
 	    ok = false;
