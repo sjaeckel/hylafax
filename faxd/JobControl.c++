@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 389 2006-12-02 00:08:51Z faxguy $ */
+/*	$Id: JobControl.c++ 511 2007-05-04 22:39:50Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -82,9 +82,6 @@ JobControlInfo::JobControlInfo (const fxStr& buffer)
 }
 
 JobControlInfo::~JobControlInfo() {}
-
-// XXX can't sort
-int JobControlInfo::compare(const JobControlInfo*) const { return (0); }
 
 void
 JobControlInfo::configError (const char* fmt, ...)

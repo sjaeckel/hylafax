@@ -1,4 +1,4 @@
-/*	$Id: JobControl.h 389 2006-12-02 00:08:51Z faxguy $ */
+/*	$Id: JobControl.h 511 2007-05-04 22:39:50Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -66,8 +66,6 @@ public:
     JobControlInfo(const fxStr& buffer);
     JobControlInfo(const JobControlInfo& other);
     ~JobControlInfo();
-
-    int compare(const JobControlInfo*) const;
 
     u_int getMaxConcurrentCalls() const;
     u_int getMaxSendPages() const;
