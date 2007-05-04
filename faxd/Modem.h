@@ -1,4 +1,4 @@
-/*	$Id: Modem.h 323 2006-10-06 17:36:48Z faxguy $ */
+/*	$Id: Modem.h 510 2007-05-04 22:34:36Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -105,6 +105,8 @@ private:
 public:
     Modem(const fxStr& devid);
     virtual ~Modem();
+
+    static void CLEANUP (void);
 
     static Modem& getModemByID(const fxStr& id);
     static Modem* modemExists(const fxStr& id, bool notexempt = false);

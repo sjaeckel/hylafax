@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 323 2006-10-06 17:36:48Z faxguy $ */
+/*	$Id: Modem.c++ 510 2007-05-04 22:34:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -504,4 +504,20 @@ Modem::encode(fxStackBuffer& buf) const
     u_int ec = caps.encodeCaps();
     buf.put((const char*) &ec, sizeof (u_int));
     buf.put((const char*) &priority, sizeof (u_short));
+}
+
+
+void
+Modem::CLEANUP (void)
+{
+    ModemGroup::reset();
+    QLink* ql = list.next; 
+    while (ql != &list)
+    {
+	Modem* m = (Modem*)ql;
+	ql = ql->next;
+
+	delete m;
+    }
+
 }
