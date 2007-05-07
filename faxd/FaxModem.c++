@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: FaxModem.c++ 513 2007-05-07 18:23:00Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -614,8 +614,14 @@ FaxModem::traceFCF(const char* dir, u_int fcf)
 	case 0x00:
 	    fcfname = "NULL (more blocks, same page)";
 	    break;
+	case FCF_DIS:
+	    fcfname = "DIS (identification signal)";
+	    break;
 	case FCF_DCS:
 	    fcfname = "DCS (command signal)";
+	    break;
+	case FCF_CSI:
+	    fcfname = "CSI (called subscriber id)";
 	    break;
 	case FCF_TSI:
 	    fcfname = "TSI (sender id)";
