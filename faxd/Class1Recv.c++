@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 509 2007-05-04 18:31:56Z faxguy $ */
+/*	$Id: Class1Recv.c++ 513 2007-05-07 18:23:00Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -324,7 +324,11 @@ Class1Modem::recvDCSFrames(HDLCFrame& frame)
 	    processDCSFrame(frame);
 	    break;
 	}
-    } while (frame.moreFrames() && recvFrame(frame, FCF_RCVR, conf.t2Timer));
+	/*
+	 * Sometimes echo is bad enough that we hear ourselves.  So if we hear DIS, we're probably
+	 * hearing ourselves.  Just ignore it and listen again.
+	 */
+    } while ((frame.moreFrames() || frame.getFCF() == FCF_DIS) && recvFrame(frame, FCF_RCVR, conf.t2Timer));
     return (frame.isOK() && frame.getFCF() == FCF_DCS);
 }
 
