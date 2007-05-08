@@ -1,7 +1,9 @@
-#	$Id: CHANGES 513 2007-05-07 18:23:00Z faxguy $	
+#	$Id: CHANGES 514 2007-05-08 19:48:34Z faxguy $	
 
 New Changes
 
+* don't release a modem when job preparation fails and there are other
+  jobs in the batch needing the modem (8 May 2007)
 * ignore DIS when in Phase B receiving - it's likely echo (7 May 2007)
 * add faxq 'Z' FIFO message for debugging use (4 May 2007)
 * make faxq squeaky clean with valgrind --tool=memcheck (4 May 2007)
