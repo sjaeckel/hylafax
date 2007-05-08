@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 512 2007-05-04 22:44:58Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 514 2007-05-08 19:48:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -455,6 +455,14 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		    targetjob = job.bnext;
 		    processnext = true;
 		}
+		/*
+		 * If there are other jobs in the batch, we have to be
+		 * careful to *not* release the modem, otherwise faxq will
+		 * schedule new jobs on this modem while the rest of the jobs
+		 * in the batch are still using it.
+		 */
+		if (startsendjob || processnext)
+			job.modem = NULL;
 		if (status == Job::requeued) {
 		    if (job.isOnList()) job.remove();
 		    delayJob(job, *req, "Could not fork to prepare job for transmission {E340}",
