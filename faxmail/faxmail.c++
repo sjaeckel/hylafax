@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 492 2007-03-29 16:56:57Z faxguy $ */
+/*	$Id: faxmail.c++ 516 2007-05-09 19:41:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -56,7 +56,7 @@ MySendFaxClient::setup(bool b)
     resetConfig();
     readConfig(FAX_SYSCONF);
     readConfig(FAX_LIBDATA "/sendfax.conf");
-    // XXX should we read faxmail.conf also??
+    readConfig(FAX_LIBDATA "/faxmail.conf");
     readConfig(FAX_USERCONF);
     setVerbose(b);
     FaxClient::setVerbose(b);
