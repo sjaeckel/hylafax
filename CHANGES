@@ -1,7 +1,8 @@
-#	$Id: CHANGES 514 2007-05-08 19:48:34Z faxguy $	
+#	$Id: CHANGES 515 2007-05-09 18:48:54Z faxguy $	
 
 New Changes
 
+* improve handling of CRP when in Phase B receiving (9 May 2007)
 * don't release a modem when job preparation fails and there are other
   jobs in the batch needing the modem (8 May 2007)
 * ignore DIS when in Phase B receiving - it's likely echo (7 May 2007)
