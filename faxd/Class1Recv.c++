@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 513 2007-05-07 18:23:00Z faxguy $ */
+/*	$Id: Class1Recv.c++ 515 2007-05-09 18:48:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -215,13 +215,15 @@ Class1Modem::recvIdentification(
 				    emsg = "RSPREC error/got DCN (sender abort) {E103}";
 				    recvdDCN = true;
 				    return (false);
-				case FCF_CRP:
 				case FCF_MPS:
 				case FCF_EOP:
 				case FCF_EOM:
 				    if (!useV34 && !switchingPause(emsg)) return (false);
 				    transmitFrame(signalSent);
 				    traceFCF("RECV send", (u_char) signalSent[2]);
+				    break;
+				case FCF_CRP:
+				    /* do nothing here, just let us repeat NSF, CSI, DIS */
 				    break;
 				default:	// XXX DTC/DIS not handled
 				    emsg = "RSPREC invalid response received {E104}";
@@ -324,6 +326,7 @@ Class1Modem::recvDCSFrames(HDLCFrame& frame)
 	    processDCSFrame(frame);
 	    break;
 	}
+	traceFCF("RECV recv", frame.getFCF());
 	/*
 	 * Sometimes echo is bad enough that we hear ourselves.  So if we hear DIS, we're probably
 	 * hearing ourselves.  Just ignore it and listen again.
