@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 516 2007-05-09 19:41:03Z faxguy $ */
+/*	$Id: faxmail.c++ 517 2007-05-09 19:45:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -153,7 +153,7 @@ faxMailApp::run(int argc, char** argv)
 	case 'c':			// truncate lines
 	    setLineWrapping(false);
 	    break;
-	case 'C':			// truncate lines
+	case 'C':			// specify cover template to use
 	    coverTempl = optarg;
 	    break;
 	case 'd':			// enable direct delivery
@@ -865,11 +865,13 @@ faxMailApp::usage()
 {
     fxFatal("usage: faxmail"
 	" [-b boldfont]"
+	" [-C template]"
 	" [-H pageheight]"
 	" [-i italicfont]"
 	" [-f textfont]"
 	" [-p pointsize]"
 	" [-s pagesize]"
+	" [-t when]"
 	" [-W pagewidth]"
 	" [-M margins]"
 	" [-u user]"
