@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 517 2007-05-09 19:45:34Z faxguy $ */
+/*	$Id: faxmail.c++ 518 2007-05-11 03:28:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -80,6 +80,7 @@ private:
     fxStr	coverTempl;		// coverpage template file
     fxStr	mailUser;		// user ID for contacting server
     fxStr	notify;			// notification request
+    fxStr	tsi;			// user-specified TSI string
     bool	autoCoverPage;		// make cover page for direct delivery
     bool	formatEnvHeaders;	// format envelope headers
     bool	trimText;		// trim text parts
@@ -142,7 +143,7 @@ faxMailApp::run(int argc, char** argv)
     readConfig(FAX_USERCONF);
 
     bool deliver = false;
-    while ((c = Sys::getopt(argc, argv, "12b:cC:df:H:i:M:nNp:rRs:t:Tu:vW:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "12b:cC:df:H:i:M:nNp:rRs:S:t:Tu:vW:")) != -1)
 	switch (c) {
 	case '1': case '2':		// format in 1 or 2 columns
 	    setNumberOfColumns(c - '0');
@@ -189,6 +190,9 @@ faxMailApp::run(int argc, char** argv)
 	case 's':			// page size
 	    pageSize = optarg;
 	    setPageSize(pageSize);
+	    break;
+	case 'S':			// set TSI
+	    tsi = optarg;
 	    break;
 	case 't':			// job state notification request
 	    notify = optarg;
@@ -268,6 +272,10 @@ faxMailApp::run(int argc, char** argv)
 
 	if (notify != "") {
 	    job->setNotification((const char*) notify);
+	}
+
+	if (tsi != "") {
+	    job->setTSI((const char*) tsi);
 	}
 
 	/*
@@ -743,6 +751,7 @@ faxMailApp::setupConfig()
     pageSize = "";
     mailUser = "";			// default to real uid
     notify = "";
+    tsi = "";
     coverTempl = "";
     autoCoverPage = true;		// a la sendfax
     formatEnvHeaders = true;		// format envelope headers by default

@@ -1,4 +1,4 @@
-.\"	$Id: faxmail.1 516 2007-05-09 19:41:03Z faxguy $
+.\"	$Id: faxmail.1 518 2007-05-11 03:28:30Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -407,6 +407,10 @@ and
 Comparisons are case-insensitive and any match of a
 substring of the full page-size name is sufficient; e.g. ``legal'' would
 match ``American Legal''.
+.TP 10
+.BI \-S " tsi"
+Pass tsi to the server as the suggested sender identification to be
+used, for example, in tagline imaging and fax protocol.
 .TP 10
 .BI \-t " when"
 Notify the sender of job status according to
