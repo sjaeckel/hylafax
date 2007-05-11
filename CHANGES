@@ -1,6 +1,8 @@
-#	$Id: CHANGES 519 2007-05-11 03:31:59Z faxguy $	
+#	$Id: CHANGES 520 2007-05-11 18:22:34Z faxguy $	
 
 New Changes
+
+(5.1.4)
 
 * add faxmail -S tsi option (10 May 2007)
 * improve handling of CRP when in Phase B receiving (9 May 2007)
