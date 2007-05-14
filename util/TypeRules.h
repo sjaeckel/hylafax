@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.h 31 2005-12-21 01:17:11Z faxguy $ */
+/*	$Id: TypeRules.h 521 2007-05-14 18:07:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -139,6 +139,7 @@ private:
 	ASCII,		// ascii-only string
 	ASCIIESC,	// ascii-only string + escape char (iso-2022 variants)
 	STRING,		// byte string
+	ISTRING,	// case-insensitive string
 	ADDR,		// address of match
 	BYTE,		// 8 bits
 	SHORT,		// 16 bits
