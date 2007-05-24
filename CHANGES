@@ -1,6 +1,8 @@
-#	$Id: CHANGES 522 2007-05-14 18:22:42Z faxguy $	
+#	$Id: CHANGES 523 2007-05-24 18:36:31Z faxguy $	
 
 New Changes
+
+* make tiffcheck agree with faxsend on page length restrictions (24 May 2007)
 
 (5.1.4)
 
