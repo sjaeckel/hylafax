@@ -1,4 +1,4 @@
-.\"	$Id: faxrm.1 436 2007-02-13 05:15:07Z faxguy $
+.\"	$Id: faxrm.1 524 2007-05-25 23:42:40Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -36,6 +36,12 @@ faxrm \- remove a \*(Fx job or document from a server
 .B \-a
 ] [
 .B \-d
+] [
+.B \-p
+.I pass[:adminpass]
+] [
+.B \-u
+.I user
 ] [
 .B \-v
 ] [
@@ -113,6 +119,16 @@ per-user file and then in the system-wide file).
 If all of the above fails, then
 .I faxrm
 attempts to contact a server on the machine where it is run.
+.TP 10
+.BI \-p " pass:adminpass"
+The login password and optionally the associated admin password (separated by a colon).
+If no password is given then the user will be prompted if one is required.  If 
+.B \-a
+is used and no adminpass is given, then the user will be prompted for it.
+.TP 10
+.BI \-u " user"
+The login username to use in client-server communcation protocol.  If no user is given then
+the user will be prompted if one is required.
 .TP
 .B \-v
 Trace the protocol messages to and from the server.
