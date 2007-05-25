@@ -1,7 +1,8 @@
-#	$Id: CHANGES 523 2007-05-24 18:36:31Z faxguy $	
+#	$Id: CHANGES 524 2007-05-25 23:42:40Z faxguy $	
 
 New Changes
 
+* add -u (user) and -p (pass:admin) options to faxrm (25 May 2007)
 * make tiffcheck agree with faxsend on page length restrictions (24 May 2007)
 
 (5.1.4)

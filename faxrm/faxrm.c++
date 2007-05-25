@@ -1,4 +1,4 @@
-/*	$Id: faxrm.c++ 492 2007-03-29 16:56:57Z faxguy $ */
+/*	$Id: faxrm.c++ 524 2007-05-25 23:42:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -57,9 +57,12 @@ faxRmApp::run(int argc, char** argv)
     bool jobs = true;
     bool docs = false;
     bool useadmin = false;
+    char* pass = NULL;
+    char* adminpass = NULL;
+    char* user = NULL;
     int errcnt = 0; // count how many jobs couldn't be removed
 
-    while ((c = Sys::getopt(argc, argv, "ah:dv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "ah:dp:u:v")) != -1)
 	switch (c) {
 	case 'a':
 	    useadmin = true;
@@ -71,6 +74,19 @@ faxRmApp::run(int argc, char** argv)
 	case 'h':			// server's host
 	    setHost(optarg);
 	    break;
+        case 'p':			// password:adminpass
+	    {
+		char* pp = strchr(optarg, ':');
+		if (pp && *(pp + 1) != '\0') {
+		    *pp = '\0';
+		    adminpass = pp + 1;
+		}
+	    }
+	    pass = optarg;
+	    break;
+        case 'u':			// user
+	    user = optarg;
+	    break;
 	case 'v':
 	    setVerbose(true);
 	    break;
@@ -81,8 +97,8 @@ faxRmApp::run(int argc, char** argv)
 	usage();
     fxStr emsg;
     if (callServer(emsg)) {
-	if (login(NULL, NULL, emsg) &&
-	    (!useadmin || admin (NULL, emsg))) {
+	if (login(user, pass, emsg) &&
+	    (!useadmin || admin (adminpass, emsg))) {
 
 	    for (; optind < argc; optind++) {
 		const char* id = argv[optind];
@@ -139,7 +155,7 @@ faxRmApp::deleteDoc(const char* id)
 void
 faxRmApp::usage()
 {
-    fxFatal("usage: faxrm [-h server-host] [-adv] id...");
+    fxFatal("usage: faxrm [-h server-host] [-u user] [-p pass[:admin]] [-adv] id...");
 }
 
 int
