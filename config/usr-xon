@@ -1,4 +1,4 @@
-# $Id: usr-xon 8 2005-11-11 22:11:04Z faxguy $
+# $Id: usr-xon 527 2007-05-29 22:22:37Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -69,10 +69,6 @@ ModemRevQueryCmd:	ATI7		# XXX returns a multi-line result
 Class1NFLOCmd:		AT&H0&I0&R1	# setup modem for no flow control
 Class1HFLOCmd:		AT&H1&I0&R2	# setup modem for hardware flow control
 Class1SFLOCmd:		""		# modem does this automatically
-#
-# This should resolve "DIS/DTC received 3 times" errors:
-#
-Class1ResponseWaitCmd:	AT+FRS=1	# wait after sending TCF for response
 #
 # The remainder of this configuration is included so that the
 # modem "idles" in Class 0 while not sending or receiving facsimile.
