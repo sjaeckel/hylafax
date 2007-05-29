@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 514 2007-05-08 19:48:34Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 525 2007-05-29 21:58:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -283,6 +283,7 @@ faxQueueApp::processJob(Job& job, FaxRequest* req, DestInfo& di)
 	creq = cjob->breq;
 	njob = cjob->bnext;
 	cjob->commid = "";			// set on return
+	req->notice = "";			// Clear for new procssing
 	di.active(*cjob);
 	setActive(*cjob);			// place job on active list
 	updateRequest(*creq, *cjob);
