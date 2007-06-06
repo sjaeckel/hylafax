@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 508 2007-05-03 00:27:59Z faxguy $
+.\"	$Id: hylafax-config.4f 529 2007-06-06 21:42:08Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-05-02 17:27:59 -0700 (Wed, 02 May 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-06-06 14:42:08 -0700 (Wed, 06 Jun 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -220,6 +220,7 @@ TagLineFont	string	\-	tag line font filename
 TagLineFormat	string	\s-1\fIsee below\fP\s+1	tag line format string
 TIFF2FaxCmd¹	string	\s-1bin/tiff2fax\s+1	\s-1TIFF\s+1 converter command script
 TimeOfDay¹	string	\s-1Any\s+1	default time-of-day restrictions
+TSIRecvdCmd	string	\-	script executed after TSI receipt, can drop calls
 Use2D¹	boolean	\s-1Yes\s+1	restrict/permit use of 2D-encoded fax data
 UseJobTSI	boolean	\s-1No\s+1	use job-specified TSI instead of \s-1LocalIdentifier\s+1
 UseJobTagLine	boolean	\s-1Yes\s+1	Allow use of job-specified Tagline instead of \s-1TagLineFormat\s+1
@@ -1746,6 +1747,24 @@ tokens but may not be inserted between 24-hour times in the time range.
 This value may be overridden by rules in the
 .B JobControl
 mechanism.
+.TP
+.B TSIRecvdCmd
+The pathname of the optional program, e.g. ``etc/tsirecvd'', that similar 
+to
+.B DynamicConfig
+can set the
+.BR RejectCall
+option to cause the current call to be rejected instead of continued.
+.B TSIRecvdCmd
+should provide a more capable mechanism than
+.B QualifyTSI
+for those wishing to screen calls based on received TSI.
+Note that this file must be marked as executable by the faxgetty process.
+Note also that any configuration modifications made by the
+.B TSIRecvdCmd
+script other than
+.BR RejectCall
+is unsupported and has undefined results.
 .TP
 .B Use2D¹
 Control the use of 2D-encoded data for transmitted facsimile.

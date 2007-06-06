@@ -1,4 +1,4 @@
-/*	$Id: FaxServer.h 389 2006-12-02 00:08:51Z faxguy $ */
+/*	$Id: FaxServer.h 529 2007-06-06 21:42:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -115,6 +115,7 @@ protected:
     virtual void notifyPageRecvd(TIFF* tif, FaxRecvInfo&, int ppm);
     virtual void notifyDocumentRecvd(FaxRecvInfo& req);
     virtual void notifyRecvDone(FaxRecvInfo& req);
+    virtual bool processTSIRecvdCmd(FaxRecvInfo&, fxStr&);
 public:
     virtual ~FaxServer();
 

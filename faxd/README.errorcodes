@@ -157,9 +157,9 @@ E301      : Receive aborted due to operator intervention
 E302      : Problem reading document directory
 E303      : Internal botch; %s post-page handling string "%s"
 E304      : Maximum receive page count exceeded, call terminated
-E305      : Could not fork for local ID.
+E305      : Could not fork for scripted configuration.
 E306      : Bad exit status %#o for '%s'
-E307      : Could not open a pipe for local ID.
+E307      : Could not open a pipe for scripted configuration.
 E308      : ANSWER: CALL REJECTED
 E309      : ANSWER: Call deduced as %s, but told to answer as %s; call ignored
 E310      : External getty use is not permitted {E310}
