@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.h 506 2007-04-26 21:55:25Z faxguy $ */
+/*	$Id: faxGettyApp.h 529 2007-06-06 21:42:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -81,6 +81,7 @@ private:
     AnswerType	answerRotary[3];	// rotary selection of answer types
     fxStr	faxRcvdCmd;		// fax received command
     fxStr	dynamicConfig;		// command to dynamically alter configuration
+    fxStr	tsiRecvdCmd;		// command to check TSI
     u_int	modemPriority;		// modem priority passed to faxq
     bool	logCalls;		// Log all calls for FaxAcctInfo
     bool	rejectCall;
@@ -123,6 +124,7 @@ private:
     friend void AnswerTimeoutHandler::timerExpired(long, long);
 // miscellaneous stuff
     bool	sendModemStatus(const char* msg);
+    void	scriptedConfig(fxStr& cmd, fxStr& emsg);
 // FIFO-related stuff
     void	openFIFOs();
     void	closeFIFOs();
@@ -136,6 +138,7 @@ private:
     void	notifyPageRecvd(TIFF* tif, FaxRecvInfo&, int ppm);
     void	notifyDocumentRecvd(FaxRecvInfo&);
     void	notifyRecvDone(FaxRecvInfo&);
+    bool	processTSIRecvdCmd(FaxRecvInfo&, fxStr&);
 public:
     faxGettyApp(const fxStr& device, const fxStr& devID);
     ~faxGettyApp();

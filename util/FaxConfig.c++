@@ -1,4 +1,4 @@
-/*	$Id: FaxConfig.c++ 526 2007-05-29 22:19:26Z faxguy $ */
+/*	$Id: FaxConfig.c++ 529 2007-06-06 21:42:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -59,8 +59,7 @@ FaxConfig::readConfig(const fxStr& filename)
 	    (void) readConfigItem(line);
 	}
 	fclose(fd);
-    } else
-	configError("Could not read config file %s", (const char*) filename);
+    }
 }
 void FaxConfig::resetConfig() { lineno = 0; }
 

@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 506 2007-04-26 21:55:25Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 529 2007-06-06 21:42:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -292,6 +292,53 @@ faxGettyApp::answerPhoneCmd(AnswerType atype, const char* dialnumber)
     }
 }
 
+void
+faxGettyApp::scriptedConfig(fxStr& cmd, fxStr& emsg)
+{
+    int pipefd[2], status;
+    char line[1024];
+    if (pipe(pipefd) == 0) {
+	pid_t pid = fork();
+	switch (pid) {
+	    case -1:
+		emsg = "Could not fork for scripted configuration. {E305}";
+		logError("%s", (const char*)emsg);
+		Sys::close(pipefd[0]);
+		Sys::close(pipefd[1]);
+		break;
+	    case  0:
+		dup2(pipefd[1], STDOUT_FILENO);
+		Sys::close(pipefd[0]);
+		Sys::close(pipefd[1]);
+		execl("/bin/sh", "sh", "-c", (const char*) cmd, (char*) NULL);
+		sleep(1);
+		_exit(1);
+	    default:
+		Sys::close(pipefd[1]);
+		{
+		    FILE* fd = fdopen(pipefd[0], "r");
+		    while (fgets(line, sizeof (line)-1, fd)) {
+			line[strlen(line)-1]='\0';		// Nuke \n at end of line
+			(void) readConfigItem(line);
+		    }
+		    Sys::waitpid(pid, status);
+		    if (status != 0) {
+			emsg = fxStr::format("Bad exit status %#o for \'%s\' {E306}", status, (const char*) cmd);
+			logError("%s", (const char*)emsg);
+		    }
+		    // modem settings may have changed...
+		    FaxModem* modem = (FaxModem*) ModemServer::getModem();
+		    modem->pokeConfig(false);
+		}
+		Sys::close(pipefd[0]);
+		break;
+	}
+    } else {
+	emsg = "Could not open a pipe for scripted configuration. {E307}";
+	logError("%s", (const char*) emsg);
+    }
+}
+
 /*
  * Answer the telephone in response to data from the modem
  * (e.g. a "RING" message) or an explicit command from the
@@ -355,49 +402,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
     if (dynamicConfig.length()) {
 	fxStr cmd(dynamicConfig | quote | quoted(getModemDevice()) | enquote | callid_formatted);
 	traceServer("DynamicConfig: %s", (const char*)cmd);
-	fxStr localid = "";
-	int pipefd[2], status;
-	char line[1024];
-	if (pipe(pipefd) == 0) {
-	    pid_t pid = fork();
-	    switch (pid) {
-		case -1:
-		    emsg = "Could not fork for local ID. {E305}";
-		    logError("%s", (const char*)emsg);
-		    Sys::close(pipefd[0]);
-		    Sys::close(pipefd[1]);
-		    break;
-		case  0:
-		    dup2(pipefd[1], STDOUT_FILENO);
-		    Sys::close(pipefd[0]);
-		    Sys::close(pipefd[1]);
-		    execl("/bin/sh", "sh", "-c", (const char*) cmd, (char*) NULL);
-		    sleep(1);
-		    _exit(1);
-		default:
-		    Sys::close(pipefd[1]);
-		    {
-			FILE* fd = fdopen(pipefd[0], "r");
-			while (fgets(line, sizeof (line)-1, fd)) {
-			    line[strlen(line)-1]='\0';		// Nuke \n at end of line
-			    (void) readConfigItem(line);
-			}
-			Sys::waitpid(pid, status);
-			if (status != 0) {
-			    emsg = fxStr::format("Bad exit status %#o for \'%s\' {E306}", status, (const char*) cmd);
-			    logError("%s", (const char*)emsg);
-			}
-			// modem settings may have changed...
-			FaxModem* modem = (FaxModem*) ModemServer::getModem();
-			modem->pokeConfig(false);
-		    }
-		    Sys::close(pipefd[0]);
-		    break;
-	    }
-	} else {
-	    emsg = "Could not open a pipe for local ID. {E307}";
-	    logError("%s", (const char*) emsg);
-	}
+	scriptedConfig(cmd, emsg);
     }
 
     if (rejectCall)
@@ -841,6 +846,30 @@ faxGettyApp::notifyPageRecvd(TIFF* tif, FaxRecvInfo& ri, int ppm)
     // XXX fill in
 }
 
+bool
+faxGettyApp::processTSIRecvdCmd(FaxRecvInfo& ri, fxStr& emsg)
+{
+    rejectCall = false;
+    if (tsiRecvdCmd.length()) {
+	fxStr callid_formatted;
+	for (u_int i = 0; i < ri.callid.size(); i++) {
+	    callid_formatted.append(quote | quoted(ri.callid.id(i)) | enquote);
+	}
+	fxStr cmd(tsiRecvdCmd
+		| quote |           quoted(ri.qfile) | enquote
+		| quote | quoted(getModemDeviceID()) | enquote
+		| quote |          quoted(ri.commid) | enquote
+		| quote |          quoted(ri.sender) | enquote
+		| quote |         quoted(ri.subaddr) | enquote
+		| quote |          quoted(ri.passwd) | enquote
+		| callid_formatted);
+	traceServer("RECV FAX: %s", (const char*) cmd);
+	scriptedConfig(cmd, emsg);
+	if (rejectCall) emsg = "Permission denied (TSIRecvdCmd rejected call)";
+    }
+    return (!rejectCall);
+}
+
 /*
  * Handle notification that a document has been received.
  */
@@ -1034,6 +1063,7 @@ faxGettyApp::stringtag faxGettyApp::strings[] = {
 { "vgettyargs",		&faxGettyApp::vgettyArgs },
 { "egettyargs",		&faxGettyApp::egettyArgs },
 { "faxrcvdcmd",		&faxGettyApp::faxRcvdCmd,	FAX_FAXRCVDCMD },
+{ "tsirecvdcmd",	&faxGettyApp::tsiRecvdCmd },
 { "dynamicconfig",	&faxGettyApp::dynamicConfig },
 };
 faxGettyApp::numbertag faxGettyApp::numbers[] = {
