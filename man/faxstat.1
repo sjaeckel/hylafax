@@ -1,4 +1,4 @@
-.\"	$Id: faxstat.1 425 2007-01-29 23:55:22Z faxguy $
+.\"	$Id: faxstat.1 530 2007-06-11 23:50:23Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -153,6 +153,12 @@ Display times and dates in the local timezone of the server.
 .TP 10
 .B \-n
 Supress the display of server and modem status.
+.TP 10
+.BI \-o " login"
+Specify the fax owner login name.  If unspecified, the user's
+current login name is used.  The login password may also
+be provided by separating it from the owner login name with
+a colon, like ``owner:pass''.
 .TP 10
 .B \-q
 Display the sequence numbers of the \*(Fx queues.
