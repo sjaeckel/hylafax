@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 492 2007-03-29 16:56:57Z faxguy $ */
+/*	$Id: faxstat.c++ 530 2007-06-11 23:50:23Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -58,12 +58,15 @@ faxStatApp::run(int argc, char** argv)
     readConfig(FAX_SYSCONF);
     readConfig(FAX_USERCONF);
 
+    char *owner = NULL;
+    char *pass = NULL;
+
     fxStrArray dirs;
     bool checkInfo = false;
     bool checkStatus = true;
     bool showSeqfs = false;
     int c;
-    while ((c = Sys::getopt(argc, argv, "h:adgfilnqrsv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "h:adgfilno:qrsv")) != -1)
 	switch (c) {
 	case 'a':			// display archived jobs
 	    dirs.append(FAX_ARCHDIR);
@@ -89,6 +92,16 @@ faxStatApp::run(int argc, char** argv)
 	case 'n':			// do not display server status
 	    checkStatus = false;
 	    break;
+	case 'o':			// specify owner:pass
+	    {
+		char* pp = strchr(optarg, ':');
+ 		if (pp && *(pp + 1) != '\0') {
+		    *pp = '\0';
+		    pass = pp + 1;
+		}
+	    }
+	    owner = optarg;
+	    break;
 	case 'q':			// display sequence numbers
 	    showSeqfs = true;
 	    break;
@@ -102,12 +115,12 @@ faxStatApp::run(int argc, char** argv)
 	    setVerbose(true);
 	    break;
 	case '?':
-	    fxFatal("usage: faxstat [-h server-host] [-adfgilnrsv]");
+	    fxFatal("usage: faxstat [-h server-host] [-adfgilnrsv] [-o login]");
 	}
     if (checkStatus) dirs.insert(FAX_STATUSDIR, 0);	// server status
     fxStr emsg;
     if (callServer(emsg)) {
-	if (login(NULL, NULL, emsg)) {
+	if (login(owner, pass, emsg)) {
 	    if (checkInfo)
 		(void) recvData(writeStdout, 0, emsg, 0,
 		    "RETR " FAX_STATUSDIR "/any." FAX_INFOSUF);
