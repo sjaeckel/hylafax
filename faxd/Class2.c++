@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: Class2.c++ 531 2007-06-14 16:58:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -441,6 +441,8 @@ Class2Modem::parseClass2Capabilities(const char* cap, Class2Params& params, bool
 		if (dfscan & 0x4) params.df |= BIT(DF_JBIG);	// JBIG L0 is JBIG to us
 		if (dfscan & 0x8) params.df |= BIT(DF_JBIG);
 	    } else {
+		// Dex 855 is known to indicate MMR in addition to JBIG when sending JBIG (0x7).
+		// Thus only interpret DF=MMR when 0x3.
 		params.df = DF_1DMH;
 		if (dfscan == 0x3) params.df = DF_2DMMR;
 		else if (dfscan & 0x1) params.df = DF_2DMR;

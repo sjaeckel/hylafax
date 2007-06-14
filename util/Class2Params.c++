@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++ 457 2007-03-06 01:49:07Z faxguy $ */
+/*	$Id: Class2Params.c++ 531 2007-06-14 16:58:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -296,6 +296,7 @@ Class2Params::setFromDCS(FaxParams& dcs_caps)
 	wd = WD_A4;
 	ln = LN_INF;
     }
+    // Dex 855 sets MMR when also indicating JBIG.  We deliberately let JBIG override.
     if (dcs_caps.isBitEnabled(FaxParams::BITNUM_JBIG_BASIC)) df = DF_JBIG;
     if (dcs_caps.isBitEnabled(FaxParams::BITNUM_JBIG_L0)) df = DF_JBIG;
     if (dcs_caps.isBitEnabled(FaxParams::BITNUM_JPEG)) jp = JP_GREY;
