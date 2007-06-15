@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 518 2007-05-11 03:28:30Z faxguy $ */
+/*	$Id: faxmail.c++ 533 2007-06-15 22:53:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -137,6 +137,8 @@ faxMailApp::run(int argc, char** argv)
     extern char* optarg;
     int c;
 
+    const char* mailPass = NULL;
+
     resetConfig();
     readConfig(FAX_SYSCONF);
     readConfig(FAX_LIBDATA "/faxmail.conf");
@@ -201,6 +203,13 @@ faxMailApp::run(int argc, char** argv)
 	    trimText = true;
 	    break;
 	case 'u':			// mail/login user
+	    {
+		char* pp = strchr(optarg, ':');
+		if (pp && *(pp + 1) != '\0') {
+		    *pp = '\0';
+		    mailPass = pp + 1;
+		}
+	    }
 	    mailUser = optarg;
 	    break;
 	case 'W':			// page width
@@ -384,7 +393,7 @@ faxMailApp::run(int argc, char** argv)
 	if (user[0] == '\0')		// null user =>'s use real uid
 	    user = NULL;
 	if (client->callServer(emsg)) {
-	    status = client->login(user, NULL, emsg)
+	    status = client->login(user, mailPass, emsg)
 		  && client->prepareForJobSubmissions(emsg)
 		  && client->submitJobs(emsg);
 	    client->hangupServer();
