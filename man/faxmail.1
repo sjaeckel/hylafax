@@ -1,4 +1,4 @@
-.\"	$Id: faxmail.1 518 2007-05-11 03:28:30Z faxguy $
+.\"	$Id: faxmail.1 533 2007-06-15 22:53:27Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -427,6 +427,9 @@ configuration parameter (see below).
 If a null user name is specified, then
 the facsimile will be submitted using the identity of the user that invoked
 .IR faxmail .
+On the command-line, the login password may also
+be provided by separating it from the owner login name with
+a colon, like ``owner:pass''.
 .TP 10
 .B \-v
 Enable tracing of envelope,
