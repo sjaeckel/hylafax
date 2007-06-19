@@ -1,4 +1,4 @@
-# $Id: digi-2 2 2005-11-11 21:32:03Z faxguy $
+# $Id: digi-2 535 2007-06-19 16:14:05Z faxguy $
 #
 # prototype config for Digi AccelePort RAS
 # It uses a K56 chip, but is similar in behavior to Lucents.
@@ -28,5 +28,5 @@ Class2APQueryCmd:	none		# not available
 # CallIDPattern:	"NMBR="
 # CallIDPattern:	"NAME="
 
-# unfortunately, HylaFAX can't currently receive in MMR
-ModemAnswerCmd:		AT+FCC=,,,,1;A
+# MMR is problematic for the Digis.
+Class2DCCQueryCmd: "!(0-1),(0-5),(0-2),(0-2),(0-1),(0-1),0,(0-7)"
