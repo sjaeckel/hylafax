@@ -1,7 +1,8 @@
-#	$Id: CHANGES 533 2007-06-15 22:53:27Z faxguy $	
+#	$Id: CHANGES 534 2007-06-19 16:09:58Z faxguy $	
 
 New Changes
 
+* account (xferfaxlog, FaxAccounting) for killed jobs as well (19 Jun 2007)
 * add password option to faxmail -u parameter (15 Jun 2007)
 * add -o login option to faxstat (11 Jun 2007)
 * add TSIRecvdCmd feature to screen calls based on TSI (6 Jun 2007)
