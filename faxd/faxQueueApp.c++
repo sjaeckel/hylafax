@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 525 2007-05-29 21:58:27Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 534 2007-06-19 16:09:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2043,6 +2043,7 @@ faxQueueApp::terminateJob(const fxStr& jobid, JobStatus why)
 	Trigger::post(Trigger::JOB_KILL, *job);
 	FaxRequest* req = readRequest(*job);
 	if (req) {
+	    queueAccounting(*job, *req, "KILLED");
 	    req->notice = "Job aborted by request {E345}";
 	    deleteRequest(*job, req, why, why != Job::removed);
 	}
@@ -2128,6 +2129,8 @@ faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
     }
     if (strstr(type, "UNSENT"))
 	ai.status = "Kill time expired";
+    else if (strstr(type, "KILLED"))
+	ai.status = "Killed";
     else if (strstr(type, "SUBMIT"))
 	ai.status = "Submitted";
     CallID empty_callid;
