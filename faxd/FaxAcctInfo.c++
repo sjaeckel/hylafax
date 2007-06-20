@@ -1,4 +1,4 @@
-/*	$Id: FaxAcctInfo.c++ 344 2006-10-25 19:55:51Z faxguy $ */
+/*	$Id: FaxAcctInfo.c++ 536 2007-06-21 02:13:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -41,14 +41,14 @@ FaxAcctInfo::record(const char* cmd)
     bool ok = false;
     int fd = Sys::open(FAX_XFERLOG, O_RDWR|O_CREAT|O_APPEND, 0644);
 
-    char timebuf[80];
-    strftime(timebuf, sizeof (timebuf), "%D %H:%M", localtime(&start));
+    char* timebuf = (char*) malloc(80);
+    strftime(timebuf, 79, "%D %H:%M", localtime(&start));
 
-    char jobtagbuf[80];
+    char* jobtagbuf = (char*) malloc(80);
     u_int i = 0;
     char c;
     for (const char* cp = jobtag; (c = *cp); cp++) {
-	if (i == sizeof (jobtagbuf)-2)		// truncate string
+	if (i == 79)				// truncate string
 	    break;
 	if (c == '\t')				// tabs are field delimiters
 	    c = ' ';
