@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 494 2007-04-06 22:46:40Z faxguy $ */
+/*	$Id: faxalter.c++ 538 2007-06-22 00:27:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -95,9 +95,12 @@ faxAlterApp::run(int argc, char** argv)
     struct tm when;
     bool useadmin = false;
     bool resubmit = false;
+    char *owner = NULL;
+    char *pass = NULL;
+    char *adminpass = NULL;
 
     int c, rc = 0;
-    while ((c = Sys::getopt(argc, argv, "a:C:d:h:k:m:n:P:t:ADQRgprv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "a:C:d:h:k:m:n:P:t:u:U:ADQRgprv")) != -1)
 	switch (c) {
 	case 'A':			// connect with administrative privileges
 	    useadmin = true;
@@ -221,6 +224,19 @@ faxAlterApp::run(int argc, char** argv)
 	    script.append(optarg);
             script.append("\n");
 	    break;
+	case 'u':			// specify login
+	    owner = optarg;
+	    break;
+	case 'U':			// specify pass:adminpass
+	    {
+		char* pp = strchr(optarg, ':');
+		if (pp && *(pp + 1) != '\0') {
+		    *pp = '\0';
+		    adminpass = pp + 1;
+		}
+	    }
+	    pass = optarg;
+	    break;
 	case 'v':			// trace protocol
 	    setVerbose(true);
 	    break;
@@ -232,8 +248,8 @@ faxAlterApp::run(int argc, char** argv)
     if (script == "" && !resubmit)
 	fxFatal("No job parameters specified for alteration.");
     if (callServer(emsg)) {
-	if (login(NULL, NULL, emsg) &&
-	    (!useadmin || admin(NULL, emsg))) {
+	if (login(owner, pass, emsg) &&
+	    (!useadmin || admin(adminpass, emsg))) {
 	    for (; optind < argc; optind++) {
 		const char* jobid = argv[optind];
 		if (setCurrentJob(jobid)) {
@@ -299,6 +315,8 @@ faxAlterApp::usage()
       " [-n notify]"
       " [-P priority]"
       " [-t tries]"
+      " [-u user]"
+      " [-U pass[:adminpass]]"
       " [-A]"
       " [-g]"
       " [-p]"

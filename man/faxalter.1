@@ -1,4 +1,4 @@
-.\"	$Id: faxalter.1 494 2007-04-06 22:46:40Z faxguy $
+.\"	$Id: faxalter.1 538 2007-06-22 00:27:55Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -163,6 +163,12 @@ respectively.
 One can also leave off ``\fIwhen\fP'' when using the
 .B \-n
 option; e.g., ``\fIdone\fP'' instead of ``\fIwhen done\fP''.
+.TP 10
+.BI \-u " user"
+Specify the login user name.
+.TP 10
+.BI \-U " pass:adminpass"
+Specify the login password and optionally the admin password preceded by a colon.
 .TP 10
 .B \-v
 Trace the protocol exchanges between
