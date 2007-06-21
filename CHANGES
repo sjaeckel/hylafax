@@ -1,7 +1,8 @@
-#	$Id: CHANGES 537 2007-06-21 23:36:39Z faxguy $	
+#	$Id: CHANGES 538 2007-06-22 00:27:55Z faxguy $	
 
 New Changes
 
+* add -u (user) and -U (pass:admin) options to faxalter (21 Jun 2007)
 * allow FAXUSER to be set to a non-system account name (21 Jun 2007)
 * account (xferfaxlog, FaxAccounting) for killed jobs as well (19 Jun 2007)
 * add password option to faxmail -u parameter (15 Jun 2007)
