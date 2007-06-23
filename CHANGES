@@ -1,6 +1,10 @@
-#	$Id: CHANGES 538 2007-06-22 00:27:55Z faxguy $	
+#	$Id: CHANGES 540 2007-06-23 16:14:38Z faxguy $	
 
 New Changes
+
+* fix Class 2 EOFB bit order when ModemSendFillOrder is LSB2MSB (23 Jun 2007)
+
+(5.1.5)
 
 * add -u (user) and -U (pass:admin) options to faxalter (21 Jun 2007)
 * allow FAXUSER to be set to a non-system account name (21 Jun 2007)

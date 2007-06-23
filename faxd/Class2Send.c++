@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: Class2Send.c++ 540 2007-06-23 16:14:38Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -497,8 +497,10 @@ Class2Modem::sendPageData(TIFF* tif, u_int pageChop)
         /*
          * correct broken Phase C (T.4/T.6) data if necessary
          */
-        if (params.df <= DF_2DMMR)
+        if (params.df <= DF_2DMMR) {
 	    lastByte = correctPhaseCData(dp, &totdata, fillorder, (conf.class2RTFCC ? params : newparams), rows);
+	    lastByte = bitrev[lastByte];
+	}
 
 	beginTimedTransfer();
 	rc = putModemDLEData(dp, (u_int) totdata, bitrev, getDataTimeout());
