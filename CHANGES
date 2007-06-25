@@ -1,7 +1,8 @@
-#	$Id: CHANGES 543 2007-06-25 17:29:56Z faxguy $	
+#	$Id: CHANGES 544 2007-06-25 18:07:18Z faxguy $	
 
 New Changes
 
+* fix QualifyTSI, etc., broken by TSIRecvdCmd (25 Jun 2007)
 * improve handling of DCN received in Phase B (25 Jun 2007)
 * fix Class 2 EOFB bit order when ModemSendFillOrder is LSB2MSB (23 Jun 2007)
 
