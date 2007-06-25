@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 529 2007-06-06 21:42:08Z faxguy $ */
+/*	$Id: FaxRecv.c++ 544 2007-06-25 18:07:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -202,7 +202,7 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, f
 	    traceServer("%s PWD \"%s\"", okToRecv ? "ACCEPT" : "REJECT",
 		(const char*) info.passwd);
 	}
-	okToRecv = processTSIRecvdCmd(info, reason);
+	if (okToRecv) okToRecv = processTSIRecvdCmd(info, reason);
 	if (!okToRecv) {
 	    emsg = reason;
 	    info.time = (u_int) getFileTransferTime();
