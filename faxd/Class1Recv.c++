@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 543 2007-06-25 17:29:56Z faxguy $ */
+/*	$Id: Class1Recv.c++ 547 2007-07-09 22:44:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -934,6 +934,10 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			}
 			(void) transmitFrame(rtnfcf|FCF_RCVR);
 			traceFCF("RECV send", rtnfcf);
+			if (rtnfcf == FCF_DCN) {
+			    recvdDCN = true;
+			    return (false);
+			}
 			/*
 			 * Reset the TIFF-related state so that subsequent
 			 * writes will overwrite the previous data.
