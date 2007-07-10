@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.h 412 2007-01-03 03:20:22Z faxguy $ */
+/*	$Id: ModemServer.h 548 2007-07-11 00:27:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -139,7 +139,7 @@ protected:
     void	timerExpired(long, long);
     void	sendDLEETX();
     int		getModemLine(char buf[], u_int bufSize, long ms = 0);
-    int		getModemChar(long ms = 0);
+    int		getModemChar(long ms = 0, bool isquery = false);
     int		getModemBit(long ms = 0);
     int		getLastByte();
     bool	didBlockEnd();

@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 505 2007-04-25 04:29:26Z faxguy $ */
+/*	$Id: ClassModem.h 548 2007-07-11 00:27:25Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -269,10 +269,10 @@ public:
     bool	putModem(void* data, int n, long ms = 0);
     bool	putModemData(void* data, int n);
     bool	putModemDLEData(const u_char* data, u_int,
-		    const u_char* brev, long ms);
+		    const u_char* brev, long ms, bool doquery = false);
     bool	putModemLine(const char* cp, long ms = 0);
     int		getModemBit(long ms = 0);
-    int		getModemChar(long ms = 0);
+    int		getModemChar(long ms = 0, bool doquery = false);
     int		getModemDataChar();
     int		getLastByte();
     bool	didBlockEnd();

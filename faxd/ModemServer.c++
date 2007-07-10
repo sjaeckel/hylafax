@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 437 2007-02-15 00:46:32Z faxguy $ */
+/*	$Id: ModemServer.c++ 548 2007-07-11 00:27:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1439,20 +1439,32 @@ ModemServer::getModemLine(char rbuf[], u_int bufSize, long ms)
 }
 
 int
-ModemServer::getModemChar(long ms)
+ModemServer::getModemChar(long ms, bool isquery)
 {
     if (rcvNext >= rcvCC) {
 	int n = 0;
+	if (isquery) {
+	    if (fcntl(modemFd, F_SETFL, fcntl(modemFd, F_GETFL, 0) | O_NONBLOCK)) {
+		traceStatus(FAXTRACE_MODEMCOM, "Can not set O_NONBLOCK: errno %u", errno);
+		return (EOF);
+	    }
+	    n = 5;		// only read once
+	}
 	if (ms) startTimeout(ms);
 	do
 	    rcvCC = Sys::read(modemFd, (char*) rcvBuf, sizeof (rcvBuf));
 	while (n++ < 5 && rcvCC == 0);
 	if (ms) stopTimeout("reading from modem");
+	if (isquery) {
+	    if (fcntl(modemFd, F_SETFL, fcntl(modemFd, F_GETFL, 0) &~ O_NONBLOCK))
+		traceStatus(FAXTRACE_MODEMCOM, "Can not reset O_NONBLOCK: errno %u", errno);
+	}
 	if (rcvCC <= 0) {
 	    if (rcvCC < 0) {
 		if (errno != EINTR)
-		    traceStatus(FAXTRACE_MODEMCOM,
-			"MODEM READ ERROR: errno %u", errno);
+		    if (!isquery || errno != EAGAIN)
+			traceStatus(FAXTRACE_MODEMCOM,
+			    "MODEM READ ERROR: errno %u", errno);
 	    }
 	    return (EOF);
 	} else

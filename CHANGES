@@ -1,8 +1,8 @@
-#	$Id: CHANGES 546 2007-07-06 01:33:43Z faxguy $	
+#	$Id: CHANGES 548 2007-07-11 00:27:25Z faxguy $	
 
 New Changes
 
-* support MultiTech Class 2.0/2.1 +FDB=1 receive debugging (5 Jul 2007)
+* support MultiTech Class 2.0/2.1 +FDB=1 extended debugging (5, 10 Jul 2007)
 * fix QualifyTSI, etc., broken by TSIRecvdCmd (25 Jun 2007)
 * improve handling of DCN received in Phase B (25 Jun 2007)
 * fix Class 2 EOFB bit order when ModemSendFillOrder is LSB2MSB (23 Jun 2007)
