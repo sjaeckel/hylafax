@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 508 2007-05-03 00:27:59Z faxguy $ */
+/*	$Id: ModemConfig.c++ 548 2007-07-11 00:27:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -286,6 +286,7 @@ ModemConfig::setupConfig()
     badPageHandling	= FaxModem::BADPAGE_RTNSAVE; // send RTN but save the page
     saveUnconfirmedPages = true;		// keep unconfirmed pages
     softRTFCC		= true;			// real-time fax comp. conv. (software)
+    doPhaseCDebug	= false;		// query modem for responses in Phase C transmit
     noAnswerVoice	= false;		// answer voice calls
 
     idConfig.resize(0);
@@ -788,6 +789,8 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	noAnswerVoice = getBoolean(value);
     else if (streq(tag, "modemsoftrtfcc"))
 	softRTFCC = getBoolean(value);
+    else if (streq(tag, "modemdophasecdebug"))
+	doPhaseCDebug = getBoolean(value);
     else if (streq(tag, "saveunconfirmedpages"))
 	saveUnconfirmedPages = getBoolean(value);
     else if (streq(tag, "distinctiverings"))

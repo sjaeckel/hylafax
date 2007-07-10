@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 540 2007-06-23 16:14:38Z faxguy $ */
+/*	$Id: Class2Send.c++ 548 2007-07-11 00:27:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -503,7 +503,7 @@ Class2Modem::sendPageData(TIFF* tif, u_int pageChop)
 	}
 
 	beginTimedTransfer();
-	rc = putModemDLEData(dp, (u_int) totdata, bitrev, getDataTimeout());
+	rc = putModemDLEData(dp, (u_int) totdata, bitrev, getDataTimeout(), conf.doPhaseCDebug);
 	endTimedTransfer();
 	protoTrace("SENT %u bytes of data", totdata);
     }
