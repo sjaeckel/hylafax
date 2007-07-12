@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
+#	$Id: Makefile.in 549 2007-07-12 20:49:22Z faxguy $
 #
 # @WARNING@
 #
@@ -61,21 +61,21 @@ install: default
 	${INSTALL} -F ${LIBDATA} -m 444 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/faxmail.ps -O faxmail.ps
 	-${INSTALL} -u ${SYSUSER} -g ${SYSGROUP} -m ${DIRMODE} \
-	    -idb hylafax.sw.client -dir ${LIBEXEC}/faxmail ${LIBEXEC}/faxmail/application ${LIBEXEC}/faxmail/image
-	${INSTALL} -F ${LIBEXEC}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
+	    -idb hylafax.sw.client -dir ${LIBDATA}/faxmail ${LIBDATA}/faxmail/application ${LIBDATA}/faxmail/image
+	${INSTALL} -F ${LIBDATA}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/application-pdf.sh -O pdf
-	${INSTALL} -F ${LIBEXEC}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
+	${INSTALL} -F ${LIBDATA}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/application-octet-stream.sh -O octet-stream
-	${INSTALL} -F ${LIBEXEC}/faxmail/image -m 755 -idb ${PRODUCT}.sw.client \
+	${INSTALL} -F ${LIBDATA}/faxmail/image -m 755 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/image-tiff.sh -O tiff
 
 uninstall::
 	${RM} -f ${BIN}/faxmail
 	${RM} -f ${LIBDATA}/faxmail.ps
-	${RM} -f ${LIBEXEC}/faxmail/application/pdf
-	${RM} -f ${LIBEXEC}/faxmail/application/octet-stream
-	${RM} -f ${LIBEXEC}/faxmail/image/tiff
-	-rmdir ${LIBEXEC}/faxmail/application ${LIBEXEC}/faxmail/image ${LIBEXEC}/faxmail 
+	${RM} -f ${LIBDATA}/faxmail/application/pdf
+	${RM} -f ${LIBDATA}/faxmail/application/octet-stream
+	${RM} -f ${LIBDATA}/faxmail/image/tiff
+	-rmdir ${LIBDATA}/faxmail/application ${LIBDATA}/faxmail/image ${LIBDATA}/faxmail 
 
 #
 # These targets are created during the configuration procedure.

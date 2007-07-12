@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 500 2007-04-18 05:26:49Z faxguy $
+#	$Id: configure 549 2007-07-12 20:49:22Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -386,7 +386,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 500 $"
+	echo "This is HylaFAX configure $Revision: 549 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3398,17 +3398,16 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	fi
 	;;
     *-*-linux*)
-	if [ "X${DIR_LIB}" != "X/usr/lib" ]; then
+	if [ "X${DIR_LIB}" != "X/usr/lib" ] && [ "X${DIR_LIB}" != "X/usr/lib64" ]; then
 	    USE_RPATH=' -Wl,-rpath,${LIBDIR}'
 	else
 	    USE_RPATH=''
 	fi
-	DSOSUF=so
-	LIBUTIL=''
-	LIBFAXSERVER='-lfaxserver'
+	DSOSUF=so.$VERSION
+	LIBFAXSERVER='${FAXD}/'$LIBFAXSERVER
 	FAXD='${DEPTH}/faxd'
 	DSOOPTS='-shared -fpic -Wl,-soname,$@'
-	LLDOPTS='-L${UTIL} -L${FAXD} -lfaxutil'$USE_RPATH
+	LLDOPTS='-L${UTIL} -L${FAXD} '$LIBUTIL$USE_RPATH
 	GCOPTS="${GCOPTS} -fpic"
 	GCXXOPTS="${GCXXOPTS} -fpic"
 	DSO=LINUX
