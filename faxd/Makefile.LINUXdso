@@ -1,4 +1,4 @@
-#	$Id: Makefile.LINUXdso 551 2007-07-17 03:18:59Z faxguy $
+#	$Id: Makefile.LINUXdso 552 2007-07-17 18:19:32Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -33,7 +33,7 @@ LDIRT	+= libfaxserver.a
 
 libfaxserver.${DSO}: ${SERVER_OBJS} ${MODEM_OBJS}
 	${C++} ${DSOOPTS} -o libfaxserver.${DSO} \
-	    ${SERVER_OBJS} ${MODEM_OBJS} ${DSODELAY} ${LIBTIFF}
+	    ${SERVER_OBJS} ${MODEM_OBJS} ${DSODELAY} ../util/libfaxutil.${DSO} ${DSODELAY} ${LIBTIFF}
 
 installDSO: libfaxserver.${DSO}
 	${PUTSERV} -F ${LIBDIR} -m 755 -O libfaxserver.${DSO}
