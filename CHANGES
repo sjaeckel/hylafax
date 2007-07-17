@@ -1,9 +1,9 @@
-#	$Id: CHANGES 550 2007-07-17 00:56:30Z faxguy $	
+#	$Id: CHANGES 552 2007-07-17 18:19:32Z faxguy $	
 
 New Changes
 
 * various modifications, aka improvements, to the way the Linux DSO
-  is built and used (12, 16 Jul 2007)
+  is built and used (12, 16-17 Jul 2007)
 * put faxmail MIMEConverters in LIBDIR instead of SBIN (12 Jul 2007)
 * support MultiTech Class 2.0/2.1 +FDB=1 extended debugging (5, 10 Jul 2007)
 * fix QualifyTSI, etc., broken by TSIRecvdCmd (25 Jun 2007)
