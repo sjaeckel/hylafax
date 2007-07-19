@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 548 2007-07-11 00:27:25Z faxguy $ */
+/*	$Id: ModemConfig.c++ 554 2007-07-19 19:06:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -205,6 +205,7 @@ static struct {
 { "class1tcfrecvtimeout",	&ModemConfig::class1TCFRecvTimeout,  4500 },
 { "class1recvabortok",		&ModemConfig::class1RecvAbortOK,     200 },
 { "class1rmpersistence",	&ModemConfig::class1RMPersistence,   2 },
+{ "class1hooksensitivity",	&ModemConfig::class1HookSensitivity, 0 },
 { "class1frameoverhead",	&ModemConfig::class1FrameOverhead,   4 },
 { "class1recvidenttimer",	&ModemConfig::class1RecvIdentTimer,  TIMER_T1 },
 { "class1tcfmaxnonzero",	&ModemConfig::class1TCFMaxNonZero,   10 },
