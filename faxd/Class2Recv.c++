@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: Class2Recv.c++ 555 2007-07-20 01:44:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -281,8 +281,9 @@ Class2Modem::abortPageRecv()
 bool
 Class2Modem::recvPageData(TIFF* tif, fxStr& emsg)
 {
+    // be careful about flushing here -- otherwise we can lose +FDB messages
     if (flowControl == FLOW_XONXOFF)
-	(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_FLUSH);
+	(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_DRAIN);
     protoTrace("RECV: send trigger 0%o", recvDataTrigger&0377);
     (void) putModem(&recvDataTrigger, 1);	// initiate data transfer
 
