@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 548 2007-07-11 00:27:25Z faxguy $ */
+/*	$Id: ClassModem.c++ 555 2007-07-20 01:44:41Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -177,6 +177,7 @@ ClassModem::isNoise(const char* s)
 	"RINGING",	// ZyXEL
 	"+FHR:",	// Intel 144e
 	"+F34:",	// Class 1.0 V.34 report
+	"+FDB:",	// DCE debugging
 	"MESSAGE-WAITING",	// voice-mail waiting, Conexant
     };
 #define	NNOISE	(sizeof (noiseMsgs) / sizeof (noiseMsgs[0]))
