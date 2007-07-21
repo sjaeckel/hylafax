@@ -1,6 +1,10 @@
-#	$Id: CHANGES 555 2007-07-20 01:44:41Z faxguy $	
+#	$Id: CHANGES 558 2007-07-22 03:51:21Z faxguy $	
 
 New Changes
+
+* adjust timing of Class 1 DCN reception to improve hearing it (21 Jul 2007)
+
+(5.1.6)
 
 * add Class1HookSensitivity modem config option (19 Jul 2007)
 * various modifications, aka improvements, to the way the Linux DSO
