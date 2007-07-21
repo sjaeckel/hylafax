@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: install.sh.in 188 2006-06-02 18:57:58Z faxguy $
+#	$Id: install.sh.in 559 2007-07-22 06:03:54Z faxguy $
 #
 # @WARNING@
 #
@@ -108,7 +108,7 @@ do
     -o)		SaveFirst=yes;;
     -O)		RemoveFirst=yes; SaveFirst=yes;;
     -root)	shift; ROOT=$1;;
-    -dir)	CMD="@MKDIR@"; HasSource=no;
+    -dir)	CMD="@MKDIR@ -p"; HasSource=no;
 		RM=":"; STRIP=":"
 		objectExists()
 		{
@@ -145,7 +145,10 @@ do
 		}
 		;;
     -src)	shift; SRC="$1";;
-    -[fF])	shift; DESTDIR="$1/";;
+    -f)		shift; DESTDIR="$1/";;
+    -F)		shift; DESTDIR="$1/"
+		test -d $ROOT$DESTDIR || @MKDIR@ -p $ROOT$DESTDIR
+		;;
     -idb)	shift; opt="$1"
 		case "$opt" in
 		*config\(update\)*)	Updated=yes;;

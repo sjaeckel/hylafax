@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 484 2007-03-19 23:26:06Z faxguy $
+#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
 #
 # @WARNING@
 #
@@ -125,7 +125,7 @@ PUTSERVER=${INSTALL} -idb ${PRODUCT}.sw.server
 
 install: default ${CONFIGFILES}
 	for i in ${CONFIGFILES}; do \
-	    ${PUTSERVER} -F ${SPOOL}/config -m 444 -src ${SRCDIR}/$$i -O $$i; \
+	    ${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/config -m 444 -src ${SRCDIR}/$$i -O $$i; \
 	done
 
 uninstall::

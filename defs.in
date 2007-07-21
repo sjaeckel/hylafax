@@ -1,4 +1,4 @@
-# $Id: defs.in 79 2006-01-31 19:31:26Z faxguy $
+# $Id: defs.in 559 2007-07-22 06:03:54Z faxguy $
 #
 # @WARNING@
 #
@@ -57,6 +57,7 @@ SENDMAIL	= @SENDMAIL@
 #
 TOPSRCDIR	= @SRCDIR@
 PORT		= ${DEPTH}/port
+INSTALLROOT	= @INSTALLROOT@
 #
 # PostScript imaging support to setup for the default
 # installation.  This should be one of "gs" or "dps"

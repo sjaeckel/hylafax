@@ -1,4 +1,4 @@
-#	$Id: Makefile.LINUXdso 550 2007-07-17 00:56:30Z faxguy $
+#	$Id: Makefile.LINUXdso 559 2007-07-22 06:03:54Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -35,7 +35,7 @@ libfaxutil.${DSO}: ${OBJECTS}
 	    ${DSODELAY} ${LIBTIFF} ${DSODELAY} ${LIBZ} ${DSODELAY} ${LIBREGEX}
 
 installDSO: libfaxutil.${DSO}
-	${PUTCLIENT} -F ${LIBDIR} -m 755 -O libfaxutil.${DSO}
+	${PUTCLIENT} -root ${INSTALLROOT} -F ${LIBDIR} -m 755 -O libfaxutil.${DSO}
 
 uninstallDSO::
 	${RM} -f ${LIBDIR}/libfaxutil.${DSO}

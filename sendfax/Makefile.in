@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
+#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
 #
 # @WARNING@
 #
@@ -57,7 +57,7 @@ sendfax: ${OBJECTS} ${LIBS}
 	${C++F} -o $@ ${OBJECTS} ${LDFLAGS}
 
 install: default
-	${INSTALL} -F ${BIN} -m 755 -idb ${PRODUCT}.sw.client -O sendfax
+	${INSTALL} -root ${INSTALLROOT} -F ${BIN} -m 755 -idb ${PRODUCT}.sw.client -O sendfax
 
 uninstall::
 	${RM} -f ${BIN}/sendfax
