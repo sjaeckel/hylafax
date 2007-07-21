@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
+#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
 #
 # @WARNING@
 #
@@ -159,13 +159,13 @@ checkat: checkat.o ${LIBS}
 PUTCLIENT	= ${INSTALL} -idb ${PRODUCT}.sw.client
 PUTSERVER	= ${INSTALL} -idb ${PRODUCT}.sw.server
 PUTSERV		= ${PUTSERVER} -m 755
-PUTSUPD		= ${PUTSERVER} -F ${SPOOL}/bin -idb "config(update)"
-PUTSBIN		= ${PUTSERVER} -F ${SBIN}
+PUTSUPD		= ${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/bin -idb "config(update)"
+PUTSBIN		= ${PUTSERVER} -root ${INSTALLROOT} -F ${SBIN}
 
 installClient: default
-	${PUTCLIENT} -F ${LIBEXEC} -m 755 -O textfmt
-	${PUTCLIENT} -F ${LIBDATA} -m 444 -O pagesizes
-	${PUTCLIENT} -F ${LIBDATA} -m 444 -src ${SRCDIR}/typerules -O typerules
+	${PUTCLIENT} -root ${INSTALLROOT} -F ${LIBEXEC} -m 755 -O textfmt
+	${PUTCLIENT} -root ${INSTALLROOT} -F ${LIBDATA} -m 444 -O pagesizes
+	${PUTCLIENT} -root ${INSTALLROOT} -F ${LIBDATA} -m 444 -src ${SRCDIR}/typerules -O typerules
 
 install: installClient
 	${PUTSBIN} -m 755 -O faxmsg faxadduser faxconfig faxdeluser faxmodem \
@@ -191,17 +191,17 @@ install: installClient
 	${PUTSUPD} -m 755 -src pollrcvd.sh -O pollrcvd
 	${PUTSUPD} -m 755 -src mkcover.sh -O mkcover
 	${PUTSUPD} -m 755 -src wedged.sh -O wedged
-	${PUTSERVER} -F ${SPOOL}/etc -m 444 -idb "config(update)" \
+	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -m 444 -idb "config(update)" \
 	    -src ${SRCDIR}/dpsprinter.ps -O dpsprinter.ps
-	${PUTSERVER} -F ${SPOOL}/etc -idb "config(suggest)" \
+	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -idb "config(suggest)" \
 	    -m 444 -src ${SRCDIR}/cover.templ -O cover.templ
 
 uninstall::
 	${RM} -f ${LIBEXEC}/textfmt
 	${RM} -f ${LIBDATA}/pagesizes
 	${RM} -f ${LIBDATA}/typerules
-	${RM} -f ${SBIN}/faxmsg ${SBIN}/faxadduser ${SBIN}/faxconfig ${SBIN}/faxdeluser ${SBIN}/faxmodem \
-        ${SBIN}/faxstate ${SBIN}/faxwatch ${SBIN}/faxinfo ${SBIN}/tiffcheck
+	${RM} -f ${SBIN}/faxmsg ${SBIN}/faxadduser ${SBIN}/faxconfig ${SBIN}/faxdeluser \
+        ${SBIN}/faxmodem ${SBIN}/faxstate ${SBIN}/faxwatch ${SBIN}/faxinfo ${SBIN}/tiffcheck
 	${RM} -f ${SBIN}/faxabort ${SBIN}/faxanswer ${SBIN}/faxquit ${SBIN}/faxlock
 	${RM} -f ${SBIN}typetest
 	${RM} -f ${SBIN}/xferfaxstats

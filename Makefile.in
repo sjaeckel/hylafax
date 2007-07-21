@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 430 2007-02-07 00:01:05Z faxguy $
+#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -234,19 +234,19 @@ distclean: clobber
 
 makeClientDirs::
 	-${INSTALL} -u ${SYSUSER} -g ${SYSGROUP} -m ${DIRMODE} \
-	    -idb hylafax.sw.client -dir \
+	    -idb hylafax.sw.client -root ${INSTALLROOT} -dir \
 	    ${BIN} ${LIBDATA} ${LIBEXEC} ${SBIN}
 makeServerDirs::
 	-${INSTALL} -u ${SYSUSER} -g ${SYSGROUP} -m ${DIRMODE} \
-	    -idb hylafax.sw.server -dir ${SBIN};
+	    -idb hylafax.sw.server -root ${INSTALLROOT} -dir ${SBIN};
 	-${INSTALL} -u ${FAXUSER} -g ${FAXGROUP} -m ${DIRMODE} \
-	    -idb hylafax.sw.server -dir ${SPOOL}
+	    -idb hylafax.sw.server -root ${INSTALLROOT} -dir ${SPOOL}
 	-${INSTALL} -u ${FAXUSER} -g ${FAXGROUP} -m ${DIRMODE} \
 	    -idb hylafax.sw.server -dir \
-	    -F ${SPOOL} bin client config dev etc info log recvq status
+	    -root ${INSTALLROOT} -F ${SPOOL} bin client config dev etc info log recvq status
 	-${INSTALL} -u ${FAXUSER} -g ${FAXGROUP} -m 700 \
 	    -idb hylafax.sw.server -dir \
-	    -F ${SPOOL} sendq doneq docq tmp pollq archive
+	    -root ${INSTALLROOT} -F ${SPOOL} sendq doneq docq tmp pollq archive
 makeDirs: makeClientDirs makeServerDirs
 
 rmDirs::
@@ -256,13 +256,13 @@ rmDirs::
 
 makeDevices::
 	${INSTALL} -u ${FAXUSER} -g ${FAXGROUP} -m 600 -fifo \
-	    -idb hylafax.sw.server -F ${SPOOL} FIFO
+	    -idb hylafax.sw.server -root ${INSTALLROOT} -F ${SPOOL} FIFO
 
 rmDevices::
 	${RM} -f ${SPOOL}/FIFO
 
 install: makeDirs makeDevices
-	${INSTALL} -m 444 -F ${SPOOL} -idb hylafax.sw.server \
+	${INSTALL} -m 444 -root ${INSTALLROOT} -F ${SPOOL} -idb hylafax.sw.server \
 	    -src ${SRCDIR}/COPYRIGHT -O COPYRIGHT
 	@if [ "@REGEX@" = yes ]; then \
 	    ${ECHO} "= "regex; cd regex; ${MAKE} install  ||  exit 1; \

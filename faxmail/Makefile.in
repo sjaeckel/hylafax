@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 549 2007-07-12 20:49:22Z faxguy $
+#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
 #
 # @WARNING@
 #
@@ -57,16 +57,16 @@ faxmail: ${OBJECTS} ${LIBS}
 	${C++F} -o $@ ${OBJECTS} ${LDFLAGS}
 
 install: default
-	${INSTALL} -F ${BIN} -m 755 -idb ${PRODUCT}.sw.client -O faxmail
-	${INSTALL} -F ${LIBDATA} -m 444 -idb ${PRODUCT}.sw.client \
+	${INSTALL} -root ${INSTALLROOT} -F ${BIN} -m 755 -idb ${PRODUCT}.sw.client -O faxmail
+	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA} -m 444 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/faxmail.ps -O faxmail.ps
 	-${INSTALL} -u ${SYSUSER} -g ${SYSGROUP} -m ${DIRMODE} \
-	    -idb hylafax.sw.client -dir ${LIBDATA}/faxmail ${LIBDATA}/faxmail/application ${LIBDATA}/faxmail/image
-	${INSTALL} -F ${LIBDATA}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
+	    -idb hylafax.sw.client -root ${INSTALLROOT} -dir ${LIBDATA}/faxmail ${LIBDATA}/faxmail/application ${LIBDATA}/faxmail/image
+	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/application-pdf.sh -O pdf
-	${INSTALL} -F ${LIBDATA}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
+	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/application-octet-stream.sh -O octet-stream
-	${INSTALL} -F ${LIBDATA}/faxmail/image -m 755 -idb ${PRODUCT}.sw.client \
+	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA}/faxmail/image -m 755 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/image-tiff.sh -O tiff
 
 uninstall::
