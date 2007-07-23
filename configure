@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 559 2007-07-22 06:03:54Z faxguy $
+#	$Id: configure 560 2007-07-23 19:00:50Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -87,7 +87,7 @@ LIBUTIL='${UTIL}/libfaxutil.${DSO}'
 CONFIG_OSFCNH=auto
 MANNUM4_5=4F
 MANNUM1_8=1M
-INSTALLROOT=
+INSTALLROOT=/
 
 # SVR4 packaging stuff
 PKG_ARCH=				# ARCH variable in pkginfo file
@@ -388,7 +388,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 559 $"
+	echo "This is HylaFAX configure $Revision: 560 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;

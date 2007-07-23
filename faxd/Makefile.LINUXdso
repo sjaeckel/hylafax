@@ -1,4 +1,4 @@
-#	$Id: Makefile.LINUXdso 559 2007-07-22 06:03:54Z faxguy $
+#	$Id: Makefile.LINUXdso 560 2007-07-23 19:00:50Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -37,7 +37,7 @@ libfaxserver.${DSO}: ${SERVER_OBJS} ${MODEM_OBJS}
 
 installDSO: libfaxserver.${DSO}
 	${PUTSERV} -root ${INSTALLROOT} -F ${LIBDIR} -m 755 -O libfaxserver.${DSO}
-	PATH=${PATH}:/sbin ldconfig ${LIBDIR}
+	[ `id -u` -eq 0 ] && ( PATH=${PATH}:/sbin ldconfig ${LIBDIR} ) || ( echo "ldconfig is required to be run as user root at install time" )
 
 uninstallDSO::
 	${RM} -f ${LIBDIR}/libfaxserver.${DSO}

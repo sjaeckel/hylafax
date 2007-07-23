@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 475 2007-03-13 17:04:49Z faxguy $
+#	$Id: faxsetup.sh.in 560 2007-07-23 19:00:50Z faxguy $
 #
 # @WARNING@
 #
@@ -1217,7 +1217,8 @@ if onClient; then
 			}	
 		'
 	}
-	RUNTIME_PATH_AFM=`getGSFonts`
+	# If configure --with-PATH_AFM=<path> was used then we need to include it first.
+	RUNTIME_PATH_AFM=$PATH_AFM:`getGSFonts`
 	if [ -n "$RUNTIME_PATH_AFM" \
 				-a "$RUNTIME_PATH_AFM" != "$PATH_AFM" ]; then 
 	    Note ""
