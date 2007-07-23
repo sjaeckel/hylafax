@@ -1,8 +1,9 @@
-#	$Id: CHANGES 559 2007-07-22 06:03:54Z faxguy $	
+#	$Id: CHANGES 560 2007-07-23 19:00:50Z faxguy $	
 
 New Changes
 
-* add INSTALLROOT configure option (21 Jul 2007)
+* use configure-set PATH_AFM in faxsetup (23 Jul 2007)
+* add INSTALLROOT configure option (21, 23 Jul 2007)
 * adjust timing of Class 1 DCN reception to improve hearing it (21 Jul 2007)
 
 (5.1.6)

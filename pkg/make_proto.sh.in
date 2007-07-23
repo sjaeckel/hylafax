@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-# $Id: make_proto.sh.in 400 2006-12-19 18:07:09Z faxguy $
+# $Id: make_proto.sh.in 560 2007-07-23 19:00:50Z faxguy $
 #
 #	Tim Rice	Wed Sep 24 18:19:04 PDT 1997
 #
@@ -16,7 +16,6 @@ DIR_SBIN=@SBIN@
 DIR_SPOOL=@SPOOL@
 DIR_FONTS=@AFMDIR@
 DIR_CGI=@CGIDIR@
-DIR_HTML=@HTMLDIR@
 DIR_SYSVINIT=@SYSVINITDIR@
 DIR_SYSVINITSTART="@SYSVINITDIR@/@SYSVINITSTARTDIR@"
 DIR_SYSVINITSTOP="@SYSVINITDIR@/@SYSVINITSTOPDIR@"
@@ -73,13 +72,6 @@ fi
 if [ ${DO_HTML} = yes ]
 then
 # skip the first one, it's in prototype.stub
-	DIR_HTML=`dirname ${DIR_HTML}`
-	while [ ${DIR_HTML} != / ]
-	do
-		grep "d none ${DIR_HTML} ? ? ?" ${TMP_LIST} >/dev/null \
-		|| echo "d html ${DIR_HTML} ? ? ?" >> ${TMP_LIST}
-		DIR_HTML=`dirname ${DIR_HTML}`
-	done
 	DIR_CGI=`dirname ${DIR_CGI}`
 	while [ ${DIR_CGI} != / ]
 	do
