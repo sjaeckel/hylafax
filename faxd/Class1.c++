@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 548 2007-07-11 00:27:25Z faxguy $ */
+/*	$Id: Class1.c++ 564 2007-07-24 22:43:19Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1397,6 +1397,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 {
     bool gotframe;
     u_short crpcnt = 0, rhcnt = 0;
+    u_int onhooks = 0;
     gotCONNECT = true;
     if (useV34) {
 	do {
@@ -1420,7 +1421,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 	do {
 	    readPending = atCmd(rhCmd, AT_NOTHING, 0) && waitFor(AT_CONNECT, 0);
 	    if (lastResponse == AT_FCERROR) pause(200);
-	} while (lastResponse == AT_FCERROR && !wasTimeout());
+	} while ((lastResponse == AT_FCERROR || (lastResponse == AT_ERROR && ++onhooks <= conf.class1HookSensitivity)) && !wasTimeout());
     }
     if (readPending) {
         stopTimeout("waiting for HDLC flags");
