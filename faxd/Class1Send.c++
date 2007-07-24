@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: Class1Send.c++ 561 2007-07-24 21:10:10Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1832,8 +1832,8 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 		    break;
 	    }
 	    dp = convertPhaseCData(dp, totdata, fillorder, params, newparams, rowsperstrip);
+	    params = newparams;		// revert back
 	}
-	params = newparams;		// revert back
 
         /*
          * correct broken Phase C (T.4/T.6) data if neccessary 
