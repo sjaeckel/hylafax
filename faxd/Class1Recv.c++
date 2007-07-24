@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 558 2007-07-22 03:51:21Z faxguy $ */
+/*	$Id: Class1Recv.c++ 562 2007-07-24 21:33:32Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -939,6 +939,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			     * all, then sending RTN at all risks confirming the non-page to RTN-confused 
 			     * senders, which risk is far worse than just simply hanging up.
 			     */
+			    emsg = "PPM received with no image data.  To continue risks receipt confirmation.";
 			    rtnfcf = FCF_DCN;
 			}
 			(void) transmitFrame(rtnfcf|FCF_RCVR);
