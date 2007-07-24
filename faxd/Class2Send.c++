@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 548 2007-07-11 00:27:25Z faxguy $ */
+/*	$Id: Class2Send.c++ 561 2007-07-24 21:10:10Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -491,14 +491,14 @@ Class2Modem::sendPageData(TIFF* tif, u_int pageChop)
 		    break;
 	    }
 	    dp = convertPhaseCData(dp, totdata, fillorder, params, newparams, rows);
+	    params = newparams;		// revert back
 	}
-	params = newparams;		// revert back
 
         /*
          * correct broken Phase C (T.4/T.6) data if necessary
          */
         if (params.df <= DF_2DMMR) {
-	    lastByte = correctPhaseCData(dp, &totdata, fillorder, (conf.class2RTFCC ? params : newparams), rows);
+	    lastByte = correctPhaseCData(dp, &totdata, fillorder, params, rows);
 	    lastByte = bitrev[lastByte];
 	}
 
