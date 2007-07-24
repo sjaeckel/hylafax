@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 560 2007-07-23 19:00:50Z faxguy $
+#	$Id: configure 563 2007-07-24 21:43:13Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -273,23 +273,18 @@ dumpvals()
 }
 
 #
-# We do this little dance with the search path to insure
-# that programs that we select for use by installed programs
-# (which may be run by the super-user) come from trusted
-# locations before they come from the user's private area.
-# This should help avoid accidentally configuring some
-# random version of a program in someone's personal bin.
+# We expect the PATH to point to trusted programs.  However,
+# because we appear to need it, we add to the PATH to help
+# some systems along.
 #
-OPATH=$PATH
-PATH=/bin:/usr/bin:/etc
+PATH=$PATH:/bin:/usr/bin:/etc
 test -d /usr/ccs/bin && PATH=$PATH:/usr/ccs/bin		# SVR4/Solaris2
 test -d /usr/sbin && PATH=$PATH:/usr/sbin		# SGI and others
 test -d /usr/bsd && PATH=$PATH:/usr/bsd			# SGI
 test -d /usr/ucb && PATH=$PATH:/usr/ucb			# Sun and others
 test -d /usr/contrib/bin && PATH=$PATH:/usr/contrib/bin	# BSDi
 test -d /usr/5bin && PATH=/usr/5bin:$PATH:/usr/etc	# Sun and others
-test -d /usr/local/bin && PATH=/usr/local/bin:$PATH	# for GNU stuff
-PATH=$PATH:$OPATH
+test -d /usr/local/bin && PATH=$PATH:/usr/local/bin	# for GNU stuff
 
 POSIXLY_CORRECT=1; export POSIXLY_CORRECT		# disable GNU extensions
 
@@ -388,7 +383,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 560 $"
+	echo "This is HylaFAX configure $Revision: 563 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
