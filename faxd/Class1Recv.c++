@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 562 2007-07-24 21:33:32Z faxguy $ */
+/*	$Id: Class1Recv.c++ 565 2007-07-24 22:47:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -148,7 +148,6 @@ Class1Modem::recvIdentification(
     time_t start = Sys::now();
     HDLCFrame frame(conf.class1FrameOverhead);
     bool framesSent = false;
-    u_int onhooks = 0;
 
     emsg = "No sender protocol (T.30 T1 timeout) {E102}";
     if (!notransmit) {
@@ -260,7 +259,7 @@ Class1Modem::recvIdentification(
 		} while (recvFrame(frame, FCF_RCVR, conf.t2Timer));
 	    }
 	}
-	if (gotEOT && ++onhooks > conf.class1HookSensitivity) {
+	if (gotEOT) {
 	    emsg = "RSPREC error/got EOT {E106}";
 	    return (false);
 	}
