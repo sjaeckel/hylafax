@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 567 2007-07-26 15:50:21Z faxguy $ */
+/*	$Id: Class1.c++ 568 2007-07-31 16:13:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1393,7 +1393,7 @@ Class1Modem::transmitData(int br, u_char* data, u_int cc,
  * retransmit the frame. 
  */
 bool
-Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, bool docrp)
+Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, bool docrp, bool usehooksensitivity)
 {
     bool gotframe;
     u_short crpcnt = 0, rhcnt = 0;
@@ -1422,8 +1422,15 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 	    readPending = atCmd(rhCmd, AT_NOTHING, 0) && waitFor(AT_CONNECT, 0);
 	    if (lastResponse == AT_FCERROR) pause(200);
 	    if (lastResponse == AT_ERROR && !wasTimeout() && ++onhooks <= conf.class1HookSensitivity) {
-		stopTimeout("");
-		startTimeout(ms);
+		if (!usehooksensitivity) {
+		    /*
+		     * Class1HookSensitivity is used by the calling function, not us.
+		     */
+		    break;
+		} else {
+		    stopTimeout("");
+		    startTimeout(ms);
+		}
 	    }
 	} while ((lastResponse == AT_FCERROR || (lastResponse == AT_ERROR && onhooks <= conf.class1HookSensitivity)) && !wasTimeout());
     }

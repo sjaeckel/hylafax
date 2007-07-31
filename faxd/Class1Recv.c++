@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 565 2007-07-24 22:47:11Z faxguy $ */
+/*	$Id: Class1Recv.c++ 568 2007-07-31 16:13:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -148,6 +148,7 @@ Class1Modem::recvIdentification(
     time_t start = Sys::now();
     HDLCFrame frame(conf.class1FrameOverhead);
     bool framesSent = false;
+    u_int onhooks = 0;
 
     emsg = "No sender protocol (T.30 T1 timeout) {E102}";
     if (!notransmit) {
@@ -201,7 +202,7 @@ Class1Modem::recvIdentification(
 	     * Wait for a response to be received.  We wait T2
 	     * rather than T4 due to empirical evidence for that need.
 	     */
-	    if (recvFrame(frame, FCF_RCVR, conf.t2Timer)) {
+	    if (recvFrame(frame, FCF_RCVR, conf.t2Timer, false, true, false)) {
 		do {
 		    /*
 		     * Verify a DCS command response and, if
@@ -239,7 +240,7 @@ Class1Modem::recvIdentification(
 			    if (lastResponse == AT_FRH3 && waitFor(AT_CONNECT,0)) {
 				// It's unclear if we are in "COMMAND REC" or "RESPONSE REC" mode,
 				// but since we are already detecting the carrier, wait the longer.
-				gotframe = recvFrame(frame, FCF_RCVR, conf.t2Timer, true);
+				gotframe = recvFrame(frame, FCF_RCVR, conf.t2Timer, true, true, false);
 				lastResponse = AT_NOTHING;
 			    }
 			}
@@ -256,10 +257,10 @@ Class1Modem::recvIdentification(
 		     * the full T1 timeout, as specified by the protocol.
 		     */
 		    t1 = howmany(conf.t1Timer, 1000);
-		} while (recvFrame(frame, FCF_RCVR, conf.t2Timer));
+		} while (recvFrame(frame, FCF_RCVR, conf.t2Timer, false, true, false));
 	    }
 	}
-	if (gotEOT) {
+	if (gotEOT && ++onhooks > conf.class1HookSensitivity) {
 	    emsg = "RSPREC error/got EOT {E106}";
 	    return (false);
 	}
