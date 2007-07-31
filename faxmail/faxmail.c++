@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 533 2007-06-15 22:53:27Z faxguy $ */
+/*	$Id: faxmail.c++ 568 2007-07-31 16:13:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -754,7 +754,7 @@ void
 faxMailApp::setupConfig()
 {
     markDiscarded = true;
-    mimeConverters = FAX_LIBEXEC "/faxmail";
+    mimeConverters = FAX_LIBDATA "/faxmail";
     mailProlog = FAX_LIBDATA "/faxmail.ps";
     msgDivider = "";
     pageSize = "";
