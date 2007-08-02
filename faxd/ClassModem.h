@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 548 2007-07-11 00:27:25Z faxguy $ */
+/*	$Id: ClassModem.h 570 2007-08-02 20:03:19Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -218,7 +218,7 @@ protected:
     bool doQuery(const fxStr& queryCmd, fxStr& result, long ms = 30*1000);
 // dial/answer interactions with derived classes
     virtual const AnswerMsg* findAnswer(const char* s);
-    virtual CallType answerResponse(fxStr& emsg);
+    virtual CallType answerResponse(fxStr, fxStr& emsg);
     virtual CallStatus dialResponse(fxStr& emsg) = 0;
     virtual bool isNoise(const char*);
 // miscellaneous
