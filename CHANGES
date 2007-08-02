@@ -1,7 +1,9 @@
-#	$Id: CHANGES 568 2007-07-31 16:13:41Z faxguy $	
+#	$Id: CHANGES 570 2007-08-02 20:03:19Z faxguy $	
 
 New Changes
 
+* if modem doesn't respond to answer command, try again (2 Aug 2007)
+* fix units error in ModemAnswerResponseTimeout usage (2 Aug 2007)
 * fix MIMEConverters broken in 5.1.6 (31 Jul 2007)
 * extend Class1HookSensitivity application (24 Jul 2007)
 * fix Class2RTFCC broken in 5.1.0 (24 Jul 2007)
