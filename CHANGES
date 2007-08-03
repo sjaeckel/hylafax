@@ -1,6 +1,10 @@
-#	$Id: CHANGES 570 2007-08-02 20:03:19Z faxguy $	
+#	$Id: CHANGES 571 2007-08-03 18:11:04Z faxguy $	
 
 New Changes
+
+* don't get stuck on repeated BUSY messages from the modem (3 Aug 2007)
+
+(5.1.7)
 
 * if modem doesn't respond to answer command, try again (2 Aug 2007)
 * fix units error in ModemAnswerResponseTimeout usage (2 Aug 2007)
