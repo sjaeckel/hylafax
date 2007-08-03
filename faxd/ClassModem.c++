@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 570 2007-08-02 20:03:19Z faxguy $ */
+/*	$Id: ClassModem.c++ 571 2007-08-03 18:11:04Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -1119,6 +1119,7 @@ ClassModem::waitFor(ATResponse wanted, long ms)
 	case AT_NOCARRIER:
 	case AT_NODIALTONE:
 	case AT_NOANSWER:
+	case AT_BUSY:
 	case AT_OFFHOOK:
 	case AT_RING:
 	case AT_FHNG:
