@@ -1,7 +1,8 @@
-#	$Id: CHANGES 571 2007-08-03 18:11:04Z faxguy $	
+#	$Id: CHANGES 572 2007-08-04 14:22:39Z faxguy $	
 
 New Changes
 
+* handle CRP at Phase C reception (4 Aug 2007)
 * don't get stuck on repeated BUSY messages from the modem (3 Aug 2007)
 
 (5.1.7)
