@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 568 2007-07-31 16:13:41Z faxguy $ */
+/*	$Id: Class1Recv.c++ 572 2007-08-04 14:22:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -955,6 +955,12 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			messageReceived = true;	// expect DCS next
 		    }
 		}
+		break;
+	    case FCF_CRP:
+		// command repeat... just repeat whatever we last sent
+		if (!useV34 && !switchingPause(emsg)) return (false);
+		transmitFrame(signalSent);
+		traceFCF("RECV send", (u_char) signalSent[2]);
 		break;
 	    case FCF_DCN:			// DCN
 		protoTrace("RECV recv DCN");
