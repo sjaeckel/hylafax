@@ -1,4 +1,4 @@
-# $Id: iaxmodem 405 2006-12-27 03:56:35Z faxguy $
+# $Id: iaxmodem 574 2007-08-07 18:22:39Z faxguy $
 
 #
 # prototype config for the IAXmodem softmodem which uses
@@ -23,7 +23,7 @@ ModemType:		Class1		# use this to supply a hint
 #
 # Enabling this will use the hfaxd-protocol to set Caller*ID
 #
-#ModemSetOriginCmd:	AT+VSID="%s","%d"
+#ModemSetOriginCmd:	"AT+VSID=\"%s\",\"%d\""
 #
 # If "glare" during initialization becomes a problem then take
 # the modem off-hook during initialization, and then place it
