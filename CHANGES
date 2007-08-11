@@ -1,9 +1,9 @@
-#	$Id: CHANGES 576 2007-08-11 21:42:37Z faxguy $	
+#	$Id: CHANGES 577 2007-08-11 22:19:04Z faxguy $	
 
 New Changes
 
 * stop fast looping in Class 1 ECM receive when AT_EMPTYLINE occurs (11 Aug 2007)
-* DLE+ETX after dialing is noise, ignore it (9 Aug 2007)
+* DLE+ETX after dialing is noise, ignore it (9, 11 Aug 2007)
 * support libtiff 3.9 (6 Aug 2007)
 * handle CRP at Phase C reception (4 Aug 2007)
 * don't get stuck on repeated BUSY messages from the modem (3 Aug 2007)
