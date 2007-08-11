@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 561 2007-07-24 21:10:10Z faxguy $ */
+/*	$Id: Class1Send.c++ 577 2007-08-11 22:19:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -100,12 +100,13 @@ Class1Modem::dialResponse(fxStr& emsg)
 	     * accept three of these in case the modem switches carriers
 	     * several times (haven't yet encountered anyone that does).
 	     */
+	case AT_DLEETX:				// silly modem
 	    if (++ntrys == 3) {
 		emsg = "Ringback detected, no answer without CED {E011}"; // XXX
 		protoTrace(emsg);
 		return (NOFCON);
 	    }
-	    break;
+	    continue;
 	}
     } while (r == AT_OTHER && isNoise(rbuf));
     return (FAILURE);
