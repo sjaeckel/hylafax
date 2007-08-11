@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 572 2007-08-04 14:22:39Z faxguy $ */
+/*	$Id: Class1Recv.c++ 576 2007-08-11 21:42:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1384,7 +1384,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    bool gotnocarrier = false;
 		    do {
 			gotnocarrier = waitFor(AT_NOCARRIER, 2*1000);
-		    } while (!gotnocarrier && Sys::now() < (nocarrierstart + 5));
+		    } while (!gotnocarrier && lastResponse != AT_EMPTYLINE && Sys::now() < (nocarrierstart + 5));
 		}
 		bool gotpps = false;
 		HDLCFrame ppsframe(conf.class1FrameOverhead);
