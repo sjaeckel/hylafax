@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 576 2007-08-11 21:42:37Z faxguy $ */
+/*	$Id: Class1Recv.c++ 579 2007-08-14 02:44:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -726,7 +726,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			    messageReceived = true;
 			    signalRcvd = FCF_DCN;
 			    lastResponse = AT_NOTHING;
-			    break;
+			    return (false);
 			}
 			if (!messageReceived) {
 			    trainok = recvTraining();
