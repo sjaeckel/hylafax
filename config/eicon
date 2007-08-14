@@ -1,4 +1,4 @@
-# $Id: eicon 556 2007-07-20 18:15:00Z faxguy $
+# $Id: eicon 580 2007-08-15 00:07:39Z faxguy $
 #
 # prototype config for Eicon Diva
 #
@@ -26,3 +26,9 @@ ModemResetCmds:         AT#CID=14
 # controller and bypasses the "channel pool" approach.
 #
 #ModemResetCmds:         AT#CID=14+iQ=a1
+
+#
+# These should match the modem responses for DID and Caller*ID.
+#
+CallIDPattern:		"DAD: "
+CallIDPattern:		"CID: "
