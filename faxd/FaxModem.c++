@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 578 2007-08-13 21:57:49Z faxguy $ */
+/*	$Id: FaxModem.c++ 581 2007-08-15 00:54:23Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -628,6 +628,9 @@ FaxModem::traceFCF(const char* dir, u_int fcf)
 	    break;
 	case FCF_CFR:
 	    fcfname = "CFR (confirmation to receive)";
+	    break;
+	case FCF_FTT:
+	    fcfname = "FTT (failure to train)";
 	    break;
 	case FCF_CRP:
 	    fcfname = "CRP (command repeat)";
