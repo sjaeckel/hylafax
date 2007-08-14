@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 579 2007-08-14 02:44:15Z faxguy $ */
+/*	$Id: Class1Recv.c++ 581 2007-08-15 00:54:23Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -222,6 +222,9 @@ Class1Modem::recvIdentification(
 				    if (!useV34 && !switchingPause(emsg)) return (false);
 				    transmitFrame(signalSent);
 				    traceFCF("RECV send", (u_char) signalSent[2]);
+				    break;
+				case FCF_FTT:
+				    /* probably just our own echo */
 				    break;
 				case FCF_CRP:
 				    /* do nothing here, just let us repeat NSF, CSI, DIS */
@@ -961,6 +964,10 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		if (!useV34 && !switchingPause(emsg)) return (false);
 		transmitFrame(signalSent);
 		traceFCF("RECV send", (u_char) signalSent[2]);
+		break;
+	    case FCF_CFR:
+		/* It's probably just our own echo. */
+		messageReceived = false;
 		break;
 	    case FCF_DCN:			// DCN
 		protoTrace("RECV recv DCN");
