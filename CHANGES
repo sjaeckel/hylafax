@@ -1,7 +1,8 @@
-#	$Id: CHANGES 581 2007-08-15 00:54:23Z faxguy $	
+#	$Id: CHANGES 583 2007-08-15 20:14:12Z faxguy $	
 
 New Changes
 
+* correct numerous manpage typographical errors (15 Aug 2007)
 * handle the echo of FTT or CFR better in Class 1 receive (14 Aug 2007)
 * stop fast looping in Class 1 ECM receive when AT_EMPTYLINE occurs (11 Aug 2007)
 * DLE+ETX after dialing is noise, ignore it (9, 11 Aug 2007)

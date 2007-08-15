@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 473 2007-03-13 04:03:06Z faxguy $
+.\"	$Id: hfaxd.1m 583 2007-08-15 20:14:12Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -76,7 +76,7 @@ Additional client-server protocols are planned and
 is intended to be the ``carrier'' through which they are supported.
 .PP
 .I hfaxd
-is typically used in one of two ways; either as a standalone
+is typically used in one of two ways; either as a stand-alone
 process that is started at system boot time to listen
 for client connections on one or more ports (in which case the
 -i, -o, or -s option must be used),
@@ -84,7 +84,7 @@ or as a subservient process to the
 .IR inetd (${MANNUM1_8})
 program.
 The two forms of use may however be combined so long as the same
-service is not provided both by the standalone
+service is not provided both by the stand-alone
 .I hfaxd
 and through
 .IR inetd .
@@ -165,7 +165,7 @@ PASV	prepare for server-to-server transfer
 PORT	specify data connection port
 PWD	print the current working directory
 QUIT	terminate session
-RCVFMT	specify/query format for returing received facsimile status
+RCVFMT	specify/query format for returning received facsimile status
 REIN	reinitiate server state
 REST	restart incomplete transfer
 RETP	retrieve the next page in a file
@@ -196,7 +196,7 @@ ADDUSER¹	add client access control entry
 CONFIG¹	send configuration parameter setting to server
 DELMODEM¹	deconfigure/remove modem
 DELUSER¹	remove client access control entry
-TRIGGER	register realtime event trigger
+TRIGGER	register real-time event trigger
 HELP	give help information, e.g., SITE HELP
 .fi
 .PP
@@ -271,7 +271,7 @@ LOGI	login to server
 MCRE	specify multiple response text and code
 MESS	specify a single-line message
 MSTA	return the status of a previously submitted request
-NOQU	diable message queueing
+NOQU	disable message queueing
 PAGE	specify the destination pager
 PING	locate/validate a pager
 QUIT	terminate session
@@ -592,7 +592,7 @@ comparisons are case-insensitive.
 .TP 10
 .B MaxAdminAttempts
 The maximum number of unsuccessful attempts
-gain adminstrative privileges with the \s-1ADMIN\s+1 command that
+gain administrative privileges with the \s-1ADMIN\s+1 command that
 .I hfaxd
 will permit a client before terminating the connection.
 Note that the count of attempts is reset if/when the client
