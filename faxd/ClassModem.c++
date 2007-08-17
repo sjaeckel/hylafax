@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 577 2007-08-11 22:19:04Z faxguy $ */
+/*	$Id: ClassModem.c++ 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -1532,3 +1532,4 @@ CallType ClassModem::findCallType(int vec[])
 bool ClassModem::doCallIDDisplay(int i) const { return conf.idConfig[i].display; }
 bool ClassModem::doCallIDRecord(int i) const { return conf.idConfig[i].record; }
 const fxStr& ClassModem::getCallIDLabel(int i) const { return conf.idConfig[i].label; }
+const fxStr& ClassModem::getCallIDType(int i) const { return conf.idConfig[i].type; }

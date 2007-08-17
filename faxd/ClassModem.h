@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 570 2007-08-02 20:03:19Z faxguy $ */
+/*	$Id: ClassModem.h 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -249,6 +249,7 @@ public:
     bool	doCallIDDisplay(int i) const;
     bool	doCallIDRecord(int i) const;
     const fxStr& getCallIDLabel(int i) const;
+    const fxStr& getCallIDType(int i) const;
 // data transfer timeout controls
     void	setDataTimeout(long secs, u_int br);
     long	getDataTimeout() const;

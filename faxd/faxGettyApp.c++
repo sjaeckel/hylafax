@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 529 2007-06-06 21:42:08Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -348,8 +348,12 @@ void
 faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const char* dialnumber)
 {
     FaxModem* modem = (FaxModem*) ModemServer::getModem();
+    fxStr callingnumber = "";
     fxStr statusmsg = "Answering the phone";
     for (u_int i = 0; i < callid.size(); i++) {
+	if (modem->getCallIDType(i) == "calling-number") {
+	    callingnumber = callid[i];
+	}
 	if (callid[i].length() && modem->doCallIDDisplay(i)) {
 	    statusmsg.append(", ");
 	    statusmsg.append(modem->getCallIDLabel(i));
@@ -374,6 +378,12 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
     ai.jobid = "";
     ai.jobtag = "";
     ai.owner = "";
+
+    FaxMachineInfo info;
+    if (callingnumber.length() && !info.updateConfig(canonicalizePhoneNumber(callingnumber))) {
+    	traceProtocol("Could not prepare FaxMachineInfo for %s", (const char*) callingnumber);
+    }    
+
     /*
      * Answer the phone according to atype.  If this is
      * ``any'', then pick a more specific type.  If
@@ -435,7 +445,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 		// NB: answer based on ctype, not atype
 		if (!(noAnswerVoice && ctype == ClassModem::CALLTYPE_VOICE)) 
 		    ctype = modemAnswerCall(ctype, emsg, dialnumber);
-		callResolved = processCall(ctype, emsg, callid);
+		callResolved = processCall(ctype, info, emsg, callid);
 	    }
 	} else if (atype == ClassModem::ANSTYPE_ANY) {
 	    /*
@@ -444,7 +454,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 	     */
 	    int r = answerRotor;
 	    do {
-		callResolved = answerCall(answerRotary[r], ctype, emsg, callid, dialnumber);
+		callResolved = answerCall(answerRotary[r], ctype, info, emsg, callid, dialnumber);
 		r = (r+1) % answerRotorSize;
 	    } while (!callResolved && adaptiveAnswer && r != answerRotor);
 	} else {
@@ -453,7 +463,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 	     * any existing call type information such as
 	     * distinctive ring.
 	     */
-	    callResolved = answerCall(atype, ctype, emsg, callid, dialnumber);
+	    callResolved = answerCall(atype, ctype, info, emsg, callid, dialnumber);
 	}
     }
     /*
@@ -537,7 +547,7 @@ faxGettyApp::answerCleanup()
  * the modem layer arrives at as the call type.
  */
 bool
-faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, CallID& callid, const char* dialnumber)
+faxGettyApp::answerCall(AnswerType atype, CallType& ctype, FaxMachineInfo info, fxStr& emsg, CallID& callid, const char* dialnumber)
 {
     bool callResolved;
     if (atype == ClassModem::ANSTYPE_EXTERN) {
@@ -566,7 +576,7 @@ faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, CallID& 
 	    emsg = "External getty use is not permitted {E310}";
     } else
 	ctype = modemAnswerCall(atype, emsg, dialnumber);
-    callResolved = processCall(ctype, emsg, callid);
+    callResolved = processCall(ctype, info, emsg, callid);
     return (callResolved);
 }
 
@@ -584,7 +594,7 @@ faxGettyApp::answerCall(AnswerType atype, CallType& ctype, fxStr& emsg, CallID& 
  * to recondition the modem for incoming calls (if configured).
  */
 bool
-faxGettyApp::processCall(CallType ctype, fxStr& emsg, CallID& callid)
+faxGettyApp::processCall(CallType ctype, FaxMachineInfo info, fxStr& emsg, CallID& callid)
 {
     bool callHandled = false;
 
@@ -613,7 +623,7 @@ faxGettyApp::processCall(CallType ctype, fxStr& emsg, CallID& callid)
 	    }
 	    changeState(RECEIVING, 0, (const char*) statusmsg);
 	    sendRecvStatus(getModemDeviceID(), "B");
-	    callHandled = recvFax(callid, emsg);
+	    callHandled = recvFax(callid, info, emsg);
 	    sendRecvStatus(getModemDeviceID(), "E");
 	}
 	break;

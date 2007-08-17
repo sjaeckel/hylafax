@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: Class2.h 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -147,10 +147,10 @@ public:
 
 // receive support
     bool	setupReceive();
-    bool	recvBegin(fxStr& emsg);
-    bool	recvEOMBegin(fxStr& emsg);
+    bool	recvBegin(FaxSetup* setupinfo, fxStr& emsg);
+    bool	recvEOMBegin(FaxSetup* setupinfo, fxStr& emsg);
     bool	recvPage(TIFF*, u_int& ppm, fxStr& emsg, const fxStr& id);
-    bool	recvEnd(fxStr& emsg);
+    bool	recvEnd(FaxSetup* setupinfo, fxStr& emsg);
     void	recvAbort();
     void	pokeConfig(bool isSend);
 

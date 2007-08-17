@@ -1,7 +1,11 @@
-#	$Id: CHANGES 583 2007-08-15 20:14:12Z faxguy $	
+#	$Id: CHANGES 584 2007-08-17 14:54:27Z faxguy $	
 
 New Changes
 
+* add senderHasV17Trouble, senderSkipsV29 info file entries, and use them
+  in Class 1 reception to discriminate V.17 availability (17 Aug 2007)
+* add CallIDType "calling-number" to be able to associate a CallIDPattern
+  match with info file entries (17 Aug 2007)
 * correct numerous manpage typographical errors (15 Aug 2007)
 * handle the echo of FTT or CFR better in Class 1 receive (14 Aug 2007)
 * stop fast looping in Class 1 ECM receive when AT_EMPTYLINE occurs (11 Aug 2007)

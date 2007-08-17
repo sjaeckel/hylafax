@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 568 2007-07-31 16:13:41Z faxguy $ */
+/*	$Id: Class1.h 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -42,6 +42,7 @@ typedef struct {
     u_short	sr;	// T.30 DCS signalling rate
     u_char	mod;	// modulation technique
     bool	ok;	// true if modem is capable
+    u_short	num;	// distinct, incremental numbering
 } Class1Cap;
 #define	HasShortTraining(c) \
     ((c)->mod == V17 && ((c)->value & 1) && (c)[1].ok)
@@ -63,12 +64,15 @@ protected:
     bool	hadV17Trouble;		// indicates failure due to V.17 problems
     bool	batchingError;		// indicates failure due to batching protocol
     bool	jbigSupported;		// whether or not JBIG is supported in this mode
+    bool	senderHasV17Trouble;	// whether or not a sender has trouble with V.17
+    bool	senderSkipsV29;		// whether or not a sender skips over V.29 usage
     const u_char* frameRev;		// HDLC frame bit reversal table
     fxStr	lid;			// encoded local id string
     fxStr	pwd;			// transmit password
     fxStr	sub;			// transmit subaddress
     Class1Cap	xmitCaps[15];		// modem send capabilities
     Class1Cap	recvCaps[15];		// modem recv capabilities
+    u_int	capsUsed;		// which modulations+bitrates were used in the session
     const Class1Cap* curcap;		// capabilities being used
     u_int	discap;			// DIS signalling rate capabilities
     u_int	prevPage;		// count of previous pages received
@@ -151,6 +155,7 @@ protected:
     bool	raiseRecvCarrier(bool& dolongtrain, fxStr& emsg);
     void	recvData(TIFF*, u_char* buf, int n);
     void	processDCSFrame(const HDLCFrame& frame);
+    void	processNewCapabilityUsage();
     void	abortPageRecv();
 // miscellaneous
     enum {			// Class 1-specific AT responses
@@ -222,10 +227,10 @@ public:
     CallType	answerCall(AnswerType, fxStr& emsg, const char* number);
     FaxParams	modemDIS() const;
     bool	setupReceive();
-    bool	recvBegin(fxStr& emsg);
-    bool	recvEOMBegin(fxStr& emsg);
+    bool	recvBegin(FaxSetup* setupinfo, fxStr& emsg);
+    bool	recvEOMBegin(FaxSetup* setupinfo, fxStr& emsg);
     bool	recvPage(TIFF*, u_int& ppm, fxStr& emsg, const fxStr& id);
-    bool	recvEnd(fxStr& emsg);
+    bool	recvEnd(FaxSetup* setupinfo, fxStr& emsg);
     void	recvAbort();
     void	pokeConfig(bool isSend);
 

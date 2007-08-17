@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: FaxMachineInfo.c++ 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -61,6 +61,8 @@ FaxMachineInfo::FaxMachineInfo(const FaxMachineInfo& other)
     supportsMMR = other.supportsMMR;
     hasV34Trouble = other.hasV34Trouble;
     hasV17Trouble = other.hasV17Trouble;
+    senderHasV17Trouble = other.senderHasV17Trouble;
+    senderSkipsV29 = other.senderSkipsV29;
     supportsPostScript = other.supportsPostScript;
     supportsBatching = other.supportsBatching;
     calledBefore = other.calledBefore;
@@ -109,6 +111,8 @@ FaxMachineInfo::resetConfig()
     supportsMMR = true;			// assume MMR support
     hasV34Trouble = false;		// assume no problems
     hasV17Trouble = false;		// assume no problems
+    senderHasV17Trouble = false;	// assume no problems
+    senderSkipsV29 = false;		// assume V.29 usage
     supportsPostScript = false;		// no support for Adobe protocol
     supportsBatching = true;		// assume batching (EOM) support
     calledBefore = false;		// never called before
@@ -182,6 +186,8 @@ static const char* stnames[] =
 #define V17	9
 #define BATCH	10
 #define PAGING	11
+#define SV17	12
+#define SSV29	13
 
 #define	setLocked(b,ix)	locked |= b<<ix
 
@@ -208,6 +214,12 @@ FaxMachineInfo::setConfigItem(const char* tag, const char* value)
     } else if (streq(tag, "hasv17trouble")) {
 	hasV17Trouble = getBoolean(value);
 	setLocked(b, V17);
+    } else if (streq(tag, "senderhasv17trouble")) {
+	senderHasV17Trouble = getBoolean(value);
+	setLocked(b, SV17);
+    } else if (streq(tag, "senderskipsv29")) {
+	senderSkipsV29 = getBoolean(value);
+	setLocked(b, SSV29);
     } else if (streq(tag, "supportspostscript")) {
 	supportsPostScript = getBoolean(value);
 	setLocked(b, PS);
@@ -284,6 +296,10 @@ void FaxMachineInfo::setHasV34Trouble(bool b)
     { checkLock(V34, hasV34Trouble, b); }
 void FaxMachineInfo::setHasV17Trouble(bool b)
     { checkLock(V17, hasV17Trouble, b); }
+void FaxMachineInfo::setSenderHasV17Trouble(bool b)
+    { checkLock(SV17, senderHasV17Trouble, b); }
+void FaxMachineInfo::setSenderSkipsV29(bool b)
+    { checkLock(SSV29, senderSkipsV29, b); }
 void FaxMachineInfo::setSupportsPostScript(bool b)
     { checkLock(PS, supportsPostScript, b); }
 void FaxMachineInfo::setSupportsBatching(bool b)
@@ -385,6 +401,8 @@ FaxMachineInfo::writeConfig(fxStackBuffer& buf)
     putBoolean(buf, "supportsMMR", isLocked(G4),supportsMMR);
     putBoolean(buf, "hasV34Trouble", isLocked(V34),hasV34Trouble);
     putBoolean(buf, "hasV17Trouble", isLocked(V17),hasV17Trouble);
+    putBoolean(buf, "senderHasV17Trouble", isLocked(SV17),senderHasV17Trouble);
+    putBoolean(buf, "senderSkipsV29", isLocked(SSV29), senderSkipsV29);
     putBoolean(buf, "supportsPostScript", isLocked(PS), supportsPostScript);
     putBoolean(buf, "supportsBatching", isLocked(BATCH), supportsBatching);
     putBoolean(buf, "calledBefore", false, calledBefore);

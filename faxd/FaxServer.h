@@ -1,4 +1,4 @@
-/*	$Id: FaxServer.h 529 2007-06-06 21:42:08Z faxguy $ */
+/*	$Id: FaxServer.h 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -80,7 +80,7 @@ private:
     int		getRecvFile(fxStr& qfile, fxStr& emsg);
     TIFF*	setupForRecv(FaxRecvInfo&, FaxRecvInfoArray&, fxStr& emsg);
     bool	recvDocuments(TIFF*, FaxRecvInfo&, FaxRecvInfoArray&,
-		    fxStr& emsg);
+		    FaxSetup* setupinfo, fxStr& emsg);
     bool	recvFaxPhaseD(TIFF* tif, FaxRecvInfo&, u_int& ppm, fxStr& emsg);
     bool	pollFaxPhaseB(const fxStr& sep, const fxStr& pwd,
 		    FaxRecvInfoArray&, fxStr& emsg);
@@ -96,7 +96,7 @@ protected:
     void	setLocalIdentifier(const fxStr& lid);
 
     void	sendFax(FaxRequest&, FaxMachineInfo&, FaxAcctInfo&, u_int&, bool);
-    bool	recvFax(const CallID& callid, fxStr& emsg);
+    bool	recvFax(const CallID& callid, FaxMachineInfo clientInfo, fxStr& emsg);
 
     time_t	getFileTransferTime() const;
     time_t	getPageTransferTime() const;

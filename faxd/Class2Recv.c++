@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 555 2007-07-20 01:44:41Z faxguy $ */
+/*	$Id: Class2Recv.c++ 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -57,7 +57,7 @@ Class2Modem::findAnswer(const char* s)
  * Begin a fax receive session.
  */
 bool
-Class2Modem::recvBegin(fxStr& emsg)
+Class2Modem::recvBegin(FaxSetup* clientinfo, fxStr& emsg)
 {
     bool status = false;
     hangupCode[0] = '\0';
@@ -108,7 +108,7 @@ Class2Modem::recvBegin(fxStr& emsg)
  * Begin a fax receive session after EOM.
  */
 bool
-Class2Modem::recvEOMBegin(fxStr& emsg)
+Class2Modem::recvEOMBegin(FaxSetup* infosetup, fxStr& emsg)
 {
     /*
      * There's nothing to do because the modem
@@ -383,7 +383,7 @@ Class2Modem::parseFPTS(TIFF* tif, const char* cp, int& ppr)
  * Complete a receive session.
  */
 bool
-Class2Modem::recvEnd(fxStr&)
+Class2Modem::recvEnd(FaxSetup*, fxStr&)
 {
     if (!hadHangup) {
 	if (isNormalHangup()) {

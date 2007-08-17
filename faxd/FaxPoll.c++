@@ -1,4 +1,4 @@
-/*	$Id: FaxPoll.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxPoll.c++ 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -50,15 +50,16 @@ FaxServer::pollFaxPhaseB(const fxStr& sep, const fxStr& pwd, FaxRecvInfoArray& d
      * be lost.)
      */
     FaxRecvInfo info;
+    FaxSetup setupinfo;
     TIFF* tif = setupForRecv(info, docs, emsg);
     if (tif) {
 	recvPages = 0;			// count of received pages
 	fileStart = Sys::now();		// count initial negotiation on failure
 	if (modem->pollBegin(canonicalizePhoneNumber(FAXNumber), sep, pwd, emsg)) {
-	    pollOK = recvDocuments(tif, info, docs, emsg);
+	    pollOK = recvDocuments(tif, info, docs, &setupinfo, emsg);
 	    if (!pollOK)
 		traceProtocol("POLL FAX: %s", (const char*) emsg);
-	    if (!modem->recvEnd(emsg))
+	    if (!modem->recvEnd(&setupinfo, emsg))
 		traceProtocol("POLL FAX: %s", (const char*) emsg);
 	} else
 	    traceProtocol("POLL FAX: %s", (const char*) emsg);
