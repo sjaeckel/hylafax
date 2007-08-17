@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 568 2007-07-31 16:13:41Z faxguy $ */
+/*	$Id: Class1.c++ 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -55,21 +55,21 @@ const char* Class1Modem::modulationNames[6] = {
  *     least at 12000 and 14400.
  */
 const Class1Cap Class1Modem::basicCaps[15] = {
-    {  3,  0,	 	0,		     V21,   false }, // v.21
-    {  24, BR_2400,	DCSSIGRATE_2400V27,  V27FB, false }, // v.27 ter
-    {  48, BR_4800,	DCSSIGRATE_4800V27,  V27,   false }, // v.27 ter
-    {  72, BR_7200,	DCSSIGRATE_7200V29,  V29,   false }, // v.29
-    {  73, BR_7200,	DCSSIGRATE_7200V17,  V17,   false }, // v.17
-    {  74, BR_7200,	DCSSIGRATE_7200V17,  V17,   false }, // v.17 w/st
-    {  96, BR_9600,	DCSSIGRATE_9600V29,  V29,   false }, // v.29
-    {  97, BR_9600,	DCSSIGRATE_9600V17,  V17,   false }, // v.17
-    {  98, BR_9600,	DCSSIGRATE_9600V17,  V17,   false }, // v.17 w/st
-    { 121, BR_12000,	DCSSIGRATE_12000V33, V33,   false }, // v.33
-    { 121, BR_12000,	DCSSIGRATE_12000V17, V17,   false }, // v.17
-    { 122, BR_12000,	DCSSIGRATE_12000V17, V17,   false }, // v.17 w/st
-    { 145, BR_14400,	DCSSIGRATE_14400V33, V33,   false }, // v.33
-    { 145, BR_14400,	DCSSIGRATE_14400V17, V17,   false }, // v.17
-    { 146, BR_14400,	DCSSIGRATE_14400V17, V17,   false }, // v.17 w/st
+    {  3,  0,	 	0,		     V21,   false, 0 },  // v.21
+    {  24, BR_2400,	DCSSIGRATE_2400V27,  V27FB, false, 1 },  // v.27 ter
+    {  48, BR_4800,	DCSSIGRATE_4800V27,  V27,   false, 2 },  // v.27 ter
+    {  72, BR_7200,	DCSSIGRATE_7200V29,  V29,   false, 3 },  // v.29
+    {  73, BR_7200,	DCSSIGRATE_7200V17,  V17,   false, 4 },  // v.17
+    {  74, BR_7200,	DCSSIGRATE_7200V17,  V17,   false, 5 },  // v.17 w/st
+    {  96, BR_9600,	DCSSIGRATE_9600V29,  V29,   false, 6 },  // v.29
+    {  97, BR_9600,	DCSSIGRATE_9600V17,  V17,   false, 7 },  // v.17
+    {  98, BR_9600,	DCSSIGRATE_9600V17,  V17,   false, 8 },  // v.17 w/st
+    { 121, BR_12000,	DCSSIGRATE_12000V33, V33,   false, 9 },  // v.33
+    { 121, BR_12000,	DCSSIGRATE_12000V17, V17,   false, 10 }, // v.17
+    { 122, BR_12000,	DCSSIGRATE_12000V17, V17,   false, 11 }, // v.17 w/st
+    { 145, BR_14400,	DCSSIGRATE_14400V33, V33,   false, 12 }, // v.33
+    { 145, BR_14400,	DCSSIGRATE_14400V17, V17,   false, 13 }, // v.17
+    { 146, BR_14400,	DCSSIGRATE_14400V17, V17,   false, 14 }, // v.17 w/st
 };
 #define	NCAPS	(sizeof (basicCaps) / sizeof (basicCaps[0]))
 

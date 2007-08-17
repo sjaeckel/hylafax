@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 581 2007-08-15 00:54:23Z faxguy $ */
+/*	$Id: Class1Recv.c++ 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -84,7 +84,7 @@ Class1Modem::findAnswer(const char* s)
  * Begin the receive protocol.
  */
 bool
-Class1Modem::recvBegin(fxStr& emsg)
+Class1Modem::recvBegin(FaxSetup* setupinfo, fxStr& emsg)
 {
     setInputBuffering(false);
     prevPage = 0;				// no previous page received
@@ -94,6 +94,12 @@ Class1Modem::recvBegin(fxStr& emsg)
     lastPPM = FCF_DCN;				// anything will do
     sendCFR = false;				// TCF was not received
     lastMCF = 0;				// no MCF heard yet
+    capsUsed = 0;				// no DCS or CTC seen yet
+
+    if (setupinfo) {
+	senderSkipsV29 = setupinfo->senderSkipsV29;
+	senderHasV17Trouble = setupinfo->senderHasV17Trouble;
+    }
 
     fxStr nsf;
     encodeNSF(nsf, HYLAFAX_VERSION);
@@ -102,20 +108,33 @@ Class1Modem::recvBegin(fxStr& emsg)
 
     FaxParams dis = modemDIS();
 
-    return FaxModem::recvBegin(emsg) && recvIdentification(
+    if (senderSkipsV29 && senderHasV17Trouble) {
+	dis.setBit(FaxParams::BITNUM_SIGRATE_14, false);	// disable V.17 support
+	protoTrace("This sender skips V.29 and has trouble with V.17.  Concealing V.17 support.");
+    }
+
+    bool ok = FaxModem::recvBegin(setupinfo, emsg) && recvIdentification(
 	0, fxStr::null,
 	0, fxStr::null,
 	FCF_NSF|FCF_RCVR, nsf,
 	FCF_CSI|FCF_RCVR, lid,
 	FCF_DIS|FCF_RCVR, dis,
 	conf.class1RecvIdentTimer, false, emsg);
+    if (setupinfo) {
+	/*
+	 * Update FaxMachine info...
+	 */
+	setupinfo->senderSkipsV29 = senderSkipsV29;
+	setupinfo->senderHasV17Trouble = senderHasV17Trouble;
+    }
+    return (ok);
 }
 
 /*
  * Begin the receive protocol after an EOM signal.
  */
 bool
-Class1Modem::recvEOMBegin(fxStr& emsg)
+Class1Modem::recvEOMBegin(FaxSetup* setupinfo, fxStr& emsg)
 {
     /*
      * We must raise the transmission carrier to mimic the state following ATA.
@@ -128,7 +147,7 @@ Class1Modem::recvEOMBegin(fxStr& emsg)
 	    return (false);
 	}
     }
-    return Class1Modem::recvBegin(emsg);
+    return Class1Modem::recvBegin(setupinfo, emsg);
 }
 
 /*
@@ -380,6 +399,7 @@ Class1Modem::recvTraining()
 	Class2Params::bitRateNames[curcap->br]);
     HDLCFrame buf(conf.class1FrameOverhead);
     bool ok = recvTCF(curcap->value, buf, frameRev, conf.class1TCFRecvTimeout);
+    if (curcap->mod == V17) senderHasV17Trouble = !ok;	// if TCF failed
     if (ok) {					// check TCF data
 	u_int n = buf.getLength();
 	u_int nonzero = 0;
@@ -475,6 +495,15 @@ Class1Modem::recvTraining()
     return (ok);
 }
 
+void
+Class1Modem::processNewCapabilityUsage()
+{
+    capsUsed |= BIT(curcap->num);		// add this modulation+bitrate to the used list
+    if ((capsUsed & 0x94) == 0x94) {
+	senderSkipsV29 = ((capsUsed & 0xDC) == 0x94);
+    }
+}
+
 /*
  * Process a received DCS frame.
  */
@@ -487,7 +516,10 @@ Class1Modem::processDCSFrame(const HDLCFrame& frame)
     else frameSize = 256;
     params.setFromDCS(dcs_caps);
     if (useV34) params.br = primaryV34Rate-1;
-    else curcap = findSRCapability((dcs_caps.getByte(1)<<8)&DCS_SIGRATE, recvCaps);
+    else {
+	curcap = findSRCapability((dcs_caps.getByte(1)<<8)&DCS_SIGRATE, recvCaps);
+	processNewCapabilityUsage();
+    }
     setDataTimeout(60, params.br);
     recvDCS(params);				// announce session params
 }
@@ -720,7 +752,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		    signalRcvd = 0;
 		    if (!pageGood) recvResetPage(tif);
 		    // look for high speed carrier only if training successful
-		    messageReceived = !(FaxModem::recvBegin(emsg));
+		    messageReceived = !(FaxModem::recvBegin(NULL, emsg));
 		    bool trainok = true;
 		    short traincount = 0;
 		    do {
@@ -887,7 +919,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 				     * Because there are a couple of notifications that occur after this
 				     * things can hang and we can miss hearing DCN.  So we do it now.
 				     */
-				    recvdDCN = recvEnd(emsg);
+				    recvdDCN = recvEnd(NULL, emsg);
 				}
 			    }
 			}
@@ -1222,6 +1254,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					// use 16-bit FIF to alter speed, curcap
 					dcs = rtncframe[3] | (rtncframe[4]<<8);
 					curcap = findSRCapability(dcs&DCS_SIGRATE, recvCaps);
+					processNewCapabilityUsage();
 					// requisite pause before sending response (CTR)
 					if (!switchingPause(emsg)) {
 					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
@@ -1548,6 +1581,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						// use 16-bit FIF to alter speed, curcap
 						dcs = rtnframe[3] | (rtnframe[4]<<8);
 						curcap = findSRCapability(dcs&DCS_SIGRATE, recvCaps);
+						processNewCapabilityUsage();
 						// requisite pause before sending response (CTR)
 						if (!switchingPause(emsg)) {
 						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
@@ -1812,8 +1846,15 @@ Class1Modem::recvPageData(TIFF* tif, fxStr& emsg)
  * Complete a receive session.
  */
 bool
-Class1Modem::recvEnd(fxStr& emsg)
+Class1Modem::recvEnd(FaxSetup* setupinfo, fxStr& emsg)
 {
+    if (setupinfo) {
+	/*
+	 * Update FaxMachine info...
+	 */
+	setupinfo->senderSkipsV29 = senderSkipsV29;
+	setupinfo->senderHasV17Trouble = senderHasV17Trouble;
+    }
     if (!recvdDCN && !gotEOT) {
 	u_int t1 = howmany(conf.t1Timer, 1000);	// T1 timer in seconds
 	time_t start = Sys::now();

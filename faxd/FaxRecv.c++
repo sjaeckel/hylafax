@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 544 2007-06-25 18:07:18Z faxguy $ */
+/*	$Id: FaxRecv.c++ 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -33,6 +33,7 @@
 #include "tiffio.h"
 #include "FaxServer.h"
 #include "FaxRecvInfo.h"
+#include "FaxMachineInfo.h"
 #include "faxApp.h"			// XXX
 #include "t.30.h"
 #include "config.h"
@@ -42,7 +43,7 @@
  */
 
 bool
-FaxServer::recvFax(const CallID& callid, fxStr& emsg)
+FaxServer::recvFax(const CallID& callid, FaxMachineInfo clientInfo, fxStr& emsg)
 {
     traceProtocol("RECV FAX: begin");
 
@@ -52,6 +53,10 @@ FaxServer::recvFax(const CallID& callid, fxStr& emsg)
     emsg = "";
     abortCall = false;
     waitNotifyPid = 0;
+
+    FaxSetup setupinfo;
+    setupinfo.senderSkipsV29 = clientInfo.getSenderSkipsV29();
+    setupinfo.senderHasV17Trouble = clientInfo.getSenderHasV17Trouble();
 
     /*
      * Create the first file ahead of time to avoid timing
@@ -65,7 +70,7 @@ FaxServer::recvFax(const CallID& callid, fxStr& emsg)
 	recvPages = 0;			// total count of received pages
 	fileStart = pageStart = Sys::now();
 
-	if (faxRecognized = modem->recvBegin(emsg)) {
+	if (faxRecognized = modem->recvBegin(&setupinfo, emsg)) {
 	    /*
 	     * If the system is busy then notifyRecvBegun may not return
 	     * quickly.  Thus we run it in a child process and move on.
@@ -85,11 +90,11 @@ FaxServer::recvFax(const CallID& callid, fxStr& emsg)
 		    Dispatcher::instance().startChild(waitNotifyPid, this);
 		    break;
 	    }
-	    if (!recvDocuments(tif, info, docs, emsg)) {
+	    if (!recvDocuments(tif, info, docs, &setupinfo, emsg)) {
 		traceProtocol("RECV FAX: %s", (const char*) emsg);
 		modem->recvAbort();
 	    }
-	    if (!modem->recvEnd(emsg))
+	    if (!modem->recvEnd(&setupinfo, emsg))
 		traceProtocol("RECV FAX: %s", (const char*) emsg);
 	} else {
 	    traceProtocol("RECV FAX: %s", (const char*) emsg);
@@ -97,6 +102,9 @@ FaxServer::recvFax(const CallID& callid, fxStr& emsg)
 	}
     } else
 	traceServer("RECV FAX: %s", (const char*) emsg);
+
+    clientInfo.setSenderSkipsV29(setupinfo.senderSkipsV29);
+    clientInfo.setSenderHasV17Trouble(setupinfo.senderHasV17Trouble);
 
     /*
      * Possibly issue a command upon successful reception.
@@ -167,7 +175,7 @@ FaxServer::setupForRecv(FaxRecvInfo& ri, FaxRecvInfoArray& docs, fxStr& emsg)
  * Receive one or more documents.
  */
 bool
-FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, fxStr& emsg)
+FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, FaxSetup* setupinfo, fxStr& emsg)
 {
     bool recvOK;
     u_int ppm = PPM_EOP;
@@ -263,7 +271,7 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, f
 	if (tif == NULL)
 	    return (false);
 	fileStart = pageStart = Sys::now();
-	if (!modem->recvEOMBegin(emsg)) {
+	if (!modem->recvEOMBegin(setupinfo, emsg)) {
 	    info.reason = emsg;
 	    docs[docs.length()-1] = info;
 	    TIFFClose(tif);

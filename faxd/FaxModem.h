@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 458 2007-03-06 20:19:30Z faxguy $ */
+/*	$Id: FaxModem.h 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -46,6 +46,10 @@ class FaxServer;
 typedef unsigned int RTNHandling;       // RTN signal handling method 
 typedef unsigned int BadPageHandling;	// bad page (received) handling method 
 typedef unsigned int JBIGSupport;	// JBIG support available
+typedef struct {
+    bool	senderSkipsV29;		// if sender skips V.29 usage
+    bool	senderHasV17Trouble;	// if we have trouble understanding sender's V.17
+} FaxSetup;
 
 /*
  * This is an abstract class that defines the interface to
@@ -290,10 +294,10 @@ public:
      * }
      */
     virtual bool setupReceive() = 0;
-    virtual bool recvBegin(fxStr& emsg);
-    virtual bool recvEOMBegin(fxStr& emsg);
+    virtual bool recvBegin(FaxSetup* setupinfo, fxStr& emsg);
+    virtual bool recvEOMBegin(FaxSetup* setupinfo, fxStr& emsg);
     virtual bool recvPage(TIFF*, u_int& ppm, fxStr& em, const fxStr& id) = 0;
-    virtual bool recvEnd(fxStr& emsg) = 0;
+    virtual bool recvEnd(FaxSetup* setupinfo, fxStr& emsg) = 0;
     virtual void recvAbort() = 0;
     virtual void recvSucceeded();
     virtual void pokeConfig(bool isSend) = 0;

@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxMachineInfo.h 584 2007-08-17 14:54:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -54,6 +54,8 @@ private:
     bool	supportsMMR;		// handles Group 4
     bool	hasV34Trouble;		// has difficulty with V.34
     bool	hasV17Trouble;		// has difficulty with V.17
+    bool	senderHasV17Trouble;	// sender has difficulty with V.17
+    bool	senderSkipsV29;		// sender skips over V.29 usage
     bool	supportsPostScript;	// handles Adobe NSF protocol
     bool	supportsBatching;	// handles batching (EOM) protocol
     bool	calledBefore;		// successfully called before
@@ -98,6 +100,8 @@ public:
     bool getSupportsMMR() const;
     bool getHasV34Trouble() const;
     bool getHasV17Trouble() const;
+    bool getSenderHasV17Trouble() const;
+    bool getSenderSkipsV29() const;
     bool getSupportsPostScript() const;
     bool getSupportsBatching() const;
     bool getCalledBefore() const;
@@ -120,6 +124,8 @@ public:
     void setSupportsMMR(bool);
     void setHasV34Trouble(bool);
     void setHasV17Trouble(bool);
+    void setSenderHasV17Trouble(bool);
+    void setSenderSkipsV29(bool);
     void setSupportsPostScript(bool);
     void setSupportsBatching(bool);
     void setCalledBefore(bool);
@@ -154,6 +160,10 @@ inline bool FaxMachineInfo::getHasV34Trouble() const
     { return hasV34Trouble; }
 inline bool FaxMachineInfo::getHasV17Trouble() const
     { return hasV17Trouble; }
+inline bool FaxMachineInfo::getSenderHasV17Trouble() const
+    { return senderHasV17Trouble; }
+inline bool FaxMachineInfo::getSenderSkipsV29() const
+    { return senderSkipsV29; }
 inline bool FaxMachineInfo::getSupportsPostScript() const
     { return supportsPostScript; }
 inline bool FaxMachineInfo::getSupportsBatching() const
