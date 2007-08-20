@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 585 2007-08-20 01:29:10Z faxguy $
+#	$Id: configure 586 2007-08-20 16:27:18Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -383,7 +383,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 585 $"
+	echo "This is HylaFAX configure $Revision: 586 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -785,7 +785,7 @@ checkGCCVersion()
 {
     app=$1; shift
     eval `$app -v 2>&1 | \
-	sed -n -e '/[Vv]ersion/s/[^(]* [a-z\-]*\([0-9]*\)\.\([0-9]*\).\([0-9]*\).*/GCCdist=\1;GCCmajor=\2;GCCminor=\3/p'`
+	sed -n -e '/[Vv]ersion/s/[^(]* [a-z\-]*\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/GCCdist=\1;GCCmajor=\2;GCCminor=\3/p'`
     GCCversion="${GCCdist}.${GCCmajor}.${GCCminor}"; export GCCversion
     if [ ${GCCdist} -gt $1 ]; then
         return 0
