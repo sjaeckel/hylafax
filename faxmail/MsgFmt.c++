@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.c++ 588 2007-08-21 03:46:22Z faxguy $ */
+/*	$Id: MsgFmt.c++ 589 2007-08-21 04:49:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -119,6 +119,10 @@ MsgFmt::parseHeaders(FILE* fd, u_int& lineno)
 		len -= csize;
 		paren = line.next(colon, '(');
 	    }
+	}
+	while (len > 0 && isspace(line[line.length()-1])) {
+	    line.remove(line.length()-1, 1);	// trim trailing whitespace
+	    len--;
 	}
 	if (len > 0 && !isspace(line[0])) { 
 	    u_int l = 0;
