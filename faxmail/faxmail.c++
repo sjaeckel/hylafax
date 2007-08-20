@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 588 2007-08-21 03:46:22Z faxguy $ */
+/*	$Id: faxmail.c++ 589 2007-08-21 04:49:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -476,9 +476,10 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	    mime.external = true;
 	    if (mime.lineno > 1) endPage();	// new page
 	    formatWithExternal(fd, app, mime);
-	} else if (type == "text" && formatText(fd, mime))
-	    empty = false;
-	else if (type == "application")
+	} else if (type == "text") {
+	    if (formatText(fd, mime))
+		empty = false;
+	} else if (type == "application")
 	    formatApplication(fd, mime);
 	else if (type == "multipart")
 	    formatMultipart(fd, mime, msg);
@@ -545,8 +546,7 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 void
 faxMailApp::formatMessage(FILE* fd, MIMEState& mime, MsgFmt& msg)
 {
-    if (mime.getSubType() == "rfc822") {	// discard anything else
-						// 980316 - mic: new MsgFmt 
+    if (mime.getSubType() == "rfc822") {
 	MsgFmt bodyHdrs(msg);            
 	bodyHdrs.parseHeaders(fd, mime.lineno);
 	/*
@@ -582,6 +582,9 @@ faxMailApp::formatMessage(FILE* fd, MIMEState& mime, MsgFmt& msg)
 
 	MIMEState subMime(mime);
 	formatMIME(fd, subMime, bodyHdrs);	// format message body
+    } else if (mime.getSubType() == "delivery-status") {
+	if (formatText(fd, mime))
+	    empty = false;
     } else {
 	discardPart(fd, mime);
 	formatDiscarded(mime);
