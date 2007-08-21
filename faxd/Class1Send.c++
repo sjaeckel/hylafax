@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 577 2007-08-11 22:19:04Z faxguy $ */
+/*	$Id: Class1Send.c++ 592 2007-08-21 20:17:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -106,7 +106,8 @@ Class1Modem::dialResponse(fxStr& emsg)
 		protoTrace(emsg);
 		return (NOFCON);
 	    }
-	    continue;
+	    r = AT_OTHER;
+	    break;
 	}
     } while (r == AT_OTHER && isNoise(rbuf));
     return (FAILURE);

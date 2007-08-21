@@ -1,4 +1,4 @@
-#	$Id: CHANGES 591 2007-08-21 18:09:53Z faxguy $	
+#	$Id: CHANGES 592 2007-08-21 20:17:40Z faxguy $	
 
 New Changes
 
@@ -11,7 +11,7 @@ New Changes
 * correct numerous manpage typographical errors (15 Aug 2007)
 * handle the echo of FTT or CFR better in Class 1 receive (14 Aug 2007)
 * stop fast looping in Class 1 ECM receive when AT_EMPTYLINE occurs (11 Aug 2007)
-* DLE+ETX after dialing is noise, ignore it (9, 11 Aug 2007)
+* DLE+ETX after dialing is noise, ignore it (9, 11, 21 Aug 2007)
 * support libtiff 3.9 (6 Aug 2007)
 * handle CRP at Phase C reception (4 Aug 2007)
 * don't get stuck on repeated BUSY messages from the modem (3 Aug 2007)
