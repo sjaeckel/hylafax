@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 450 2007-02-28 21:22:24Z faxguy $
+#	$Id: faxrcvd.sh.in 594 2007-08-22 05:09:21Z faxguy $
 #
 # ============================================
 #
@@ -66,19 +66,22 @@ faxrcvd_mail()
     echo "Content-Transfer-Encoding: $MAILENCODING"
     echo "To: $MAILTO"
     echo "From: $DICTRECEIVEAGENT <$FROMADDR>"
+    printf "Subject: =?$CHARSET?Q?"
+    (
     if [ -f "$FILE" ]; then
-	eval echo "Subject: $DICTRECEIVEDFROM";
+	eval printf "$DICTRECEIVEDFROM";
     else
-	eval echo "Subject: $DICTNOTRECEIVED";
+	eval printf "$DICTNOTRECEIVED";
     fi
+    ) | $AWK -f bin/rfc2047-encode.awk
+    echo "?="
     echo ""
+    echo "--$MIMEBOUNDARY"
+    echo "Content-Type: text/plain; charset=$CHARSET"
+    echo "Content-Transfer-Encoding: quoted-printable"
+    echo ""
+    (
     case "$MAILTYPE" in
-	Multipart/Mixed*)
-	    echo "--$MIMEBOUNDARY"
-	    echo "Content-Type: text/plain; charset=$CHARSET"
-	    echo "Content-Transfer-Encoding: quoted-printable"
-	    echo ""
-	    ;;
 	text/plain*)
 	    echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";
 	    ;;
@@ -102,7 +105,6 @@ faxrcvd_mail()
 	if [ -f log/c$COMMID ]; then
 	    $SED -e '/-- data/d' \
 		 -e '/start.*timer/d' -e '/stop.*timer/d' \
-		 -e 's/=/=3D/g' \
 		 log/c$COMMID
 	elif [ -n "$COMMID" ]; then
 	    echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)."
@@ -119,6 +121,7 @@ faxrcvd_mail()
 		;;
 	esac
     fi
+    ) | $AWK -f bin/qp-encode.awk
     if [ -f $FILE ]; then
 	case "$MAILTYPE" in
 	    Multipart/Mixed*)
@@ -182,7 +185,7 @@ faxrcvd_mail()
 	    text/plain*)
 		if [ -n "$SENDTO" ]; then
 		    echo ""
-		    eval echo "$DICTDISPATCHEDTO"
+		    (eval echo "$DICTDISPATCHEDTO") | $AWK -f bin/qp-encode.awk
 		fi
 		;;
 	esac

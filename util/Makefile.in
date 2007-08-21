@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
+#	$Id: Makefile.in 594 2007-08-22 05:09:21Z faxguy $
 #
 # @WARNING@
 #
@@ -191,6 +191,8 @@ install: installClient
 	${PUTSUPD} -m 755 -src pollrcvd.sh -O pollrcvd
 	${PUTSUPD} -m 755 -src mkcover.sh -O mkcover
 	${PUTSUPD} -m 755 -src wedged.sh -O wedged
+	${PUTSUPD} -m 755 -src qp-encode.awk -O qp-encode.awk
+	${PUTSUPD} -m 755 -src rfc2047-encode.awk -O rfc2047-encode.awk
 	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -m 444 -idb "config(update)" \
 	    -src ${SRCDIR}/dpsprinter.ps -O dpsprinter.ps
 	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -idb "config(suggest)" \
@@ -222,6 +224,8 @@ uninstall::
 	${RM} -f ${SPOOL}/bin/pollrcvd
 	${RM} -f ${SPOOL}/bin/mkcover
 	${RM} -f ${SPOOL}/bin/wedged
+	${RM} -f ${SPOOL}/bin/qp-encode.awk
+	${RM} -f ${SPOOL}/bin/rfc2047-encode.awk
 	${RM} -f ${SPOOL}/etc/dpsprinter.ps
 	${RM} -f ${SPOOL}/etc/cover.templ
 
@@ -233,6 +237,6 @@ uninstall::
 clobberconfig:
 	-${RM} -f pagesizes xferfaxstats.sh recvstats.sh faxcron.sh dictionary.sh \
 		faxrcvd.sh mkcover.sh notify.sh pcl2fax.sh pollrcvd.sh \
-		ps2fax.dps.sh ps2fax.gs.sh ps2fax.imp.sh tiff2fax.sh \
-		tiff2pdf.sh wedged.sh archive.sh pdf2fax.gs.sh common-functions.sh
+		ps2fax.dps.sh ps2fax.gs.sh ps2fax.imp.sh tiff2fax.sh tiff2pdf.sh \
+		wedged.sh qp-encode.awk rfc2047-encode.awk archive.sh pdf2fax.gs.sh common-functions.sh
 

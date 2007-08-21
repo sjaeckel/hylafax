@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 586 2007-08-20 16:27:18Z faxguy $
+#	$Id: configure 594 2007-08-22 05:09:21Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -383,7 +383,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 586 $"
+	echo "This is HylaFAX configure $Revision: 594 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -4865,6 +4865,8 @@ CONF_FILES="
     util/tiff2fax.sh
     util/wedged.sh
     util/tiff2pdf.sh
+    util/qp-encode.awk
+    util/rfc2047-encode.awk
 
     pkg/Makefile
     pkg/cpkginfo

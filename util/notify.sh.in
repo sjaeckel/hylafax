@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 460 2007-03-08 02:36:53Z faxguy $
+#    $Id: notify.sh.in 594 2007-08-22 05:09:21Z faxguy $
 #
 # ============================================
 #
@@ -71,7 +71,9 @@ notify_mail()
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $mailaddr"
     echo "From: $FROMADDR"
-    echo "Subject: $MAILSUBJECT"
+    printf "Subject: =?$CHARSET?Q?"
+    ( printf "$MAILSUBJECT" ) | $AWK -f bin/rfc2047-encode.awk
+    echo "?="
     echo ""
     echo "This is a multi-part message in MIME format."
     echo ""
@@ -80,6 +82,7 @@ notify_mail()
     echo "Content-Type: text/plain; charset=$CHARSET"
     echo "Content-Transfer-Encoding: quoted-printable"
     echo ""
+    (
     if [ -z "$THISJOBTYPE" ]; then
 	printf "$jobtag $DICTTO $number"
     else
@@ -264,8 +267,7 @@ notify_mail()
         if [ -f "$COMFILE" ] ; then
             # dump the comfile to output except for '-- data' lines
             cat $COMFILE | $SED -e '/-- data/d' \
-		-e '/start.*timer/d' -e '/stop.*timer/d' \
-		-e 's/=/=3D/g'
+		-e '/start.*timer/d' -e '/stop.*timer/d'
         else 
             printf "$DICTNOLOGAVAIL"
             if [ -n "$commid" ] ; then  # non 0 len commid value
@@ -274,6 +276,7 @@ notify_mail()
             echo "."
         fi
     fi
+    ) | $AWK -f bin/qp-encode.awk
     for type in $RETURNFILETYPE; do 
 	if [ $nfiles -gt 0 ] ; then
 	    for i in `local_seq 1 $nfiles`; do 
