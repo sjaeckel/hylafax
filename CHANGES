@@ -1,7 +1,8 @@
-#	$Id: CHANGES 589 2007-08-21 04:49:08Z faxguy $	
+#	$Id: CHANGES 590 2007-08-21 15:08:19Z faxguy $	
 
 New Changes
 
+* don't fail on odd responses to ModemVerbseResultsCmd (21 Aug 2007)
 * make faxmail trim whitespace from the ends of header lines (20 Aug 2007)
 * discard empty text parts (20 Aug 2007)
 * add senderHasV17Trouble, senderSkipsV29 info file entries, and use them
