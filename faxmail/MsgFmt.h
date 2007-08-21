@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.h 588 2007-08-21 03:46:22Z faxguy $ */
+/*	$Id: MsgFmt.h 591 2007-08-21 18:09:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -56,7 +56,7 @@ struct MsgFmt {
     u_int headerCount(void);
     fxStr mapHeader(const fxStr& name);
     void parseHeaders(FILE* fd, u_int& lineno);
-    bool formatHeaders(TextFormat& fmt);
+    void formatHeaders(TextFormat& fmt);
     void showItalic(TextFormat& fmt, const char* cp);
 };
 #endif /* _MsgFmt_ */

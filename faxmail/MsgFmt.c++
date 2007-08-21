@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.c++ 589 2007-08-21 04:49:08Z faxguy $ */
+/*	$Id: MsgFmt.c++ 591 2007-08-21 18:09:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -234,7 +234,7 @@ MsgFmt::headerCount(void)
 #endif
 #define	roundup(x, y)	((((x)+((y)-1))/(y))*(y))
 
-bool
+void
 MsgFmt::formatHeaders(TextFormat& fmt)
 {
     /*
@@ -284,9 +284,7 @@ MsgFmt::formatHeaders(TextFormat& fmt)
 	fmt.beginLine();
 	    fputc(' ', fmt.getOutputFile());	// XXX whitespace needed
 	fmt.endLine();
-	return true;
     }
-    return false;
 }
 
 /*
