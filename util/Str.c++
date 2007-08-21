@@ -1,4 +1,4 @@
-/*	$Id: Str.c++ 510 2007-05-04 22:34:36Z faxguy $ */
+/*	$Id: Str.c++ 593 2007-08-21 23:23:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -179,12 +179,24 @@ fxStr::vformat(const char* fmt, va_list ap)
     //XXX can truncate but cant do much about it without va_copy
     int size = DEFAULT_FORMAT_BUFFER;
     fxStr s;
-    s.data = (char*)malloc(size);
-    int len = vsnprintf(s.data, size, fmt, ap);
-    fxAssert(len >= 0 && len < size, "Str:vformat() Have truncated string.");
+    char* tmp = NULL;
+
+    int len = 0;
+
+    do
+    {
+	if (len)
+	    size *= 2;
+	tmp = (char*)realloc(tmp, size);
+	len = vsnprintf(tmp, size, fmt, ap);
+	fxAssert(len >= 0, "Str::vformat() error in vsnprintf");
+    } while (len > size);
+
     if (size > len + 1) {
-        s.data = (char*) realloc(s.data, len + 1);
+        tmp = (char*) realloc(tmp, len + 1);
     }
+
+    s.data = tmp;
     s.slength = len + 1;
     return s; //XXX this is return by value which is inefficient
 }
