@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: ClassModem.c++ 590 2007-08-21 15:08:19Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -775,7 +775,8 @@ ClassModem::reset(long ms)
         return false;
     }
     if ( true != atCmd(conf.verboseResultsCmd, AT_OK, ms) ) {
-        return false;
+	/* Some modems sometimes return NO CARRIER here, so we don't return false. */
+	protoTrace("Unexpected result to %s, continuing anyway.", (const char*) conf.verboseResultsCmd);
     }
     if ( true != atCmd(conf.resultCodesCmd, AT_OK, ms) ) {
         return false;
