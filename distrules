@@ -1,4 +1,4 @@
-#	$Id: distrules 484 2007-03-19 23:26:06Z faxguy $
+#	$Id: distrules 594 2007-08-22 05:09:21Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -380,6 +380,8 @@ HYLAFAXSRC=\
 	util/tiff2fax.sh.in			\
 	util/tiff2pdf.sh.in			\
 	util/wedged.sh.in			\
+	util/qp-encode.awk.in			\
+	util/rfc2047-encode.awk.in		\
 	util/xferfaxstats.sh.in			\
 	util/typerules				\
 	util/cover.templ			\
