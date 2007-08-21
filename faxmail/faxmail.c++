@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 589 2007-08-21 04:49:08Z faxguy $ */
+/*	$Id: faxmail.c++ 591 2007-08-21 18:09:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -68,7 +68,6 @@ class faxMailApp : public TextFormat, public MsgFmt {
 private:
     bool	markDiscarded;		// mark MIME parts not handled
     bool	withinFile;		// between beginFile() & endFile()
-    bool	empty;			// No acutall formated output
     fxStr	mimeConverters;		// pathname to MIME converter scripts
     fxStr	mailProlog;		// site-specific prologue definitions
     fxStr	clientProlog;		// client-specific prologue info
@@ -87,7 +86,7 @@ private:
     bool	trimText;		// trim text parts
 
     void formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg);
-    bool formatText(FILE* fd, MIMEState& mime);
+    void formatText(FILE* fd, MIMEState& mime);
     void formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg);
     void formatMessage(FILE* fd, MIMEState& mime, MsgFmt& msg);
     void formatApplication(FILE* fd, MIMEState& mime);
@@ -369,42 +368,23 @@ faxMailApp::run(int argc, char** argv)
     } else
 	beginFormatting(stdout);	// NB: sets up page info
 
-    /*
-     * empty tracks if we've actually put any real content
-     * into our self (MsgFmt/TextFormat), instead of just the boiler-plate
-     * PostScript.  If we're still empty at the end, we don't submit
-     * the file we've been making.
-     */
-    empty = true;
-
     const fxStr* version = findHeader("MIME-Version");
     if (version && *version == "1.0") {
         beginFile();
 	withinFile = true;
-	// We only format top-level headers if they are wanted
-	if (formatEnvHeaders && formatHeaders (*this))
-	    empty = false;
+        if (formatEnvHeaders) formatHeaders(*this);	// format top-level headers
 	formatMIME(stdin, mime, *this);	// parse MIME format
         if (withinFile) endFile();
 	withinFile = false;
     } else {
         beginFile();
 	withinFile = true;
-	// We only format top-level headers if they are wanted
-	if (formatEnvHeaders && formatHeaders(*this))
-	    empty = false;
-	if (formatText(stdin, mime))    // treat body as text/plain
-	    empty = false;
+	if (formatEnvHeaders) formatHeaders(*this);	// format top-level headers
+	formatText(stdin, mime);	// treat body as text/plain
         if (withinFile) endFile();
 	withinFile = false;
     }
     endFormatting(mime.external);
-
-    /*
-     * If our "formatted" file is empty, remove it.
-     * We know it's the first file the client has.
-     */
-    if (empty) client->removeFile(0);
 
     if (client) {			// complete direct delivery
 	bool status = false;
@@ -476,10 +456,9 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	    mime.external = true;
 	    if (mime.lineno > 1) endPage();	// new page
 	    formatWithExternal(fd, app, mime);
-	} else if (type == "text") {
-	    if (formatText(fd, mime))
-		empty = false;
-	} else if (type == "application")
+	} else if (type == "text")
+	    formatText(fd, mime);
+	else if (type == "application")
 	    formatApplication(fd, mime);
 	else if (type == "multipart")
 	    formatMultipart(fd, mime, msg);
@@ -496,20 +475,15 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 /*
  * Format a text part.
  */
-bool
+void
 faxMailApp::formatText(FILE* fd, MIMEState& mime)
 {
     fxStackBuffer buf;
     bool trim = trimText;
-    u_int lines = 0;
     while (mime.getLine(fd, buf)) {
 	if (trim) trim = ((buf.getLength() == 0) || (buf[0] == 0xA));
-	if (!trim) {
-	    format(buf, buf.getLength());	// NB: treat as text/plain
-	    lines++;
-	}
+	if (!trim) format(buf, buf.getLength());	// NB: treat as text/plain
     }
-    return (lines > 0);
 }
 
 /*
@@ -576,15 +550,13 @@ faxMailApp::formatMessage(FILE* fd, MIMEState& mime, MsgFmt& msg)
 		fprintf(getOutputFile(), " %s ", divider);
 	    endLine();
 	}
-	if (nl > 0 )
-	    if (bodyHdrs.formatHeaders(*this) )	// emit formatted headers
-		empty = false;
+	if (nl > 0)
+	    bodyHdrs.formatHeaders(*this);	// emit formatted headers
 
 	MIMEState subMime(mime);
 	formatMIME(fd, subMime, bodyHdrs);	// format message body
     } else if (mime.getSubType() == "delivery-status") {
-	if (formatText(fd, mime))
-	    empty = false;
+	formatText(fd, mime);
     } else {
 	discardPart(fd, mime);
 	formatDiscarded(mime);
@@ -654,7 +626,6 @@ faxMailApp::formatDiscarded(MIMEState& mime)
 		, (const char*) mime.getSubType()
 	    );
 	format((const char*)buf, buf.getLength());
-	empty = false;
     }
 }
 
