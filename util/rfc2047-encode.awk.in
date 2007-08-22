@@ -1,5 +1,5 @@
 #! @AWK@ -f
-#      $Id: rfc2047-encode.awk.in 597 2007-08-23 01:13:54Z faxguy $
+#      $Id: rfc2047-encode.awk.in 600 2007-08-23 04:14:32Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -38,9 +38,9 @@ BEGIN {
 }
 
 {
-  l=0;
+  l=1;
   len = length();
-  while (len != 0 && l <= len) {
+  while (l <= len) {
     printf("=?" charset "?Q?");
     pos = 5 + length(charset);
     for (; pos < 70 && l <= len; l++) {

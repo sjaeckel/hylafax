@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 597 2007-08-23 01:13:54Z faxguy $
+#    $Id: notify.sh.in 600 2007-08-23 04:14:32Z faxguy $
 #
 # ============================================
 #
@@ -72,8 +72,7 @@ notify_mail()
     echo "To: $mailaddr"
     echo "From: $FROMADDR"
     printf "Subject: "
-    ( printf "$MAILSUBJECT" ) | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
-    echo ""
+    ( echo "$MAILSUBJECT" ) | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo ""
     echo "This is a multi-part message in MIME format."
     echo ""
