@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: Class1Recv.c++ 598 2007-08-23 01:35:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1282,6 +1282,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    continue;
 				case FCF_MCF:
 				case FCF_CFR:
+				case FCF_CTR:
 				    if ((rtncframe[2] & 0x80) == FCF_RCVR) {
 					/*
 					 * Echo on the channel may be so lagged that we're hearing 

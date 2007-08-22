@@ -1,7 +1,8 @@
-#	$Id: CHANGES 597 2007-08-23 01:13:54Z faxguy $	
+#	$Id: CHANGES 598 2007-08-23 01:35:25Z faxguy $	
 
 New Changes
 
+* handle an echoed CTR signal (22 Aug 2007)
 * add MinAcceptedLineCount configuration feature, default to 10 (22 Aug 2007)
 * properly use quoted-printable and RFC2047 Subject header in mails (21-22 Aug 2007)
 * don't fail on odd responses to ModemVerbseResultsCmd (21 Aug 2007)
