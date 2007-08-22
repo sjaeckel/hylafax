@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 594 2007-08-22 05:09:21Z faxguy $
+#	$Id: faxrcvd.sh.in 597 2007-08-23 01:13:54Z faxguy $
 #
 # ============================================
 #
@@ -66,15 +66,15 @@ faxrcvd_mail()
     echo "Content-Transfer-Encoding: $MAILENCODING"
     echo "To: $MAILTO"
     echo "From: $DICTRECEIVEAGENT <$FROMADDR>"
-    printf "Subject: =?$CHARSET?Q?"
+    printf "Subject: "
     (
     if [ -f "$FILE" ]; then
 	eval printf "$DICTRECEIVEDFROM";
     else
 	eval printf "$DICTNOTRECEIVED";
     fi
-    ) | $AWK -f bin/rfc2047-encode.awk
-    echo "?="
+    ) | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    echo ""
     echo ""
     echo "--$MIMEBOUNDARY"
     echo "Content-Type: text/plain; charset=$CHARSET"

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 594 2007-08-22 05:09:21Z faxguy $
+#	$Id: pollrcvd.sh.in 597 2007-08-23 01:13:54Z faxguy $
 #
 # ============================================
 #
@@ -66,9 +66,9 @@ pollrcvd_mail ()
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
     echo "From: $DICTRECEIVEAGENT <$FROMADDR>"
-    printf "Subject: =?$CHARSET?Q?"
-    ( eval printf "$DICTRETRIEVEDFROM" ) | $AWK -f bin/rfc2047-encode.awk
-    echo "?="
+    printf "Subject: "
+    ( eval printf "$DICTRETRIEVEDFROM" ) | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    echo ""
     echo ""
     echo "--$MIMEBOUNDARY"
     echo "Content-Type: text/plain; charset=$CHARSET"

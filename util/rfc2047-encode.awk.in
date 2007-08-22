@@ -1,5 +1,5 @@
 #! @AWK@ -f
-#      $Id: rfc2047-encode.awk.in 595 2007-08-22 15:02:15Z faxguy $
+#      $Id: rfc2047-encode.awk.in 597 2007-08-23 01:13:54Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -27,49 +27,31 @@
 #
 
 
-function qp_lc(c)
-{
-  return _qp[c];
-}
-
-function qp(c)
-{
-  return _qp[c];
-}
-
 BEGIN {
-  FS = "\n";
-
   for (i = 0; i < 256; i++) {
     c = sprintf("%c", i);
     if ((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122))
-      _qp[c] = c;
+      qp[c] = c;
     else
-      _qp[c] = sprintf("=%02X", i);
+      qp[c] = sprintf("=%02X", i);
   }
 }
 
 {
   l=0;
-  out="";
-  len=length();
-  if (len > 0)
-  {
-    for (i=1; i<len; i++)
-      out = out qp(substr($0, i, 1));
-    out = out qp_lc(substr($0, len, 1));
-
-    # Quoted-Printable lines must be no more than 76 characters
-    # (including soft break)
-    while (length(out) > 75)
-    {
-      end = 75;
-      while (substr(out, end, 1) == "=" || substr(out, end-1, 1) == "=")
-        end--;
-      print substr(out, 1, end) "=";
-      out = substr(out, end+1);
+  len = length();
+  while (len != 0 && l <= len) {
+    printf("=?" charset "?Q?");
+    pos = 5 + length(charset);
+    for (; pos < 70 && l <= len; l++) {
+      printf(qp[substr($0, l, 1)]);
+      pos += length(qp[substr($0, l, 1)]);
+    }
+    printf("?=");
+    if (l < len) {
+      print("");
+      printf(" ");
     }
   }
-  printf(out);
 }
 
