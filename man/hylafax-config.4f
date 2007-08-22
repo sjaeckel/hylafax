@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 584 2007-08-17 14:54:27Z faxguy $
+.\"	$Id: hylafax-config.4f 596 2007-08-22 23:54:30Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-08-17 07:54:27 -0700 (Fri, 17 Aug 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-08-22 16:54:30 -0700 (Wed, 22 Aug 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -178,6 +178,7 @@ MaxRecvPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a receive
 MaxSendPages¹	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a send
 MaxSetupAttempts	integer	\s-12\s+1	max attempts to initialize a modem
 MaxTries¹	integer	\s-13\s+1	max attempts to transmit a job
+MinAcceptedLineCount	integer	\s-110\s+1	min number of rows for \s-1OK\s+1 page quality
 ModemGroup¹	string	\-	define a name for a set of modems
 ModemPriority	integer	255	scheduling priority for outbound jobs
 ModemReadyState	string	\s-1R\s+1	``ready state'' sent by \fIfaxgetty\fP
@@ -1226,6 +1227,11 @@ This value may be overridden by rules in the
 mechanism.
 See also
 .BR MaxDials .
+.TP
+.B MinAcceptedLineCount
+The minimum number of received scanlines allowed on an ``OK'' page.
+The use of this setting prevents confirmation from being sent for
+very short pages.
 .TP
 .B ModemGroup¹
 Define a logical name for a set of modem devices.
