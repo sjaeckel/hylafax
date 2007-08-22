@@ -1,5 +1,5 @@
 #! @AWK@ -f
-#      $Id: rfc2047-encode.awk.in 594 2007-08-22 05:09:21Z faxguy $
+#      $Id: rfc2047-encode.awk.in 595 2007-08-22 15:02:15Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -29,13 +29,7 @@
 
 function qp_lc(c)
 {
-  # Space (32) and tab (9) must be encoded at the end of line.
-  if (c == " ")
-    return "=20";
-  else if (c == "\t")
-    return "=09";
-  else
-    return _qp[c];
+  return _qp[c];
 }
 
 function qp(c)
