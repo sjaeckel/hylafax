@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 597 2007-08-23 01:13:54Z faxguy $
+#	$Id: faxrcvd.sh.in 600 2007-08-23 04:14:32Z faxguy $
 #
 # ============================================
 #
@@ -58,23 +58,21 @@ fi
 faxrcvd_mail()
 {
     MAILTYPE="$1"
-    MAILENCODING="$2"
-    MAILTO="$3"
+    MAILTO="$2"
 
    (echo "Mime-Version: 1.0"
-    echo "Content-Type: $MAILTYPE"
-    echo "Content-Transfer-Encoding: $MAILENCODING"
+    echo "Content-Type: Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\""
+    echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
     echo "From: $DICTRECEIVEAGENT <$FROMADDR>"
     printf "Subject: "
     (
     if [ -f "$FILE" ]; then
-	eval printf "$DICTRECEIVEDFROM";
+	eval echo "$DICTRECEIVEDFROM";
     else
-	eval printf "$DICTNOTRECEIVED";
+	eval echo "$DICTNOTRECEIVED";
     fi
     ) | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
-    echo ""
     echo ""
     echo "--$MIMEBOUNDARY"
     echo "Content-Type: text/plain; charset=$CHARSET"
@@ -82,9 +80,8 @@ faxrcvd_mail()
     echo ""
     (
     case "$MAILTYPE" in
-	text/plain*)
-	    echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";
-	    ;;
+	textonly)
+	    echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";;
     esac
     if [ -f $FILE ]; then
 	faxInfo $FILE
@@ -113,10 +110,10 @@ faxrcvd_mail()
 	fi
     else
 	case "$MAILTYPE" in
-	    Multipart/Mixed*)
+	    withattached)
 		printf "%`echo $INFOSIZE`s: c$COMMID\n" "$DICTCOMMID"
 		;;
-	    text/plain*)
+	    textonly)
 		printf "%`echo $INFOSIZE`s: c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)\n" "$DICTCOMMID"
 		;;
 	esac
@@ -124,7 +121,7 @@ faxrcvd_mail()
     ) | $AWK -f bin/qp-encode.awk
     if [ -f $FILE ]; then
 	case "$MAILTYPE" in
-	    Multipart/Mixed*)
+	    withattached)
 		for type in $FILETYPE; do
 		    echo ""
 		    echo "--$MIMEBOUNDARY"
@@ -182,7 +179,7 @@ faxrcvd_mail()
 		echo ""
 		echo "--$MIMEBOUNDARY--"
 		;;
-	    text/plain*)
+	    textonly)
 		if [ -n "$SENDTO" ]; then
 		    echo ""
 		    (eval echo "$DICTDISPATCHEDTO") | $AWK -f bin/qp-encode.awk
@@ -309,9 +306,9 @@ case $NOTIFY_FAXMASTER$MSG in
 esac
 if [ "$NOTIFY_FAXMASTER" != "no" ]; then
     if [ ! -f $FILE ] || [ "$TOADDR" != "$SENDTO" ]; then
-	faxrcvd_mail "text/plain; charset=$CHARSET" "quoted-printable" "$TOADDR"
+	faxrcvd_mail "textonly" "$TOADDR"
     fi
 fi
 if [ -n "$SENDTO" ] && [ -f $FILE ]; then
-    faxrcvd_mail "Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\"" "7bit" "$SENDTO"
+    faxrcvd_mail "withattached" "$SENDTO"
 fi
