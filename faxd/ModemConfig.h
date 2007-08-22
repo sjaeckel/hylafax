@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: ModemConfig.h 596 2007-08-22 23:54:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -234,6 +234,7 @@ public:
     u_int	atCmdDelay;		// delay (ms) between each AT cmd
     u_int	percentGoodLines;	// required % of good lines in page
     u_int	maxConsecutiveBadLines;	// max consecutive bad lines in page
+    u_int	minAcceptedLineCount;	// min accepted number of lines in page
     u_int	minSpeed;		// minimum speed for fax transmits
     bool	softRTFCC;		// real-time fax compression conversion (software)
     bool	waitForConnect;		// modem sends multiple answer responses

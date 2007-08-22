@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 499 2007-04-18 00:55:49Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 596 2007-08-22 23:54:30Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -1073,7 +1073,11 @@ FaxModem::isQualityOK(const Class2Params& params)
 	    return (false);
 	}
     }
-    if (recvEOLCount == 0) return (false);	// don't label null data as "good"
+    if (recvEOLCount == 0 || recvEOLCount < conf.minAcceptedLineCount) {
+	serverTrace("RECV: REJECT page quality, too few scanlines: %u",
+	    recvEOLCount);
+	return (false);
+    }
     return (true);
 }
 

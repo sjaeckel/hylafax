@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: ModemConfig.c++ 596 2007-08-22 23:54:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -189,6 +189,7 @@ static struct {
 { "ringtimeout",		&ModemConfig::ringTimeout,	     6000 },
 { "percentgoodlines",		&ModemConfig::percentGoodLines,	     95 },
 { "maxconsecutivebadlines",	&ModemConfig::maxConsecutiveBadLines,5 },
+{ "minacceptedlinecount",	&ModemConfig::minAcceptedLineCount,  10 },
 { "modemresetdelay",		&ModemConfig::resetDelay,	     2600 },
 { "modemdtrdropdelay",		&ModemConfig::dtrDropDelay,	     75 },
 { "modembaudratedelay",		&ModemConfig::baudRateDelay,	     10 },
