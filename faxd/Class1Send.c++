@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 592 2007-08-21 20:17:40Z faxguy $ */
+/*	$Id: Class1Send.c++ 599 2007-08-23 01:43:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -849,7 +849,7 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 			 * through.
 			 */
 			if (curcap->mod == V17 && attempt == 1 && tries == 3) hadV17Trouble = true;
-			emsg = "RSPREC error/got DCN (sender abort) {E103}";
+			emsg = "RSPREC error/got DCN (receiver abort) {E103}";
 		    } else
 			emsg = "RSPREC invalid response received {E104}";
 		    goto done;
