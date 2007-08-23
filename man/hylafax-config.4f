@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 596 2007-08-22 23:54:30Z faxguy $
+.\"	$Id: hylafax-config.4f 602 2007-08-23 17:52:43Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-08-22 16:54:30 -0700 (Wed, 22 Aug 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-08-23 10:52:43 -0700 (Thu, 23 Aug 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -258,6 +258,7 @@ ModemMinSpeed	string	\s-12400\s+1	minimum acceptable transmit speed
 ModemMfrQueryCmd	string	\-	command for querying modem manufacturer
 ModemModelQueryCmd	string	\-	command for querying modem model
 ModemNoAutoAnswerCmd	string	\s-1ATS0=0\s+1	command for disabling auto-answer
+ModemNoAutoAnswerCmdDelay	integer	\s-10\s+1	time, in ms, to pause after a disabling auto-answer
 ModemNoFlowCmd	string	\-	command for disabling hardware flow control between \s-1DTE\s+1 and \s-1DCE\s+1
 ModemOnHookCmd	string	\s-1ATH0\s+1	command for placing phone ``on hook''
 ModemPageDoneTimeout	integer	\s-1180000\s+1	page send/receive timeout (ms)
@@ -2236,6 +2237,12 @@ is issued to the modem.
 .B ModemNoAutoAnswerCmd
 The command to stop the modem from automatically
 answering when the phone rings.
+.TP
+.B ModemNoAutoAnswerCmdDelay
+The time, in milliseconds, to pause after receiving the OK following
+.B ModemNoAutoAnswerCmd
+before any further commands are sent to the modem.  All input from
+the modem is flushed after pausing.
 .TP
 .B ModemNoFlowCmd
 The command to disable flow control between

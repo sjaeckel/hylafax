@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 592 2007-08-21 20:17:40Z faxguy $ */
+/*	$Id: ClassModem.c++ 602 2007-08-23 17:52:43Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -772,12 +772,16 @@ ClassModem::reset(long ms)
     if ( true != atCmd(conf.noAutoAnswerCmd, AT_OK, ms) ) {
         return false;
     }
+    if (conf.noAutoAnswerCmdDelay) {
+	/* Some modems do funny things after ATS0=0. */
+	pause(conf.noAutoAnswerCmdDelay);
+	flushModemInput();
+    }
     if ( true != atCmd(conf.echoOffCmd, AT_OK, ms) ) {
         return false;
     }
     if ( true != atCmd(conf.verboseResultsCmd, AT_OK, ms) ) {
-	/* Some modems sometimes return NO CARRIER here, so we don't return false. */
-	protoTrace("Unexpected result to %s, continuing anyway.", (const char*) conf.verboseResultsCmd);
+        return false;
     }
     if ( true != atCmd(conf.resultCodesCmd, AT_OK, ms) ) {
         return false;
