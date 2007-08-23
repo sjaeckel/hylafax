@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 596 2007-08-22 23:54:30Z faxguy $ */
+/*	$Id: ModemConfig.h 602 2007-08-23 17:52:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -108,6 +108,7 @@ public:
     fxStr	onHookCmd;		// cmd for placing phone ``on hook''
     fxStr	softResetCmd;		// cmd for doing soft reset
     u_int	softResetCmdDelay;	// time in ms to pause after soft reset
+    u_int	noAutoAnswerCmdDelay;	// time in ms to pause after noAutoAnswerCmd
     u_int	ringsBeforeResponse;	// number of rings to wait before ModemRingResponse
     u_int	ringTimeout;		// timeout in ms after RING to reset
     fxStr	waitTimeCmd;		// cmd for setting carrier wait time
