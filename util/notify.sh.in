@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 600 2007-08-23 04:14:32Z faxguy $
+#    $Id: notify.sh.in 603 2007-08-24 20:04:57Z faxguy $
 #
 # ============================================
 #
@@ -252,30 +252,41 @@ notify_mail()
             cat $files_0
         fi
     fi
+    ) | $AWK -f bin/qp-encode.awk
     if [ -n "$faxstatus" ] && [ "$RETURNTRANSCRIPT" = "yes" ] ; then
-        # use -e in echo to interpret escape characters in faxstatus
-	echo ""
-	echo "$DICTADDITIONALINFO"
-	echo ""
-	# we need to change the '\n' in the strings to real newlines
-	echo "     $faxstatus" | sed -e 's/\\n/\n/g'
-	echo ""
-	echo "    ---- $DICTLOGFOLLOWS2 ----"
-	echo ""
+	(
+	 # use -e in echo to interpret escape characters in faxstatus
+	 echo ""
+	 echo "$DICTADDITIONALINFO"
+	 echo ""
+	 # we need to change the '\n' in the strings to real newlines
+	 echo "     $faxstatus" | sed -e 's/\\n/\n/g'
+	 echo ""
+	 echo "    ---- $DICTLOGFOLLOWS2 ----"
+	 echo ""
+	) | $AWK -f bin/qp-encode.awk
         COMFILE="log/c$commid"
         if [ -f "$COMFILE" ] ; then
+	    echo ""
+	    echo "--$MIMEBOUNDARY"
+	    echo "Content-Type: text/plain; charset=US-ASCII; name=c$commid"
+	    echo "Content-Description: FAX session log"
+	    echo "Content-Transfer-Encoding: 7bit"
+	    echo "Content-Disposition: inline"
+	    echo ""
             # dump the comfile to output except for '-- data' lines
             cat $COMFILE | $SED -e '/-- data/d' \
 		-e '/start.*timer/d' -e '/stop.*timer/d'
         else 
-            printf "$DICTNOLOGAVAIL"
-            if [ -n "$commid" ] ; then  # non 0 len commid value
+	    (
+             printf "$DICTNOLOGAVAIL"
+             if [ -n "$commid" ] ; then  # non 0 len commid value
                     printf "($DICTCOMMID c$commid)"
-            fi
-            echo "."
+             fi
+             echo "."
+	    ) | $AWK -f bin/qp-encode.awk
         fi
     fi
-    ) | $AWK -f bin/qp-encode.awk
     for type in $RETURNFILETYPE; do 
 	if [ $nfiles -gt 0 ] ; then
 	    for i in `local_seq 1 $nfiles`; do 

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 600 2007-08-23 04:14:32Z faxguy $
+#	$Id: faxrcvd.sh.in 603 2007-08-24 20:04:57Z faxguy $
 #
 # ============================================
 #
@@ -86,107 +86,111 @@ faxrcvd_mail()
     if [ -f $FILE ]; then
 	faxInfo $FILE
 	printf "%`echo $INFOSIZE`s: $DEVICE\n" "$DICTRECEIVEDON"
-	if [ "$MSG" ]; then
-	    echo ""
-	    echo "$DICTMSGINTRO"
+	if [ -z "$MSG" ]; then
+	    case "$MAILTYPE" in
+		withattached)
+		    printf "%`echo $INFOSIZE`s: c$COMMID\n" "$DICTCOMMID"
+		    ;;
+		textonly)
+		    printf "%`echo $INFOSIZE`s: c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)\n" "$DICTCOMMID"
+		    if [ -f $FILE ] && [ -n "$SENDTO" ]; then
+			echo ""
+			eval echo "$DICTDISPATCHEDTO"
+		    fi
+		    ;;
+	    esac
 	fi
     else
 	eval echo "$DICTATTEMPTEDFAXFAILED"
     fi
+    ) | $AWK -f bin/qp-encode.awk
     if [ "$MSG" ] || [ ! -f $FILE ]; then
-	echo ""
-	echo "    $MSG"
-	echo ""
-	echo "$DICTLOGFOLLOWS"
-	echo ""
+	(
+	 echo ""
+	 echo "$DICTMSGINTRO"
+	 echo ""
+	 echo "    $MSG"
+	 echo ""
+	 echo "$DICTLOGFOLLOWS"
+	 echo ""
+	) | $AWK -f bin/qp-encode.awk
 	if [ -f log/c$COMMID ]; then
+	    echo ""
+	    echo "--$MIMEBOUNDARY"
+	    echo "Content-Type: text/plain; charset=US-ASCII; name=c$COMMID"
+	    echo "Content-Description: FAX session log"
+	    echo "Content-Transfer-Encoding: 7bit"
+	    echo "Content-Disposition: inline"
+	    echo ""
 	    $SED -e '/-- data/d' \
 		 -e '/start.*timer/d' -e '/stop.*timer/d' \
 		 log/c$COMMID
 	elif [ -n "$COMMID" ]; then
-	    echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)."
+	    ( echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)." ) | $AWK -f bin/qp-encode.awk
 	else
-	    echo "$DICTNOLOGAVAIL."
+	    ( echo "$DICTNOLOGAVAIL." ) | $AWK -f bin/qp-encode.awk
 	fi
-    else
-	case "$MAILTYPE" in
-	    withattached)
-		printf "%`echo $INFOSIZE`s: c$COMMID\n" "$DICTCOMMID"
-		;;
-	    textonly)
-		printf "%`echo $INFOSIZE`s: c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)\n" "$DICTCOMMID"
-		;;
-	esac
     fi
-    ) | $AWK -f bin/qp-encode.awk
     if [ -f $FILE ]; then
-	case "$MAILTYPE" in
-	    withattached)
-		for type in $FILETYPE; do
-		    echo ""
-		    echo "--$MIMEBOUNDARY"
-		    if [ "$type" = "tif" ]; then
-		 	echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
-		 	echo "Content-Description: FAX document"
-		 	echo "Content-Transfer-Encoding: $ENCODING"
-		 	echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
-		 	echo ""
-		 	encode $FILE;
-		    elif [ "$type" = "tif-r" ]; then
-			echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
-			echo "Content-Description: FAX document"
-			echo "Content-Transfer-Encoding: $ENCODING"
-			echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
-			echo ""
-			if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
-			    tiffcp -c jpeg:R $FILE $FILE.r.tif
-			    encode $FILE.r.tif
-			    $RM -f $FILE.r.tif 2>$ERRORSTO
-			else 
-			    encode $FILE
-		 	fi
-		    elif [ "$type" = "tif-y" ]; then
-			echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
-			echo "Content-Description: FAX document"
-			echo "Content-Transfer-Encoding: $ENCODING"
-			echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
-			echo ""
-			if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
-			    tiffcp -c jpeg:Y $FILE $FILE.y.tif
-			    encode $FILE.y.tif
-			    $RM -f $FILE.y.tif 2>$ERRORSTO
-			else
-			    encode $FILE
-			fi
-		    elif [ "$type" = "pdf" ]; then
-			echo "Content-Type: application/pdf; name=\"$FILENAME.pdf\""
-			echo "Content-Description: FAX document"
-			echo "Content-Transfer-Encoding: $ENCODING"
-			echo "Content-Disposition: attachment; filename=\"$FILENAME.pdf\""
-			echo ""
-			$TIFF2PDF -o $FILE.pdf $FILE
-			encode $FILE.pdf
-			$RM -f $FILE.pdf 2>$ERRORSTO
-		    else #  default as Postscript
-			echo "Content-Type: application/postscript; name=\"$FILENAME.ps\""
-			echo "Content-Description: FAX document"
-			echo "Content-Transfer-Encoding: 7bit"
-			echo "Content-Disposition: attachment; filename=\"$FILENAME.ps\""
-			echo ""
-			$FAX2PS $FILE 2>$ERRORSTO
-		    fi
-		done
+	if [ "$MAILTYPE" = "withattached" ]; then
+	    for type in $FILETYPE; do
 		echo ""
-		echo "--$MIMEBOUNDARY--"
-		;;
-	    textonly)
-		if [ -n "$SENDTO" ]; then
+		echo "--$MIMEBOUNDARY"
+		if [ "$type" = "tif" ]; then
+		    echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
+		    echo "Content-Description: FAX document"
+		    echo "Content-Transfer-Encoding: $ENCODING"
+		    echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
 		    echo ""
-		    (eval echo "$DICTDISPATCHEDTO") | $AWK -f bin/qp-encode.awk
+		    encode $FILE;
+		elif [ "$type" = "tif-r" ]; then
+		    echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
+		    echo "Content-Description: FAX document"
+		    echo "Content-Transfer-Encoding: $ENCODING"
+		    echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
+		    echo ""
+		    if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
+			tiffcp -c jpeg:R $FILE $FILE.r.tif
+			encode $FILE.r.tif
+			$RM -f $FILE.r.tif 2>$ERRORSTO
+		    else 
+			encode $FILE
+		    fi
+		elif [ "$type" = "tif-y" ]; then
+		    echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
+		    echo "Content-Description: FAX document"
+		    echo "Content-Transfer-Encoding: $ENCODING"
+		    echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
+		    echo ""
+		    if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
+			tiffcp -c jpeg:Y $FILE $FILE.y.tif
+			encode $FILE.y.tif
+			$RM -f $FILE.y.tif 2>$ERRORSTO
+		    else
+			encode $FILE
+		    fi
+		elif [ "$type" = "pdf" ]; then
+		    echo "Content-Type: application/pdf; name=\"$FILENAME.pdf\""
+		    echo "Content-Description: FAX document"
+		    echo "Content-Transfer-Encoding: $ENCODING"
+		    echo "Content-Disposition: attachment; filename=\"$FILENAME.pdf\""
+		    echo ""
+		    $TIFF2PDF -o $FILE.pdf $FILE
+		    encode $FILE.pdf
+		    $RM -f $FILE.pdf 2>$ERRORSTO
+		else #  default as Postscript
+		    echo "Content-Type: application/postscript; name=\"$FILENAME.ps\""
+		    echo "Content-Description: FAX document"
+		    echo "Content-Transfer-Encoding: 7bit"
+		    echo "Content-Disposition: attachment; filename=\"$FILENAME.ps\""
+		    echo ""
+		    $FAX2PS $FILE 2>$ERRORSTO
 		fi
-		;;
-	esac
+	    done
+	fi
     fi
+    echo ""
+    echo "--$MIMEBOUNDARY--"
    ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi "$MAILTO"
 }
 
