@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 604 2007-08-24 21:25:29Z faxguy $ */
+/*	$Id: Class1Recv.c++ 605 2007-08-24 23:10:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1696,7 +1696,15 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    return (false);
 		}
 	    } else {
-		if (wasTimeout()) abortReceive();
+		if (wasTimeout()) {
+		    abortReceive();
+		    if (!useV34) {
+			// must now await V.21 signalling
+			long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
+			gotRTNC = atCmd(rhCmd, AT_CONNECT, wait);
+			if (!gotRTNC) syncattempts = 21;
+		    }
+		}
 		if (syncattempts++ > 20) {
 		    emsg = "Cannot synchronize ECM frame reception. {E120}";
 		    abortPageECMRecv(tif, params, block, fcount, seq, true);
