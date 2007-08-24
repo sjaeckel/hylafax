@@ -1,11 +1,11 @@
-#	$Id: CHANGES 602 2007-08-23 17:52:43Z faxguy $	
+#	$Id: CHANGES 603 2007-08-24 20:04:57Z faxguy $	
 
 New Changes
 
 * add ModemNoAutoAnswerCmdDelay modem configuration option (23 Aug 2007)
 * handle an echoed CTR signal (22 Aug 2007)
 * add MinAcceptedLineCount configuration feature, default to 10 (22 Aug 2007)
-* properly use quoted-printable and RFC2047 Subject header in mails (21-22 Aug 2007)
+* properly use quoted-printable and RFC2047 Subject header in mails (21-24 Aug 2007)
 * make faxmail trim whitespace from the ends of header lines (20 Aug 2007)
 * add senderHasV17Trouble, senderSkipsV29 info file entries, and use them
   in Class 1 reception to discriminate V.17 availability (17 Aug 2007)

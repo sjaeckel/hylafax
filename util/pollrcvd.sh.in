@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 600 2007-08-23 04:14:32Z faxguy $
+#	$Id: pollrcvd.sh.in 603 2007-08-24 20:04:57Z faxguy $
 #
 # ============================================
 #
@@ -74,34 +74,50 @@ pollrcvd_mail ()
     echo "Content-Transfer-Encoding: quoted-printable"
     echo ""
     (
-    echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";
-    faxInfo $FILE
-    printf "%`echo $INFOSIZE`s: $DEVICE\n" "$DICTRECEIVEDON"
-    if [ "$MSG" ]; then
-	echo ""
-	if [ -f $FILE ]; then
-	    echo "$DICTMSGINTRO"
-	else
-	    eval echo "$DICTATTEMPTEDPOLLFAILED"
+     echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";
+     faxInfo $FILE
+     printf "%`echo $INFOSIZE`s: $DEVICE\n" "$DICTRECEIVEDON"
+     if [ -z "$MSG" ]; then
+	echo "    $DICTCOMMID: c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)"
+     fi
+     if [ "$ATTACHFILE" != "yes" ] || [ ! -f $FILE ]; then
+	if [ -n "$MAILADDR" ]; then
+	    echo ""
+	    eval echo "$DICTPOLLDISPATCHTO"
 	fi
-	echo ""
-	echo "    $MSG"
-	echo ""
-	echo "$DICTLOGFOLLOWS"
-	echo ""
+     fi
+    ) | $AWK -f bin/qp-encode.awk
+    if [ "$MSG" ]; then
+	(
+	 echo ""
+	 if [ -f $FILE ]; then
+	    echo "$DICTMSGINTRO"
+	 else
+	    eval echo "$DICTATTEMPTEDPOLLFAILED"
+	 fi
+	 echo ""
+	 echo "    $MSG"
+	 echo ""
+	 echo "$DICTLOGFOLLOWS"
+	 echo ""
+	) | $AWK -f bin/qp-encode.awk
 	if [ -f log/c$COMMID ]; then
+	    echo ""
+	    echo "--$MIMEBOUNDARY"
+	    echo "Content-Type: text/plain; charset=US-ASCII; name=c$COMMID"
+	    echo "Content-Description: FAX session log"
+	    echo "Content-Transfer-Encoding: 7bit"
+	    echo "Content-Disposition: inline"
+	    echo ""
 	    sed -e '/-- data/d' \
 		-e '/start.*timer/d' -e '/stop.*timer/d' \
 		log/c$COMMID
 	elif [ -n "$COMMID" ]; then
-	    echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)."
+	    ( echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)." ) | $AWK -f bin/qp-encode.awk
 	else
-	    echo "$DICTNOLOGAVAIL."
+	    ( echo "$DICTNOLOGAVAIL." ) | $AWK -f bin/qp-encode.awk
 	fi
-    else
-	echo "    $DICTCOMMID: c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)"
     fi
-    ) | $AWK -f bin/qp-encode.awk
     if [ "$ATTACHFILE" = "yes" ] && [ -f $FILE ]; then
 	for type in $FILETYPE; do
 	    echo ""
@@ -131,11 +147,6 @@ pollrcvd_mail ()
 		$FAX2PS $FILE 2>$ERRORSTO
 	    fi
 	done
-    else
-	if [ -n "$MAILADDR" ]; then
-	    echo ""
-	    eval echo "$DICTPOLLDISPATCHTO" | $AWK -f bin/qp-encode.awk
-	fi
     fi
     echo ""
     echo "--$MIMEBOUNDARY--"
