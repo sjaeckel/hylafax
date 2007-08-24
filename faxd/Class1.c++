@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: Class1.c++ 606 2007-08-24 23:24:45Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -929,9 +929,9 @@ Class1Modem::syncECMFrame()
     // look for the first sync flag
 
     time_t start = Sys::now();
-    startTimeout(30000);	// despite indications by T.4 A.3.1
+    startTimeout(60000);	// despite indications by T.4 A.3.1
     do {
-	if ((unsigned) Sys::now()-start >= 30) {
+	if ((unsigned) Sys::now()-start >= 60) {
 	    protoTrace("Timeout awaiting synchronization sequence");
 	    setTimeout(true);
 	    return (false);
@@ -939,7 +939,7 @@ Class1Modem::syncECMFrame()
 	bit = getModemBit(0);
     } while (bit != 0 && !didBlockEnd());
     do {
-	if ((unsigned) Sys::now()-start >= 30) {
+	if ((unsigned) Sys::now()-start >= 60) {
 	    protoTrace("Timeout awaiting synchronization sequence");
 	    setTimeout(true);
 	    return (false);
