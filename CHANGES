@@ -1,7 +1,8 @@
-#	$Id: CHANGES 604 2007-08-24 21:25:29Z faxguy $	
+#	$Id: CHANGES 606 2007-08-24 23:24:45Z faxguy $	
 
 New Changes
 
+* extend timeout for initial ECM frame synchronization (24 Aug 2007)
 * update "lastMCF" timer when we have to repeat ourselves (24 Aug 2007)
 * add ModemNoAutoAnswerCmdDelay modem configuration option (23 Aug 2007)
 * handle an echoed CTR signal (22 Aug 2007)
