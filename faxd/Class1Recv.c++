@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 598 2007-08-23 01:35:25Z faxguy $ */
+/*	$Id: Class1Recv.c++ 604 2007-08-24 21:25:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -965,6 +965,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 			 */
 			(void) transmitFrame(FCF_MCF|FCF_RCVR);
 			traceFCF("RECV send", FCF_MCF);
+			lastMCF = Sys::now();
 			messageReceived = false;	// expect Phase C
 		    } else {
 			u_int rtnfcf = FCF_RTN;
