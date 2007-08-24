@@ -1,7 +1,8 @@
-#	$Id: CHANGES 603 2007-08-24 20:04:57Z faxguy $	
+#	$Id: CHANGES 604 2007-08-24 21:25:29Z faxguy $	
 
 New Changes
 
+* update "lastMCF" timer when we have to repeat ourselves (24 Aug 2007)
 * add ModemNoAutoAnswerCmdDelay modem configuration option (23 Aug 2007)
 * handle an echoed CTR signal (22 Aug 2007)
 * add MinAcceptedLineCount configuration feature, default to 10 (22 Aug 2007)
