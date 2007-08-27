@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 602 2007-08-23 17:52:43Z faxguy $ */
+/*	$Id: ModemConfig.h 608 2007-08-27 19:09:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -167,6 +167,7 @@ public:
     u_int	class1RecvIdentTimer;	// timeout receiving initial identity
     u_int	class1TCFMaxNonZero;	// non-zero threshold for TCF check
     u_int	class1TCFMinRun;	// min length of zero run for TCF check
+    u_int	class1TCFMinRunECMMod;	// modify min length in ECM by this factor
     u_int	class1TMConnectDelay;	// delay (ms) after +FTM CONNECT
     u_int	class1ECMFrameSize;	// ECM frame size for transmission
     u_int	class1PageLengthSupport;// page length support

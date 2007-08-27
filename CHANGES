@@ -1,7 +1,8 @@
-#	$Id: CHANGES 606 2007-08-24 23:24:45Z faxguy $	
+#	$Id: CHANGES 608 2007-08-27 19:09:15Z faxguy $	
 
 New Changes
 
+* add Class1TCFMinRunECMMod config file option (27 Aug 2007)
 * extend timeout for initial ECM frame synchronization (24 Aug 2007)
 * update "lastMCF" timer when we have to repeat ourselves (24 Aug 2007)
 * add ModemNoAutoAnswerCmdDelay modem configuration option (23 Aug 2007)
