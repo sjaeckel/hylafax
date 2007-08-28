@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 608 2007-08-27 19:09:15Z faxguy $ */
+/*	$Id: Class1Recv.c++ 609 2007-08-28 16:29:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -446,7 +446,7 @@ Class1Modem::recvTraining()
 	 */
 	u_int fullrun = params.transferSize(TCF_DURATION);
 	u_int minrun = params.transferSize(conf.class1TCFMinRun);
-	if (params.ec != EC_DISABLE) {
+	if (params.ec != EC_DISABLE && conf.class1TCFMinRunECMMod > 0) {
 	    /*
 	     * When using ECM it may not be wise to fail TCF so easily
 	     * as retransmissions can compensate for data corruption.
