@@ -1,6 +1,10 @@
-#	$Id: CHANGES 608 2007-08-27 19:09:15Z faxguy $	
+#	$Id: CHANGES 610 2007-08-30 20:00:06Z faxguy $	
 
 New Changes
+
+* handle NO CARRIER in leiu of OK after transmitting data (30 Aug 2007)
+
+(5.1.8)
 
 * add Class1TCFMinRunECMMod config file option (27 Aug 2007)
 * extend timeout for initial ECM frame synchronization (24 Aug 2007)
