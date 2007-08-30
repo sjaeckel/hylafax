@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 606 2007-08-24 23:24:45Z faxguy $ */
+/*	$Id: Class1.c++ 610 2007-08-30 20:00:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1369,7 +1369,8 @@ Class1Modem::transmitData(int br, u_char* data, u_int cc,
 	if (ok && eod) {
 	    ok = false;
 	    u_short attempts = 0;
-	    while (!ok && attempts++ < 3) {
+	    lastResponse = AT_NOTHING;
+	    while (!ok && lastResponse != AT_NOCARRIER && attempts++ < 3) {
 		ok = waitFor(AT_OK, 60*1000);	// wait up to 60 seconds for "OK"
 	    }
 	}
