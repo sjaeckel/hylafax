@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 612 2007-08-30 21:07:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -380,8 +380,9 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
     ai.owner = "";
 
     FaxMachineInfo info;
-    if (callingnumber.length() && !info.updateConfig(canonicalizePhoneNumber(callingnumber))) {
-    	traceProtocol("Could not prepare FaxMachineInfo for %s", (const char*) callingnumber);
+    if (callingnumber.length()) {
+	info.updateConfig(canonicalizePhoneNumber(callingnumber));
+	// if updateConfig returns false it's probably because the info file doesn't exist, no need to raise alarms
     }    
 
     /*
