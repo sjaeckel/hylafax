@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 609 2007-08-28 16:29:28Z faxguy $ */
+/*	$Id: Class1Recv.c++ 611 2007-08-30 20:08:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1927,6 +1927,10 @@ Class1Modem::recvEnd(FaxSetup* setupinfo, fxStr& emsg)
 void
 Class1Modem::recvAbort()
 {
-    if (!recvdDCN && !gotEOT) transmitFrame(FCF_DCN|FCF_RCVR);
+    if (!recvdDCN && !gotEOT) {
+	fxStr emsg;
+	switchingPause(emsg);
+	transmitFrame(FCF_DCN|FCF_RCVR);
+    }
     recvdDCN = true;				// don't hang around in recvEnd
 }
