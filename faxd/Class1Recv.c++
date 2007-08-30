@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 611 2007-08-30 20:08:27Z faxguy $ */
+/*	$Id: Class1Recv.c++ 613 2007-08-30 21:17:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1016,6 +1016,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	    case FCF_CFR:
 		/* It's probably just our own echo. */
 		messageReceived = false;
+		signalRcvd = 0;
 		break;
 	    case FCF_DCN:			// DCN
 		protoTrace("RECV recv DCN");
