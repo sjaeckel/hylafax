@@ -1,7 +1,8 @@
-#	$Id: CHANGES 613 2007-08-30 21:17:22Z faxguy $	
+#	$Id: CHANGES 615 2007-09-01 01:14:02Z faxguy $	
 
 New Changes
 
+* properly handle timeout waiting for Phase C carrier drop in Class 1 ECM (31 Aug 2007)
 * improve handling of CFR in Class 1 Phase C (30 Aug 2007)
 * handle NO CARRIER in leiu of OK after transmitting data (30 Aug 2007)
 

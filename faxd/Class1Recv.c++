@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 613 2007-08-30 21:17:22Z faxguy $ */
+/*	$Id: Class1Recv.c++ 615 2007-09-01 01:14:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1434,7 +1434,15 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			return (false);
 		    }
 		} else {
-		    endECMBlock();				// wait for <DLE><ETX>
+		    if (!endECMBlock()) {				// wait for <DLE><ETX>
+			if (wasTimeout()) {
+			    abortReceive();
+			    emsg = "Timeout waiting for Phase C carrier drop. {E154}";
+			    protoTrace(emsg);
+			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			    return (false);
+			}
+		    }
 		}
 		if (!useV34) {
 		    // wait for message carrier to drop
