@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 610 2007-08-30 20:00:06Z faxguy $ */
+/*	$Id: Class1.c++ 615 2007-09-01 01:14:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1141,9 +1141,11 @@ Class1Modem::endECMBlock()
 
     int c = getLastByte();		// some erroniously re-use bits	
     time_t start = Sys::now();
+    setTimeout(false);
     do {
 	if ((unsigned) Sys::now()-start >= 60) {	// 60 seconds of garbage after RCP is too much
 	    protoTrace("Timeout waiting for DLE+ETX");
+	    setTimeout(true);
 	    return false;
 	}
 	if (c == DLE) {
