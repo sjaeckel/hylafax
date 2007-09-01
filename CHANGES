@@ -1,7 +1,8 @@
-#	$Id: CHANGES 615 2007-09-01 01:14:02Z faxguy $	
+#	$Id: CHANGES 616 2007-09-02 00:35:18Z faxguy $	
 
 New Changes
 
+* enable functionality of X-Fax-To header for faxmail (1 Sep 2007)
 * properly handle timeout waiting for Phase C carrier drop in Class 1 ECM (31 Aug 2007)
 * improve handling of CFR in Class 1 Phase C (30 Aug 2007)
 * handle NO CARRIER in leiu of OK after transmitting data (30 Aug 2007)
