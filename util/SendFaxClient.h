@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.h 616 2007-09-02 00:35:18Z faxguy $ */
+/*	$Id: SendFaxClient.h 617 2007-09-02 00:39:02Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -178,6 +178,7 @@ public:
 };
 
 inline SendFaxJob& SendFaxClient::getProtoJob()	{ return proto; }
+inline const fxStr& SendFaxClient::getFromIdentity() const { return from; }
 inline const fxStr& SendFaxClient::getSenderName() const { return senderName;}
 inline void SendFaxClient::setVerbose(bool b) { verbose = b; }
 inline bool SendFaxClient::getVerbose() const { return verbose; }
