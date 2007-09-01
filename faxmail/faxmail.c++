@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 591 2007-08-21 18:09:53Z faxguy $ */
+/*	$Id: faxmail.c++ 616 2007-09-02 00:35:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -324,7 +324,7 @@ faxMailApp::run(int argc, char** argv)
 	    /*
 	     * Likewise for the receipient name.
 	     */
-	    if (job->getCoverName() == "" && (s = findHeader("to"))) {
+	    if (job->getCoverName() == "" && ((s = findHeader("x-fax-to")) || (s = findHeader("to")))) {
 		/*
 		 * Try to extract a user name from the to information.
 		 */
@@ -333,7 +333,7 @@ faxMailApp::run(int argc, char** argv)
 		u_int tl = to.length();
 		if (l == tl) {
 		    l = to.next(0, '(');
-		    if (l != tl)		// joe@foobar (Joe Schmo)
+		    if (l != tl)		// joe@foobar (Joe Schmo), no longer works due to RFC822 compliance in parseHeaders (in-parenthesis are stripped as comments)
 			l++, to = to.token(l, ')');
 		    else {			// joe@foobar
 			l = to.next(0, '@');
@@ -343,9 +343,9 @@ faxMailApp::run(int argc, char** argv)
 		} else {			// Joe Schmo <joe@foobar>
 		    to = to.head(l);
 		}
-		// strip any leading&trailing white space
-		to.remove(0, to.skip(0, " \t"));
-		to.resize(to.skipR(to.length(), " \t"));
+		// strip any leading&trailing white space or double-quotes
+		to.remove(0, to.skip(0, " \t\""));
+		to.resize(to.skipR(to.length(), " \t\""));
 		job->setCoverName(to);
 	    }
 	}
