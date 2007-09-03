@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: wedged.sh.in 400 2006-12-19 18:07:09Z faxguy $
+#	$Id: wedged.sh.in 619 2007-09-03 19:23:48Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -70,15 +70,15 @@ devID=$1
 device=$2
 
 #
-# Variables customizable through etc/FaxDispatch
+# Variables customizable through etc/FaxWedged
 #
 TOADDR=FaxMaster
 FROMADDR=fax
 WEDGED_EMAIL_INTERVAL=5		# minutes: at most 1 wedged email every X mins
 WEDGED_DISABLE_FAXGETTY=	# if set, faxgetty disabled from inittab
 
-if [ -f etc/FaxDispatch ]; then
-    . etc/FaxDispatch	
+if [ -f etc/FaxWedged ]; then
+    . etc/FaxWedged	
 fi
 
 #

@@ -1,7 +1,8 @@
-#	$Id: CHANGES 618 2007-09-03 19:14:20Z faxguy $	
+#	$Id: CHANGES 619 2007-09-03 19:23:48Z faxguy $	
 
 New Changes
 
+* move wedged use of FaxDispatch to FaxWedged (3 Sep 2007)
 * add RecvqProtection for hfaxd (3 Sep 2007)
 * enable functionality of X-Fax-To header for faxmail (1 Sep 2007)
 * properly handle timeout waiting for Phase C carrier drop in Class 1 ECM (31 Aug 2007)
