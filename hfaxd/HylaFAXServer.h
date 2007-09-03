@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: HylaFAXServer.h 618 2007-09-03 19:14:20Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -213,6 +213,7 @@ protected:
     time_t	discTime;		// time to disconnect service
     time_t	denyTime;		// time to deny service
     u_int	jobProtection;		// Protection to use on Jobs
+    u_int	recvqProtection;	// Protection to use on Recvq
     /*
      * User authentication and login-related state.
      */

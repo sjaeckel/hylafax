@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 425 2007-01-29 23:55:22Z faxguy $ */
+/*	$Id: RecvQueue.c++ 618 2007-09-03 19:14:20Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -214,10 +214,22 @@ HylaFAXServer::getRecvDocStatus(RecvInfo& ri)
     return (true);
 }
 
+#define A_READ   004
+#define A_WRITE  002
+#define A_MODIFY 001
+
 bool
-HylaFAXServer::isVisibleRecvQFile(const char* filename, const struct stat&)
+HylaFAXServer::isVisibleRecvQFile(const char* filename, const struct stat& sb)
 {
-    return (strncmp(filename, "fax", 3) == 0 || strncmp(filename, FAX_SEQF, 4) == 0);
+    if (strncmp(filename, "fax", 3) == 0 || strncmp(filename, FAX_SEQF, 4) == 0) {
+	if (recvqProtection & A_READ)					// other/public access
+	    return (true);
+	if (IS(PRIVILEGED) && ((recvqProtection>>3) & A_READ))		// administrative access
+	    return (true);
+	if (((u_int) sb.st_gid == uid) && ((recvqProtection>>6) & A_READ))	// owner access
+	    return (true);
+    }
+    return (false);
 }
 
 RecvInfo*
@@ -256,13 +268,15 @@ HylaFAXServer::listRecvQ(FILE* fd, const SpoolDir& sd, DIR* dir)
     struct dirent* dp;
     while ((dp = readdir(dir))) {
 	struct stat sb;
-	if (!isVisibleRecvQFile(dp->d_name, sb))
-	    continue;
 	fxStr qfile(path | dp->d_name);
-	RecvInfo* rip;
-	if (FileCache::update(qfile, sb) && (rip = getRecvInfo(qfile, sb))) {
-	    Rprintf(fd, recvFormat, *rip, sb);
-	    fputs("\r\n", fd);
+	if (FileCache::update(qfile, sb)) {
+	    if (!isVisibleRecvQFile(dp->d_name, sb))
+		continue;
+	    RecvInfo* rip;
+	    if ((rip = getRecvInfo(qfile, sb))) {
+		Rprintf(fd, recvFormat, *rip, sb);
+		fputs("\r\n", fd);
+	    }
 	}
     }
 }
