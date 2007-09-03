@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 583 2007-08-15 20:14:12Z faxguy $
+.\"	$Id: hfaxd.1m 618 2007-09-03 19:14:20Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -417,6 +417,7 @@ ModemFmt	string	\s-1\fIsee below\fP\s+1	format string for modem status results
 PagerIDMapFile	string	\s-1${SPOOL}/etc/pagermap\s+1	name of file for mapping pager IDs (\s-1SNPP\s+1)
 PriorityMap	string	\s-1\fIsee below\fP\s+1	mapping from service level to job priority (\s-1SNPP\s+1)
 RcvFmt	string	\s-1\fIsee below\fP\s+1	format string for received facsimile status results
+RecvqProtection	octal	\s-10444\s+1	permissions for client access to recvq
 RetryTimeMap	string	\s-1\fIsee below\fP\s+1	mapping from service level to job retry time (\s-1SNPP\s+1)
 ServerTracing	integer	\s-11\s+1	server tracing control vector
 ShutdownFile	string	\s-1${SPOOL}/etc/shutdown\s+1	name of shutdown control file
@@ -564,7 +565,7 @@ column title strings.
 .B JobProtection
 The permissions setting for administrator, owners, and users for viewing jobs in
 the \*(Fx queues.  The default setting of ``0444'' allows all users to view all
-jobs in the queues.  A setting of ``0440'' allows only the job owner and the 
+jobs in the send and done queues.  A setting of ``0440'' allows only the job owner and the 
 administrator to view jobs.  A setting of ``0040'' allows only the administrator 
 to view the jobs once they are submitted.  If a user doesn't have permissions 
 on the job, the job will not be visible to them when viewing the queues.
@@ -713,6 +714,14 @@ applications, such as
 .IR faxstat (1)
 that construct headers from the format string can constrain the width of
 column title strings.
+.TP 10
+.B RecvqProtection
+The permissions setting for administrator, owners, and users for viewing files in
+the \*(Fx receive queue.  The default setting of ``0444'' allows all users to view all
+files in the queues.  A setting of ``0440'' allows only the job owner and the 
+administrator to view files.  A setting of ``0040'' allows only the administrator 
+to view the files.  If a user doesn't have permissions 
+on the file, the file will not be visible to them when viewing the queue.
 .TP 10
 .B RetryTimeMap
 The mapping from \s-1SNPP\s+1 service level (0-11) to job retry time.
