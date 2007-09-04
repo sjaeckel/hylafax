@@ -1,4 +1,4 @@
-.\"	$Id: xferfaxlog.4f 583 2007-08-15 20:14:12Z faxguy $
+.\"	$Id: xferfaxlog.4f 620 2007-09-04 14:18:40Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -46,7 +46,7 @@ strings.
 Each record of a facsimile transmission is of the form:
 .sp .5
 .ti +0.5i
-date \s-1SEND\s+1 commid modem jobid jobtag sender ``dest-number'' ``\s-1CSI\s+1'' params #pages jobtime conntime ``reason'' \fI<null>\fP \fI<null>\fP ``owner'' ``dcs'' jobinfo
+date \s-1SEND\s+1 commid modem jobid jobtag sender ``dest-number'' ``\s-1CSI\s+1'' params #pages jobtime conntime ``reason'' \fI<null>\fP \fI<null>\fP \fI<null>\fP ``owner'' ``dcs'' jobinfo
 .sp .5
 .PP
 A facsimile document reception record is of the form:
