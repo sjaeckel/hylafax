@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 622 2007-09-04 21:00:46Z faxguy $ */
+/*	$Id: Class1Recv.c++ 623 2007-09-04 21:06:00Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -755,7 +755,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		 * occurs a bit more tolerance here...
 		 */
 		ppmrcvd = recvFrame(frame, FCF_RCVR, timer);
-	    } while (!ppmrcvd && gotCONNECT && !gotEOT && ++recvFrameCount < 3);
+	    } while (!ppmrcvd && gotCONNECT && wasTimeout() && !gotEOT && ++recvFrameCount < 3);
 	    if (ppmrcvd) lastPPM = frame.getFCF();
 	}
 	/*
