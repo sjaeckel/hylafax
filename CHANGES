@@ -1,7 +1,8 @@
-#	$Id: CHANGES 619 2007-09-03 19:23:48Z faxguy $	
+#	$Id: CHANGES 622 2007-09-04 21:00:46Z faxguy $	
 
 New Changes
 
+* be more resiliant in post-page message reception (4 Sep 2007)
 * move wedged use of FaxDispatch to FaxWedged (3 Sep 2007)
 * add RecvqProtection for hfaxd (3 Sep 2007)
 * enable functionality of X-Fax-To header for faxmail (1 Sep 2007)
