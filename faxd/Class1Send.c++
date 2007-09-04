@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 599 2007-08-23 01:43:14Z faxguy $ */
+/*	$Id: Class1Send.c++ 621 2007-09-04 19:04:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -155,7 +155,7 @@ Class1Modem::getPrologue(Class2Params& params, bool& hasDoc, fxStr& emsg, u_int&
 
     bool framerecvd = false;
     if (batched & BATCH_FIRST)			// receive carrier raised
-	framerecvd = recvFrame(frame, FCF_SNDR, conf.t2Timer, true);
+	framerecvd = recvFrame(frame, FCF_SNDR, conf.t1Timer, true);	// T1 is used here
     else {					// receive carrier not raised
 	// We're not really switching directions of communication, but we don't want
 	// to start listening for prologue frames until we're sure that the receiver 
@@ -220,7 +220,7 @@ Class1Modem::getPrologue(Class2Params& params, bool& hasDoc, fxStr& emsg, u_int&
 	if ((unsigned) Sys::now()-start >= t1)
 	    break;
 	if (!useV34) (void) switchingPause(emsg);
-	framerecvd = recvFrame(frame, FCF_SNDR, conf.t2Timer);
+	framerecvd = recvFrame(frame, FCF_SNDR, (Sys::now()-start)*1000);	// timer here is T1
     }
     emsg = "No receiver protocol (T.30 T1 timeout) {E126}";
     protoTrace(emsg);
