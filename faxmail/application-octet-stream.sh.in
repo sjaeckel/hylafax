@@ -22,8 +22,8 @@ fi
 MIMETYPE="`$FILECMD -bi "$1"`"
 case "$MIMETYPE" in
     "application/postscript") cat "$1";;
-    "application/pdf")	$LIBEXEC/faxmail/application/pdf "$1";;
-    "image/tiff")	$LIBEXEC/faxmail/image/tiff "$1";;
+    "application/pdf")	$LIBDATA/faxmail/application/pdf "$1";;
+    "image/tiff")	$LIBDATA/faxmail/image/tiff "$1";;
     "message/rfc822")	cat "$1" | $LIBEXEC/textfmt -B;;
     text/*) cat "$1" | $LIBEXEC/textfmt -B;;
     *) echo "$DISCARDMSG" | $LIBEXEC/textfmt -B;;
