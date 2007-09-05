@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 603 2007-08-24 20:04:57Z faxguy $
+#	$Id: faxrcvd.sh.in 624 2007-09-05 20:31:54Z faxguy $
 #
 # ============================================
 #
@@ -79,11 +79,11 @@ faxrcvd_mail()
     echo "Content-Transfer-Encoding: quoted-printable"
     echo ""
     (
-    case "$MAILTYPE" in
-	textonly)
-	    echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";;
-    esac
     if [ -f $FILE ]; then
+	case "$MAILTYPE" in
+	    textonly)
+		echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";;
+	esac
 	faxInfo $FILE
 	printf "%`echo $INFOSIZE`s: $DEVICE\n" "$DICTRECEIVEDON"
 	if [ -z "$MSG" ]; then
