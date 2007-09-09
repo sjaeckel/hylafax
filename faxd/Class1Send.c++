@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 621 2007-09-04 19:04:28Z faxguy $ */
+/*	$Id: Class1Send.c++ 626 2007-09-09 15:32:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1369,8 +1369,12 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 			    // There is no CTC with V.34-fax (T.30 Annex F.3.4.5 Note 1).
 			    if (conf.class1PersistentECM && !useV34 && (blockgood == false) && 
 				!((curcap->br == 0) && (badframes >= badframesbefore))) {
-				// send ctc even at 2400 baud if we're getting somewhere
-				if (curcap->br != 0) {
+				/*
+				 * We send ctc even at 2400 baud if we're getting somewhere, and
+				 * often training down to a slower speed only makes matters worse.
+				 * So, if we seem to be making adequate progress we don't train down.
+				 */
+				if (curcap->br != 0 && (badframes >= badframesbefore/2)) {
 				    u_char oldmod = curcap->mod;
 				    do {
 					if (!dropToNextBR(params)) {
