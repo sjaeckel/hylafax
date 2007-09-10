@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 623 2007-09-04 21:06:00Z faxguy $ */
+/*	$Id: Class1Recv.c++ 627 2007-09-11 00:42:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1221,7 +1221,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						    return (false);
 						}
-						if (frameRev[rtncframe[4]] > prevPage || (frameRev[rtncframe[4]] == prevPage && frameRev[rtncframe[5]] >= prevBlock)) {
+						if (frameRev[rtncframe[4]]+1 > prevPage || (frameRev[rtncframe[4]]+1 == prevPage && frameRev[rtncframe[5]]+1 >= prevBlock)) {
 						    (void) transmitFrame(FCF_PPR, fxStr(ppr, 32));
 						    traceFCF("RECV send", FCF_PPR);
 						} else {
@@ -1551,6 +1551,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					for (pprpos = 0, pprval = i; pprval >= 8; pprval -= 8) pprpos++;
 					if (ppr[pprpos] & frameRev[1 << pprval]) blockgood = false;
 				    }
+				    if (frameRev[ppsframe[4]]+1 < prevPage || (frameRev[ppsframe[4]]+1 == prevPage && frameRev[ppsframe[5]]+1 <= prevBlock))
+					blockgood = false;	// we already confirmed this block receipt... (see below)
 				} else {
 				    blockgood = false;	// MCF only if we have data
 				}
@@ -1571,11 +1573,22 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    pprcnt = 4;
 				}
 				if (signalRcvd == 0) {
-				    // inform the remote that one or more frames were invalid
-				    transmitFrame(FCF_PPR, fxStr(ppr, 32));
-				    traceFCF("RECV send", FCF_PPR);
-				    pprcnt++;
-				    if (pprcnt > 4) pprcnt = 4;		// could've been 4 before increment
+				    if (frameRev[ppsframe[4]]+1 > prevPage || (frameRev[ppsframe[4]]+1 == prevPage && frameRev[ppsframe[5]]+1 >= prevBlock)) {
+					// inform the remote that one or more frames were invalid
+					transmitFrame(FCF_PPR, fxStr(ppr, 32));
+					traceFCF("RECV send", FCF_PPR);
+					pprcnt++;
+					if (pprcnt > 4) pprcnt = 4;		// could've been 4 before increment
+				    } else {
+					/*
+					 * The silly sender already sent us this block and we already confirmed it.
+					 * Just confirm it again, but let's behave as if we sent a full PPR without
+					 * incrementing pprcnt.
+					 */
+					(void) transmitFrame(FCF_MCF|FCF_RCVR);
+					traceFCF("RECV send", FCF_MCF);
+					for (u_int i = 0; i < 32; i++) ppr[i] = 0xff;	// ppr defaults to all 1's, T.4 A.4.4
+				    }
 				}
 				if (pprcnt == 4 && (!useV34 || !conf.class1PersistentECM)) {
 				    HDLCFrame rtnframe(conf.class1FrameOverhead);
