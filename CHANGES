@@ -1,7 +1,8 @@
-#	$Id: CHANGES 626 2007-09-09 15:32:30Z faxguy $	
+#	$Id: CHANGES 627 2007-09-11 00:42:58Z faxguy $	
 
 New Changes
 
+* if a sender transmits PPS for a block already confirmed, reconfirm it (10 Sep 2007)
 * in Class 1 ECM sending don't train down on CTC if we are adequately
   progressing (9 Sep 2007)
 * fix faxmail's octet-stream MIMEConverters for TIFF and PDF (5 Sep 2007)
