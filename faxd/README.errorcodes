@@ -73,6 +73,7 @@ E151      : No response to EOP repeated 3 tries
 E152      : No response to EOM repeated 3 tries
 E153      : No response to PPM repeated 3 tries
 E154      : Timeout waiting for Phase C carrier drop.
+E155      : PPM received with no image data.  To continue risks receipt confirmation.
 
 E200-E299 : Class 2-specific protocol failure
 E200      : Unable to request polling operation (modem may not support polling)
