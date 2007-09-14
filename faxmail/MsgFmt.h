@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.h 591 2007-08-21 18:09:53Z faxguy $ */
+/*	$Id: MsgFmt.h 630 2007-09-14 18:02:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -51,6 +51,7 @@ struct MsgFmt {
     virtual bool setConfigItem(const char* tag, const char* value);
 
     static bool getLine(FILE* fd, fxStackBuffer& buf);
+    static fxStr stripComments(const fxStr& s);
 
     const fxStr* findHeader(const fxStr& name) const;
     u_int headerCount(void);
