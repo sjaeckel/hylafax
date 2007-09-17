@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 615 2007-09-01 01:14:02Z faxguy $ */
+/*	$Id: Class1.c++ 633 2007-09-18 03:26:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -563,7 +563,7 @@ Class1Modem::abortReceive()
 	flushModemInput();
 	(void) atCmd("AT", AT_OK, 100);
     } else
-	(void) waitFor(AT_OK, conf.class1RecvAbortOK);
+	while (!waitFor(AT_OK, conf.class1RecvAbortOK) && lastResponse == AT_OTHER && !wasTimeout());
     setTimeout(b);			// XXX putModem clobbers timeout state
 }
 

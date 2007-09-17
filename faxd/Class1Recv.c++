@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 632 2007-09-17 23:17:01Z faxguy $ */
+/*	$Id: Class1Recv.c++ 633 2007-09-18 03:26:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1147,13 +1147,14 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	u_int fcount = 0;
 	u_short syncattempts = 0;
 	bool blockgood = false, dolongtrain = false;
+	bool gotoPhaseD = false;
 	do {
 	    sendERR = false;
 	    resetBlock();
 	    signalRcvd = 0;
 	    rcpcnt = 0;
 	    bool dataseen = false;
-	    if (!useV34) {
+	    if (!useV34 && !gotoPhaseD) {
 		gotRTNC = false;
 		if (!raiseRecvCarrier(dolongtrain, emsg) && !gotRTNC) {
 		    if (wasTimeout()) {
@@ -1389,6 +1390,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	    setInputBuffering(true);
 	    if (flowControl == FLOW_XONXOFF)
 		(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_FLUSH);
+	    gotoPhaseD = false;
 	    if (!sendERR && (useV34 || syncECMFrame())) {	// no synchronization needed w/V.34-fax
 		time_t start = Sys::now();
 		do {
@@ -1749,6 +1751,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			// must now await V.21 signalling
 			long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
 			gotRTNC = atCmd(rhCmd, AT_CONNECT, wait);
+			gotoPhaseD = gotRTNC;
 			if (!gotRTNC) syncattempts = 21;
 		    }
 		}
