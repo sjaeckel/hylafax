@@ -1,7 +1,8 @@
-#	$Id: CHANGES 630 2007-09-14 18:02:36Z faxguy $	
+#	$Id: CHANGES 633 2007-09-18 03:26:53Z faxguy $	
 
 New Changes
 
+* further improve ECM synchronization timeout handling (17 Sep 2007)
 * further fix faxmail comment parsing, and only parse MIME-Version (14 Sep 2007)
 * if a sender transmits PPS for a block already confirmed, reconfirm it (10 Sep 2007)
 * in Class 1 ECM sending don't train down on CTC if we are adequately
