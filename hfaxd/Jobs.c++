@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: Jobs.c++ 631 2007-09-17 17:00:47Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1579,12 +1579,12 @@ HylaFAXServer::checkAddDocument(Job& job, Token type,
 {
     if (checkParm(job, type, A_WRITE)) {
 	struct stat sb;
-	if (!fileAccess(docname, R_OK, sb))
-	    perror_reply(550, docname, errno);
-	else if (!docType(docname, op))
-	    reply(550, "%s: Document type not recognized.", docname);
-	else
-	    return (true);
+	if (fileAccess(docname, R_OK, sb)) {
+	    if (!docType(docname, op))
+		reply(550, "%s: Document type not recognized.", docname);
+	    else
+		return (true);
+	}
     }
     return (false);
 }
