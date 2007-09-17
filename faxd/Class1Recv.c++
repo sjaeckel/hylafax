@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 629 2007-09-12 19:34:47Z faxguy $ */
+/*	$Id: Class1Recv.c++ 632 2007-09-17 23:17:01Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1221,7 +1221,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						    return (false);
 						}
-						if (frameRev[rtncframe[4]]+1 > prevPage || (frameRev[rtncframe[4]]+1 == prevPage && frameRev[rtncframe[5]]+1 >= prevBlock)) {
+						if (frameRev[rtncframe[4]]+1 > prevPage || (frameRev[rtncframe[4]]+1 == prevPage && frameRev[rtncframe[5]]+1 > prevBlock)) {
 						    (void) transmitFrame(FCF_PPR, fxStr(ppr, 32));
 						    traceFCF("RECV send", FCF_PPR);
 						} else {
