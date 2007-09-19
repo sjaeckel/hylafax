@@ -1,7 +1,8 @@
-#	$Id: CHANGES 637 2007-09-19 20:46:07Z faxguy $	
+#	$Id: CHANGES 638 2007-09-19 22:32:30Z faxguy $	
 
 New Changes
 
+* add a "canonical" line to sendq and doneq files (19 Sep 2007)
 * permit easy localization/customization of error messages in mail (19 Sep 2007)
 * further improve ECM synchronization timeout handling (17 Sep 2007)
 * further fix faxmail comment parsing, and only parse MIME-Version (14 Sep 2007)
