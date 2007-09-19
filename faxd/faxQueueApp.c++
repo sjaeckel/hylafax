@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 534 2007-06-19 16:09:58Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 635 2007-09-19 16:10:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2074,11 +2074,12 @@ faxQueueApp::rejectJob(Job& job, FaxRequest& req, const fxStr& reason)
 void
 faxQueueApp::blockJob(Job& job, FaxRequest& req, const char* mesg)
 {
+    int old_state = job.state;
     job.state = FaxRequest::state_blocked;
     req.notice = mesg;
     updateRequest(req, job);
     traceQueue(job, "%s", mesg);
-    if (req.isNotify(FaxRequest::when_requeued))
+    if (req.isNotify(FaxRequest::when_requeued) && old_state != FaxRequest::state_blocked)
 	notifySender(job, Job::blocked); 
     Trigger::post(Trigger::JOB_BLOCKED, job);
 }
