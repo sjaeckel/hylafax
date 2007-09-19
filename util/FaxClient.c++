@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 636 2007-09-19 19:46:44Z faxguy $ */
+/*	$Id: FaxClient.c++ 637 2007-09-19 20:46:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -64,7 +64,6 @@ FaxClient::init()
     fdOut = NULL;
     fdData = -1;
     state = 0;
-    pasv = false;
 
     setupConfig();
 }
@@ -296,8 +295,6 @@ FaxClient::setConfigItem(const char* tag, const char* value)
 	setModemStatusFormat(value);
     } else if (streq(tag, "filefmt")) {
 	setFileStatusFormat(value);
-    } else if (streq(tag, "passivemode")) {
-	pasv = getBoolean(value);
     } else
 	return (false);
     return (true);
@@ -403,8 +400,6 @@ FaxClient::login(const char* user, const char* pass, fxStr& emsg)
 	    (void) setTimeZone(tz);
 	    state &= ~FS_TZPEND;
 	}
-	if (pasv)
-	    n = command("PASV");
 	return (true);
     } else {
 	emsg = "Login failed: " | lastResponse;
