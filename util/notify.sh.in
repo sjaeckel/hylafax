@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 603 2007-08-24 20:04:57Z faxguy $
+#    $Id: notify.sh.in 634 2007-09-19 07:21:12Z faxguy $
 #
 # ============================================
 #
@@ -260,7 +260,7 @@ notify_mail()
 	 echo "$DICTADDITIONALINFO"
 	 echo ""
 	 # we need to change the '\n' in the strings to real newlines
-	 echo "     $faxstatus" | sed -e 's/\\n/\n/g'
+	 echo "     $ERRMSG" | sed -e 's/\\n/\n/g'
 	 echo ""
 	 echo "    ---- $DICTLOGFOLLOWS2 ----"
 	 echo ""
@@ -474,6 +474,19 @@ setCustomValues()
     if [ -f etc/FaxDictionary ]; then
 	. etc/FaxDictionary
     fi
+
+    #
+    #  Customize error message.
+    #
+    if [ -n "$errorcode" ]; then
+	eval ERRMSG="$"`echo $errorcode`
+	if [ -z "$ERRMSG" ]; then
+	    ERRMSG="$faxstatus"
+	fi
+    else
+	ERRMSG="$faxstatus"
+    fi
+
     setItemSize
 }
 
@@ -627,7 +640,7 @@ if [ -z "$faxstatus" ] ; then # 0 string len
     FAXSTATUSMSG="<$DICTNOREASON>"
 else
     # we need to change the '\n' in the strings to real newlines
-    FAXSTATUSMSG=`echo "$faxstatus" | sed -e 's/\\n/\n/g'`
+    FAXSTATUSMSG=`echo "$ERRMSG" | sed -e 's/\\n/\n/g'`
 fi
 case "$WHY" in
     "done")

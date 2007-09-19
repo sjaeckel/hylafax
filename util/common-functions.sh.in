@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 460 2007-03-08 02:36:53Z faxguy $
+#    $Id: common-functions.sh.in 634 2007-09-19 07:21:12Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -142,6 +142,7 @@ parseQfile()
                   status = status $0;
               } p("faxstatus", status);
             }
+    /^errorcode/    { p("errorcode", $2); }
     /^resolution/    { p("resolution", $2); }
     /^npages/    { p("npages", $2); }
     /^totpages/    { p("totpages", $2); }

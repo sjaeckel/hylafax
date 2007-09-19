@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 603 2007-08-24 20:04:57Z faxguy $
+#	$Id: pollrcvd.sh.in 634 2007-09-19 07:21:12Z faxguy $
 #
 # ============================================
 #
@@ -96,7 +96,7 @@ pollrcvd_mail ()
 	    eval echo "$DICTATTEMPTEDPOLLFAILED"
 	 fi
 	 echo ""
-	 echo "    $MSG"
+	 echo "    $ERRMSG"
 	 echo ""
 	 echo "$DICTLOGFOLLOWS"
 	 echo ""
@@ -237,6 +237,21 @@ fi
 if [ -f etc/FaxDictionary ]; then
     . etc/FaxDictionary
 fi
+
+#
+# Customize error message.
+#
+ERRNUM=`echo $MSG | sed 's/.*{\([^}]*\)}$/\1/g'`
+if [ "$ERRNUM" != "$MSG" ]; then
+    eval ERRMSG="$"`echo $ERRNUM`
+    if [ -z "$ERRMSG" ]; then
+	ERRMSG="$MSG"
+    fi
+else
+    ERRNUM=
+    ERRMSG="$MSG"
+fi
+
 setInfoSize $FILE
 
 if [ "$TOADDR" != "$MAILADDR" ]; then # don't send FaxMaster duplicate

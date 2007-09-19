@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 624 2007-09-05 20:31:54Z faxguy $
+#	$Id: faxrcvd.sh.in 634 2007-09-19 07:21:12Z faxguy $
 #
 # ============================================
 #
@@ -109,7 +109,7 @@ faxrcvd_mail()
 	 echo ""
 	 echo "$DICTMSGINTRO"
 	 echo ""
-	 echo "    $MSG"
+	 echo "    $ERRMSG"
 	 echo ""
 	 echo "$DICTLOGFOLLOWS"
 	 echo ""
@@ -297,6 +297,21 @@ fi
 if [ -f etc/FaxDictionary ]; then
     . etc/FaxDictionary
 fi
+
+#
+# Customize error message.
+#
+ERRNUM=`echo $MSG | sed 's/.*{\([^}]*\)}$/\1/g'`
+if [ "$ERRNUM" != "$MSG" ]; then
+    eval ERRMSG="$"`echo $ERRNUM`
+    if [ -z "$ERRMSG" ]; then
+	ERRMSG="$MSG"
+    fi
+else
+    ERRNUM=
+    ERRMSG="$MSG"
+fi
+
 setInfoSize $FILE
 
 #
