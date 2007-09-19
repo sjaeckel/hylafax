@@ -1,8 +1,7 @@
-#	$Id: CHANGES 636 2007-09-19 19:46:44Z faxguy $	
+#	$Id: CHANGES 637 2007-09-19 20:46:07Z faxguy $	
 
 New Changes
 
-* add PassiveMode feature support for hyla.conf-using clients (19 Sep 2007)
 * permit easy localization/customization of error messages in mail (19 Sep 2007)
 * further improve ECM synchronization timeout handling (17 Sep 2007)
 * further fix faxmail comment parsing, and only parse MIME-Version (14 Sep 2007)
