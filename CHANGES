@@ -1,7 +1,8 @@
-#	$Id: CHANGES 633 2007-09-18 03:26:53Z faxguy $	
+#	$Id: CHANGES 634 2007-09-19 07:21:12Z faxguy $	
 
 New Changes
 
+* permit easy localization/customization of error messages in mail (19 Sep 2007)
 * further improve ECM synchronization timeout handling (17 Sep 2007)
 * further fix faxmail comment parsing, and only parse MIME-Version (14 Sep 2007)
 * if a sender transmits PPS for a block already confirmed, reconfirm it (10 Sep 2007)
