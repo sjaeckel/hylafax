@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: FaxRequest.h 638 2007-09-19 22:32:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -141,6 +141,7 @@ public:
     fxStr	number;		// dialstring for fax machine
     fxStr	subaddr;	// transmit subaddress
     fxStr	passwd;		// transmit password
+    fxStr	canonical;	// canonical phone number for data correlation
     fxStr	external;	// displayable phone number for fax machine
     fxStr	notice;		// message to send for notification
     fxStr	modem;		// outgoing modem (ModemGroup) to use

@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 635 2007-09-19 16:10:31Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 638 2007-09-19 22:32:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1840,6 +1840,7 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
 	    "REJECT: Unable to convert dial string to canonical format {E327}");
 	return (false);
     }
+    req.canonical = job.dest;
     time_t now = Sys::now();
     if (req.killtime <= now) {
 	timeoutJob(job, req);

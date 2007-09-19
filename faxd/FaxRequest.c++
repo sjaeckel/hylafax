@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: FaxRequest.c++ 638 2007-09-19 22:32:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -87,6 +87,7 @@ FaxRequest::~FaxRequest()
 #define	N(a)		(sizeof (a) / sizeof (a[0]))
 
 FaxRequest::stringval FaxRequest::strvals[] = {
+    { "canonical",	&FaxRequest::canonical },
     { "external",	&FaxRequest::external },
     { "number",		&FaxRequest::number },
     { "mailaddr",	&FaxRequest::mailaddr },
