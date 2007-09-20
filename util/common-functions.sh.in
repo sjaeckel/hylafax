@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 638 2007-09-19 22:32:30Z faxguy $
+#    $Id: common-functions.sh.in 639 2007-09-20 12:44:33Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -35,12 +35,12 @@ encode()
 #
 setInfoSize()
 {
-    INFOSIZE=`$INFO -n $1 | $SED 's/:.*//g' | $SED q | wc -m`
+    INFOSIZE=`$INFO -n $1 | $SED 's/:.*//g' | $SED q | wc -c`
     for ITEM in DICTSENDER DICTPAGES DICTQUALITY DICTSIZE DICTRECEIVED \
 		DICTTIMETORECV DICTSIGNALRATE DICTDATAFORMAT DICTERRCORRECT \
 		DICTCALLID1 DICTCALLID2 DICTCALLID3 DICTCALLID4 DICTCALLID \
 		DICTCALLID6 DICTCALLID7 DICTRECEIVEDON DICTCOMMID; do
-	THISLEN="`eval echo "$"$ITEM | wc -m | $SED 's/ //g'`"
+	THISLEN="`eval echo "$"$ITEM | wc -c | $SED 's/ //g'`"
 	if [ $THISLEN -gt $INFOSIZE ]; then INFOSIZE=$THISLEN; fi
     done
 }
@@ -57,7 +57,7 @@ setItemSize()
 		DICTCALLS DICTPAGES DICTATTEMPTS DICTDIRNUM DICTRECEIVER DICTQUALITY \
 		DICTPAGEWIDTH DICTPAGELENGTH DICTDATAFORMAT DICTREMOTEEQUIPMENT \
 		DICTREMOTESTATION DICTSIGNALRATE; do
-	THISLEN="`eval echo "$"$ITEM | wc -m | $SED 's/ //g'`"
+	THISLEN="`eval echo "$"$ITEM | wc -c | $SED 's/ //g'`"
 	if [ $THISLEN -gt $ITEMSIZE ]; then ITEMSIZE=$THISLEN; fi
     done
 }
