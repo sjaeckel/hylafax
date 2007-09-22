@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 631 2007-09-17 17:00:47Z faxguy $ */
+/*	$Id: Jobs.c++ 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -147,6 +147,8 @@ static const struct {
     { T_RETRYTIME,	A_RUSR|A_MUSR|A_RADM|A_WADM|A_ROTH },
     { T_SCHEDPRI,	A_RUSR|A_MUSR|A_RADM|A_WADM|A_ROTH },
     { T_SENDTIME,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_SKIPPAGES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_SKIPPEDPAGES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_STATE,		A_RUSR|A_RADM|A_ROTH },
     { T_STATUS,		A_RUSR|A_RADM|A_WADM|A_ROTH },
     { T_ERRORCODE,	A_RUSR|A_RADM|A_WADM|A_ROTH },
@@ -242,6 +244,8 @@ static struct {
 } shortvals[] = {
     { T_TOTPAGES,	&Job::totpages },
     { T_NPAGES,		&Job::npages },
+    { T_SKIPPAGES,	&Job::skippages },
+    { T_SKIPPEDPAGES,	&Job::skippedpages },
     { T_NTRIES,		&Job::ntries },
     { T_NDIALS,		&Job::ndials },
     { T_TOTDIALS,	&Job::totdials },
@@ -917,6 +921,8 @@ HylaFAXServer::initDefaultJob(void)
     defJob.client	= remotehost;
     defJob.tagline	= "";
     defJob.doneop	= "default";
+    defJob.skippedpages	= 0;
+    defJob.skippages	= 0;
 }
 
 /*

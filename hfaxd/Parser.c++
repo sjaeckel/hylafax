@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: Parser.c++ 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -163,6 +163,8 @@ static const tab parmtab[] = {
 { "RETRYTIME",    T_RETRYTIME,	  false, true, "[HHSS]" },
 { "SCHEDPRI",     T_SCHEDPRI,	  false, true, "[<number>]" },
 { "SENDTIME",     T_SENDTIME,	  false, true, "[NOW|YYYYMMDDHHSS]" },
+{ "SKIPPAGES",    T_SKIPPAGES,    false, true, "[<number>]" },
+{ "SKIPPEDPAGES", T_SKIPPEDPAGES, false, true, "[<number>]" },
 { "STATE",        T_STATE,	  false, true, "(job state)" },
 { "STATUS",       T_STATUS,       false, true, "[<string>]" },
 { "SUBADDR",      T_SUBADDR,	  false, true, "[<string>]" },
@@ -1077,6 +1079,8 @@ HylaFAXServer::param_cmd(Token t)
     case T_MAXPAGES:
     case T_SCHEDPRI:
     case T_NPAGES:
+    case T_SKIPPAGES:
+    case T_SKIPPEDPAGES:
     case T_TOTPAGES:
     case T_NTRIES:
     case T_TOTTRIES:

@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 638 2007-09-19 22:32:30Z faxguy $ */
+/*	$Id: FaxRequest.c++ 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -57,7 +57,7 @@ FaxRequest::reset(void)
     pri = (u_short) -1;
     usrpri = FAX_DEFPRIORITY;
     pagewidth = pagelength = resolution = 0;
-    npages = totpages = 0;
+    npages = totpages = skippages = skippedpages = 0;
     ntries = ndials = 0;
     minbr = BR_2400;
     desiredbr = BR_33600;
@@ -129,6 +129,8 @@ FaxRequest::stringval FaxRequest::strvals[] = {
 FaxRequest::shortval FaxRequest::shortvals[] = {
     { "state",		&FaxRequest::state },
     { "npages",		&FaxRequest::npages },
+    { "skippages",	&FaxRequest::skippages },
+    { "skippedpages",	&FaxRequest::skippedpages },
     { "totpages",	&FaxRequest::totpages },
     { "ntries",		&FaxRequest::ntries },
     { "ndials",		&FaxRequest::ndials },
@@ -329,10 +331,20 @@ FaxRequest::readQFile(bool& rejectJob)
 	case H_RESOLUTION:	resolution = atoi(tag); break;
 	case H_PAGELENGTH:	pagelength = atoi(tag); break;
 	case H_PRIORITY:	usrpri = atoi(tag); break;
-	case H_SCHEDPRI:	pri = atoi(tag); break;
+	case H_SCHEDPRI:		// NB: skippages collides
+	    if (cmd[1] == 'c')
+		pri = atoi(tag);
+	    else
+		skippages = atoi(tag);
+	    break;
 	case H_DESIREDBR:	desiredbr = atoi(tag); break;
 	case H_DESIREDST:	desiredst = tag[0] - '0'; break;
-	case H_DESIREDEC:	desiredec = tag[0] - '0'; break;
+	case H_DESIREDEC:		// NB: skippedpages collides
+	    if (cmd[0] == 'd')
+		desiredec = tag[0] - '0';
+	    else
+		skippedpages = atoi(tag);
+	    break;
 	case H_DESIREDDF:	desireddf = tag[0] - '0'; break;
 	case H_DESIREDTL:	desiredtl = tag[0] - '0'; break;
 	case H_USECCOVER:	useccover = tag[0] - '0'; break;

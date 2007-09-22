@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1 637 2007-09-19 20:46:07Z faxguy $
+.\"	$Id: sendfax.1 640 2007-09-23 02:04:11Z faxguy $
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -484,6 +484,27 @@ If neither is specified, the user's
 current login name is used.  The login password may also
 be provided by separating it from the owner login name with
 a colon, like ``owner:pass''.
+.TP 12
+.BI \-O " option:value"
+Submit
+.I option
+with the indicated
+.I value
+as a job parameter in the client-server protocol for the job.
+Multiple instances of this command-line option may be used.
+The following
+.I options
+are currently supported:
+.ne 1i
+.sp .5
+.ta \w'\fB131072 (0x20000)    \fP'u +\w'Modem Communications    'u
+.nf
+
+\fBOption    Value Type        Description\fP
+skippages    integer           assume this number of pages in the first document have already been sent
+skippedpages integer           assume this number of pages in unsubmitted documents were previously sent
+.sp .5
+.fi
 .TP 12
 .B \-p
 Poll each destination for any available documents.

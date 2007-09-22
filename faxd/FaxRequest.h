@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 638 2007-09-19 22:32:30Z faxguy $ */
+/*	$Id: FaxRequest.h 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -110,6 +110,8 @@ public:
     FaxSendStatus status;	// request status indicator
     u_short	totpages;	// total cumulative pages in documents
     u_short	npages;		// total pages sent/received
+    u_short	skippages;	// skip over these pages in the document
+    u_short	skippedpages;	// start page numbering here + 1
     u_short	ntries;		// # tries to send current page
     u_short	ndials;		// # consecutive failed tries to call dest
     u_short	totdials;	// total # calls to dest
