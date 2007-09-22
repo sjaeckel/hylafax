@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 492 2007-03-29 16:56:57Z faxguy $ */
+/*	$Id: sendfax.c++ 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -93,7 +93,7 @@ sendFaxApp::run(int argc, char** argv)
     int verbose = 0;
     SendFaxJob& proto = getProtoJob();
     db = new FaxDB(tildeExpand(dbName));
-    while ((c = Sys::getopt(argc, argv, "a:b:B:c:C:d:e:f:F:h:i:I:k:M:o:P:r:s:S:t:T:u:U:V:W:x:X:y:Y:z:123lmnpvwADEGNR")) != -1) {
+    while ((c = Sys::getopt(argc, argv, "a:b:B:c:C:d:e:f:F:h:i:I:k:M:o:O:P:r:s:S:t:T:u:U:V:W:x:X:y:Y:z:123lmnpvwADEGNR")) != -1) {
         if (c != 'h')
             optionsUsed = false;
         switch (c) {
@@ -182,6 +182,19 @@ sendFaxApp::run(int argc, char** argv)
 		}
 	    }
 	    owner = optarg;
+	    break;
+	case 'O':
+	    {
+		char* op = strchr(optarg, ':');
+		if (op && *(op + 1) != '\0') {
+		    *op = '\0';
+		    if (strncmp(optarg, "skippedpages", 12) == 0) {
+			proto.setSkippedPages(atoi(++op));
+		    } else if (strncmp(optarg, "skippages", 9) == 0) {
+			proto.setSkipPages(atoi(++op));
+		    }
+		}
+	    }
 	    break;
         case 'p':			// submit polling request
             addPollRequest();

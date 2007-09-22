@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 638 2007-09-19 22:32:30Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -803,6 +803,13 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
     Class2Params next;			// parameters for ``next'' page
     TIFF* tif = NULL;			// current open TIFF image
     req.totpages = req.npages;		// count pages previously transmitted
+    if (req.skippages) {		// job instructs us to skip pages...
+	u_int i = req.findItem(FaxRequest::send_fax, 0);
+	if (i) req.items[0].dirnum = req.skippages;	// mark original
+	req.items[i].dirnum = req.skippages;		// mark prepared image
+	req.skippedpages += req.skippages;		// update tagline indicators
+	req.skippages = 0;
+    }
     for (u_int i = 0;;) {
 	if (!tif || TIFFLastDirectory(tif)) {
 	    /*

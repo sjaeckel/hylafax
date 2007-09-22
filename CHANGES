@@ -1,7 +1,9 @@
-#	$Id: CHANGES 638 2007-09-19 22:32:30Z faxguy $	
+#	$Id: CHANGES 640 2007-09-23 02:04:11Z faxguy $	
 
 New Changes
 
+* add "skippages" and "skippedpages" job parameter features and support
+  for indicating them in sendfax via the "-O" command-line option (22 Sep 2007)
 * add a "canonical" line to sendq and doneq files (19 Sep 2007)
 * permit easy localization/customization of error messages in mail (19 Sep 2007)
 * further improve ECM synchronization timeout handling (17 Sep 2007)

@@ -1,4 +1,4 @@
-/*	$Id: TagLine.c++ 470 2007-03-09 22:31:19Z faxguy $ */
+/*	$Id: TagLine.c++ 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -84,7 +84,7 @@ FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt)
 	case 't': insert(tagLine, l,
 			fxStr((int)(req.totpages-req.npages), "%u")); break;
 	case 'T': insert(tagLine, l,
-			fxStr((int)(req.totpages), "%u")); break;
+			fxStr((int)(req.totpages+req.skippedpages), "%u")); break;
 	case 'v': insert(tagLine, l, req.voice); break;
 	case 'V': insert(tagLine, l, req.fromvoice); break;
 	case '%': tagLine.remove(l); break;

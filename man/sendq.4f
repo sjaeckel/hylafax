@@ -1,4 +1,4 @@
-.\"	$Id: sendq.4f 583 2007-08-15 20:14:12Z faxguy $
+.\"	$Id: sendq.4f 640 2007-09-23 02:04:11Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -127,6 +127,8 @@ returned	integer	indicates return status value for the job
 schedpri	integer	current scheduling priority
 sender	string	identity of sender
 signalrate	string	signalling rate at which a facsimile was sent
+skippages	integer	skip this number of pages in the first document
+skippedpages	integer	increment page counts by this number
 state	integer	job scheduling state
 status	string	job status
 subaddr	string	info to send in \s-1HDLC SUB\s+1 frame
@@ -494,6 +496,21 @@ This item is recorded by
 so that
 .IR notify (${MANNUM1_8})
 can return it in a notification message.
+.TP 14
+.B skippages
+Indicates to the server to skip-over this number of 
+pages in the first document submitted, but to indicate in the 
+page counts as if they were already transmitted (i.e. in 
+a previous job).  The server moves this number from 
+.B skippages
+into
+.B skippedpages
+as soon as the document preparation occurs.
+.TP 14
+.B skippedpages
+Indicates to the server to increment page counts by this 
+number as if that number of pages were transmitted in a previous
+job.
 .TP 14
 .B state
 The job scheduling state.

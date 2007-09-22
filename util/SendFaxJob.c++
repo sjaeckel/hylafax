@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 494 2007-04-06 22:46:40Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -89,6 +89,8 @@ SendFaxJob::SendFaxJob(const SendFaxJob& other)
     desireddf = other.desireddf;
     pagechop = other.pagechop;
     chopthreshold = other.chopthreshold;
+    skippages = other.skippages;
+    skippedpages = other.skippedpages;
 }
 SendFaxJob::~SendFaxJob()
 {
@@ -123,6 +125,8 @@ SendFaxJob::SFJ_stringtag SendFaxJob::strings[] = {
 SendFaxJob::SFJ_numbertag SendFaxJob::numbers[] = {
 { "maxtries",		&SendFaxJob::maxRetries,	FAX_RETRIES },
 { "maxdials",		&SendFaxJob::maxDials,		FAX_REDIALS },
+{ "skippages",		&SendFaxJob::skippages,		0 },
+{ "skippedpages",	&SendFaxJob::skippedpages,	0 },
 };
 SendFaxJob::SFJ_floattag SendFaxJob::floats[] = {
 { "hres",		&SendFaxJob::hres,		204. },
@@ -431,6 +435,8 @@ SendFaxJob::setChopHandling(const char* v)
 }
 void SendFaxJob::setChopHandling(u_int v)		{ pagechop = v; }
 void SendFaxJob::setChopThreshold(float v)		{ chopthreshold = v; }
+void SendFaxJob::setSkipPages(u_int v)			{ skippages = v; }
+void SendFaxJob::setSkippedPages(u_int v)		{ skippedpages = v; }
 
 extern int
 parseAtSyntax(const char* s, const struct tm& ref, struct tm& at0, fxStr& emsg);
@@ -559,6 +565,8 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
 	pagechop == chop_all	? "all" :
 				  "last")
     IFPARM("CHOPTHRESHOLD", chopthreshold, -1)
+    IFPARM("SKIPPAGES", skippages, 0)
+    IFPARM("SKIPPEDPAGES", skippedpages, 0)
     if (coverFile != "") {
 	int fd = Sys::open(coverFile, O_RDONLY);
 	if (fd < 0) {

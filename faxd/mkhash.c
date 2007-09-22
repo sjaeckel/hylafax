@@ -1,4 +1,4 @@
-/*	$Id: mkhash.c 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: mkhash.c 640 2007-09-23 02:04:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -104,6 +104,8 @@ main()
     hash("state");
     hash("npages");
     hash("totpages");
+    hash("skippages");
+    hash("skippedpages");
     hash("ntries");
     hash("ndials");
     hash("totdials");
