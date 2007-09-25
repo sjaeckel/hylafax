@@ -1,7 +1,8 @@
-#	$Id: CHANGES 640 2007-09-23 02:04:11Z faxguy $	
+#	$Id: CHANGES 642 2007-09-25 22:12:47Z faxguy $	
 
 New Changes
 
+* fix support for full-path device names (25 Sep 2007)
 * add "skippages" and "skippedpages" job parameter features and support
   for indicating them in sendfax via the "-O" command-line option (22 Sep 2007)
 * add a "canonical" line to sendq and doneq files (19 Sep 2007)
