@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 602 2007-08-23 17:52:43Z faxguy $ */
+/*	$Id: ClassModem.c++ 641 2007-09-25 21:25:29Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -176,6 +176,7 @@ ClassModem::isNoise(const char* s)
 	"RRING",	// Telebit
 	"RINGING",	// ZyXEL
 	"+FHR:",	// Intel 144e
+	"+A8",		// Class 1.0 V.8 report
 	"+F34:",	// Class 1.0 V.34 report
 	"+FDB:",	// DCE debugging
 	"MESSAGE-WAITING",	// voice-mail waiting, Conexant
