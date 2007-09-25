@@ -1,4 +1,4 @@
-/*	$Id: faxApp.c++ 384 2006-11-24 21:27:42Z faxguy $ */
+/*	$Id: faxApp.c++ 642 2007-09-25 22:12:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -317,6 +317,7 @@ faxApp::idToDev(const fxStr& id)
     u_int l;
     while ((l = dev.next(0, '_')) < dev.length())
 	dev[l] = '/';
+    if (dev[0] == '/') return (dev);	// path + device
     return (_PATH_DEV | dev);
 }
 
