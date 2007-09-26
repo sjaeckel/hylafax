@@ -1,4 +1,4 @@
-.\"	$Id: sendq.4f 640 2007-09-23 02:04:11Z faxguy $
+.\"	$Id: sendq.4f 643 2007-09-27 05:28:15Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -103,6 +103,7 @@ maxtries	integer	max number of attempts to send job
 minbr	integer	minimum required transmit speed
 modem	string	outgoing modem to use
 ndials	integer	number of consecutive failed attempts to place call
+nocountcover	integer	don't include these pages in counts
 notify	string	email notification specification
 npages	integer	number of pages transmitted
 ntries	integer	number of attempts to send current page
@@ -346,6 +347,10 @@ The value is the string specified in the
 \s-1USER\s+1 command passed to
 .IR hfaxd (${MANNUM1_8})
 when a client logins in to the server.
+.TP 14
+.B nocountcover
+Indicates the number of pages at the first document that should be
+ignored in page counting for the tagline.
 .TP 14
 .B notify
 A specification of whether the sender wants

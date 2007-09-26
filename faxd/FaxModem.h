@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: FaxModem.h 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -67,6 +67,7 @@ private:
     u_int	pageNumber;	// current transmit page number
     u_int	pageNumberOfJob;// current transmit page number of Job
     u_int	pageNumberOfCall;// current transmit page number of call
+    u_int	noCountCoverPages; // number of no-count cover pages
     FaxFont*	tagLineFont;	// font for imaging tag line
     u_int	tagLineSlop;	// extra space reserved for tag line re-encoding
     fxStr	tagLine;	// tag line formatted with transmit time

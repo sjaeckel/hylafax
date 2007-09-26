@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 640 2007-09-23 02:04:11Z faxguy $ */
+/*	$Id: Jobs.c++ 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -149,6 +149,7 @@ static const struct {
     { T_SENDTIME,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_SKIPPAGES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_SKIPPEDPAGES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_NOCOUNTCOVER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_STATE,		A_RUSR|A_RADM|A_ROTH },
     { T_STATUS,		A_RUSR|A_RADM|A_WADM|A_ROTH },
     { T_ERRORCODE,	A_RUSR|A_RADM|A_WADM|A_ROTH },
@@ -245,7 +246,7 @@ static struct {
     { T_TOTPAGES,	&Job::totpages },
     { T_NPAGES,		&Job::npages },
     { T_SKIPPAGES,	&Job::skippages },
-    { T_SKIPPEDPAGES,	&Job::skippedpages },
+    { T_NOCOUNTCOVER,	&Job::nocountcover },
     { T_NTRIES,		&Job::ntries },
     { T_NDIALS,		&Job::ndials },
     { T_TOTDIALS,	&Job::totdials },
@@ -259,6 +260,12 @@ static struct {
     { T_MINBR,		&Job::minbr },
     { T_BEGBR,		&Job::desiredbr },
     { T_BEGST,		&Job::desiredst },
+};
+static struct {
+    Token	t;
+    int		Job::* p;
+} intvals[] = {
+    { T_SKIPPEDPAGES,	&Job::skippedpages },
 };
 static const char* notifyVals[4] = {
     "NONE",		// no_notice
@@ -510,6 +517,11 @@ HylaFAXServer::replyJobParamValue(Job& job, int code, Token t)
 	    reply(code, "%u", job.*shortvals[i].p);
 	    return;
 	}
+    for (i = 0, n = N(intvals); i < n; i++)
+	if (intvals[i].t == t) {
+	    reply(code, "%u", job.*intvals[i].p);
+	    return;
+	}
     reply(500, "Botch: no support for querying parameter value.");
 }
 
@@ -584,6 +596,9 @@ HylaFAXServer::jstatCmd(const Job& job)
     for (i = 0, n = N(shortvals); i < n; i++)
 	if (checkAccess(job, shortvals[i].t, A_READ))
 	    jstatLine(shortvals[i].t, "%u", job.*shortvals[i].p);
+    for (i = 0, n = N(intvals); i < n; i++)
+	if (checkAccess(job, intvals[i].t, A_READ))
+	    jstatLine(intvals[i].t, "%u", job.*intvals[i].p);
     /*
      * NB: This assumes access to T_DOCUMENT is sufficient
      *     for access to T_COVER and T_POLL also.
@@ -761,6 +776,14 @@ HylaFAXServer::setJobParameter(Job& job, Token t, u_short value)
 		}
 		return (true);
 	    }
+	for (u_int i = 0, n = N(intvals); i < n; i++)
+	    if (intvals[i].t == t) {
+		if (job.*intvals[i].p != value) {
+		    // XXX constrain values per A_MODIFY
+		    job.*intvals[i].p = value;	// XXX
+		}
+		return (true);
+	    }
 	parmBotch(t);
     }
     return (false);
@@ -921,6 +944,7 @@ HylaFAXServer::initDefaultJob(void)
     defJob.client	= remotehost;
     defJob.tagline	= "";
     defJob.doneop	= "default";
+    defJob.nocountcover	= 0;
     defJob.skippedpages	= 0;
     defJob.skippages	= 0;
 }
