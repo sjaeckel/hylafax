@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 512 2007-05-04 22:44:58Z faxguy $ */
+/*	$Id: faxQueueApp.h 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -252,7 +252,7 @@ private:
     JobStatus	runConverter(Job& job, const char* app, char* const* argv,
 		    fxStr& emsg);
     bool	runConverter1(Job& job, int fd, fxStr& output);
-    void	makeCoverPage(Job&, FaxRequest&, const Class2Params&);
+    bool	makeCoverPage(Job&, FaxRequest&, const Class2Params&);
     bool	preparePageHandling(Job&, FaxRequest&,
 		    const FaxMachineInfo&, fxStr& emsg);
     void	preparePageChop(const FaxRequest&,

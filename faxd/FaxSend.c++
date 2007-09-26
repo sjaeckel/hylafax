@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: FaxSend.c++ 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -901,6 +901,10 @@ FaxServer::notifyPageSent(FaxRequest& req, const char*)
 {
     time_t now = Sys::now();
     req.npages++;			// count transmitted page
+    if (req.nocountcover) {
+	req.nocountcover--;
+	req.skippedpages--;
+    }
     /*
      * If the system is busy then req.writeQFile may not return quickly.
      * Thus we run it in a child process and move on.

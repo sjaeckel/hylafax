@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 640 2007-09-23 02:04:11Z faxguy $ */
+/*	$Id: Parser.c++ 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -149,6 +149,7 @@ static const tab parmtab[] = {
 { "MINBR",        T_MINBR,	  false, true, "[ANY|bit-rate]" },
 { "MODEM",        T_MODEM,	  false, true, "[device|class]" },
 { "NDIALS",       T_NDIALS,	  false, true, "[<number>]" },
+{ "NOCOUNTCOVER", T_NOCOUNTCOVER, false, true, "[<number>]" },
 { "NOTIFY",       T_NOTIFY,	  false, true, "[NONE|DONE|REQUEUE|DONE+REQUEUE]" },
 { "NOTIFYADDR",   T_NOTIFYADDR,	  false, true, "[email-address]" },
 { "NPAGES",       T_NPAGES,	  false, true, "[<number>]" },
@@ -1081,6 +1082,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_NPAGES:
     case T_SKIPPAGES:
     case T_SKIPPEDPAGES:
+    case T_NOCOUNTCOVER:
     case T_TOTPAGES:
     case T_NTRIES:
     case T_TOTTRIES:

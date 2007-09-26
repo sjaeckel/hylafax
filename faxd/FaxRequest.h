@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 640 2007-09-23 02:04:11Z faxguy $ */
+/*	$Id: FaxRequest.h 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -98,6 +98,10 @@ public:
 	const char* name;
 	u_short FaxRequest::* p;
     };
+    struct intval {
+	const char* name;
+	int FaxRequest::* p;
+    };
 
     fxStr	qfile;		// associated queue file name
     fxStr	jobid;		// job identifier
@@ -111,7 +115,8 @@ public:
     u_short	totpages;	// total cumulative pages in documents
     u_short	npages;		// total pages sent/received
     u_short	skippages;	// skip over these pages in the document
-    u_short	skippedpages;	// start page numbering here + 1
+    int		skippedpages;	// start page numbering here + 1
+    u_short	nocountcover;	// don't count these pages
     u_short	ntries;		// # tries to send current page
     u_short	ndials;		// # consecutive failed tries to call dest
     u_short	totdials;	// total # calls to dest
@@ -177,6 +182,7 @@ public:
 
     static stringval strvals[];
     static shortval shortvals[];
+    static intval intvals[];
     static char* opNames[18];
     static char* notifyVals[4];
     static char* chopVals[4];
@@ -192,6 +198,7 @@ public:
 
     static bool isStrCmd(const char* cmd, u_int& ix);
     static bool isShortCmd(const char* cmd, u_int& ix);
+    static bool isIntCmd(const char* cmd, u_int& ix);
 
     void insertFax(u_int ix, const fxStr& file);
     void addItem(FaxSendOp op, char* tag);

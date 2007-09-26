@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 640 2007-09-23 02:04:11Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -738,25 +738,36 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
 	i++;
     }
     if (status == Job::done && !abortPrepare) {
-	if (req.cover != "") {
-	    /*
-	     * Generate a continuation cover page if necessary.
-	     * Note that a failure in doing this is not considered
-	     * fatal; perhaps this should be configurable?
-	     */
-	    makeCoverPage(job, req, params);
-	    updateQFile = true;
-	}
 	if (req.pagehandling == "" && !abortPrepare) {
 	    /*
 	     * Calculate/recalculate the per-page session parameters
-	     * and check the page count against the max pages.
+	     * and check the page count against the max pages.  We
+	     * do this before generating continuation any cover page
+	     * to prevent any skippages setting from trying to skip
+	     * the continuation cover page.
 	     */
 	    if (!preparePageHandling(job, req, info, req.notice)) {
 		status = Job::rejected;		// XXX
 		req.notice.insert("Document preparation failed: ");
 	    }
 	    updateQFile = true;
+	}    
+	if (req.cover != "" && !abortPrepare) {
+	    /*
+	     * Generate a continuation cover page if necessary.
+	     * Note that a failure in doing this is not considered
+	     * fatal; perhaps this should be configurable?
+	     */
+	    if (makeCoverPage(job, req, params))
+		req.nocountcover++;
+	    updateQFile = true;
+	    /*
+	     * Recalculate the per-page session parameters.
+	     */
+	    if (!preparePageHandling(job, req, info, req.notice)) {
+	 	status = Job::rejected;		// XXX
+		req.notice.insert("Document preparation failed: ");
+	    }
 	}    
     }
     if (updateQFile)
@@ -1271,14 +1282,15 @@ faxQueueApp::runConverter1(Job& job, int fd, fxStr& output)
  * page counts for the job instead of resetting pagehandling
  * so that everything just gets recalculated from scratch.
  */
-void
+bool
 faxQueueApp::makeCoverPage(Job& job, FaxRequest& req, const Class2Params& params)
 {
+    bool ok = true;
     FaxItem fitem(FaxRequest::send_postscript, 0, fxStr::null, req.cover);
     fxStr cmd(coverCmd
-	| " " | req.qfile
-	| " " | contCoverPageTemplate
-	| " " | fitem.item
+	| quote | quoted(req.qfile)             | enquote
+	| quote | quoted(contCoverPageTemplate) | enquote
+	| quote | fitem.item                    | enquote
     );
     traceQueue(job, "COVER PAGE: %s", (const char*)cmd);
     if (runCmd(cmd, true)) {
@@ -1291,12 +1303,15 @@ faxQueueApp::makeCoverPage(Job& job, FaxRequest& req, const Class2Params& params
 	} else {
 	    jobError(job, "SEND: No continuation cover page, "
 		" document conversion failed: %s", (const char*) emsg);
+	    ok = false;
 	}
 	Sys::unlink(fitem.item);
     } else {
 	jobError(job,
 	    "SEND: No continuation cover page, generation cmd failed");
+	ok = false;
     }
+    return (ok);
 }
 
 const fxStr&
@@ -1901,6 +1916,14 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
 	    setDead(job);
 	    return (true);
 	}
+    }
+    if (req.useccover && (req.skippedpages || req.skippages) && contCoverPageTemplate != "") {
+	/*
+	 * The user submitted a job with "skipped" pages.  This equates
+	 * to a user-initiated resubmission.  Add a continuation coverpage
+	 * if appropriate.
+	 */
+	req.cover = docDir | "/cover" | req.jobid | ".ps";
     }
     /*
      * Put the job on the appropriate queue

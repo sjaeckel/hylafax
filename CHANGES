@@ -1,7 +1,9 @@
-#	$Id: CHANGES 642 2007-09-25 22:12:47Z faxguy $	
+#	$Id: CHANGES 643 2007-09-27 05:28:15Z faxguy $	
 
 New Changes
 
+* fix (maintain) pagination when continuation cover pages are used, and 
+  add "nocountcover" job parameter to prevent paginating the cover (26 Sep 2007)
 * fix support for full-path device names (25 Sep 2007)
 * add "skippages" and "skippedpages" job parameter features and support
   for indicating them in sendfax via the "-O" command-line option (22 Sep 2007)

@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 640 2007-09-23 02:04:11Z faxguy $ */
+/*	$Id: FaxRequest.c++ 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -57,7 +57,7 @@ FaxRequest::reset(void)
     pri = (u_short) -1;
     usrpri = FAX_DEFPRIORITY;
     pagewidth = pagelength = resolution = 0;
-    npages = totpages = skippages = skippedpages = 0;
+    npages = totpages = skippages = skippedpages = nocountcover = 0;
     ntries = ndials = 0;
     minbr = BR_2400;
     desiredbr = BR_33600;
@@ -130,7 +130,7 @@ FaxRequest::shortval FaxRequest::shortvals[] = {
     { "state",		&FaxRequest::state },
     { "npages",		&FaxRequest::npages },
     { "skippages",	&FaxRequest::skippages },
-    { "skippedpages",	&FaxRequest::skippedpages },
+    { "nocountcover",	&FaxRequest::nocountcover },
     { "totpages",	&FaxRequest::totpages },
     { "ntries",		&FaxRequest::ntries },
     { "ndials",		&FaxRequest::ndials },
@@ -151,6 +151,9 @@ FaxRequest::shortval FaxRequest::shortvals[] = {
     { "desiredtl",	&FaxRequest::desiredtl },
     { "useccover",	&FaxRequest::useccover },
     { "usexvres",	&FaxRequest::usexvres },
+};
+FaxRequest::intval FaxRequest::intvals[] = {
+    { "skippedpages",	&FaxRequest::skippedpages },
 };
 char* FaxRequest::opNames[18] = {
     "fax",
@@ -354,6 +357,7 @@ FaxRequest::readQFile(bool& rejectJob)
 	    if (tts == 0)	// distinguish ``now'' from unset
 		tts = Sys::now();
 	    break;
+	case H_NOCOUNTCOVER:	nocountcover = atoi(tag); break;
 	case H_KILLTIME:	killtime = atoi(tag); break;
 	case H_RETRYTIME:	retrytime = atoi(tag); break;
 	case H_NOTIFY:		checkNotifyValue(tag); break;
@@ -524,6 +528,7 @@ FaxRequest::writeQFile()
     } else if (notice == "")
 	errorcode = "";
     DUMP(fp, shortvals,	"%s:%d\n", (int));
+    DUMP(fp, intvals,	"%s:%d\n", (int));
     DUMP(fp, strvals,	"%s:%s\n", (const char*));
     /*
      * Escape unprotected \n's with \\.
@@ -722,6 +727,17 @@ FaxRequest::isShortCmd(const char* cmd, u_int& ix)
 {
     for (int i = N(shortvals)-1; i >= 0; i--)
 	if (strcmp(shortvals[i].name, cmd) == 0) {
+	    ix = i;
+	    return (true);
+	}
+    return (false);
+}
+
+bool
+FaxRequest::isIntCmd(const char* cmd, u_int& ix)
+{
+    for (int i = N(intvals)-1; i >= 0; i--)
+	if (strcmp(intvals[i].name, cmd) == 0) {
 	    ix = i;
 	    return (true);
 	}

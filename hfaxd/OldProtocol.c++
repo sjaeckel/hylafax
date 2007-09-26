@@ -1,4 +1,4 @@
-/*	$Id: OldProtocol.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: OldProtocol.c++ 643 2007-09-27 05:28:15Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -820,6 +820,8 @@ OldProtocolServer::submitJob(const char*)
 		job.*FaxRequest::strvals[ix].p = tag;
 	} else if (FaxRequest::isShortCmd(line, ix)) {
 	    job.*FaxRequest::shortvals[ix].p = atoi(tag);
+	} else if (FaxRequest::isIntCmd(line, ix)) {
+	    job.*FaxRequest::intvals[ix].p = atoi(tag);
 	} else if (isCmd("sendAt")) {
 	    job.tts = (time_t) cvtTime(tag, &now, "time-to-send");
 	} else if (isCmd("killtime")) {
