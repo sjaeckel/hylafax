@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 626 2007-09-09 15:32:30Z faxguy $ */
+/*	$Id: Class1Send.c++ 644 2007-10-01 18:14:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -885,7 +885,7 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 		again = dropToNextBR(params);
 	    } while (again && (params.br == BR_9600 || params.br == BR_7200) && curcap->mod != V29);
 	}
-    } while (!useV34 && again);
+    } while (!useV34 && (again || attempt < 3));
 failed:
     emsg = "Failure to train remote modem at 2400 bps or minimum speed {E137}";
 done:

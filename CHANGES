@@ -1,7 +1,8 @@
-#	$Id: CHANGES 643 2007-09-27 05:28:15Z faxguy $	
+#	$Id: CHANGES 644 2007-10-01 18:14:06Z faxguy $	
 
 New Changes
 
+* attempt send training at least three times (1 Oct 2007)
 * fix (maintain) pagination when continuation cover pages are used, and 
   add "nocountcover" job parameter to prevent paginating the cover (26 Sep 2007)
 * fix support for full-path device names (25 Sep 2007)
