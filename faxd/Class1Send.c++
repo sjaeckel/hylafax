@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 644 2007-10-01 18:14:06Z faxguy $ */
+/*	$Id: Class1Send.c++ 645 2007-10-01 18:39:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2005,6 +2005,7 @@ Class1Modem::sendPPM(u_int ppm, HDLCFrame& mcf, fxStr& emsg)
 	    return (true);
 	if (abortRequested())
 	    return (false);
+	switchingPause(emsg);
     }
     switch (ppm) {
 	case FCF_MPS:
