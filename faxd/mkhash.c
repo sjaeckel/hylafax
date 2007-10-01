@@ -1,4 +1,4 @@
-/*	$Id: mkhash.c 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: mkhash.c 646 2007-10-01 20:23:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -154,6 +154,7 @@ main()
     hash("returned");
     hash("doneop");
     hash("commid");
+    hash("canonical");
     printf("/* %u total collisions */\n", collisions);
     return (0);
 }

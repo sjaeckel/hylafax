@@ -1,4 +1,4 @@
-#	$Id: CHANGES 644 2007-10-01 18:14:06Z faxguy $	
+#	$Id: CHANGES 646 2007-10-01 20:23:53Z faxguy $	
 
 New Changes
 
@@ -8,7 +8,7 @@ New Changes
 * fix support for full-path device names (25 Sep 2007)
 * add "skippages" and "skippedpages" job parameter features and support
   for indicating them in sendfax via the "-O" command-line option (22 Sep 2007)
-* add a "canonical" line to sendq and doneq files (19 Sep 2007)
+* add a "canonical" line to sendq and doneq files (19 Sep, 1 Oct 2007)
 * permit easy localization/customization of error messages in mail (19 Sep 2007)
 * further improve ECM synchronization timeout handling (17 Sep 2007)
 * further fix faxmail comment parsing, and only parse MIME-Version (14 Sep 2007)

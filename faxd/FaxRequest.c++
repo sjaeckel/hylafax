@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: FaxRequest.c++ 646 2007-10-01 20:23:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -269,6 +269,7 @@ FaxRequest::readQFile(bool& rejectJob)
 	*bp++ = '\0';				// null-terminate tag
 	switch (HASH(hash)) {
 	case H_EXTERNAL:	external = tag; break;
+	case H_CANONICAL:	canonical = tag; break;
 	case H_NUMBER:		number = tag; break;
 	case H_MAILADDR:	mailaddr = tag; break;
 	case H_SENDER:		sender = tag; break;
