@@ -1,7 +1,8 @@
-#	$Id: CHANGES 646 2007-10-01 20:23:53Z faxguy $	
+#	$Id: CHANGES 647 2007-10-02 00:32:35Z faxguy $	
 
 New Changes
 
+* output an error message from faxmail if a part is discarded (1 Oct 2007)
 * attempt send training at least three times (1 Oct 2007)
 * fix (maintain) pagination when continuation cover pages are used, and 
   add "nocountcover" job parameter to prevent paginating the cover (26 Sep 2007)

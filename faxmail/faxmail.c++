@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 630 2007-09-14 18:02:36Z faxguy $ */
+/*	$Id: faxmail.c++ 647 2007-10-02 00:32:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -632,6 +632,15 @@ faxMailApp::formatDiscarded(MIMEState& mime)
 	    );
 	format((const char*)buf, buf.getLength());
     }
+    if (mime.getDescription() != "")
+	fprintf(stderr, "DISCARDED: %s (%s/%s)\n",
+	    (const char*) mime.getDescription(),
+	    (const char*) mime.getType(),
+	    (const char*) mime.getSubType());
+    else
+	fprintf(stderr, "DISCARDED: %s/%s\n",
+	    (const char*) mime.getType(),
+	    (const char*) mime.getSubType());
 }
 
 /*
