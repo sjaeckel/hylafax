@@ -1,4 +1,4 @@
-# $Id: intel-400e 2 2005-11-11 21:32:03Z faxguy $
+# $Id: intel-400e 648 2007-10-02 16:52:13Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -80,3 +80,9 @@ ModemAnswerFaxCmd:	AT+FCLASS=1A	# fax answer
 #GettyArgs:		"-h %l dx_%s"	# NB: enable this for dialins (SGI)
 #GettyArgs:		"std.%s -"	# NB: enable this for dialins (SunOS)
 #GettyArgs:	"-g -h -t 60 -l ff_%s"	# NB: enable this for dialins (SVR4.2)
+
+Class1PPMWaitCmd:       "<delay\0727>"  # \072 == :  to avoid awk problem
+Class1TCFWaitCmd:       "<delay\0727>"
+Class1EOPWaitCmd:       "<delay\0729>"
+Class1SwitchingCmd:     "<delay\0727>"
+
