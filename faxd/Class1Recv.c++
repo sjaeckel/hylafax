@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 633 2007-09-18 03:26:53Z faxguy $ */
+/*	$Id: Class1Recv.c++ 650 2007-10-03 23:52:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -303,7 +303,7 @@ Class1Modem::recvIdentification(
 	     * The best way to do that is to make sure that there is
 	     * silence on the line, and  we do that with Class1SwitchingCmd.
 	     */
-	    if (!switchingPause(emsg)) {
+	    if (!useV34 && !switchingPause(emsg)) {
 		return (false);
 	    }
 	}
