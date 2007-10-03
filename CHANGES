@@ -1,7 +1,8 @@
-#	$Id: CHANGES 649 2007-10-02 23:19:55Z faxguy $	
+#	$Id: CHANGES 650 2007-10-03 23:52:46Z faxguy $	
 
 New Changes
 
+* add default prototype support for Mainpine IQ modems (3 Oct 2007)
 * output an error message from faxmail if a part is discarded (1 Oct 2007)
 * attempt send training at least three times (1 Oct 2007)
 * fix (maintain) pagination when continuation cover pages are used, and 

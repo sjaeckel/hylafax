@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
+#	$Id: Makefile.in 650 2007-10-03 23:52:46Z faxguy $
 #
 # @WARNING@
 #
@@ -79,7 +79,9 @@ CONFIGFILES=class1 \
 	lucent-mt-20 \
 	lucent-mt-21 \
 	lucent-mt-10 \
+	mainpine-10 \
 	mainpine-2 \
+	mainpine-20 \
 	mainpine-21 \
 	moto-288 \
 	mt-1432 \
