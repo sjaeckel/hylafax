@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 633 2007-09-18 03:26:53Z faxguy $ */
+/*	$Id: Class1.c++ 652 2007-10-05 01:21:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1402,6 +1402,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
     u_short crpcnt = 0, rhcnt = 0;
     u_int onhooks = 0;
     gotCONNECT = true;
+    time_t start = Sys::now();
     if (useV34) {
 	do {
 	    if (crpcnt) traceFCF(dir == FCF_SNDR ? "SEND send" : "RECV send", FCF_CRP);
@@ -1435,7 +1436,8 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 		    startTimeout(ms);
 		}
 	    }
-	} while ((lastResponse == AT_FCERROR || (lastResponse == AT_ERROR && onhooks <= conf.class1HookSensitivity)) && !wasTimeout());
+	} while (((u_int) Sys::now()-start < conf.t1Timer) && !wasTimeout() &&
+	    (lastResponse == AT_FCERROR || (lastResponse == AT_ERROR && onhooks <= conf.class1HookSensitivity)));
     }
     if (readPending) {
         stopTimeout("waiting for HDLC flags");
@@ -1472,7 +1474,8 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 	     * modem response at that point, anyway.  So it is a good indicator for us.
 	     * So we simply repeat AT+FRH=3 in that case.
 	     */
-	} while (!gotframe && !wasTimeout() && ((conf.class1HasRHConnectBug && !frame.getLength() && lastResponse == AT_NOCARRIER && rhcnt++ < 30) ||
+	} while (((u_int) Sys::now()-start < conf.t1Timer) && !gotframe && !wasTimeout() && 
+	    ((conf.class1HasRHConnectBug && !frame.getLength() && lastResponse == AT_NOCARRIER && rhcnt++ < 30) ||
 	    (docrp && crpcnt++ < 3 && switchingPause(emsg, 3) && transmitFrame(dir|FCF_CRP))));	/* triple switchingPause to avoid sending CRP during TCF */
 	return (gotframe);
     } else {
