@@ -1,7 +1,8 @@
-#	$Id: CHANGES 650 2007-10-03 23:52:46Z faxguy $	
+#	$Id: CHANGES 652 2007-10-05 01:21:51Z faxguy $	
 
 New Changes
 
+* put a time limit on potential looping tring to receive a frame (4 Oct 2007)
 * add default prototype support for Mainpine IQ modems (3 Oct 2007)
 * output an error message from faxmail if a part is discarded (1 Oct 2007)
 * attempt send training at least three times (1 Oct 2007)
