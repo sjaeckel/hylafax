@@ -1,7 +1,8 @@
-#	$Id: CHANGES 653 2007-10-05 16:56:47Z faxguy $	
+#	$Id: CHANGES 655 2007-10-05 21:21:56Z faxguy $	
 
 New Changes
 
+* handle echo of MCF in non-ECM reception (5 Oct 2007)
 * fix Class 1 protocol when MaxRecvPages is exceeded (5 Oct 2007)
 * put a time limit on potential looping tring to receive a frame (4 Oct 2007)
 * add default prototype support for Mainpine IQ modems (3 Oct 2007)

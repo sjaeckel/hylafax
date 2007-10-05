@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 654 2007-10-05 20:04:18Z faxguy $ */
+/*	$Id: Class1Recv.c++ 655 2007-10-05 21:21:56Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1023,6 +1023,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		transmitFrame(signalSent);
 		traceFCF("RECV send", (u_char) signalSent[2]);
 		break;
+	    case FCF_MCF:
 	    case FCF_CFR:
 		/* It's probably just our own echo. */
 		messageReceived = false;
