@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 653 2007-10-05 16:56:47Z faxguy $ */
+/*	$Id: Class1Recv.c++ 654 2007-10-05 20:04:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1222,7 +1222,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
 						    return (false);
 						}
-						if (frameRev[rtncframe[4]]+1 > prevPage || (frameRev[rtncframe[4]]+1 == prevPage && frameRev[rtncframe[5]]+1 > prevBlock)) {
+						if (frameRev[rtncframe[4]] > prevPage || (frameRev[rtncframe[4]] == prevPage && frameRev[rtncframe[5]] >= prevBlock)) {
 						    (void) transmitFrame(FCF_PPR, fxStr(ppr, 32));
 						    traceFCF("RECV send", FCF_PPR);
 						} else {
@@ -1553,7 +1553,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					for (pprpos = 0, pprval = i; pprval >= 8; pprval -= 8) pprpos++;
 					if (ppr[pprpos] & frameRev[1 << pprval]) blockgood = false;
 				    }
-				    if (frameRev[ppsframe[4]]+1 < prevPage || (frameRev[ppsframe[4]]+1 == prevPage && frameRev[ppsframe[5]]+1 <= prevBlock))
+				    if (frameRev[ppsframe[4]] < prevPage || (frameRev[ppsframe[4]] == prevPage && frameRev[ppsframe[5]] < prevBlock))
 					blockgood = false;	// we already confirmed this block receipt... (see below)
 				} else {
 				    blockgood = false;	// MCF only if we have data
@@ -1575,7 +1575,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    pprcnt = 4;
 				}
 				if (signalRcvd == 0) {
-				    if (frameRev[ppsframe[4]]+1 > prevPage || (frameRev[ppsframe[4]]+1 == prevPage && frameRev[ppsframe[5]]+1 >= prevBlock)) {
+				    if (frameRev[ppsframe[4]] > prevPage || (frameRev[ppsframe[4]] == prevPage && frameRev[ppsframe[5]] > prevBlock)) {
 					// inform the remote that one or more frames were invalid
 					transmitFrame(FCF_PPR, fxStr(ppr, 32));
 					traceFCF("RECV send", FCF_PPR);
