@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: FaxRecv.c++ 653 2007-10-05 16:56:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -299,10 +299,7 @@ FaxServer::recvFaxPhaseD(TIFF* tif, FaxRecvInfo& info, u_int& ppm, fxStr& emsg)
 	}
     }
     do {
-	if (++recvPages > maxRecvPages) {
-	    emsg = "Maximum receive page count exceeded, call terminated {E304}";
-	    return (false);
-	}
+	++recvPages;
 	if (!modem->recvPage(tif, ppm, emsg, id))
 	    return (false);
 	info.npages++;
@@ -331,6 +328,10 @@ FaxServer::recvFaxPhaseD(TIFF* tif, FaxRecvInfo& info, u_int& ppm, fxStr& emsg)
 	if (emsg != "") return (false);		// got page with fatal error
 	if (PPM_PRI_MPS <= ppm && ppm <= PPM_PRI_EOP) {
 	    emsg = "Procedure interrupt received, job terminated {E051}";
+	    return (false);
+	}
+	if (recvPages > maxRecvPages) {
+	    emsg = "Maximum receive page count exceeded, call terminated {E304}";
 	    return (false);
 	}
     } while (ppm == PPM_MPS || ppm == PPM_PRI_MPS);
