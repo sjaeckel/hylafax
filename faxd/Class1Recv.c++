@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 655 2007-10-05 21:21:56Z faxguy $ */
+/*	$Id: Class1Recv.c++ 656 2007-10-06 20:06:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1576,7 +1576,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    pprcnt = 4;
 				}
 				if (signalRcvd == 0) {
-				    if (frameRev[ppsframe[4]] > prevPage || (frameRev[ppsframe[4]] == prevPage && frameRev[ppsframe[5]] > prevBlock)) {
+				    if (frameRev[ppsframe[4]] > prevPage || (frameRev[ppsframe[4]] == prevPage && frameRev[ppsframe[5]] >= prevBlock)) {
 					// inform the remote that one or more frames were invalid
 					transmitFrame(FCF_PPR, fxStr(ppr, 32));
 					traceFCF("RECV send", FCF_PPR);
