@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 639 2007-09-20 12:44:33Z faxguy $
+#    $Id: common-functions.sh.in 657 2007-10-08 16:47:44Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -98,12 +98,14 @@ parseQfile()
     #
     # print out variable name and value so we can eval it in the shell
     AWK_OUTPUT=`$AWK -F: ' 
+    VAR_PREFIX="$1"
     function p(varname,val)
     {
         gsub(/\\047/, "\047\\\\\047\047", val);
-        printf "%s=\\047%s\\047\n",varname,val
+        printf "%s%s=\\047%s\\047\n",var_prefix,varname,val
     }
     BEGIN {
+	var_prefix = "'"${VAR_PREFIX}"'";
         nfiles = 0;
         npins = 0;
         pagewidth = 0;
