@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 653 2007-10-05 16:56:47Z faxguy $ */
+/*	$Id: FaxRecv.c++ 660 2007-10-09 23:22:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -346,6 +346,7 @@ FaxServer::notifyRecvBegun(FaxRecvInfo&)
 bool
 FaxServer::processTSIRecvdCmd(FaxRecvInfo&, fxStr&)
 {
+    return (true);
 }
 
 /*
