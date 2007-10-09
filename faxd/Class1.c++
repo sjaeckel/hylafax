@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 652 2007-10-05 01:21:51Z faxguy $ */
+/*	$Id: Class1.c++ 658 2007-10-09 22:35:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -104,6 +104,7 @@ Class1Modem::Class1Modem(FaxServer& s, const ModemConfig& c)
     gotCTRL = false;
     repeatPhaseB = false;
     silenceHeard = false;
+    imagefd = 0;
 }
 
 Class1Modem::~Class1Modem()

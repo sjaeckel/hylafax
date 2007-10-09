@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: FaxModem.c++ 658 2007-10-09 22:35:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -41,6 +41,7 @@ FaxModem::FaxModem(FaxServer& s, const ModemConfig& c)
     minsp = BR_2400;
     curreq = NULL;
     group3opts = 0;
+    imagefd = 0;
     // fill order settings may be overwritten in derived class
     recvFillOrder = (conf.recvFillOrder != 0)? conf.recvFillOrder : FILLORDER_LSB2MSB;
     sendFillOrder = (conf.sendFillOrder != 0)? conf.sendFillOrder : FILLORDER_LSB2MSB;

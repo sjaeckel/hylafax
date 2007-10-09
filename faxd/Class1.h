@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: Class1.h 658 2007-10-09 22:35:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -96,6 +96,7 @@ protected:
     u_long	ecmStuffedBlockPos;	// fill pointer for ecmStuffedBlockPos
     u_int	frameNumber;		// frame sequence number of ecmFrame in ecmBlock
     u_short	blockNumber;		// block sequence number of ecmBlock in page
+    int		imagefd;		// file descriptor for raw image
 
     static const u_int modemPFMCodes[8];// map T.30 FCF to Class 2 PFM
     static const u_int modemPPMCodes[8];// map T.30 FCF to Class 2 PPM

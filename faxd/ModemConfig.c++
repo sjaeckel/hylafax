@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 608 2007-08-27 19:09:15Z faxguy $ */
+/*	$Id: ModemConfig.c++ 658 2007-10-09 22:35:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -292,6 +292,7 @@ ModemConfig::setupConfig()
     softRTFCC		= true;			// real-time fax comp. conv. (software)
     doPhaseCDebug	= false;		// query modem for responses in Phase C transmit
     noAnswerVoice	= false;		// answer voice calls
+    saverawimage	= false;		// don't save raw image data by default
 
     idConfig.resize(0);
     callidIndex		= (u_int) -1;
@@ -791,6 +792,8 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	class2RTFCC = getBoolean(value);
     else if (streq(tag, "noanswervoice"))
 	noAnswerVoice = getBoolean(value);
+    else if (streq(tag, "saverawimage"))
+	saverawimage = getBoolean(value);
     else if (streq(tag, "modemsoftrtfcc"))
 	softRTFCC = getBoolean(value);
     else if (streq(tag, "modemdophasecdebug"))

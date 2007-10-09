@@ -1,7 +1,8 @@
-#	$Id: CHANGES 655 2007-10-05 21:21:56Z faxguy $	
+#	$Id: CHANGES 658 2007-10-09 22:35:50Z faxguy $	
 
 New Changes
 
+* add SaveRawImage configuration option for debugging use (9 Oct 2007)
 * handle echo of MCF in non-ECM reception (5 Oct 2007)
 * fix Class 1 protocol when MaxRecvPages is exceeded (5 Oct 2007)
 * put a time limit on potential looping tring to receive a frame (4 Oct 2007)

@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 645 2007-10-01 18:39:42Z faxguy $ */
+/*	$Id: Class1Send.c++ 658 2007-10-09 22:35:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1598,6 +1598,7 @@ Class1Modem::sendClass1ECMData(const u_char* data, u_int cc, const u_char* bitre
 bool
 Class1Modem::sendPageData(u_char* data, u_int cc, const u_char* bitrev, bool ecm, fxStr& emsg)
 {
+    if (imagefd > 0) Sys::write(imagefd, (const char*) data, cc);
     beginTimedTransfer();
     bool rc;
     if (ecm)
@@ -1863,6 +1864,10 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	    TIFFReverseBits(dp, totdata);
 	    lastbyte = frameRev[lastbyte];
 	}
+
+	/* For debugging purposes we may want to write the image-data to file. */
+	if (conf.saverawimage) imagefd = Sys::open("/tmp/out.fax", O_RDWR|O_CREAT|O_EXCL);
+
 	u_int minLen = params.minScanlineSize();
 	if (minLen > 0) {			// only in non-ECM
 	    /*
@@ -1945,8 +1950,9 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	    /*
 	     * Flush anything that was not sent above.
 	     */
-	    if (fp > fill && rc)
+	    if (fp > fill && rc) {
 		rc = sendPageData(fill, fp-fill, bitrev, (params.ec != EC_DISABLE), emsg);
+	    }
 	    delete fill;
 	} else {
 	    /*
@@ -1955,6 +1961,10 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	    rc = sendPageData(dp, (u_int) totdata, bitrev, (params.ec != EC_DISABLE), emsg);
 	}
 	delete data;
+	if (imagefd > 0) {
+	    Sys::close(imagefd);
+	    imagefd = 0;
+	}
     }
     if (rc || abortRequested())
 	rc = sendRTC(params, ppmcmd, lastbyte, rowsperstrip, emsg);

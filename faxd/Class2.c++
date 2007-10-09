@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 531 2007-06-14 16:58:21Z faxguy $ */
+/*	$Id: Class2.c++ 658 2007-10-09 22:35:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -34,6 +34,7 @@ Class2Modem::Class2Modem(FaxServer& s, const ModemConfig& c) : FaxModem(s,c)
     serviceType = 0;			// must be set in derived class
     useExtendedDF = false;		// T.32 Amendment 1 extension for data format is detectable
     useJP = false;			// JP +FCC option support is detectable
+    imagefd = 0;
 }
 
 Class2Modem::~Class2Modem()

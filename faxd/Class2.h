@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: Class2.h 658 2007-10-09 22:35:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -72,6 +72,7 @@ protected:
     char	hangupCode[5];		// hangup reason (from modem)
     bool	hadHangup;		// true if +FHNG:/+FHS: received
     fxStr	lid;			// prepared local identifier string
+    int		imagefd;		// file descriptor for raw image data
 
 // modem setup stuff
     virtual bool setupModem(bool isSend = true);

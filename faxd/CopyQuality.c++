@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 596 2007-08-22 23:54:30Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 658 2007-10-09 22:35:50Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -125,6 +125,9 @@ bool
 FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
     const Class2Params& params, fxStr& emsg)
 {
+    /* For debugging purposes we may want to write the image-data to file. */
+    if (conf.saverawimage) imagefd = Sys::open("/tmp/in.fax", O_RDWR|O_CREAT|O_EXCL);
+
     initializeDecoder(params);
     u_int rowpixels = params.pageWidth();	// NB: assume rowpixels <= 4864
     /*
@@ -411,6 +414,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		if (params.df == DF_JBIG) clearSDNORMCount();
 		else fixupJPEG(tif);
 	    }
+	    if (imagefd > 0) Sys::close(imagefd);
 	    recvEndPage(tif, params);
 	    return (true);
 	}
@@ -459,6 +463,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 	    recvEOLCount = getRTCRow();
 	}
     }
+    if (imagefd > 0) Sys::close(imagefd);
     recvEndPage(tif, params);
     return (true);
 }
@@ -547,6 +552,7 @@ setupCompression(TIFF* tif, u_int df, u_int jp, uint32 opts)
 void
 FaxModem::flushEncodedData(TIFF* tif, tstrip_t strip, const u_char* buf, u_int cc)
 {
+    if (imagefd > 0) Sys::write(imagefd, (const char*) buf, cc);
     // NB: must update ImageLength for each new strip
     TIFFSetField(tif, TIFFTAG_IMAGELENGTH, recvEOLCount);
     if (TIFFWriteEncodedStrip(tif, strip, (tdata_t)buf, cc) == -1)
@@ -559,6 +565,7 @@ FaxModem::flushEncodedData(TIFF* tif, tstrip_t strip, const u_char* buf, u_int c
 void
 FaxModem::flushRawData(TIFF* tif, tstrip_t strip, const u_char* buf, u_int cc)
 {
+    if (imagefd > 0) Sys::write(imagefd, (const char*) buf, cc);
     recvTrace("%u bytes of data, %lu total lines", cc, recvEOLCount);
     if (TIFFWriteRawStrip(tif, strip, (tdata_t)buf, cc) == -1)
 	serverTrace("RECV: %s: write error", TIFFFileName(tif));
