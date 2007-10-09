@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 608 2007-08-27 19:09:15Z faxguy $ */
+/*	$Id: ModemConfig.h 658 2007-10-09 22:35:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -132,6 +132,7 @@ public:
     fxStr	dringOn;		// pattern for distinctive ring silence interval
     fxStr	dringOff;		// pattern for distinctive ring ring interval
     bool	noAnswerVoice;		// leave voice calls unanswered
+    bool	saverawimage;		// debugging feature to save raw image data
 					// call identification
     IDConfArray	idConfig;		// pattern for ID info
 					// protocol timers
