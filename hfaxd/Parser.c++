@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: Parser.c++ 659 2007-10-09 22:39:36Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -150,6 +150,7 @@ static const tab parmtab[] = {
 { "MODEM",        T_MODEM,	  false, true, "[device|class]" },
 { "NDIALS",       T_NDIALS,	  false, true, "[<number>]" },
 { "NOCOUNTCOVER", T_NOCOUNTCOVER, false, true, "[<number>]" },
+{ "SERVERDOCOVER", T_SERVERDOCOVER, false, true, "[YES|NO]" },
 { "NOTIFY",       T_NOTIFY,	  false, true, "[NONE|DONE|REQUEUE|DONE+REQUEUE]" },
 { "NOTIFYADDR",   T_NOTIFYADDR,	  false, true, "[email-address]" },
 { "NPAGES",       T_NPAGES,	  false, true, "[<number>]" },
@@ -1145,6 +1146,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_USE_ECM:
     case T_USE_TAGLINE:
     case T_USE_CONTCOVER:
+    case T_SERVERDOCOVER:
 	if (opt_CRLF()) {
 	    replyJobParamValue(*curJob, 213, t);
 	    return (true);

@@ -1,4 +1,4 @@
-.\"	$Id: sendq.4f 643 2007-09-27 05:28:15Z faxguy $
+.\"	$Id: sendq.4f 659 2007-10-09 22:39:36Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -127,6 +127,7 @@ retrytime	integer	time to use between job retries
 returned	integer	indicates return status value for the job
 schedpri	integer	current scheduling priority
 sender	string	identity of sender
+serverdocover	integer	whether or not to have the server create the cover page
 signalrate	string	signalling rate at which a facsimile was sent
 skippages	integer	skip this number of pages in the first document
 skippedpages	integer	increment page counts by this number
@@ -493,6 +494,10 @@ attempt.
 .TP 14
 .B sender
 The ``full name'' of the sender of the facsimile.
+.TP 14
+.B serverdocover
+1 if the job should have a server-generated cover page,
+0 otherwise.
 .TP 14
 .B signalrate
 The signalling rate used to transmit facsimile data.

@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 659 2007-10-09 22:39:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -92,6 +92,7 @@ SendFaxJob::SendFaxJob(const SendFaxJob& other)
     skippages = other.skippages;
     skippedpages = other.skippedpages;
     nocountcover = other.nocountcover;
+    serverdocover = other.serverdocover;
 }
 SendFaxJob::~SendFaxJob()
 {
@@ -153,6 +154,7 @@ SendFaxJob::setupConfig()
     autoCover = true;
     sendTagLine = false;		// default is to use server config
     useXVRes = false;			// default is to use normal or fine
+    serverdocover = false;		// default to do it client-side
     notify = FAX_DEFNOTIFY;		// default notification
     mailbox = "";
     priority = FAX_DEFPRIORITY;		// default transmit priority
@@ -196,6 +198,8 @@ SendFaxJob::setConfigItem(const char* tag, const char* value)
 	setDesiredEC(value);
     else if (streq(tag, "usexvres"))
 	setUseXVRes(FaxConfig::getBoolean(value));
+    else if (streq(tag, "serverdocover"))
+	setServerDoCover(FaxConfig::getBoolean(value));
     else if (streq(tag, "desireddf"))
 	setDesiredDF(value);
     else if (streq(tag, "retrytime"))
@@ -400,6 +404,7 @@ SendFaxJob::setDesiredEC(const char* e)
 }
 void SendFaxJob::setDesiredEC(int e)			{ desiredec = e; }
 void SendFaxJob::setUseXVRes(bool b)			{ useXVRes = b; }
+void SendFaxJob::setServerDoCover(bool b)		{ serverdocover = b; }
 void
 SendFaxJob::setDesiredDF(const char* v)
 {
@@ -554,6 +559,9 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     }
     if (useXVRes) {
 	CHECKPARM("USEXVRES", true)
+    }
+    if (serverdocover) {
+	CHECKPARM("SERVERDOCOVER", true)
     }
     if (doneop == "archive") {
 	CHECKPARM("DONEOP", "archive")

@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: FaxRequest.h 659 2007-10-09 22:39:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -116,6 +116,7 @@ public:
     u_short	npages;		// total pages sent/received
     u_short	skippages;	// skip over these pages in the document
     int		skippedpages;	// start page numbering here + 1
+    u_short	serverdocover;	// server should create the coverpage
     u_short	nocountcover;	// don't count these pages
     u_short	ntries;		// # tries to send current page
     u_short	ndials;		// # consecutive failed tries to call dest

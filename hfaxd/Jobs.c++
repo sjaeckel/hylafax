@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: Jobs.c++ 659 2007-10-09 22:39:36Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -153,6 +153,7 @@ static const struct {
     { T_STATE,		A_RUSR|A_RADM|A_ROTH },
     { T_STATUS,		A_RUSR|A_RADM|A_WADM|A_ROTH },
     { T_ERRORCODE,	A_RUSR|A_RADM|A_WADM|A_ROTH },
+    { T_SERVERDOCOVER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_SUBADDR,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_TAGLINE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_TOTDIALS,	A_RUSR|A_RADM|A_ROTH },
@@ -454,6 +455,9 @@ HylaFAXServer::replyJobParamValue(Job& job, int code, Token t)
     case T_USE_CONTCOVER:
 	replyBoolean(code, job.useccover);
 	return;
+    case T_SERVERDOCOVER:
+	replyBoolean(code, job.serverdocover);
+	return;
     case T_DOCUMENT:
 	for (i = 0, n = job.items.length(); i < n; i++) {
 	    const FaxItem& fitem = job.items[i];
@@ -589,6 +593,8 @@ HylaFAXServer::jstatCmd(const Job& job)
 	jstatLine(T_USE_XVRES,"%s", boolString(job.usexvres));
     if (checkAccess(job, T_USE_CONTCOVER, A_READ))
 	jstatLine(T_USE_CONTCOVER,"%s", boolString(job.useccover));
+    if (checkAccess(job, T_SERVERDOCOVER, A_READ))
+	jstatLine(T_SERVERDOCOVER,"%s", boolString(job.serverdocover));
     u_int i, n;
     for (i = 0, n = N(strvals); i < n; i++)
 	if (checkAccess(job, strvals[i].t, A_READ))
@@ -857,6 +863,9 @@ HylaFAXServer::setJobParameter(Job& job, Token t, bool b)
 	case T_USE_CONTCOVER:
 	    job.useccover = b;
 	    return (true);
+	case T_SERVERDOCOVER:
+	    job.serverdocover = b;
+	    return (true);
 	default:
 	    break;
 	}
@@ -913,6 +922,7 @@ HylaFAXServer::initDefaultJob(void)
     defJob.desiredtl	= false;
     defJob.usexvres	= false;
     defJob.useccover	= true;
+    defJob.serverdocover= false;
     defJob.pagechop	= FaxRequest::chop_default;
     defJob.notify	= FaxRequest::no_notice;// FAX_DEFNOTIFY
     defJob.chopthreshold= 3.0;
@@ -1011,6 +1021,7 @@ HylaFAXServer::newJob(fxStr& emsg)
     job->desiredtl = curJob->desiredtl;
     job->usexvres = curJob->usexvres;
     job->useccover = curJob->useccover;
+    job->serverdocover = curJob->serverdocover;
     job->pagechop = curJob->pagechop;
     job->notify = curJob->notify;
     job->chopthreshold = curJob->chopthreshold;
