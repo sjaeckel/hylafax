@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 659 2007-10-09 22:39:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1917,7 +1917,7 @@ faxQueueApp::submitJob(Job& job, FaxRequest& req, bool checkState)
 	    return (true);
 	}
     }
-    if (req.useccover && (req.skippedpages || req.skippages) && contCoverPageTemplate != "") {
+    if (req.useccover && (req.serverdocover || req.skippedpages || req.skippages) && contCoverPageTemplate != "") {
 	/*
 	 * The user submitted a job with "skipped" pages.  This equates
 	 * to a user-initiated resubmission.  Add a continuation coverpage

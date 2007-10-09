@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 646 2007-10-01 20:23:53Z faxguy $ */
+/*	$Id: FaxRequest.c++ 659 2007-10-09 22:39:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -69,6 +69,7 @@ FaxRequest::reset(void)
     tottries = 0, maxtries = (u_short) FAX_RETRIES;
     useccover = true;
     usexvres = false;
+    serverdocover = false;
     pagechop = chop_default;
     chopthreshold = -1;
     csi = fxStr::null;
@@ -131,6 +132,7 @@ FaxRequest::shortval FaxRequest::shortvals[] = {
     { "npages",		&FaxRequest::npages },
     { "skippages",	&FaxRequest::skippages },
     { "nocountcover",	&FaxRequest::nocountcover },
+    { "serverdocover",	&FaxRequest::serverdocover },
     { "totpages",	&FaxRequest::totpages },
     { "ntries",		&FaxRequest::ntries },
     { "ndials",		&FaxRequest::ndials },
@@ -273,7 +275,12 @@ FaxRequest::readQFile(bool& rejectJob)
 	case H_NUMBER:		number = tag; break;
 	case H_MAILADDR:	mailaddr = tag; break;
 	case H_SENDER:		sender = tag; break;
-	case H_JOBID:		jobid = tag; break;
+	case H_JOBID:			// NB: jobid serverdocover collide
+	    if (cmd[0] == 's')
+		serverdocover = tag[0] - '0';
+	    else
+		jobid = tag;
+	    break;
 	case H_JOBTAG:		jobtag = tag; break;
 	case H_COMMID:		commid = tag; break;
 	case H_PAGEHANDLING:	pagehandling = tag; break;

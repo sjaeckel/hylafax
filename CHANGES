@@ -1,7 +1,8 @@
-#	$Id: CHANGES 658 2007-10-09 22:35:50Z faxguy $	
+#	$Id: CHANGES 659 2007-10-09 22:39:36Z faxguy $	
 
 New Changes
 
+* add "serverdocover" job parameter feature and support (9 Oct 2007)
 * add SaveRawImage configuration option for debugging use (9 Oct 2007)
 * handle echo of MCF in non-ECM reception (5 Oct 2007)
 * fix Class 1 protocol when MaxRecvPages is exceeded (5 Oct 2007)
