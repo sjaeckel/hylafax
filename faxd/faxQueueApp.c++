@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 662 2007-10-10 22:59:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -751,13 +751,15 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
 		req.notice.insert("Document preparation failed: ");
 	    }
 	    updateQFile = true;
-	}    
+	}
 	if (req.cover != "" && !abortPrepare) {
 	    /*
 	     * Generate a continuation cover page if necessary.
 	     * Note that a failure in doing this is not considered
 	     * fatal; perhaps this should be configurable?
 	     */
+	    if (updateQFile) 
+		updateRequest(req, job);	// cover-page generation may look at the file
 	    if (makeCoverPage(job, req, params))
 		req.nocountcover++;
 	    updateQFile = true;
