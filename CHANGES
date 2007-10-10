@@ -1,7 +1,8 @@
-#	$Id: CHANGES 659 2007-10-09 22:39:36Z faxguy $	
+#	$Id: CHANGES 661 2007-10-10 22:50:35Z faxguy $	
 
 New Changes
 
+* prevent 'sendfax -vv' from truncating job params (10 Oct 2007)
 * add "serverdocover" job parameter feature and support (9 Oct 2007)
 * add SaveRawImage configuration option for debugging use (9 Oct 2007)
 * handle echo of MCF in non-ECM reception (5 Oct 2007)

@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 637 2007-09-19 20:46:07Z faxguy $ */
+/*	$Id: FaxClient.c++ 661 2007-10-10 22:50:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -634,11 +634,11 @@ FaxClient::vcommand(const char* fmt, va_list ap)
         } else if (strncasecmp("ADMIN ", fmt, 6) == 0) {
             traceServer("-> ADMIN XXXX");
         } else {
-	    line = (char *)malloc(100);
+	    line = (char *)malloc(1024);
 	    if (line == NULL)
 		printError("Memory allocation failed");
 	    else {
-		vsnprintf(line, 100, fmt, ap);
+		vsnprintf(line, 1024, fmt, ap);
 		traceServer("-> %s", line);
 	    }
         }
@@ -651,7 +651,7 @@ FaxClient::vcommand(const char* fmt, va_list ap)
     if (line == NULL)
 	vfprintf(fdOut, fmt, ap);
     else {
-	fputs(line, fdOut);
+	vfprintf(fdOut, fmt, ap);
 	free(line);
     }
     fputs("\r\n", fdOut);
