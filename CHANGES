@@ -1,7 +1,8 @@
-#	$Id: CHANGES 662 2007-10-10 22:59:02Z faxguy $	
+#	$Id: CHANGES 663 2007-10-10 23:52:06Z faxguy $	
 
 New Changes
 
+* correct bitorder of Class 2 JBIG sending (10 Oct 2007)
 * prevent 'sendfax -vv' from truncating job params (10 Oct 2007)
 * add "serverdocover" job parameter feature and support (9, 10 Oct 2007)
 * add SaveRawImage configuration option for debugging use (9 Oct 2007)

@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 658 2007-10-09 22:35:50Z faxguy $ */
+/*	$Id: Class2Send.c++ 663 2007-10-10 23:52:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -504,6 +504,13 @@ Class2Modem::sendPageData(TIFF* tif, u_int pageChop)
         if (params.df <= DF_2DMMR) {
 	    lastByte = correctPhaseCData(dp, &totdata, fillorder, params, rows);
 	    lastByte = bitrev[lastByte];
+	} else if (params.df == DF_JBIG) {
+	    // JBIG needs the data bit-reversed as we get it backwards from the library
+	    TIFFReverseBits(dp, totdata);
+	    lastByte =  (((lastByte>>0)&1)<<7)|(((lastByte>>1)&1)<<6)|
+		(((lastByte>>2)&1)<<5)|(((lastByte>>3)&1)<<4)|
+		(((lastByte>>4)&1)<<3)|(((lastByte>>5)&1)<<2)|
+		(((lastByte>>6)&1)<<1)|(((lastByte>>7)&1)<<0);
 	}
 
 	if (imagefd > 0) Sys::write(imagefd, (const char*) dp, (u_int) totdata);
