@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 649 2007-10-02 23:19:55Z faxguy $
+#	$Id: faxaddmodem.sh.in 664 2007-10-11 16:13:15Z faxguy $
 #
 # @WARNING@
 #
@@ -1212,7 +1212,7 @@ EOF
 	-e 's/2\.0/3/g' -e 's/1\.0/4/g' -e 's/2\.1/5/g'`";
     SUPPORT="This modem looks to have support for Class "
     MODEMCLASSES="";
-    for CLASS in 1 2 3 4 5; do
+    for CLASS in 1 4 2 3 5; do
 	if [ "`echo $RESPONSE | $GREP $CLASS`" != "" ]; then
 	    if [ "$MODEMCLASSES" != "" ]; then
 		 SUPPORT=`echo $SUPPORT | $SED 's/ and /, /g'`" and ";
