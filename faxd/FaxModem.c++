@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 658 2007-10-09 22:35:50Z faxguy $ */
+/*	$Id: FaxModem.c++ 667 2007-10-15 18:48:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -59,6 +59,8 @@ FaxModem::~FaxModem()
  */
 
 u_int FaxModem::getTagLineSlop() const		{ return tagLineSlop; }
+
+u_int FaxModem::getNoCountCoverPages() 		{ return noCountCoverPages; }
 
 /*
  * Do setup work prior to placing the call.
