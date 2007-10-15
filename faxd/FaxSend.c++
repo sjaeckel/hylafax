@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: FaxSend.c++ 667 2007-10-15 18:48:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -307,6 +307,7 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 		    notifyDocumentSent(fax, i);
 		    dosetup = false;
 		}
+		fax.nocountcover = modem->getNoCountCoverPages();	// update it
 		if ((fax.status == send_done || dosetup) &&
 	      fax.findItem(FaxRequest::send_poll) != fx_invalidArrayIndex)
 		    sendPoll(fax, remoteHasDoc);
