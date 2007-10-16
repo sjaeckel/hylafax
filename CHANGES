@@ -1,7 +1,8 @@
-#	$Id: CHANGES 667 2007-10-15 18:48:44Z faxguy $	
+#	$Id: CHANGES 668 2007-10-16 17:30:40Z faxguy $	
 
 New Changes
 
+* make "regarding" available to notify (16 Oct 2007)
 * correctly update nocountcover from faxsend (15 Oct 2007)
 
 (5.1.10)
