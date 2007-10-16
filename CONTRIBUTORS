@@ -48,6 +48,7 @@ following for their contributions:
   Albert DeKnuydt
   Mark Diekhans
   Reeby Dobalina
+  Charles Duffy				var_prefix in parseQFile
   Paul Eggert
   Greg Ferguson
   Steve Fine
@@ -107,6 +108,7 @@ following for their contributions:
   Rick Lyons
   Rob MacKinnon
   Andy MacNamara
+  Riccardo Magliocchetti		make "regarding" available from parseQFile
   Philippe Maladjian
   Lionel Mamane
   Pierluigi Mangani

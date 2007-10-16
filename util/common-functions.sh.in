@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 665 2007-10-12 03:19:04Z faxguy $
+#    $Id: common-functions.sh.in 668 2007-10-16 17:30:40Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -136,6 +136,7 @@ parseQfile()
     /^sender/    { p("sender", $2); }
     /^mailaddr/    { p("mailaddr", $2); }
     /^owner/    { p("owner", $2); }
+    /^regarding/ { regarding = $0; sub("regarding:", "", regarding); p("regarding", regarding)}
     /^jobtag/    { jobtag = $0; sub("jobtag:", "", jobtag); p("jobtag", jobtag)}
     /^jobtype/    { p("jobtype", $2); }
     # status needs to be used in the shell as faxstatus since status is reserved word
