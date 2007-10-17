@@ -1,4 +1,4 @@
-/*	$Id: Class2Ersatz.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Class2Ersatz.c++ 670 2007-10-18 06:05:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -145,6 +145,7 @@ Class2ErsatzModem::pageDone(u_int ppm, u_int& ppr)
 	    case AT_ERROR:			// possible if page retransmit
 		return (true);
 	    case AT_FHNG:
+		waitFor(AT_OK);
 		/*
 		 * Certain modems respond +FHNG:0 on the final page
 		 * w/o providing post-page status when sending to

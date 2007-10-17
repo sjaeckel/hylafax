@@ -1,7 +1,8 @@
-#	$Id: CHANGES 668 2007-10-16 17:30:40Z faxguy $	
+#	$Id: CHANGES 670 2007-10-18 06:05:09Z faxguy $	
 
 New Changes
 
+* wait for OK in Class 2 after +FHS (17 Oct 2007)
 * make "regarding" available to notify (16 Oct 2007)
 * correctly update nocountcover from faxsend (15 Oct 2007)
 

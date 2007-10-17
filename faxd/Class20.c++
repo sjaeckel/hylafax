@@ -1,4 +1,4 @@
-/*	$Id: Class20.c++ 546 2007-07-06 01:33:43Z faxguy $ */
+/*	$Id: Class20.c++ 670 2007-10-18 06:05:09Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -195,6 +195,7 @@ Class20Modem::pageDone(u_int ppm, u_int& ppr)
         for (;;) {
 	    switch (atResponse(rbuf, conf.pageDoneTimeout)) {
             case AT_FHNG:
+		waitFor(AT_OK);
                 if (!isNormalHangup()) {
                     return (false);
                 }
