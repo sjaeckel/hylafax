@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: Class2Recv.c++ 670 2007-10-18 06:05:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -189,7 +189,9 @@ Class2Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	    case AT_NOCARRIER:
 	    case AT_NODIALTONE:
 	    case AT_NOANSWER:
+		goto bad;
 	    case AT_FHNG:			// remote hangup
+		waitFor(AT_OK);
 		goto bad;
 	    }
 	} while (r != AT_CONNECT && r != AT_OK);
@@ -387,7 +389,8 @@ Class2Modem::recvEnd(FaxSetup*, fxStr&)
 {
     if (!hadHangup) {
 	if (isNormalHangup()) {
-	    (void) atCmd("AT+FDR", AT_FHNG);	// wait for DCN
+	    if (atCmd("AT+FDR", AT_FHNG))	// wait for DCN
+		waitFor(AT_OK);
 	} else
 	    (void) atCmd(abortCmd);		// abort session
     }

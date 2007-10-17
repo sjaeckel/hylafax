@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 663 2007-10-10 23:52:06Z faxguy $ */
+/*	$Id: Class2Send.c++ 670 2007-10-18 06:05:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -135,8 +135,10 @@ Class2Modem::getPrologue(Class2Params& dis, bool& hasDoc, fxStr& emsg, u_int& ba
     bool gotParams = false;
     hasDoc = false;
     if (batched & BATCH_FIRST) {		// only for the first document
+	ATResponse r;
 	for (;;) {
-	    switch (atResponse(rbuf, conf.t1Timer)) {
+	    r  = atResponse(rbuf, conf.t1Timer);
+	    switch (r) {
 	    case AT_FPOLL:
 		hasDoc = true;
 		protoTrace("REMOTE has document to POLL");
@@ -163,6 +165,7 @@ Class2Modem::getPrologue(Class2Params& dis, bool& hasDoc, fxStr& emsg, u_int& ba
 		processHangup("20");		// Unspecified Phase B error
 		/* fall thru... */
 	    case AT_FHNG:
+		if (r == AT_FHNG) waitFor(AT_OK);
 		emsg = fxStr::format("%s {%s}", hangupCause(hangupCode), hangupCause(hangupCode, true));
 		return (send_retry);
 	    }
