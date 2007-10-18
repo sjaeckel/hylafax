@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 662 2007-10-10 22:59:02Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 672 2007-10-18 21:10:12Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1567,7 +1567,6 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 	 * be cleaned up.  Not sure if the user should be
 	 * notified of the requeue as well as the timeout?
 	 */
-	queueAccounting(job, *req, "UNSENT");
 	req->notice = "Kill time expired {E325}";
 	updateRequest(*req, job);
 	job.state = FaxRequest::state_failed;
@@ -2076,7 +2075,6 @@ faxQueueApp::terminateJob(const fxStr& jobid, JobStatus why)
 	Trigger::post(Trigger::JOB_KILL, *job);
 	FaxRequest* req = readRequest(*job);
 	if (req) {
-	    queueAccounting(*job, *req, "KILLED");
 	    req->notice = "Job aborted by request {E345}";
 	    deleteRequest(*job, req, why, why != Job::removed);
 	}
@@ -2161,11 +2159,7 @@ faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
     else {
 	ai.status = req.notice;
     }
-    if (strstr(type, "UNSENT"))
-	ai.status = "Kill time expired";
-    else if (strstr(type, "KILLED"))
-	ai.status = "Killed";
-    else if (strstr(type, "SUBMIT"))
+    if (strstr(type, "SUBMIT"))
 	ai.status = "Submitted";
     CallID empty_callid;
     ai.callid = empty_callid;
@@ -2209,7 +2203,6 @@ faxQueueApp::timeoutJob(Job& job)
 	job.state = FaxRequest::state_failed;
 	FaxRequest* req = readRequest(job);
 	if (req) {
-	    queueAccounting(job, *req, "UNSENT");
 	    req->notice = "Kill time expired {E325}";
 	    deleteRequest(job, req, Job::timedout, true);
 	}
@@ -2234,7 +2227,6 @@ faxQueueApp::timeoutJob(Job& job, FaxRequest& req)
     job.state = FaxRequest::state_failed;
     traceQueue(job, "KILL TIME EXPIRED");
     Trigger::post(Trigger::JOB_TIMEDOUT, job);
-    queueAccounting(job, req, "UNSENT");
     req.notice = "Kill time expired {E325}";
     deleteRequest(job, req, Job::timedout, true);
     setDead(job);
@@ -2889,6 +2881,7 @@ void
 faxQueueApp::deleteRequest(Job& job, FaxRequest* req, JobStatus why,
     bool force, const char* duration)
 {
+    if (why != Job::done) queueAccounting(job, *req, "UNSENT");
     deleteRequest(job, *req, why, force, duration);
     delete req;
 }
