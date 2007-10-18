@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 658 2007-10-09 22:35:50Z faxguy $ */
+/*	$Id: Class1.c++ 671 2007-10-18 19:09:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1475,7 +1475,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 	     * modem response at that point, anyway.  So it is a good indicator for us.
 	     * So we simply repeat AT+FRH=3 in that case.
 	     */
-	} while (((u_int) Sys::now()-start < conf.t1Timer) && !gotframe && !wasTimeout() && 
+	} while (((u_int) Sys::now()-start < howmany(conf.t1Timer, 1000)) && !gotframe && !wasTimeout() && 
 	    ((conf.class1HasRHConnectBug && !frame.getLength() && lastResponse == AT_NOCARRIER && rhcnt++ < 30) ||
 	    (docrp && crpcnt++ < 3 && switchingPause(emsg, 3) && transmitFrame(dir|FCF_CRP))));	/* triple switchingPause to avoid sending CRP during TCF */
 	return (gotframe);
