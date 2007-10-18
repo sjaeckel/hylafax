@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 656 2007-10-06 20:06:53Z faxguy $ */
+/*	$Id: Class1Recv.c++ 671 2007-10-18 19:09:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -292,7 +292,7 @@ Class1Modem::recvIdentification(
 	 * time to make another attempt...
 	 */
 	if ((u_int) Sys::now()-start >= t1)
-	    break;
+	    return (false);
 	if (frame.getFCF() != FCF_CRP) {
 	    /*
 	     * Historically we waited "Class1TrainingRecovery" (1500 ms)
