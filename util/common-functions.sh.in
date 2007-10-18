@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 668 2007-10-16 17:30:40Z faxguy $
+#    $Id: common-functions.sh.in 674 2007-10-19 00:11:37Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -154,6 +154,8 @@ parseQfile()
     /^commid/    { p("commid", $2); }
     /^ntries/    { p("ntries", $2); }
     /^ndials/    { p("ndials", $2); }
+    /^maxdials/    { p("maxdials", $2); }
+    /^maxtries/    { p("maxtries", $2); }
     /^pagewidth/    { p("pagewidth", $2); }
     /^pagelength/    { p("pagelength", $2); }
     /^signalrate/    { p("signalrate", $2); }
