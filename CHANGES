@@ -1,7 +1,8 @@
-#	$Id: CHANGES 671 2007-10-18 19:09:05Z faxguy $	
+#	$Id: CHANGES 672 2007-10-18 21:10:12Z faxguy $	
 
 New Changes
 
+* extend UNSENT queue accounting (18 Oct 2007)
 * fix time limit on potential looping tring to receive a frame (18 Oct 2007)
 * wait for OK in Class 2 after +FHS (17 Oct 2007)
 * make "regarding" available to notify (16 Oct 2007)
