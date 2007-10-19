@@ -1,4 +1,4 @@
-# $Id: config.site 2 2005-11-11 21:32:03Z faxguy $
+# $Id: config.site 675 2007-10-19 23:16:10Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -59,7 +59,7 @@
 #DIR_BIN="/usr/local/bin"		# directory for client apps
 #DIR_LIB="/usr/local/lib"		# directory for libfaxserver, libfaxutil
 #DIR_LIBDATA="/usr/lib/fax"		# directory for client data
-#DIR_LIBEXEC="/usr/lib/fax"		# directory for libraries&hidden apps
+#DIR_LIBEXEC="/usr/local/sbin"		# directory for libraries&hidden apps
 #DIR_MAN="/usr/local/man"		# directory for manual pages
 #DIR_SPOOL="/var/spool/hylafax"		# directory for spooling area
 #DIR_SBIN="/var/spool/hylafax/bin"		# directory for system apps
