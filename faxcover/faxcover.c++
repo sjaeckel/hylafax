@@ -1,4 +1,4 @@
-/*	$Id: faxcover.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: faxcover.c++ 678 2007-10-23 17:45:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -49,6 +49,7 @@ private:
     fxStr	fromVoiceNumber;	// sender's voice number
     fxStr	fromLocation;	// sender's geographical location
     fxStr	fromCompany;	// sender's company/institution
+    fxStr	fromMailAddr;	// sender's email address
     fxStr	regarding;	// fax is regarding...
     fxStr	comments;	// general comments
     fxStr	sender;		// sender's identity
@@ -108,7 +109,7 @@ faxCoverApp::initialize(int argc, char** argv)
 	cover = cp;
 
     setupPageSize("default");
-    while ((c = Sys::getopt(argc, argv, "C:D:L:N:V:X:n:t:f:c:p:l:m:r:s:v:x:z:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "C:D:L:M:N:V:X:n:t:f:c:p:l:m:r:s:v:x:z:")) != -1)
 	switch (c) {
 	case 's':			// page size
 	    setupPageSize(optarg);
@@ -121,6 +122,9 @@ faxCoverApp::initialize(int argc, char** argv)
 	    break;
 	case 'L':			// sender's geographic location
 	    fromLocation = optarg;
+	    break;
+	case 'M':			// sender's email address
+	    fromMailAddr = optarg;
 	    break;
 	case 'N':			// sender's fax number
 	    fromFaxNumber = optarg;
@@ -208,6 +212,7 @@ faxCoverApp::usage()
 	" [-C template-file]"
 	" [-D date-format]"
 	" [-L from-location]"
+	" [-M from-mail-address]"
 	" [-N from-fax-number]"
 	" [-V from-voice-number]"
 	" [-X from-company]"
@@ -391,6 +396,7 @@ faxCoverApp::emitFromDefs(FaxDBRecord* rec)
 	fromLocation = rec->find("Location");
 	fromFaxNumber = rec->find(FaxDB::numberKey);
 	fromVoiceNumber = rec->find("Voice-Number");
+	fromMailAddr = rec->find("Mail-Address");
 	fxStr areaCode(rec->find("Area-Code"));
 	if (areaCode != "") {
 	    if (fromFaxNumber != "")
@@ -399,11 +405,12 @@ faxCoverApp::emitFromDefs(FaxDBRecord* rec)
 		fromVoiceNumber.insert("1-" | areaCode | "-");
 	}
     }
-    coverDef("from",		sender);
-    coverDef("from-fax-number",	fromFaxNumber);
-    coverDef("from-voice-number",fromVoiceNumber);
-    coverDef("from-company",	fromCompany);
-    coverDef("from-location",	fromLocation);
+    coverDef("from",			sender);
+    coverDef("from-fax-number",		fromFaxNumber);
+    coverDef("from-voice-number",	fromVoiceNumber);
+    coverDef("from-company",		fromCompany);
+    coverDef("from-location",		fromLocation);
+    coverDef("from-mail-address",	fromMailAddr);
 }
 
 void

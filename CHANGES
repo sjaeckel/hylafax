@@ -1,7 +1,8 @@
-#	$Id: CHANGES 672 2007-10-18 21:10:12Z faxguy $	
+#	$Id: CHANGES 678 2007-10-23 17:45:14Z faxguy $	
 
 New Changes
 
+* add faxcover -M from-mail-address option (23 Oct 2007)
 * extend UNSENT queue accounting (18 Oct 2007)
 * fix time limit on potential looping tring to receive a frame (18 Oct 2007)
 * wait for OK in Class 2 after +FHS (17 Oct 2007)

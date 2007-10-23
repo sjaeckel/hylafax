@@ -1,4 +1,4 @@
-/*	$Id: FaxDB.c++ 222 2006-06-25 03:59:30Z faxguy $ */
+/*	$Id: FaxDB.c++ 678 2007-10-23 17:45:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -83,6 +83,7 @@ fxStr FaxDB::numberKey("FAX-Number");
 fxStr FaxDB::companyKey("Company");
 fxStr FaxDB::locationKey("Location");
 fxStr FaxDB::phoneKey("Voice-Number");
+fxStr FaxDB::mailAddrKey("Mail-Address");
 
 FaxDBRecord*
 FaxDB::find(const fxStr& s, fxStr* name)
