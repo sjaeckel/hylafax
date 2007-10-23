@@ -1,4 +1,4 @@
-/*	$Id: FaxDB.h 222 2006-06-25 03:59:30Z faxguy $ */
+/*	$Id: FaxDB.h 678 2007-10-23 17:45:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -73,6 +73,7 @@ public:
     static fxStr locationKey;
     static fxStr phoneKey;
     static fxStr companyKey;
+    static fxStr mailAddrKey;
 
     FaxDBRecord* find(const fxStr& pat, fxStr* name = 0);
     FaxDBRecord* operator[](const fxStr& name);
