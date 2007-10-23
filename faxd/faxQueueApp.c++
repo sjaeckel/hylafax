@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 672 2007-10-18 21:10:12Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 677 2007-10-23 14:32:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2130,10 +2130,10 @@ faxQueueApp::delayJob(Job& job, FaxRequest& req, const char* mesg, time_t tts)
     updateRequest(req, job);
     traceQueue(job, "%s: requeue for %s",
 	    (const char*)mesg, (const char*)strTime(delay));
+    setSleep(job, tts);
+    Trigger::post(Trigger::JOB_DELAYED, job);
     if (req.isNotify(FaxRequest::when_requeued))
 	notifySender(job, Job::requeued); 
-    Trigger::post(Trigger::JOB_DELAYED, job);
-    setSleep(job, tts);
     if (job.modem != NULL)
 	releaseModem(job);
 }
