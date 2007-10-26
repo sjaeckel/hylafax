@@ -1,7 +1,8 @@
-#	$Id: CHANGES 679 2007-10-26 15:45:37Z faxguy $	
+#	$Id: CHANGES 681 2007-10-26 18:42:29Z faxguy $	
 
 New Changes
 
+* add Chinese mail translation (26 Oct 2007)
 * handle parsing of Class 2 subparameters when the modem supports JP but
   sometimes does not show it (26 Oct 2007)
 * add faxcover -M from-mail-address option (23 Oct 2007)
