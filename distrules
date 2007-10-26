@@ -1,4 +1,4 @@
-#	$Id: distrules 650 2007-10-03 23:52:46Z faxguy $
+#	$Id: distrules 680 2007-10-26 18:32:27Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -369,6 +369,17 @@ HYLAFAXSRC=\
 	util/archive.sh.in			\
 	util/common-functions.sh.in		\
 	util/dictionary.sh.in			\
+	util/dict-cn				\
+	util/dict-de				\
+	util/dict-en				\
+	util/dict-es				\
+	util/dict-fr				\
+	util/dict-it				\
+	util/dict-pl				\
+	util/dict-pt				\
+	util/dict-pt_BR				\
+	util/dict-ro				\
+	util/dict-tr				\
 	util/faxrcvd.sh.in			\
 	util/mkcover.sh.in			\
 	util/notify.sh.in			\
