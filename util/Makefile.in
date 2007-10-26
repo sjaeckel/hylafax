@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 594 2007-08-22 05:09:21Z faxguy $
+#	$Id: Makefile.in 680 2007-10-26 18:32:27Z faxguy $
 #
 # @WARNING@
 #
@@ -160,6 +160,7 @@ PUTCLIENT	= ${INSTALL} -idb ${PRODUCT}.sw.client
 PUTSERVER	= ${INSTALL} -idb ${PRODUCT}.sw.server
 PUTSERV		= ${PUTSERVER} -m 755
 PUTSUPD		= ${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/bin -idb "config(update)"
+PUTSUPDDICT	= ${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/bin/dict -idb "config(update)"
 PUTSBIN		= ${PUTSERVER} -root ${INSTALLROOT} -F ${SBIN}
 
 installClient: default
@@ -186,13 +187,24 @@ install: installClient
 	${PUTSUPD} -m 755 -src notify.sh -O notify
 	${PUTSUPD} -m 755 -src archive.sh -O archive
 	${PUTSUPD} -m 755 -src common-functions.sh -O common-functions
-	${PUTSUPD} -m 755 -src dictionary.sh -O dictionary
 	${PUTSUPD} -m 755 -src faxrcvd.sh -O faxrcvd
 	${PUTSUPD} -m 755 -src pollrcvd.sh -O pollrcvd
 	${PUTSUPD} -m 755 -src mkcover.sh -O mkcover
 	${PUTSUPD} -m 755 -src wedged.sh -O wedged
 	${PUTSUPD} -m 755 -src qp-encode.awk -O qp-encode.awk
 	${PUTSUPD} -m 755 -src rfc2047-encode.awk -O rfc2047-encode.awk
+	${PUTSUPD} -m 755 -src dictionary.sh -O dictionary
+	${PUTSUPDDICT} -m 644 -src dict-cn -O cn
+	${PUTSUPDDICT} -m 644 -src dict-de -O de
+	${PUTSUPDDICT} -m 644 -src dict-en -O en
+	${PUTSUPDDICT} -m 644 -src dict-es -O es
+	${PUTSUPDDICT} -m 644 -src dict-fr -O fr
+	${PUTSUPDDICT} -m 644 -src dict-it -O it
+	${PUTSUPDDICT} -m 644 -src dict-pl -O pl
+	${PUTSUPDDICT} -m 644 -src dict-pt -O pt
+	${PUTSUPDDICT} -m 644 -src dict-pt_BR -O pt_BR
+	${PUTSUPDDICT} -m 644 -src dict-ro -O ro
+	${PUTSUPDDICT} -m 644 -src dict-tr -O tr
 	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -m 444 -idb "config(update)" \
 	    -src ${SRCDIR}/dpsprinter.ps -O dpsprinter.ps
 	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -idb "config(suggest)" \
@@ -219,7 +231,6 @@ uninstall::
 	${RM} -f ${SPOOL}/bin/notify
 	${RM} -f ${SPOOL}/bin/archive
 	${RM} -f ${SPOOL}/bin/common-functions
-	${RM} -f ${SPOOL}/bin/dictionary
 	${RM} -f ${SPOOL}/bin/faxrcvd
 	${RM} -f ${SPOOL}/bin/pollrcvd
 	${RM} -f ${SPOOL}/bin/mkcover
@@ -228,6 +239,8 @@ uninstall::
 	${RM} -f ${SPOOL}/bin/rfc2047-encode.awk
 	${RM} -f ${SPOOL}/etc/dpsprinter.ps
 	${RM} -f ${SPOOL}/etc/cover.templ
+	${RM} -f ${SPOOL}/bin/dictionary
+	${RM} -rf ${SPOOL}/bin/dict
 
 @MAKEDSOINCLUDE@ @MAKELQUOTE@${SRCDIR}/Makefile.@DSO@dso@MAKERQUOTE@
 
