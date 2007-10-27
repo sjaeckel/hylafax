@@ -1,7 +1,8 @@
-#	$Id: CHANGES 681 2007-10-26 18:42:29Z faxguy $	
+#	$Id: CHANGES 682 2007-10-27 19:20:35Z faxguy $	
 
 New Changes
 
+* improve clean up temporary files in faxaddmodem/faxsetup/probemodem (27 Oct 2007)
 * add Chinese mail translation (26 Oct 2007)
 * handle parsing of Class 2 subparameters when the modem supports JP but
   sometimes does not show it (26 Oct 2007)
