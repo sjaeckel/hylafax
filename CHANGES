@@ -1,7 +1,9 @@
-#	$Id: CHANGES 683 2007-10-31 17:53:58Z faxguy $	
+#	$Id: CHANGES 684 2007-10-31 19:01:59Z faxguy $	
 
 New Changes
 
+* fix and improve faxinfo data format descriptions when FAXDCS 
+  and FAXRECVPARAMS are both unavailable in the TIFF (31 Oct 2007)
 * improve clean up temporary files in faxaddmodem/faxsetup/probemodem (27, 31 Oct 2007)
 * add Chinese mail translation (26 Oct 2007)
 * handle parsing of Class 2 subparameters when the modem supports JP but

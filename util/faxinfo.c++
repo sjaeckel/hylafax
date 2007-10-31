@@ -1,4 +1,4 @@
-/*	$Id: faxinfo.c++ 447 2007-02-27 21:14:44Z faxguy $ */
+/*	$Id: faxinfo.c++ 684 2007-10-31 19:01:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -276,6 +276,20 @@ main(int argc, char** argv)
 	    }
 	} else {
 #endif
+	uint16 compression = 0;
+	(void) TIFFGetField(tif, TIFFTAG_COMPRESSION, &compression);
+	if (compression == COMPRESSION_JBIG) {
+	    params.df = DF_JBIG;
+	} else if (compression == COMPRESSION_JPEG) {
+	    params.df = 0;
+	    params.jp = JP_COLOR;
+	} else if (compression == COMPRESSION_CCITTFAX4) {
+	    params.df = DF_2DMMR;
+	} else {
+	    uint32 g3opts = 0;
+	    TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts);
+	    params.df = (g3opts&GROUP3OPT_2DENCODING ? DF_2DMR : DF_1DMH);
+	}
 	if (TIFFGetField(tif, TIFFTAG_YRESOLUTION, &vres)) {
 	    uint16 resunit = RESUNIT_INCH;			// TIFF spec default
 	    TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
