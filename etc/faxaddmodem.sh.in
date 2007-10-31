@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 682 2007-10-27 19:20:35Z faxguy $
+#	$Id: faxaddmodem.sh.in 683 2007-10-31 17:53:58Z faxguy $
 #
 # @WARNING@
 #
@@ -44,6 +44,11 @@
 # this mountain of shell code!
 #
 SPOOL=@SPOOL@
+
+die()
+{
+    kill -1 $$			# use kill so trap handler is called
+}
 
 INTERACTIVE=yes
 SKELFILE=
@@ -296,7 +301,7 @@ while [ -z "$TTY" ] || [ ! -c $DEVPATH$TTY ]; do
 done
 
 JUNK="$OUT"
-trap "$RMCMD \$JUNK; $RMCMD -r $TMPDIR; exit 1" 1 2 15 EXIT
+trap "$RMCMD \$JUNK; $RMCMD -r $TMPDIR; exit 1" 1 2 15
 
 if [ ! -d $UUCP_LOCKDIR ]; then
     cat<<EOF
@@ -307,7 +312,7 @@ can use this script to setup a modem for use.  Rerun the faxsetup
 command to correct this problem.
 
 EOF
-    exit 1
+    die
 fi
 
 PORT=`ttyPort $TTY`			# shortened tty port name
@@ -323,7 +328,7 @@ CONFIG=$CPATH.$DEVID			# HylaFAX configuration filename
 for x in $LOCKX; do
     if [ -f $x ]; then
 	echo "Sorry, the device is currently in use by another program."
-	exit 1
+	die
     fi
 done
 
@@ -916,8 +921,7 @@ if [ -z "$SPEED" ]; then
 	echo "Unable to deduce DTE-DCE speed; check that you are using the"
 	echo "correct device and/or that your modem is setup properly.  If"
 	echo "all else fails, try the -s option to lock the speed."
-	@RM@ -f $JUNK; @RM@ -fr $TMPDIR
-	exit 1
+	die
     fi
     echo " OK."
 else
@@ -936,7 +940,7 @@ while [ -z "$RESULT" ]; do
 	echo ""
 	echo "Hmm, something seems to be hung, check your modem eh?"
      done)& nagpid=$!
-    trap "$RMCMD \$JUNK; $RMCMD -r $TMPDIR; kill $nagpid \$catpid; exit 1" 1 2 15 EXIT
+    trap "$RMCMD \$JUNK; $RMCMD -r $TMPDIR; kill $nagpid \$catpid; exit 1" 1 2 15
     SendToModem "AT+FCLASS=?" 			# ask for class support
 
     exec 3>&2 2> /dev/null  # Mute stderr against child death
@@ -944,7 +948,7 @@ while [ -z "$RESULT" ]; do
     wait $nagpid            # Really waits its end
     exec 2>&3 3>&-          # Restore stderr
 
-    trap "$RMCMD \$JUNK; $RMCMD -r $TMPDIR; test \"\$catpid\" && kill \$catpid; exit 1" 1 2 15 EXIT
+    trap "$RMCMD \$JUNK; $RMCMD -r $TMPDIR; test \"\$catpid\" && kill \$catpid; exit 1" 1 2 15
     sleep 1
 
     RESULT=`tr -ds '\015' '\012' < $OUT | $SED -n '$p'`
@@ -1174,7 +1178,7 @@ software does not support it and you will need to write a driver that
 supports it.
 
 EOF
-    exit 1
+    die
 }
 
 echo ""
@@ -1278,7 +1282,7 @@ if [ ! -f $proto ]; then
 	    echo
 	    x=
 	fi
-	isOK $x || exit 1
+	isOK $x || die
 	ProtoType=skel;
 	if [ -n "$SKELFILE" ]; then
 	    proto="$SKELFILE"
@@ -1292,11 +1296,11 @@ Sigh, the skeletal configuration file is not available either.  There
 is nothing that I can do without some kind of prototype config file;
 I'm bailing out...
 EOF
-	    exit 1
+	    die
 	fi
     else
 	echo "There is nothing more that I can do; I'm bailing out..."
-	exit 1
+	die
     fi
 fi
 
@@ -1836,7 +1840,7 @@ else
     echo "*** The original config file is unchanged; I'm terminating before"
     echo "***    I do something stupid."
     echo ""
-    exit 1
+    die
 fi
 
 #
@@ -1852,7 +1856,7 @@ test -p $FIFO || {
     else
 	echo ""
 	echo "*** Unable to create fifo \"$FIFO\"; terminating."
-	exit 1
+	die
     fi
 }
 $CHOWN $FAX $FIFO; $CHGRP $faxGID $FIFO; $CHMOD 600 $FIFO
@@ -2123,7 +2127,7 @@ if [ $updateConfig = yes ]; then
 	echo "*** Sorry, something went wrong building $SCHEDCONFIG.new."
 	echo "*** The original config file is unchanged; check your disk space?"
 	echo ""
-	exit 1
+	die
     fi
 fi
 
@@ -2134,6 +2138,5 @@ echo "or configure init to run faxgetty on $TTY."
 exec >/dev/null 2>&1
 
 # cleanup
-trap - EXIT
 $RMCMD $JUNK; $RMCMD -r $TMPDIR
 exit 0
