@@ -1,4 +1,4 @@
-/*	$Id: SNPPClient.h 637 2007-09-19 20:46:07Z faxguy $ */
+/*	$Id: SNPPClient.h 685 2007-11-01 05:00:34Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -70,6 +70,7 @@ private:
     FILE*	fdOut;		// control stream output handle
     char	buf[1024];	// input buffer
     int		code;		// code from last server repsonse
+    bool	pasv;		// whether or not to use passive mode
     fxStr	proto;		// protocol to use for service query
     fxStr	lastResponse;	// text message from last server response
     u_int	port;		// server port to connect to

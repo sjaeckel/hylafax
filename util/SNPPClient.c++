@@ -1,4 +1,4 @@
-/*	$Id: SNPPClient.c++ 637 2007-09-19 20:46:07Z faxguy $ */
+/*	$Id: SNPPClient.c++ 685 2007-11-01 05:00:34Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -58,6 +58,7 @@ SNPPClient::init()
     fdOut = NULL;
     state = 0;
     msg = NULL;
+    pasv = false;
 
     setupConfig();
 }
@@ -394,6 +395,8 @@ SNPPClient::setConfigItem(const char* tag, const char* value)
 	jproto.setServiceLevel(getNumber(value));
     } else if (streq(tag, "mailaddr")) {
 	jproto.setMailbox(value);
+    } else if (streq(tag, "passivemode")) {
+	pasv = getBoolean(value);
     } else
 	return (false);
     return (true);
