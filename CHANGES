@@ -1,7 +1,8 @@
-#	$Id: CHANGES 684 2007-10-31 19:01:59Z faxguy $	
+#	$Id: CHANGES 685 2007-11-01 05:00:34Z faxguy $	
 
 New Changes
 
+* add PassiveMode support to all client programs (31 Oct 2007)
 * fix and improve faxinfo data format descriptions when FAXDCS 
   and FAXRECVPARAMS are both unavailable in the TIFF (31 Oct 2007)
 * improve clean up temporary files in faxaddmodem/faxsetup/probemodem (27, 31 Oct 2007)
