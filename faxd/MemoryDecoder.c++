@@ -1,4 +1,4 @@
-/*	$Id: MemoryDecoder.c++ 141 2006-04-18 19:15:55Z faxguy $ */
+/*	$Id: MemoryDecoder.c++ 686 2007-11-04 01:45:30Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -77,12 +77,6 @@ MemoryDecoder::decodeNextByte()
         raiseRTC();                     // XXX don't need to recognize EOF
     cc--;
     return (*bp++);
-}
-
-int
-MemoryDecoder::getLastByte()
-{
-    return (*(endOfData - 1));
 }
 
 void

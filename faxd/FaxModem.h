@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 667 2007-10-15 18:48:44Z faxguy $ */
+/*	$Id: FaxModem.h 686 2007-11-04 01:45:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -175,7 +175,7 @@ protected:
 /*
  * Correct if neccessary Phase C (T.4/T.6) data (remove extra RTC/EOFB etc.)
  */
-    int		correctPhaseCData(u_char* buf, u_long* pBufSize,
+    void	correctPhaseCData(u_char* buf, u_long& pBufSize,
                                   u_int fillorder, const Class2Params& params, uint32& rows);
 /*
  * Convert Phase C data...

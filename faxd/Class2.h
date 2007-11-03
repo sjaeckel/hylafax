@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 658 2007-10-09 22:35:50Z faxguy $ */
+/*	$Id: Class2.h 686 2007-11-04 01:45:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -165,6 +165,5 @@ public:
     bool	reset(long ms);			// reset modem
     void	setLID(const fxStr& number);	// set local id string
     bool	supportsPolling() const;	// modem capability
-    int		lastByte;
 };
 #endif /* _CLASS2_ */

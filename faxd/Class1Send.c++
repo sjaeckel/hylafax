@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 658 2007-10-09 22:35:50Z faxguy $ */
+/*	$Id: Class1Send.c++ 686 2007-11-04 01:45:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1618,9 +1618,9 @@ Class1Modem::sendPageData(u_char* data, u_int cc, const u_char* bitrev, bool ecm
  * send all the data they are presented.
  */
 bool
-Class1Modem::sendRTC(Class2Params params, u_int ppmcmd, int lastbyte, uint32 rows, fxStr& emsg)
+Class1Modem::sendRTC(Class2Params params, u_int ppmcmd, uint32 rows, fxStr& emsg)
 {
-    if (params.df == DF_JBIG) {
+    if (params.df > DF_2DMR) {
 	/*
 	 * If we ever needed to send NEWLEN or other JBIG-terminating
 	 * markers this is where we would do it.
@@ -1630,13 +1630,6 @@ Class1Modem::sendRTC(Class2Params params, u_int ppmcmd, int lastbyte, uint32 row
 	//    0xFF, 0x02 };	// SDNORM is added per spec
 	//return sendClass1ECMData(newlen, 8, rtcRev, true, ppmcmd, emsg);
 	return sendClass1ECMData(NULL, 0, rtcRev, true, ppmcmd, emsg);
-    }
-
-    // determine the number of trailing zeros on the last byte of data
-    u_short zeros = 0;
-    for (short i = 7; i >= 0; i--) {
-	if (lastbyte & (1<<i)) break;
-	else zeros++;
     }
     /*
      * These are intentionally reverse-encoded in order to keep
@@ -1654,15 +1647,6 @@ Class1Modem::sendRTC(Class2Params params, u_int ppmcmd, int lastbyte, uint32 row
 	{ 0x00,0x18,0x00,0x03,0x60,0x00,0x0C,0x80,0x01,0x30,
 	  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 	  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
-    // T.6 does not allow zero-fill until after EOFB and not before.
-    u_char EOFB[3];
-	EOFB[0] = (0x0800 >> zeros) & 0xFF;
-	EOFB[1] = (0x8008 >> zeros) & 0xFF;
-	EOFB[2] = 0x80 >> zeros;
-    if (params.df == DF_2DMMR) {
-	protoTrace("SEND EOFB");
-	return sendClass1ECMData(EOFB, 3, rtcRev, true, ppmcmd, emsg);
-    }
     if (params.is2D()) {
 	protoTrace("SEND 2D RTC");
 	if (params.ec != EC_DISABLE)
@@ -1719,7 +1703,6 @@ EOLcode(u_long& w)
 bool
 Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppmcmd, fxStr& emsg)
 {
-    int lastbyte = 0;
     if (params.ec == EC_DISABLE) {	// ECM does it later
 	/*
 	 * Set high speed carrier & start transfer.  If the
@@ -1843,10 +1826,10 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	}
 
         /*
-         * correct broken Phase C (T.4/T.6) data if neccessary 
+         * correct broken Phase C (T.4) data if neccessary 
          */
-	if (params.df <= DF_2DMMR)
-	    lastbyte = correctPhaseCData(dp, &totdata, fillorder, params, rowsperstrip);
+	if (params.df < DF_2DMMR)
+	    correctPhaseCData(dp, totdata, fillorder, params, rowsperstrip);
 
 	/*
 	 * Send the page of data.  This is slightly complicated
@@ -1862,7 +1845,6 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	 */
 	if (params.df <= DF_2DMMR && fillorder != FILLORDER_LSB2MSB) {
 	    TIFFReverseBits(dp, totdata);
-	    lastbyte = frameRev[lastbyte];
 	}
 
 	/* For debugging purposes we may want to write the image-data to file. */
@@ -1967,7 +1949,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	}
     }
     if (rc || abortRequested())
-	rc = sendRTC(params, ppmcmd, lastbyte, rowsperstrip, emsg);
+	rc = sendRTC(params, ppmcmd, rowsperstrip, emsg);
     protoTrace("SEND end page");
     if (params.ec == EC_DISABLE) {
 	// these were already done by ECM protocol
