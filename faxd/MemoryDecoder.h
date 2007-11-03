@@ -1,4 +1,4 @@
-/*	$Id: MemoryDecoder.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: MemoryDecoder.h 686 2007-11-04 01:45:30Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -59,7 +59,6 @@ public:
     u_char* cutExtraEOFB();
     u_char* encodeTagLine (u_long* raster, u_int th, u_int slop);
     u_char* convertDataFormat(const Class2Params& params);
-    int		getLastByte();
 
     void scanPageForBlanks(u_int fillorder, const Class2Params& params);
     const u_char* getEndOfPage()			{ return endOfData; }

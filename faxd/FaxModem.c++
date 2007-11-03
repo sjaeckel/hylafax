@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 667 2007-10-15 18:48:44Z faxguy $ */
+/*	$Id: FaxModem.c++ 686 2007-11-04 01:45:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -799,30 +799,21 @@ FaxModem::notifyPageSent(TIFF* tif)
 
 #include "MemoryDecoder.h"
 
-int
-FaxModem::correctPhaseCData(u_char* buf, u_long* pBufSize,
+void
+FaxModem::correctPhaseCData(u_char* buf, u_long& pBufSize,
                             u_int fillorder, const Class2Params& params, uint32& rows)
 {
     u_char* endOfData;
-    int lastbyte = 0;
-    if (params.df == DF_2DMMR) {
-	MemoryDecoder dec1(buf, params.pageWidth(), *pBufSize, fillorder, params.is2D(), true);
-	endOfData = dec1.cutExtraEOFB();
-	lastbyte = dec1.getLastByte();
-	rows = dec1.getRows();
-    } else {
-	MemoryDecoder dec1(buf, params.pageWidth(), *pBufSize, fillorder, params.is2D(), false);
-	dec1.fixFirstEOL();
-	/*
-	 * We have to construct new decoder. See comments to cutExtraRTC().
-	 */
-	MemoryDecoder dec2(buf, params.pageWidth(), *pBufSize, fillorder, params.is2D(), false);
-	endOfData = dec2.cutExtraRTC();
-	// we don't update rows because we don't decode the entire image
-    }
+    MemoryDecoder dec1(buf, params.pageWidth(), pBufSize, fillorder, params.is2D(), false);
+    dec1.fixFirstEOL();
+    /*
+     * We have to construct new decoder. See comments to cutExtraRTC().
+     */
+    MemoryDecoder dec2(buf, params.pageWidth(), pBufSize, fillorder, params.is2D(), false);
+    endOfData = dec2.cutExtraRTC();
+    // we don't update rows because we don't decode the entire image
     if( endOfData )
-        *pBufSize = endOfData - buf;
-    return lastbyte;
+        pBufSize = endOfData - buf;
 }
 
 u_char*

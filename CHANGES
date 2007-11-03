@@ -1,7 +1,8 @@
-#	$Id: CHANGES 685 2007-11-01 05:00:34Z faxguy $	
+#	$Id: CHANGES 686 2007-11-04 01:45:30Z faxguy $	
 
 New Changes
 
+* fix occassional incorrect EOFB formatting on MMR sending (3 Nov 2007)
 * add PassiveMode support to all client programs (31 Oct 2007)
 * fix and improve faxinfo data format descriptions when FAXDCS 
   and FAXRECVPARAMS are both unavailable in the TIFF (31 Oct 2007)
