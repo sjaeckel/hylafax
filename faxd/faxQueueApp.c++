@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 677 2007-10-23 14:32:18Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 690 2007-11-06 00:53:32Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2176,7 +2176,7 @@ faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
 	    break;
 	case 0:				// child
 	    if (!ai.record(type))
-		logError("Error writing UNSENT accounting record, dest=%s",
+		logError("Error writing %s accounting record, dest=%s",
 		    type, (const char*) ai.dest);
 	    _exit(255);
 	    /*NOTREACHED*/
