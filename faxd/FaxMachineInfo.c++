@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.c++ 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: FaxMachineInfo.c++ 691 2007-11-06 04:32:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -347,7 +347,7 @@ void FaxMachineInfo::setDialFailures(int v)
 void
 FaxMachineInfo::writeConfig()
 {
-    if (changed) {
+    if (changed && file != "") {
 	mode_t omask = umask(022);
 	int fd = Sys::open(file, O_WRONLY|O_CREAT, 0644);
 	(void) umask(omask);
