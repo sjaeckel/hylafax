@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 634 2007-09-19 07:21:12Z faxguy $
+#	$Id: faxrcvd.sh.in 689 2007-11-05 18:20:04Z faxguy $
 #
 # ============================================
 #
@@ -142,7 +142,16 @@ faxrcvd_mail()
 		    echo "Content-Transfer-Encoding: $ENCODING"
 		    echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
 		    echo ""
-		    encode $FILE;
+		    # This is useful because the majority of TIFF viewers won't
+		    # be able to read JBIG compressed TIFF files, while
+		    # G4 (MMR) is a much older and supported format.
+		    if (tiffinfo $FILE | grep "JBIG" > /dev/null) then
+			tiffcp -c g4 $FILE $FILE.g4.tif
+			encode $FILE.g4.tif
+			$RM -f $FILE.g4.tif 2>$ERRORSTO
+		    else
+			encode $FILE
+		    fi
 		elif [ "$type" = "tif-r" ]; then
 		    echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
 		    echo "Content-Description: FAX document"
