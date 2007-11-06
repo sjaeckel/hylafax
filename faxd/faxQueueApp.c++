@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 690 2007-11-06 00:53:32Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 693 2007-11-06 21:58:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3733,7 +3733,7 @@ faxQueueApp::showDebugState(void)
 void faxQueueApp::childStatus(pid_t pid, int status)
 {
     // We don't do anything here - nothing to act on.
-    traceServer("NOTIFY exit status: %#o (%u)", status, pid);
+    //traceServer("Child exit status: %#o (%u)", status, pid);
 }
 
 static void
