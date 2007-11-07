@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: ClassModem.h 696 2007-11-08 01:28:44Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -179,7 +179,8 @@ public:
 	AT_DLEEOT	= 14,	// dle+eot characters (end of transmission)
 	AT_XON		= 15,	// xon character
 	AT_DTMF		= 16,	// DTMF detection
-	AT_OTHER	= 17	// unknown response (not one of above)
+	AT_VCON		= 17,	// voice connection
+	AT_OTHER	= 18	// unknown response (not one of above)
     };
 private:
     ModemServer& server;	// server for getting to device
@@ -204,7 +205,7 @@ protected:
 
     static const char* serviceNames[9];	 // class 2 services
     static const char* callStatus[10];	 // printable call status
-    static const char* ATresponses[17];
+    static const char* ATresponses[19];
 
     ClassModem(ModemServer&, const ModemConfig&);
 
