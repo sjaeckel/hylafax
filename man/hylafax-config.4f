@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 608 2007-08-27 19:09:15Z faxguy $
+.\"	$Id: hylafax-config.4f 696 2007-11-08 01:28:44Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-08-27 12:09:15 -0700 (Mon, 27 Aug 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-11-07 17:28:44 -0800 (Wed, 07 Nov 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -654,6 +654,16 @@ pause for 100 ms before returning to fax mode and answering the call.
   CallIDPattern:         SHIELDED_DTMF
   CallIDAnswerLength:    4
   ModemAnswerCmd:        <delay:100>AT+FCLASS=1;A
+
+.fi
+For modems that do not support AT+FCLASS=8 (such as some USR modems) this
+may be an appropriate equivalent:
+.nf
+
+  ModemRingResponse:      "AT#CLS=8\\nAT#VLS=4\\nATA"
+  CallIDPattern:          SHIELDED_DTMF
+  CallIDAnswerLength:     4
+  ModemAnswerCmd:         "<delay:100>AT+FCLASS=1\\nATA"
 
 .fi
 Multiple entries of
