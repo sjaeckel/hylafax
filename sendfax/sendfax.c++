@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: sendfax.c++ 695 2007-11-07 23:41:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -407,7 +407,7 @@ sendFaxApp::copyToTemporary(int fin, fxStr& tmpl)
     if (total == 0) {
         Sys::unlink(tmpl);
         tmpl = "";
-        fatal("No input data; tranmission aborted");
+        fatal("No input data; transmission aborted");
     }
 }
 
