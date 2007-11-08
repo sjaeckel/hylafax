@@ -1,7 +1,8 @@
-#	$Id: CHANGES 697 2007-11-08 01:30:12Z faxguy $	
+#	$Id: CHANGES 698 2007-11-09 00:27:18Z faxguy $	
 
 New Changes
 
+* add "quiet" option to dialtest (8 Nov 2007)
 * support SHIELDED_DTMF on more kinds of modems (7 Nov 2007)
 * convert TIFF to JBIG before encoding them as a received-fax attachment (5 Nov 2007)
 * fix occassional incorrect EOFB formatting on MMR sending (3 Nov 2007)

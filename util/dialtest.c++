@@ -1,4 +1,4 @@
-/*	$Id: dialtest.c++ 216 2006-06-22 15:06:36Z faxguy $ */
+/*	$Id: dialtest.c++ 698 2007-11-09 00:27:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -26,7 +26,7 @@
 /*
  * Program for interactively using dial string rules.
  *
- * Usage: dialtest [-v] [-a areacode] [-c countrycode]
+ * Usage: dialtest [-v] [-q] [-a areacode] [-c countrycode]
  *    [-i internationalprefix] [-l longdistanceprefix] dial-rules-file
  */
 #include <stdlib.h>
@@ -37,12 +37,14 @@
 extern	void fxFatal(const char* va_alist ...);
 
 static	const char* appName;
+static	bool quiet = false;
 
 static void
 usage()
 {
     fxFatal("usage: %s"
 	" [-v]"
+	" [-q]"
 	" [-a area-code]"
 	" [-c country-code]"
 	" [-i international-prefix]"
@@ -55,24 +57,25 @@ usage()
 static int
 prompt()
 {
-    printf("ready> "); fflush(stdout);
+    if (! quiet)
+	    printf("ready> "); fflush(stdout);
     return (1);
 }
 
 int
 main(int argc, char* argv[])
 {
-    char* areaCode = "415";
-    char* countryCode = "1";
-    char* internationalPrefix = "011";
-    char* longDistancePrefix = "1";
+    const char* areaCode = "415";
+    const char* countryCode = "1";
+    const char* internationalPrefix = "011";
+    const char* longDistancePrefix = "1";
     bool verbose = false;
     extern int optind;
     extern char* optarg;
     int c;
 
     appName = argv[0];
-    while ((c = Sys::getopt(argc, argv, "a:c:i:l:v")) != -1)
+    while ((c = Sys::getopt(argc, argv, "a:c:i:l:qv")) != -1)
 	switch (c) {
 	case 'a':
 	    areaCode = optarg;
@@ -86,6 +89,9 @@ main(int argc, char* argv[])
 	case 'l':
 	    longDistancePrefix = optarg;
 	    break;
+	case 'q':
+	    quiet = true;
+	    break;
 	case 'v':
 	    verbose = true;
 	    break;
@@ -96,7 +102,7 @@ main(int argc, char* argv[])
     if (argc - optind != 1)
 	usage();
     DialStringRules rules(argv[optind]);
-    rules.setVerbose(true);
+    rules.setVerbose(!quiet);
     rules.def("AreaCode", areaCode);
     rules.def("CountryCode", countryCode);
     rules.def("InternationalPrefix", internationalPrefix);
@@ -116,7 +122,10 @@ main(int argc, char* argv[])
 		*ep = '\0';
 	    fxStr set(line, cp-line);
 	    fxStr result = rules.applyRules(set, cp+1);
-	    printf("%s(%s) = \"%s\"\n", (const char*) set, cp+1, (const char*) result);
+	    if (quiet)
+		    printf("%s\n", (const char*) result);
+	    else
+		    printf("%s(%s) = \"%s\"\n", (const char*) set, cp+1, (const char*) result);
 	} else {
 	    fxStr c = rules.canonicalNumber(line);
 	    fxStr d = rules.dialString(line);
