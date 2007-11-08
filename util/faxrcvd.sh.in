@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 689 2007-11-05 18:20:04Z faxguy $
+#	$Id: faxrcvd.sh.in 699 2007-11-09 00:36:58Z faxguy $
 #
 # ============================================
 #
@@ -322,6 +322,23 @@ else
 fi
 
 setInfoSize $FILE
+
+# Convert TIFF file format/compression from JBIG to MMR (G4) if admin
+# requested for it in FaxDispatch.
+# The TIFF JBIG file as saved by HylaFAX is REPLACED with a MMR (G4) version.
+if [ "$RECV_DATA_CONVERSION" = "JBIG:MMR" ]; then
+    if (tiffinfo $FILE | grep "JBIG" > /dev/null) then
+	$RM -f $FILE.g4
+	tiffcp -c g4 $FILE $FILE.g4
+	if [ $? = 0 -a -s $FILE.g4 ]; then
+	    # Using 'cp' and then 'rm' (instead of 'mv') preserves
+	    # owner/mode of the original file (at least on Linux)
+	    #cp -p $FILE $FILE.jbig.tif
+	    cp $FILE.g4 $FILE
+	fi
+	$RM -f $FILE.g4
+    fi
+fi
 
 #
 # Don't send FaxMaster duplicates, and FaxMaster may not even
