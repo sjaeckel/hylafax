@@ -1,4 +1,4 @@
-.\"	$Id: faxrcvd.1m 583 2007-08-15 20:14:12Z faxguy $
+.\"	$Id: faxrcvd.1m 699 2007-11-09 00:36:58Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -159,6 +159,21 @@ regarding incoming facsimile.  Default is ``always''.  Also available are
 ``never'', which means to never send any received facsimile notification,
 and ``errors'', which means to send notification only if there were
 reception errors.
+.TP
+.I RECV_DATA_CONVERSION
+Indicates whether TIFF files saved to disk by HylaFAX should be converted
+in place to another compression data format.
+At this time the only available option is ``JBIG:2D-MMR'' which causes
+TIFF files using JBIG compression to be converted to 2D-MMR (G4)
+compression. Since the majority of TIFF file viewers lacks JBIG support,
+this setting may be useful if JBIG-compressed fax receiving is enabled
+(see ``Class1JBIGSupport'' config option) and the received fax files are
+to be directly accessed by users, either through HylaFAX clients such as
+WHFC or via a shared directory.
+Note that if the received faxes are viewed/accessed only as email
+attachments then there's no need to use this setting: TIFF email
+attachments are automatically sent as 2D-MMR (G4) when the on disk
+compression data format is JBIG.
 .TP
 .I SENDER
 is the received TSI of the fax sender.
