@@ -1,6 +1,6 @@
-#    $Id: dict-fr 680 2007-10-26 18:32:27Z faxguy $
+#    $Id: dict-fr 701 2007-11-13 07:19:00Z faxguy $
 
-	CHARSET=iso-8859-1;
+	CHARSET=UTF-8;
 	DICTRECEIVEAGENT="The HylaFAX Receive Agent";
 	DICTRECEIVEDFROM="Fax reçu de \$SENDER";
 	DICTRETRIEVEDFROM="Fax recherché de \$SENDER";
