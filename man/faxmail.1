@@ -1,4 +1,4 @@
-.\"	$Id: faxmail.1 583 2007-08-15 20:14:12Z faxguy $
+.\"	$Id: faxmail.1 702 2007-11-13 16:44:09Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -596,7 +596,9 @@ The pathname of a directory hierarchy that has scripts for
 external processing of 
 .SM MIME
 body parts.
-The default pathname is ${LIBEXEC}/faxmail.
+The default pathname is ${LIBDATA}/faxmail.  \*(Fx comes with default converter
+scripts for TIFF and PDF, and they can be found in that path and used as a 
+reference for constructing other converters.
 .TP 15
 .B Orientation
 Control whether pages are oriented horizontally (``landscape'')
