@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: FaxRequest.c++ 704 2007-11-14 17:45:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -157,7 +157,7 @@ FaxRequest::shortval FaxRequest::shortvals[] = {
 FaxRequest::intval FaxRequest::intvals[] = {
     { "skippedpages",	&FaxRequest::skippedpages },
 };
-char* FaxRequest::opNames[18] = {
+const char* FaxRequest::opNames[18] = {
     "fax",
     "tiff",
     "!tiff",
@@ -175,13 +175,13 @@ char* FaxRequest::opNames[18] = {
     "uucp",
     "15", "16", "17"
 };
-char* FaxRequest::notifyVals[4] = {
+const char* FaxRequest::notifyVals[4] = {
     "none",			// no_notice
     "when done",		// when_done
     "when requeued",		// when_requeued
     "when done+requeued"	// when_done|when_requeued
 };
-char* FaxRequest::chopVals[4] = {
+const char* FaxRequest::chopVals[4] = {
     "default",			// chop_default
     "none",			// chop_none
     "all",			// chop_all

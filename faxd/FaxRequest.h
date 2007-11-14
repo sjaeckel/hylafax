@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: FaxRequest.h 704 2007-11-14 17:45:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -184,9 +184,9 @@ public:
     static stringval strvals[];
     static shortval shortvals[];
     static intval intvals[];
-    static char* opNames[18];
-    static char* notifyVals[4];
-    static char* chopVals[4];
+    static const char* opNames[18];
+    static const char* notifyVals[4];
+    static const char* chopVals[4];
 
     FaxRequest(const fxStr& qf, int fd = -1);
     virtual ~FaxRequest();

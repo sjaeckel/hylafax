@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 686 2007-11-04 01:45:30Z faxguy $ */
+/*	$Id: FaxModem.c++ 704 2007-11-14 17:45:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -613,7 +613,7 @@ FaxModem::traceModemParams()
 void
 FaxModem::traceFCF(const char* dir, u_int fcf)
 {
-    char* fcfname;
+    const char* fcfname;
     switch (fcf & 0x7F) {
 	case 0x00:
 	    fcfname = "NULL (more blocks, same page)";
