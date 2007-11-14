@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 601 2007-08-23 08:00:14Z faxguy $
+#	$Id: configure 703 2007-11-14 17:36:12Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -383,7 +383,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 601 $"
+	echo "This is HylaFAX configure $Revision: 703 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -4640,11 +4640,11 @@ sysv-*-strip)	MANNUM4_5=4  MANNUM1_8=1;;
 sysv-*)		MANNUM4_5=4F MANNUM1_8=1M;;
 esac
 case $MANSCHEME in
-*-source-*)	MANCVT='${MANSED} $? >$@';;
-*-nroff-gzip-*)	MANCVT='${MANSED} $? | nroff -man | gzip > $@';;
-*-nroff-pack-*)	MANCVT='${MANSED} $? | nroff -man | pack > $@';;
-*-nroff-com*-*)	MANCVT='${MANSED} $? | nroff -man | compress > $@';;
-*-nroff-cat-*)	MANCVT='${MANSED} $? | nroff -man > $@';;
+*-source-*)	MANCVT='${MANSED} $< >$@';;
+*-nroff-gzip-*)	MANCVT='${MANSED} $< | nroff -man | gzip > $@';;
+*-nroff-pack-*)	MANCVT='${MANSED} $< | nroff -man | pack > $@';;
+*-nroff-com*-*)	MANCVT='${MANSED} $< | nroff -man | compress > $@';;
+*-nroff-cat-*)	MANCVT='${MANSED} $< | nroff -man > $@';;
 esac
 case $MANSCHEME in
 *-0|*-0.gz|*-0.Z|*-gz|*-Z|*-z)
