@@ -1,4 +1,4 @@
-/*	$Id: FaxConfig.c++ 529 2007-06-06 21:42:08Z faxguy $ */
+/*	$Id: FaxConfig.c++ 704 2007-11-14 17:45:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -86,7 +86,7 @@ FaxConfig::tildeExpand(const fxStr& filename)
     fxStr path(filename);
     if (filename.length() > 1 && filename[0] == '~') {
 	path.remove(0);
-	char* cp = getenv("HOME");
+	const char* cp = getenv("HOME");
 	if (!cp || *cp == '\0') {
 	    struct passwd* pwd = getpwuid(getuid());
 	    if (!pwd) {
