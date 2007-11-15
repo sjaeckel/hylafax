@@ -1,6 +1,10 @@
-#	$Id: CHANGES 699 2007-11-09 00:36:58Z faxguy $	
+#	$Id: CHANGES 706 2007-11-15 21:31:29Z faxguy $	
 
 New Changes
+
+* change time format to always include hours (15 Nov 2007)
+
+(5.1.11)
 
 * add RECV_DATA_CONVERSION feature to faxrcvd/FaxDispatch to convert
   JBIG faxes to MMR in the recvq (8 Nov 2007)
