@@ -72,7 +72,7 @@ protected:
     virtual void attach(int fd, DispatcherMask, IOHandler*);
     virtual void detach(int fd);
     virtual bool dispatch(timeval*);
-    virtual bool anyReady() const;
+    virtual bool anyReady();
     virtual int fillInReady(fd_set&, fd_set&, fd_set&);
     virtual int waitFor(fd_set&, fd_set&, fd_set&, timeval*);
     virtual void notify(int, fd_set&, fd_set&, fd_set&);

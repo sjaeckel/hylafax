@@ -516,7 +516,7 @@ bool Dispatcher::dispatch(timeval* howlong) {
     return (nfound != 0);
 }
 
-bool Dispatcher::anyReady() const {
+bool Dispatcher::anyReady() {
     if (!_cqueue->isEmpty()) {
         Dispatcher::sigCLD(0);		// poll for pending children
         return _cqueue->isReady();
