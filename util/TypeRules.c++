@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.c++ 521 2007-05-14 18:07:39Z faxguy $ */
+/*	$Id: TypeRules.c++ 705 2007-11-15 18:15:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -64,7 +64,7 @@ TypeRule::TypeRule(const TypeRule& other)
 }
 
 static const char* typeNames[] =
-    { "ascii", "asciiesc", "string", "address", "byte", "short", "long" };
+    { "ascii", "asciiesc", "string", "istring", "address", "byte", "short", "long" };
 static const char* opNames[] =
     { "<any>", "=", "!=", "<", "<=", ">", ">=", "&", "^", "!" };
 static const char* resultNames[] = { "tiff", "postscript", "pdf", "error" };
