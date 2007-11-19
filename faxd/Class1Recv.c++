@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 671 2007-10-18 19:09:05Z faxguy $ */
+/*	$Id: Class1Recv.c++ 709 2007-11-19 13:50:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1062,7 +1062,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	    }
 	}
     } while (gotCONNECT && !wasTimeout() && lastResponse != AT_EMPTYLINE);
-    emsg = "T.30 T2 timeout, expected page not received {E111}";
+    emsg = "V.21 signal reception timeout; expected page possibly not received in full {E111}";
     if (prevPage && conf.saveUnconfirmedPages && getRecvEOLCount()) {
 	TIFFWriteDirectory(tif);
 	protoTrace("RECV keeping unconfirmed page");
