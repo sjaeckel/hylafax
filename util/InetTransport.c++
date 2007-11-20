@@ -1,4 +1,4 @@
-/*	$Id: InetTransport.c++ 685 2007-11-01 05:00:34Z faxguy $ */
+/*	$Id: InetTransport.c++ 711 2007-11-21 06:04:10Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -150,7 +150,7 @@ InetTransport::initDataConn(fxStr& emsg)
     if (client.isPassive()) {
 	if (client.command("PASV") != FaxClient::COMPLETE)
 	    return (false);
-	char *cp = strchr(client.getLastResponse(), '(');
+	char *cp = (char*) strchr(client.getLastResponse(), '(');
 	if (!cp) return (false);
 	cp++;
 	unsigned int v[6];
