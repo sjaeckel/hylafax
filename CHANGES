@@ -1,7 +1,8 @@
-#	$Id: CHANGES 706 2007-11-15 21:31:29Z faxguy $	
+#	$Id: CHANGES 710 2007-11-20 18:29:07Z faxguy $	
 
 New Changes
 
+* fix build error with Mac OS X Leopard (darwin9) (20 Nov 2007)
 * change time format to always include hours (15 Nov 2007)
 
 (5.1.11)

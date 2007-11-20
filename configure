@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 703 2007-11-14 17:36:12Z faxguy $
+#	$Id: configure 710 2007-11-20 18:29:07Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -383,7 +383,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 703 $"
+	echo "This is HylaFAX configure $Revision: 710 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3031,6 +3031,7 @@ BuildPortDotH()
     CheckForDefine _POSIX_PRIORITY_SCHEDULING unistd.h sched.h && {
 	case $TARGET in
 	*darwin8*)	Note "... ignoring POSIX realtime process control interface as invalid";;
+	*darwin9*)	Note "... ignoring POSIX realtime process control interface as invalid";;
 	*)
 			Note "... configure use of POSIX realtime process control interface"
 			echo '#define HAS_POSIXSCHED 1'
@@ -3232,7 +3233,7 @@ Note "Checking TIFF support."
 # Location of TIFF binaries
 #
 if [ -z "$TIFFBIN" ]; then
-    DIRS="/usr/local/bin /usr/contrib/bin /usr/gnu/bin /usr/bin"
+    DIRS="/opt/local/bin /usr/local/bin /usr/contrib/bin /usr/gnu/bin /usr/bin"
     for i in $DIRS; do
         test -x $i/tiff2ps && { TIFFBIN=$i; break; }
     done
@@ -3970,6 +3971,7 @@ PickRIP()
 {
     if [ -z "$PATH_GSRIP" ]; then
 	GSLOCS="
+	    /opt/local/bin/gs
 	    /usr/local/bin/gs
 	    /usr/contrib/bin/gs
 	    /usr/gnu/bin/gs
@@ -4084,6 +4086,7 @@ if [ -z "$PATH_AFM" ]; then
     else
         DIR_AFMS="
 	    /usr/lib/afm
+	    /opt/local/lib/afm
 	    /usr/local/lib/afm
 	    /usr/local/share/ghostscript/fonts
 	    /usr/local/lib/ghostscript/fonts
