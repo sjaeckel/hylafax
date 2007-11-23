@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 658 2007-10-09 22:35:50Z faxguy $ */
+/*	$Id: ModemConfig.c++ 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -162,6 +162,7 @@ static struct {
 } strcmds[] = {
 { "modemtype",			&ModemConfig::type,		"unknown" },
 { "taglinefont",		&ModemConfig::tagLineFontFile },
+{ "taglinelocale",		&ModemConfig::tagLineLocale,	"" },
 { "taglineformat",		&ModemConfig::tagLineFmt,
   "From %%n|%c|Page %%p of %%t" },
 { "class2recvdatatrigger",	&ModemConfig::class2RecvDataTrigger },

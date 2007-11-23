@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 686 2007-11-04 01:45:30Z faxguy $ */
+/*	$Id: FaxModem.h 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -71,9 +71,10 @@ private:
     FaxFont*	tagLineFont;	// font for imaging tag line
     u_int	tagLineSlop;	// extra space reserved for tag line re-encoding
     fxStr	tagLine;	// tag line formatted with transmit time
+    fxStr	tagLineLocale;	// locale setting for tagline
     u_int	tagLineFields;	// number of fields in the tag line
 
-    void	setupTagLine(const FaxRequest&, const fxStr& tagLineFmt);
+    void	setupTagLine(const FaxRequest&, const fxStr& tagLineFmt, const fxStr& locale);
 // phase c data receive & copy quality checking
     u_int	cblc;		// current count of consecutive bad lines
     bool	lastRowBad;	// last decoded row was bad

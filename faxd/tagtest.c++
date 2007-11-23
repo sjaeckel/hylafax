@@ -1,4 +1,4 @@
-/*	$Id: tagtest.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: tagtest.c++ 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -26,7 +26,7 @@
 /*
  * Program for testing tag line imaging support.
  *
- * Usage: tagtest [-f fontfile] [-m format] [-o output.tif] input.tif
+ * Usage: tagtest [-f fontfile] [-m format] [-o output.tif] [-l locale] input.tif
  */
 #include "Sys.h"
 
@@ -40,12 +40,18 @@ extern "C" {
 #include <locale.h>
 }
 #endif
+#if HAS_LANGINFO
+extern "C" {
+#include <langinfo.h>
+}
+#endif
 
 u_int	tagLineSlop;
 FaxFont* tagLineFont;
 u_int	pageNumber = 1;
 u_int	totalPages;
 fxStr	tagLineFmt("From %%n|%c|Page %%p of %%t");
+fxStr	tagLineLocale("");
 fxStr	tagLineFontFile("fixed.pcf");
 fxStr	jobid("9733");
 fxStr	jobtag("sendq/q9733");
@@ -75,6 +81,17 @@ setupTagLine()
 	tagLineFont = new PCFFont;
     if (!tagLineFont->isReady() && tagLineFontFile != "")
 	(void) tagLineFont->read(tagLineFontFile);
+#ifdef LC_CTYPE
+    setlocale(LC_CTYPE, tagLineLocale);		// for <ctype.h> calls
+#endif
+#ifdef LC_TIME
+    setlocale(LC_TIME, tagLineLocale);		// for strftime calls
+#endif
+    bool isutf8 = false;
+#if HAS_LANGINFO
+    isutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0);
+    tagLine.setUTF8(isutf8);
+#endif
 
     time_t t = Sys::now();
     tm* tm = localtime(&t);
@@ -140,6 +157,17 @@ u_char*
 imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& totdata)
 {
     u_int l;
+#ifdef LC_CTYPE
+    setlocale(LC_CTYPE, tagLineLocale);		// for <ctype.h> calls
+#endif
+#ifdef LC_TIME
+    setlocale(LC_TIME, tagLineLocale);		// for strftime calls
+#endif
+    bool isutf8 = false;
+#if HAS_LANGINFO
+    isutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0);
+    tagLine.setUTF8(isutf8);
+#endif
     /*
      * Fill in any per-page variables used in the tag line.
      */
@@ -215,7 +243,7 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
 	    xoff += (fieldWidth-fw)/2;
 	else
 	    xoff += MARGIN_LEFT;
-	(void) tagLineFont->imageText(tagField, (u_short*) raster, w, h,
+	(void) tagLineFont->imageText(tagField, isutf8, (u_short*) raster, w, h,
 	    xoff, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOT);
     }
 
@@ -381,7 +409,7 @@ void
 usage()
 {
     fprintf(stderr,
-	"usage: %s [-m format] [-o t.tif] [-f font.pcf] input.tif\n",
+	"usage: %s [-m format] [-o t.tif] [-f font.pcf] [-l locale] input.tif\n",
 	appName);
     exit(-1);
 }
@@ -413,10 +441,13 @@ main(int argc, char* argv[])
     setlocale(LC_TIME, "");			// for strftime calls
 #endif
     appName = argv[0];
-    while ((c = Sys::getopt(argc, argv, "f:m:o:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "f:l:m:o:")) != -1)
 	switch (c) {
 	case 'f':
 	    tagLineFontFile = optarg;
+	    break;
+	case 'l':
+	    tagLineLocale = optarg;
 	    break;
 	case 'm':
 	    tagLineFmt = optarg;

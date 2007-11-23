@@ -1,4 +1,4 @@
-/*	$Id: Str.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Str.h 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -61,6 +61,7 @@ protected:
     char	indata[100];		// inline data, avoiding malloc
     char*	data;			// points at indata or heap
     u_int	slength;		// same rules as fxStr::slength
+    bool	isutf8;			// UTF-8 indication
 
     friend class fxStr;
 
@@ -101,6 +102,8 @@ public:
 	{ return atoi(data); }
 
     u_int length() const { return slength-1; }
+
+    void setUTF8(bool b) { isutf8 = b; }
 
     char& operator[](u_int i) const
     {   fxAssert(i<slength-1,"Invalid Str[] index");
@@ -237,6 +240,9 @@ protected:
 
     // data points to the actual data. It is always a valid pointer.
     char * data; 
+
+    // isutf8 indicates whether or not the string is UTF-8 encoded.
+    bool isutf8;
 
     // zero-length string support
     // resizeInternal doesn't update slength or handle null termination

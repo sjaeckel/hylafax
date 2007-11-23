@@ -1,4 +1,4 @@
-/*	$Id: Str.c++ 593 2007-08-21 23:23:37Z faxguy $ */
+/*	$Id: Str.c++ 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -36,6 +36,7 @@ fxStr fxStr::null;
 
 fxStr::fxStr(u_int l)
 {
+    isutf8 = false;
     slength = l+1;
     if (l>0) {
 	data = (char*) malloc(slength);
@@ -46,6 +47,7 @@ fxStr::fxStr(u_int l)
 
 fxStr::fxStr(const char *s)
 {
+    isutf8 = false;
     u_int l = strlen(s)+1;
     if (l>1) {
 	data = (char*) malloc(l);
@@ -58,6 +60,7 @@ fxStr::fxStr(const char *s)
 
 fxStr::fxStr(const char *s, u_int len)
 {
+    isutf8 = false;
     if (len>0) {
 	data = (char*) malloc(len+1);
 	memcpy(data,s,len);
@@ -69,6 +72,7 @@ fxStr::fxStr(const char *s, u_int len)
 
 fxStr::fxStr(const fxStr& s)
 {
+    isutf8 = s.isutf8;
     slength = s.slength;
     if (slength > 1) {
 	data = (char*) malloc(slength);
@@ -80,6 +84,7 @@ fxStr::fxStr(const fxStr& s)
 
 fxStr::fxStr(const fxTempStr& t)
 {
+    isutf8 = t.isutf8;
     slength = t.slength;
     if (t.slength>1) {
 	data = (char*) malloc(slength);
@@ -93,6 +98,7 @@ fxStr::fxStr(int a, const char * format)
 {
     fxStr s = fxStr::format((format) ? format : "%d", a);
     slength = s.slength;
+    isutf8 = s.isutf8;
     if (slength > 1) {
         data = (char*) malloc(slength);
         memcpy(data, s.data, slength);
@@ -105,6 +111,7 @@ fxStr::fxStr(long a, const char * format)
 {
     fxStr s = fxStr::format((format) ? format : "%ld", a);
     slength = s.slength;
+    isutf8 = s.isutf8;
     if (slength > 1) {
         data = (char*) malloc(slength);
         memcpy(data, s.data, slength);
@@ -117,6 +124,7 @@ fxStr::fxStr(float a, const char * format)
 {
     fxStr s = fxStr::format((format) ? format : "%g", a);
     slength = s.slength;
+    isutf8 = s.isutf8;
     if (slength > 1) {
         data = (char*) malloc(slength);
         memcpy(data, s.data, slength);
@@ -129,6 +137,7 @@ fxStr::fxStr(double a, const char * format)
 {
     fxStr s = fxStr::format((format) ? format : "%lg", a);
     slength = s.slength;
+    isutf8 = s.isutf8;
     if (slength > 1) {
         data = (char*) malloc(slength);
         memcpy(data, s.data, slength);
@@ -415,6 +424,7 @@ void fxStr::operator=(const fxTempStr& s)
     resizeInternal(s.slength-1);
     memcpy(data,s.data,s.slength);
     slength = s.slength;
+    isutf8 = s.isutf8;
 }
 
 void fxStr::operator=(const fxStr& s)
@@ -424,6 +434,7 @@ void fxStr::operator=(const fxStr& s)
     resizeInternal(s.slength-1);
     memcpy(data,s.data,s.slength);
     slength = s.slength;
+    isutf8 = s.isutf8;
 }
 
 void fxStr::operator=(const char *s)
@@ -455,7 +466,7 @@ void fxStr::append(char a)
 
 bool operator==(const fxStr& a,const fxStr& b)
 {
-    return (a.slength == b.slength) && (memcmp(a.data,b.data,a.slength) == 0);
+    return (a.slength == b.slength) && (memcmp(a.data,b.data,a.slength) == 0) && (a.isutf8 == b.isutf8);
 }
 
 bool operator==(const fxStr& a,const char* b)
@@ -470,7 +481,7 @@ bool operator==(const char* b, const fxStr& a)
 
 bool operator!=(const fxStr& a,const fxStr& b)
 {
-    return (a.slength != b.slength) || (memcmp(a.data,b.data,a.slength) != 0);
+    return (a.slength != b.slength) || (memcmp(a.data,b.data,a.slength) != 0) || (a.isutf8 != b.isutf8);
 }
 
 bool operator!=(const fxStr& a,const char* b)
@@ -572,7 +583,15 @@ u_int fxStr::next(u_int posn, char a) const
     char * buf = data+posn;
     u_int counter = slength-1-posn;
     while (counter--) {
-	if (*buf == a) return (buf-data);
+	if (*buf == a) {
+	    if (!isutf8) return (buf-data);
+	    /*
+	     * buf is signed, thus buf < 0 means that it has the 
+	     * high bit set and is therefore part of a multi-byte 
+	     * character.  Ignore those bytes.
+	     */
+	    if (*buf > 0) return (buf-data);
+	}
 	buf++;
     }
     return slength-1;

@@ -1,4 +1,4 @@
-/*	$Id: TagLine.c++ 643 2007-09-27 05:28:15Z faxguy $ */
+/*	$Id: TagLine.c++ 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -28,6 +28,16 @@
 #include "StackBuffer.h"
 #include "FaxFont.h"
 #include "FaxRequest.h"
+#if HAS_LOCALE
+extern "C" {
+#include <locale.h>
+}
+#endif
+#if HAS_LANGINFO
+extern "C" {
+#include <langinfo.h>
+}
+#endif
 
 #include "Sys.h"
 
@@ -43,12 +53,24 @@ insert(fxStr& tag, u_int l, const fxStr& s)
  * preformat as much of the tag line as possible.
  */
 void
-FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt)
+FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt, const fxStr& locale)
 {
     if (tagLineFont == NULL)
 	tagLineFont = new PCFFont;
     if (!tagLineFont->isReady() && conf.tagLineFontFile != "")
 	(void) tagLineFont->read(conf.tagLineFontFile);
+    tagLineLocale = locale;
+#ifdef LC_CTYPE
+    setlocale(LC_CTYPE, tagLineLocale);         // for <ctype.h> calls
+#endif
+#ifdef LC_TIME
+    setlocale(LC_TIME, tagLineLocale);          // for strftime calls
+#endif
+    bool isutf8 = false;
+#if HAS_LANGINFO
+    isutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0);
+    tagLine.setUTF8(isutf8);
+#endif
 
     time_t t = Sys::now();
     tm* tm = localtime(&t);
@@ -143,6 +165,17 @@ u_char*
 FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& totdata)
 {
     u_int l;
+#ifdef LC_CTYPE
+    setlocale(LC_CTYPE, tagLineLocale);         // for <ctype.h> calls
+#endif
+#ifdef LC_TIME
+    setlocale(LC_TIME, tagLineLocale);          // for strftime calls
+#endif
+    bool isutf8 = false;
+#if HAS_LANGINFO
+    isutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0);
+    tagLine.setUTF8(isutf8);
+#endif
     /*
      * Fill in any per-page variables used in the tag line.
      */
@@ -224,7 +257,7 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params,
 	    xoff += (fieldWidth-fw)/2;
 	else
 	    xoff += MARGIN_LEFT;
-	(void) tagLineFont->imageText(tagField, (u_short*) raster, w, h,
+	(void) tagLineFont->imageText(tagField, isutf8, (u_short*) raster, w, h,
 	    xoff, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOT);
     }
 

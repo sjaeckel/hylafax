@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 658 2007-10-09 22:35:50Z faxguy $ */
+/*	$Id: ModemConfig.h 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -242,6 +242,7 @@ public:
     bool	softRTFCC;		// real-time fax compression conversion (software)
     bool	waitForConnect;		// modem sends multiple answer responses
     fxStr	tagLineFmt;		// format string for tag lines
+    fxStr	tagLineLocale;		// locale for tag lines
     fxStr	tagLineFontFile;	// font file for imaging tag lines
     u_int	recvDataFormat;		// received facsimile data format
     bool	useJobTagLine;		// Use Job tagline or use conf taglineformat
