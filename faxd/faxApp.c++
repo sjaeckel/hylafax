@@ -1,4 +1,4 @@
-/*	$Id: faxApp.c++ 642 2007-09-25 22:12:47Z faxguy $ */
+/*	$Id: faxApp.c++ 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -31,11 +31,11 @@
 #include <limits.h>
 #include <grp.h>
 #include <unistd.h>
-extern "C" {
 #if HAS_LOCALE
+extern "C" {
 #include <locale.h>
-#endif
 }
+#endif
 
 #include "Sys.h"
 

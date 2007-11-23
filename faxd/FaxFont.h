@@ -1,4 +1,4 @@
-/*	$Id: FaxFont.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: FaxFont.h 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -46,7 +46,7 @@ public:
     u_int	fontHeight() const;
     virtual u_int charWidth(u_int) const = 0;
     virtual void strWidth(const char* text, u_int& w, u_int& h) const = 0;
-    virtual u_int imageText(const char* text,
+    virtual u_int imageText(const char* text, bool isutf8, 
 		    u_short* bitmap, u_int w, u_int h,
 		    u_int lm, u_int rm, u_int tm, u_int bm) const = 0;
     virtual void print(FILE*) const = 0;

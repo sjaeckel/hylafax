@@ -1,7 +1,9 @@
-#	$Id: CHANGES 710 2007-11-20 18:29:07Z faxguy $	
+#	$Id: CHANGES 713 2007-11-24 00:45:47Z faxguy $	
 
 New Changes
 
+* add TagLineLocale modem configuration option and corresponding
+  tagtest feature for using UTF-8 font and format (23 Nov 2007)
 * fix build error with Mac OS X Leopard (darwin9) (20 Nov 2007)
 * change time format to always include hours (15 Nov 2007)
 

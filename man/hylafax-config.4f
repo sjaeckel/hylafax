@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 696 2007-11-08 01:28:44Z faxguy $
+.\"	$Id: hylafax-config.4f 713 2007-11-24 00:45:47Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-11-07 17:28:44 -0800 (Wed, 07 Nov 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-11-23 16:45:47 -0800 (Fri, 23 Nov 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -220,6 +220,7 @@ SpeakerVolume	string	\s-1Quiet\s+1	volume level for modem speaker
 StaggerCalls¹	integer	\s-10\s+1	time to delay between starting outbound calls
 TagLineFont	string	\-	tag line font filename
 TagLineFormat	string	\s-1\fIsee below\fP\s+1	tag line format string
+TagLineLocale	string	\s-1\fIsee below\fP\s+1	tag line format locale
 TIFF2FaxCmd¹	string	\s-1bin/tiff2fax\s+1	\s-1TIFF\s+1 converter command script
 TimeOfDay¹	string	\s-1Any\s+1	default time-of-day restrictions
 TSIRecvdCmd	string	\-	script executed after TSI receipt, can drop calls
@@ -1684,8 +1685,16 @@ e.g. etc/lutRS18.pcf.
 If no font is specified, if a null filename is specified, or if
 the specified font file is not readable, then tag lines will not
 be generated.
-See also
-.BR TagLineFormat .
+Note that the default
+.B TagLineFont
+that traditionally comes with \*(Fx does not have glyphs
+available beyond basic ASCII, and to show non-ASCII characters
+a different file must be used that has characters matching those
+characters found in
+.B TagLineFormat
+as decoded by the
+.B TagLineLocale
+setting.
 .TP
 .B TagLineFormat
 The format string to use when imaging
@@ -1737,6 +1746,16 @@ when a fax job is retried after an incomplete attempt and only the previously
 unsent pages are then queued in a successive session.
 See also
 .BR TagLineFont .
+.TP
+.B TagLineLocale
+The locale setting for handling 
+.BR TagLineFormat ,
+for example, ``en_US.UTF-8''.  If 
+.B TagLineFormat
+is encoded via UTF-8 then the correct setting of
+.B TagLineLocale
+is requisite for proper decoding by the parser.  By
+default the environment settings are used.
 .TP
 .B TIFF2FaxCmd¹
 The command to invoke to convert a TIFF submitted

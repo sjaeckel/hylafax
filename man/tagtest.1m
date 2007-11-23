@@ -1,4 +1,4 @@
-.\"	$Id: tagtest.1m 583 2007-08-15 20:14:12Z faxguy $
+.\"	$Id: tagtest.1m 713 2007-11-24 00:45:47Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -75,6 +75,17 @@ when imaging tag lines.
 If this option is not specified, then
 .I tagtest
 uses the format string ``From %%n|%c|Page %%p of %%t''.
+.TP
+.BI \-l " locale"
+Use
+.I locale
+as the locale setting for preparing the given
+.I format
+string.  For example, ``en_US.UTF-8''.  If the string is
+encoded via UTF-8 then the correct setting of
+.I locale
+is requisite for proper decoding by the parser.  By
+default the environment settings are used.
 .TP
 .BI \-o " file"
 Write output to

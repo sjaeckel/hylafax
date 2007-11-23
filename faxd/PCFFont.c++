@@ -1,4 +1,4 @@
-/*	$Id: PCFFont.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: PCFFont.c++ 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -33,6 +33,7 @@
  * of the format to image text for outgoing facsimile.
  */
 #include <unistd.h>
+#include <stdlib.h>
 #include "PCFFont.h"
 #include "tiffio.h"
 
@@ -252,8 +253,8 @@ PCFFont::read(const char* name)
 	}
 	firstCol = getINT16();
 	lastCol = getINT16();
-	u_short firstRow = getINT16();
-	u_short lastRow = getINT16();
+	firstRow = getINT16();
+	lastRow = getINT16();
 	u_short defaultCh = getINT16();
 
 	u_int nencoding = (lastCol-firstCol+1) * (lastRow-firstRow+1);
@@ -491,7 +492,7 @@ PCFFont::strWidth(const char* text, u_int &sw, u_int& sh) const
  * left-to-right.  The height of the rendered text is returned.
  */
 u_int
-PCFFont::imageText(const char* text,
+PCFFont::imageText(const char* text, bool isutf8,
     u_short* raster, u_int w, u_int h,
     u_int lm, u_int rm, u_int tm, u_int bm) const
 {
@@ -507,9 +508,43 @@ PCFFont::imageText(const char* text,
      */
     if (!isBigEndian)				// XXX
 	TIFFSwabArrayOfShort((u_short*) raster, h*rowwords);
+    const char* cp = text;
     for (const char* cp = text; *cp; cp++) {
-	u_int g = (u_char)*cp;
-	charInfo* ci = (firstCol <= g && g <= lastCol) ?
+	u_int g = (u_int)*cp;
+	if (isutf8 && (g & 0xC0)) {		// first byte in a multibyte character
+	    /*
+	     * We probably could use mbstowcs and not perform
+	     * the UTF-8 decoding ourselves; however, this saves
+	     * us from needing to use #ifdef __STDC_ISO_10646__
+	     * and thus able to support UTF-8 on systems where
+	     * it is not.
+	     */
+	    u_short morebytes = 0;
+	    if (!(g & 0x20)) {
+		morebytes = 1;
+		g &= 0x1F;
+	    } else if (!(g & 0x10)) {
+		morebytes = 2;
+		g &= 0xF;
+	    } else if (!(g & 0x8)) {
+		morebytes = 3;
+		g &= 0x7;
+	    } else if (!(g & 0x4)) {
+		morebytes = 4;
+		g &= 0x3;
+	    } else if (!(g & 0x2)) {
+		morebytes = 5;
+		g &= 0x1;
+	    }
+	    for (cp++; morebytes && *cp; morebytes--, cp++) {
+		g <<= 6;
+		g += (*cp & 0x3F);
+	    }
+	    cp--;				// back up one
+	}
+	int r = g >> 8;
+	int c = g & 0xff;
+	charInfo* ci = (firstRow <= r && r <= lastRow && firstCol <= c && c <= lastCol) ?
 	    encoding[g - firstCol] : cdef;
 	if (!ci)
 	    continue;

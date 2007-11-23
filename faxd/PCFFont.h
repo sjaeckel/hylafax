@@ -1,4 +1,4 @@
-/*	$Id: PCFFont.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: PCFFont.h 713 2007-11-24 00:45:47Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -39,8 +39,10 @@ struct charInfo;
 
 class PCFFont : public FaxFont {
 private:
-    u_short	firstCol;	// index of first encoded glyph
-    u_short	lastCol;	// index of last encoded glyph
+    u_short	firstCol;	// index of first encoded glyph column
+    u_short	lastCol;	// index of last encoded glyph column
+    u_short	firstRow;	// index of first encoded glyph row
+    u_short	lastRow;	// index of last encoded glyph row
     u_long	numGlyphs;	// count of glyphs with metrics+bitmaps
     charInfo*	metrics;	// font metrics, including glyph pointers
     u_char*	bitmaps;	// base of bitmaps, useful only to free
@@ -82,7 +84,7 @@ public:
 
     u_int	charWidth(u_int) const;
     void	strWidth(const char* text, u_int& w, u_int& h) const;
-    u_int	imageText(const char* text,
+    u_int	imageText(const char* text, bool isutf8,
 		    u_short* bitmap, u_int w, u_int h,
 		    u_int lm, u_int rm, u_int tm, u_int bm) const;
     void	print(FILE*) const;

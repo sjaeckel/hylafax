@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 710 2007-11-20 18:29:07Z faxguy $
+#	$Id: configure 713 2007-11-24 00:45:47Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -383,7 +383,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 710 $"
+	echo "This is HylaFAX configure $Revision: 713 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -2880,6 +2880,10 @@ BuildPortDotH()
     CheckForIncludeFile locale.h && {
 	Note "... configure use of <locale.h> (internationalization support)"
 	echo '#define HAS_LOCALE 1'
+    }
+    CheckForIncludeFile langinfo.h && {
+	Note "... configure use of <langinfo.h> (internationalization support)"
+	echo '#define HAS_LANGINFO 1'
     }
     CheckForIncludeFile paths.h && {
 	Note "... configure use of <paths.h>"
