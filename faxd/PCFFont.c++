@@ -1,4 +1,4 @@
-/*	$Id: PCFFont.c++ 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: PCFFont.c++ 714 2007-11-24 01:42:42Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -511,7 +511,7 @@ PCFFont::imageText(const char* text, bool isutf8,
     const char* cp = text;
     for (const char* cp = text; *cp; cp++) {
 	u_int g = (u_int)*cp;
-	if (isutf8 && (g & 0xC0)) {		// first byte in a multibyte character
+	if (isutf8 && (g >= 0xC0)) {		// first byte in a multibyte character
 	    /*
 	     * We probably could use mbstowcs and not perform
 	     * the UTF-8 decoding ourselves; however, this saves
@@ -520,19 +520,19 @@ PCFFont::imageText(const char* text, bool isutf8,
 	     * it is not.
 	     */
 	    u_short morebytes = 0;
-	    if (!(g & 0x20)) {
+	    if ((g & 0x20) == 0) {
 		morebytes = 1;
 		g &= 0x1F;
-	    } else if (!(g & 0x10)) {
+	    } else if ((g & 0x10) == 0) {
 		morebytes = 2;
 		g &= 0xF;
-	    } else if (!(g & 0x8)) {
+	    } else if ((g & 0x8) == 0) {
 		morebytes = 3;
 		g &= 0x7;
-	    } else if (!(g & 0x4)) {
+	    } else if ((g & 0x4) == 0) {
 		morebytes = 4;
 		g &= 0x3;
-	    } else if (!(g & 0x2)) {
+	    } else if ((g & 0x2) == 0) {
 		morebytes = 5;
 		g &= 0x1;
 	    }
