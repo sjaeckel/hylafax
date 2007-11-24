@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 699 2007-11-09 00:36:58Z faxguy $
+#	$Id: faxrcvd.sh.in 717 2007-11-25 00:44:44Z faxguy $
 #
 # ============================================
 #
@@ -64,7 +64,9 @@ faxrcvd_mail()
     echo "Content-Type: Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\""
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
-    echo "From: $DICTRECEIVEAGENT <$FROMADDR>"
+    printf "From: "
+    printf "$DICTRECEIVEAGENT" | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    echo " <$FROMADDR>"
     printf "Subject: "
     (
     if [ -f "$FILE" ]; then
