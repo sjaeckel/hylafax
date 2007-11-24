@@ -1,4 +1,4 @@
-#    $Id: dict-tr 680 2007-10-26 18:32:27Z faxguy $
+#    $Id: dict-tr 719 2007-11-25 00:58:20Z faxguy $
 
 	CHARSET=utf-8;
 	DICTRECEIVEAGENT="HylaFAX Faks Alım Hizmeti";
@@ -99,7 +99,7 @@
 	DICTUNKNOWNREASON2="Malesef, bildirim betiği bilinmeyen bir nedenden dolayı çağrıldı.";
 	DICTUNKNOWNREASON3="so the rest of this message is for debugging:";
 	DICTUNKNOWNREASON4="Bu olmamalıydı, lütfen sistem yetkilinize bildirin..";
-	DICTRECEIVEDON="Alınan :";
+	DICTRECEIVEDON="Alınan";
 	DICTPOLLFAILED="havuza faks alımı başarısız";
 	DICTYES="Evet";
 	DICTNO="Hayır";
