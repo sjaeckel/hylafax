@@ -1,4 +1,4 @@
-/*	$Id: PCFFont.c++ 714 2007-11-24 01:42:42Z faxguy $ */
+/*	$Id: PCFFont.c++ 716 2007-11-24 17:20:28Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -542,9 +542,9 @@ PCFFont::imageText(const char* text, bool isutf8,
 	    }
 	    cp--;				// back up one
 	}
-	int r = g >> 8;
+	int l = g >> 8;
 	int c = g & 0xff;
-	charInfo* ci = (firstRow <= r && r <= lastRow && firstCol <= c && c <= lastCol) ?
+	charInfo* ci = (firstRow <= l && l <= lastRow && firstCol <= c && c <= lastCol) ?
 	    encoding[g - firstCol] : cdef;
 	if (!ci)
 	    continue;
