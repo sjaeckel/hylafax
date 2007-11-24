@@ -1,4 +1,4 @@
-#    $Id: dict-es 680 2007-10-26 18:32:27Z faxguy $
+#    $Id: dict-es 715 2007-11-24 17:04:06Z faxguy $
 
 	CHARSET=iso-8859-1;
 	DICTRECEIVEAGENT="Servidor de Fax HylaFAX";
@@ -91,7 +91,7 @@
 	DICTNOFORMATTER1="no fue enviado porque";
 	DICTNOFORMATTER2="el programa de conversión no fue encontrado.";
 	DICTNOTICEABOUT="Aviso de";
-	DICTPOLLINGFAILED=", el intento de poner el documento para envio, \nhs fallado porque ";
+	DICTPOLLINGFAILED=", el intento de poner el documento para envio, \nha fallado porque ";
 	DICTREMOTEREJECTED="la estacion remota ha rechado su llamada.";
 	DICTNODOCTOPOLL="no hay documento disponible para recuperación.";
 	DICTUNSPECIFIEDPROBLEM="ha ocurrido un problema sin especificar.";
