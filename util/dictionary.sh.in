@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: dictionary.sh.in 680 2007-10-26 18:32:27Z faxguy $
+#    $Id: dictionary.sh.in 718 2007-11-25 00:53:35Z faxguy $
 
 case "$LANG" in
     pl_*)
@@ -11,7 +11,7 @@ case "$LANG" in
     it_*)
 	. bin/dict/it
 	;;
-    pt_BR)
+    pt_BR*)
 	. bin/dict/pt_BR
 	;;
     pt_*)
@@ -36,3 +36,8 @@ case "$LANG" in
 	. bin/dict/en
 	;;
 esac
+
+#
+# Modify LANG according to CHARSET
+#
+LANG="`echo $LANG | $SED 's/\..*//'`.$CHARSET"
