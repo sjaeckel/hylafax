@@ -1,7 +1,9 @@
-#	$Id: CHANGES 713 2007-11-24 00:45:47Z faxguy $	
+#	$Id: CHANGES 721 2007-11-26 21:59:09Z faxguy $	
 
 New Changes
 
+* cleanup client FIFO file when client disconnects not from 
+  root directory (26 Nov 2007)
 * add TagLineLocale modem configuration option and corresponding
   tagtest feature for using UTF-8 font and format (23 Nov 2007)
 * fix build error with Mac OS X Leopard (darwin9) (20 Nov 2007)
