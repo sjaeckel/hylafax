@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 396 2006-12-13 19:14:08Z faxguy $ */
+/*	$Id: Login.c++ 721 2007-11-26 21:59:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -415,7 +415,7 @@ HylaFAXServer::dologout(int status)
     if (clientFd != -1)
 	Sys::close(clientFd);
     if (clientFIFOName != "")
-	Sys::unlink(clientFIFOName);
+	Sys::unlink("/" | clientFIFOName);
     for (JobDictIter iter(blankJobs); iter.notDone(); iter++) {
 	Job* job = iter.value();
 	fxStr file("/" | job->qfile);
