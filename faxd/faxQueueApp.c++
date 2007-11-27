@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 693 2007-11-06 21:58:21Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 722 2007-11-28 06:05:26Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1697,7 +1697,6 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 		    dup2(pfd[1], STDOUT_FILENO);
 		closeAllBut(STDOUT_FILENO);
 		traceQueue(job, "JOB CONTROL: %s %s", app[0], app[1]);
-		dup2(STDOUT_FILENO, STDERR_FILENO);
 		Sys::execv(app[0], (char * const*)app);
 		sleep(1);			// XXX give parent time to catch signal
 		traceQueue(job, "JOB CONTROL: failed to exec: %m");

@@ -1,7 +1,8 @@
-#	$Id: CHANGES 721 2007-11-26 21:59:09Z faxguy $	
+#	$Id: CHANGES 722 2007-11-28 06:05:26Z faxguy $	
 
 New Changes
 
+* don't parse JobControl stderr output (27 Nov 2007)
 * cleanup client FIFO file when client disconnects not from 
   root directory (26 Nov 2007)
 * add TagLineLocale modem configuration option and corresponding
