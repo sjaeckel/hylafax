@@ -1,4 +1,4 @@
-#    $Id: dict-cn 680 2007-10-26 18:32:27Z faxguy $
+#    $Id: dict-zh 723 2007-11-28 20:35:44Z faxguy $
 
 	CHARSET=UTF-8;
 	DICTRECEIVEAGENT="传真接收程序";

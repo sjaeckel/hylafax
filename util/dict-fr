@@ -1,4 +1,4 @@
-#    $Id: dict-fr 701 2007-11-13 07:19:00Z faxguy $
+#    $Id: dict-fr 723 2007-11-28 20:35:44Z faxguy $
 
 	CHARSET=UTF-8;
 	DICTRECEIVEAGENT="The HylaFAX Receive Agent";
@@ -16,16 +16,16 @@
 	DICTFAILEDBECAUSE="à échoué pour la raison suivante : ";
 	DICTUNKNOWNDOCTYPE="Type de document inconnue";
 	DICTNOFILEEXISTS="Fichier inexistant";
-	DICTDESTINATION="Destination ";
-	DICTJOBID="Identifiant du travail ";
-	DICTGROUPID="Identifiant du groupe ";
-	DICTSENDER="Emetteur ";
+	DICTDESTINATION="Destination";
+	DICTJOBID="Identifiant du travail";
+	DICTGROUPID="Identifiant du groupe";
+	DICTSENDER="Emetteur";
 	DICTMAILADDR="Adresse mail";
 	DICTMODEM="Modem";
-	DICTCOMMID="CommID ";
-	DICTSUBMITTEDFROM="Envoyé par ";
-	DICTPAGEWIDTH="Largeur de page ";
-	DICTPAGELENGTH="Hauteur de page ";
+	DICTCOMMID="CommID";
+	DICTSUBMITTEDFROM="Envoyé par";
+	DICTPAGEWIDTH="Largeur de page";
+	DICTPAGELENGTH="Hauteur de page";
 	DICTRES="Résolution ";
 	DICTNOTHINGAVAIL="rien de disponible";
 	DICTSTATUS="Status ";
@@ -36,7 +36,7 @@
 	DICTTOTALCALLS="nombre totals d'appel avant émission";
 	DICTCALLS="Totals appels ";
 	DICTPAGESTRANSMITTED="pages transmisent";
-	DICTPAGES="Pages ";
+	DICTPAGES="Pages";
 	DICTTOTALPAGES="nombre total de pages transmisent";
 	DICTTOTPAGES="Nombre total de pages ";
 	DICTATTEMPTSPAGE="tentative d'envoie de la page en cours";
@@ -64,14 +64,14 @@
 	DICTTO="au";
 	DICTCOMPLETED="a réussi";
 	DICTCOMPLETEDSUCCESSFULLY=", a été effectué avec succès.";
-	DICTRECEIVER="Récepteur ";
-	DICTQUALITY="Qualité ";
+	DICTRECEIVER="Récepteur";
+	DICTQUALITY="Qualité";
 	DICTFINE="Fin";
 	DICTNORMAL="Normal";
-	DICTSIGNALRATE="Vitesse de transmission ";
-	DICTDATAFORMAT="Format données ";
-	DICTREMOTEEQUIPMENT="Equipement distant ";
-	DICTREMOTESTATION="Station distante ";
+	DICTSIGNALRATE="Vitesse de transmission";
+	DICTDATAFORMAT="Format données";
+	DICTREMOTEEQUIPMENT="Equipement distant";
+	DICTREMOTESTATION="Station distante";
 	DICTPROCESSINGTIME="Le temps d'émission est de :";
 	DICTADDITIONALINFO="  Informations complémentaire :";
 	DICTFAILED="échoué";

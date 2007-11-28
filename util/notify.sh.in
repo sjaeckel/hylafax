@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 634 2007-09-19 07:21:12Z faxguy $
+#    $Id: notify.sh.in 723 2007-11-28 20:35:44Z faxguy $
 #
 # ============================================
 #
@@ -72,7 +72,7 @@ notify_mail()
     echo "To: $mailaddr"
     echo "From: $FROMADDR"
     printf "Subject: "
-    ( echo "$MAILSUBJECT" ) | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    ( echo "$MAILSUBJECT" ) | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo ""
     echo "This is a multi-part message in MIME format."
     echo ""
@@ -146,56 +146,56 @@ notify_mail()
 	echo "    ---- $DICTUNSENTJOBSTATUS ----"
 	echo ""
     fi
-    printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTDESTINATION" "$number"
-    printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTSENDER" "$sender"
-    printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTMAILADDR" "$mailaddr"
+    echo "$DICTDESTINATION| $number" | printFormatted $ITEMSIZE
+    echo "$DICTSENDER| $sender" | printFormatted $ITEMSIZE
+    echo "$DICTMAILADDR| $mailaddr" | printFormatted $ITEMSIZE
     if [ "$jobtype" = "facsimile" ] ; then
 	if [ "$npages" -gt 0 ]; then
-	    printf "`echo %$ITEMSIZE\s: %u`\n" "$DICTPAGES" "$npages"
+	    echo "$DICTPAGES| $npages" | printFormatted $ITEMSIZE
 	fi
 	if [ -n "$faxstatus" ] && [ -n "$dirnum" ]; then
-	    printf "`echo %$ITEMSIZE\s: %u` ($DICTDIRNEXTPAGE)\n" "$DICTDIRNUM" "$dirnum"
+	    echo  "$DICTDIRNUM| $dirnum ($DICTDIRNEXTPAGE)" | printFormatted $ITEMSIZE
 	fi
 	if [ -n "$csi" ]; then
-	    printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTRECEIVER" "$csi"
+	    echo "$DICTRECEIVER| $csi" | printFormatted $ITEMSIZE
 	fi
         if [ "$RETURNTECHINFO" = "yes" ] && [ "$totdials" -gt 0 ]; then
 	    case "$resolution" in
-		196) printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTQUALITY" "$DICTFINE";;
-		98) printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTQUALITY" "$DICTNORMAL";;
-		*) printf "`echo %$ITEMSIZE\s %.0f` (lpi)\n" "$DICTRES" "$resolution";;
+		196) echo "$DICTQUALITY| $DICTFINE" | printFormatted $ITEMSIZE;;
+		98) echo "$DICTQUALITY| $DICTNORMAL" | printFormatted $ITEMSIZE;;
+		*) echo "$DICTRES| $resolution (lpi)" | printFormatted $ITEMSIZE;;
             esac
-            printf "`echo %$ITEMSIZE\s: %u` (mm)\n" "$DICTPAGEWIDTH" "$pagewidth"
-            printf "`echo %$ITEMSIZE\s: %.0f` (mm)\n" "$DICTPAGELENGTH" "$pagelength"
-            printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTSIGNALRATE" "$signalrate"
-            printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTDATAFORMAT" "$dataformat"
+            echo "$DICTPAGEWIDTH| $pagewidth (mm)" | printFormatted $ITEMSIZE
+            echo "$DICTPAGELENGTH| $pagelength (mm)" | printFormatted $ITEMSIZE
+            echo "$DICTSIGNALRATE| $signalrate" | printFormatted $ITEMSIZE
+            echo "$DICTDATAFORMAT| $dataformat" | printFormatted $ITEMSIZE
 	    if [ -n "$equipment" ]; then
-		printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTREMOTEEQUIPMENT" "$equipment"
+		echo "$DICTREMOTEEQUIPMENT| $equipment" | printFormatted $ITEMSIZE
 	    fi
 	    if [ -n "$station" ]; then
-		printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTREMOTESTATION" "$station"
+		echo "$DICTREMOTESTATION| $station" | printFormatted $ITEMSIZE
 	    fi
         fi
     fi
     if [ "$RETURNTECHINFO" = "yes" ] ; then
         if [ "$tottries" != "1" ] ; then 
-            printf "`echo %$ITEMSIZE\s: %s` ($DICTREMOTEEXCHANGES)\n" "$DICTDIALOGS" "$tottries"
+            echo "$DICTDIALOGS| $tottries ($DICTREMOTEEXCHANGES)" | printFormatted $ITEMSIZE
         fi
         if [ "$totdials" != "1" ] ; then 
-            printf "`echo %$ITEMSIZE\s: %s` ($DICTTOTALCALLS)\n" "$DICTCALLS" "$totdials"
+            echo "$DICTCALLS| $totdials ($DICTTOTALCALLS)" | printFormatted $ITEMSIZE
         fi
 	if [ "$ndials" != "0" ]; then
-	    printf "`echo %$ITEMSIZE\s: %s` ($DICTFAILEDCALLS)\n" "$DICTDIALS" "$ndials"
+	    echo "$DICTDIALS| $ndials ($DICTFAILEDCALLS)" | printFormatted $ITEMSIZE
 	fi
-	printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTMODEM" "$modemused"
+	echo "$DICTMODEM| $modemused" | printFormatted $ITEMSIZE
 	if [ -n "$faxstatus" ]; then
-	    printf "`echo %$ITEMSIZE\s: %b`\n" "$DICTSTATUS" "$FAXSTATUSMSG"
+	    echo "$DICTSTATUS| $FAXSTATUSMSG" | printFormatted $ITEMSIZE
 	fi
-        printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTSUBMITTEDFROM" "$client"
-        printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTJOBID" "$jobid"
-        printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTGROUPID" "$groupid"
+        echo "$DICTSUBMITTEDFROM| $client" | printFormatted $ITEMSIZE
+        echo "$DICTJOBID| $jobid" | printFormatted $ITEMSIZE
+        echo "$DICTGROUPID| $groupid" | printFormatted $ITEMSIZE
 	if [ -n "$commid" ]; then
-            printf "`echo %$ITEMSIZE\s: %s`\n" "$DICTCOMMID" "c$commid"
+            echo "$DICTCOMMID| c$commid" | printFormatted $ITEMSIZE
 	fi
 	if [ -n "$JTIME" ]; then
 	    printf "\n$DICTPROCESSINGTIME %s.\n" "$JTIME"
@@ -252,7 +252,7 @@ notify_mail()
             cat $files_0
         fi
     fi
-    ) | $AWK -f bin/qp-encode.awk
+    ) | LANG=C $AWK -f bin/qp-encode.awk
     if [ -n "$faxstatus" ] && [ "$RETURNTRANSCRIPT" = "yes" ] ; then
 	(
 	 # use -e in echo to interpret escape characters in faxstatus
@@ -264,7 +264,7 @@ notify_mail()
 	 echo ""
 	 echo "    ---- $DICTLOGFOLLOWS2 ----"
 	 echo ""
-	) | $AWK -f bin/qp-encode.awk
+	) | LANG=C $AWK -f bin/qp-encode.awk
         COMFILE="log/c$commid"
         if [ -f "$COMFILE" ] ; then
 	    echo ""
@@ -284,7 +284,7 @@ notify_mail()
                     printf "($DICTCOMMID c$commid)"
              fi
              echo "."
-	    ) | $AWK -f bin/qp-encode.awk
+	    ) | LANG=C $AWK -f bin/qp-encode.awk
         fi
     fi
     for type in $RETURNFILETYPE; do 

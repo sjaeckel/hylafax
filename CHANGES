@@ -1,7 +1,8 @@
-#	$Id: CHANGES 722 2007-11-28 06:05:26Z faxguy $	
+#	$Id: CHANGES 723 2007-11-28 20:35:44Z faxguy $	
 
 New Changes
 
+* numerous internationalization fixes in notify, faxrcvd, pollrcvd (28 Nov 2007)
 * don't parse JobControl stderr output (27 Nov 2007)
 * cleanup client FIFO file when client disconnects not from 
   root directory (26 Nov 2007)
