@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 680 2007-10-26 18:32:27Z faxguy $
+#	$Id: Makefile.in 723 2007-11-28 20:35:44Z faxguy $
 #
 # @WARNING@
 #
@@ -194,7 +194,7 @@ install: installClient
 	${PUTSUPD} -m 755 -src qp-encode.awk -O qp-encode.awk
 	${PUTSUPD} -m 755 -src rfc2047-encode.awk -O rfc2047-encode.awk
 	${PUTSUPD} -m 755 -src dictionary.sh -O dictionary
-	${PUTSUPDDICT} -m 644 -src dict-cn -O cn
+	${PUTSUPDDICT} -m 644 -src dict-zh -O zh
 	${PUTSUPDDICT} -m 644 -src dict-de -O de
 	${PUTSUPDDICT} -m 644 -src dict-en -O en
 	${PUTSUPDDICT} -m 644 -src dict-es -O es

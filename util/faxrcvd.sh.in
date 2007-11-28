@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 717 2007-11-25 00:44:44Z faxguy $
+#	$Id: faxrcvd.sh.in 723 2007-11-28 20:35:44Z faxguy $
 #
 # ============================================
 #
@@ -65,7 +65,7 @@ faxrcvd_mail()
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
     printf "From: "
-    printf "$DICTRECEIVEAGENT" | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    printf "$DICTRECEIVEAGENT" | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo " <$FROMADDR>"
     printf "Subject: "
     (
@@ -74,7 +74,7 @@ faxrcvd_mail()
     else
 	eval echo "$DICTNOTRECEIVED";
     fi
-    ) | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    ) | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo ""
     echo "--$MIMEBOUNDARY"
     echo "Content-Type: text/plain; charset=$CHARSET"
@@ -87,14 +87,14 @@ faxrcvd_mail()
 		echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";;
 	esac
 	faxInfo $FILE
-	printf "%`echo $INFOSIZE`s: $DEVICE\n" "$DICTRECEIVEDON"
+	echo "$DICTRECEIVEDON| $DEVICE" | printFormatted $INFOSIZE
 	if [ -z "$MSG" ]; then
 	    case "$MAILTYPE" in
 		withattached)
-		    printf "%`echo $INFOSIZE`s: c$COMMID\n" "$DICTCOMMID"
+		    echo "$DICTCOMMID| c$COMMID" | printFormatted $INFOSIZE
 		    ;;
 		textonly)
-		    printf "%`echo $INFOSIZE`s: c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)\n" "$DICTCOMMID"
+		    echo "$DICTCOMMID| c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)" | printFormatted $INFOSIZE
 		    if [ -f $FILE ] && [ -n "$SENDTO" ]; then
 			echo ""
 			eval echo "$DICTDISPATCHEDTO"
@@ -105,7 +105,7 @@ faxrcvd_mail()
     else
 	eval echo "$DICTATTEMPTEDFAXFAILED"
     fi
-    ) | $AWK -f bin/qp-encode.awk
+    ) | LANG=C $AWK -f bin/qp-encode.awk
     if [ "$MSG" ] || [ ! -f $FILE ]; then
 	(
 	 echo ""
@@ -115,7 +115,7 @@ faxrcvd_mail()
 	 echo ""
 	 echo "$DICTLOGFOLLOWS"
 	 echo ""
-	) | $AWK -f bin/qp-encode.awk
+	) | LANG=C $AWK -f bin/qp-encode.awk
 	if [ -f log/c$COMMID ]; then
 	    echo ""
 	    echo "--$MIMEBOUNDARY"
@@ -128,9 +128,9 @@ faxrcvd_mail()
 		 -e '/start.*timer/d' -e '/stop.*timer/d' \
 		 log/c$COMMID
 	elif [ -n "$COMMID" ]; then
-	    ( echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)." ) | $AWK -f bin/qp-encode.awk
+	    ( echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)." ) | LANG=C $AWK -f bin/qp-encode.awk
 	else
-	    ( echo "$DICTNOLOGAVAIL." ) | $AWK -f bin/qp-encode.awk
+	    ( echo "$DICTNOLOGAVAIL." ) | LANG=C $AWK -f bin/qp-encode.awk
 	fi
     fi
     if [ -f $FILE ]; then

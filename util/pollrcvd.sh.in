@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 717 2007-11-25 00:44:44Z faxguy $
+#	$Id: pollrcvd.sh.in 723 2007-11-28 20:35:44Z faxguy $
 #
 # ============================================
 #
@@ -66,10 +66,10 @@ pollrcvd_mail ()
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
     printf "From: "
-    printf "$DICTRECEIVEAGENT" | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    printf "$DICTRECEIVEAGENT" | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo " <$FROMADDR>"
     printf "Subject: "
-    ( eval echo "$DICTRETRIEVEDFROM" ) | $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    ( eval echo "$DICTRETRIEVEDFROM" ) | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo ""
     echo "--$MIMEBOUNDARY"
     echo "Content-Type: text/plain; charset=$CHARSET"
@@ -78,9 +78,9 @@ pollrcvd_mail ()
     (
      echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";
      faxInfo $FILE
-     printf "%`echo $INFOSIZE`s: $DEVICE\n" "$DICTRECEIVEDON"
+     echo "$DICTRECEIVEDON| $DEVICE" | printFormatted $INFOSIZE
      if [ -z "$MSG" ]; then
-	echo "    $DICTCOMMID: c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)"
+	echo "$DICTCOMMID| c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)" | printFormatted $INFOSIZE
      fi
      if [ "$ATTACHFILE" != "yes" ] || [ ! -f $FILE ]; then
 	if [ -n "$MAILADDR" ]; then
@@ -88,7 +88,7 @@ pollrcvd_mail ()
 	    eval echo "$DICTPOLLDISPATCHTO"
 	fi
      fi
-    ) | $AWK -f bin/qp-encode.awk
+    ) | LANG=C $AWK -f bin/qp-encode.awk
     if [ "$MSG" ]; then
 	(
 	 echo ""
@@ -102,7 +102,7 @@ pollrcvd_mail ()
 	 echo ""
 	 echo "$DICTLOGFOLLOWS"
 	 echo ""
-	) | $AWK -f bin/qp-encode.awk
+	) | LANG=C $AWK -f bin/qp-encode.awk
 	if [ -f log/c$COMMID ]; then
 	    echo ""
 	    echo "--$MIMEBOUNDARY"
@@ -115,9 +115,9 @@ pollrcvd_mail ()
 		-e '/start.*timer/d' -e '/stop.*timer/d' \
 		log/c$COMMID
 	elif [ -n "$COMMID" ]; then
-	    ( echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)." ) | $AWK -f bin/qp-encode.awk
+	    ( echo "$DICTNOLOGAVAIL ($DICTCOMMID c$COMMID)." ) | LANG=C $AWK -f bin/qp-encode.awk
 	else
-	    ( echo "$DICTNOLOGAVAIL." ) | $AWK -f bin/qp-encode.awk
+	    ( echo "$DICTNOLOGAVAIL." ) | LANG=C $AWK -f bin/qp-encode.awk
 	fi
     fi
     if [ "$ATTACHFILE" = "yes" ] && [ -f $FILE ]; then
