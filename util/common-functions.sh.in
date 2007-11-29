@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 723 2007-11-28 20:35:44Z faxguy $
+#    $Id: common-functions.sh.in 724 2007-11-29 21:01:20Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -86,7 +86,7 @@ faxInfo()
 		-e "s/ Normal$/ $DICTNORMAL/" \
 		-e "s/ Fine$/ $DICTFINE/" \
 		-e 's/:/|/' | \
-		printFormatted
+		printFormatted $INFOSIZE
 }
 
 printFormatted()

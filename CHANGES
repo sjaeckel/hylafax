@@ -1,6 +1,10 @@
-#	$Id: CHANGES 723 2007-11-28 20:35:44Z faxguy $	
+#	$Id: CHANGES 724 2007-11-29 21:01:20Z faxguy $	
 
 New Changes
+
+* fix formatting for faxInfo (29 Nov 2007)
+
+(5.1.12)
 
 * numerous internationalization fixes in notify, faxrcvd, pollrcvd (28 Nov 2007)
 * don't parse JobControl stderr output (27 Nov 2007)
