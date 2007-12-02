@@ -1,7 +1,8 @@
-#	$Id: CHANGES 725 2007-12-02 18:56:09Z faxguy $	
+#	$Id: CHANGES 727 2007-12-03 04:59:09Z faxguy $	
 
 New Changes
 
+* fix build error on SCO OSR6.0.0 due to man changes in 5.1.12 (2 Dec 2007)
 * sort hfaxd output (2 Dec 2007)
 * fix formatting for faxInfo (29 Nov 2007)
 
