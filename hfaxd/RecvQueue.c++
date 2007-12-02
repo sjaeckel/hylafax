@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 618 2007-09-03 19:14:20Z faxguy $ */
+/*	$Id: RecvQueue.c++ 725 2007-12-02 18:56:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -265,12 +265,17 @@ HylaFAXServer::listRecvQ(FILE* fd, const SpoolDir& sd, DIR* dir)
      * lookups to improve cache locality.
      */
     fxStr path(sd.pathname);
+    fxStrArray files;
     struct dirent* dp;
     while ((dp = readdir(dir))) {
+	files.append(dp->d_name);
+    }
+    files.qsort();
+    for (u_int i = 0, n = files.length(); i < n; i++) {
+	fxStr qfile(path | files[i]);
 	struct stat sb;
-	fxStr qfile(path | dp->d_name);
 	if (FileCache::update(qfile, sb)) {
-	    if (!isVisibleRecvQFile(dp->d_name, sb))
+	    if (!isVisibleRecvQFile(files[i], sb))
 		continue;
 	    RecvInfo* rip;
 	    if ((rip = getRecvInfo(qfile, sb))) {

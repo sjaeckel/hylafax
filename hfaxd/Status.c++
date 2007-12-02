@@ -1,4 +1,4 @@
-/*	$Id: Status.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Status.c++ 725 2007-12-02 18:56:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -130,19 +130,24 @@ HylaFAXServer::listStatus(FILE* fd, const SpoolDir& sd, DIR* dir)
     fxStr path(sd.pathname);
     struct stat sb;
     fxStr fifoPrefix("/" FAX_FIFO ".");
+    fxStrArray files;
     struct dirent* dp;
     while ((dp = readdir(dir))) {
-	fxStr statusFile(path | dp->d_name);
+	files.append(dp->d_name);
+    }
+    files.qsort();
+    for (u_int i = 0, n = files.length(); i < n; i++) {
+	fxStr statusFile(path | files[i]);
 	if (!FileCache::update(statusFile, sb) || !S_ISREG(sb.st_mode))
 	    continue;
 	// verify there is a modem config file
-	fxStr configFile = fxStr::format("/" FAX_CONFIG ".%s", dp->d_name);
+	fxStr configFile = fxStr::format("/" FAX_CONFIG ".%s", (const char*) files[i]);
 	if (!FileCache::lookup(configFile, sb) || !S_ISREG(sb.st_mode))
 	    continue;
-	fxStr fifoFile(fifoPrefix | dp->d_name);
+	fxStr fifoFile(fifoPrefix | files[i]);
 	if (!FileCache::lookup(fifoFile, sb) || !S_ISFIFO(sb.st_mode))
 	    continue;
-	ModemConfig config(dp->d_name);
+	ModemConfig config(files[i]);
 	config.readConfig(configFile);			// read config file
 	config.checkGetty(fifoFile);			// check for faxgetty
 	getServerStatus(statusFile, config.status);	// XXX
@@ -307,19 +312,24 @@ HylaFAXServer::nlstStatus(FILE* fd, const SpoolDir& sd, DIR* dir)
     fxStr path(sd.pathname);
     struct stat sb;
     fxStr fifoPrefix("/" FAX_FIFO ".");
+    fxStrArray files;
     struct dirent* dp;
     while ((dp = readdir(dir))) {
-	fxStr statusFile(path | dp->d_name);
+	files.append(dp->d_name);
+    }
+    files.qsort();
+    for (u_int i = 0, n = files.length(); i < n; i++) {
+	fxStr statusFile(path | files[i]);
 	if (!FileCache::update(statusFile, sb) || !S_ISREG(sb.st_mode))
 	    continue;
 	// verify there is a modem config file
-	fxStr configFile = fxStr::format("/" FAX_CONFIG ".%s", dp->d_name);
+	fxStr configFile = fxStr::format("/" FAX_CONFIG ".%s", (const char*) files[i]);
 	if (!FileCache::lookup(configFile, sb) || !S_ISREG(sb.st_mode))
 	    continue;
-	fxStr fifoFile(fifoPrefix | dp->d_name);
+	fxStr fifoFile(fifoPrefix | files[i]);
 	if (!FileCache::lookup(fifoFile, sb) || !S_ISFIFO(sb.st_mode))
 	    continue;
-	ModemConfig config(dp->d_name);
+	ModemConfig config(files[i]);
 	config.readConfig(configFile);			// read config file
 	config.checkGetty(fifoFile);			// check for faxgetty
 	getServerStatus(statusFile, config.status);	// XXX

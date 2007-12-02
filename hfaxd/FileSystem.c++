@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++ 425 2007-01-29 23:55:22Z faxguy $ */
+/*	$Id: FileSystem.c++ 725 2007-12-02 18:56:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -487,16 +487,21 @@ HylaFAXServer::listDirectory(FILE* fd, const SpoolDir& sd, DIR* dir)
      * lookups to improve cache locality.
      */
     fxStr path(sd.pathname);
+    fxStrArray files;
     struct dirent* dp;
     while ((dp = readdir(dir))) {
-	if (dp->d_name[0] == '.' &&
-	  (dp->d_name[1] == '\0' || strcmp(dp->d_name, "..") == 0))
+	files.append(dp->d_name);
+    }
+    files.qsort();
+    for (u_int i = 0, n = files.length(); i < n; i++) {
+	if (files[i][0] == '.' &&
+	   (((const char*)files[i])[1] == '\0' || strcmp(files[i], "..") == 0))
 	    continue;
 	struct stat sb;
-	if (!FileCache::update(path | dp->d_name, sb))
+	if (!FileCache::update(path | files[i], sb))
 	    continue;
-	if ((this->*sd.isVisibleFile)(dp->d_name, sb)) {
-	    (this->*sd.listFile)(fd, sd, dp->d_name, sb);
+	if ((this->*sd.isVisibleFile)(files[i], sb)) {
+	    (this->*sd.listFile)(fd, sd, files[i], sb);
 	    fputs("\r\n", fd);
 	}
     }
@@ -705,16 +710,21 @@ HylaFAXServer::nlstDirectory(FILE* fd, const SpoolDir& sd, DIR* dir)
      * lookups to improve cache locality.
      */
     fxStr path(sd.pathname);
+    fxStrArray files;
     struct dirent* dp;
     while ((dp = readdir(dir))) {
-	if (dp->d_name[0] == '.' &&
-	  (dp->d_name[1] == '\0' || strcmp(dp->d_name, "..") == 0))
+	files.append(dp->d_name);
+    }
+    files.qsort();
+    for (u_int i = 0, n = files.length(); i < n; i++) {
+	if (files[i][0] == '.' &&
+	   (((const char*)files[i])[1] == '\0' || strcmp(files[i], "..") == 0))
 	    continue;
 	struct stat sb;
-	if (!FileCache::update(path | dp->d_name, sb))
+	if (!FileCache::update(path | files[i], sb))
 	    continue;
-	if ((this->*sd.isVisibleFile)(dp->d_name, sb)) {
-	    (this->*sd.nlstFile)(fd, sd, dp->d_name, sb);
+	if ((this->*sd.isVisibleFile)(files[i], sb)) {
+	    (this->*sd.nlstFile)(fd, sd, files[i], sb);
 	    fputs("\r\n", fd);
 	}
     }

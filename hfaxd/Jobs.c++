@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: Jobs.c++ 725 2007-12-02 18:56:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -2023,16 +2023,22 @@ HylaFAXServer::Jprintf(FILE* fd, const char* fmt, const Job& job)
 void
 HylaFAXServer::listSendQ(FILE* fd, const SpoolDir&, DIR* dir)
 {
+    fxStrArray files;
     struct dirent* dp;
-    while ((dp = readdir(dir)))
-	if (dp->d_name[0] == 'q') {
+    while ((dp = readdir(dir))) {
+	files.append(dp->d_name);
+    }
+    files.qsort();
+    for (u_int i = 0, n = files.length(); i < n; i++) {
+	if (files[i][0] == 'q') {
 	    fxStr emsg;
-	    Job* job = findJob(&dp->d_name[1], emsg);
+	    Job* job = findJob(&((const char*)files[i])[1], emsg);
 	    if (job) {
 		Jprintf(fd, jobFormat, *job);
 		fputs("\r\n", fd);
 	    }
 	}
+    }
 }
 
 void
@@ -2050,14 +2056,20 @@ HylaFAXServer::listSendQFile(FILE* fd, const SpoolDir& dir,
 void
 HylaFAXServer::nlstSendQ(FILE* fd, const SpoolDir&, DIR* dir)
 {
+    fxStrArray files;
     struct dirent* dp;
-    while ((dp = readdir(dir)))
-	if (dp->d_name[0] == 'q') {
+    while ((dp = readdir(dir))) {
+	files.append(dp->d_name);
+    }
+    files.qsort();
+    for (u_int i = 0, n = files.length(); i < n; i++) {
+	if (files[i][0] == 'q') {
 	    fxStr emsg;
-	    Job* job = findJob(&dp->d_name[1], emsg);
+	    Job* job = findJob(&((const char*)files[i])[1], emsg);
 	    if (job)
 		Jprintf(fd, "%j\r\n", *job);
 	}
+    }
 }
 
 void
