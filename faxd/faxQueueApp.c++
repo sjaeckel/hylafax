@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 722 2007-11-28 06:05:26Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 728 2007-12-05 02:13:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1638,8 +1638,12 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 		    (const char*)strTime(req->tts - now), (const char*)req->notice);
 		setSleep(job, req->tts);
 		Trigger::post(Trigger::SEND_REQUEUE, job);
-		if (req->isNotify(FaxRequest::when_requeued))
-		    notifySender(job, Job::requeued);
+		if (job.getJCI().getNotify() != -1) {
+		    if (job.getJCI().isNotify(FaxRequest::when_requeued))
+			notifySender(job, Job::requeued);
+		} else
+		    if (req->isNotify(FaxRequest::when_requeued))
+			notifySender(job, Job::requeued);
 	    } else {
 		traceQueue(job, "SEND INCOMPLETE: retry immediately; %s",
 		    (const char*)req->notice);
@@ -2109,8 +2113,14 @@ faxQueueApp::blockJob(Job& job, FaxRequest& req, const char* mesg)
     req.notice = mesg;
     updateRequest(req, job);
     traceQueue(job, "%s", mesg);
-    if (req.isNotify(FaxRequest::when_requeued) && old_state != FaxRequest::state_blocked)
-	notifySender(job, Job::blocked); 
+    if (old_state != FaxRequest::state_blocked) {
+	if (job.getJCI().getNotify() != -1) {
+	    if (job.getJCI().isNotify(FaxRequest::when_requeued))
+		notifySender(job, Job::blocked);
+	} else
+	    if (req.isNotify(FaxRequest::when_requeued))
+		notifySender(job, Job::blocked);
+    }
     Trigger::post(Trigger::JOB_BLOCKED, job);
 }
 
@@ -2131,8 +2141,12 @@ faxQueueApp::delayJob(Job& job, FaxRequest& req, const char* mesg, time_t tts)
 	    (const char*)mesg, (const char*)strTime(delay));
     setSleep(job, tts);
     Trigger::post(Trigger::JOB_DELAYED, job);
-    if (req.isNotify(FaxRequest::when_requeued))
-	notifySender(job, Job::requeued); 
+    if (job.getJCI().getNotify() != -1) {
+	if (job.getJCI().isNotify(FaxRequest::when_requeued))
+	    notifySender(job, Job::requeued); 
+    } else
+	if (req.isNotify(FaxRequest::when_requeued))
+	    notifySender(job, Job::requeued); 
     if (job.modem != NULL)
 	releaseModem(job);
 }
@@ -2922,8 +2936,16 @@ faxQueueApp::deleteRequest(Job& job, FaxRequest& req, JobStatus why,
 	req.tts = Sys::now();			// mark job termination time
 	job.tts = req.tts;
 	req.writeQFile();
-	if (force || req.isNotify(FaxRequest::notify_any))
+	if (force) {
 	    notifySender(job, why, duration);
+	} else {
+	    if (job.getJCI().getNotify() != -1) {
+		if (job.getJCI().isNotify(FaxRequest::notify_any))
+		    notifySender(job, why, duration);
+	    } else
+		if (req.isNotify(FaxRequest::notify_any))
+		    notifySender(job, why, duration);
+	}
     } else {
 	/*
 	 * Move failed, probably because there's no
@@ -2934,9 +2956,16 @@ faxQueueApp::deleteRequest(Job& job, FaxRequest& req, JobStatus why,
 	 */
 	jobError(job, "rename to %s failed: %s",
 	    (const char*) dest, strerror(errno));
-	if (force || req.isNotify(FaxRequest::notify_any)) {
-	    req.writeQFile();
+	req.writeQFile();
+	if (force) {
 	    notifySender(job, why, duration);
+	} else {
+	    if (job.getJCI().getNotify() != -1) {
+		if (job.getJCI().isNotify(FaxRequest::notify_any))
+		    notifySender(job, why, duration);
+	    } else
+		if (req.isNotify(FaxRequest::notify_any))
+		    notifySender(job, why, duration);
 	}
 	u_int n = req.items.length();
 	for (u_int i = 0; i < n; i++) {

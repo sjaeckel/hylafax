@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 583 2007-08-15 20:14:12Z faxguy $
+.\"	$Id: jobcontrol.1m 728 2007-12-05 02:13:53Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -79,6 +79,7 @@ MaxDials	integer	\s-1\fIunlimited\fP\s+1	max phone calls to make to transmit a j
 MaxSendPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a send
 MaxTries	integer	\s-13\s+1	max attempts to transmit a job
 Modem	string	\s-1Any\s+1	ModemGroup to use for destination
+Notify	string	\-	notification override for job
 Priority	integer	\-	priority to use for job
 RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
@@ -106,6 +107,12 @@ included in this
 matching a destination, then the value of
 .B Modem
 is overridden by the inclusive set of modems found in both.
+.PP
+The
+.B Notify
+parameter allows an override of whatever notification request
+the client requested in the job.  Options are ``none'',  ``when requeued'',
+``when done'', and ``when done+requeued''.
 .PP
 The
 .B Priority

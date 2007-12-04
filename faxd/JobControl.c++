@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 511 2007-05-04 22:39:50Z faxguy $ */
+/*	$Id: JobControl.c++ 728 2007-12-05 02:13:53Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -30,6 +30,7 @@
 #include "JobControl.h"
 #include "faxQueueApp.h"
 #include "FaxTrace.h"
+#include "FaxRequest.h"
 
 #define	DCI_MAXCONCURRENTCALLS	0x0001
 #define	DCI_TIMEOFDAY		0x0002
@@ -40,6 +41,7 @@
 #define	DCI_VRES		0x0040
 #define	DCI_PRIORITY		0x0080
 #define	DCI_DESIREDDF		0x0100
+#define	DCI_NOTIFY		0x0200
 
 #define	isDefined(b)		(defined & b)
 #define	setDefined(b)		(defined |= b)
@@ -60,6 +62,7 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     vres = other.vres;
     priority = other.priority;
     desireddf = other.desireddf;
+    notify = other.notify;
 }
 
 JobControlInfo::JobControlInfo (const fxStr& buffer)
@@ -132,6 +135,13 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
     } else if (streq(tag, "priority")) {
 	priority = getNumber(value);
 	setDefined(DCI_PRIORITY);
+    } else if (streq(tag, "notify")) {
+	notify = -1;
+	if (strcmp("none", value) == 0) notify = FaxRequest::no_notice;
+	if (strcmp("when done", value) == 0) notify = FaxRequest::when_done;
+	if (strcmp("when requeued", value) == 0) notify = FaxRequest::when_requeued;
+	if (strcmp("when done+requeued", value) == 0) notify = FaxRequest::notify_any;
+	if (notify != -1) setDefined(DCI_NOTIFY);
     } else {
 	if (streq(tag, "desireddf")) {		// need to pass desireddf to faxsend, also
 	    desireddf = getNumber(value);
@@ -236,4 +246,22 @@ JobControlInfo::getDesiredDF() const
 	return desireddf;
     else
 	return -1;
+}
+
+int
+JobControlInfo::getNotify() const
+{
+    if (isDefined(DCI_NOTIFY))
+	return notify;
+    else
+	return -1;
+}
+
+bool
+JobControlInfo::isNotify(u_int what) const
+{
+    if (isDefined(DCI_NOTIFY) && (notify & (u_short) what) != 0)
+	return true;
+    else
+	return false;
 }
