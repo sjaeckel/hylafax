@@ -1,4 +1,4 @@
-/*	$Id: JobControl.h 511 2007-05-04 22:39:50Z faxguy $ */
+/*	$Id: JobControl.h 728 2007-12-05 02:13:53Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -56,6 +56,7 @@ private:
     fxStr	args;			// arguments for subprocesses
     int		priority;		// override submission priority with this
     int		desireddf;		// if set, desireddf value
+    int		notify;			// if set, notify value
 
     // default returned on no match
     static const JobControlInfo defControlInfo;
@@ -78,6 +79,8 @@ public:
     u_int getVRes() const;
     int getPriority() const;
     int getDesiredDF() const;
+    int getNotify() const;
+    bool isNotify(u_int what) const;
     const fxStr& getArgs() const;
 
     virtual bool setConfigItem(const char*, const char*);
