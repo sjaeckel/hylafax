@@ -1,7 +1,9 @@
-#	$Id: CHANGES 728 2007-12-05 02:13:53Z faxguy $	
+#	$Id: CHANGES 729 2007-12-05 17:15:41Z faxguy $	
 
 New Changes
 
+* fix faxmail job submission when using a coverpage and the 
+  subject line is wrapped to more than one line (5 Dec 2007)
 * add "notify" feature to JobControl (4 Dec 2007)
 * fix build error on SCO OSR6.0.0 due to man changes in 5.1.12 (2 Dec 2007)
 * sort hfaxd output (2 Dec 2007)
