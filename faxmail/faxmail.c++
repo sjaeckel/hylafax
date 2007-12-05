@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 647 2007-10-02 00:32:35Z faxguy $ */
+/*	$Id: faxmail.c++ 729 2007-12-05 17:15:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -319,6 +319,11 @@ faxMailApp::run(int argc, char** argv)
 		fxStr subj(*s);
 		while (subj.length() > 3 && strncasecmp(subj, "Re:", 3) == 0)
 		    subj.remove(0, subj.skip(3, " \t"));
+		int npos = subj.next(0, "\n");
+		while (npos < subj.length()) {
+		    subj.remove(npos, 1);
+		    npos = subj.next(npos, "\n");
+		}
 		job->setCoverRegarding(subj);
 	    }
 	    /*
