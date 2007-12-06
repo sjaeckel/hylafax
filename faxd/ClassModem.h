@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 696 2007-11-08 01:28:44Z faxguy $ */
+/*	$Id: ClassModem.h 730 2007-12-06 18:19:28Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -281,6 +281,7 @@ public:
     void	resetBlock();
     void	startTimeout(long ms);
     void	stopTimeout(const char* whichdir);
+    bool	poke();
 // host-modem protocol parsing support
     virtual ATResponse atResponse(char* buf, long ms = 30*1000);
     bool	waitFor(ATResponse wanted, long ms = 30*1000);

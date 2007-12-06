@@ -1,6 +1,10 @@
-#	$Id: CHANGES 729 2007-12-05 17:15:41Z faxguy $	
+#	$Id: CHANGES 730 2007-12-06 18:19:28Z faxguy $	
 
 New Changes
+
+* add PollLockPokeModem feature (6 Dec 2007)
+
+(5.2.0)
 
 * fix faxmail job submission when using a coverpage and the 
   subject line is wrapped to more than one line (5 Dec 2007)

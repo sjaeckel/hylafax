@@ -1,4 +1,4 @@
-/*	$Id: ServerConfig.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: ServerConfig.h 730 2007-12-06 18:19:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -119,6 +119,7 @@ public:
     u_int	retryOther;		// number of retries after other problem
     u_int	pollModemWait;		// polling interval in modem wait state
     u_int	pollLockWait;		// polling interval in lock wait state
+    bool	pollLockPokeModem;	// poke modem after polling lock
     u_int	maxRecvPages;		// max pages to accept on receive
     u_int	maxConsecutiveBadCalls;	// max consecutive bad phone calls
     fxStr	localIdentifier;	// to use in place of FAXNumber

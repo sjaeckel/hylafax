@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 696 2007-11-08 01:28:44Z faxguy $ */
+/*	$Id: ClassModem.c++ 730 2007-12-06 18:19:28Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -1404,6 +1404,12 @@ void
 ClassModem::hangup()
 {
     atCmd(conf.onHookCmd, AT_OK, 5000);
+}
+
+bool
+ClassModem::poke()
+{
+    return atCmd("AT", AT_OK, 5000);
 }
 
 bool

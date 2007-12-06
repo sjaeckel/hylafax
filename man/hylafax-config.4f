@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 713 2007-11-24 00:45:47Z faxguy $
+.\"	$Id: hylafax-config.4f 730 2007-12-06 18:19:28Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-11-23 16:45:47 -0800 (Fri, 23 Nov 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-12-06 10:19:28 -0800 (Thu, 06 Dec 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -191,6 +191,7 @@ PageChop¹	string	\s-1last\s+1	control automatic truncation of trailing whitespa
 PageChopThreshold¹	float	\s-13.0\s+1	whitespace truncation threshold (inches)
 PCL2FaxCmd¹	string	\s-1bin/pcl2fax\s+1	PCL \s-1RIP\s+1 command script
 PercentGoodLines	integer	\s-195\s+1	percentage of good rows for \s-1OK\s+1 page quality
+PollLockPokeModem	boolean	\s-1false\s+1	check on modem every time the lock is polled
 PollLockWait²	integer	\s-130\s+1	polling interval for lockfile presence/removal (secs)
 PollModemWait	integer	\s-130\s+1	polling interval when in ``modem wait'' state (secs)
 PollRcvdCmd	string	\s-1bin/pollrcvd\s+1	delivery script for facsimile received by polling
@@ -1287,7 +1288,7 @@ voice (e.g. by
 ).
 .TP
 .B NoCarrierRetrys
-This is mapped onto \s-1JobRetryNoCarrier\1+1
+This is mapped onto \s-1JobRetryNoCarrier\s+1
 .TP
 .B ModemReadyState
 Define the
@@ -1370,6 +1371,15 @@ Facsimile received with error-correction do not have copy quality
 checking performed.
 See also
 .BR MaxConsecutiveBadLines .
+.TP
+.B PollLockPokeModem
+When polling for the presence/removal of a
+.SM UUCP
+lockfile, also test to make sure the modem is still reachable.
+This is useful for scenarios where the modem is apt to become
+disconnected while the modem is idle, such as an external modem 
+that may lose power, where the administrator wants notification
+of this (as a ``wedged'' condition).
 .TP
 .B PollLockWait
 When polling for the presence/removal of a 
