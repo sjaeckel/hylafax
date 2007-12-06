@@ -1,4 +1,4 @@
-/*	$Id: ServerConfig.c++ 418 2007-01-11 18:36:24Z faxguy $ */
+/*	$Id: ServerConfig.c++ 730 2007-12-06 18:19:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -79,6 +79,7 @@ ServerConfig::configTrace(const char* fmt, ...)
 
 ServerConfig::S_booltag ServerConfig::bools[] = {
 { "batchlogs",		&ServerConfig::batchLogs,	true },
+{ "polllockpokemodem",	&ServerConfig::pollLockPokeModem, false },
 };
 
 ServerConfig::S_stringtag ServerConfig::strings[] = {

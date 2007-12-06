@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 548 2007-07-11 00:27:25Z faxguy $ */
+/*	$Id: ModemServer.c++ 730 2007-12-06 18:19:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -753,7 +753,20 @@ ModemServer::timerExpired(long, long)
 	 * If a lockfile exists, go to LOCKWAIT
 	 */
 	if (canLockModem()) {
-	    Dispatcher::instance().startTimer(pollLockWait, 0, this);
+	    bool ok = true;
+	    if (pollLockPokeModem) {
+		/*
+		 * Poke the modem to make sure it's still there.
+		 * If not, then mark it to be reset.
+		 */
+		lockModem();
+		ok = modem->poke();
+		unlockModem();
+	    }
+	    if (ok)
+		Dispatcher::instance().startTimer(pollLockWait, 0, this);
+	    else
+		changeState(MODEMWAIT, pollModemWait);
 	} else {
 	    changeState(LOCKWAIT, pollLockWait);
 	}
