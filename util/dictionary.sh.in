@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: dictionary.sh.in 723 2007-11-28 20:35:44Z faxguy $
+#    $Id: dictionary.sh.in 732 2007-12-10 17:20:36Z faxguy $
 
 LANG=`echo $LANG | sed 's/^cn_/zh_/'`	# fix wrong Chinese locale
 
@@ -43,3 +43,4 @@ esac
 # Modify LANG according to CHARSET
 #
 LANG="`echo $LANG | $SED 's/\..*//'`.$CHARSET"
+export LANG
