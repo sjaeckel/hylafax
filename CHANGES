@@ -1,7 +1,9 @@
-#	$Id: CHANGES 730 2007-12-06 18:19:28Z faxguy $	
+#	$Id: CHANGES 733 2007-12-10 18:06:57Z faxguy $	
 
 New Changes
 
+* update and correct German translations (10 Dec 2007)
+* fix formatting again for faxInfo (10 Dec 2007)
 * add PollLockPokeModem feature (6 Dec 2007)
 
 (5.2.0)
