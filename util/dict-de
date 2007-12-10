@@ -1,4 +1,4 @@
-#    $Id: dict-de 680 2007-10-26 18:32:27Z faxguy $
+#    $Id: dict-de 733 2007-12-10 18:06:57Z faxguy $
 
 	CHARSET=iso-8859-1;
 	DICTRECEIVEAGENT="HylaFAX Empfang";
@@ -11,8 +11,8 @@
 	DICTDISPATCHEDTO="Das Fax wurde automatisch weitergeleitet an: \$SENDTO.";
 	DICTPOLLDISPATCHTO="Das Fax wurde abgerufen und zugestellt an: \$MAILADDR.";
 	DICTNOTRECEIVED="Fax nicht empfangen";
-	DICTATTEMPTEDFAXFAILED="Ein Versuch, ein Fax zu empfangen an \$DEVICE schlug fehl da:";
-	DICTATTEMPTEDPOLLFAILED="Ein Versuch, ein Fax zu holen an \$DEVICE schlug fehl da:";
+	DICTATTEMPTEDFAXFAILED="Ein Versuch, ein Fax an \$DEVICE zu empfangen, schlug fehl da:";
+	DICTATTEMPTEDPOLLFAILED="Ein Versuch, ein Fax an \$DEVICE zu holen, schlug fehl da:";
 	DICTFAILEDBECAUSE="schlug fehl da:";
 	DICTUNKNOWNDOCTYPE="Unbekannter Dokumententyp";
 	DICTNOFILEEXISTS="Datei existiert nicht";
@@ -44,12 +44,12 @@
 	DICTDIRNEXTPAGE="Verzeichniss der nächsten zu übermittelnden Seite";
 	DICTDIRNUM="Dirnum";
 	DICTDOCSSUBMITTED="Dokumente zum Versand übermittelt";
-	DICTDOCSTEXT1="Die folgenden Dokumente wurden zum Versand übermittelt und sind";
-	DICTDOCSTEXT2="auf dem Server zur erneuten Nutzung verfügbar bis sie automatisch";
-	DICTDOCSTEXT3="bereinigt, wenn dieser Auftrag `if [ \"\$doneop\" = archive ]; then echo 'archiviert'; else echo 'entfernt'; fi`.  Dokumente können auch manuell";
-	DICTDOCSTEXT4="entfernt werden durch Nutzung des faxrm Kommandos\; siehe dazu faxrm\(1\) für mehr Information.";
+	DICTDOCSTEXT1="Die folgenden Dokumente wurden zum Versand übermittelt und sind auf dem Server";
+	DICTDOCSTEXT2="zur erneuten Nutzung verfügbar bis sie automatisch bereinigt werden, wenn";
+	DICTDOCSTEXT3="dieser Auftrag `if [ \"\$doneop\" = archive ]; then echo 'archiviert'; else echo 'entfernt'; fi` wird. Dokumente können auch manuell entfernt werden";
+	DICTDOCSTEXT4="durch Nutzung des faxrm Kommandos. Siehe dazu \'man faxrm\' für mehr Information.";
 	DICTFILENAME="Dateiname";
-	DICTSIZE="Grösse";
+	DICTSIZE="Größe";
 	DICTTYPE="Typ";
 	DICTUNSENTPAGES="Nicht gesendete Seiten zum Versand übermittelt";
         DICTUNSENTJOBSTATUS="Nicht gesendete Jobstatus";
@@ -77,25 +77,25 @@
 	DICTFAILED="fehlgeschlagen";
 	DICTREJECTEDBECAUSE="wurde verworfen weil:";
 	DICTBLOCKED="blockiert";
-	DICTDELAYEDBECAUSE="ist verzögert im Verarbeitungswarteschlange weil:";
-	DICTASSOONASPOSSIBLE="Der Auftrag so schnell wie möglich bearbeitet.";
+	DICTDELAYEDBECAUSE="ist in der Verarbeitungswarteschlange verzögert, weil:";
+	DICTASSOONASPOSSIBLE="Der Auftrag wird so schnell wie möglich bearbeitet.";
 	DICTREQUEUED="wiedereingefügt";
-	DICTWASNOTSENT="wurde nicht gesendet weil:";
+	DICTWASNOTSENT="wurde nicht gesendet, weil:";
 	DICTWILLBERETRIED="Der Auftrag wird erneut bearbeitet um";
-	DICTREMOVEDFROMQUEUE="von der Verarbeitungswarteschlange entfernt";
+	DICTREMOVEDFROMQUEUE="aus der Verarbeitungswarteschlange entfernt";
 	DICTWASDELETED="wurde aus der Verarbeitungswarteschlange gelöscht.";
 	DICTTIMEDOUT="konnte nicht innerhalb der für den Auftrag verfügbaren Zeit vollendet werden.";
 	DICTCONVERSION1="wurde nicht gesendet, weil die Dokumentenkonvertierung";
 	DICTCONVERSION2="zum Fax fehlgeschlagen ist.  Die Ausgabe des Konvertierungsprogrammes war:";
-	DICTCONVERSION3="Überprüfen Sie jedes PostScript Dokument auf nicht standard konforme Fonts und invalide Konstruktionen";
-	DICTNOFORMATTER1="wurde nicht gesendet weil";
-	DICTNOFORMATTER2="das Skript zur Dokumentenkonvertierung wurde nicht gefunden.";
+	DICTCONVERSION3="Überprüfen Sie jedes PostScript Dokument auf nicht standard-konforme Fonts und invalide Konstruktionen";
+	DICTNOFORMATTER1="wurde nicht gesendet, weil";
+	DICTNOFORMATTER2="das Skript zur Dokumentenkonvertierung nicht gefunden wurde.";
 	DICTNOTICEABOUT="Hinweis über";
-	DICTPOLLINGFAILED=", ein Faxabruf,\nkonnte nicht vollendet werden weil ";
+	DICTPOLLINGFAILED=", ein Faxabruf,\nkonnte nicht vollendet werden, weil ";
 	DICTREMOTEREJECTED="die Gegenstelle den Faxabruf abgewiesen hat.";
-	DICTNODOCTOPOLL="kein Dokument war zum Empfang verfügbar.";
-	DICTUNSPECIFIEDPROBLEM="ein nicht spezifiziertes Problem ist aufgetreten.";
-	DICTUNKNOWNREASON1="ist irgendwas geschehen.";
+	DICTNODOCTOPOLL="kein Dokument zum Empfang verfügbar war.";
+	DICTUNSPECIFIEDPROBLEM="ein nicht spezifiziertes Problem aufgetreten ist.";
+	DICTUNKNOWNREASON1="irgendwas geschehen ist.";
 	DICTUNKNOWNREASON2="Leider wurde das Benachrichtigungsskript aus unbekanntem Grund aufgerufen";
 	DICTUNKNOWNREASON3="so dass der Rest dieser Nachricht dem Debugging dienen kann:";
 	DICTUNKNOWNREASON4="Dies sollte nicht geschehen, bitte wenden Sie Sich an den Administrator.";

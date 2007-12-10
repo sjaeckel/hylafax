@@ -85,6 +85,7 @@ following for their contributions:
   Brian Katzung
   Dimitry Ketov
   Masao Kitano
+  Wolfgang Klein			German translation modifications
   Steffan Klipsch
   Carsten Koch
   John T Kohl
@@ -133,7 +134,7 @@ following for their contributions:
   Dag Nygren
   Helge Oldach				multiple filetypes in mail
   Jonas Olsson
-  Giulio Orsero				JBIG conversion to MMR in faxrcvd
+  Giulio Orsero				JBIG conversion to MMR in faxrcvd, shell fixes
   Dave Packer
   Davide Pagnin				accounting bug fixes and enhancements
   Paolo <oopla@users.sf.net>		faxinfo output formatting options
