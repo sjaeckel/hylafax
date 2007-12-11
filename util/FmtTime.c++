@@ -1,4 +1,4 @@
-/*	$Id: FmtTime.c++ 706 2007-11-15 21:31:29Z faxguy $ */
+/*	$Id: FmtTime.c++ 734 2007-12-11 20:16:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -42,12 +42,16 @@ fmtTime(time_t t)
 
     if (t < 0)
 	return ("0:00:00");
-    if (t > 99*60*60)
+    if (t > 365*24*60*60)
 	return ("??:??:??");
     v = t/3600;
+    if (v >= 1000)
+	*cp++ = digits[v / 1000];
+    if (v >= 100)
+	*cp++ = digits[(v % 1000) / 100];
     if (v >= 10)
-	*cp++ = digits[v / 10];
-    *cp++ = digits[v % 10];
+	*cp++ = digits[((v % 1000) % 100) / 10];
+    *cp++ = digits[((v % 1000) % 100) % 10];
     *cp++ = ':';
     t -= v*3600;
     v = t/60;
