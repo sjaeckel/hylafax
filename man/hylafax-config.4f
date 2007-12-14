@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 730 2007-12-06 18:19:28Z faxguy $
+.\"	$Id: hylafax-config.4f 735 2007-12-14 19:21:51Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-12-06 10:19:28 -0800 (Thu, 06 Dec 2007) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2007-12-14 11:21:51 -0800 (Fri, 14 Dec 2007) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -186,7 +186,7 @@ ModemRingResponse	string	\-	command to respond after hearing RING
 ModemRingsBeforeResponse	integer	\s-10\s+1	the number of rings before ModemRingResponse
 NoAnswerVoice	boolean	\s-1false\s+1	disable the answering of voice-indicated calls
 NoCarrierRetrys	integer	\-	Deprecated - See JobRetryNoCarrier
-NotifyCmd²	string	\s-1bin/notify\s+1	user notification command script
+NotifyCmd¹	string	\s-1bin/notify\s+1	user notification command script
 PageChop¹	string	\s-1last\s+1	control automatic truncation of trailing whitespace
 PageChopThreshold¹	float	\s-13.0\s+1	whitespace truncation threshold (inches)
 PCL2FaxCmd¹	string	\s-1bin/pcl2fax\s+1	PCL \s-1RIP\s+1 command script
