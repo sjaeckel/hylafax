@@ -1,4 +1,4 @@
-/*	$Id: TagLine.c++ 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: TagLine.c++ 736 2007-12-15 17:39:41Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -187,9 +187,12 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params,
 	    break;
 	if (tag[l+1] == 'p')
 	    insert(tag, l, fxStr((int) pageNumber, "%d"));
-	if (tag[l+1] == 'P')
-	    insert(tag, l, noCountCoverPages ? "-" : fxStr((int) pageNumberOfJob, "%d"));
-	else
+	if (tag[l+1] == 'P') {
+	    if (noCountCoverPages)
+		insert(tag, l, "-");
+	    else
+		insert(tag, l, fxStr((int) pageNumberOfJob, "%d"));
+	} else
 	    l += 2;
     }
     /* 
