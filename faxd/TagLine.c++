@@ -1,4 +1,4 @@
-/*	$Id: TagLine.c++ 736 2007-12-15 17:39:41Z faxguy $ */
+/*	$Id: TagLine.c++ 737 2007-12-17 02:24:22Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -35,6 +35,7 @@ extern "C" {
 #endif
 #if HAS_LANGINFO
 extern "C" {
+#define __USE_XOPEN
 #include <langinfo.h>
 }
 #endif

@@ -1,4 +1,4 @@
-/*	$Id: tagtest.c++ 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: tagtest.c++ 737 2007-12-17 02:24:22Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -42,6 +42,7 @@ extern "C" {
 #endif
 #if HAS_LANGINFO
 extern "C" {
+#define __USE_XOPEN
 #include <langinfo.h>
 }
 #endif
