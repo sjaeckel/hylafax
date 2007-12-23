@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: dictionary.sh.in 732 2007-12-10 17:20:36Z faxguy $
+#    $Id: dictionary.sh.in 738 2007-12-23 15:50:28Z faxguy $
 
 LANG=`echo $LANG | sed 's/^cn_/zh_/'`	# fix wrong Chinese locale
 
@@ -33,6 +33,9 @@ case "$LANG" in
 	;;
     zh_*)
 	. bin/dict/zh
+	;;
+    sr_*)
+	. bin/dict/sr
 	;;
     *)
 	. bin/dict/en
