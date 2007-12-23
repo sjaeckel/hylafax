@@ -1,4 +1,4 @@
-.\"	$Id: faxrcvd.1m 699 2007-11-09 00:36:58Z faxguy $
+.\"	$Id: faxrcvd.1m 739 2007-12-23 16:16:48Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -115,8 +115,16 @@ Note that you must match any embedded white space.
 The facsimile will be sent as a MIME-encoded PostScript document
 as default.
 .TP
+.I BCCTO
+controls the blind copy recipient of the received fax notification.  It is
+given as an e-mail address.
+.TP
 .I CALLIDn
 is equivalent to the nth call identification parameter
+.TP
+.I CCTO
+controls the copy recipient of the received fax notification.  It is
+given as an e-mail address.
 .TP
 .I CIDNAME
 is equivalent to

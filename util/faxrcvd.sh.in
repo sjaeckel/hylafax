@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 723 2007-11-28 20:35:44Z faxguy $
+#	$Id: faxrcvd.sh.in 739 2007-12-23 16:16:48Z faxguy $
 #
 # ============================================
 #
@@ -59,11 +59,14 @@ faxrcvd_mail()
 {
     MAILTYPE="$1"
     MAILTO="$2"
+    CCTO="$3"
+    BCCTO="$4"
 
    (echo "Mime-Version: 1.0"
     echo "Content-Type: Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\""
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
+    if [ -n "$CCTO" ]; then echo "Cc: $CCTO"; fi
     printf "From: "
     printf "$DICTRECEIVEAGENT" | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo " <$FROMADDR>"
@@ -202,7 +205,7 @@ faxrcvd_mail()
     fi
     echo ""
     echo "--$MIMEBOUNDARY--"
-   ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi "$MAILTO"
+   ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi "$MAILTO" "$CCTO" "$BCCTO"
 }
 
 test -f etc/setup.cache || {
@@ -353,9 +356,9 @@ case $NOTIFY_FAXMASTER$MSG in
 esac
 if [ "$NOTIFY_FAXMASTER" != "no" ]; then
     if [ ! -f $FILE ] || [ "$TOADDR" != "$SENDTO" ]; then
-	faxrcvd_mail "textonly" "$TOADDR"
+	faxrcvd_mail "textonly" "$TOADDR" "" ""
     fi
 fi
 if [ -n "$SENDTO" ] && [ -f $FILE ]; then
-    faxrcvd_mail "withattached" "$SENDTO"
+    faxrcvd_mail "withattached" "$SENDTO" "$CCTO" "$BCCTO"
 fi

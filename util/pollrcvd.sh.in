@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 723 2007-11-28 20:35:44Z faxguy $
+#	$Id: pollrcvd.sh.in 739 2007-12-23 16:16:48Z faxguy $
 #
 # ============================================
 #
@@ -56,15 +56,18 @@ fi
 # then this is the place to change that.  We put it here, up-front,
 # because this is most likely what most customizations will deal with.
 #
-pollrcvd_mail ()
+pollrcvd_mail()
 {
     MAILTO="$1"
     ATTACHFILE="$2"
+    CCTO="$3"
+    BCCTO="$4"
 
    (echo "Mime-Version: 1.0"
     echo "Content-Type: Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\""
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
+    if [ -n "$CCTO" ]; then echo "Cc: $CCTO"; fi
     printf "From: "
     printf "$DICTRECEIVEAGENT" | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo " <$FROMADDR>"
@@ -152,7 +155,7 @@ pollrcvd_mail ()
     fi
     echo ""
     echo "--$MIMEBOUNDARY--"
-   ) 2>$ERRORSTO | $SENDMAIL -ffax -oi $MAILTO
+   ) 2>$ERRORSTO | $SENDMAIL -ffax -oi "$MAILTO" "$CCTO" "$BCCTO"
 }
 
 test -f etc/setup.cache || {
@@ -257,8 +260,8 @@ fi
 setInfoSize $FILE
 
 if [ "$TOADDR" != "$MAILADDR" ]; then # don't send FaxMaster duplicate
-    pollrcvd_mail "$TOADDR" "no"
+    pollrcvd_mail "$TOADDR" "no" "" ""
 fi
 if [ -n "$MAILADDR" ] && [ -f $FILE ]; then
-    pollrcvd_mail "$MAILADDR" "yes"
+    pollrcvd_mail "$MAILADDR" "yes" "$CCTO" "$BCCTO"
 fi
