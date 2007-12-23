@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 723 2007-11-28 20:35:44Z faxguy $
+#	$Id: Makefile.in 738 2007-12-23 15:50:28Z faxguy $
 #
 # @WARNING@
 #
@@ -194,7 +194,6 @@ install: installClient
 	${PUTSUPD} -m 755 -src qp-encode.awk -O qp-encode.awk
 	${PUTSUPD} -m 755 -src rfc2047-encode.awk -O rfc2047-encode.awk
 	${PUTSUPD} -m 755 -src dictionary.sh -O dictionary
-	${PUTSUPDDICT} -m 644 -src dict-zh -O zh
 	${PUTSUPDDICT} -m 644 -src dict-de -O de
 	${PUTSUPDDICT} -m 644 -src dict-en -O en
 	${PUTSUPDDICT} -m 644 -src dict-es -O es
@@ -204,7 +203,9 @@ install: installClient
 	${PUTSUPDDICT} -m 644 -src dict-pt -O pt
 	${PUTSUPDDICT} -m 644 -src dict-pt_BR -O pt_BR
 	${PUTSUPDDICT} -m 644 -src dict-ro -O ro
+	${PUTSUPDDICT} -m 644 -src dict-sr -O sr
 	${PUTSUPDDICT} -m 644 -src dict-tr -O tr
+	${PUTSUPDDICT} -m 644 -src dict-zh -O zh
 	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -m 444 -idb "config(update)" \
 	    -src ${SRCDIR}/dpsprinter.ps -O dpsprinter.ps
 	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -idb "config(suggest)" \
