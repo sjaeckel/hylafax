@@ -1,4 +1,4 @@
-.\"	$Id: pollrcvd.1m 450 2007-02-28 21:22:24Z faxguy $
+.\"	$Id: pollrcvd.1m 739 2007-12-23 16:16:48Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -80,6 +80,14 @@ This script can be customized for the intended receipient.
 To do this create a shell script
 .B etc/PollDispatch
 in the spooling area that sets
+.TP
+.I BCCTO
+controls the blind copy recipient of the received fax notification.  It is
+given as an e-mail address.
+.TP
+.I CCTO
+controls the copy recipient of the received fax notification.  It is
+given as an e-mail address.
 .TP
 .I LANG
 controls the localization of the text of the received poll notification.
