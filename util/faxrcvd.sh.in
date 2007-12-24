@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 739 2007-12-23 16:16:48Z faxguy $
+#	$Id: faxrcvd.sh.in 740 2007-12-24 17:31:29Z faxguy $
 #
 # ============================================
 #
@@ -77,7 +77,7 @@ faxrcvd_mail()
     else
 	eval echo "$DICTNOTRECEIVED";
     fi
-    ) | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    ) | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"; echo
     echo ""
     echo "--$MIMEBOUNDARY"
     echo "Content-Type: text/plain; charset=$CHARSET"
