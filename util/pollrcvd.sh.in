@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 739 2007-12-23 16:16:48Z faxguy $
+#	$Id: pollrcvd.sh.in 740 2007-12-24 17:31:29Z faxguy $
 #
 # ============================================
 #
@@ -72,7 +72,7 @@ pollrcvd_mail()
     printf "$DICTRECEIVEAGENT" | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo " <$FROMADDR>"
     printf "Subject: "
-    ( eval echo "$DICTRETRIEVEDFROM" ) | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    ( eval echo "$DICTRETRIEVEDFROM" ) | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"; echo
     echo ""
     echo "--$MIMEBOUNDARY"
     echo "Content-Type: text/plain; charset=$CHARSET"
