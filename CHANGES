@@ -1,7 +1,8 @@
-#	$Id: CHANGES 738 2007-12-23 15:50:28Z faxguy $	
+#	$Id: CHANGES 741 2007-12-24 18:29:25Z faxguy $	
 
 New Changes
 
+* add qfile to RECV xferfaxlog records (24 Dec 2007)
 * add Serbian dictionary translation (23 Dec 2007)
 * define __USE_XOPEN in TagLine routines for older systems (16 Dec 2007)
 * properly enumerate times in excess of 99:59:59 (11 Dec 2007)

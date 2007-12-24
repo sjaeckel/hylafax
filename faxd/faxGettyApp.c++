@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 612 2007-08-30 21:07:09Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 741 2007-12-24 18:29:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -903,7 +903,7 @@ faxGettyApp::notifyDocumentRecvd(FaxRecvInfo& ri)
     ai.npages = ri.npages;
     ai.params = ri.params.encode();
     ai.status = ri.reason;
-    ai.jobid = "";
+    ai.jobid = ri.qfile;
     ai.jobtag = "";
     ai.callid = ri.callid;
     ai.owner = "";
