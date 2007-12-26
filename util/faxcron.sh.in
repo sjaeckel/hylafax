@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxcron.sh.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: faxcron.sh.in 742 2007-12-26 18:24:27Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -103,7 +103,7 @@ echo ""
 $SBIN/xferfaxstats -since "$LASTRUN" 
 echo ""
 
-echo "Facsimile transmitted since last week:"
+echo "Facsimile transmitted in the last seven days:"
 echo ""
 $SBIN/xferfaxstats -age 7
 echo ""
@@ -113,7 +113,7 @@ echo ""
 $SBIN/recvstats -since "$LASTRUN" 
 echo ""
 
-echo "Facsimile received since last week:"
+echo "Facsimile received in the last seven days:"
 echo ""
 $SBIN/recvstats -age 7
 echo ""
