@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 744 2008-01-01 03:01:55Z faxguy $
+#    $Id: common-functions.sh.in 745 2008-01-02 01:51:22Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -264,10 +264,66 @@ gs2fax()
     FIXEDWIDTH="-dFIXEDMEDIA"
 
     #
+    # Ghostscript's default dithering with the fax drivers is 
+    # usually unsatisfactory.  So we have an option to process
+    # the image through libtiff's Floyd-Steinberg dithering.
+    # This will be a bit more costly on CPU and image preparation
+    # time... enable it cautiously.
+    #
+    # An alternative to libtiff Floyd-Steinberg dithering would
+    # be to use a threshold array based stochastic mask within
+    # Ghostscript.  However, this alternative may perform less 
+    # than ideally on unmodified Ghostscript versions prior to 8.62.
+    # See: http://bugs.ghostscript.com/show_bug.cgi?id=689633
+    #
+    DITHERING=default
+
+    #
     # Apply customizations such as watermarking.
     #
     if [ -f etc/FaxModify ]; then
 	. etc/FaxModify
+    fi
+
+    if [ "$DITHERING" = "gs-stocht" ]; then
+	$CAT $files | $PS -q \
+	    -sDEVICE=$device \
+	    -dNOPAUSE \
+	    -dSAFER=true \
+	    -sPAPERSIZE=$paper \
+	    $FIXEDWIDTH \
+	    -dBATCH \
+	    -r$hres\x$vres \
+	    "-sOutputFile=$out" \
+	    stocht.ps -c "<< /HalftoneMode 1 >> setuserparams" -
+	return
+    fi
+    if [ "$DITHERING" = "libtiff-fs" ] && ($PS -h | grep tiff24nc >/dev/null 2>&1) && \
+       [ -x $TIFFBIN/tiff2bw ] && [ -x $TIFFBIN/tiffdither ] && [ -x $TIFFBIN/tiff2ps ] && \
+       [ -x $TIFFBIN/tiffsplit ] && [ -x $TIFFBIN/tiffcp ]; then
+	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
+	    $FIXEDWIDTH -dBATCH -r$hres\x$vres "-sOutputFile=$out.1" $files
+	# Both tiff2bw and tiffdither only operate on single pages, so...
+	mkdir tmpdir.$$
+	cd tmpdir.$$
+	$TIFFBIN/tiffsplit ../$out.1
+	for i in *; do
+	    $TIFFBIN/tiff2bw $i $i.2
+	    $TIFFBIN/tiffdither $i.2 $i.3
+	    $RM -f $i $i.2
+	done
+	$TIFFBIN/tiffcp * ../$out.2
+	$RM -f *
+	cd ..
+	rmdir tmpdir.$$
+	#
+	# Unfortunately, this process leaves the image with Photometric of min-is-black, which
+	# is opposite from what we need for faxing.  So we have to run it again through gs.
+	#
+	$TIFFBIN/tiff2ps -a $out.2 > $out.3
+	files=$out.3
+    else
+	DITHERING=default
     fi
 
     $PS -q \
@@ -280,4 +336,8 @@ gs2fax()
 	-r$hres\x$vres \
 	"-sOutputFile=$out" \
 	$files
+
+    if [ "$DITHERING" = "libtiff-fs" ]; then
+	$RM -f $out.1 $out.2 $out.3
+    fi
 }
