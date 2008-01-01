@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pdf2fax.gs.sh.in 744 2008-01-01 03:01:55Z faxguy $
+#	$Id: pdf2fax.gs.sh.in 745 2008-01-02 01:51:22Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -92,4 +92,4 @@ do
     shift
 done
 
-gs2fax
+gs2fax pdf
