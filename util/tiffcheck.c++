@@ -1,4 +1,4 @@
-/*	$Id: tiffcheck.c++ 523 2007-05-24 18:36:31Z faxguy $ */
+/*	$Id: tiffcheck.c++ 747 2008-01-02 20:38:34Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -157,6 +157,13 @@ checkPageFormat(TIFF* tif, fxStr& emsg)
     if (spp != 1) {
 	emsg.append(fxStr::format(
 	    "Document is a multi-sample image (samples/pixel %u).\n", spp));
+	status |= REIMAGE;
+    }
+    uint16 pmi;
+    TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &pmi);
+    if (pmi != PHOTOMETRIC_MINISWHITE) {
+	emsg.append(fxStr::format(
+	    "Document is not black-on-white.\n"));
 	status |= REIMAGE;
     }
     uint16 compression = 0;
