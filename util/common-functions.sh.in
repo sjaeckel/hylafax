@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 745 2008-01-02 01:51:22Z faxguy $
+#    $Id: common-functions.sh.in 746 2008-01-02 19:30:27Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -187,7 +187,7 @@ parseQfile()
 #
 gs2fax()
 {
-    test -z "$fil" && fil="-"		# read from stdin
+    test -z "$files" && files="-"	# read from stdin
     case "${pagewidth}x${pagelength}" in
 	1728x280|1728x279|2592x280|2592x279|3456x280|3456x279)	# 279.4mm is actually correct...
 	    paper=letter;;
