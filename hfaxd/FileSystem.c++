@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++ 725 2007-12-02 18:56:09Z faxguy $ */
+/*	$Id: FileSystem.c++ 748 2008-01-04 23:24:31Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -772,9 +772,16 @@ HylaFAXServer::docType(const char* docname, FaxSendOp& op)
 	    else if (cc > 2 && b.buf[0] == '%' && b.buf[1] == 'P') {
 	    	logDebug("What we have here is a PDF file");
 	    	op = FaxRequest::send_pdf;
+	    } else if (cc > 2 && b.buf[0] == 0x1b && (b.buf[1] == 0x25 || b.buf[1] == 0x26)) {
+	    	logDebug("What we have here is a PCL file");
+	    	op = FaxRequest::send_pcl;
 	    }
 	    else if (cc > (ssize_t)sizeof (b.h) && isTIFF(b.h))
 		op = FaxRequest::send_tiff;
+	    else if (cc > 3 && b.buf[0] == '@' && b.buf[1] == 'P' && b.buf[2] == 'J' && b.buf[3] == 'L') {
+	    	logDebug("PJL is unsupported");
+	    	op = FaxRequest::send_unknown;
+	    }
 	    else
 		op = FaxRequest::send_data;
 	}

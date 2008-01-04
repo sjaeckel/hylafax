@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 727 2007-12-03 04:59:09Z faxguy $
+#	$Id: configure 748 2008-01-04 23:24:31Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -217,6 +217,7 @@ PAGESIZE
 PATHGETTY	PATH_GETTY
 PATHVGETTY	PATH_VGETTY
 PATHEGETTY	PATH_EGETTY
+PCL6CMD
 PKG_ARCH
 PKG_EMAIL
 PKG_VENDOR
@@ -383,7 +384,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 727 $"
+	echo "This is HylaFAX configure $Revision: 748 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3597,6 +3598,7 @@ test "$MIMENCODE" || MIMENCODE=`findAppDef base64-encode $PATH base64-encode`
 test "$MIMENCODE" || MIMENCODE=`findAppDef base64 $PATH base64`
 test "$MKDIR"	|| MKDIR=`findAppDef mkdir $PATH mkdir`
 test "$MV"	|| MV=`findAppDef mv $PATH mv`
+test "$PCL6CMD"	|| PCL6CMD=`findAppDef pcl6 $PATH pcl6`
 test "$PWDCMD"	|| PWDCMD=`findAppDef pwd $PATH pwd`
 test "$RMCMD"	|| RMCMD=`findAppDef rm $PATH rm`
 test "$SORT"	|| SORT=`findAppDef sort $PATH sort`

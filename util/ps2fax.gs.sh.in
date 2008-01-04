@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: ps2fax.gs.sh.in 745 2008-01-02 01:51:22Z faxguy $
+#	$Id: ps2fax.gs.sh.in 748 2008-01-04 23:24:31Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -93,3 +93,5 @@ do
 done
 
 gs2fax ps
+
+exit 0

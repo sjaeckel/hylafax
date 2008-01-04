@@ -1,7 +1,8 @@
-#	$Id: CHANGES 747 2008-01-02 20:38:34Z faxguy $	
+#	$Id: CHANGES 748 2008-01-04 23:24:31Z faxguy $	
 
 New Changes
 
+* add completed support for server-side PCL support via GhostPCL (4 Jan 2008)
 * make tiffcheck verify black-on-white photometric interpretation (2 Jan 2008)
 * add new FaxModify DITHERING options for ps2fax and pdf2fax (1-2 Jan 2008)
 * combine most of GS versions of ps2pdf and pdf2fax (31 Dec 2007)
