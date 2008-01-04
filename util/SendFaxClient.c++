@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++ 375 2006-11-18 18:50:13Z faxguy $ */
+/*	$Id: SendFaxClient.c++ 748 2008-01-04 23:24:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -467,6 +467,10 @@ SendFaxClient::sendDocuments(fxStr& emsg)
 	    fileSent = setFormat(FORM_TIFF)
 		    && setType(TYPE_I)
 		    && sendData(fd, &FaxClient::storeTemp, info.doc, emsg);
+	} else if (info.rule->getResult() == TypeRule::PCL) {
+	    fileSent = setFormat(FORM_PCL)
+	    	    && setType(TYPE_I)
+		    && sendData(fd, &FaxClient::storeTemp, info.doc, emsg);
 	} else if (info.rule->getResult() == TypeRule::PDF) {
 	    fileSent = setFormat(FORM_PDF)
 	    	    && setType(TYPE_I)
@@ -683,11 +687,14 @@ SendFaxClient::prepareFile(FileInfo& info, fxStr& emsg)
 	    return (false);
 	}
 	info.temp = tmpFile;
-    } else				// already postscript, pdf, or tiff
+    } else				// already postscript, pdf, pcl, or tiff
 	info.temp = info.name;
     switch (info.rule->getResult()) {
     case TypeRule::TIFF:
 	countTIFFPages(info.temp);
+	break;
+    case TypeRule::PCL:
+	// maybe use pclcount/pcl6count from http://www.fea.unicamp.br/pclcount/
 	break;
     case TypeRule::POSTSCRIPT:
     case TypeRule::PDF:

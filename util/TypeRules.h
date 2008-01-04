@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.h 521 2007-05-14 18:07:39Z faxguy $ */
+/*	$Id: TypeRules.h 748 2008-01-04 23:24:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -70,8 +70,8 @@
  *	  and embedded spaces, but not embedded tabs, are allowed.
  *	  These data are taken literally; no C-style character escapes
  *         are meaningful.
- * result: one of "PS", "TIFF", "PDF", or "error" (case insensitive).  The
- *	  first two results specifiy whether the rule generates a PostScript
+ * result: one of "PS", "TIFF", "PDF", "PCL", or "error" (case insensitive).
+ *	  The first two results specifiy whether the rule generates a PostScript
  *	  file or a bilevel TIFF image.  The "error" result indicates a
  *	  file is unsuitable for transmission and if supplied as an
  *	  argument to sendfax, the command should be aborted.
@@ -130,6 +130,7 @@ public:
 	TIFF,		// bilevel Group 3-encoded TIFF
 	POSTSCRIPT,	// PostScript
 	PDF,		// Portable Document Format
+	PCL,		// Printer Control Language
 	ERROR		// recognized erronious format
     };
 private:

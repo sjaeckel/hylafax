@@ -1,4 +1,4 @@
-/*	$Id: FileTransfer.c++ 80 2006-02-01 18:57:45Z faxguy $ */
+/*	$Id: FileTransfer.c++ 748 2008-01-04 23:24:31Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -48,7 +48,6 @@
 #endif /* CHAR_BIT */
 
 #define	HAVE_PSLEVEL2	false
-#define	HAVE_PCL5	false
 
 static struct {
     const char*	name;		// protocol token name
@@ -59,7 +58,7 @@ static struct {
 { "TIFF", true,		 "tif", "Tagged Image File Format, Class F only" },
 { "PS",	  true,		 "ps",  "Adobe PostScript Level I" },
 { "PS2",  HAVE_PSLEVEL2, "ps",  "Adobe PostScript Level II" },
-{ "PCL",  HAVE_PCL5,	 "pcl", "HP Printer Control Language (PCL), Version 5"},
+{ "PCL",  true,		 "pcl", "HP Printer Control Language (PCL)"},
 { "PDF",  true,		 "pdf", "Adobe Portable Document Format" },
 };
 static 	const char* typenames[] =  { "ASCII", "EBCDIC", "Image", "Local" };

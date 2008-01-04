@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 683 2007-10-31 17:53:58Z faxguy $
+#	$Id: faxsetup.sh.in 748 2008-01-04 23:24:31Z faxguy $
 #
 # @WARNING@
 #
@@ -64,6 +64,7 @@ LN_S=@LN_S@			# ln option for creating a symbolic link
 MIMENCODE=@MIMENCODE@		# mimencode command to dump in setup.cache
 MKFIFO=@MKFIFO@			# FIFO creation program for use below
 MV=@MV@				# move file for use below
+PCL6CMD=@PCL6CMD@		# pcl6 (GhostPCL) program
 RMCMD=@RM@			# remove file for use below
 SCRIPT_SH=@SCRIPT_SH@		# shell for use below
 SED=@SED@			# sed for use below
@@ -158,6 +159,7 @@ PATH
 PATHGETTY	PATH_GETTY
 PATHVGETTY	PATH_VGETTY
 PATHEGETTY	PATH_EGETTY
+PCL6CMD
 PSPACKAGE	PS
 RM		RMCMD
 SBIN		DIR_SBIN
@@ -800,6 +802,10 @@ if [ ! -x "$TIFF2PDF" ] || [ "$TIFF2PDF" = "bin/tiff2pdf" ]; then
 	test -x "$TIFF2PDF" && Note "Found converter: $TIFF2PDF"
     fi
 fi
+test -x "$PCL6CMD" || {
+    PCL6CMD=`findAppDef pcl6 $PATH pcl6`
+    test -x "$PCL6CMD" && Note "Found PCL converter: $PCL6CMD"
+}
 test -x "$MIMENCODE" || {
     MIMENCODE=`findAppDef mimencode $PATH mimencode`
     test -x $MIMENCODE || {
