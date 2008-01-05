@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 686 2007-11-04 01:45:30Z faxguy $ */
+/*	$Id: Class1Send.c++ 749 2008-01-05 21:43:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1725,7 +1725,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
     }
 
     bool rc = true;
-    frameNumber = ecmBlockPos = ecmFramePos = ecmBitPos = ecmOnes = ecmByte = 0;
+    blockNumber = frameNumber = ecmBlockPos = ecmFramePos = ecmBitPos = ecmOnes = ecmByte = 0;
     protoTrace("SEND begin page");
 
     tstrip_t nstrips = TIFFNumberOfStrips(tif);

@@ -1,7 +1,8 @@
-#	$Id: CHANGES 748 2008-01-04 23:24:31Z faxguy $	
+#	$Id: CHANGES 749 2008-01-05 21:43:28Z faxguy $	
 
 New Changes
 
+* fix initialization of ECM block number for Class 1 sending (5 Jan 2008)
 * add completed support for server-side PCL support via GhostPCL (4 Jan 2008)
 * make tiffcheck verify black-on-white photometric interpretation (2 Jan 2008)
 * add new FaxModify DITHERING options for ps2fax and pdf2fax (1-2 Jan 2008)
