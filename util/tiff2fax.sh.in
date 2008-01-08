@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: tiff2fax.sh.in 417 2007-01-09 23:47:42Z faxguy $
+#	$Id: tiff2fax.sh.in 750 2008-01-09 06:40:36Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -62,12 +62,14 @@ TIFFCP=$TIFFBIN/tiffcp			# part of the TIFF distribution
 TIFF2PS=$TIFFBIN/tiff2ps		# ditto
 TIFFINFO=$TIFFBIN/tiffinfo		# ditto
 
+jobid=
 out=foo.tif				# default output filename
 df=1d					# default output is 1D-encoded
 fil=
 opt=
 while test $# != 0
 do case "$1" in
+    -i)	shift; jobid=$1 ;;
     -o)	shift; out=$1 ;;
     -l)	shift; opt="$opt -l $1" ;;
     -w)	shift; opt="$opt -w $1" ;;
