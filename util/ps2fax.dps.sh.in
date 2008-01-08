@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: ps2fax.dps.sh.in 400 2006-12-19 18:07:09Z faxguy $
+#	$Id: ps2fax.dps.sh.in 750 2008-01-09 06:40:36Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -61,10 +61,12 @@ EOF
 
 PS=$DPSRIP
 
+jobid=
 fil=
 opt=
 while test $# != 0
 do case "$1" in
+    -i)	shift; jobid=$1 ;;
     -o)	shift; opt="$opt -o $1" ;;
     -l)	shift; opt="$opt -l $1" ;;
     -w)	shift; opt="$opt -w $1" ;;

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: ps2fax.gs.sh.in 748 2008-01-04 23:24:31Z faxguy $
+#	$Id: ps2fax.gs.sh.in 750 2008-01-09 06:40:36Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -61,6 +61,7 @@ EOF
 
 PS=$GSRIP
 
+jobid=
 files=
 out=ps.fax		# default output filename
 pagewidth=1728		# standard fax width
@@ -71,6 +72,7 @@ unlimitedlength=no	# default to fixed length-pages
 while test $# != 0
 do
     case "$1" in
+    -i)	shift; jobid="$1" ;;
     -o)	shift; out="$1" ;;
     -w) shift; pagewidth="$1" ;;
     -l) shift; pagelength="$1" ;;

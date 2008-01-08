@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 728 2007-12-05 02:13:53Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 750 2008-01-09 06:40:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1094,6 +1094,7 @@ faxQueueApp::convertDocument(Job& job,
 	/*
 	 * Imaged document does not exist, run the document converter
 	 * to generate it.  The converter is invoked according to:
+	 *   -i jobid		jobid number
 	 *   -o file		output (temp) file
 	 *   -r <res>		output resolution (dpi)
 	 *   -w <pagewidth>	output page width (pixels)
@@ -1113,6 +1114,7 @@ faxQueueApp::convertDocument(Job& job,
 	case FaxRequest::send_pcl:	  argv[ac++] = pcl2faxCmd; break;
 	case FaxRequest::send_tiff:	  argv[ac++] = tiff2faxCmd; break;
 	}
+	argv[ac++] = "-i"; argv[ac++] = (const char*)job.jobid;
 	argv[ac++] = "-o"; argv[ac++] = outFile;
 	argv[ac++] = "-r"; argv[ac++] = (const char*)rbuf;
 	argv[ac++] = "-w"; argv[ac++] = (const char*)wbuf;

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: ps2fax.imp.sh.in 400 2006-12-19 18:07:09Z faxguy $
+#	$Id: ps2fax.imp.sh.in 750 2008-01-09 06:40:36Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -67,10 +67,12 @@ pagelength=297		# default to A4
 vres=98			# default to low res
 out=ps.fax		# default output filename
 
+jobid=
 fil=
 opt=
 while test $# != 0
 do case "$1" in
+    -i)	shift; jobid="$1" ;;
     -o)	shift; out="$1" ;;
     -l)	shift; pagelength="$1" ;;
     -w)	shift; pagewidth="$1" ;;

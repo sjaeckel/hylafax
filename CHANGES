@@ -1,6 +1,10 @@
-#	$Id: CHANGES 749 2008-01-05 21:43:28Z faxguy $	
+#	$Id: CHANGES 750 2008-01-09 06:40:36Z faxguy $	
 
 New Changes
+
+* pass jobid into *2fax converters (8 Jan 2008)
+
+(5.2.1)
 
 * fix initialization of ECM block number for Class 1 sending (5 Jan 2008)
 * add completed support for server-side PCL support via GhostPCL (4 Jan 2008)
