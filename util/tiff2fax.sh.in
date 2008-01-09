@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: tiff2fax.sh.in 750 2008-01-09 06:40:36Z faxguy $
+#	$Id: tiff2fax.sh.in 751 2008-01-09 16:06:30Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -69,7 +69,7 @@ fil=
 opt=
 while test $# != 0
 do case "$1" in
-    -i)	shift; jobid=$1 ;;
+    -i)	shift; jobid=$1; opt="$opt -i $1" ;;
     -o)	shift; out=$1 ;;
     -l)	shift; opt="$opt -l $1" ;;
     -w)	shift; opt="$opt -w $1" ;;
