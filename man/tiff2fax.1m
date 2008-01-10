@@ -1,4 +1,4 @@
-.\"	$Id: tiff2fax.1m 750 2008-01-09 06:40:36Z faxguy $
+.\"	$Id: tiff2fax.1m 753 2008-01-11 01:27:26Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -96,6 +96,10 @@ By default, pages are 297 millimeters long.
 .BI \-r " vres"
 Set the vertical resolution,
 in lines/inch, at which to image the \*(Ps.
+.TP
+.B \-S
+Simple mode.  Serves as a format conversion interface for RTFCC in faxsend
+to utilize ${TIFFBIN}/tiffcp.
 .SH FILES
 .ta \w'${SPOOL}/bin/ps2fax    'u
 .nf
