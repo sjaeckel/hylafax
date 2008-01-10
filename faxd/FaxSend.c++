@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 667 2007-10-15 18:48:44Z faxguy $ */
+/*	$Id: FaxSend.c++ 753 2008-01-11 01:27:26Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -23,6 +23,8 @@
  * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
  * OF THIS SOFTWARE.
  */
+#include <errno.h>
+
 #include "Sys.h"
 
 #include "Dispatcher.h"
@@ -198,6 +200,71 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	sendFailed(fax, send_failed, notice);
 	return;
     }
+
+    if (tiff2faxCmd && (class2RTFCC || softRTFCC)) {
+	/*
+	 * Here we enable "intelligent" RTFCC format selection by 
+	 * determining the effectiveness of 2-D encoding.  We take all 
+	 * fax items and convert them to both MH (1-D) and MMR (2-D).  
+	 * Then we can sum up the data sizes and later make a decision 
+	 * based on receiver support for which compression format will 
+	 * be optimal.
+	 */
+	formatSize[0] = formatSize[1] = 0;
+	const char* argv[7];
+	argv[0] = tiff2faxCmd;
+	argv[1] = "-S";
+	argv[3] = "-o";
+	argv[6] = NULL;
+	char pidstr[6];
+	snprintf(pidstr, sizeof(pidstr), "%u", (u_int) getpid());
+	fxStr newfile, ext, opt;
+	struct stat sb;
+	for (u_int i = 0, n = fax.items.length(); i < n; i++) {
+	    if (fax.items[i].op == FaxRequest::send_fax) {
+		argv[5] = (const char*) fax.items[i].item;
+		for (u_short j = 0; j < 2; j++) {
+		    switch (j) {
+			case 0: opt = "-1"; ext = ".MH."; break;
+			case 1: opt = "-3"; ext = ".MMR."; break;
+		    }
+		    argv[2] = (const char*) opt;
+		    newfile = fax.items[i].item;
+		    newfile.append(ext);
+		    newfile.append(pidstr);
+		    argv[4] = (const char*) newfile;
+		    pid_t pid = fork();
+		    switch (pid) {
+			case 0:
+			    Sys::execv(tiff2faxCmd, (char* const*) argv);
+			    sleep(1);		// XXX give parent time
+			    _exit(127);
+			case -1:
+			    break;
+			default:
+			    Sys::waitpid(pid);
+			    break;
+		    }
+		    if (Sys::stat(newfile, sb) < 0) {
+			logError("Could not create %s, result: %s", (const char*) newfile, strerror(errno));
+			break;
+		    }
+		    formatSize[j] += sb.st_size;
+		    /*
+		     * In theory we could leave these files around for other faxsend processes
+		     * (if we didn't use the pid in the filename) or to use instead of performing 
+		     * RTFCC.  But CPU is usually cheap, and for now it's easier to just delete 
+		     * these here rather than having to keep track of cleaning up elsewhere.
+		     */
+		    Sys::unlink((const char*) newfile);
+		}
+	    }
+	}
+	if (formatSize[0] < formatSize[1])
+	    traceProtocol("1-D encoding outperforms 2-D by %d%%. Prefer MH format.", 
+		(formatSize[1]-formatSize[0])*100/formatSize[1]);
+    }
+
     fax.notice = "";
     notifyCallPlaced(fax);
     CallStatus callstat;
@@ -660,6 +727,23 @@ FaxServer::sendSetupParams1(TIFF* tif,
 		params.df = DF_2DMR;
 	if (params.df == DF_2DMR && (!modem->supports2D() || !(clientCapabilities.df & BIT(DF_2DMR))))
 		params.df = DF_1DMH;
+
+	if (tiff2faxCmd && formatSize[0] != 0 && formatSize[0] != 0 && formatSize[0] != 0) {
+	    /*
+	     * T.4 and T.6 compress poorly when there are frequent alternations between
+	     * black and white (i.e. a dithered photograph).  Thus, in some cases the
+	     * "highest" compression may actually be MH.  Since MH support is requisite 
+	     * we can switch "down" to it freely.
+	     *
+	     * If MH is tighter than MMR then it would be extremely unlikely that MH would
+	     * not also be tighter than MR.  So we don't consider dropping from MMR to MR.
+	     *
+	     * JBIG will virtually always outcompress any other format, so we don't consider
+	     * another format when we can use JBIG.
+	     */
+	    if ((params.df == DF_2DMMR || params.df == DF_2DMR) && formatSize[0] < formatSize[1]) 
+		params.df = DF_1DMH;
+	}
     } else {
 	if (compression == COMPRESSION_CCITTFAX4) {
 	    if (!clientInfo.getSupportsMMR()) {

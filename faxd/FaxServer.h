@@ -1,4 +1,4 @@
-/*	$Id: FaxServer.h 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: FaxServer.h 753 2008-01-11 01:27:26Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,6 +60,9 @@ private:
     time_t	pageTransferTime;	// transfer time for last page
     u_int	npages;			// # pages sent/received
     fxStr	batchid;		// Batch ID, for session logs
+    u_int	formatSize[2];		// combined byte sizes for comparing 1D and 2D encodings
+
+    const char*	tiff2faxCmd;		// tiff2fax command for intelligent format selection
 
     friend class FaxModem;
 

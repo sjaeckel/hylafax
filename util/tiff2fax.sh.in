@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: tiff2fax.sh.in 751 2008-01-09 16:06:30Z faxguy $
+#	$Id: tiff2fax.sh.in 753 2008-01-11 01:27:26Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -63,6 +63,7 @@ TIFF2PS=$TIFFBIN/tiff2ps		# ditto
 TIFFINFO=$TIFFBIN/tiffinfo		# ditto
 
 jobid=
+simple=no
 out=foo.tif				# default output filename
 df=1d					# default output is 1D-encoded
 fil=
@@ -79,6 +80,7 @@ do case "$1" in
     -3) opt="$opt $1"; df=g4 ;;
     -m) shift;;				# NB: not implemented
     -U) opt="$opt $1" ;;
+    -S) simple=yes;;
     *)	fil="$fil $1" ;;
     esac
     shift
@@ -87,6 +89,12 @@ test -z "$fil" && {
     echo "$0: No input file specified."
     exit 255
 }
+
+if [ "$simple" = "yes" ]; then
+    # simple, fast conversion for the benefit of intelligent RTFCC
+    $TIFFCP -i -c $df $fil $out
+    exit
+fi
 
 #
 # Apply customizations such as watermarking.   

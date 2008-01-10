@@ -1,7 +1,9 @@
-#	$Id: CHANGES 750 2008-01-09 06:40:36Z faxguy $	
+#	$Id: CHANGES 753 2008-01-11 01:27:26Z faxguy $	
 
 New Changes
 
+* employ "intelligent" RTFCC to use MH format when it is better
+  than 2-D compressions (10 Jan 2007)
 * pass jobid into *2fax converters (8 Jan 2008)
 
 (5.2.1)

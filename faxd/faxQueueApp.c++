@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 750 2008-01-09 06:40:36Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 753 2008-01-11 01:27:26Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1420,6 +1420,13 @@ faxQueueApp::sendJobStart(Job& job, FaxRequest* req)
     
     const fxStr& cmd = pickCmd(*req);
     fxStr dargs(job.getJCI().getArgs());
+    if (req->jobtype == "facsimile") {
+	/* This is for intelligent RTFCC... */
+	dargs.append('\0');
+	dargs.append("-t");
+	dargs.append('\0');
+	dargs.append(tiff2faxCmd);
+    }
     pid_t pid = fork();
     switch (pid) {
     case 0:				// child, startup command
