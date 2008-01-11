@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: tiff2fax.sh.in 753 2008-01-11 01:27:26Z faxguy $
+#	$Id: tiff2fax.sh.in 755 2008-01-11 20:12:59Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -70,7 +70,7 @@ fil=
 opt=
 while test $# != 0
 do case "$1" in
-    -i)	shift; jobid=$1; opt="$opt -i $1" ;;
+    -i)	shift; jobid=$1;;
     -o)	shift; out=$1 ;;
     -l)	shift; opt="$opt -l $1" ;;
     -w)	shift; opt="$opt -w $1" ;;
@@ -177,7 +177,7 @@ EOF
 # *REIMAGE			maybe should reject (XXX)
 #
 *REVRES|*RESIZE|*REIMAGE)
-    ($TIFF2PS -a $fil | $PS2FAX -o $out $opt) || {
+    ($TIFF2PS -a $fil | $PS2FAX -o $out -i "$jobid" $opt) || {
 	$CAT<<EOF
 Unexpected failure converting TIFF document; the command
 
