@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 753 2008-01-11 01:27:26Z faxguy $ */
+/*	$Id: FaxSend.c++ 756 2008-01-12 20:00:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -201,7 +201,7 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	return;
     }
 
-    if (tiff2faxCmd && (class2RTFCC || softRTFCC)) {
+    if (tiff2faxCmd.length() && (class2RTFCC || softRTFCC)) {
 	/*
 	 * Here we enable "intelligent" RTFCC format selection by 
 	 * determining the effectiveness of 2-D encoding.  We take all 
@@ -212,7 +212,7 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	 */
 	formatSize[0] = formatSize[1] = 0;
 	const char* argv[7];
-	argv[0] = tiff2faxCmd;
+	argv[0] = (const char*) tiff2faxCmd;
 	argv[1] = "-S";
 	argv[3] = "-o";
 	argv[6] = NULL;
@@ -236,7 +236,7 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 		    pid_t pid = fork();
 		    switch (pid) {
 			case 0:
-			    Sys::execv(tiff2faxCmd, (char* const*) argv);
+			    Sys::execv((const char*) tiff2faxCmd, (char* const*) argv);
 			    sleep(1);		// XXX give parent time
 			    _exit(127);
 			case -1:
@@ -728,7 +728,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	if (params.df == DF_2DMR && (!modem->supports2D() || !(clientCapabilities.df & BIT(DF_2DMR))))
 		params.df = DF_1DMH;
 
-	if (tiff2faxCmd && formatSize[0] != 0 && formatSize[0] != 0 && formatSize[0] != 0) {
+	if (tiff2faxCmd.length() && formatSize[0] != 0 && formatSize[0] != 0 && formatSize[0] != 0) {
 	    /*
 	     * T.4 and T.6 compress poorly when there are frequent alternations between
 	     * black and white (i.e. a dithered photograph).  Thus, in some cases the

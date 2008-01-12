@@ -1,4 +1,4 @@
-/*	$Id: FaxServer.c++ 753 2008-01-11 01:27:26Z faxguy $ */
+/*	$Id: FaxServer.c++ 756 2008-01-12 20:00:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -51,14 +51,12 @@ FaxServer::FaxServer(const fxStr& devName, const fxStr& devID)
     : ModemServer(devName, devID)
 {
     modem = NULL;
-    tiff2faxCmd = NULL;
 }
 
 FaxServer::~FaxServer()
 {
 }
 
-#include "faxApp.h"
 void
 FaxServer::initialize(int argc, char** argv)
 {
@@ -68,13 +66,6 @@ FaxServer::initialize(int argc, char** argv)
     if (Sys::gethostname(buff, MAXHOSTNAMELEN) == 0) {
         hostname = buff;
         hostname.resize(strlen(hostname));
-    }
-    for (GetoptIter iter(argc, argv, faxApp::getOpts()); iter.notDone(); iter++) {
-	switch (iter.option()) {
-	    case 't':
-		tiff2faxCmd = iter.optArg();
-		break;
-	}
     }
 }
 

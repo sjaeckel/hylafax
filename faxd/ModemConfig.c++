@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: ModemConfig.c++ 756 2008-01-12 20:00:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -165,6 +165,7 @@ static struct {
 { "taglinelocale",		&ModemConfig::tagLineLocale,	"" },
 { "taglineformat",		&ModemConfig::tagLineFmt,
   "From %%n|%c|Page %%p of %%t" },
+{ "tiff2faxcmd",		&ModemConfig::tiff2faxCmd,	FAX_TIFF2FAXCMD },
 { "class2recvdatatrigger",	&ModemConfig::class2RecvDataTrigger },
 { "ringdata",			&ModemConfig::ringData },
 { "ringfax",			&ModemConfig::ringFax },

@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 748 2008-01-04 23:24:31Z faxguy $
+.\"	$Id: hylafax-config.4f 756 2008-01-12 20:00:18Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-01-04 15:24:31 -0800 (Fri, 04 Jan 2008) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-01-12 12:00:18 -0800 (Sat, 12 Jan 2008) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -222,7 +222,7 @@ StaggerCalls¹	integer	\s-10\s+1	time to delay between starting outbound calls
 TagLineFont	string	\-	tag line font filename
 TagLineFormat	string	\s-1\fIsee below\fP\s+1	tag line format string
 TagLineLocale	string	\s-1\fIsee below\fP\s+1	tag line format locale
-TIFF2FaxCmd¹	string	\s-1bin/tiff2fax\s+1	\s-1TIFF\s+1 converter command script
+TIFF2FaxCmd²	string	\s-1bin/tiff2fax\s+1	\s-1TIFF\s+1 converter command script
 TimeOfDay¹	string	\s-1Any\s+1	default time-of-day restrictions
 TSIRecvdCmd	string	\-	script executed after TSI receipt, can drop calls
 Use2D¹	boolean	\s-1Yes\s+1	restrict/permit use of 2D-encoded fax data
@@ -1767,12 +1767,16 @@ is encoded via UTF-8 then the correct setting of
 is requisite for proper decoding by the parser.  By
 default the environment settings are used.
 .TP
-.B TIFF2FaxCmd¹
+.B TIFF2FaxCmd²
 The command to invoke to convert a TIFF submitted
 for transmission to
 .SM TIFF/F,
 suitable for transmission; see
 .IR tiff2fax (${MANNUM1_8}).
+In the scheduler configuration file this is used in
+outbound job preparation.  In the per-device configuration
+files this is used in conjunction with RTFCC features for
+comparing relative data sizes between different formats.
 .TP
 .B TimeOfDay¹
 The default time-of-day restrictions to apply to outbound jobs.
