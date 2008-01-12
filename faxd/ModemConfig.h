@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: ModemConfig.h 756 2008-01-12 20:00:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -252,6 +252,7 @@ public:
     BadPageHandling badPageHandling;	// bad page (received) handling method
     JBIGSupport	class1JBIGSupport;	// monochrome JBIG support
     bool	saveUnconfirmedPages;	// don't delete unconfirmed pages
+    fxStr	tiff2faxCmd;		// for intelligent RTFCC in comparing compression rates
     
     					// Distinctive ring data as sequences of DRON/DROF intervals
     struct {
