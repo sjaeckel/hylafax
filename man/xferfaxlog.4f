@@ -1,4 +1,4 @@
-.\"	$Id: xferfaxlog.4f 741 2007-12-24 18:29:25Z faxguy $
+.\"	$Id: xferfaxlog.4f 758 2008-01-15 01:06:33Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -192,6 +192,10 @@ exists then it will be executed every time a record is written to
 The record fields will each serve as separate command arguments.
 This is designed to allow attachment to external databases and other
 accounting mechanisms.
+.B FaxAccounting
+will block the \*(Fx process invoking it, thus it is critical that
+it not block for periods of time exceeding various other \*(Fx
+process timeouts.
 .SH NOTES
 The sender field does not necessarily represent the submitter's 
 actual identity.  For example, it reflects the value given by
