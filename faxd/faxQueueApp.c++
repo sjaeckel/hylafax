@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 756 2008-01-12 20:00:18Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 758 2008-01-15 01:06:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1448,7 +1448,7 @@ faxQueueApp::sendJobStart(Job& job, FaxRequest* req)
 	break;
     default:				// parent, setup handler to wait
 	// joinargs puts a leading space so this looks funny here
-	traceQueue(job, "CMD START%s -m %s %s (PID %lu)"
+	traceQueue(job, "CMD START%s -m %s %s (PID %d)"
 	    , (const char*) joinargs(cmd, dargs)
 	    , (const char*) job.modem->getDeviceID()
 	    , (const char*) files
