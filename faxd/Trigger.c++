@@ -1,4 +1,4 @@
-/*	$Id: Trigger.c++ 490 2007-03-26 23:40:13Z faxguy $ */
+/*	$Id: Trigger.c++ 759 2008-01-16 17:38:23Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -419,10 +419,9 @@ Trigger::post(TriggerEvent e, const Modem& modem, const char* info)
     if (!modem.triggers.isEmpty() || !any.isEmpty()) {
 	fxStackBuffer msg;
 	msg.put((const char*) &hdr, sizeof (hdr));
+	modem.encode(msg);
 	if (info)
 	    msg.put(info);
-	else
-	    modem.encode(msg);
 	post(e, modem.triggers, any, msg);
     }
     hook(e, modem.devID, info);
