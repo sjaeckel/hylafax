@@ -1,4 +1,5 @@
-#    $Id: dict-sr 738 2007-12-23 15:50:28Z faxguy $
+#! @SCRIPT_SH@
+#    $Id: dict-sr 763 2008-01-18 19:18:55Z faxguy $
 
 	CHARSET=utf-8;
 	DICTRECEIVEAGENT="FAX Server";
