@@ -1,4 +1,5 @@
-#	$Id: faxsetup.linux 2 2005-11-11 21:32:03Z faxguy $
+#! @SCRIPT_SH@
+#	$Id: faxsetup.linux 762 2008-01-18 19:12:42Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
