@@ -1,4 +1,4 @@
-#	$Id: distrules 738 2007-12-23 15:50:28Z faxguy $
+#	$Id: distrules 764 2008-01-18 19:28:19Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -265,7 +265,7 @@ HYLAFAXSRC=\
 	etc/faxaddmodem.sh.in			\
 	etc/faxsetup.bsdi			\
 	etc/faxsetup.irix			\
-	etc/faxsetup.linux			\
+	etc/faxsetup.linux.in			\
 	etc/faxsetup.sh.in			\
 	etc/probemodem.sh.in			\
 	etc/lockname.c				\
@@ -369,18 +369,18 @@ HYLAFAXSRC=\
 	util/archive.sh.in			\
 	util/common-functions.sh.in		\
 	util/dictionary.sh.in			\
-	util/dict-de				\
-	util/dict-en				\
-	util/dict-es				\
-	util/dict-fr				\
-	util/dict-it				\
-	util/dict-pl				\
-	util/dict-pt				\
-	util/dict-pt_BR				\
-	util/dict-ro				\
-	util/dict-sr				\
-	util/dict-tr				\
-	util/dict-zh				\
+	util/dict-de.in				\
+	util/dict-en.in				\
+	util/dict-es.in				\
+	util/dict-fr.in				\
+	util/dict-it.in				\
+	util/dict-pl.in				\
+	util/dict-pt.in				\
+	util/dict-pt_BR.in			\
+	util/dict-ro.in				\
+	util/dict-sr.in				\
+	util/dict-tr.in				\
+	util/dict-zh.in				\
 	util/faxrcvd.sh.in			\
 	util/mkcover.sh.in			\
 	util/notify.sh.in			\

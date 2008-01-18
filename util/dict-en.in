@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: dict-en 763 2008-01-18 19:18:55Z faxguy $
+#    $Id: dict-en.in 764 2008-01-18 19:28:19Z faxguy $
 
 	CHARSET=iso-8859-1;
 	DICTRECEIVEAGENT="The HylaFAX Receive Agent";
