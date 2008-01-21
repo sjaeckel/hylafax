@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.c++ 630 2007-09-14 18:02:36Z faxguy $ */
+/*	$Id: MsgFmt.c++ 765 2008-01-21 17:03:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -175,7 +175,7 @@ MsgFmt::parseHeaders(FILE* fd, u_int& lineno)
 		    );
 	    }
 	} else if (field != "")  {		// append continuation
-	    headers[headers.length()-1].append("\n" | line);
+	    headers[headers.length()-1].append(line);
 	    if (verbose)
 		fprintf(stderr, "+HEADER %s: %s\n"
 		    , (const char*) field
