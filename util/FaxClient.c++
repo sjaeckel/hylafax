@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 766 2008-01-25 18:25:50Z faxguy $ */
+/*	$Id: FaxClient.c++ 770 2008-01-25 21:38:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -75,7 +75,7 @@ FaxClient::initServerState(void)
     type = TYPE_A;
     mode = MODE_S;
     stru = STRU_F;
-    format = FORM_PS;
+    format = FORM_UNKNOWN;
     curjob = "DEFAULT";
     tzone = TZ_GMT;
     jobFmt = "";

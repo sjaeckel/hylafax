@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.h 685 2007-11-01 05:00:34Z faxguy $ */
+/*	$Id: FaxClient.h 770 2008-01-25 21:38:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,6 +60,7 @@ public:
         MODE_Z = 4		// zlib compressed
     };
     enum {			// data file FORMats
+        FORM_UNKNOWN = 0,	// unknown, initial setting
         FORM_PS   = 1,		// PostScript Level I
         FORM_PS2  = 2,		// PostScript Level II
         FORM_TIFF = 3,		// TIFF
