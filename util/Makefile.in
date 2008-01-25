@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 738 2007-12-23 15:50:28Z faxguy $
+#	$Id: Makefile.in 771 2008-01-25 21:46:02Z faxguy $
 #
 # @WARNING@
 #
@@ -252,5 +252,6 @@ clobberconfig:
 	-${RM} -f pagesizes xferfaxstats.sh recvstats.sh faxcron.sh dictionary.sh \
 		faxrcvd.sh mkcover.sh notify.sh pcl2fax.sh pollrcvd.sh \
 		ps2fax.dps.sh ps2fax.gs.sh ps2fax.imp.sh tiff2fax.sh tiff2pdf.sh \
-		wedged.sh qp-encode.awk rfc2047-encode.awk archive.sh pdf2fax.gs.sh common-functions.sh
+		wedged.sh qp-encode.awk rfc2047-encode.awk archive.sh pdf2fax.gs.sh common-functions.sh \
+		dict-de dict-en dict-es dict-fr dict-it dict-pl dict-pt dict-pt_BR dict-ro dict-sr dict-tr dict-zh
 
