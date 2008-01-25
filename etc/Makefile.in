@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
+#	$Id: Makefile.in 771 2008-01-25 21:46:02Z faxguy $
 #
 # @WARNING@
 #
@@ -168,5 +168,5 @@ installClient: default
 # These targets are created during the configuration procedure.
 #
 clobberconfig:
-	-${RM} -f hylafax probemodem.sh faxaddmodem.sh faxsetup.sh
+	-${RM} -f hylafax probemodem.sh faxaddmodem.sh faxsetup.sh faxsetup.linux
 
