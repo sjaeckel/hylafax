@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 685 2007-11-01 05:00:34Z faxguy $ */
+/*	$Id: FaxClient.c++ 766 2008-01-25 18:25:50Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -854,12 +854,31 @@ FaxClient::setCurrentJob(const char* jobid)
 bool
 FaxClient::jobParm(const char* name, const fxStr& value)
 {
+    /*
+     * We need to quote any " marks in the string before
+     * we pass it on to the raw jobParm(... const char*)
+     */
+    if (value.next(0,'"'))
+    {
+	fxStr tmp(value);
+	int r = tmp.length();
+	while (r > 0)
+	{
+	    if ( (r = tmp.nextR(r-1, '"') ) > 0 )
+		tmp.insert('\\', r-1);
+	}
+	return jobParm(name, (const char*)tmp);
+    }
     return jobParm(name, (const char*) value);
 }
 
 bool
 FaxClient::jobParm(const char* name, const char* value)
 {
+    /*
+     * if they're passing us a wrong char*, we expect
+     * them to have handled any quoting requried.
+     */
     return (command("JPARM %s \"%s\"", name, value) == COMPLETE);
 }
 
