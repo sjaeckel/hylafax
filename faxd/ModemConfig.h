@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 756 2008-01-12 20:00:18Z faxguy $ */
+/*	$Id: ModemConfig.h 768 2008-01-25 18:47:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -180,8 +180,8 @@ public:
     bool	class1MMRSupport;	// support 2-D MMR
     bool	class1PersistentECM;	// continue to correct
     bool	class1ValidateV21Frames;// check received FCS values in V.21
-    bool	class1ModemHasDLEBug;;	// modem doesn't double-up DLEs in V.21
-    bool	class1HasRHConnectBug;;	// modem reports CONNECT after +FRH=3 to non-V.21-HDLC data
+    bool	class1ModemHasDLEBug;	// modem doesn't double-up DLEs in V.21
+    bool	class1HasRHConnectBug;	// modem reports CONNECT after +FRH=3 to non-V.21-HDLC data
 					// for class 2 and 2.0:
     fxStr	class2Cmd;		// cmd for setting Class 2/2.0
     fxStr	class2DCCQueryCmd;	// cmd to query modem capabilities

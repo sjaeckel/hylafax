@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 686 2007-11-04 01:45:30Z faxguy $ */
+/*	$Id: Class1.h 768 2008-01-25 18:47:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -161,7 +161,7 @@ protected:
 // miscellaneous
     enum {			// Class 1-specific AT responses
 	AT_FCERROR	= 100, 	// "+FCERROR"
-	AT_FRH3		= 101,	// "+FRH:3"
+	AT_FRH3		= 101	// "+FRH:3"
     };
     virtual ATResponse atResponse(char* buf, long ms = 30*1000);
     virtual bool waitFor(ATResponse wanted, long ms = 30*1000);
