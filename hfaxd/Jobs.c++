@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 725 2007-12-02 18:56:09Z faxguy $ */
+/*	$Id: Jobs.c++ 772 2008-01-26 19:18:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1621,6 +1621,21 @@ HylaFAXServer::checkAddDocument(Job& job, Token type,
     if (checkParm(job, type, A_WRITE)) {
 	struct stat sb;
 	if (fileAccess(docname, R_OK, sb)) {
+	    fxStr file(docname);
+	    u_int d = file.nextR(file.length(), '.');
+	    /*
+	     * We trust the client's protocol-specified (FORM) file format except 
+	     * in the case of Postscript because Postscript is the server-default 
+	     * (in the case the client did not specify the format).
+	     */
+	    if (strcmp(docname+d, "ps") != 0) {
+		for (u_int i = 0, n = N(formats); i < n; i++) {
+		    if (strcmp(docname+d, formats[i].suffix) == 0 && formats[i].supported) {
+			op = formats[i].op;
+			return (true);
+		    }
+		}
+	    }
 	    if (!docType(docname, op))
 		reply(550, "%s: Document type not recognized.", docname);
 	    else

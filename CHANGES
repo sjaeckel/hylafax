@@ -1,7 +1,8 @@
-#	$Id: CHANGES 769 2008-01-25 20:44:41Z faxguy $	
+#	$Id: CHANGES 772 2008-01-26 19:18:28Z faxguy $	
 
 New Changes
 
+* make the server trust the client's specified document type (26 Jan 2008)
 * make pcl2fax produce TIFF output directly (25 Jan 2008)
 * escape double-quotes in client communication before passing them to the
   server (25 Jan 2008)

@@ -1,4 +1,4 @@
-/*	$Id: FileTransfer.c++ 748 2008-01-04 23:24:31Z faxguy $ */
+/*	$Id: FileTransfer.c++ 772 2008-01-26 19:18:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -47,25 +47,9 @@
 #endif
 #endif /* CHAR_BIT */
 
-#define	HAVE_PSLEVEL2	false
-
-static struct {
-    const char*	name;		// protocol token name
-    bool	supported;	// true if format is supported
-    const char*	suffix;		// file suffix
-    const char* help;		// help string for HELP FORM command
-} formats[] = {
-{ "TIFF", true,		 "tif", "Tagged Image File Format, Class F only" },
-{ "PS",	  true,		 "ps",  "Adobe PostScript Level I" },
-{ "PS2",  HAVE_PSLEVEL2, "ps",  "Adobe PostScript Level II" },
-{ "PCL",  true,		 "pcl", "HP Printer Control Language (PCL)"},
-{ "PDF",  true,		 "pdf", "Adobe Portable Document Format" },
-};
 static 	const char* typenames[] =  { "ASCII", "EBCDIC", "Image", "Local" };
 static 	const char* strunames[] =  { "File", "Record", "Page", "TIFF" };
 static 	const char* modenames[] =  { "Stream", "Block", "Compressed", "ZIP" };
-
-#define	N(a)	(sizeof (a) / sizeof (a[0]))
 
 /*
  * Record a file transfer in the log file.

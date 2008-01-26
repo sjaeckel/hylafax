@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: HylaFAXServer.h 772 2008-01-26 19:18:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -80,6 +80,24 @@ struct RecvInfo : public FaxRecvInfo {
     ~RecvInfo();
 };
 fxDECLARE_StrKeyDictionary(RecvInfoDict, RecvInfo*)
+
+#define HAVE_PSLEVEL2   false
+  
+static struct {
+    const char* name;		// protocol token name
+    bool        supported;	// true if format is supported
+    const char* suffix;		// file suffix
+    FaxSendOp	op;		// associated FaxSendOp value
+    const char* help;		// help string for HELP FORM command
+} formats[] = {
+{ "TIFF", true,          "tif", FaxRequest::send_tiff,		"Tagged Image File Format, Class F only" },
+{ "PS",   true,          "ps",  FaxRequest::send_postscript,	"Adobe PostScript Level I" },
+{ "PS2",  HAVE_PSLEVEL2, "ps",  FaxRequest::send_postscript,	"Adobe PostScript Level II" },
+{ "PCL",  true,          "pcl", FaxRequest::send_pcl,		"HP Printer Control Language (PCL)"},
+{ "PDF",  true,          "pdf", FaxRequest::send_pdf,		"Adobe Portable Document Format" },
+};
+
+#define N(a)    (sizeof (a) / sizeof (a[0]))
 
 #ifdef T_USER
 #undef T_USER				// XXX FreeBSD defines this
