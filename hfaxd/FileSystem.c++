@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++ 772 2008-01-26 19:18:28Z faxguy $ */
+/*	$Id: FileSystem.c++ 774 2008-01-26 19:31:55Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -757,6 +757,10 @@ isTIFF(const TIFFHeader& h)
 /*
  * This is used to identify a submitted document type when the client 
  * specified the default (Postscript) or did not make a specification.
+ *
+ * There is no sure-fire way to type all PCL files.  So this is a best-
+ * guess approach on PCL.  It's best if the client specifies the type
+ * with PCL.
  */
 bool
 HylaFAXServer::docType(const char* docname, FaxSendOp& op)
@@ -776,7 +780,7 @@ HylaFAXServer::docType(const char* docname, FaxSendOp& op)
 	    else if (cc > 2 && b.buf[0] == '%' && b.buf[1] == 'P') {
 	    	logDebug("What we have here is a PDF file");
 	    	op = FaxRequest::send_pdf;
-	    } else if (cc > 2 && b.buf[0] == 0x1b && (b.buf[1] == 'E' || b.buf[1] == '%' || b.buf[1] == '&')) {
+	    } else if (cc > 2 && b.buf[0] == 0x1b && (b.buf[1] == 'E' || b.buf[1] == '%' || b.buf[1] == '&' || b.buf[1] == '*')) {
 	    	logDebug("What we have here is a PCL file");
 	    	op = FaxRequest::send_pcl;
 	    } else if (cc > (ssize_t)sizeof (b.h) && isTIFF(b.h))

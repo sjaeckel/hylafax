@@ -1,4 +1,4 @@
-#	$Id: typerules 773 2008-01-26 19:21:17Z faxguy $
+#	$Id: typerules 774 2008-01-26 19:31:55Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -110,6 +110,7 @@
 0	short		0x1b45		pcl
 0	short		0x1b25		pcl
 0	short		0x1b26		pcl
+0	short		0x1b2a		pcl
 #
 # To do client-side PCL conversion to PostScript comment-out the above
 # and uncomment this:
