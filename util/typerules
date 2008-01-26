@@ -1,4 +1,4 @@
-#	$Id: typerules 748 2008-01-04 23:24:31Z faxguy $
+#	$Id: typerules 773 2008-01-26 19:21:17Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -107,6 +107,7 @@
 0	short		0xf702		ps	dvips -q -o %o %i
 0	string		GIF		tiff
 0	long		0x59a66a95	tiff	ras2tiff -%f -v %V %i %o
+0	short		0x1b45		pcl
 0	short		0x1b25		pcl
 0	short		0x1b26		pcl
 #
