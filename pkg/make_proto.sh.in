@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-# $Id: make_proto.sh.in 560 2007-07-23 19:00:50Z faxguy $
+# $Id: make_proto.sh.in 775 2008-01-29 13:53:35Z faxguy $
 #
 #	Tim Rice	Wed Sep 24 18:19:04 PDT 1997
 #
@@ -14,7 +14,6 @@ DIR_SLIB=@LIBEXEC@
 DIR_MAN=@MANDIR@
 DIR_SBIN=@SBIN@
 DIR_SPOOL=@SPOOL@
-DIR_FONTS=@AFMDIR@
 DIR_CGI=@CGIDIR@
 DIR_SYSVINIT=@SYSVINITDIR@
 DIR_SYSVINITSTART="@SYSVINITDIR@/@SYSVINITSTARTDIR@"
@@ -57,17 +56,6 @@ do
 	done
 
 done
-
-if [ "@AFM@" = yes ]
-then
-# skip the first one, it's in prototype.stub
-	DIR_FONTS=`dirname ${DIR_FONTS}`
-	while [ ${DIR_FONTS} != / ]
-	do
-		echo "d none ${DIR_FONTS} ? ? ?" >> ${TMP_LIST}
-		DIR_FONTS=`dirname ${DIR_FONTS}`
-	done
-fi
 
 if [ ${DO_HTML} = yes ]
 then
@@ -151,11 +139,6 @@ rm ${TMP_LIST}
 grep " none " ${PROTOTYPE}.stub >> ${PROTOTYPE}
 grep " man " ${PROTOTYPE}.stub | sed -e "s~\.${MANNUM1_8}=~.${LMANNUM1_8}=~" \
 	-e "s~\.${MANNUM4_5}=~.${LMANNUM4_5}=~" >> ${PROTOTYPE}
-
-if [ "@AFM@" = yes ]
-then
-	grep " fonts " ${PROTOTYPE}.stub >> ${PROTOTYPE}
-fi
 
 if [ ${DO_HTML} = yes ]
 then
