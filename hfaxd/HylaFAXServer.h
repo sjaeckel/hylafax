@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 772 2008-01-26 19:18:28Z faxguy $ */
+/*	$Id: HylaFAXServer.h 777 2008-01-31 02:26:36Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -572,9 +572,6 @@ protected:
     bool lockJob(Job& job, int how, fxStr& emsg);
     bool lockJob(Job& job, int how);
     void unlockJob(Job& job);
-#ifdef OLDPROTO_SUPPORT
-    void readJobs(void);
-#endif
     void purgeJobs(void);
     void jstatCmd(const Job&);
     void jstatLine(Token t, const char* fmt ...);

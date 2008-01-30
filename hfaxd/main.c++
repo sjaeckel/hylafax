@@ -1,4 +1,4 @@
-/*	$Id: main.c++ 274 2006-08-12 00:26:53Z faxguy $ */
+/*	$Id: main.c++ 777 2008-01-31 02:26:36Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -27,9 +27,6 @@
 #include "InetFaxServer.h"
 #if CONFIG_UNIXTRANSPORT
 #include "UnixFaxServer.h"
-#endif
-#ifdef OLDPROTO_SUPPORT
-#include "OldProtocol.h"
 #endif
 #ifdef SNPP_SUPPORT
 #include "SNPPServer.h"
@@ -256,19 +253,9 @@ main(int argc, char** argv, char** envp)
     opterr = 0;
     while ((c = Sys::getopt(argc, argv, opts)) != -1)
 	switch (c) {
-#ifdef OLDPROTO_SUPPORT
-	case 'o': handlers.append(new OldProtocolSuperServer(optarg)); break;
-	case 'O':
-	    { OldProtocolServer* server = new OldProtocolServer;
-	      server->open();
-	      handlers.append(server);
-	    }
-	    break;
-#else
 	case 'o': case 'O':
 	    fatal("No support for old protocol");
 	    /*NOTREACHED*/
-#endif
 #ifdef HTTP_SUPPORT
 	case 'h': handlers.append(new HTTPSuperServer(optarg)); break;
 	case 'H':

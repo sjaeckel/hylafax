@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 767 2008-01-25 18:38:18Z faxguy $
+#	$Id: configure 777 2008-01-31 02:26:36Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -59,7 +59,6 @@ PS=auto
 SYSVINIT=auto
 FAXQ_SERVER=yes			# init script starts faxq
 HFAXD_SERVER=yes		# init script starts hfaxd
-HFAXD_OLD_PROTOCOL=no		# don't start old protocol
 HFAXD_SNPP_SERVER=no		# don't start paging protocol
 SGI2FAX=auto
 PORT=auto
@@ -157,7 +156,6 @@ GETTY
 GREP
 GS
 GSRIP 		PATH_GSRIP
-HFAXD_OLD_PROTOCOL
 HFAXD_SERVER
 HFAXD_SNPP_SERVER
 IMP
@@ -384,7 +382,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 767 $"
+	echo "This is HylaFAX configure $Revision: 777 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -4487,8 +4485,7 @@ HylaFAX configuration parameters (part 2 of 2) are:
 [22] Name of SysV stop script:		$NAME_SYSVINITSTOP
 [23] Init script starts faxq:		$FAXQ_SERVER
 [24] Init script starts hfaxd		$HFAXD_SERVER
-[25] Start old protocol:		$HFAXD_OLD_PROTOCOL
-[26] Start paging protocol:		$HFAXD_SNPP_SERVER
+[25] Start paging protocol:		$HFAXD_SNPP_SERVER
 EOF
 }
   
@@ -4563,10 +4560,7 @@ promptForParameter()
     24) promptForNonNullStringParameter "$HFAXD_SERVER" \
 	    "Init script starts hfaxd";			HFAXD_SERVER="$param"
 	;;
-    25) promptForNonNullStringParameter "$HFAXD_OLD_PROTOCOL" \
-	    "Start old protocol";			HFAXD_OLD_PROTOCOL="$param"
-	;;
-    26) promptForNonNullStringParameter "$HFAXD_SNPP_SERVER" \
+    25) promptForNonNullStringParameter "$HFAXD_SNPP_SERVER" \
 	    "Start paging protocol";			HFAXD_SNPP_SERVER="$param"
 	;;
     esac
