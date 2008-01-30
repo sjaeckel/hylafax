@@ -1,4 +1,4 @@
-#	$Id: distrules 764 2008-01-18 19:28:19Z faxguy $
+#	$Id: distrules 777 2008-01-31 02:26:36Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -570,8 +570,6 @@ HYLAFAXSRC=\
 	hfaxd/InetFaxServer.h			\
 	hfaxd/Jobs.c++				\
 	hfaxd/Login.c++				\
-	hfaxd/OldProtocol.c++			\
-	hfaxd/OldProtocol.h			\
 	hfaxd/Parser.c++			\
 	hfaxd/RecvQueue.c++			\
 	hfaxd/Status.c++			\

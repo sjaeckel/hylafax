@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
+#	$Id: Makefile.in 777 2008-01-31 02:26:36Z faxguy $
 #
 # @WARNING@
 #
@@ -59,12 +59,11 @@ C++FILES=Admin.c++ \
 	\
 	SuperServer.c++ \
 	InetFaxServer.c++ \
-	OldProtocol.c++ \
 	SNPPServer.c++ \
 	UnixFaxServer.c++ \
 	\
 	main.c++
-LC++DEFS=-DOLDPROTO_SUPPORT=1 -DSNPP_SUPPORT=1
+LC++DEFS=-DSNPP_SUPPORT=1
 LC++INCS= -I${FAXDSRCDIR} ${ZLIBINC}
 TARGETS	= hfaxd
 
