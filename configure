@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 777 2008-01-31 02:26:36Z faxguy $
+#	$Id: configure 780 2008-02-01 01:57:21Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -382,7 +382,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 777 $"
+	echo "This is HylaFAX configure $Revision: 780 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -824,6 +824,7 @@ checkCompiler()
     if [ -z "${ENVOPTS:-}" ]; then
 	case $ISGCC-$TARGET in
 	no-*-hpux11*)	C_ANSI="-Aa -D_HPUX_SOURCE -Dhpux -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED";;
+	yes-*-hpux11*)  C_ANSI="-D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED";;
 	no-*-hp*)	C_ANSI="-Aa -D_HPUX_SOURCE -Dhpux";;
 	no-*-sco3.2v5.*)	C_ANSI="-Dsco -Dsco5 -b elf";;
 	yes-*-sco3.2v5.*)	C_ANSI="-Dsco -Dsco5 -m486";;
