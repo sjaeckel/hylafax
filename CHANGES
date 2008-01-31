@@ -1,7 +1,8 @@
-#	$Id: CHANGES 780 2008-02-01 01:57:21Z faxguy $	
+#	$Id: CHANGES 781 2008-02-01 02:52:40Z faxguy $	
 
 New Changes
 
+* add support for <waitfor:VCON> (31 Jan 2008)
 * more socklen_t adjustments for HP-UX 11 (31 Jan 2008)
 * remove "old" protocol support (30 Jan 2008)
 * make the server trust the client's specified document type (26 Jan 2008)

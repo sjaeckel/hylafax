@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 756 2008-01-12 20:00:18Z faxguy $ */
+/*	$Id: ModemConfig.c++ 781 2008-02-01 02:52:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -374,6 +374,7 @@ ModemConfig::findATResponse(const char* cp, ATResponse& resp)
 	{    "OFFHOOK", ClassModem::AT_OFFHOOK },
 	{       "RING", ClassModem::AT_RING },
 	{      "ERROR", ClassModem::AT_ERROR },
+	{       "VCON", ClassModem::AT_VCON },
 	{      "OTHER", ClassModem::AT_OTHER },
     };
     for (u_int i = 0; i < N(responses); i++)
