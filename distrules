@@ -1,4 +1,4 @@
-#	$Id: distrules 779 2008-01-31 23:42:41Z faxguy $
+#	$Id: distrules 782 2008-02-03 06:12:58Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -443,7 +443,6 @@ HYLAFAXSRC=\
 	faxd/Class21.h				\
 	faxd/Class2Ersatz.h			\
 	faxd/ClassModem.h			\
-	faxd/DestControl.h			\
 	faxd/DestInfo.h				\
 	faxd/FaxAcctInfo.h			\
 	faxd/FaxFont.h				\
@@ -463,6 +462,7 @@ HYLAFAXSRC=\
 	faxd/HDLCFrame.h			\
 	faxd/HylaClient.h			\
 	faxd/Job.h				\
+	faxd/JobControl.h			\
 	faxd/MemoryDecoder.h			\
 	faxd/Modem.h				\
 	faxd/ModemConfig.h			\
@@ -497,7 +497,6 @@ HYLAFAXSRC=\
 	faxd/Class2Send.c++			\
 	faxd/ClassModem.c++			\
 	faxd/CopyQuality.c++			\
-	faxd/DestControl.c++			\
 	faxd/DestInfo.c++			\
 	faxd/FaxAcctInfo.c++			\
 	faxd/FaxFont.c++			\
@@ -518,6 +517,7 @@ HYLAFAXSRC=\
 	faxd/HDLCFrame.c++			\
 	faxd/HylaClient.c++			\
 	faxd/Job.c++				\
+	faxd/JobControl.c++			\
 	faxd/MemoryDecoder.c++			\
 	faxd/Modem.c++				\
 	faxd/ModemConfig.c++			\
@@ -624,12 +624,12 @@ HYLAFAXSRC=\
 MANPAGES=\
     man/Makefile.in				\
 	man/hylafax-config.4f			\
-	man/destctrls.4f			\
 	man/dialrules.4f			\
 	man/cqtest.1m				\
 	man/choptest.1m				\
 	man/dialtest.1m				\
 	man/doneq.4f				\
+	man/edit-faxcover.1			\
 	man/faxabort.1m				\
 	man/faxaddmodem.1m			\
 	man/faxadduser.1m			\
@@ -638,7 +638,6 @@ MANPAGES=\
 	man/faxanswer.1m			\
 	man/faxconfig.1m			\
 	man/faxcover.1				\
-	man/edit-faxcover.1			\
 	man/faxqclean.1m			\
 	man/faxcron.1m				\
 	man/faxdeluser.1m			\
@@ -661,6 +660,7 @@ MANPAGES=\
 	man/hylafax-server.4f			\
 	man/hylafax-info.4f			\
 	man/hylafax-log.4f			\
+	man/jobcontrol.1m			\
 	man/mkcover.1m				\
 	man/notify.1m				\
 	man/pagermap.4f				\

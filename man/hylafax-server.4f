@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-server.4f 748 2008-01-04 23:24:31Z faxguy $
+.\"	$Id: hylafax-server.4f 782 2008-02-03 06:12:58Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -269,19 +269,12 @@ For more information consult
 .PP
 There are a number of controls on outbound calls that can be
 specified using the
-.B etc/destcontrols
-file (or whatever file is specified in a
-.B DestControls
-configuration parameter in the
+.B JobControl
+feature in the
 .I faxq
-configuration file).
-This file, described in
-.IR destctrls (${MANNUM4_5}),
-allows an administrator to restrict calls by phone number
-and to control the time of day that calls may be placed.
-In addition, operational parameters such as the maximum number
-of pages in a facsimile transmission can be constrained
-on a per-destination basis.
+configuration file.
+This file is described in
+.IR jobcontrol (${MANNUM1_8}).
 .PP
 If an error is encountered during transmission and a subsequent
 retransmission would not include the original cover page, then

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 688 2007-11-05 06:03:37Z faxguy $
+#	$Id: faxaddmodem.sh.in 782 2008-02-03 06:12:58Z faxguy $
 #
 # @WARNING@
 #
@@ -1899,7 +1899,6 @@ RequiredSchedulerParameters="
 OptionalSchedulerParameters="
     ContCoverPage
     ContCoverCmd
-    DestControls
     MaxConcurrentCalls
     MaxDials
     MaxSendPages
@@ -1916,7 +1915,6 @@ OptionalSchedulerParameters="
 "
 defaultContCoverPage=
 defaultContCoverCmd=\"bin/mkcover\"
-defaultDestControls=
 defaultMaxConcurrentCalls=1
 defaultMaxDials=12
 defaultMaxSendPages=0xffffffff
@@ -2088,8 +2086,6 @@ C#	MaxConcurrentCalls	\
 	Maximum number of concurrent jobs to a destination
 S	ModemGroup		Define a group of modems
 S	TimeOfDay		Time of day restrictions for outbound jobs
-S	DestControls		\
-	Pathname of destination controls file (relative to $SPOOL)
 C#	UUCPLockTimeout		\
 	Timeout before purging a stale UUCP lock file (secs)
 C#	MaxSendPages		Max number of pages to permit in an outbound job
@@ -2098,9 +2094,6 @@ EOF
 	. $PROMPTS
     fi
     checkForLocalFile $DialStringRules "dial string rules"
-    if [ "$DestControls" != "" ] && [ "$DestControls" != '""' ]; then
-	checkForLocalFile $DestControls "destination controls";
-    fi
     printSchedulerConfig; prompt "Are these ok [yes]?";
     if [ "$INTERACTIVE" != "no" ]; then
 	read ok

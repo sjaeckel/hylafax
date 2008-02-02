@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 758 2008-01-15 01:06:33Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 782 2008-02-03 06:12:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -635,10 +635,10 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
     int vres = req.resolution;
     int usexvres = req.usexvres;
     /*
-     * System overrides in destcontrols:
-     * VRes: we check for vres = 98 or vres = 196 in destroncontrols;
+     * System overrides in JobControl:
+     * VRes: we check for vres = 98 or vres = 196 in JobControl;
      *       if vres is not set getVRes returns 0.
-     * UseXVres: we check for usexvres = 0 or usexvres = 1 in destcontrols;
+     * UseXVres: we check for usexvres = 0 or usexvres = 1 in JobControl;
      *           if usexvres is not set getUseXVRes retuns -1.
      */
     if (job.getJCI().getVRes() == 98)

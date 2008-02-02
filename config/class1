@@ -1,4 +1,4 @@
-# $Id: class1 418 2007-01-11 18:36:24Z faxguy $
+# $Id: class1 782 2008-02-03 06:12:58Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -54,7 +54,6 @@
 #MaxSendPages:		25		# max pages in an outbound job
 #MaxRecvPages:		25		# max pages in an inbound job
 #ContCoverPage:		etc/cover.templ	# enable continuation cover pages
-#DestControls:		etc/destcontrols # destination-specific controls
 #MaxConcurrentCalls:	1		# serialize jobs to the same dest
 #TimeOfDay:		"Any"		# outbound jobs any day, any time
 # END-SERVER
