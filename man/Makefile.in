@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 727 2007-12-03 04:59:09Z faxguy $
+#	$Id: Makefile.in 782 2008-02-03 06:12:58Z faxguy $
 #
 # @WARNING@
 #
@@ -195,7 +195,6 @@ sman.apps/wedged.1m::	${SRCDIR}/wedged.1m;	${MANCVT}
 sman.apps/xferfaxstats.1m:: ${SRCDIR}/xferfaxstats.1m; ${MANCVT}
 sman.files/hylafax-server.4f::	${SRCDIR}/hylafax-server.4f;	${MANCVT}
 sman.files/hylafax-config.4f::	${SRCDIR}/hylafax-config.4f;	${MANCVT}
-sman.files/destctrls.4f:: ${SRCDIR}/destctrls.4f; ${MANCVT}
 sman.files/doneq.4f::	${SRCDIR}/doneq.4f;	${MANCVT}
 sman.files/dialrules.4f:: ${SRCDIR}/dialrules.4f; ${MANCVT}
 sman.files/hosts.hfaxd.4f::	${SRCDIR}/hosts.hfaxd.4f;	${MANCVT}
