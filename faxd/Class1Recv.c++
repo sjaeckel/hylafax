@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 709 2007-11-19 13:50:42Z faxguy $ */
+/*	$Id: Class1Recv.c++ 783 2008-02-06 01:28:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -633,7 +633,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		u_short attempts = 0;
 		do {
 		    (void) atCmd(rmCmd, AT_NOTHING);
-		    rmResponse = atResponse(rbuf, conf.class1RMPersistence ? conf.t2Timer : conf.t2Timer - 2900);
+		    rmResponse = atResponse(rbuf, conf.class1RMPersistence ? conf.t2Timer + 2900 : conf.t2Timer - 2900);
 		} while ((rmResponse == AT_NOTHING || rmResponse == AT_FCERROR) && ++attempts < conf.class1RMPersistence);
 		if (rmResponse == AT_CONNECT) {
 		    /*
@@ -1097,7 +1097,7 @@ Class1Modem::raiseRecvCarrier(bool& dolongtrain, fxStr& emsg)
     lastResponse = AT_NOTHING;
     do {
 	(void) atCmd(rmCmd, AT_NOTHING);
-	lastResponse = atResponse(rbuf, conf.class1RMPersistence ? conf.t2Timer : conf.t2Timer - 2900);
+	lastResponse = atResponse(rbuf, conf.class1RMPersistence ? conf.t2Timer + 2900 : conf.t2Timer - 2900);
     } while ((lastResponse == AT_NOTHING || lastResponse == AT_FCERROR) && ++attempts < conf.class1RMPersistence);
     if (lastResponse == AT_ERROR) gotEOT = true;	// on hook
     if (lastResponse == AT_FRH3 && waitFor(AT_CONNECT,0)) {
