@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.c++ 408 2007-01-01 18:44:29Z faxguy $ */
+/*	$Id: MIMEState.c++ 784 2008-02-07 18:26:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -159,6 +159,9 @@ MIMEState::parse(const MsgFmt& msg, fxStr& emsg)
     s = msg.findHeader("Content-ID");
     if (s)
 	cid = *s;
+    s = msg.findHeader("Content-Disposition");
+    if (s)
+	disp = *s;
     return (true);
 }
 

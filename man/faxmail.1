@@ -1,4 +1,4 @@
-.\"	$Id: faxmail.1 702 2007-11-13 16:44:09Z faxguy $
+.\"	$Id: faxmail.1 784 2008-02-07 18:26:39Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -598,7 +598,10 @@ external processing of
 body parts.
 The default pathname is ${LIBDATA}/faxmail.  \*(Fx comes with default converter
 scripts for TIFF and PDF, and they can be found in that path and used as a 
-reference for constructing other converters.
+reference for constructing other converters.  The script is passed the
+filename of the body part for conversion as the first parameters.  Subsequent
+parameters are the MIME Content-Description, Content-ID, and Content-Disposition
+information prefixed with ``description:'', ``id:'', and ``disposition:'' respectively.
 .TP 15
 .B Orientation
 Control whether pages are oriented horizontally (``landscape'')
