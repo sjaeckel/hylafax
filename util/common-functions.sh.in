@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 746 2008-01-02 19:30:27Z faxguy $
+#    $Id: common-functions.sh.in 787 2008-02-08 00:52:53Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -135,6 +135,8 @@ parseQfile()
     /^state/    { p("state", $2+0); }  
     /^doneop/    { p("doneop", $2); }
     /^number/    { p("number", $2); }
+    /^faxnumber/ { p("faxnumber", $2); }
+    /^faxname/   { p("faxname", $2); }
     /^canonical/    { p("canonical", $2); }
     /^external/    { p("number", $2); }        # override unprocessed number
     /^receiver/    { p("receiver", $2); }
