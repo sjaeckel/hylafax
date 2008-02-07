@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 781 2008-02-01 02:52:40Z faxguy $ */
+/*	$Id: ModemConfig.c++ 786 2008-02-07 21:09:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -855,10 +855,20 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	if (idConfig.length() < CallID::NUMBER+1)
 	    idConfig.resize(CallID::NUMBER+1);
 	idConfig[CallID::NUMBER].pattern = value;
+	idConfig[CallID::NUMBER].answerlength = 0;	// we must initialize this
+	idConfig[CallID::NUMBER].display = false;	// we must initialize this
+	idConfig[CallID::NUMBER].record = true;		// we must initialize this
+	idConfig[CallID::NUMBER].label = "";		// we must initialize this
+	idConfig[CallID::NUMBER].type = "";		// we must initialize this
     } else if (streq(tag, "cidname")) {
 	if (idConfig.length() < CallID::NAME+1)
 	    idConfig.resize(CallID::NAME+1);
 	idConfig[CallID::NAME].pattern = value;
+	idConfig[CallID::NAME].answerlength = 0;	// we must initialize this
+	idConfig[CallID::NAME].display = false;		// we must initialize this
+	idConfig[CallID::NAME].record = true;		// we must initialize this
+	idConfig[CallID::NAME].label = "";		// we must initialize this
+	idConfig[CallID::NAME].type = "";		// we must initialize this
     } else if (streq(tag, "cidnumberanswerlength")) {
 	if (idConfig.length() < CallID::NUMBER+1)
 	    idConfig.resize(CallID::NUMBER+1);
