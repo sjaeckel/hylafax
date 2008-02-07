@@ -1,7 +1,9 @@
-#	$Id: CHANGES 783 2008-02-06 01:28:57Z faxguy $	
+#	$Id: CHANGES 784 2008-02-07 18:26:39Z faxguy $	
 
 New Changes
 
+* pass Content-Description, Content-ID, Content-Disposition information
+  along to the faxmail MIMEConverters (7 Feb 2008)
 * extend high-speed receive carrier when possible (5 Feb 2008)
 * add support for <waitfor:VCON> (31 Jan 2008)
 * more socklen_t adjustments for HP-UX 11 (31 Jan 2008)

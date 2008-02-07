@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 765 2008-01-21 17:03:37Z faxguy $ */
+/*	$Id: faxmail.c++ 784 2008-02-07 18:26:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -707,13 +707,31 @@ faxMailApp::copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile)
 bool
 faxMailApp::runConverter(const fxStr& app, const fxStr& tmp, MIMEState& mime)
 {
-    const char* av[3];
+    const char* av[6];
     av[0] = strrchr(app, '/');
     if (av[0] == NULL)
 	av[0] = app;
     // XXX should probably pass in MIME state like charset
-    av[1] = tmp;
-    av[2] = NULL;
+    u_int i = 1;
+    av[i++] = tmp;
+    fxStr label;
+    if (mime.getDescription() != "") {
+	label = "description:";
+	label.append(mime.getDescription());
+	av[i++] = (const char*) label;
+    }
+    if (mime.getContentID() != "") {
+	label = "id:";
+	label.append(mime.getContentID());
+	av[i++] = (const char*) label;
+    }
+    if (mime.getDisposition() != "") {
+	label = "disposition:";
+	label.append(mime.getDisposition());
+	av[i++] = (const char*) label;
+    }
+    av[i++] = NULL;
+
     pid_t pid = fork();
     switch (pid) {
     case -1:				// error

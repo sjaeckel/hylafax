@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.h 408 2007-01-01 18:44:29Z faxguy $ */
+/*	$Id: MIMEState.h 784 2008-02-07 18:26:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -62,6 +62,7 @@ private:
     fxStr	subtype;		// content subtype
     fxStr	desc;			// content description
     fxStr	cid;			// content ID
+    fxStr	disp;			// content disposition
     fxStr	boundary;		// multipart boundary marker
     u_int	blen;			// adjusted boundary length
     bool	lastPart;		// true if last multipart boundary seen
@@ -93,6 +94,7 @@ public:
     bool isParent(const char* type, const char* subtype) const;
     const fxStr& getDescription(void) const;
     const fxStr& getContentID(void) const;
+    const fxStr& getDisposition(void) const;
 
     virtual void setEncoding(const char*);
     Encoding getEncoding(void) const;
@@ -118,4 +120,5 @@ inline const fxStr& MIMEState::getType(void) const	{ return type; }
 inline const fxStr& MIMEState::getSubType(void) const	{ return subtype; }
 inline const fxStr& MIMEState::getDescription(void) const { return desc; }
 inline const fxStr& MIMEState::getContentID(void) const	{ return cid; }
+inline const fxStr& MIMEState::getDisposition(void) const { return disp; }
 #endif /* _MIMEState_ */
