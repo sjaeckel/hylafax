@@ -1,7 +1,9 @@
-#	$Id: CHANGES 784 2008-02-07 18:26:39Z faxguy $	
+#	$Id: CHANGES 786 2008-02-07 21:09:49Z faxguy $	
 
 New Changes
 
+* fix the initialization of CallID types when using CIDName or
+  CIDNumber (7 Feb 2008)
 * pass Content-Description, Content-ID, Content-Disposition information
   along to the faxmail MIMEConverters (7 Feb 2008)
 * extend high-speed receive carrier when possible (5 Feb 2008)
