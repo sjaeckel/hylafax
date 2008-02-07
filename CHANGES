@@ -1,7 +1,8 @@
-#	$Id: CHANGES 786 2008-02-07 21:09:49Z faxguy $	
+#	$Id: CHANGES 787 2008-02-08 00:52:53Z faxguy $	
 
 New Changes
 
+* make parseQfile read $faxname and $faxnumber (7 Feb 2008)
 * fix the initialization of CallID types when using CIDName or
   CIDNumber (7 Feb 2008)
 * pass Content-Description, Content-ID, Content-Disposition information
