@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 730 2007-12-06 18:19:28Z faxguy $ */
+/*	$Id: ClassModem.c++ 789 2008-02-08 18:35:57Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -939,7 +939,7 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
 		if (conf.atCmdDelay)
 		    pause(conf.atCmdDelay);
 		fxStr command = cmd.extract(pos, i-pos);
-		command.raiseatcmd();
+		if (conf.raiseATCmd) command.raiseatcmd();
 		if (!putModemLine(command, ms))
 		    return (false);
 		pos = ++i;			// next segment starts after line break
@@ -971,7 +971,7 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
 			 * translated to \r).
 			 */
 			fxStr command = cmd.extract(pos, i-1-pos);
-			command.raiseatcmd();
+			if (conf.raiseATCmd) command.raiseatcmd();
 			if (!putModemLine(command, ms))
 			    return (false);
 			// setup for expected response
@@ -1085,7 +1085,7 @@ ClassModem::atCmd(const fxStr& cmd, ATResponse r, long ms)
 	    if (conf.atCmdDelay)
 		pause(conf.atCmdDelay);
 	    fxStr command = cmd.extract(pos, i-pos);
-	    command.raiseatcmd();
+	    if (conf.raiseATCmd) command.raiseatcmd();
 	    if (!putModemLine(command, ms))
 		return (false);
 	    respPending = true;

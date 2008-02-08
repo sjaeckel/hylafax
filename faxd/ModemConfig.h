@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 768 2008-01-25 18:47:29Z faxguy $ */
+/*	$Id: ModemConfig.h 789 2008-02-08 18:35:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -246,6 +246,7 @@ public:
     fxStr	tagLineFontFile;	// font file for imaging tag lines
     u_int	recvDataFormat;		// received facsimile data format
     bool	useJobTagLine;		// Use Job tagline or use conf taglineformat
+    bool	raiseATCmd;		// whether or not to raise-case the AT commands
     bool	doPhaseCDebug;		// Query modem during Phase C for debugging info.
 
     RTNHandling rtnHandling;            // RTN signal handling method

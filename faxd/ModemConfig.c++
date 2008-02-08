@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 786 2008-02-07 21:09:49Z faxguy $ */
+/*	$Id: ModemConfig.c++ 789 2008-02-08 18:35:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -255,6 +255,7 @@ ModemConfig::setupConfig()
     maxRate		= ClassModem::BR19200;	// reasonable for most modems
     minSpeed		= BR_2400;		// minimum transmit speed
     waitForConnect	= false;		// unique modem answer response
+    raiseATCmd		= true;			// raise all AT commands to upper case by default
     class2ECMType	= ClassModem::ECMTYPE_UNSET;// follow the service type default
     class2XmitWaitForXON = true;		// default per Class 2 spec
     class2SendRTC	= false;		// default per Class 2 spec
@@ -803,6 +804,8 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	doPhaseCDebug = getBoolean(value);
     else if (streq(tag, "saveunconfirmedpages"))
 	saveUnconfirmedPages = getBoolean(value);
+    else if (streq(tag, "modemraiseatcommands"))
+	raiseATCmd = getBoolean(value);
     else if (streq(tag, "distinctiverings"))
     	parseDR(value);
     else if (streq(tag, "callidpattern") || streq(tag, "callidanswerlength") || streq(tag, "calliddisplay") 
