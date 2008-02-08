@@ -221,6 +221,7 @@ f none @SPOOL@/etc/hosts.hfaxd=../etc/hosts.hfaxd 0600 @FAXUID@ @FAXGID@
 f none @SPOOL@/etc/dialrules=../@SRCDIR@/etc/dialrules 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/dialrules.sf-ba=../@SRCDIR@/etc/dialrules.sf-ba 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/dialrules.europe=../@SRCDIR@/etc/dialrules.europe 0444 @SYSUID@ @SYSGID@
+f none @SPOOL@/etc/dialrules.ext=../@SRCDIR@/etc/dialrules.ext 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/lutRS18.pcf=../@SRCDIR@/etc/lutRS18.pcf 0644 @FAXUID@ @FAXGID@
 d none @SPOOL@/info 0755 @FAXUID@ @FAXGID@
 d none @SPOOL@/log 0755 @FAXUID@ @FAXGID@
