@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.c++ 765 2008-01-21 17:03:37Z faxguy $ */
+/*	$Id: MsgFmt.c++ 790 2008-02-11 04:12:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -300,11 +300,13 @@ MsgFmt::formatHeaders(TextFormat& fmt)
     for (i = 0; i < nHead; i++) {
 	const fxStr* value = findHeader(headToKeep[i]);
 	if (value) {
+	    fxStr v(*value);
+	    decodeRFC2047(v);
 	    fmt.beginLine();
 		TextCoord hm = bold->show(fmt.getOutputFile(),
 		    mapHeader(headToKeep[i]) | ":");
 		fmt.hrMove(headerStop - hm);
-		showItalic(fmt, *value);
+		showItalic(fmt, v);
 	    fmt.endLine();
 	    nl++;
 	}
@@ -358,4 +360,137 @@ MsgFmt::showItalic(TextFormat& fmt, const char* cp)
     }
     if (tp > cp)
 	italic->show(tf, cp, tp-cp);		// flush remainder
+}
+
+static int
+hex(char c)
+{
+    // NB: don't check if c is in set [0-9a-fA-F]
+    return (isdigit(c) ? c-'0' : isupper(c) ? 10+c-'A' : 10+c-'a');
+}
+
+#define ishex(c) ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
+
+/*
+ * Decode a string that is RFC2047-encoded
+ */
+void
+MsgFmt::decodeRFC2047(fxStr& s)
+{
+    fxStackBuffer buf;
+    u_int bm = s.find(0, "=?");			// beginning marker
+    if (bm < s.length()) {
+	u_int mm = s.find(bm+2, "?Q?");		// quoted printable
+	if (mm == s.length()) s.find(bm, "?q?");
+	if (mm < s.length()) {
+	    u_int em = s.find(mm+3, "?=");	// end marker
+	    if (em < s.length()) {
+		s.remove(em, 2);
+		s.remove(bm, mm-bm+3);
+		u_int i = 0;
+		while (i < s.length()) {
+		    if (s[i] == '_') s[i] = ' ';
+		    i++;
+		}
+		copyQP(buf, s, s.length());
+		buf.put('\0');
+		s = buf;
+	    }
+	} else {
+	    s.find(bm, "?B?");			// base64
+	    if (mm == s.length()) s.find(bm, "?b?");
+	    if (mm < s.length()) {
+		u_int em = s.find(mm+3, "?=");	// end marker
+		if (em < s.length()) {
+		    s.remove(em, 2);
+		    s.remove(bm, mm-bm+3);
+		    copyBase64(buf, s, s.length());
+		    buf.put('\0');
+		    s = buf;
+		}
+	    }
+	}
+    }
+}
+
+void
+MsgFmt::copyQP(fxStackBuffer& buf, const char line[], u_int cc)
+{
+    // copy to buf & convert =XX escapes
+    for (u_int i = 0; i < cc; i++) {
+	if (line[i] == '=' && cc-i >= 2) {
+	    int v1 = hex(line[++i]);
+	    int v2 = hex(line[++i]);
+	    buf.put((v1<<4) + v2);
+	} else
+	    buf.put(line[i]);
+    }
+}
+
+void
+MsgFmt::copyBase64(fxStackBuffer& buf, const char line[], u_int cc)
+{
+    static const int base64[128] = {
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,
+	52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,
+	-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,
+	15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,
+	-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
+	41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1
+    };
+    u_int i = 0;
+    while (i < cc) {
+	int c1;
+	do {
+	    c1 = base64[(u_int)line[i++]];
+	} while (c1 == -1 && i < cc);
+	if (c1 != -1) {
+	    int c2;
+	    do {
+		c2 = base64[(u_int)line[i++]];
+	    } while (c2 == -1 && i < cc);
+	    if (c2 != -1) {
+		buf.put((c1<<2) | ((c2&0x30)>>4));
+		int c3;
+		do {
+		    c3 = base64[(u_int)line[i++]];
+		} while (c3 == -1 && i < cc);
+		if (c3 != -1) {
+		    buf.put(((c2&0x0f)<<4) | ((c3&0x3c)>>2));
+		    int c4;
+		    do {
+			c4 = base64[(u_int)line[i++]];
+		    } while (c4 == -1 && i < cc);
+		    if (c4 != -1)
+			buf.put((c3&0x3)<<6 | c4);
+		}
+	    }
+	}
+    }
+}
+
+inline int DEC(char c) { return ((c - ' ') & 077); }
+
+void
+MsgFmt::copyUUDecode(fxStackBuffer& buf, const char line[], u_int)
+{
+    const char* cp = line;
+    int n = DEC(*cp);
+    if (n > 0) {
+	// XXX check n against passed in byte count for line
+	int c;
+	for (cp++; n >= 3; cp += 4, n -= 3) {
+	    c = (DEC(cp[0])<<2) | (DEC(cp[1])>>4); buf.put(c);
+	    c = (DEC(cp[1])<<4) | (DEC(cp[2])>>2); buf.put(c);
+	    c = (DEC(cp[2])<<6) |  DEC(cp[3]);     buf.put(c);
+	}
+	if (n >= 1)
+	    c = (DEC(cp[0])<<2) | (DEC(cp[1])>>4), buf.put(c);
+	if (n >= 2)
+	    c = (DEC(cp[1])<<4) | (DEC(cp[2])>>2), buf.put(c);
+	if (n >= 3)
+	    c = (DEC(cp[2])<<6) |  DEC(cp[3]),     buf.put(c);
+    }
 }

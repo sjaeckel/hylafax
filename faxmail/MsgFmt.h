@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.h 630 2007-09-14 18:02:36Z faxguy $ */
+/*	$Id: MsgFmt.h 790 2008-02-11 04:12:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -52,6 +52,9 @@ struct MsgFmt {
 
     static bool getLine(FILE* fd, fxStackBuffer& buf);
     static fxStr stripComments(const fxStr& s);
+    void copyQP(fxStackBuffer& buf, const char line[], u_int cc);
+    void copyBase64(fxStackBuffer& buf, const char line[], u_int cc);
+    void copyUUDecode(fxStackBuffer& buf, const char line[], u_int);
 
     const fxStr* findHeader(const fxStr& name) const;
     u_int headerCount(void);
@@ -59,5 +62,6 @@ struct MsgFmt {
     void parseHeaders(FILE* fd, u_int& lineno);
     void formatHeaders(TextFormat& fmt);
     void showItalic(TextFormat& fmt, const char* cp);
+    void decodeRFC2047(fxStr& s);
 };
 #endif /* _MsgFmt_ */
