@@ -1,7 +1,8 @@
-#	$Id: CHANGES 789 2008-02-08 18:35:57Z faxguy $	
+#	$Id: CHANGES 790 2008-02-11 04:12:22Z faxguy $	
 
 New Changes
 
+* make faxmail decode RFC2047-encoded headers (10 Feb 2008)
 * add ModemRaiseATCommands configuration feature (8 Feb 2008)
 * make parseQfile read $faxname and $faxnumber (7 Feb 2008)
 * fix the initialization of CallID types when using CIDName or
