@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: hylafax.in 785 2008-02-07 20:15:30Z faxguy $
+#	$Id: hylafax.in 791 2008-02-11 18:53:33Z faxguy $
 #
 # chkconfig: 2345 97 05
 #
@@ -169,7 +169,6 @@ do_start()
 	    fi
 	    $ECHO "."
 	fi
-	;;
 }
 
 do_stop ()
