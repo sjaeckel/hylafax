@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 787 2008-02-08 00:52:53Z faxguy $
+#    $Id: common-functions.sh.in 792 2008-02-14 19:38:10Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -217,6 +217,10 @@ gs2fax()
     # AdjustWidth can be made to specify the pagewidth directly and
     # replace -dFIXEDMEDIA to permit TIFFs to be produced with
     # varied lengths.
+    #
+    # Another alternative to -dFIXEDMEDIA is -dPDFFitPage which has the 
+    # difference of "resizing" images to fit the page rather than cutting
+    # them off.
     #
     case "$paper" in
 	a4)
