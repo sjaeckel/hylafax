@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 740 2007-12-24 17:31:29Z faxguy $
+#	$Id: faxrcvd.sh.in 793 2008-02-18 16:31:50Z faxguy $
 #
 # ============================================
 #
@@ -67,6 +67,7 @@ faxrcvd_mail()
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
     if [ -n "$CCTO" ]; then echo "Cc: $CCTO"; fi
+    if [ -n "$BCCTO" ]; then echo "Bcc: $BCCTO"; fi
     printf "From: "
     printf "$DICTRECEIVEAGENT" | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo " <$FROMADDR>"
@@ -205,7 +206,7 @@ faxrcvd_mail()
     fi
     echo ""
     echo "--$MIMEBOUNDARY--"
-   ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi "$MAILTO" "$CCTO" "$BCCTO"
+   ) 2>$ERRORSTO | $SENDMAIL -f$FROMADDR -oi -t
 }
 
 test -f etc/setup.cache || {
