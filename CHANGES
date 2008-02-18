@@ -1,6 +1,11 @@
-#	$Id: CHANGES 790 2008-02-11 04:12:22Z faxguy $	
+#	$Id: CHANGES 794 2008-02-18 16:35:25Z faxguy $	
 
 New Changes
+
+* make faxrcvd use sendmail -t instead of placing the to-addresses on
+  the command-line (18 Feb 2008)
+
+(5.2.2)
 
 * make faxmail decode RFC2047-encoded headers (10 Feb 2008)
 * add ModemRaiseATCommands configuration feature (8 Feb 2008)
