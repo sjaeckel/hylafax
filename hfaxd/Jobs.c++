@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 777 2008-01-31 02:26:36Z faxguy $ */
+/*	$Id: Jobs.c++ 795 2008-02-23 17:47:30Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1063,6 +1063,16 @@ HylaFAXServer::newJob(fxStr& emsg)
 bool
 HylaFAXServer::updateJobOnDisk(Job& job, fxStr& emsg)
 {
+    if (job.fd < 0)
+    {
+	job.fd = Sys::open("/" | job.qfile, O_RDWR|O_CREAT, 0600);
+	if (job.fd < 0)
+	{
+	    emsg = "Cannot open/create job description file /" | job.qfile;
+	    return false;
+	}
+    }
+
     if (lockJob(job, LOCK_EX|LOCK_NB, emsg)) {
 	// XXX don't update in place, use temp file and rename
 	job.writeQFile();
@@ -1155,7 +1165,7 @@ bool
 HylaFAXServer::lockJob(Job& job, int how, fxStr& emsg)
 {
     if (job.fd < 0) {
-	job.fd = Sys::open("/" | job.qfile, O_RDWR|O_CREAT, 0600);
+	job.fd = Sys::open("/" | job.qfile, O_RDWR, 0600);
 	if (job.fd < 0) {
 	    emsg = "Cannot open/create job description file /" | job.qfile;
 	    return (false);
@@ -1176,7 +1186,8 @@ bool
 HylaFAXServer::lockJob(Job& job, int how)
 {
     if (job.fd < 0)
-	job.fd = Sys::open("/" | job.qfile, O_RDWR|O_CREAT, 0600);
+       job.fd = Sys::open("/" | job.qfile, O_RDWR, 0600);
+
     return (job.fd >= 0 && flock(job.fd, how) >= 0);
 }
 
