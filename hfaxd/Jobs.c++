@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 795 2008-02-23 17:47:30Z faxguy $ */
+/*	$Id: Jobs.c++ 796 2008-02-23 17:54:23Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -359,8 +359,8 @@ HylaFAXServer::checkJobState(Job* job)
 	return (false);
     }
     if (job->lastmod < sb.st_mtime) {
-	(void) updateJobFromDisk(*job);
-	job->lastmod = sb.st_mtime;
+	if (updateJobFromDisk(*job))
+		job->lastmod = sb.st_mtime;
     }
     return (true);
 }
