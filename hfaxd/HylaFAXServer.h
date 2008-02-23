@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 777 2008-01-31 02:26:36Z faxguy $ */
+/*	$Id: HylaFAXServer.h 797 2008-02-23 18:00:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -119,7 +119,7 @@ enum Token {
     T_ALLO,	 T_ANSWER,	T_APPE,		T_CHMOD,	T_CHOWN,
     T_CONFIG,	 T_CWD, 	T_CDUP,		T_DELE,		T_DELUSER,
     T_DELMODEM,	 T_DISABLE,	T_ENABLE,	T_FILEFMT,	T_FORM,
-    T_HELP,	 T_IDLE,	T_JDELE,	T_JGDELE,	T_JGINTR,
+    T_HELP,	 T_IDLE,	T_LOCKWAIT,	T_JDELE,	T_JGDELE,	T_JGINTR,
     T_JGKILL,	 T_JGNEW,	T_JGPARM,	T_JGREST,	T_JGRP,
     T_JGSUB,	 T_JGSUSP,	T_JGWAIT,	T_JINTR,	T_JKILL,
     T_JNEW,	 T_JOB,		T_JOBFMT,	T_JPARM,	T_JREST,
@@ -217,6 +217,8 @@ protected:
     fxStr	fifoResponse;		// response received to FIFO msg
     u_int	idleTimeout;		// client inactivity timeout
     u_int	maxIdleTimeout;		// upper bound on idle timeout
+    u_int	lockTimeout;		// qfile lock timeout
+    u_int	maxLockTimeout;		// upper bound on qfile lock timeout
     int		data;			// current data connection (socket)
     int		pdata;			// passive mode data connect (socket)
     fxStr	hostname;		// name of machine server is running on

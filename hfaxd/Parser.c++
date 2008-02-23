@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: Parser.c++ 797 2008-02-23 18:00:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -202,6 +202,7 @@ static const tab sitetab[] = {
 { "DELUSER",      T_DELUSER,	  false, true, "user-spec" },
 { "TRIGGER",	  T_TRIGGER,	  false, true, "spec" },
 { "HELP",         T_HELP,	  false, true, "[<string>]" },
+{ "LOCKWAIT",     T_LOCKWAIT,	  false, true, "max-lockwait-timeout" },
 };
 
 static const tab*
@@ -924,6 +925,7 @@ bool
 HylaFAXServer::site_cmd(Token t)
 {
     fxStr s;
+    long n;
 
     switch (t) {
     case T_ADDUSER:
@@ -992,6 +994,23 @@ HylaFAXServer::site_cmd(Token t)
 	    return (true);
 	}
 	break;
+    case T_LOCKWAIT:
+	if (opt_CRLF()) {
+	    logcmd(t);
+	    reply(213, "%u seconds.", lockTimeout);
+	    return (true);
+	} else if (number_param(n)) {
+	    logcmd(t, "%lu", n);
+	    if ((unsigned)n > maxLockTimeout && !IS(PRIVILEGED)) {
+		lockTimeout = maxLockTimeout;
+		reply(213, "%lu: Lock timeout too large, set to %u.",
+		    n, maxLockTimeout);
+	    } else {
+		lockTimeout = (int) n;
+		reply(213, "Lock timeout set to %u.", lockTimeout);
+	    }
+	    return (true);
+	}
     default:
 	break;
     }

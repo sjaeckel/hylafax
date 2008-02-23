@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 618 2007-09-03 19:14:20Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 797 2008-02-23 18:00:22Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -629,6 +629,8 @@ HylaFAXServer::numbertag HylaFAXServer::numbers[] = {
 { "servertracing",	&HylaFAXServer::tracingLevel,		TRACE_SERVER },
 { "idletimeout",	&HylaFAXServer::idleTimeout,		900 },
 { "maxidletimeout",	&HylaFAXServer::maxIdleTimeout,		7200 },
+{ "locktimeout",	&HylaFAXServer::lockTimeout,		0 },
+{ "maxlocktimeout",	&HylaFAXServer::maxLockTimeout,		60 },
 { "maxloginattempts",	&HylaFAXServer::maxLoginAttempts,	5 },
 { "maxadminattempts",	&HylaFAXServer::maxAdminAttempts,	5 },
 { "maxconsecutivebadcmds",&HylaFAXServer::maxConsecutiveBadCmds,10 },
