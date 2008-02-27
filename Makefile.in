@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
+#	$Id: Makefile.in 800 2008-02-27 23:24:12Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -57,6 +57,7 @@ DIRS=	util \
 	config \
 	etc \
 	man
+
 DSODIRS	= util faxd
 
 TARGETS=hylafax
