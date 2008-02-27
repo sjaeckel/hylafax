@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 792 2008-02-14 19:38:10Z faxguy $
+#    $Id: common-functions.sh.in 798 2008-02-27 23:04:16Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -112,6 +112,7 @@ parseQfile()
     }
     BEGIN {
 	var_prefix = "'"${VAR_PREFIX}"'";
+        tts = 0;
         nfiles = 0;
         npins = 0;
         pagewidth = 0;
@@ -127,6 +128,7 @@ parseQfile()
 	equipment = "";
 	station = "";
     }
+    /^tts/	{ p("tts",$2); }
     /^csi/	{ p("csi",$2); }
     /^nsf/	{ p("equipment",$3); }
     /^nsf/	{ p("station",$5); }
