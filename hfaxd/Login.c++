@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 721 2007-11-26 21:59:09Z faxguy $ */
+/*	$Id: Login.c++ 799 2008-02-27 23:20:40Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -25,6 +25,7 @@
  */
 #include "HylaFAXServer.h"
 #include "Sys.h"
+#include "config.h"
 
 #include <unistd.h>
 #include <ctype.h>
