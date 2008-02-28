@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 789 2008-02-08 18:35:57Z faxguy $
+.\"	$Id: hylafax-config.4f 802 2008-02-28 18:37:15Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-02-08 10:35:57 -0800 (Fri, 08 Feb 2008) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-02-28 10:37:15 -0800 (Thu, 28 Feb 2008) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -1721,8 +1721,8 @@ may be used as well as the following server-implemented codes:
 .nf
 \fBEscape\fP	\fBDescription\fP
 %%a	destination subaddress
-%%c	sender's company name
-%%C	destination company name
+%%c	destination company name
+%%C	sender's company name
 %%d	destination phone number
 %%g	sender's geographic location
 %%G	destination geographic location
