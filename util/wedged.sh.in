@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: wedged.sh.in 619 2007-09-03 19:23:48Z faxguy $
+#	$Id: wedged.sh.in 804 2008-03-08 18:16:19Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -51,7 +51,11 @@ startup a server system.
 EOF
     exit 1
 }
+
+CHARSET=UTF-8		# this really gets set in dictionary
+
 . etc/setup.cache
+. bin/common-functions
 
 #
 # Redirect errors to a tty, if possible, rather than
@@ -79,6 +83,14 @@ WEDGED_DISABLE_FAXGETTY=	# if set, faxgetty disabled from inittab
 
 if [ -f etc/FaxWedged ]; then
     . etc/FaxWedged	
+fi
+
+#
+# Fetch language settings (after FaxDispatch for customization of $LANG).
+#
+. bin/dictionary
+if [ -f etc/FaxDictionary ]; then
+    . etc/FaxDictionary
 fi
 
 #
@@ -164,9 +176,11 @@ EOF
     #
     # Send 'modem is wedged' email
     #
-    ($CAT<<EOF
-To: $TOADDR
-From: The HylaFAX Receive Agent <$FROMADDR>
+    (echo "To: $TOADDR"
+    printf "From: "
+    printf "$DICTRECEIVEAGENT" | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
+    echo " <$FROMADDR>"
+    $CAT<<EOF
 Subject: modem on $device appears wedged
 
 The HylaFAX software thinks that there is a problem with the modem
