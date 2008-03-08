@@ -1,7 +1,8 @@
-#	$Id: CHANGES 794 2008-02-18 16:35:25Z faxguy $	
+#	$Id: CHANGES 804 2008-03-08 18:16:19Z faxguy $	
 
 New Changes
 
+* begin to use bin/dictionary in wedged e-mails (8 Mar 2008)
 * make faxrcvd use sendmail -t instead of placing the to-addresses on
   the command-line (18 Feb 2008)
 
