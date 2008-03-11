@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 801 2008-02-28 00:47:00Z faxguy $ */
+/*	$Id: Login.c++ 806 2008-03-11 17:44:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -414,8 +414,16 @@ HylaFAXServer::dologout(int status)
         Sys::close(xferfaxlog);
     if (clientFd != -1)
 	Sys::close(clientFd);
-    if (clientFIFOName != "")
-	Sys::unlink("/" | clientFIFOName);
+    if (clientFIFOName != "") {
+      /* we need to check for the FIFO since dologout() might be called
+       * before we are chroot()ed... *sigh*
+       */
+      if (Sys::isFIFOFile( "/" | clientFIFOName)) {
+          Sys::unlink("/" | clientFIFOName);
+      } else if (Sys::isFIFOFile( FAX_SPOOLDIR "/" | clientFIFOName)) {
+          Sys::unlink( FAX_SPOOLDIR "/" | clientFIFOName);
+      }
+    }
     for (JobDictIter iter(blankJobs); iter.notDone(); iter++) {
 	Job* job = iter.value();
 	fxStr file("/" | job->qfile);
