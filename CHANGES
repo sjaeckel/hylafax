@@ -1,7 +1,8 @@
-#	$Id: CHANGES 804 2008-03-08 18:16:19Z faxguy $	
+#	$Id: CHANGES 806 2008-03-11 17:44:11Z faxguy $	
 
 New Changes
 
+* improvements to client FIFO cleanup (11 Mar 2008)
 * begin to use bin/dictionary in wedged e-mails (8 Mar 2008)
 * make faxrcvd use sendmail -t instead of placing the to-addresses on
   the command-line (18 Feb 2008)
