@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.h 770 2008-01-25 21:38:43Z faxguy $ */
+/*	$Id: FaxClient.h 807 2008-03-12 05:43:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -217,7 +217,7 @@ public:
 
     // output
     int command(const char* fmt ...);
-    int vcommand(const char* fmt, va_list ap);
+    int vcommand(const char* fmt, va_list ap1, va_list ap2);
     int getReply(bool expectEOF);
     const fxStr& getLastResponse(void) const;
     const fxStr& getLastContinuation(void) const;

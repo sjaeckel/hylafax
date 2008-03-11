@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 770 2008-01-25 21:38:43Z faxguy $ */
+/*	$Id: FaxClient.c++ 807 2008-03-12 05:43:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -615,10 +615,12 @@ FaxClient::protocolBotch(fxStr& emsg, const char* fmt ...)
 int
 FaxClient::command(const char* fmt ...)
 {
-    va_list ap;
-    va_start(ap, fmt);
-    int r = vcommand(fmt, ap);
-    va_end(ap);
+    va_list ap1, ap2;
+    va_start(ap1, fmt);
+    va_start(ap2, fmt);
+    int r = vcommand(fmt, ap1, ap2);
+    va_end(ap1);
+    va_end(ap2);
     return (r);
 }
 
@@ -627,23 +629,22 @@ FaxClient::command(const char* fmt ...)
  * The primary response code is returned.
  */
 int
-FaxClient::vcommand(const char* fmt, va_list ap)
+FaxClient::vcommand(const char* fmt, va_list ap1, va_list ap2)
 {
-    char *line = NULL;
-
     if (getVerbose()) {
         if (strncasecmp("PASS ", fmt, 5) == 0) {
             traceServer("-> PASS XXXX");
         } else if (strncasecmp("ADMIN ", fmt, 6) == 0) {
             traceServer("-> ADMIN XXXX");
         } else {
-	    line = (char *)malloc(1024);
+	    char* line = (char *)malloc(1024);
 	    if (line == NULL)
 		printError("Memory allocation failed");
 	    else {
-		vsnprintf(line, 1024, fmt, ap);
+		vsnprintf(line, 1024, fmt, ap1);
 		traceServer("-> %s", line);
 	    }
+	    free(line);
         }
     }
     if (fdOut == NULL) {
@@ -651,12 +652,7 @@ FaxClient::vcommand(const char* fmt, va_list ap)
         code = -1;
         return (0);
     }
-    if (line == NULL)
-	vfprintf(fdOut, fmt, ap);
-    else {
-	vfprintf(fdOut, fmt, ap);
-	free(line);
-    }
+    vfprintf(fdOut, fmt, ap2);
     fputs("\r\n", fdOut);
     (void) fflush(fdOut);
     return (getReply(strncmp(fmt, "QUIT", 4) == 0));
@@ -1327,10 +1323,12 @@ FaxClient::recvData(bool (*f)(int, const char*, int, fxStr&),
 	closeDataConn();
 	return (false);
     }
-    va_list ap;
-    va_start(ap, fmt);
-    int r; r = vcommand(fmt, ap);
-    va_end(ap);
+    va_list ap1, ap2;
+    va_start(ap1, fmt);
+    va_start(ap2, fmt);
+    int r; r = vcommand(fmt, ap1, ap2);
+    va_end(ap1);
+    va_end(ap2);
     if (r != PRELIM)
 	goto bad;
     if (!openDataConn(emsg))
@@ -1384,10 +1382,12 @@ FaxClient::recvZData(bool (*f)(void*, const char*, int, fxStr&),
 	    inflateEnd(&zstream);
 	    return (false);
 	}
-	va_list ap;
-	va_start(ap, fmt);
-	int r; r = vcommand(fmt, ap);		// XXX for __GNUC__
-	va_end(ap);
+	va_list ap1, ap2;
+	va_start(ap1, fmt);
+	va_start(ap2, fmt);
+	int r; r = vcommand(fmt, ap1, ap2);		// XXX for __GNUC__
+	va_end(ap1);
+	va_end(ap2);
 	if (r != PRELIM)
 	    goto bad;
 	if (!openDataConn(emsg))
