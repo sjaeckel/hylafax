@@ -1,7 +1,9 @@
-#	$Id: CHANGES 806 2008-03-11 17:44:11Z faxguy $	
+#	$Id: CHANGES 807 2008-03-12 05:43:09Z faxguy $	
 
 New Changes
 
+* fix a problem with va_list reuse when running clients in verbose
+  mode (11 Mar 2008)
 * improvements to client FIFO cleanup (11 Mar 2008)
 * begin to use bin/dictionary in wedged e-mails (8 Mar 2008)
 * make faxrcvd use sendmail -t instead of placing the to-addresses on

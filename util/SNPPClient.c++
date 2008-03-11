@@ -1,4 +1,4 @@
-/*	$Id: SNPPClient.c++ 685 2007-11-01 05:00:34Z faxguy $ */
+/*	$Id: SNPPClient.c++ 807 2008-03-12 05:43:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -616,10 +616,12 @@ SNPPClient::protocolBotch(fxStr& emsg, const char* fmt ...)
 int
 SNPPClient::command(const char* fmt ...)
 {
-    va_list ap;
-    va_start(ap, fmt);
-    int r = vcommand(fmt, ap);
-    va_end(ap);
+    va_list ap1, ap2;
+    va_start(ap1, fmt);
+    va_start(ap2, fmt);
+    int r = vcommand(fmt, ap1, ap2);
+    va_end(ap1);
+    va_end(ap2);
     return (r);
 }
 
@@ -628,7 +630,7 @@ SNPPClient::command(const char* fmt ...)
  * The primary response code is returned.
  */
 int
-SNPPClient::vcommand(const char* fmt, va_list ap)
+SNPPClient::vcommand(const char* fmt, va_list ap1, va_list ap2)
 {
     if (getVerbose()) {
 	if (strncasecmp("LOGI", fmt, 4) == 0)
@@ -636,7 +638,7 @@ SNPPClient::vcommand(const char* fmt, va_list ap)
 	else {
         fxStr f("-> ");
         f.append(fmt);
-	    vtraceServer(f, ap);
+	    vtraceServer(f, ap1);
 	}
     }
     if (fdOut == NULL) {
@@ -644,7 +646,7 @@ SNPPClient::vcommand(const char* fmt, va_list ap)
 	code = -1;
 	return (0);
     }
-    vfprintf(fdOut, fmt, ap);
+    vfprintf(fdOut, fmt, ap2);
     fputs("\r\n", fdOut);
     (void) fflush(fdOut);
     int r = getReply(strncmp(fmt, "QUIT", 4) == 0);

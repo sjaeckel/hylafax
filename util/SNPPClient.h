@@ -1,4 +1,4 @@
-/*	$Id: SNPPClient.h 685 2007-11-01 05:00:34Z faxguy $ */
+/*	$Id: SNPPClient.h 807 2008-03-12 05:43:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -181,7 +181,7 @@ public:
 
     // output
     int command(const char* fmt ...);
-    int vcommand(const char* fmt, va_list ap);
+    int vcommand(const char* fmt, va_list ap1, va_list ap2);
     int getReply(bool expectEOF);
     const fxStr& getLastResponse(void) const;
     int getLastCode(void) const;
