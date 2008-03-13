@@ -1,7 +1,8 @@
-#	$Id: CHANGES 807 2008-03-12 05:43:09Z faxguy $	
+#	$Id: CHANGES 808 2008-03-13 18:28:43Z faxguy $	
 
 New Changes
 
+* fix TimeOfDay consideration when batching (13 Mar 2008)
 * fix a problem with va_list reuse when running clients in verbose
   mode (11 Mar 2008)
 * improvements to client FIFO cleanup (11 Mar 2008)
