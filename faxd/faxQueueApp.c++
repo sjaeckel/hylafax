@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 782 2008-02-03 06:12:58Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 808 2008-03-13 18:28:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2439,10 +2439,13 @@ faxQueueApp::removeDestInfoJob(Job& job)
  * job to see if they can be batched together.
  */
 bool
-faxQueueApp::areBatchable(FaxRequest& reqa, FaxRequest& reqb, Job& job)
+faxQueueApp::areBatchable(FaxRequest& reqa, FaxRequest& reqb, Job& job, Job& cjob)
 {
     // make sure the job's modem is in the requested ModemGroup 
     if (!job.modem->isInGroup(reqb.modem)) return(false);
+    // make sure cjob's TimeOfDay is for now
+    time_t now = Sys::now();
+    if ((cjob.getJCI().nextTimeToSend(now) != now) || (cjob.tod.nextTimeOfDay(now) != now)) return (false);
     return(true);
 }
 
@@ -2658,7 +2661,7 @@ faxQueueApp::runScheduler()
 				fxAssert(cjob->tts <= Sys::now(), "Sleeping job on run queue");
 				fxAssert(cjob->modem == NULL, "Job on run queue holding modem");
 				FaxRequest* creq = readRequest(*cjob);
-				if (!areBatchable(*req, *creq, job)) {
+				if (!areBatchable(*req, *creq, job, *cjob)) {
 				    delete creq;
 				    continue;
 				}
@@ -2688,7 +2691,7 @@ faxQueueApp::runScheduler()
 			    if (cjob->dest != job.dest || cjob->state != FaxRequest::state_sleeping)
 				continue;
 			    FaxRequest* creq = readRequest(*cjob);
-			    if (!(req && areBatchable(*req, *creq, job))) {
+			    if (!(req && areBatchable(*req, *creq, job, *cjob))) {
 				delete creq;
 				continue;
 			    }
