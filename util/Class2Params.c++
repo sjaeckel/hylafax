@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++ 684 2007-10-31 19:01:59Z faxguy $ */
+/*	$Id: Class2Params.c++ 810 2008-03-16 08:08:21Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -812,7 +812,7 @@ const char* Class2Params::verticalResNames[65] = {
 };
 
 const char* Class2Params::verticalResName() const
-    { return (verticalResNames[vr & VR_ALL]); }
+    { return (verticalResNames[(vr & VR_ALL) > 64 ? 0 : (vr & VR_ALL)]); }
 
 const char* Class2Params::bestVerticalResName() const
 {
