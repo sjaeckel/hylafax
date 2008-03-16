@@ -1,7 +1,9 @@
-#	$Id: CHANGES 808 2008-03-13 18:28:43Z faxguy $	
+#	$Id: CHANGES 810 2008-03-16 08:08:21Z faxguy $	
 
 New Changes
 
+* fix some client hfaxd connections from dying (especially faxwach)
+  due to incomplete information in FIFO messages (16 Mar 2008)
 * fix TimeOfDay consideration when batching (13 Mar 2008)
 * fix a problem with va_list reuse when running clients in verbose
   mode (11 Mar 2008)
