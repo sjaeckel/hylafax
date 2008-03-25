@@ -1,7 +1,8 @@
-#	$Id: CHANGES 810 2008-03-16 08:08:21Z faxguy $	
+#	$Id: CHANGES 811 2008-03-26 04:42:18Z faxguy $	
 
 New Changes
 
+* make faxmail support ISO-8859-1 characters by default (25 Mar 2008)
 * fix some client hfaxd connections from dying (especially faxwach)
   due to incomplete information in FIFO messages (16 Mar 2008)
 * fix TimeOfDay consideration when batching (13 Mar 2008)
