@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 790 2008-02-11 04:12:22Z faxguy $ */
+/*	$Id: faxmail.c++ 811 2008-03-26 04:42:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -434,8 +434,38 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
     if (mime.parse(msg, emsg)) {
 	if (verbose)
 	    mime.trace(stderr);
-	// XXX anything but us-ascii is treated as ISO-8859-1
-	setISO8859(mime.getCharset() != CS_USASCII);
+	/*
+	 * In theory each MIME part could be in a different
+	 * character set, and each text mail header (such as
+	 * the subject header) could also be in multiple
+	 * character sets.  Supporting this would probably 
+	 * require faxmail to scan the entire mail beforehand
+	 * to add the requisite font definitions early in
+	 * the Postscript output... which isn't how faxmail
+	 * does things right now.
+	 *
+	 * Fortunately, the likelihood of a mail being written
+	 * in more than one character set (not including ASCII)
+	 * would be extremely rare and quite possibly only in
+	 * contrived scenarios.  So for now we just apply a single
+	 * character set to the entire mail message.
+	 *
+	 * In the past we did this:
+	 *
+	 * setISO8859(mime.getCharset() != CS_USASCII);
+	 *
+	 * However, this makes it impossible for RFC-2047-encoded
+	 * subject lines to show properly, as well as any 
+	 * subsequent non-ASCII mail parts.
+	 *
+	 * Eventually it may be best to have the character set 
+	 * be selected by a command-line argument, however, since
+	 * TextFormat.c++ only supports ISO-8859-1 at the moment
+	 * there is no point.  And since ASCII is completely 
+	 * covered by ISO-8859-1 there is no reason to prefer
+	 * ASCII over ISO-8859-1.
+	 */
+	setISO8859(true);
 
 	/*
 	 * Check first for any external script/command to
