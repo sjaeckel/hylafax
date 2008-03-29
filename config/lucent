@@ -1,4 +1,4 @@
-# $Id: lucent 496 2007-04-12 23:52:18Z faxguy $
+# $Id: lucent 812 2008-03-29 18:48:17Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -43,6 +43,7 @@
 # CONFIG:CLASS1:LT V.92 1.0 MT5634SMI*:.*:.*: Manufacturer=MultiTech Model=MT5634SMI
 # CONFIG:CLASS1:Zoom V.90 PCI*:.*:.*: Manufacturer=Zoom Model=2920
 # CONFIG:CLASS1:Zoom V.90 USB*:.*:.*: Manufacturer=Zoom Model=2980
+# CONFIG:CLASS1:Zoom V.90 Serial*:.*:.*: Manufacturer=Zoom Model=2949L
 # CONFIG:CLASS1:EFM560 VER*:.*:.*: Manufacturer=AboCom Model=EFM560
 # CONFIG:CLASS1:Mainpine Venus V.92*:.*:.*: Manufacturer=Mainpine Model=RockForce
 # CONFIG:CLASS1:Agere OCM V.92*:.*:.*: Manufacturer=Agere Model=OCM
