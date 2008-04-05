@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 777 2008-01-31 02:26:36Z faxguy $
+.\"	$Id: hfaxd.1m 813 2008-04-05 18:06:33Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -667,6 +667,9 @@ field containing the signalling rate.
 .nf
 .ta \w'Format    'u +\w'Description    'u
 \fBFormat	Description\fP
+X	Reception indicator (1=yes, 0=no)
+Y	Received date and time
+Z	Received time in seconds since the UNIX epoch
 a	SubAddress received from sender (if any)
 b	Signalling rate used during receive
 d	Data format used during receive

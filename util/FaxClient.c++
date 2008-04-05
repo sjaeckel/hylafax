@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 807 2008-03-12 05:43:09Z faxguy $ */
+/*	$Id: FaxClient.c++ 813 2008-04-05 18:06:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1691,7 +1691,9 @@ void FaxClient::getJobStatusHeader(fxStr& header)
  * queue status listings returned by the server.
  */
 const FaxClient::FaxFmtHeader FaxClient::recvFormats[] = {
+    { 'X',	"RI" },		// X (reception indicator)
     { 'Y',	"Date       Time" },	// Y (date & time)
+    { 'Z',	"UNIX Time" },	// Z (seconds since the UNIX epoch)
     { 'a',	"SUB" },	// a (subaddress)
     { 'b',	"BR" },		// b (bitrate)
     { 'd',	"DF" },		// d (data format)
