@@ -1,4 +1,4 @@
-# $Id: usr-rts 2 2005-11-11 21:32:03Z faxguy $
+# $Id: usr-rts 815 2008-04-05 19:36:46Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -81,3 +81,10 @@ ModemAnswerCmd:		AT+FCLASS=1&H1&I0&R2A	# force RTS/CTS after change
 # It is not necessary for the Courier modem.
 #
 Class2NRCmd:    AT+FNR=1,1,1,0
+# 
+# When using AT+FRS=n we see USR modems reset themselves in the middle of sessions
+# this is not good.  So, we seem to work-around that problem by not using the
+# command.  Unfortunately, this isn't an ideal thing.
+# 
+Class1SwitchingCmd:     "<delay\0727>"
+
