@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 777 2008-01-31 02:26:36Z faxguy $ */
+/*	$Id: RecvQueue.c++ 813 2008-04-05 18:06:33Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -322,9 +322,9 @@ static const char rformat[] = {
     'U',		// U
     'V',		// V
     'W',		// W
-    'X',		// X
-    'Y',		// Y
-    'Z',		// Z
+    'u',		// X (beingReceived as 1 or 0)
+    's',		// Y (recvTime in strftime %Y:%m:%d %H:%M:%S format)
+    'u',		// Z (recvTime as decimal time_t)
     '[',		// [
     '\\',		// \ (must have something after the backslash)
     ']',		// ]
@@ -483,6 +483,19 @@ HylaFAXServer::Rprintf(FILE* fd, const char* fmt,
 		break;
 	    case 'z':
 		fprintf(fd, fspec, ri.beingReceived ? "*" : " ");
+		break;
+	    case 'X':
+		fprintf(fd, fspec, ri.beingReceived);
+		break;
+	    case 'Y':
+		{ char buf[30];					// XXX HP C++
+		  strftime(buf, sizeof (buf), "%Y:%m:%d %H:%M:%S",
+			IS(USEGMT) ? gmtime(&ri.recvTime) : localtime(&ri.recvTime));
+		  fprintf(fd, fspec, buf);
+		}
+		break;
+	    case 'Z':
+		fprintf(fd, fspec, (u_int) ri.recvTime);
 		break;
 	    }
 	} else

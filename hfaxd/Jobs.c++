@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 797 2008-02-23 18:00:22Z faxguy $ */
+/*	$Id: Jobs.c++ 813 2008-04-05 18:06:33Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1796,8 +1796,8 @@ static const char jformat[] = {
     's',		// V (doneop)
     's',		// W (commid)
     'c',		// X (jobtype as symbol)
-    'Y',		// Y
-    'Z',		// Z
+    's',		// Y (tts in strftime %Y/%m/%d %H.%M.%S format)
+    'u',		// Z (tts as decimal time_t)
     '[',		// [
     '\\',		// \ (must have something after the backslash)
     ']',		// ]

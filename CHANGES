@@ -1,8 +1,9 @@
-#	$Id: CHANGES 812 2008-03-29 18:48:17Z faxguy $	
+#	$Id: CHANGES 813 2008-04-05 18:06:33Z faxguy $	
 
 New Changes
 
-* add default config support for Zoom 2949L (29 Mar 2007)
+* restore JobFmt %Y %Z and RcvFmt %X %Y %Z options (5 Apr 2008)
+* add default config support for Zoom 2949L (29 Mar 2008)
 
 (5.2.3)
 
