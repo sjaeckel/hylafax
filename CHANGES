@@ -1,7 +1,8 @@
-#	$Id: CHANGES 813 2008-04-05 18:06:33Z faxguy $	
+#	$Id: CHANGES 814 2008-04-05 19:09:56Z faxguy $	
 
 New Changes
 
+* add direct LDAP authentication support (5 Apr 2008)
 * restore JobFmt %Y %Z and RcvFmt %X %Y %Z options (5 Apr 2008)
 * add default config support for Zoom 2949L (29 Mar 2008)
 

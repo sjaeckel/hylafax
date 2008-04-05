@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 806 2008-03-11 17:44:11Z faxguy $ */
+/*	$Id: Login.c++ 814 2008-04-05 19:09:56Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -151,6 +151,160 @@ HylaFAXServer::pamIsAdmin(const char* user)
 	return(retval);
 }
 
+/**
+* ldapCheck
+* function checks if user with selected login and password exists in LDAP
+* param user [IN] - pointer to string containing user login
+* param pass [IN] - pointer to string containing user password
+* return true if user exists
+*/
+bool
+HylaFAXServer::ldapCheck(const char* user, const char* pass)
+{
+	bool retval = false;
+#ifdef HAVE_LDAP
+
+	int err = 0, i = 0;
+	char* filter = new char[255];
+	snprintf(filter, 255, "uid=%s", user);
+	LDAPMessage* pEntries;
+	LDAPMessage* pEntry;
+	struct berval **p_arr_values;
+	struct berval s_UserPasswd;
+	char* sLDAPUserDN = new char[255];
+	LDAP* p_LDAPConn;
+	bool bValidUser = false;
+
+	/*
+	 * See if ldapServerUri has a value.
+	 * If not, disable using LDAP support.
+	 */
+	if (strlen(ldapServerUri) == 0) {
+		retval = false;
+		return retval;
+	}
+
+
+
+	/*
+	 * Build the User DN using the LDAP Base value
+	 * from the config file and the supplied username
+	 */
+	strcpy(sLDAPUserDN, "cn=");
+	strcat(sLDAPUserDN, user);
+	strcat(sLDAPUserDN, ",");
+	strcat(sLDAPUserDN, ldapBaseDN);
+	strcat(sLDAPUserDN, "\0");
+
+	/*
+	 * Store the password in the berval struct for ldap_sasl_bind_s
+	 */
+	s_UserPasswd.bv_val = (char *)pass;
+	s_UserPasswd.bv_len = strlen(pass);
+
+
+	/*
+	 * Connect to the LDAP server and set the version
+	 */
+	ldap_initialize(&p_LDAPConn, ldapServerUri);
+	if (p_LDAPConn == NULL)
+	{
+		reply(530, "Unable to connect to LDAP");
+		return false;
+	}
+	err = ldap_set_option(p_LDAPConn, LDAP_OPT_PROTOCOL_VERSION, (void *) &ldapVersion);
+	if (err != LDAP_SUCCESS)
+	{
+		reply(530, "Set Option LDAP error %d: %s", err, ldap_err2string(err));
+		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		return false;
+	}
+
+
+	/*
+	 * Attempt a simple bind to the LDAP server
+	 * using the user credentials given to us.
+	 *
+	 * If we fail, then the provided credentials
+	 * are incorrect
+	 */
+	err = ldap_sasl_bind_s(p_LDAPConn, sLDAPUserDN, LDAP_SASL_SIMPLE, &s_UserPasswd, NULL, NULL, NULL);
+	if (err != LDAP_SUCCESS)
+	{
+		reply(530, "Bind LDAP error %d: %s", err, ldap_err2string(err));
+		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		return false;
+	} 
+
+
+	/*
+	 * Search the LDAP tree for the group that
+	 * a user needs to be in to have fax server
+	 * access.
+	 */
+	err = ldap_search_ext_s(p_LDAPConn, sLDAPUserDN, LDAP_SCOPE_SUBTREE, filter, NULL, 0, NULL, NULL, NULL, 0, &pEntries);
+	if (err != LDAP_SUCCESS)
+	{
+		reply(530, "Search LDAP error %d: %s", err, ldap_err2string(err));
+		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		return false;
+	}
+
+	/*
+	 * Get the first entry, which should be
+	 * our desired user
+	 */
+	pEntry = ldap_first_entry(p_LDAPConn, pEntries);
+	if (pEntry == NULL)
+	{
+		reply(530, "LDAP user not found");
+		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		return false;
+	}
+
+	/*
+	 * Fetch all of the groupMembership values
+	 */
+	p_arr_values = ldap_get_values_len(p_LDAPConn, pEntry, "groupMembership");
+	if (p_arr_values == NULL)
+	{
+		reply(530, "LDAP attribute groupMembership not found");
+		ldap_value_free_len(p_arr_values);
+		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		return false;
+	} 
+
+	/*
+	 * Check each value to see if it matches
+	 * our desired value specifed in the config
+	 */
+	while (p_arr_values[i] != NULL)
+	{
+		if (strcmp(ldapReqGroup, p_arr_values[i]->bv_val) == 0)
+		{
+			bValidUser = true;
+			break;
+		}
+		i++;
+	}
+	if (bValidUser)
+		retval = true;
+	else
+	{
+		reply(530, "Access Denied");
+		ldap_value_free_len(p_arr_values);
+		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		return false;
+	}
+
+
+	ldap_value_free_len(p_arr_values);
+	ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+
+#endif // HAVE_LDAP
+	return retval;
+}
+
 bool
 HylaFAXServer::pamCheck(const char* user, const char* pass)
 {
@@ -272,7 +426,14 @@ HylaFAXServer::passCmd(const char* pass)
 	pass++;
     } else
 	state |= S_LREPLIES;
-    if (pass[0] == '\0' || !(strcmp(crypt(pass, passWd), passWd) == 0 || pamCheck(the_user, pass))) {
+
+    /*
+     * Check hosts.hfaxd first, then PAM, and last, LDAP
+     */
+    if (pass[0] == '\0' || !(strcmp(crypt(pass, passWd), passWd) == 0 || 
+			     pamCheck(the_user, pass) || 
+			     ldapCheck(the_user,pass)))
+    {
 	if (++loginAttempts >= maxLoginAttempts) {
 	    reply(530, "Login incorrect (closing connection).");
 	    logNotice("Repeated login failures for user %s from %s [%s]"
@@ -431,3 +592,5 @@ HylaFAXServer::dologout(int status)
     }
     _exit(status);		// beware of flushing buffers after a SIGPIPE
 }
+
+
