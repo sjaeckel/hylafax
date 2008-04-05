@@ -1,4 +1,4 @@
-# $Id: defs.in 560 2007-07-23 19:00:50Z faxguy $
+# $Id: defs.in 814 2008-04-05 19:09:56Z faxguy $
 #
 # @WARNING@
 #
@@ -135,7 +135,7 @@ C++FILE		= @CXXFILE@
 
 # default definitions for programs--overide them as desired
 LIBS		= ${LIBUTIL}
-LLDLIBS		= ${LIBS} @PAMLIBS@ @LIBJBIG@ ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${LIBPORT} ${MACHDEPLIBS}
+LLDLIBS		= ${LIBS} @PAMLIBS@ @LIBJBIG@ @LDAPLIBS@ ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${LIBPORT} ${MACHDEPLIBS}
 #
 # Override this definition to eliminate shared library use.
 #

@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 797 2008-02-23 18:00:22Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 814 2008-04-05 19:09:56Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -624,6 +624,11 @@ HylaFAXServer::stringtag HylaFAXServer::strings[] = {
 { "systemtype",		&HylaFAXServer::systemType,
   "UNIX Type: L8 Version: SVR4" },
 { "admingroup",		&HylaFAXServer::admingroup },
+#ifdef HAVE_LDAP
+{ "ldapserveruri",	&HylaFAXServer::ldapServerUri,		"" },
+{ "ldapbasedn",		&HylaFAXServer::ldapBaseDN,		"" },
+{ "ldapreqgroup",	&HylaFAXServer::ldapReqGroup,		"" },
+#endif
 };
 HylaFAXServer::numbertag HylaFAXServer::numbers[] = {
 { "servertracing",	&HylaFAXServer::tracingLevel,		TRACE_SERVER },
@@ -636,6 +641,9 @@ HylaFAXServer::numbertag HylaFAXServer::numbers[] = {
 { "maxconsecutivebadcmds",&HylaFAXServer::maxConsecutiveBadCmds,10 },
 { "jobprotection",	&HylaFAXServer::jobProtection,		0444 },
 { "recvqprotection",	&HylaFAXServer::recvqProtection,	0444 },
+#ifdef HAVE_LDAP
+{ "ldapversion",	&HylaFAXServer::ldapVersion,		3 },
+#endif
 };
 
 void

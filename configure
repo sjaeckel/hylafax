@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 805 2008-03-10 15:27:30Z faxguy $
+#	$Id: configure 814 2008-04-05 19:09:56Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -179,7 +179,9 @@ HAVE_PAM
 PAMLIBS
 HAVE_JBIG
 HAVE_JBIGTIFF
-LIBJBIG"
+LIBJBIG
+HAVE_LDAP
+LDAPLIBS"
 
 VAR2="MACHDEPLIBS
 MAKECXXOVERRIDE
@@ -382,7 +384,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 805 $"
+	echo "This is HylaFAX configure $Revision: 814 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -1637,6 +1639,24 @@ if [ "$DISABLE_JBIG" != "yes" ]; then
 	fi
 else
 	Note "Disabling JBIG support"
+fi
+HAVE_LDAP="/*#define HAVE_LDAP 1*/"
+LDAPLIBS=""
+if [ "$DISABLE_LDAP" != "yes" ]; then
+	Note "Checking for LDAP (Lightweight Directory Access Protocol) support"
+	CheckForLibrary ldap_initialize -lldap &&
+		CheckForLibrary ber_get_null -llber &&
+			CheckForIncludeFile ldap.h && {
+				HAVE_LDAP="#define HAVE_LDAP 1"
+				LDAPLIBS="-lldap -llber -lresolv"
+			}
+	if [ "x$LDAPLIBS" = "x" ]; then
+		Note "... not found. Disabling LDAP support"
+		else
+		Note "... found. Enabling LDAP support"
+	fi
+else
+	Note "Disabling LDAP support"
 fi
 CheckForLibrary crypt -lc || {
     #

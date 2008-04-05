@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 797 2008-02-23 18:00:22Z faxguy $ */
+/*	$Id: HylaFAXServer.h 814 2008-04-05 19:09:56Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -46,6 +46,14 @@ extern "C" {
 #include <grp.h>
 }
 #endif // HAVE_PAM
+
+#ifdef HAVE_LDAP
+#include <ldap.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <lber.h>
+#endif // HAVE_LDAP
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -243,6 +251,13 @@ protected:
 
     fxStr	passWd;			// encrypted user password
     fxStr	adminWd;		// encrypted passwd for admin privileges
+#ifdef HAVE_LDAP
+    fxStr	ldapServerUri;		// URL for the LDAP Server
+    fxStr	ldapBaseDN;		// LDAP base DN where user objects are found
+    fxStr	ldapReqGroup;		// LDAP group users need to be members of for
+					// fax server access
+    u_int	ldapVersion;		// LDAP Protocol Version being used (def. v3)
+#endif
     u_int	uid;			// client's ID
     u_int	loginAttempts;		// number of failed login attempts
     u_int	maxLoginAttempts;	// login failures before server exits
@@ -384,7 +399,7 @@ protected:
     const char* userName(u_int uid);
     bool userID(const char*, u_int& id);
     void fillIDCache(void);
-
+    bool ldapCheck(const char* user, const char* pass);
     bool cvtPasswd(const char* type, const char* pass, fxStr& result);
     bool findUser(FILE* db, const char* user, u_int& newuid);
     bool addUser(FILE* db, const char* user, u_int uid,
@@ -618,7 +633,7 @@ inline void HylaFAXServer::pushToken(Token t)		{ pushedToken = t; }
  * business seeing.  Also we implement an access
  * control system that is built on top of the
  * normal UNIX protection mechanisms.
- */ 
+ */
 struct SpoolDir {
     const char*	pathname;
     bool adminOnly;	// accessible by unprivileged clients
