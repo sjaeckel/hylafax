@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 783 2008-02-06 01:28:57Z faxguy $ */
+/*	$Id: Class1Recv.c++ 816 2008-04-08 22:32:19Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1134,6 +1134,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
     HDLCFrame frame(5);					// A+C+FCF+FCS=5 bytes
     u_char* block = (u_char*) malloc(frameSize*256);	// 256 frames per block - totalling 16/64KB
     fxAssert(block != NULL, "ECM procedure error (receive block).");
+    memset(block, 0, (size_t) frameSize*256);
     bool lastblock = false;
     bool pagedataseen = false;
     u_short seq = 1;					// sequence code for the first block
