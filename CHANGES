@@ -1,7 +1,9 @@
-#	$Id: CHANGES 816 2008-04-08 22:32:19Z faxguy $	
+#	$Id: CHANGES 819 2008-04-11 05:10:42Z faxguy $	
 
 New Changes
 
+* don't strip Sender/SubAddr information in faxrcvd after a 
+  colon (10 Apr 2008)
 * blank ECM page block before use (8 Apr 2008)
 * add direct LDAP authentication support (5 Apr 2008)
 * restore JobFmt %Y %Z and RcvFmt %X %Y %Z options (5 Apr 2008)
