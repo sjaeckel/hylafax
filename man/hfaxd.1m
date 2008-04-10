@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 813 2008-04-05 18:06:33Z faxguy $
+.\"	$Id: hfaxd.1m 818 2008-04-11 04:55:42Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -386,6 +386,10 @@ IdleTimeout	integer	\s-1900\s+1	client idle timeout in seconds
 JobFmt	string	\s-1\fIsee below\fP\s+1	format string for job status results
 JobProtection	octal	\s-10444\s+1	permissions for client access to jobs
 KillTimeMap	string	\s-1\fIsee below\fP\s+1	mapping from service level to job kill time (\s-1SNPP\s+1)
+LDAPServerURI	string		URI of the ldap server including port number
+LDAPBaseDN	string		LDAP context where user objects can be found
+LDAPReqGroup	string		LDAP context of the users group
+LDAPVersion	integer	3	LDAP protocol version to use
 LogFacility	string	\s-1daemon\s+1	\fIsyslog\fP facility name for tracing messages
 MaxAdminAttempts	integer	\s-15\s+1	maximum admin attempts before disconnecting
 MaxConsecutiveBadCmds	integer	\s-110\s+1	maximum invalid commands before disconnecting
@@ -558,6 +562,21 @@ The default mapping is ``5 5 5 15 60 240 720 1440 1440 1440 1440 1440''
 which expires a
 job in 5 minutes for service levels 0-2, 15 minutes for level three, 60
 minutes for level four, etc.
+.TP 10
+.B LDAPServerURI
+The full address of the ldap server including port number, i.e.: ldaps://1.2.3.4:636 
+(for secure connections) or ldap://1.2.3.4:389 (for insecure connections)
+.TP 10
+.B LDAPBaseDN
+The full LDAP context where user objects can be found, i.e.: 
+ou=users,dc=example,dc=com for Active Directory/LDAP or ou=users,o=organization for Novell eDirectory
+.TP 10
+.B LDAPReqGroup
+The full LDAP context of the group users have to be a member of to gain HylaFAX 
+access for sending faxes
+.TP 10
+.B LDAPVersion
+Version number of the LDAP Protocol to use (default is '3')
 .TP 10
 .B LogFacility
 The symbolic name for the 
