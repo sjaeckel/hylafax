@@ -1,4 +1,4 @@
-# $Id: mainpine-10 650 2007-10-03 23:52:46Z faxguy $
+# $Id: mainpine-10 817 2008-04-10 23:53:56Z faxguy $
 
 #
 # prototype config for Mainpine RockForce and IQ series modems using
@@ -6,7 +6,7 @@
 #
 
 # CONFIG:CLASS1.0:Mainpine Venus V.92*:.*:.*: Manufacturer=Mainpine Model=RockForce
-# CONFIG:CLASS1.0:Mainpine CFAX34*:.*:.*: Manufacturer=Mainpine Model=IQ
+# CONFIG:CLASS1.0:Mainpine CFAX34*:.*:.*: Manufacturer=Mainpine Model='IQ Express'
 
 #
 # BEGIN-SERVER
