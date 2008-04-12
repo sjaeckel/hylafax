@@ -1,7 +1,9 @@
-#	$Id: CHANGES 819 2008-04-11 05:10:42Z faxguy $	
+#	$Id: CHANGES 820 2008-04-12 15:11:20Z faxguy $	
 
 New Changes
 
+* handle a V.34 control channel retrain when receiving and waiting
+  for DCN (12 Apr 2008)
 * don't strip Sender/SubAddr information in faxrcvd after a 
   colon (10 Apr 2008)
 * blank ECM page block before use (8 Apr 2008)

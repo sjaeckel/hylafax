@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 816 2008-04-08 22:32:19Z faxguy $ */
+/*	$Id: Class1Recv.c++ 820 2008-04-12 15:11:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1925,6 +1925,7 @@ Class1Modem::recvEnd(FaxSetup* setupinfo, fxStr& emsg)
 	 */
 	HDLCFrame frame(conf.class1FrameOverhead);
 	do {
+	    gotRTNC = false;
 	    if (recvFrame(frame, FCF_RCVR, conf.t2Timer)) {
 		traceFCF("RECV recv", frame.getFCF());
 		switch (frame.getFCF()) {
@@ -1944,6 +1945,9 @@ Class1Modem::recvEnd(FaxSetup* setupinfo, fxStr& emsg)
 		    recvdDCN = true;
 		    break;
 		}
+	    } else if (gotRTNC) {
+		(void) transmitFrame(FCF_MCF|FCF_RCVR);
+		traceFCF("RECV send", FCF_MCF);
 	    } else if (!wasTimeout() && lastResponse != AT_FCERROR && lastResponse != AT_FRH3) {
 		/*
 		 * Beware of unexpected responses from the modem.  If
