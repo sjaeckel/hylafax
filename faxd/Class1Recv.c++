@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 820 2008-04-12 15:11:20Z faxguy $ */
+/*	$Id: Class1Recv.c++ 821 2008-04-22 05:27:12Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1547,10 +1547,10 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				 * we will send MCF (to accomodate #1), and so this frame will then be 
 				 * lost.  This should be rare and have little impact on actual image data
 				 * loss when it does occur.  This approach cannot be followed with JPEG
-				 * and JBIG data formats.
+				 * and JBIG data formats or when the signal is PPS-NULL.
 				 */
 				if (fcount) {
-				    for (u_int i = 0; i <= (fcount - ((fc || params.df > DF_2DMMR) ? 1 : 2)); i++) {
+				    for (u_int i = 0; i <= (fcount - ((fc || params.df > DF_2DMMR || ppsframe.getFCF() == 0) ? 1 : 2)); i++) {
 					u_int pprpos, pprval;
 					for (pprpos = 0, pprval = i; pprval >= 8; pprval -= 8) pprpos++;
 					if (ppr[pprpos] & frameRev[1 << pprval]) blockgood = false;
