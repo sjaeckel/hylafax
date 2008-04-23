@@ -1,7 +1,8 @@
-#	$Id: CHANGES 820 2008-04-12 15:11:20Z faxguy $	
+#	$Id: CHANGES 822 2008-04-23 16:46:35Z faxguy $	
 
 New Changes
 
+* don't allow frame 255 to go missing on PPS-NULL (22 Apr 2008)
 * handle a V.34 control channel retrain when receiving and waiting
   for DCN (12 Apr 2008)
 * don't strip Sender/SubAddr information in faxrcvd after a 
