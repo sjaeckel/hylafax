@@ -1,4 +1,4 @@
-/*	$Id: Getty.c++ 506 2007-04-26 21:55:25Z faxguy $ */
+/*	$Id: Getty.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -217,7 +217,7 @@ Getty::setupSession(int fd)
     struct stat sb;
     Sys::fstat(fd, sb);
 #if HAS_FCHOWN
-    (void) fchown(fd, 0, sb.st_gid);
+    int ignore = fchown(fd, 0, sb.st_gid);
 #else
     Sys::chown(getLine(), 0, sb.st_gid);
 #endif

@@ -1,4 +1,4 @@
-/*	$Id: faxQCleanApp.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: faxQCleanApp.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -163,8 +163,7 @@ faxQCleanApp::scanDirectory(void)
 			    printf("%s: job too new, ignored (for now).\n",
 				(const char*) filename);
 			collectRefs(*req);
-		    } else if (forceArchiving || archiving &&
-		      strncmp(req->doneop, "archive", 7) == 0) {
+		    } else if (forceArchiving || (archiving && strncmp(req->doneop, "archive", 7) == 0)) {
 			/*
 			 * Job should be archived, pass the jobid
 			 * value to the archive script for archiving.

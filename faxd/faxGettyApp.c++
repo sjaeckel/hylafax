@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 741 2007-12-24 18:29:25Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -244,7 +244,7 @@ faxGettyApp::listenForRing()
 		    break;
 		}
 	    }
-	    if (done || ringsBeforeAnswer && (ringsHeard >= ringsBeforeAnswer))
+	    if (done || (ringsBeforeAnswer && (ringsHeard >= ringsBeforeAnswer)))
 		answerPhone(ClassModem::ANSTYPE_ANY, ctype, received_callid);
 	    else if (isModemInput())
 	        again = true;

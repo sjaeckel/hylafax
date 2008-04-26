@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 679 2007-10-26 15:45:37Z faxguy $ */
+/*	$Id: Class2.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -177,9 +177,9 @@ Class2Modem::setupModem(bool isSend)
      * assume the opposite.  In order to know otherwise we'd need to make
      * sense of AT+FCQ? and incorporate that in the messages above.
      */
-    if (serviceType == SERVICE_CLASS2)
+    if (serviceType == SERVICE_CLASS2) {
 	if (cqCmds == "") modemCQ = 0;
-    else {	// SERVICE_CLASS20, SERVICE_CLASS21
+    } else {	// SERVICE_CLASS20, SERVICE_CLASS21
 	if (cqCmds == "" && modemCQ) modemCQ = 1;
     }
     /*
@@ -837,9 +837,13 @@ Class2Modem::hangupCause(const char* code, bool codetocode)
     for (u_int i = 0; i < NCODES; i++) {
 	const HangupCode& c = hangupCodes[i];
 	if ((c.code[1] != NULL && strcasecmp(code, c.code[1]) == 0) ||
-	    (c.code[2] != NULL && strcasecmp(code, c.code[2]) == 0))
-	    if (codetocode) return (c.code[3]);
-	    else return (c.message);
+	    (c.code[2] != NULL && strcasecmp(code, c.code[2]) == 0)) {
+	    if (codetocode) {
+		return (c.code[3]);
+	    } else {
+		return (c.message);
+	    }
+	}
     }
     if (codetocode) return ("E210");
     return ("Unknown hangup code");

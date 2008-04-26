@@ -1,4 +1,4 @@
-/*	$Id: PCFFont.c++ 716 2007-11-24 17:20:28Z faxguy $ */
+/*	$Id: PCFFont.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -509,7 +509,7 @@ PCFFont::imageText(const char* text, bool isutf8,
     if (!isBigEndian)				// XXX
 	TIFFSwabArrayOfShort((u_short*) raster, h*rowwords);
     const char* cp = text;
-    for (const char* cp = text; *cp; cp++) {
+    for (; *cp; cp++) {
 	u_int g = (u_int)*cp;
 	if (isutf8 && (g >= 0xC0)) {		// first byte in a multibyte character
 	    /*

@@ -1,4 +1,4 @@
-/*	$Id: SNPPServer.c++ 390 2006-12-07 00:30:08Z faxguy $ */
+/*	$Id: SNPPServer.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -868,6 +868,7 @@ SNPPServer::dataCmd(void)
 	    reply(354, "Begin message input; end with <CRLF>'.'<CRLF>.");
 	    char buf[1024];
 	    u_int len = 0;
+	    int ignore;
 	    for (;;) {
 		if (getCmdLine(buf, sizeof (buf), true)) {
 		    const char* bp = buf;
@@ -889,7 +890,7 @@ SNPPServer::dataCmd(void)
 		    // if buf only contains .., we skipped the first .
 		    // hence we must write bp, not buf. also blen is
 		    // the length of bp, not buf.
-		    (void) fwrite((const char*) bp, blen, 1, fout);
+		    ignore = fwrite((const char*) bp, blen, 1, fout);
 		}
 	    }
 	    if (fclose(fout)) {
@@ -1069,7 +1070,7 @@ SNPPServer::messageCmd(const char* msg)
 	    setFileOwner(msgFile);
 	    FileCache::chmod(msgFile, 0660);		// sync cache
 	    tempFiles.append(msgFile);
-	    (void) fwrite(msg, len, 1, fout);
+	    int ignore = fwrite(msg, len, 1, fout);
 	    if (fclose(fout)) {
 		perror_reply(554, msgFile, errno);
 		Sys::unlink(msgFile);

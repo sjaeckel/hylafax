@@ -1,4 +1,4 @@
-/*	$Id: faxcover.c++ 678 2007-10-23 17:45:14Z faxguy $ */
+/*	$Id: faxcover.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -356,9 +356,9 @@ faxCoverApp::makeCoverSheet()
     printf("%%%%Page: \"1\" 1\n");
     // copy prototype cover page
     char buf[16*1024];
-    int n;
+    int n, ignore;
     while ((n = read(fd, buf, sizeof (buf))) > 0) 
-	fwrite(buf, n, 1, stdout);
+	ignore = fwrite(buf, n, 1, stdout);
     Sys::close(fd);
     printf("\nend\n");
 }

@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 749 2008-01-05 21:43:28Z faxguy $ */
+/*	$Id: Class1Send.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1231,7 +1231,8 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 		// a "RESPONSE REC" operation, anyway, this is correct behavior.
 		//
 		// We don't use CRP here, because it isn't well-received.
-		if (gotppr = recvFrame(pprframe, FCF_SNDR, conf.t4Timer, false, false)) {
+		gotppr = recvFrame(pprframe, FCF_SNDR, conf.t4Timer, false, false);
+		if (gotppr) {
 		    traceFCF("SEND recv", pprframe.getFCF());
 		    if (pprframe.getFCF() == FCF_CRP) {
 			gotppr = false;
@@ -1269,7 +1270,8 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 			    stopTimeout("sending RR frame");
 			    traceFCF("SEND send", FCF_RR);
 			    // T.30 states that we must wait no more than T4 between unanswered RR signals.
-			    if (gotmsg = recvFrame(pprframe, FCF_SNDR, conf.t4Timer, false, false)) {	// no CRP, stick to RR only
+			    gotmsg = recvFrame(pprframe, FCF_SNDR, conf.t4Timer, false, false);
+			    if (gotmsg) {	// no CRP, stick to RR only
 				traceFCF("SEND recv", pprframe.getFCF());
 				if (pprframe.getFCF() == FCF_CRP) {
 				    gotmsg = false;
@@ -1398,7 +1400,8 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 				    sendFrame(FCF_CTC|FCF_SNDR, fxStr(ctc, 2));
 				    stopTimeout("sending CTC frame");
 				    traceFCF("SEND send", FCF_CTC);
-				    if (gotctr = recvFrame(ctrframe, FCF_SNDR, conf.t4Timer)) {
+				    gotctr = recvFrame(ctrframe, FCF_SNDR, conf.t4Timer);
+				    if (gotctr) {
 					traceFCF("SEND recv", ctrframe.getFCF());
 					if (ctrframe.getFCF() == FCF_CRP) {
 					    gotctr = false;
@@ -1451,7 +1454,8 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 				    stopTimeout("sending EOR frame");
 				    traceFCF("SEND send", FCF_EOR);
 				    traceFCF("SEND send", pps[0]);
-				    if (goterr = recvFrame(errframe, FCF_SNDR, conf.t4Timer)) {
+				    goterr = recvFrame(errframe, FCF_SNDR, conf.t4Timer);
+				    if (goterr) {
 					traceFCF("SEND recv", errframe.getFCF());
 					if (errframe.getFCF() == FCF_CRP) {
 					    goterr = false;
@@ -1491,7 +1495,8 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 					    stopTimeout("sending RR frame");
 					    traceFCF("SEND send", FCF_RR);
 					    // T.30 states that we must wait no more than T4 between unanswered RR signals.
-					    if (gotmsg = recvFrame(errframe, FCF_SNDR, conf.t4Timer, false, false)) {	// no CRP, stick to RR only
+					    gotmsg = recvFrame(errframe, FCF_SNDR, conf.t4Timer, false, false);
+					    if (gotmsg) {	// no CRP, stick to RR only
 						traceFCF("SEND recv", errframe.getFCF());
 						if (errframe.getFCF() == FCF_CRP) {
 						    gotmsg = false;

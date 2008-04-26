@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 797 2008-02-23 18:00:22Z faxguy $ */
+/*	$Id: Parser.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -394,7 +394,7 @@ HylaFAXServer::cmd(Token t)
     case T_REIN:			// reinitialize server
 	logcmd(t);
 	if (IS(LOGGEDIN))
-	    (void) chdir("/");		// return to top of spooling area
+	    int ignore = chdir("/");	// return to top of spooling area
 	initServer();
 	reply(220, "%s server (%s) ready.", (const char*) hostname, version);
 	break;

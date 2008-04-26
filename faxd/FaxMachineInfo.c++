@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.c++ 691 2007-11-06 04:32:35Z faxguy $ */
+/*	$Id: FaxMachineInfo.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -360,7 +360,7 @@ FaxMachineInfo::writeConfig()
 		Sys::close(fd);
 		return;
 	    }
-	    (void) ftruncate(fd, cc);
+	    int ignore = ftruncate(fd, cc);
 	    Sys::close(fd);
 	} else
 	    error("open: %m");

@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 777 2008-01-31 02:26:36Z faxguy $ */
+/*	$Id: FaxRequest.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -565,7 +565,7 @@ FaxRequest::writeQFile()
     }
     lseek(fd, 0L, SEEK_SET);
     Sys::write(fd, sb, sb.getLength());
-    (void) ftruncate(fd, sb.getLength());
+    int ignore = ftruncate(fd, sb.getLength());
     // XXX maybe should fsync, but not especially portable
 }
 
@@ -683,7 +683,7 @@ FaxRequest::addItem(FaxSendOp op, char* tag)
     if (*cp == ':')			// address info
 	*cp++ = '\0';
     else
-	cp = tag, tag = "";
+	cp = tag, tag = '\0';
     items.append(FaxItem(op, dirnum, tag, cp));
 }
 
@@ -707,7 +707,7 @@ FaxRequest::addItem(FaxSendOp op, char* tag, bool& rejectJob)
     if (*cp == ':')			// address info
 	*cp++ = '\0';
     else
-	cp = tag, tag = "";
+	cp = tag, tag = '\0';
     if (!checkDocument(cp)) {
     	error("Rejected document in corrupt job request");
 	rejectJob = true;

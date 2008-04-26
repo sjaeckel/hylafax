@@ -1,4 +1,4 @@
-/*	$Id: class2.h 442 2007-02-21 19:23:06Z faxguy $ */
+/*	$Id: class2.h 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -96,7 +96,7 @@ const u_short DF_2DMR	= 1;		// 2-D Modified Read
 const u_short DF_2DMRUNCOMP	= 2;	// 2-D Uncompressed Mode
 const u_short DF_2DMMR	= 3;		// 2-D Modified Modified Read
 const u_short DF_JBIG	= 4;		// Single-progression sequential coding (Rec. T.85)
-const u_short DF_ALL	= BIT(DF_JBIG+1)-1 ^ BIT(DF_2DMRUNCOMP);	// no uncompressed
+const u_short DF_ALL	= (BIT(DF_JBIG+1)-1) ^ BIT(DF_2DMRUNCOMP);	// no uncompressed
 
 /*
  * The EC definition varies between the Class 2 and Class 2.0 spec, so

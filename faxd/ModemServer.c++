@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 730 2007-12-06 18:19:28Z faxguy $ */
+/*	$Id: ModemServer.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -439,7 +439,7 @@ ModemServer::setServerStatus(const char* fmt, ...)
     va_end(ap);
     fprintf(statusFile, "\n");
     fflush(statusFile);
-    (void) ftruncate(fileno(statusFile), ftell(statusFile));
+    int ignore = ftruncate(fileno(statusFile), ftell(statusFile));
     flock(fileno(statusFile), LOCK_UN);
 }
 
@@ -1420,7 +1420,8 @@ void
 ModemServer::stopTimeout(const char* whichdir)
 {
     timer.stopTimeout();
-    if (timeout = timer.wasTimeout())
+    timeout = timer.wasTimeout();
+    if (timeout)
 	traceModemOp("TIMEOUT: %s", whichdir);
 }
 

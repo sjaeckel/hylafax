@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.c++ 408 2007-01-01 18:44:29Z faxguy $ */
+/*	$Id: TextFormat.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -160,7 +160,8 @@ void TextFormat::setFilename(const char* cp)	{ curFile = cp; }
 void
 TextFormat::setGaudyHeaders(bool b)	
 {
-    if (gaudy = b)
+    gaudy = b;
+    if (gaudy)
 	headers = true;
 }
 

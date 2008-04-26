@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 808 2008-03-13 18:28:43Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2601,7 +2601,7 @@ faxQueueApp::runScheduler()
 		    if (job.isOnList()) job.remove();	// remove from run queue
 		    delayJob(job, *req, "Delayed by time-of-day restrictions {E338}", tts);
 		    delete req;
-		} else if (staggerCalls && lastCall + staggerCalls > now) {
+		} else if (staggerCalls && ((u_int) lastCall + staggerCalls) > (u_int) now) {
 		    /*
 		     * This job may not be started now because we last started
 		     * another job too recently and we're staggering jobs.
@@ -3083,7 +3083,8 @@ faxQueueApp::FIFOMessage(char cmd, const fxStr& id, const char* args)
 	break;
     case 'S':				// submit an outbound job
 	traceServer("SUBMIT JOB %s", args);
-	if (status = submitJob(args, false, true))
+	status = submitJob(args, false, true);
+	if (status)
 	    pokeScheduler();
 	break;
     case 'U':				// unreference file
@@ -3093,12 +3094,14 @@ faxQueueApp::FIFOMessage(char cmd, const fxStr& id, const char* args)
 	break;
     case 'X':				// suspend job
 	traceServer("SUSPEND JOB %s", args);
-	if (status = suspendJob(args, false))
+	status = suspendJob(args, false);
+	if (status)
 	    pokeScheduler();
 	break;
     case 'Y':				// interrupt job
 	traceServer("INTERRUPT JOB %s", args);
-	if (status = suspendJob(args, true))
+	status = suspendJob(args, true);
+	if (status)
 	    pokeScheduler();
 	break;
     case 'N':				// noop
