@@ -1,4 +1,4 @@
-/*	$Id: Trigger.c++ 759 2008-01-16 17:38:23Z faxguy $ */
+/*	$Id: Trigger.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -468,6 +468,7 @@ Trigger::setTriggerHook (const char* prg, const char* spec)
     event->cancel();
     delete event;
     hookCmd = prg;
+    return (true);
 }
 
 

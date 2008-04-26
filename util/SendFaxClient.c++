@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++ 748 2008-01-04 23:24:31Z faxguy $ */
+/*	$Id: SendFaxClient.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -248,9 +248,10 @@ SendFaxClient::makeCoverPage(const SendFaxJob& job, fxStr& file, fxStr& emsg)
 	    default:			// parent, read from pipe and wait
 		Sys::close(pfd[1]);
 		{ char buf[16*1024];	// XXX for HP C++ compiler
-		  int cc;
-		  while ((cc = read(pfd[0], buf, sizeof (buf))) > 0)
-		      (void) write(fd, buf, cc);
+		  int cc, ignore;
+		  while ((cc = read(pfd[0], buf, sizeof (buf))) > 0) {
+		      ignore = write(fd, buf, cc);
+		  }
 		}
 		(void) Sys::close(pfd[0]);
 		(void) Sys::close(fd);

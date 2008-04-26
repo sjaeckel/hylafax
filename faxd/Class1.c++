@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 760 2008-01-16 19:03:42Z faxguy $ */
+/*	$Id: Class1.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -389,7 +389,7 @@ Class1Modem::encodeTSI(fxStr& binary, const fxStr& ascii)
     u_char buf[20];
     u_int n = fxmin(ascii.length(),(u_int) 20);
     for (i = 0, j = 0; i < n; i++) {
-	char c = ascii[i];
+	int c = ascii[i];
 	if (isprint(c) || c == ' ')
 	    buf[j++] = frameRev[c];
     }
@@ -413,7 +413,7 @@ Class1Modem::encodeNSF(fxStr& binary, const fxStr& ascii)
     u_int n = ascii.length();
     binary.resize(n);
     for (i = 0, j = 0; i < n; i++) {
-	char c = ascii[i];
+	int c = ascii[i];
 	if (isprint(c) || c == ' ')
 	    binary[j++] = frameRev[c];
     }

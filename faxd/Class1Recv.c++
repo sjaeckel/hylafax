@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 821 2008-04-22 05:27:12Z faxguy $ */
+/*	$Id: Class1Recv.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -886,7 +886,8 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 						(void) transmitFrame(params.ec != EC_DISABLE ? FCF_RNR : FCF_CRP|FCF_RCVR);
 						traceFCF("RECV send", params.ec != EC_DISABLE ? FCF_RNR : FCF_CRP);
 						HDLCFrame rrframe(conf.class1FrameOverhead);
-						if (gotresponse = recvFrame(rrframe, FCF_RCVR, conf.t2Timer)) {
+						gotresponse = recvFrame(rrframe, FCF_RCVR, conf.t2Timer);
+						if (gotresponse) {
 						    traceFCF("RECV recv", rrframe.getFCF());
 						    if (rrframe.getFCF() == FCF_DCN) {
 							protoTrace("RECV recv DCN");
@@ -1618,7 +1619,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    }
 					    transmitFrame(FCF_PPR, fxStr(ppr, 32));
 					    traceFCF("RECV send", FCF_PPR);
-					    if (gotrtnframe = recvFrame(rtnframe, FCF_RCVR, conf.t2Timer))
+					    gotrtnframe = recvFrame(rtnframe, FCF_RCVR, conf.t2Timer);
+					    if (gotrtnframe)
 						traceFCF("RECV recv", rtnframe.getFCF());
 					    recvFrameCount++;
 					}
@@ -1815,7 +1817,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				(void) transmitFrame(FCF_RNR|FCF_RCVR);
 				traceFCF("RECV send", FCF_RNR);
 				HDLCFrame rrframe(conf.class1FrameOverhead);
-				if (gotresponse = recvFrame(rrframe, FCF_RCVR, conf.t2Timer)) {
+				gotresponse = recvFrame(rrframe, FCF_RCVR, conf.t2Timer);
+				if (gotresponse) {
 				    traceFCF("RECV recv", rrframe.getFCF());
 				    if (rrframe.getFCF() == FCF_DCN) {
 					protoTrace("RECV recv DCN");

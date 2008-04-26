@@ -1,4 +1,4 @@
-/*	$Id: ondelay.c 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: ondelay.c 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -48,7 +48,7 @@ main(int ac, char* av[])
     }
     (void) fcntl(0, F_SETFL, fcntl(0, F_GETFL, 0) &~ O_NDELAY);
 #ifndef ONDELAY_NOSTDINDUP
-    close(1); dup(0);	/* for Ultrix and other old BSD stty(1)s */
+    close(1); int ignore = dup(0);	/* for Ultrix and other old BSD stty(1)s */
 #endif
     execvp(av[2], &av[2]);
     perror(av[2]);

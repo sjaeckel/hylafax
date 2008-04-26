@@ -1,4 +1,4 @@
-/*	$Id: FaxAcctInfo.c++ 536 2007-06-21 02:13:06Z faxguy $ */
+/*	$Id: FaxAcctInfo.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -101,7 +101,7 @@ FaxAcctInfo::record(const char* cmd)
      * Here we provide a hook for an external accounting
      * facility, such as a database.
      */
-    const char* argv[21];
+    const char* argv[22];
     argv[0] = "FaxAccounting";
     argv[1] = timebuf;
     argv[2] = cmd;

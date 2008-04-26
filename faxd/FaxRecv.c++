@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 660 2007-10-09 23:22:15Z faxguy $ */
+/*	$Id: FaxRecv.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -70,7 +70,8 @@ FaxServer::recvFax(const CallID& callid, FaxMachineInfo clientInfo, fxStr& emsg)
 	recvPages = 0;			// total count of received pages
 	fileStart = pageStart = Sys::now();
 
-	if (faxRecognized = modem->recvBegin(&setupinfo, emsg)) {
+	faxRecognized = modem->recvBegin(&setupinfo, emsg);
+	if (faxRecognized) {
 	    /*
 	     * If the system is busy then notifyRecvBegun may not return
 	     * quickly.  Thus we run it in a child process and move on.

@@ -1,6 +1,11 @@
-#	$Id: CHANGES 822 2008-04-23 16:46:35Z faxguy $	
+#	$Id: CHANGES 823 2008-04-26 22:34:29Z faxguy $	
 
 New Changes
+
+* warnings fixups and configure script modifications for gcc-4.3
+  and specifically Fedora 9 (26 Apr 2008)
+
+(5.2.4)
 
 * don't allow frame 255 to go missing on PPS-NULL (22 Apr 2008)
 * handle a V.34 control channel retrain when receiving and waiting

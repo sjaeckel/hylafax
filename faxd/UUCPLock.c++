@@ -1,4 +1,4 @@
-/*	$Id: UUCPLock.c++ 386 2006-11-30 03:12:40Z faxguy $ */
+/*	$Id: UUCPLock.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -178,7 +178,7 @@ UUCPLock::create()
 	Sys::chmod(buff, mode);
 #endif
 #if HAS_FCHOWN
-	(void) fchown(fd, UUCPuid, UUCPgid);
+	int ignore = fchown(fd, UUCPuid, UUCPgid);
 #else
 	Sys::chown(buff, UUCPuid, UUCPgid);
 #endif

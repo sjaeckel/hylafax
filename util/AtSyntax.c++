@@ -1,4 +1,4 @@
-/*	$Id: AtSyntax.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: AtSyntax.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -41,7 +41,7 @@
 static int
 isLeapYear(const tm& at) {
     int y = at.tm_year + TM_YEAR_BASE;
-    return ((y % 4) == 0 && (y % 100) != 0 || (y % 400) == 0);
+    return (((y % 4) == 0 && (y % 100) != 0) || (y % 400) == 0);
 }
 
 #ifdef streq

@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++ 810 2008-03-16 08:08:21Z faxguy $ */
+/*	$Id: Class2Params.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -778,7 +778,7 @@ Class2Params::encodeCaps() const
 	 | ((ln&LN_ALL)<<19)
 	 | ((df&DF_ALL)<<22)
 	 | ((ec&EC_DISABLE)<<26)
-	 | ((ec&EC_ALL != 0 ? 1 : 0)<<27)
+	 | (((ec&EC_ALL) != 0 ? 1 : 0)<<27)
 	 | ((bf&BF_ALL)<<28)
 	 | ((st&ST_ALL)<<30)
 	 ;

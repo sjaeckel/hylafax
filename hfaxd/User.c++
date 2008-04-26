@@ -1,4 +1,4 @@
-/*	$Id: User.c++ 390 2006-12-07 00:30:08Z faxguy $ */
+/*	$Id: User.c++ 823 2008-04-26 22:34:29Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -528,9 +528,9 @@ HylaFAXServer::deleteUser(FILE* db, const char* user)
 	}
 	fputs(line, ftmp);
     }
-    int cc;
+    int cc, ignore;
     while ((cc = fread(line, 1, sizeof (line), db)) > 0)
-	fwrite(line, cc, 1, ftmp);
+	ignore = fwrite(line, cc, 1, ftmp);
     bool ioError = (fclose(ftmp) != 0);
     if (found) {
 	if (ioError)

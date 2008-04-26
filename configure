@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 814 2008-04-05 19:09:56Z faxguy $
+#	$Id: configure 823 2008-04-26 22:34:29Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -384,7 +384,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 814 $"
+	echo "This is HylaFAX configure $Revision: 823 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -406,6 +406,14 @@ if [ -n "$ac_prev" ]; then
     bitch "configure: missing argument to --`echo $ac_prev | sed 's/_/-/g'`"
     die
 fi
+
+#
+# Our GCOPTS and GCXXOPTS are equivalent in usage to the more-traditional
+# CFLAGS and CXXFLAGS.  So if GCOPTS and GCXXOPTS are unset, then apply
+# CFLAGS and CXXFLAGS to them.
+#
+if [ -z "$GCOPTS" ]; then GCOPTS=$CFLAGS; fi
+if [ -z "$GCXXOPTS" ]; then GCXXOPTS=$CXXFLAGS; fi
 
 #
 # Locate source directory by looking for the VERSION file.
@@ -806,6 +814,7 @@ checkGCCVersion()
 # NB: use ANSI C prototype to weed out non-ANSI compilers.
 #
 cat>dummy.c<<EOF
+#include <stdlib.h>
 main(int argc, char* argv) { exit(0); }
 EOF
 
@@ -903,7 +912,7 @@ CheckForGandO()
 {
     f=$1
     if test -s $f; then
-	capture grep -i \(error\|warning\) $f || return 1
+	capture egrep -i \"error\|warning\" $f || return 1
     fi
     return 0
 }
@@ -957,6 +966,7 @@ fi
 # Make dependency information.
 #
 cat>dummy.c<<EOF
+#include <stdlib.h>
 main(int argc, char* argv) { exit(0); }
 EOF
 capture cat dummy.c
@@ -1305,7 +1315,7 @@ if [ -z "$RANLIB" ]; then
 fi
 
 cat>dummy.C<<EOF
-#include "new.h"
+#include <new>
 struct foo {
     int x;
     foo();
@@ -1417,8 +1427,8 @@ runMake()
 CheckForCXXRuntime()
 {
 cat>t.c++<<EOF
-#include "iostream.h"
-int main(){ cout << "Hello World!" << endl; return 0;}
+#include <iostream>
+int main(){ std::cout << "Hello World!" << std::endl; return 0;}
 EOF
     runMake t "t:; \${C++F} \${C++FILE} t.c++${MAKECXXOVERRIDE}"
 }
@@ -1529,10 +1539,12 @@ EOF
 #
 CheckForLibraryWithArgs()
 {
+    l=$1; shift
     f=$1; shift
     a=$1; shift
     libs="$@";
     cat>t.c<<EOF
+#include <$l>
 int t() { $f($a); return 0; }
 int main(){ t(); return 0; }
 EOF
@@ -1672,7 +1684,7 @@ CheckForLibrary crypt -lc || {
 	fi
     done
 }
-CheckForLibraryWithArgs strftime "(void*)0, 0, (void*)0, (void*)0" -lc || {
+CheckForLibraryWithArgs time.h strftime "(void*)0, 0, (void*)0, (void*)0" -lc || {
     #
     # SCO has strftime in -lintl.
     #
@@ -1762,26 +1774,54 @@ done
 if [ "$ISGXX" = yes ]; then
     if [ -z "$CXXRUNTIME" ]; then
 	for f in memmove strdup; do
-	    CheckForLibrary $f -lc || {
-		CheckForLibrary $f -lg++ && {
-		    Note "Looks like we need -lg++ for $f"
-		    MACHDEPLIBS="$MACHDEPLIBS -lg++"
-		    break;
+	    if [ $f = "memmove" ]; then
+		CheckForLibraryWithArgs string.h $f "(void*)0, (void*)0, 0" -lc || {
+		    CheckForLibraryWithArgs string.h $f "(void*0), (void*)0, 0" -lg++ && {
+			Note "Looks like we need -lg++ for $f"
+			MACHDEPLIBS="$MACHDEPLIBS -lg++"
+			break;
+		    }
 		}
-	    }
+	    else
+		CheckForLibraryWithArgs string.h $f "(void*)0" -lc || {
+		    CheckForLibraryWithArgs string.h $f "(void*)0" -lg++ && {
+			Note "Looks like we need -lg++ for $f"
+			MACHDEPLIBS="$MACHDEPLIBS -lg++"
+			break;
+		    }
+		}
+	    fi
 	done
     fi
     for f in strtoul strerror memmove random; do
-	CheckForLibrary $f -lc || {
-	    CheckForLibrary $f -liberty && {
-		Note "Looks like we need -liberty for $f"
-		MACHDEPLIBS="$MACHDEPLIBS -liberty"
-		break;
+	if [ $f = "memmove" ]; then
+	    CheckForLibraryWithArgs string.h $f "(void*)0, (void*)0, 0" -lc || {
+		CheckForLibraryWithArgs string.h $f "(void*0), (void*)0, 0" -liberty && {
+		    Note "Looks like we need -liberty for $f"
+		    MACHDEPLIBS="$MACHDEPLIBS -liberty"
+		    break;
+		}
 	    }
-	}
+	elif [ $f = "strerror" ]; then
+	    CheckForLibraryWithArgs string.h $f "0" -lc || {
+		CheckForLibraryWithArgs string.h $f "0" -liberty && {
+		    Note "Looks like we need -liberty for $f"
+		    MACHDEPLIBS="$MACHDEPLIBS -liberty"
+		    break;
+		}
+	    }
+	else
+	    CheckForLibraryWithArgs string.h $f "" -lc || {
+		CheckForLibraryWithArgs string.h $f "" -liberty && {
+		    Note "Looks like we need -liberty for $f"
+		    MACHDEPLIBS="$MACHDEPLIBS -liberty"
+		    break;
+		}
+	    }
+	fi
     done
 fi
-CheckForLibrary floor -lm && {
+CheckForLibraryWithArgs math.h floor "0" -lm && {
     Note "Looks like -lm is the library for math functions."
     MACHDEPLIBS="$MACHDEPLIBS -lm"
 }
@@ -2090,7 +2130,23 @@ EmitConfigurationDefinitions()
 #
 CheckForFunc()
 {
-    echo "extern int $1(); main(){$1($2);exit(0);}" >t.c
+    echo "#include <stdlib.h>" > t.c
+    echo "extern int $1(); main(){$1($2);exit(0);}" >> t.c
+    capture cat t.c
+    runMake t "t:; \${CC} t.c ${MACHDEPLIBS}"
+}
+CheckForStdFunc()
+{
+    echo "#include <stdlib.h>" > t.c
+    echo "main(){$1($2);exit(0);}" >> t.c
+    capture cat t.c
+    runMake t "t:; \${CC} t.c ${MACHDEPLIBS}"
+}
+CheckForStdioFunc()
+{
+    echo "#include <stdlib.h>" > t.c
+    echo "#include <stdio.h>" >> t.c
+    echo "main(){$1($2);exit(0);}" >> t.c
     capture cat t.c
     runMake t "t:; \${CC} t.c ${MACHDEPLIBS}"
 }
@@ -2292,7 +2348,8 @@ EOF
 EOF
     }
 cat<<'EOF'
-extern char* malloc();
+#include <stdlib.h>
+#include <stdio.h>
 static void
 boom(const char* msg)
 {
@@ -2363,7 +2420,7 @@ CheckForTimeZoneHandling()
 main()
 {
     struct tm x;
-    char* cp;
+    const char* cp;
     long off;
     cp = x.tm_zone;
     off = x.tm_gmtoff;
@@ -2426,6 +2483,7 @@ CheckLibtiff()
     Note "... checking TIFF library version"
     tiff_runlen_t=""
     cat>t.c<<EOF
+#include <stdlib.h>
 #include <stdio.h>
 #include "tiffio.h"
 main()
@@ -2566,7 +2624,7 @@ BuildPortDotH()
     fi
 
     #
-    # Check whether  compiler uses new C++ header style
+    # Check whether compiler uses new C++ header style
     #
     CheckForIncludeFile new || {
         Note "... configure use of new.h"
@@ -3114,17 +3172,10 @@ FUNCS="
     flock
     ftruncate
     getopt
-    mkstemp
-    random
-    srandom
     setegid
     seteuid
     setvbuf
-    setenv
-    snprintf
     strcasecmp
-    strtod
-    strtoul
     writev
 "
 
@@ -3135,12 +3186,47 @@ for i in $FUNCS; do
     }
 done
 
+FUNCS="
+    random
+"
+
+for i in $FUNCS; do
+    CheckForStdFunc $i || {
+	Note "... emulate $i"
+	PORTFUNCS="$PORTFUNCS $i.c"
+    }
+done
+
 #
 # Now for those functions that need args.
 #
+CheckForStdioFunc snprintf "(void*)0, 0, (void*)0" || {
+    Note "... emulate snprintf"
+    PORTFUNCS="$PORTFUNCS snprintf.c"
+}
 CheckForFunc vsnprintf "(void*)0, 0, (void*)0, (void*)0" || {
     Note "... emulate vsnprintf"
     PORTFUNCS="$PORTFUNCS vsnprintf.c"
+}
+CheckForFunc mkstemp "(void*)0" || {
+    Note "... emulate mkstemp"
+    PORTFUNCS="$PORTFUNCS mkstemp.c"
+}
+CheckForFunc setenv "(void*)0, (void*)0, 0" || {
+    Note "... emulate setenv"
+    PORTFUNCS="$PORTFUNCS setenv.c"
+}
+CheckForStdFunc srandom "0" || {
+    Note "... emulate srandom"
+    PORTFUNCS="$PORTFUNCS srandom.c"
+}
+CheckForStdFunc strtod "(void*)0, (void*)0" || {
+    Note "... emulate strtod"
+    PORTFUNCS="$PORTFUNCS strtod.c"
+}
+CheckForStdFunc strtoul "(void*)0, (void*)0, 0" || {
+    Note "... emulate strtoul"
+    PORTFUNCS="$PORTFUNCS strtoul.c"
 }
 
 #
@@ -3152,6 +3238,7 @@ CheckForFunc vsnprintf "(void*)0, 0, (void*)0, (void*)0" || {
 CheckForSyslog()
 {
     (echo '#include <syslog.h>';
+     echo '#include <stdlib.h>';
      echo '#include "port.h"';
      echo 'main(){syslog(0,"foo");exit(0);}') >t.c
     capture cat t.c
@@ -3161,6 +3248,7 @@ CheckForVSyslog()
 {
     (echo '#include <syslog.h>';
      echo '#include <stdarg.h>';
+     echo '#include <stdlib.h>';
      echo '#include "port.h"';
      echo 'main(){va_list ap; vsyslog(0,"foo", ap);exit(0);}') >t.c
     capture cat t.c
@@ -3189,6 +3277,8 @@ Note "Checking ZLIB support."
 # Verify library is compatible.
 #
 cat>t.c<<EOF
+#include <stdlib.h>
+#include <stdio.h>
 #include "zlib.h"
 main()
 {
@@ -3211,7 +3301,9 @@ if [ -z "$LIBZ" ]; then
 fi
 if runMake t "t:; \${CC} \${CVERSION} ${OZLIBINC} t.c ${LIBZ} ${MACHDEPLIBS}" && capture ./a.out; then
                 ZLIBINC="${OZLIBINC}"
-    Note "Using ZLIB include files from $OZLIBINC"
+    if [ -n "$OZLIBINC" ]; then
+	Note "Using ZLIB include files from $OZLIBINC"
+    fi
     Note "Using pre-built ZLIB library $LIBZ"
 else
     LIBZ=
@@ -3284,8 +3376,11 @@ fi
 HAVE_JBIGTIFF="/*#define HAVE_JBIGTIFF 1*/"
 if [ "$DISABLE_JBIG" != "yes" ]; then
     Note "Checking JBIG-in-TIFF conversion support."
+    exec 3>&2 2> /dev/null	# Mute stderr, tiffcp may segfault here
     $TIFFBIN/tiffcp -c g4 misc/jbig.tif misc/foo.tif > /dev/null 2>&1
-    if [ $? = 0 ]; then
+    EV=$?
+    exec 2>&3 3>&-		# Restore stderr
+    if [ $EV = 0 ]; then
 	$TIFFBIN/tiffcp misc/jbig.tif misc/foo.tif > /dev/null
 	if [ -n "`$TIFFBIN/tiffinfo misc/foo.tif | grep 'Fax DCS'`" ]; then
 	    HAVE_JBIGTIFF="#define HAVE_JBIGTIFF 1"
@@ -3313,6 +3408,7 @@ if [ -f $SRCDIR/MLA/VERSION ] && [ $DBLIB = no ]; then
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "db.h"
 main()
 {
