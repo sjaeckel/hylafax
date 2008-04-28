@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 814 2008-04-05 19:09:56Z faxguy $ */
+/*	$Id: HylaFAXServer.h 828 2008-04-28 23:48:24Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -99,7 +99,7 @@ static struct {
     const char* help;		// help string for HELP FORM command
 } formats[] = {
 { "TIFF", true,          "tif", FaxRequest::send_tiff,		"Tagged Image File Format, Class F only" },
-{ "PS",   true,          "ps",  FaxRequest::send_postscript,	"Adobe PostScript Level I" },
+{ "PS",   true,          "ps",  FaxRequest::send_postscript,	"Adobe PostScript" },
 { "PS2",  HAVE_PSLEVEL2, "ps",  FaxRequest::send_postscript,	"Adobe PostScript Level II" },
 { "PCL",  true,          "pcl", FaxRequest::send_pcl,		"HP Printer Control Language (PCL)"},
 { "PDF",  true,          "pdf", FaxRequest::send_pdf,		"Adobe Portable Document Format" },
