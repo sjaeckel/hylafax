@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 789 2008-02-08 18:35:57Z faxguy $ */
+/*	$Id: ModemConfig.h 826 2008-04-28 12:00:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -252,6 +252,7 @@ public:
     RTNHandling rtnHandling;            // RTN signal handling method
     BadPageHandling badPageHandling;	// bad page (received) handling method
     JBIGSupport	class1JBIGSupport;	// monochrome JBIG support
+    JBIGSupport	class2JBIGSupport;	// monochrome JBIG support
     bool	saveUnconfirmedPages;	// don't delete unconfirmed pages
     fxStr	tiff2faxCmd;		// for intelligent RTFCC in comparing compression rates
     

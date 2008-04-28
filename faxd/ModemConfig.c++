@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 789 2008-02-08 18:35:57Z faxguy $ */
+/*	$Id: ModemConfig.c++ 826 2008-04-28 12:00:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -272,14 +272,18 @@ ModemConfig::setupConfig()
 #ifdef HAVE_JBIG
 #ifdef HAVE_JBIGTIFF
     class1JBIGSupport	= FaxModem::JBIG_FULL;	// full support for monochrome JBIG
+    class2JBIGSupport	= FaxModem::JBIG_FULL;	// full support for monochrome JBIG
 #else
     class1JBIGSupport	= FaxModem::JBIG_SEND;	// send support for monochrome JBIG
+    class2JBIGSupport	= FaxModem::JBIG_SEND;	// send support for monochrome JBIG
 #endif
 #else
 #ifdef HAVE_JBIGTIFF
     class1JBIGSupport	= FaxModem::JBIG_RECV;	// receive support for monochrome JBIG
+    class2JBIGSupport	= FaxModem::JBIG_RECV;	// receive support for monochrome JBIG
 #else
     class1JBIGSupport	= FaxModem::JBIG_NONE;	// no support for monochrome JBIG
+    class2JBIGSupport	= FaxModem::JBIG_NONE;	// no support for monochrome JBIG
 #endif
 #endif
     class1Resolutions	= VR_ALL;		// resolutions support
@@ -762,6 +766,8 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 #endif
     else if (streq(tag, "class1jbigsupport"))
         class1JBIGSupport = getJBIGSupport(value);
+    else if (streq(tag, "class2jbigsupport"))
+        class2JBIGSupport = getJBIGSupport(value);
     else if (streq(tag, "class1persistentecm"))
 	class1PersistentECM = getBoolean(value);
     else if (streq(tag, "class1extendedres"))

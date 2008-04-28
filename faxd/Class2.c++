@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: Class2.c++ 826 2008-04-28 12:00:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -118,6 +118,21 @@ Class2Modem::setupModem(bool isSend)
 	    modemParams.ec |= BIT(EC_DISABLE);	// reset EC_DISABLE
 	    if (modemParams.ec & BIT(EC_ENABLE256))
 		modemParams.ec |= BIT(EC_ENABLE64);
+    }
+    bool jbigsupported = false;
+    switch (conf.class2JBIGSupport) {
+	case FaxModem::JBIG_FULL:
+	    jbigsupported = true;
+	    break;
+	case FaxModem::JBIG_SEND:
+	    jbigsupported = isSend;
+	    break;
+	case FaxModem::JBIG_RECV:
+	    jbigsupported = !isSend;
+	    break;
+	}
+    if (!jbigsupported) {
+	modemParams.df ^= BIT(DF_JBIG);
     }
     traceModemParams();
     /*
