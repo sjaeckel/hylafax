@@ -1,7 +1,8 @@
-#	$Id: CHANGES 823 2008-04-26 22:34:29Z faxguy $	
+#	$Id: CHANGES 826 2008-04-28 12:00:03Z faxguy $	
 
 New Changes
 
+* add Class2JBIGSupport modem configuration option (28 Apr 2008)
 * warnings fixups and configure script modifications for gcc-4.3
   and specifically Fedora 9 (26 Apr 2008)
 
