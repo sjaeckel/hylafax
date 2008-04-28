@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 827 2008-04-28 23:39:38Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1193,6 +1193,7 @@ faxQueueApp::runConverter(Job& job, const char* app, char* const* argv, fxStr& e
     JobStatus status;
     int pfd[2];
     if (pipe(pfd) >= 0) {
+	int fd;
 	pid_t pid = fork();
 	switch (pid) {
 	case -1:			// error
@@ -1205,6 +1206,12 @@ faxQueueApp::runConverter(Job& job, const char* app, char* const* argv, fxStr& e
 		dup2(pfd[1], STDOUT_FILENO);
 	    closeAllBut(STDOUT_FILENO);
 	    dup2(STDOUT_FILENO, STDERR_FILENO);
+	    fd = Sys::open(_PATH_DEVNULL, O_RDWR);
+	    if (fd != STDIN_FILENO)
+	    {
+		    dup2(fd, STDIN_FILENO);
+		    Sys::close(fd);
+	    }
 	    Sys::execv(app, argv);
 	    sleep(3);			// XXX give parent time to catch signal
 	    _exit(255);
