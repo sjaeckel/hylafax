@@ -1,4 +1,4 @@
-/*	$Id: manifest.h 31 2005-12-21 01:17:11Z faxguy $ */
+/*	$Id: manifest.h 828 2008-04-28 23:48:24Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -89,7 +89,7 @@
  * File format types.
  */
 #define	FORM_TIFF	0	// Tagged Image File Format
-#define	FORM_PS		1	// PostScript Level I
+#define	FORM_PS		1	// PostScript
 #define	FORM_PS2	2	// PostScript Level II
 #define	FORM_PCL	3	// HP-PCL5
 #define	FORM_PDF	4	// Portable Document Format
