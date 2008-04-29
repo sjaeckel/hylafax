@@ -1,4 +1,4 @@
-# $Id: mainpine-21 651 2007-10-04 00:01:52Z faxguy $
+# $Id: mainpine-21 831 2008-04-29 21:12:20Z faxguy $
 #
 # prototype config file for Mainpine Ltd. RockForce and IQ series
 #
@@ -21,6 +21,7 @@ ModemRecvFillOrder:	MSB2LSB
 ModemSetupDTRCmd:	AT&D3		# hang up and reset on DTR drop
 
 Class2DisableV17Cmd:	ATS29=1
+Class2DisableV34Cmd:	ATS28=0
 Class2APCmd:		AT+FAP=1,1,1
 Class2BUGCmd:		AT+FBU=0	# early firmware is buggy
 Class2SendRTC:		yes

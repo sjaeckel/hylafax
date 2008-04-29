@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 826 2008-04-28 12:00:03Z faxguy $ */
+/*	$Id: Class2.c++ 831 2008-04-29 21:12:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -516,6 +516,7 @@ bool
 Class2Modem::faxService(bool enableV34, bool enableV17)
 {
     if (!enableV17 && conf.class2DisableV17Cmd != "" && !atCmd(conf.class2DisableV17Cmd)) return (false);
+    if (!enableV34 && conf.class2DisableV34Cmd != "" && !atCmd(conf.class2DisableV34Cmd)) return (false);
     return setupClass2Parameters(enableV34, enableV17);
 }
 
