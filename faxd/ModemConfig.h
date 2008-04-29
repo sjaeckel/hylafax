@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 826 2008-04-28 12:00:03Z faxguy $ */
+/*	$Id: ModemConfig.h 831 2008-04-29 21:12:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -188,6 +188,7 @@ public:
     fxStr	class2CQQueryCmd;	// cmd to query copy quality checking
     fxStr	class2BORCmd;		// cmd to set bit order
     fxStr	class2DisableV17Cmd;	// cmd to disable V.17 support
+    fxStr	class2DisableV34Cmd;	// cmd to disable V.34 support
     fxStr	class2RELCmd;		// cmd to enable byte-aligned EOL
     fxStr	class2CQCmd;		// cmd to setup copy quality checking
     fxStr	class2AbortCmd;		// cmd to abort a session
