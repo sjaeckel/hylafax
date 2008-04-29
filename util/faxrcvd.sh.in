@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 819 2008-04-11 05:10:42Z faxguy $
+#	$Id: faxrcvd.sh.in 832 2008-04-29 23:34:25Z faxguy $
 #
 # ============================================
 #
@@ -361,5 +361,7 @@ if [ "$NOTIFY_FAXMASTER" != "no" ]; then
     fi
 fi
 if [ -n "$SENDTO" ] && [ -f $FILE ]; then
-    faxrcvd_mail "withattached" "$SENDTO" "$CCTO" "$BCCTO"
+    for toeml in $SENDTO; do
+	faxrcvd_mail "withattached" "$toeml" "$CCTO" "$BCCTO"
+    done
 fi
