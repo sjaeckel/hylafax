@@ -1,4 +1,4 @@
-# $Id: mainpine-21 831 2008-04-29 21:12:20Z faxguy $
+# $Id: mainpine-21 833 2008-05-03 00:22:23Z faxguy $
 #
 # prototype config file for Mainpine Ltd. RockForce and IQ series
 #
@@ -17,7 +17,6 @@ ModemFlowControl:	rtscts
 ModemNoFlowCmd:		AT&K0
 ModemSoftFlowCmd:	AT&K4
 ModemHardFlowCmd:	AT&K3
-ModemRecvFillOrder:	MSB2LSB
 ModemSetupDTRCmd:	AT&D3		# hang up and reset on DTR drop
 
 Class2DisableV17Cmd:	ATS29=1
