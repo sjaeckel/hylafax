@@ -1,4 +1,4 @@
-/*	$Id: Class2Recv.c++ 670 2007-10-18 06:05:09Z faxguy $ */
+/*	$Id: Class2Recv.c++ 833 2008-05-03 00:22:23Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -303,7 +303,23 @@ Class2Modem::recvPageData(TIFF* tif, fxStr& emsg)
 	hostDidCQ = modemCQ == 0 && checkQuality();
     protoTrace("Copy quality checking performed by %s", hostDidCQ ? "host" : "modem");
 
+    // JBIG needs the data bit-reversed
+    if (params.df == DF_JBIG) {
+	if (recvFillOrder == FILLORDER_LSB2MSB)
+	    recvFillOrder = FILLORDER_MSB2LSB;
+	else
+	    recvFillOrder = FILLORDER_LSB2MSB;
+    }
+
     bool pageRecvd = recvPageDLEData(tif, hostDidCQ, params, emsg);
+
+    // Return recvFillOrder to its configured setting
+    if (params.df == DF_JBIG) {
+	if (recvFillOrder == FILLORDER_LSB2MSB)
+	    recvFillOrder = FILLORDER_MSB2LSB;
+	else
+	    recvFillOrder = FILLORDER_LSB2MSB;
+    }
 
     // be careful about flushing here -- otherwise we lose +FPTS codes
     if (flowControl == FLOW_XONXOFF)

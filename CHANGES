@@ -1,7 +1,8 @@
-#	$Id: CHANGES 831 2008-04-29 21:12:20Z faxguy $	
+#	$Id: CHANGES 833 2008-05-03 00:22:23Z faxguy $	
 
 New Changes
 
+* correctly handle received bit order on JBIG in Class 2.1 (2 May 2008)
 * add Class2DisableV34Cmd configuration option (29 Apr 2008)
 * add Class2JBIGSupport modem configuration option (28 Apr 2008)
 * warnings fixups and configure script modifications for gcc-4.3
