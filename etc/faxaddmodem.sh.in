@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 782 2008-02-03 06:12:58Z faxguy $
+#	$Id: faxaddmodem.sh.in 834 2008-05-06 17:32:37Z faxguy $
 #
 # @WARNING@
 #
@@ -411,7 +411,6 @@ OptionalServerParameters="
     PriorityScheduling
     TagLineFont
     TagLineFormat
-    QualifyCID
     QualifyTSI
 
     AdaptiveAnswer
@@ -506,7 +505,6 @@ defaultFaxRcvdCmd=\"\"
 defaultNoCarrierRetrys=\"\"
 defaultNotifyCmd=\"bin/notify\"
 defaultPollRcvdCmd=\"\"
-defaultQualifyCID=\"\"
 defaultRingData=\"\"
 defaultRingFax=\"\"
 defaultRingVoice=\"\"
@@ -784,8 +782,6 @@ SpeakerVolume
 S	GettyArgs		Command line arguments to getty program
 S	QualifyTSI		\
 	Pathname of TSI access control list file (relative to $SPOOL)
-S	QualifyCID		\
-	Pathname of Caller-ID access control list file (relative to $SPOOL)
 S	TagLineFont		Tag line font file (relative to $SPOOL)
 S	TagLineFormat		Tag line format string
 C#	UUCPLockTimeout		\
