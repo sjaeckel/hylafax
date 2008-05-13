@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: SendFaxClient.c++ 836 2008-05-14 00:49:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -220,6 +220,7 @@ SendFaxClient::makeCoverPage(const SendFaxJob& job, fxStr& file, fxStr& emsg)
 	addarg(av, ac, "-N", job.getCoverFromFax());
 	addarg(av, ac, "-V", job.getCoverFromVoice());
 	addarg(av, ac, "-X", job.getCoverFromCompany());
+	addarg(av, ac, "-M", job.getMailbox());
 	fxStr pages;
 	if (totalPages > 0) {
 	    pages = fxStr::format("%u", totalPages);
