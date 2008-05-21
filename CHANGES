@@ -1,7 +1,8 @@
-#	$Id: CHANGES 833 2008-05-03 00:22:23Z faxguy $	
+#	$Id: CHANGES 838 2008-05-22 01:27:29Z faxguy $	
 
 New Changes
 
+* handle NO CARRIER results to AT+FRH=3 better (21 May 2008)
 * correctly handle received bit order on JBIG in Class 2.1 (2 May 2008)
 * add Class2DisableV34Cmd configuration option (29 Apr 2008)
 * add Class2JBIGSupport modem configuration option (28 Apr 2008)

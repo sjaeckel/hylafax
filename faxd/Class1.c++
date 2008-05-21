@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: Class1.c++ 838 2008-05-22 01:27:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1422,6 +1422,19 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 	 * with a pause to prevent unwanted massive amounts of tracing.  The pause 
 	 * needs to be short enough, though, that the modem will still pick up
 	 * any V.21 signalling if it misses that much of the startup.
+	 *
+	 * T.31 8.3.6 states that the NO CARRIER result to AT+FRH=3 indicates 
+	 * carrier loss.  Getting this result without first getting a CONNECT 
+	 * response (indicating carrier detection) seems a bit undefined.  However,
+	 * sample sessions T.31 I.1 and I.2 seem to give its use as a means to
+	 * deliberately detect carrier loss since the OK result to AT+FRH=3 does
+	 * not necessarily indicate carrier loss (even on final frames - although
+	 * smart modem developers would make it thus).  Thus could serve a purpose
+	 * similar to AT+FRS=1 as we haved used in Class1TCFRecvHackCmd (which is
+	 * generally a bad idea).  In any case, if we're trying to detect a V.21
+	 * HDLC frame and we get a NO CARRIER result immediately following AT+FRH=3
+	 * it probably means that the previous carrier was still up, that we just
+	 * saw its loss, and so we just need to re-issue AT+FRH=3.  See more below...
 	 */
 	do {
 	    readPending = atCmd(rhCmd, AT_NOTHING, 0) && waitFor(AT_CONNECT, 0);
@@ -1438,7 +1451,7 @@ Class1Modem::recvFrame(HDLCFrame& frame, u_char dir, long ms, bool readPending, 
 		}
 	    }
 	} while (((u_int) Sys::now()-start < conf.t1Timer) && !wasTimeout() &&
-	    (lastResponse == AT_FCERROR || (lastResponse == AT_ERROR && onhooks <= conf.class1HookSensitivity)));
+	    (lastResponse == AT_FCERROR || lastResponse == AT_NOCARRIER || (lastResponse == AT_ERROR && onhooks <= conf.class1HookSensitivity)));
     }
     if (readPending) {
         stopTimeout("waiting for HDLC flags");
