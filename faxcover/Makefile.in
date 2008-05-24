@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 559 2007-07-22 06:03:54Z faxguy $
+#	$Id: Makefile.in 839 2008-05-24 19:53:23Z faxguy $
 #
 # @WARNING@
 #
@@ -61,9 +61,6 @@ install: default ${SRCDIR}/faxcover.ps
 	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA} -m 644 \
 	    -idb "${PRODUCT}.sw.client config(suggest)" \
 	    -src ${SRCDIR}/faxcover.ps -O faxcover.ps
-	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA} -m 644 \
-	    -idb "${PRODUCT}.sw.client config(suggest)" \
-	    -src ${SRCDIR}/faxcover_example_sgi.ps -O faxcover_example_sgi.ps
 	${INSTALL} -root ${INSTALLROOT} -F ${SBIN} -m 755 -src edit-faxcover.sh -O edit-faxcover
 
 uninstall::

@@ -1,4 +1,4 @@
-#	$Id: distrules 788 2008-02-08 17:53:54Z faxguy $
+#	$Id: distrules 839 2008-05-24 19:53:23Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -431,7 +431,6 @@ HYLAFAXSRC=\
     faxcover/Makefile.in			\
 	faxcover/faxcover.c++			\
 	faxcover/faxcover.ps			\
-	faxcover/faxcover_example_sgi.ps	\
 	faxcover/edit-faxcover.sh.in		\
     faxd/Makefile.in				\
     faxd/Makefile.IRIXdso			\
