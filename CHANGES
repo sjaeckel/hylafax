@@ -1,6 +1,10 @@
-#	$Id: CHANGES 840 2008-05-24 20:11:35Z faxguy $	
+#	$Id: CHANGES 841 2008-05-27 18:37:13Z faxguy $	
 
 New Changes
+
+* fix build for SCO 6.0.0 (27 May 2008)
+
+(5.2.5)
 
 * remove faxcover_example_sgi.ps for legal reasons (24 May 2008)
 * handle NO CARRIER results to AT+FRH=3 better (21 May 2008)
