@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 798 2008-02-27 23:04:16Z faxguy $
+#    $Id: common-functions.sh.in 843 2008-05-30 20:08:06Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -306,7 +306,7 @@ gs2fax()
 	    stocht.ps -c "<< /HalftoneMode 1 >> setuserparams" -
 	return
     fi
-    if [ "$DITHERING" = "libtiff-fs" ] && ($PS -h | grep tiff24nc >/dev/null 2>&1) && \
+    if [ "$DITHERING" = "libtiff-fs" ] && ($PS -h | $GREP tiff24nc >/dev/null 2>&1) && \
        [ -x $TIFFBIN/tiff2bw ] && [ -x $TIFFBIN/tiffdither ] && [ -x $TIFFBIN/tiff2ps ] && \
        [ -x $TIFFBIN/tiffsplit ] && [ -x $TIFFBIN/tiffcp ]; then
 	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
