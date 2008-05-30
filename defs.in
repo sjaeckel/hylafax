@@ -1,4 +1,4 @@
-# $Id: defs.in 814 2008-04-05 19:09:56Z faxguy $
+# $Id: defs.in 842 2008-05-30 19:06:59Z faxguy $
 #
 # @WARNING@
 #
@@ -134,8 +134,12 @@ CVERSION	= @ENVOPTS@
 C++FILE		= @CXXFILE@
 
 # default definitions for programs--overide them as desired
+#
+# -lresolv (in LDAPLIBS) can conflict with gethostbyname in -lsocket on some systems
+# So we make sure that LDAPLIBS comes after MACHDEPLIBS.
+#
 LIBS		= ${LIBUTIL}
-LLDLIBS		= ${LIBS} @PAMLIBS@ @LIBJBIG@ @LDAPLIBS@ ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${LIBPORT} ${MACHDEPLIBS}
+LLDLIBS		= ${LIBS} ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${LIBPORT} ${MACHDEPLIBS} @PAMLIBS@ @LIBJBIG@ @LDAPLIBS@
 #
 # Override this definition to eliminate shared library use.
 #
