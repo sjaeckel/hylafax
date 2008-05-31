@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 844 2008-05-31 21:18:04Z faxguy $ */
+/*	$Id: Class1Send.c++ 845 2008-06-01 00:21:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1143,7 +1143,6 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 			gotrtncframe = true;
 		    }
 		} while (!gotprate && gotrtncframe && --limit);
-		if (!waitForDCEChannel(false)) return (false);
 		if (renegotiate) {
 		    // Although spec says this can be done any time,
 		    // in practice it must be done at this moment.
