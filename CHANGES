@@ -1,7 +1,9 @@
-#	$Id: CHANGES 842 2008-05-30 19:06:59Z faxguy $	
+#	$Id: CHANGES 844 2008-05-31 21:18:04Z faxguy $	
 
 New Changes
 
+* handle control frame receipt in Class 1 V.34-Fax sending when
+  switching to primary channel (31 May 2008)
 * fix build for SCO 6.0.0 (27, 30 May 2008)
 
 (5.2.5)

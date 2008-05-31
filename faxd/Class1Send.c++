@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: Class1Send.c++ 844 2008-05-31 21:18:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1125,8 +1125,24 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 	    if (useV34) {
 		// switch to primary channel
 		buf[0] = DLE; buf[1] = 0x6B;	// <DLE><pri>
-		if (!putModemData(buf, 2)) return (false);
+		HDLCFrame rtncframe(conf.class1FrameOverhead);
+		u_short limit = 5;
+		bool gotprate, gotrtncframe = false;
 		// wait for the ready indicator, <DLE><pri><DLE><prate>
+		do {
+		    if (!putModemData(buf, 2)) return (false);
+		    gotprate = waitForDCEChannel(false);
+		    if (!gotprate && ctrlFrameRcvd != fxStr::null) {
+			/*
+			 * Maybe we took so long to assemble the block that 
+			 * the receiver has retransmitted CFR or MCF.
+			 */
+			for (u_int i = 0; i < ctrlFrameRcvd.length(); i++)
+			    rtncframe.put(frameRev[ctrlFrameRcvd[i] & 0xFF]);
+			traceHDLCFrame("-->", rtncframe);
+			gotrtncframe = true;
+		    }
+		} while (!gotprate && gotrtncframe && --limit);
 		if (!waitForDCEChannel(false)) return (false);
 		if (renegotiate) {
 		    // Although spec says this can be done any time,
