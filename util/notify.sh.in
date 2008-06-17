@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 848 2008-06-18 02:09:50Z faxguy $
+#    $Id: notify.sh.in 851 2008-06-18 05:12:47Z faxguy $
 #
 # ============================================
 #
@@ -46,6 +46,8 @@
 # The notify shell now behaves in a manner like faxrcvd.  
 # It is now written in shell with a little embedded awk as needed.
 
+. bin/common-functions
+
 #
 # notify qfile why jobtime [nextTry]
 #
@@ -53,7 +55,7 @@
 #
 if [ $# != 3 ] && [ $# != 4 ]; then
     echo "Usage: $0 qfile why jobtime [nextTry]"
-    exit 1
+    hfExit 1
 fi
 
 #
@@ -354,7 +356,7 @@ command.  Read the documentation on setting up HylaFAX before you
 startup a server system.
 
 EOF
-    exit 1
+    hfExit 1
 }
 
 # need to parse out the command line here.  some may be needed
@@ -374,7 +376,6 @@ TTYCMD=tty
 CHARSET=UTF-8		# this really gets set in dictionary
 
 . etc/setup.cache
-. bin/common-functions
 
 local_seq() {
 	if [ $1 -gt $2 ]; then
