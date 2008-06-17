@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 740 2007-12-24 17:31:29Z faxguy $
+#	$Id: pollrcvd.sh.in 846 2008-06-18 01:15:08Z faxguy $
 #
 # ============================================
 #
@@ -149,7 +149,7 @@ pollrcvd_mail()
 		echo "Content-Transfer-Encoding: 7bit"
 		echo "Content-Disposition: attachment; filename=\"$FILENAME.ps\""
 		echo ""
-		$FAX2PS $FILE 2>$ERRORSTO
+		$TIFF2PS -a $FILE 2>$ERRORSTO
 	    fi
 	done
     fi
@@ -187,7 +187,7 @@ CHARSET=UTF-8		# this really gets set in dictionary
 
 INFO=$SBIN/faxinfo
 FAX2PS=$TIFFBIN/fax2ps
-TIFF2PS=tiff2ps
+TIFF2PS=$TIFFBIN/tiff2ps
 TOADDR=FaxMaster
 TIFFINFO=tiffinfo
 FROMADDR=fax
