@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 831 2008-04-29 21:12:20Z faxguy $
+.\"	$Id: hylafax-config.4f 847 2008-06-18 01:51:37Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-04-29 14:12:20 -0700 (Tue, 29 Apr 2008) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-06-17 18:51:37 -0700 (Tue, 17 Jun 2008) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -2187,7 +2187,10 @@ OFF and
 .SM DTR
 ON while resetting a modem.  This value should be at
 least equal to the time-value of the analogous S-register,
-usually S25.
+usually S25.  This so-called DTR drop can be bypassed
+entirely by setting
+.B ModemDTRDropDelay
+to 0, but this should likely only be used for debugging purposes.
 .TP
 .B ModemEchoOffCmd
 The command to disable echoing of commands sent to the modem.
