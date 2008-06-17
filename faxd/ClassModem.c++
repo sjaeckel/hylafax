@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 789 2008-02-08 18:35:57Z faxguy $ */
+/*	$Id: ClassModem.c++ 847 2008-06-18 01:51:37Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -733,10 +733,12 @@ ClassModem::trimModemLine(char buf[], int& cc)
 bool
 ClassModem::reset(long ms)
 {
-    setDTR(false);
-    pause(conf.dtrDropDelay);		// required DTR OFF-to-ON delay
-    setDTR(true);
-    pause(conf.resetDelay);		// pause so modem can do reset
+    if (conf.dtrDropDelay) {
+	setDTR(false);
+	pause(conf.dtrDropDelay);	// required DTR OFF-to-ON delay
+	setDTR(true);
+	pause(conf.resetDelay);		// pause so modem can do reset
+    }
 #ifndef CONFIG_NOREOPEN
     /*
      * On some systems lowering and raising DTR is not done
