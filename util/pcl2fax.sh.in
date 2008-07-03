@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pcl2fax.sh.in 769 2008-01-25 20:44:41Z faxguy $
+#	$Id: pcl2fax.sh.in 852 2008-07-03 20:22:31Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -183,17 +183,6 @@ if [ -f etc/FaxModify ]; then
     . etc/FaxModify
 fi
 
-# For debuging
-false && echo $PCL6 \
-    -sDEVICE=$device \
-    -dNOPAUSE \
-    -dSAFER=true \
-    -sPAPERSIZE=$paper \
-    $FIXEDWIDTH \
-    -r$hres\x$vres \
-    "-sOutputFile=$out" \
-    "$files"
-
 if [ ! "$PCLFONTSOURCE" -a -n "$FONTPATH" ] ; then 
     PCLFONTSOURCE=$FONTPATH
 fi
@@ -201,7 +190,7 @@ if [ -n "$PCLFONTSOURCE" ] ; then
     export PCLFONTSOURCE
 fi
 
-$CAT $files | $PCL6 \
+$CAT $files | $PCL6CMD \
     -sDEVICE=$device \
     -dNOPAUSE \
     -dSAFER=true \

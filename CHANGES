@@ -1,7 +1,8 @@
-#	$Id: CHANGES 844 2008-05-31 21:18:04Z faxguy $	
+#	$Id: CHANGES 852 2008-07-03 20:22:31Z faxguy $	
 
 New Changes
 
+* fix $PCL6CMD in pcl2fax script
 * handle control frame receipt in Class 1 V.34-Fax sending when
   switching to primary channel (31 May 2008)
 * fix build for SCO 6.0.0 (27, 30 May 2008)
