@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 788 2008-02-08 17:53:54Z faxguy $
+#	$Id: Makefile.in 854 2008-07-04 21:25:00Z faxguy $
 #
 # @WARNING@
 #
@@ -52,7 +52,8 @@ NAME_SYSVINITSTOP	= @SYSVINITSTOPNAME@
 DIALRULES=dialrules \
 	dialrules.sf-ba \
 	dialrules.europe \
-	dialrules.ext
+	dialrules.ext \
+	dialrules.uk
 TARGETS	= config.fax hosts.hfaxd xferfaxlog lockname ondelay
 
 default all::
