@@ -1,4 +1,4 @@
-# $Id: mainpine-10 817 2008-04-10 23:53:56Z faxguy $
+# $Id: mainpine-10 856 2008-07-15 18:12:04Z faxguy $
 
 #
 # prototype config for Mainpine RockForce and IQ series modems using
@@ -24,6 +24,11 @@ Class1HasRHConnectBug:	yes		# cope with +FRH=3 CONNECT errors
 # Older firmwares on MainPine cards may require this:
 # Class1Cmd: AT+FCLASS=1
 #
+
+#
+# IQ Express firmwares 8.6.0.1 and newer support this:
+#
+#Class1AdaptRecvCmd:	AT+FAR=1	# reports carrier detection mismatches
 
 # If your line supports Caller-ID, you may want to uncomment this...
 # ModemResetCmds:	AT+VCID=1
