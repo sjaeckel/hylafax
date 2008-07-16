@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 730 2007-12-06 18:19:28Z faxguy $ */
+/*	$Id: ClassModem.h 857 2008-07-16 16:17:39Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -269,7 +269,7 @@ public:
     void	setTimeout(bool);
     void	flushModemInput();
     bool	putModem(void* data, int n, long ms = 0);
-    bool	putModemData(void* data, int n);
+    bool	putModemData(void* data, int n, long ms = -1);
     bool	putModemDLEData(const u_char* data, u_int,
 		    const u_char* brev, long ms, bool doquery = false);
     bool	putModemLine(const char* cp, long ms = 0);

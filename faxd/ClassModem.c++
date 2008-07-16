@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 847 2008-06-18 01:51:37Z faxguy $ */
+/*	$Id: ClassModem.c++ 857 2008-07-16 16:17:39Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -560,8 +560,8 @@ void ClassModem::flushModemInput()
     { server.modemFlushInput(); }
 bool ClassModem::putModem(void* d, int n, long ms)
     { return server.putModem(d, n, ms); }
-bool ClassModem::putModemData(void* d, int n)
-    { return server.putModem(d, n, dataTimeout); }
+bool ClassModem::putModemData(void* d, int n, long ms)
+    { return server.putModem(d, n, (ms == -1) ? dataTimeout : ms); }
 
 bool
 ClassModem::putModemLine(const char* cp, long ms)

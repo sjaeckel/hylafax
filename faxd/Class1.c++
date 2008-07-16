@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 838 2008-05-22 01:27:29Z faxguy $ */
+/*	$Id: Class1.c++ 857 2008-07-16 16:17:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -536,7 +536,7 @@ Class1Modem::sendClass1Data(const u_char* data, u_int cc,
 	u_char buf[2];
 	buf[0] = DLE;
 	buf[1] = ETX;
-	ok = putModemData(buf, 2);
+	ok = putModemData(buf, 2, ms);
 	return (ok && !abortRequested());
     } else
 	return (ok);
