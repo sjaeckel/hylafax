@@ -1,8 +1,9 @@
-#	$Id: CHANGES 852 2008-07-03 20:22:31Z faxguy $	
+#	$Id: CHANGES 857 2008-07-16 16:17:39Z faxguy $	
 
 New Changes
 
-* fix $PCL6CMD in pcl2fax script
+* fix timeout in sendClass1Data-putModemData (16 Jul 2008)
+* fix $PCL6CMD in pcl2fax script (3 Jul 2008)
 * handle control frame receipt in Class 1 V.34-Fax sending when
   switching to primary channel (31 May 2008)
 * fix build for SCO 6.0.0 (27, 30 May 2008)
