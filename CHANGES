@@ -1,6 +1,10 @@
-#	$Id: CHANGES 857 2008-07-16 16:17:39Z faxguy $	
+#	$Id: CHANGES 859 2008-07-21 19:30:52Z faxguy $	
 
 New Changes
+
+* invoke SetupPrivateTmp from notify, faxrcvd, and pollrcvd (21 Jul 2008)
+
+(5.2.6)
 
 * fix timeout in sendClass1Data-putModemData (16 Jul 2008)
 * fix $PCL6CMD in pcl2fax script (3 Jul 2008)

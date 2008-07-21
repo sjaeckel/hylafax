@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 851 2008-06-18 05:12:47Z faxguy $
+#	$Id: pollrcvd.sh.in 859 2008-07-21 19:30:52Z faxguy $
 #
 # ============================================
 #
@@ -229,6 +229,8 @@ COMMID="$4"
 MSG="$5"
 
 FILENAME=`echo $FILE | $SED -e 's/\.tif//' -e 's/recvq\///'`
+
+SetupPrivateTmp
 
 if [ -f $FILE ]; then
     SENDER="`$INFO $FILE | $AWK -F: '/Sender/ { print $2 }' 2>/dev/null`"
