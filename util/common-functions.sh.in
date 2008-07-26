@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 850 2008-06-18 04:57:58Z faxguy $
+#    $Id: common-functions.sh.in 860 2008-07-26 16:23:36Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -153,7 +153,8 @@ parseQfile()
     /^page:/    { p("pins_"++npins, $4); next; }
     /^data:/    { p("files_"++nfiles, $4); next; }
     /^poll/        { p("poll", " -p"); next; }
-    /^[a-z]+:/     { p($1, $2); next; }       # Only parse remaining valid lines
+    # Only parse remaining valid lines and allows for colons to appear in the value part
+    /^[a-z]+:/     { str = $0; sub($1":", "", str); p($1, str); next; }
     {printf "# Invalid line> %s\n", $0;}
     END { p("nfiles", nfiles); p("npins", npins) } ' $FILENAME > $TMPDIR/qfile-awk.sh
     . $TMPDIR/qfile-awk.sh
