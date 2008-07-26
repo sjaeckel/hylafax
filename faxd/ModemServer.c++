@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: ModemServer.c++ 862 2008-07-26 17:57:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -835,6 +835,15 @@ BaudRate ModemServer::getModemRate() const	{ return baudRates[curRate]; }
 void
 ModemServer::readConfig(const fxStr& filename)
 {
+    if (delayConfig)
+    {
+        /*
+        * We're recursively in here, likely from an Include statement.
+        * We don't want to do any of our delayConfig stuff...
+        */
+       ServerConfig::readConfig(filename);
+       return;
+    }
     dialRulesFile = "";
     delayConfig = true;
     ServerConfig::readConfig(filename);
