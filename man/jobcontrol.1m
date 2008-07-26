@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 728 2007-12-05 02:13:53Z faxguy $
+.\"	$Id: jobcontrol.1m 861 2008-07-26 16:50:35Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -183,6 +183,36 @@ international phone calls one might use:
     DesiredBR: 3
     DesiredEC: 0
     DesiredDF: 1
+.ft P
+.fi
+.SH EXAMPLES
+Change (overlap) MaxDials parameter to 3 for all outgoing calls.
+.PP
+1. Create file bin/jobcontrol with the following content:
+.sp .5
+.nf
+.ft C
+   #!/bin/sh
+   echo "MaxDials: \"3\""
+   exit 0
+.ft P
+.fi
+.PP
+2. Ensure that bin/jobcontrol is marked as executable:
+.sp .5
+.nf
+.ft C
+    chmod +x bin/jobcontrol
+.ft P
+.fi
+.PP
+3. Add parameter JobControlCmd to
+.IR hylafax-config (5F);
+(etc/config) file:
+.sp .5
+.nf
+.ft C
+    JobControlCmd: bin/jobcontrol
 .ft P
 .fi
 .PP
