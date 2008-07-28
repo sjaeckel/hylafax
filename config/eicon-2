@@ -1,4 +1,4 @@
-# $Id: eicon-2 673 2007-10-18 23:42:42Z faxguy $
+# $Id: eicon-2 863 2008-07-28 16:39:16Z faxguy $
 #
 # prototype config file for the Eicon Diva ISDN Modem
 #
@@ -32,6 +32,14 @@ ModemResetCmds:         AT#CID=14
 # Eicon recommends initializing with AT+iQ=a1 where "1" is
 # the controller number.  This command binds the tty to that
 # controller and bypasses the "channel pool" approach.
+#
+# There are 4 controllers on the 4BRI card.
+# For each controller You have to configure 2 ttyds<xx> devices.
+#
+# 1st controller - ttyds01 (AT#CID=14+iQ=a1), ttyds02 (AT#CID=14+iQ=a1)
+# 2nd controller - ttyds03 (AT#CID=14+iQ=a2), ttyds04 (AT#CID=14+iQ=a2)
+# 3rd controller - ttyds05 (AT#CID=14+iQ=a3), ttyds06 (AT#CID=14+iQ=a3)
+# 4th controller - ttyds07 (AT#CID=14+iQ=a4), ttyds08 (AT#CID=14+iQ=a4)
 #
 #ModemResetCmds:         AT#CID=14+iQ=a1
 
