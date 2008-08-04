@@ -1,4 +1,4 @@
-! $Id: dialrules.uk 853 2008-07-04 20:53:36Z faxguy $
+! $Id: dialrules.uk 864 2008-08-04 13:52:05Z faxguy $
 !
 ! HylaFAX (tm) Dialing String Processing Rules
 !   for much of Europe.
@@ -82,5 +82,5 @@ DialString := [
 ^[+]                    = ${IDPrefix}           ! international call
 ! Uncomment if leading 9, needed to dial out
 ! Vulnerable to problems with Area matching numbers
-!^[0-9][0-9][0-9][0-9][0-9]+$	= 9,&		! dial 9, for outside calls
+^[0-9][0-9][0-9][0-9][0-9]+$	= 9,&		! dial 9, for outside calls
 ]
