@@ -1,4 +1,4 @@
-/*	$Id: Str.c++ 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: Str.c++ 865 2008-08-07 02:17:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -32,7 +32,7 @@
 #define DEFAULT_FORMAT_BUFFER 4096
 
 char fxStr::emptyString = '\0';
-fxStr fxStr::null;
+fxStr fxStr::null = "";
 
 fxStr::fxStr(u_int l)
 {

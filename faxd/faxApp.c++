@@ -1,4 +1,4 @@
-/*	$Id: faxApp.c++ 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: faxApp.c++ 865 2008-08-07 02:17:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -152,8 +152,8 @@ int
 faxApp::FIFOInput(int fd)
 {
     char buf[2048];
-    int n;
-    while ((n = Sys::read(fd, buf, sizeof (buf)-1)) > 0) {
+    int n = 0;
+    while ((n = (Sys::read(fd, buf+n, sizeof (buf)-(n+1)) + n)) > 0) {
 	buf[n] = '\0';
 	/*
 	 * Break up '\0'-separated records and strip
@@ -161,15 +161,36 @@ faxApp::FIFOInput(int fd)
 	 * works (i.e. echo appends a '\n' character).
 	 */
 	char* bp = &buf[0];
+	bool done = false;
 	do {
 	    char* cp = strchr(bp, '\0');
-	    if (cp > bp) {
-		if (cp[-1] == '\n')
-		    cp[-1] = '\0';
-		FIFOMessage(bp);
+	    /*
+	     * If the read filled the buffer without emptying the FIFO 
+	     * then we'll find ourselves at &buf[sizeof(buf)-1].  In 
+	     * that case we need to wrap the existing message into the 
+	     * next read buffer.
+	     */
+	    if (cp == &buf[sizeof(buf)-1]) {
+		n = cp-bp;
+		if (n == sizeof(buf)-1) {
+		    // Is a single FIFO message realistically larger than the read buffer?  This appears to be a whole lot of garbage; ignore it all.
+		    n = 0;
+		}
+		memmove(buf, bp, n);
+		done = true;
+	    } else {
+		if (cp > bp) {
+		    if (cp[-1] == '\n')
+			cp[-1] = '\0';
+		    FIFOMessage(bp);
+		    bp = cp+1;
+		}
+		if (bp >= &buf[n]) {
+		    done = true;
+		    n = 0;
+		}
 	    }
-	    bp = cp+1;
-	} while (bp < &buf[n]);
+	} while (!done);
     }
 #ifdef FIFOSELECTBUG
     /*

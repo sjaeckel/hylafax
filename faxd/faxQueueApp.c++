@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 827 2008-04-28 23:39:38Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 865 2008-08-07 02:17:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3034,38 +3034,51 @@ faxQueueApp::FIFOMessage(const char* cp)
     if (tracingLevel & FAXTRACE_FIFO)
 	logInfo("FIFO RECV \"%s\"", cp);
     if (cp[0] == '\0') {
-	logError("Bad fifo message \"%s\"", cp);
+	logError("Empty FIFO message");
 	return;
     }
     const char* tp = strchr(++cp, ':');
-    if (tp)
+    if (tp && (tp[1] != '\0'))
 	FIFOMessage(cp[-1], fxStr(cp,tp-cp), tp+1);
     else
 	FIFOMessage(cp[-1], fxStr::null, cp);
 }
 
+/*
+ * Process a parsed FIFO message.
+ *
+ * If an application goes crazy, or if the FIFO overflows, then it's possible 
+ * to see corrupt FIFO messages.  Thus, the previous parsing of the FIFO message
+ * cannot be entirely trusted.  Here, "id" and "args" must be checked for size
+ * before continued processing.  The downstream functions will need to make sure 
+ * that the id and args are actually meaningful.
+ */
 void
 faxQueueApp::FIFOMessage(char cmd, const fxStr& id, const char* args)
 {
     bool status = false;
     switch (cmd) {
     case '+':				// modem status msg
-	FIFOModemMessage(id, args);
+	if (id.length()) FIFOModemMessage(id, args);
 	return;
     case '*':				// job status msg from subproc's
-	FIFOJobMessage(id, args);
+	if (id.length()) FIFOJobMessage(id, args);
 	return;
     case '@':				// receive status msg
-	FIFORecvMessage(id, args);
+	if (id.length()) FIFORecvMessage(id, args);
 	return;
     case 'Q':				// quit
-	traceServer("QUIT");
-	quit = true;
-	pokeScheduler();
+	if (!id.length()) {
+	    traceServer("QUIT");
+	    quit = true;
+	    pokeScheduler();
+	}
 	return;				// NB: no return value expected
     case 'T':				// create new trigger 
-	traceServer("TRIGGER %s", args);
-	Trigger::create(id, args);
+	if (id.length()) {
+	    traceServer("TRIGGER %s", args);
+	    Trigger::create(id, args);
+	}
 	return;				// NB: trigger id returned specially
 
     /*
@@ -3073,39 +3086,47 @@ faxQueueApp::FIFOMessage(char cmd, const fxStr& id, const char* args)
      * the client has included a return address.
      */
     case 'C':				// configuration control
+	if (args[0] == '\0') return;
 	traceServer("CONFIG %s", args);
 	status = readConfigItem(args);
 	break;
     case 'D':				// cancel an existing trigger
+	if (args[0] == '\0') return;
 	traceServer("DELETE %s", args);
 	status = Trigger::cancel(args);
 	break;
     case 'R':				// remove job
+	if (args[0] == '\0') return;
 	traceServer("REMOVE JOB %s", args);
 	status = terminateJob(args, Job::removed);
 	break;
     case 'K':				// kill job
+	if (args[0] == '\0') return;
 	traceServer("KILL JOB %s", args);
 	status = terminateJob(args, Job::killed);
 	break;
     case 'S':				// submit an outbound job
+	if (args[0] == '\0') return;
 	traceServer("SUBMIT JOB %s", args);
 	status = submitJob(args, false, true);
 	if (status)
 	    pokeScheduler();
 	break;
     case 'U':				// unreference file
+	if (args[0] == '\0') return;
 	traceServer("UNREF DOC %s", args);
 	unrefDoc(args);
 	status = true;
 	break;
     case 'X':				// suspend job
+	if (args[0] == '\0') return;
 	traceServer("SUSPEND JOB %s", args);
 	status = suspendJob(args, false);
 	if (status)
 	    pokeScheduler();
 	break;
     case 'Y':				// interrupt job
+	if (args[0] == '\0') return;
 	traceServer("INTERRUPT JOB %s", args);
 	status = suspendJob(args, true);
 	if (status)
