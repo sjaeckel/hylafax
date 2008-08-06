@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 865 2008-08-07 02:17:18Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 867 2008-08-07 04:35:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3650,7 +3650,7 @@ faxQueueApp::notifySender(Job& job, JobStatus why, const char* duration)
 	 * and pass the result as an optional argument.
 	 */
 	char buf[30];
-	strftime(buf, sizeof (buf), " \"%H:%M\"", localtime(&job.tts));
+	strftime(buf, sizeof (buf), " '%H:%M'", localtime(&job.tts));
 	cmd.append(buf);
     }
     traceServer("NOTIFY: %s", (const char*) cmd);
