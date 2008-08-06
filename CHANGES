@@ -1,7 +1,8 @@
-#	$Id: CHANGES 859 2008-07-21 19:30:52Z faxguy $	
+#	$Id: CHANGES 865 2008-08-07 02:17:18Z faxguy $	
 
 New Changes
 
+* improve faxq's FIFO parsing resiliancy (6 Aug 2008)
 * invoke SetupPrivateTmp from notify, faxrcvd, and pollrcvd (21 Jul 2008)
 
 (5.2.6)
