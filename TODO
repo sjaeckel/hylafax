@@ -1,9 +1,10 @@
-#	$Id: TODO 734 2007-12-11 20:16:50Z faxguy $
+#	$Id: TODO 868 2008-08-07 14:16:24Z faxguy $
 
 #
 # These are recent to-do items that have been added.  (Time to manage this file again.)
 #
 
+modemused in q-file is not populated on requeues
 ability to customize the date/time presentation in hfaxd/faxstat output
 abort more quickly when client SUSP or DELE
 speed up probemodem and faxaddmodem modem queries
@@ -13,8 +14,6 @@ Unfortunately, FaxModem::recvResetPage(TIFF) doesn't really work (anymore?).
 sendfax -d -d -d or -z uses job groups now, but shouldn't repeat params
 credible reports of faxmodem losing the modem after a while
 if you abort a job during a call the "calls" notify report still says 0
-sendfax should support PASV
-faxmail doesn't cope with RFC2047-encoded Subject lines
 Make clients poll the system for default page size rather than using a compiled-in default.
 
 If HylaFAX doesn't standardize internally on a particular bit orientation we will see problems on MSB2LSB systems 
