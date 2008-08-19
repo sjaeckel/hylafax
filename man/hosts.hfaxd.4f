@@ -1,4 +1,4 @@
-.\"	$Id: hosts.hfaxd.4f 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: hosts.hfaxd.4f 869 2008-08-19 15:50:23Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -142,6 +142,7 @@ is taken, so more-specific entries should be placed first.
 	# pb on a machine directly in cl.cam.ac.uk can
 	# administer if an admin pw is given
 127.0.0.1	# anyone on local host uses the default uid
+192.168.[0-9]+.[0-9]+	# anyone on the LAN uses the default uid
 ^sam@flake.*sgi\e.com$	# Sam on his work machine
 ^sam@oxford.*Berkeley.*	# Sam on any machine starting oxford and containing
 	# Berkeley, e.g. sam@oxfordberkeley.cl.cam.ac.uk
