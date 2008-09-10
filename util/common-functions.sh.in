@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 860 2008-07-26 16:23:36Z faxguy $
+#    $Id: common-functions.sh.in 871 2008-09-11 04:04:17Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -332,7 +332,7 @@ SetupPrivateTmp()
     fi
 
     # Would have liked to use -t, but older mktemp don't support it.
-    if [ -z "$TMPDIR" ]; then
+    if [ -z "$TMPDIR" ] || [ ! -w "$TMPDIR" ]; then
         TMPDIR="/tmp"
     fi
     HYLAFAX_TMPDIR=`mktemp -d $TMPDIR/hylafaxtmp-XXXXXXXX 2>/dev/null` || {
