@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 841 2008-05-27 18:37:13Z faxguy $
+#	$Id: configure 870 2008-09-11 04:02:23Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -384,7 +384,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 841 $"
+	echo "This is HylaFAX configure $Revision: 870 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3566,13 +3566,16 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	    "t:t.o; \${C++F} ${DSOOPTS} -o t.${DSOSUF} t.o"
 	}
 	;;
-# supposedly DSOs are now working on Solaris, so pass "auto" through to "yes"
-#    auto-*-solaris*)
-#	Note "Automatic DSO usage on Solaris is disabled.  Use --with-DSO=yes to enable."
-#	DSO=no
-#	;;
-#    yes-*-solaris*)
-    *-*-solaris*)
+# There has been a fair amount of back-and-forth on Solaris DSO defaults
+# because it always seems to be that there is some Solaris version out there
+# that won't work right, and it causes more trouble than it's worth.
+# So it's defaulted to "no" since it's the path of least-resistance and the
+# value of the DSO usage is rather small.
+    auto-*-solaris*)
+	Note "Automatic DSO usage on Solaris is disabled.  Use --with-DSO=yes to enable."
+	DSO=no
+	;;
+    yes-*-solaris*)
 	if [ "X${DIR_LIB}" != "X/usr/lib" ]; then
 	    USE_RPATH=' -R${LIBDIR}'
 	else
