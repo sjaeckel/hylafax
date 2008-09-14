@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 867 2008-08-07 04:35:17Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2617,7 +2617,7 @@ faxQueueApp::runScheduler()
 		    if (job.isOnList()) job.remove();
 		    delayJob(job, *req, "Delayed by outbound call staggering {E339}", lastCall + staggerCalls);
 		    delete req;
-		} else if (assignModem(job)) {
+		} else if (assignModem(job, (allowIgnoreModemBusy && req->ignoremodembusy))) {
 		    lastCall = now;
 		    if (job.isOnList()) job.remove();	// remove from run queue
 		    job.breq = req;
@@ -2770,20 +2770,20 @@ faxQueueApp::scheduling(void)
  * use from faxgetty processes.
  */
 bool
-faxQueueApp::assignModem(Job& job)
+faxQueueApp::assignModem(Job& job, bool ignorebusy)
 {
     fxAssert(job.modem == NULL, "Assigning modem to job that already has one");
 
     bool retryModemLookup;
     do {
 	retryModemLookup = false;
-	Modem* modem = Modem::findModem(job);
+	Modem* modem = Modem::findModem(job, ignorebusy);
 	if (modem) {
 	    if (modem->getState() == Modem::EXEMPT) {
 		job.state = FaxRequest::state_failed;
 		return (false);
 	    }
-	    if (modem->assign(job)) {
+	    if (modem->assign(job, (modem->getState() == Modem::BUSY && ignorebusy))) {
 		Trigger::post(Trigger::MODEM_ASSIGN, *modem);
 		return (true);
 	    }
@@ -3374,6 +3374,7 @@ faxQueueApp::setupConfig()
     tod.reset();			// any day, any time
     use2D = true;			// ok to use 2D data
     useUnlimitedLN = true;		// ok to use LN_INF
+    allowIgnoreModemBusy = false;	// to allow jobs to ignore modem busy status
     uucpLockMode = UUCP_LOCKMODE;
     delete dialRules, dialRules = NULL;
     ModemGroup::reset();		// clear+add ``any modem'' class
@@ -3473,6 +3474,8 @@ faxQueueApp::setConfigItem(const char* tag, const char* value)
 	tod.parse(value);
     else if (streq(tag, "use2d"))
 	use2D = getBoolean(value);
+    else if (streq(tag, "allowignoremodembusy"))
+	allowIgnoreModemBusy = getBoolean(value);
     else if (streq(tag, "uucplockmode"))
 	uucpLockMode = (mode_t) strtol(value, 0, 8);
     else if (streq(tag, "modemgroup")) {

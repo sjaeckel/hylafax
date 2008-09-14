@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.h 704 2007-11-14 17:45:04Z faxguy $ */
+/*	$Id: FaxRequest.h 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -139,6 +139,7 @@ public:
     u_short	usexvres;	// whether to use extended VR
     u_short	pagechop;	// whether to do page chopping
     u_short	notify;		// email notification flags
+    u_short	ignoremodembusy;// ignore modem busy status
     float	chopthreshold;	// minimum white space before chopping
     time_t	tts;		// time to send
     time_t	killtime;	// time to kill job

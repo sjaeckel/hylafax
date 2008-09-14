@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 808 2008-03-13 18:28:43Z faxguy $ */
+/*	$Id: faxQueueApp.h 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -107,6 +107,7 @@ private:
     u_int	requeueInterval;	// job requeue interval
     bool	use2D;			// ok to use 2D-encoded data
     bool	useUnlimitedLN;		// ok to use unlimited page length
+    bool	allowIgnoreModemBusy;	// to allow job to ignore modem busy status
     u_int	pageChop;		// default page chop handling
     float	pageChopThreshold;	// minimum space before page chop
     fxStr	notifyCmd;		// external command for notification
@@ -163,7 +164,7 @@ private:
     fxStr	canonicalizePhoneNumber(const fxStr& ds);
 // modem support
     void	scanForModems();
-    bool	assignModem(Job& job);
+    bool	assignModem(Job& job, bool ignorebusy);
     void	releaseModem(Job& job);
     void	notifyModemWedged(Modem&);
     void	pollForModemLock(Modem& modem);

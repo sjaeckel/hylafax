@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -93,6 +93,7 @@ SendFaxJob::SendFaxJob(const SendFaxJob& other)
     skippedpages = other.skippedpages;
     nocountcover = other.nocountcover;
     serverdocover = other.serverdocover;
+    ignoremodembusy = other.ignoremodembusy;
 }
 SendFaxJob::~SendFaxJob()
 {
@@ -155,6 +156,7 @@ SendFaxJob::setupConfig()
     sendTagLine = false;		// default is to use server config
     useXVRes = false;			// default is to use normal or fine
     serverdocover = false;		// default to do it client-side
+    ignoremodembusy = false;		// default to acknowledge busy status
     notify = FAX_DEFNOTIFY;		// default notification
     mailbox = "";
     priority = FAX_DEFPRIORITY;		// default transmit priority
@@ -200,6 +202,8 @@ SendFaxJob::setConfigItem(const char* tag, const char* value)
 	setUseXVRes(FaxConfig::getBoolean(value));
     else if (streq(tag, "serverdocover"))
 	setServerDoCover(FaxConfig::getBoolean(value));
+    else if (streq(tag, "ignoremodembusy"))
+	setIgnoreModemBusy(FaxConfig::getBoolean(value));
     else if (streq(tag, "desireddf"))
 	setDesiredDF(value);
     else if (streq(tag, "retrytime"))
@@ -405,6 +409,7 @@ SendFaxJob::setDesiredEC(const char* e)
 void SendFaxJob::setDesiredEC(int e)			{ desiredec = e; }
 void SendFaxJob::setUseXVRes(bool b)			{ useXVRes = b; }
 void SendFaxJob::setServerDoCover(bool b)		{ serverdocover = b; }
+void SendFaxJob::setIgnoreModemBusy(bool b)		{ ignoremodembusy = b; }
 void
 SendFaxJob::setDesiredDF(const char* v)
 {
@@ -562,6 +567,9 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     }
     if (serverdocover) {
 	CHECKPARM("SERVERDOCOVER", true)
+    }
+    if (ignoremodembusy) {
+	CHECKPARM("IGNOREMODEMBUSY", true)
     }
     if (doneop == "archive") {
 	CHECKPARM("DONEOP", "archive")

@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.h 659 2007-10-09 22:39:36Z faxguy $ */
+/*	$Id: SendFaxJob.h 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -120,6 +120,7 @@ private:
     u_int	skippedpages;		// begin page count at this page number + 1
     u_int	nocountcover;		// don't include these pages in the page count
     bool	serverdocover;		// server should generate the cover page
+    bool	ignoremodembusy;	// ignore modem busy status
 
     static SFJ_stringtag strings[];
     static SFJ_numbertag numbers[];
@@ -286,6 +287,8 @@ public:
     u_int getNoCountCover() const;
     void setServerDoCover(bool);	// server should generate cover page
     bool getServerDoCover() const;
+    void setIgnoreModemBusy(bool);	// ignore modem busy status
+    bool getIgnoreModemBusy() const;
 };
 
 fxDECLARE_ObjArray(SendFaxJobArray, SendFaxJob)
@@ -337,4 +340,5 @@ inline u_int SendFaxJob::getSkipPages() const		{ return skippages; }
 inline u_int SendFaxJob::getSkippedPages() const	{ return skippedpages; }
 inline u_int SendFaxJob::getNoCountCover() const	{ return nocountcover; }
 inline bool SendFaxJob::getServerDoCover() const	{ return serverdocover; }
+inline bool SendFaxJob::getIgnoreModemBusy() const	{ return ignoremodembusy; }
 #endif /* _SendFaxJob_ */

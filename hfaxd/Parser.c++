@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: Parser.c++ 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -139,6 +139,7 @@ static const tab parmtab[] = {
 { "FROMVOICE",    T_FROM_VOICE,	  false, true, "[<string>]" },
 { "GROUPID",      T_GROUPID,	  false, true, "(job group identifier)" },
 { "HRES",         T_HRES,	  false,false, "[dots-per-inch]" },
+{ "IGNOREMODEMBUSY", T_IGNOREMODEMBUSY, false, true, "[YES|NO]" },
 { "JOBID",        T_JOBID,	  false, true, "(job identifier)" },
 { "JOBINFO",      T_JOBINFO,	  false, true, "[<string>]" },
 { "JOBTYPE",      T_JOBTYPE,	  false, true, "(job type)" },
@@ -1166,15 +1167,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_USE_TAGLINE:
     case T_USE_CONTCOVER:
     case T_SERVERDOCOVER:
-	if (opt_CRLF()) {
-	    replyJobParamValue(*curJob, 213, t);
-	    return (true);
-	} else if (boolean_param(b) &&
-	  setJobParameter(*curJob, t, b)) {
-	    reply(213, "%s set to %s.", parmToken(t), b ? "YES" : "NO");
-	    return (true);
-	}
-	break;
+    case T_IGNOREMODEMBUSY:
     case T_USE_XVRES:
 	if (opt_CRLF()) {
 	    replyJobParamValue(*curJob, 213, t);

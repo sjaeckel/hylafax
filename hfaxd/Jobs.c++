@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 813 2008-04-05 18:06:33Z faxguy $ */
+/*	$Id: Jobs.c++ 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -124,6 +124,7 @@ static const struct {
     { T_FROM_USER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_FROM_VOICE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_GROUPID,	A_RUSR|A_RADM|A_ROTH },
+    { T_IGNOREMODEMBUSY,A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_JOBID,		A_RUSR|A_RADM|A_ROTH },
     { T_JOBINFO,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_JOBTYPE,	A_RUSR|A_RADM|A_ROTH },
@@ -459,6 +460,9 @@ HylaFAXServer::replyJobParamValue(Job& job, int code, Token t)
     case T_SERVERDOCOVER:
 	replyBoolean(code, job.serverdocover);
 	return;
+    case T_IGNOREMODEMBUSY:
+	replyBoolean(code, job.ignoremodembusy);
+	return;
     case T_DOCUMENT:
 	for (i = 0, n = job.items.length(); i < n; i++) {
 	    const FaxItem& fitem = job.items[i];
@@ -596,6 +600,8 @@ HylaFAXServer::jstatCmd(const Job& job)
 	jstatLine(T_USE_CONTCOVER,"%s", boolString(job.useccover));
     if (checkAccess(job, T_SERVERDOCOVER, A_READ))
 	jstatLine(T_SERVERDOCOVER,"%s", boolString(job.serverdocover));
+    if (checkAccess(job, T_IGNOREMODEMBUSY, A_READ))
+	jstatLine(T_IGNOREMODEMBUSY,"%s", boolString(job.ignoremodembusy));
     u_int i, n;
     for (i = 0, n = N(strvals); i < n; i++)
 	if (checkAccess(job, strvals[i].t, A_READ))
@@ -867,6 +873,9 @@ HylaFAXServer::setJobParameter(Job& job, Token t, bool b)
 	case T_SERVERDOCOVER:
 	    job.serverdocover = b;
 	    return (true);
+	case T_IGNOREMODEMBUSY:
+	    job.ignoremodembusy = b;
+	    return (true);
 	default:
 	    break;
 	}
@@ -924,6 +933,7 @@ HylaFAXServer::initDefaultJob(void)
     defJob.usexvres	= false;
     defJob.useccover	= true;
     defJob.serverdocover= false;
+    defJob.ignoremodembusy= false;
     defJob.pagechop	= FaxRequest::chop_default;
     defJob.notify	= FaxRequest::no_notice;// FAX_DEFNOTIFY
     defJob.chopthreshold= 3.0;
@@ -1023,6 +1033,7 @@ HylaFAXServer::newJob(fxStr& emsg)
     job->usexvres = curJob->usexvres;
     job->useccover = curJob->useccover;
     job->serverdocover = curJob->serverdocover;
+    job->ignoremodembusy = curJob->ignoremodembusy;
     job->pagechop = curJob->pagechop;
     job->notify = curJob->notify;
     job->chopthreshold = curJob->chopthreshold;
