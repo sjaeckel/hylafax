@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: FaxRequest.c++ 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -70,6 +70,7 @@ FaxRequest::reset(void)
     useccover = true;
     usexvres = false;
     serverdocover = false;
+    ignoremodembusy = false;
     pagechop = chop_default;
     chopthreshold = -1;
     csi = fxStr::null;
@@ -133,6 +134,7 @@ FaxRequest::shortval FaxRequest::shortvals[] = {
     { "skippages",	&FaxRequest::skippages },
     { "nocountcover",	&FaxRequest::nocountcover },
     { "serverdocover",	&FaxRequest::serverdocover },
+    { "ignoremodembusy",&FaxRequest::ignoremodembusy },
     { "totpages",	&FaxRequest::totpages },
     { "ntries",		&FaxRequest::ntries },
     { "ndials",		&FaxRequest::ndials },
@@ -357,6 +359,7 @@ FaxRequest::readQFile(bool& rejectJob)
 	case H_DESIREDTL:	desiredtl = tag[0] - '0'; break;
 	case H_USECCOVER:	useccover = tag[0] - '0'; break;
 	case H_USEXVRES:	usexvres = tag[0] - '0'; break;
+	case H_IGNOREMODEMBUSY:	ignoremodembusy = tag[0] - '0'; break;
 	case H_TTS:
 	    tts = atoi(tag);
 	    if (tts == 0)	// distinguish ``now'' from unset

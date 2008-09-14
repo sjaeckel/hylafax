@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 847 2008-06-18 01:51:37Z faxguy $
+.\"	$Id: hylafax-config.4f 872 2008-09-14 10:33:17Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-06-17 18:51:37 -0700 (Tue, 17 Jun 2008) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-09-14 03:33:17 -0700 (Sun, 14 Sep 2008) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -117,6 +117,7 @@ More detailed information about each item is given following the table.
 \fBTag	Type	Default	Description\fP
 AdaptiveAnswer	boolean	\s-1No\s+1	enable adaptive answer of inbound calls
 AdminGroup	string	\s-1faxadmin\s+1	System user group for administration (if PAM enabled)
+AllowIgnoreModemBusy¹	boolean	\s-1No\s+1	honor job requests to ignore modem busy status
 AnswerRotary	string	\s-1Any\s+1	alternatives for answering calls
 AnswerBias	integer	\-	bias to apply to successful rotary answer 
 AreaCode²	string	\-	local area code
@@ -475,6 +476,14 @@ second and subsequent
 .B AdminGroup
 Tells PAM what user group is allowed to administer the fax server.
 Only useful if the server is compiled with PAM enabled.
+.TP
+.B AllowIgnoreModemBusy¹
+Whether or not to honor job requests to ignore modem busy status when
+allocating jobs to a modem.  The intended use for this feature is to
+allow configurations whereby a
+.B DynamicConfig
+script can send a fax to an incoming caller (contrary to T.30 protocol
+for sending or polling).
 .TP
 .B AnswerRotary
 The sequence of answering techniques the server should

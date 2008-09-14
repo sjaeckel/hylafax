@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 510 2007-05-04 22:34:36Z faxguy $ */
+/*	$Id: Modem.c++ 872 2008-09-14 10:33:17Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -147,7 +147,7 @@ Modem::isInGroup(const fxStr& mgroup)
  * work associated with the specified job.
  */
 Modem*
-Modem::findModem(const Job& job)
+Modem::findModem(const Job& job, bool ignorebusy)
 {
     RE* c = ModemGroup::find(job.device);
     if (c) {
@@ -217,7 +217,8 @@ Modem::findModem(const Job& job)
 	for (ModemIter iter(list); iter.notDone(); iter++) {
 	    Modem& modem = iter;
 	    if (modem.getState() != Modem::READY && modem.getState() != Modem::EXEMPT)
-		continue;
+		if (!(ignorebusy && modem.getState() == Modem::BUSY))
+		    continue;
 	    if (job.device != modem.devID)
 		continue;
 	    return (modem.isCapable(job) ? &modem : (Modem*) NULL);
@@ -228,11 +229,15 @@ Modem::findModem(const Job& job)
 
 /*
  * Assign a modem for use by a job.
+ *
+ * ignorebusy tells us that the modem is already marked as busy.
+ * In that case don't bother trying to lock.  Just proceed as if
+ * the lock had worked.
  */
 bool
-Modem::assign(Job& job)
+Modem::assign(Job& job, bool ignorebusy)
 {
-    if (lock->lock()) {		// lock modem for use
+    if (ignorebusy || lock->lock()) {		// lock modem for use
 	state = BUSY;		// mark in use
 	job.modem = this;	// assign modem to job
 	send("L", 2, false);

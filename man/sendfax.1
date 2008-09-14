@@ -1,4 +1,4 @@
-.\"	$Id: sendfax.1 855 2008-07-14 05:41:42Z faxguy $
+.\"	$Id: sendfax.1 872 2008-09-14 10:33:17Z faxguy $
 .\"
 .\"  HylaFAX Facsimile Software
 .\"
@@ -500,11 +500,12 @@ are currently supported:
 .ta \w'\fB131072 (0x20000)    \fP'u +\w'Modem Communications    'u
 .nf
 
-\fBOption     Value Type        Description\fP
-nocountcover  integer           don't include this number of initial pages in the page counting
-serverdocover boolean           whether or not the server should generate the cover-page, if configured
-skippages     integer           assume this number of pages in the first document have already been sent
-skippedpages  integer           assume this number of pages in unsubmitted documents were previously sent
+\fBOption       Value Type        Description\fP
+ignoremodembusy boolean           whether or not to ignore modem busy status (requires server configuration to allow)
+nocountcover    integer           don't include this number of initial pages in the page counting
+serverdocover   boolean           whether or not the server should generate the cover-page, if configured
+skippages       integer           assume this number of pages in the first document have already been sent
+skippedpages    integer           assume this number of pages in unsubmitted documents were previously sent
 .sp .5
 .fi
 .TP 12

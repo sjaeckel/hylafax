@@ -1,4 +1,4 @@
-.\"	$Id: sendq.4f 659 2007-10-09 22:39:36Z faxguy $
+.\"	$Id: sendq.4f 872 2008-09-14 10:33:17Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -92,6 +92,7 @@ fax	string	document ready for transmission
 faxnumber	string	faxnumber to use sending
 faxname	string	origin name to use sending
 groupid	integer	\*(Fx job group identifier
+ignoremodembusy	integer	whether or not to ignore a modem busy state
 jobid	integer	\*(Fx job identifier
 jobtag	string	user-specified job identifier
 jobtype	string	job type identification string
@@ -292,6 +293,10 @@ The job group identifier, an integer number in the range
 1 to 32000 assigned to each group of jobs by the \*(Fx software.
 Each job in a group of jobs submitted at the same time is
 assigned the same value by the \*(Fx software.
+.TP 14
+.B ignoremodembusy
+1 if the job should ignore a modem busy status (requires server configuration to allow)
+0 otherwise.
 .TP 14
 .B jobid
 The job identifier, a unique integer number in the range
