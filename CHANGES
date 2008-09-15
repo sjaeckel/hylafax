@@ -1,7 +1,8 @@
-#	$Id: CHANGES 873 2008-09-16 04:37:15Z faxguy $	
+#	$Id: CHANGES 874 2008-09-16 05:39:07Z faxguy $	
 
 New Changes
 
+* avoid collissions in hash code (15 Sep 2008)
 * add hfaxd -D sleep option (15 Sep 2008)
 * add IgnoreModemBusy and AllowIgnoreModemBusy experimental
   features enabling sending of jobs to incoming calls (14 Sep 2008)
