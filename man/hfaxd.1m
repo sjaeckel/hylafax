@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 829 2008-04-28 23:53:25Z faxguy $
+.\"	$Id: hfaxd.1m 873 2008-09-16 04:37:15Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -35,6 +35,9 @@ hfaxd \- \*(Fx client-server protocol server
 .B ${LIBEXEC}/hfaxd
 [
 .B \-d
+] [
+.B \-D
+.I secs
 ] [
 .B \-q
 .I dir
@@ -820,6 +823,10 @@ under a debugger or when
 is started up from the
 .IR inetd (${MANNUM1_8})
 process.
+.TP 10
+.BI \-D " secs"
+Sleep for the specified number of seconds before actually processing the
+client to allow a debugger to attach.
 .TP 10
 .BI \-l " bindaddress"
 Bind to the specified 

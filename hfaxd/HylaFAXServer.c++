@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 814 2008-04-05 19:09:56Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 873 2008-09-16 04:37:15Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -42,6 +42,7 @@
 #include <stdlib.h>
 
 const char* HylaFAXServer::version = HYLAFAX_VERSION;
+int HylaFAXServer::_debugSleep = 0;
 
 /*
  * NB: The remainder of the instance state is
@@ -146,6 +147,11 @@ HylaFAXServer::~HylaFAXServer()
 void
 HylaFAXServer::initServer(void)
 {
+    if (_debugSleep)		// Allow a debuger time to attach
+    {
+	logDebug("Sleeping %d for debugger", _debugSleep);
+	sleep(_debugSleep);
+    }
     end_login();		// reset user-related state
 
     /*
