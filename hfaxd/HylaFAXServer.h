@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 872 2008-09-14 10:33:17Z faxguy $ */
+/*	$Id: HylaFAXServer.h 873 2008-09-16 04:37:15Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -198,6 +198,7 @@ public:
         u_int HylaFAXServer::*p;
         u_int		 def;
     };
+    static int _debugSleep;
 protected:
     u_int	state;
 #define	S_LOGGEDIN	0x0001		// client is logged in
