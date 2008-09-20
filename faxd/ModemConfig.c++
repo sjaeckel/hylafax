@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 831 2008-04-29 21:12:20Z faxguy $ */
+/*	$Id: ModemConfig.c++ 876 2008-09-20 16:09:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -737,7 +737,7 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
     else if (findTag(tag, (const tags*)numbers, N(numbers), ix))
 	(*this).*numbers[ix].p = atoi(value);
     else if (findTag(tag, (const tags*)booleans, N(booleans), ix))
-	(*this).*booleans[ix].p = atoi(value);
+	(*this).*booleans[ix].p = getBoolean(value);
 
     else if (streq(tag, "modemsetvolumecmd"))
 	setVolumeCmds(value);
