@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 872 2008-09-14 10:33:17Z faxguy $ */
+/*	$Id: Modem.c++ 878 2008-09-20 19:53:24Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -272,8 +272,11 @@ Modem::release()
      * may result in overzealous scheduling of the modem, but
      * since sender apps are expected to stablize the modem
      * before starting work it shouldn't be too bad.
+     *
+     * We only mark the modem READY when it is BUSY.  This
+     * is to allow states DOWN and EXEMPT to persist.
      */
-    state = READY;
+    if (state == BUSY) state = READY;
 }
 
 /*

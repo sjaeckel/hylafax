@@ -1,7 +1,8 @@
-#	$Id: CHANGES 874 2008-09-16 05:39:07Z faxguy $	
+#	$Id: CHANGES 878 2008-09-20 19:53:24Z faxguy $	
 
 New Changes
 
+* make faxstate "DOWN" persist through a faxq modem release (20 Sep 2008)
 * avoid collissions in hash code (15 Sep 2008)
 * add hfaxd -D sleep option (15 Sep 2008)
 * add IgnoreModemBusy and AllowIgnoreModemBusy experimental
