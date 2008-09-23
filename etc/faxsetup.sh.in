@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 782 2008-02-03 06:12:58Z faxguy $
+#	$Id: faxsetup.sh.in 879 2008-09-23 12:48:53Z faxguy $
 #
 # @WARNING@
 #
@@ -805,9 +805,9 @@ test -x "$PCL6CMD" || {
 }
 test -x "$MIMENCODE" || {
     MIMENCODE=`findAppDef mimencode $PATH mimencode`
-    test -x $MIMENCODE || {
+    test -x "$MIMENCODE" || {
 	MIMENCODE=`findAppDef base64-encode $PATH base64-encode`
-	test -x $MIMENCODE || {
+	test -x "$MIMENCODE" || {
 	    MIMENCODE=`findAppDef base64 $PATH base64`
 	}
     }
@@ -815,7 +815,7 @@ test -x "$MIMENCODE" || {
 }
 test -x "$UUENCODE" || {
     UUENCODE=`findAppDef uuencode $PATH uuencode`
-    test -x $UUENCODE || {
+    test -x "$UUENCODE" || {
 	UUENCODE=`findAppDef gmime-uuencode $PATH gmime-uuencode`
     }
     test -x "$UUENCODE" && Note "Found encoder: $UUENCODE"
