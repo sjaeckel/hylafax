@@ -1,7 +1,9 @@
-#	$Id: CHANGES 878 2008-09-20 19:53:24Z faxguy $	
+#	$Id: CHANGES 880 2008-09-29 05:53:03Z faxguy $	
 
 New Changes
 
+* prevent faxq from reusing old prepared image files from other
+  jobs (28 Sep 2008)
 * make faxstate "DOWN" persist through a faxq modem release (20 Sep 2008)
 * avoid collissions in hash code (15 Sep 2008)
 * add hfaxd -D sleep option (15 Sep 2008)
