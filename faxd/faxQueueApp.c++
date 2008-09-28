@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 872 2008-09-14 10:33:17Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 880 2008-09-29 05:53:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1042,7 +1042,8 @@ faxQueueApp::convertDocument(Job& job,
      * for the duration of the imaging job.  Concurrent jobs will
      * block on flock and wait for the imaging to be completed.
      * Previously imaged documents will be flock'd immediately
-     * and reused without delays.
+     * and reused without delays after verifying that they were
+     * last modified *after* the source image.
      *
      * NB: There is a race condition here.  One process may create
      * the file but another may get the shared lock above before
@@ -1053,6 +1054,22 @@ faxQueueApp::convertDocument(Job& job,
      * before the shared lock but that would slow down the normal
      * case and the window is small--so let's leave it there for now.
      */
+    struct stat sin;
+    struct stat sout;
+    if (Sys::stat(outFile, sout) == 0 && Sys::stat(req.item, sin) == 0) {
+	if (sout.st_mtime < sin.st_mtime) {
+	    /*
+	     * It appears that the target file exists and is 
+	     * older than the source image.  (Thus the old target is an image 
+	     * file from a previous job.)  This can happen, for example,
+	     * if faxqclean isn't being run frequently-enough and faxq
+	     * for some reason did not delete the old target file after its job 
+	     * completion.  Thus, we delete the old file before continuing.
+	     */
+	     jobError(job, "Removing old image file: %s (run faxqclean more often)", (const char*) outFile);
+	     (void) Sys::unlink(outFile);
+	}
+    }
     int fd = Sys::open(outFile, O_RDWR|O_CREAT|O_EXCL, 0600);
     if (fd == -1) {
 	if (errno == EEXIST) {
