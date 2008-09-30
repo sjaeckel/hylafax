@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 870 2008-09-11 04:02:23Z faxguy $
+#	$Id: configure 882 2008-09-30 14:39:51Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -384,7 +384,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 870 $"
+	echo "This is HylaFAX configure $Revision: 882 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3158,6 +3158,10 @@ BuildPortDotH()
     if [ "x$PAMLIBS" != "x" ]; then
 	CheckPAMType
     fi
+
+    # Emit the version variable that port will always give us.
+    echo "extern const char* HYLAFAX_VERSION_STRING;"
+
     EmitCPlusPlusEpilogue
     )>xport.h
     mv xport.h port.h; chmod 444 port.h
@@ -3274,12 +3278,8 @@ else
     Note "... emulate syslog&co."
     PORTFUNCS="$PORTFUNCS syslog.c"
 fi
-if [ "$PORTFUNCS" ]; then
-    LIBPORT='${PORT}/libport.a'
-    PORT=yes
-else
-    PORT=no
-fi
+LIBPORT='${PORT}/libport.a'
+
 Note "Done checking system libraries."
 
 Note ""
@@ -4980,7 +4980,9 @@ CONF_FILES="
     faxmail/application-octet-stream.sh
     faxmail/image-tiff.sh
 
+    port/Makefile
     port/install.sh
+    port/version.c
 
     etc/faxsetup.sh
     etc/faxsetup.linux
@@ -5040,7 +5042,6 @@ test $GS = yes &&		   SedConfigFiles gs/Makefile
 test $IMP = yes &&		   SedConfigFiles imp/Makefile
 test "$MKDEPEND" != ":" &&	   SedConfigFiles port/mkdepend
 test $SGI2FAX = yes &&	   	   SedConfigFiles sgi2fax/Makefile
-test $PORT = yes &&		   SedConfigFiles port/Makefile
 test $REGEX = yes &&		   SedConfigFiles regex/Makefile
 test $DBLIB = yes &&		   SedConfigFiles dblib/Makefile
 test -f $SRCDIR/MLA/VERSION &&	   SedConfigFiles MLA/Makefile

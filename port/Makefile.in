@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 2 2005-11-11 21:32:03Z faxguy $
+#	$Id: Makefile.in 882 2008-09-30 14:39:51Z faxguy $
 #
 # @WARNING@
 #
@@ -42,7 +42,7 @@ DEPTH=..
 SRCDIR	= ${DEPTH}/${TOPSRCDIR}/port
 VPATH	= ../@SRCDIR@/port
 
-CFILES	= @PORTFUNCS@
+CFILES	= @PORTFUNCS@ version.c
 TARGETS	= libport.a
 
 default all::
