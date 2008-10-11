@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 873 2008-09-16 04:37:15Z faxguy $ */
+/*	$Id: HylaFAXServer.h 885 2008-10-12 04:15:56Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -422,6 +422,8 @@ protected:
     bool restartSend(FILE* fd, off_t marker);
 
     static SpoolDir dirs[];
+
+    bool checkFileRights(int op, const struct stat&);
 
     void dirSetup(void);
     static SpoolDir* dirLookup(const char* path);
