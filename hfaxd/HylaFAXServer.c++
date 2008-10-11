@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 873 2008-09-16 04:37:15Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 883 2008-10-12 04:04:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -613,6 +613,10 @@ HylaFAXServer::resetConfig()
 
 #define	N(a)	(sizeof (a) / sizeof (a[0]))
 
+/*
+ * logFacility *must* be the first entry - see its handling
+ * below in setConfigItem()
+ */
 HylaFAXServer::stringtag HylaFAXServer::strings[] = {
 { "logfacility",	&HylaFAXServer::logFacility,	LOG_FAX },
 { "faxcontact",		&HylaFAXServer::faxContact,	"FaxMaster" },
@@ -636,7 +640,13 @@ HylaFAXServer::stringtag HylaFAXServer::strings[] = {
 { "ldapreqgroup",	&HylaFAXServer::ldapReqGroup,		"" },
 #endif
 };
+
+/*
+ * jobprotection needs to be first as well, see setConfigItem() below
+ */
 HylaFAXServer::numbertag HylaFAXServer::numbers[] = {
+{ "jobprotection",	&HylaFAXServer::jobProtection,		0644 },
+{ "recvqprotection",	&HylaFAXServer::recvqProtection,	0644 },
 { "servertracing",	&HylaFAXServer::tracingLevel,		TRACE_SERVER },
 { "idletimeout",	&HylaFAXServer::idleTimeout,		900 },
 { "maxidletimeout",	&HylaFAXServer::maxIdleTimeout,		7200 },
@@ -645,8 +655,6 @@ HylaFAXServer::numbertag HylaFAXServer::numbers[] = {
 { "maxloginattempts",	&HylaFAXServer::maxLoginAttempts,	5 },
 { "maxadminattempts",	&HylaFAXServer::maxAdminAttempts,	5 },
 { "maxconsecutivebadcmds",&HylaFAXServer::maxConsecutiveBadCmds,10 },
-{ "jobprotection",	&HylaFAXServer::jobProtection,		0444 },
-{ "recvqprotection",	&HylaFAXServer::recvqProtection,	0444 },
 #ifdef HAVE_LDAP
 { "ldapversion",	&HylaFAXServer::ldapVersion,		3 },
 #endif
@@ -696,6 +704,13 @@ HylaFAXServer::setConfigItem(const char* tag, const char* value)
 	}
     } else if (findTag(tag, (const tags*) numbers, N(numbers), ix)) {
 	(*this).*numbers[ix].p = getNumber(value);
+	switch (ix) {
+	case 0: if ( (jobProtection & 0600) != 0600)
+	    {
+		logError("JobProtection value must include 0600, forcing");
+		jobProtection |= 0600;
+	    }
+	}
     } else
 	return (false);
     return (true);

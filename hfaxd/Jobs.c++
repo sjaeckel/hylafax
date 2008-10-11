@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 872 2008-09-14 10:33:17Z faxguy $ */
+/*	$Id: Jobs.c++ 883 2008-10-12 04:04:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -981,7 +981,7 @@ HylaFAXServer::newJobCmd(void)
     if (newJob(emsg) && updateJobOnDisk(*curJob, emsg)) {
 	fxStr file("/" | curJob->qfile);
 	setFileOwner(file);			// force ownership
-	FileCache::chmod(file, 0660);		// sync cache
+	FileCache::chmod(file, jobProtection);	// sync cache
 	curJob->lastmod = Sys::now();		// noone else should update
 	reply(200, "New job created: jobid: %s groupid: %s.",
 	    (const char*) curJob->jobid, (const char*) curJob->groupid);
@@ -1077,7 +1077,7 @@ HylaFAXServer::updateJobOnDisk(Job& job, fxStr& emsg)
 {
     if (job.fd < 0)
     {
-	job.fd = Sys::open("/" | job.qfile, O_RDWR|O_CREAT, 0600);
+	job.fd = Sys::open("/" | job.qfile, O_RDWR|O_CREAT, jobProtection);
 	if (job.fd < 0)
 	{
 	    emsg = "Cannot open/create job description file /" | job.qfile;
@@ -1177,7 +1177,7 @@ bool
 HylaFAXServer::lockJob(Job& job, int how, fxStr& emsg)
 {
     if (job.fd < 0) {
-	job.fd = Sys::open("/" | job.qfile, O_RDWR, 0600);
+	job.fd = Sys::open("/" | job.qfile, O_RDWR, jobProtection);
 	if (job.fd < 0) {
 	    emsg = "Cannot open/create job description file /" | job.qfile;
 	    return (false);
@@ -1216,7 +1216,7 @@ HylaFAXServer::lockJob(Job& job, int how)
 {
     if (job.fd < 0)
     {
-	job.fd = Sys::open("/" | job.qfile, O_RDWR, 0600);
+	job.fd = Sys::open("/" | job.qfile, O_RDWR, jobProtection);
 	if (job.fd < 0)
 	    return false;
     }
