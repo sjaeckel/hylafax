@@ -1,7 +1,8 @@
-#	$Id: CHANGES 883 2008-10-12 04:04:28Z faxguy $	
+#	$Id: CHANGES 886 2008-10-13 04:32:54Z faxguy $	
 
 New Changes
 
+* add i537ep modem configuration template (12 Oct 2008)
 * use JobProtection to be default file permissions for sendq/doneq 
   files (11 Oct 2008)
 * prevent faxq from reusing old prepared image files from other

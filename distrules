@@ -1,4 +1,4 @@
-#	$Id: distrules 854 2008-07-04 21:25:00Z faxguy $
+#	$Id: distrules 886 2008-10-13 04:32:54Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -209,6 +209,7 @@ HYLAFAXSRC=\
 	config/gvc-288-2			\
 	config/hayes				\
 	config/iaxmodem				\
+	config/i537ep				\
 	config/intel-400e			\
 	config/ip568x				\
 	config/linux-isdn-2			\

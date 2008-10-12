@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 650 2007-10-03 23:52:46Z faxguy $
+#	$Id: Makefile.in 886 2008-10-13 04:32:54Z faxguy $
 #
 # @WARNING@
 #
@@ -70,6 +70,7 @@ CONFIGFILES=class1 \
 	gvc-288-2 \
 	hayes \
 	iaxmodem \
+	i537ep \
 	intel-400e \
 	ip568x \
 	linux-isdn-2 \
