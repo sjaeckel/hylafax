@@ -1,7 +1,8 @@
-#	$Id: CHANGES 886 2008-10-13 04:32:54Z faxguy $	
+#	$Id: CHANGES 887 2008-10-13 05:09:02Z faxguy $	
 
 New Changes
 
+* add "-q spool" option for faxcron (12 Oct 2008)
 * add i537ep modem configuration template (12 Oct 2008)
 * use JobProtection to be default file permissions for sendq/doneq 
   files (11 Oct 2008)

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxcron.sh.in 851 2008-06-18 05:12:47Z faxguy $
+#	$Id: faxcron.sh.in 887 2008-10-13 05:09:02Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -42,11 +42,30 @@ AGELOG=30			# keep log info for last 30 days
 AGERCV=7			# purge received facsimile after 7 days
 AGETMP=1			# purge orphaned temp files after 1 day
 FAXUSER=@FAXUID@		# owner of log files
+SPOOL=@SPOOL@			# HylaFAX spool directory
 LOGMODE=0644			# mode for log files
 XFERLOG=etc/xferfaxlog		# HylaFAX xferfaxlog file location
 LAST=etc/lastrun		# file where time+date of last run recorded
 
-cd @SPOOL@			# NB: everything below assumes this
+TEE=tee
+UPDATE="date +'%D %H:%M' >$LAST"
+
+while [ x"$1" != x"" ] ; do
+    case $1 in
+    -n)	    RM=":" TEE=":" CP=":" MV=":" CHOWN=":" CHMOD=":" UPDATE=":";;
+    -l)	    shift; LASTRUN="$1";;
+    -q)     shift; SPOOL="$1";;
+    -info)  shift; AGEINFO="$1";;
+    -log)   shift; AGELOG="$1";;
+    -rcv)   shift; AGERCV="$1";;
+    -tmp)   shift; AGETMP="$1";;
+    -mode)  shift; LOGMODE="$1";;
+    -*)	    echo "Usage: $0 [-n] [-l lastrun] [-q spool] [-info days] [-log days] [-rcv days] [-tmp days] [-mode logmode]"; hfExit 1;;
+    esac
+    shift
+done
+
+cd $SPOOL			# NB: everything below assumes this
 . bin/common-functions
 
 test -f etc/setup.cache || {
@@ -66,28 +85,12 @@ EOF
 . etc/setup.cache
 
 RM="$RM -f"
-TEE=tee
-UPDATE="date +'%D %H:%M' >$LAST"
 
 # security
 SetupPrivateTmp
 
 JUNK=$TMPDIR/faxjunk$$         # temp file used multiple times
 AWKTMP=$TMPDIR/faxawk$$                # temp file for awk program
-
-while [ x"$1" != x"" ] ; do
-    case $1 in
-    -n)	    RM=":" TEE=":" CP=":" MV=":" CHOWN=":" CHMOD=":" UPDATE=":";;
-    -l)	    shift; LASTRUN="$1";;
-    -info)  shift; AGEINFO="$1";;
-    -log)   shift; AGELOG="$1";;
-    -rcv)   shift; AGERCV="$1";;
-    -tmp)   shift; AGETMP="$1";;
-    -mode)  shift; LOGMODE="$1";;
-    -*)	    echo "Usage: $0 [-n] [-l lastrun] [-info days] [-log days] [-rcv days] [-tmp days] [-mode logmode]"; hfExit 1;;
-    esac
-    shift
-done
 
 test -z "$LASTRUN" && LASTRUN=`$CAT $LAST 2>/dev/null`
 
