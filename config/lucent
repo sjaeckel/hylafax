@@ -1,4 +1,4 @@
-# $Id: lucent 856 2008-07-15 18:12:04Z faxguy $
+# $Id: lucent 888 2008-10-13 15:44:46Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -47,6 +47,7 @@
 # CONFIG:CLASS1:EFM560 VER*:.*:.*: Manufacturer=AboCom Model=EFM560
 # CONFIG:CLASS1:Mainpine Venus V.92*:.*:.*: Manufacturer=Mainpine Model=RockForce
 # CONFIG:CLASS1:Mainpine CFAX34*:.*:.*: Manufacturer=Mainpine Model='IQ Express'
+# CONFIG:CLASS1:.*:Mainpine CFAX34*:.*: Manufacturer=Mainpine Model='IQ Express'
 # CONFIG:CLASS1:Agere OCM V.92*:.*:.*: Manufacturer=Agere Model=OCM
 #
 # BEGIN-SERVER
