@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 771 2008-01-25 21:46:02Z faxguy $
+#	$Id: Makefile.in 890 2008-10-27 01:55:46Z faxguy $
 #
 # @WARNING@
 #
@@ -218,7 +218,8 @@ uninstall::
 	${RM} -f ${SBIN}/faxmsg ${SBIN}/faxadduser ${SBIN}/faxconfig ${SBIN}/faxdeluser \
         ${SBIN}/faxmodem ${SBIN}/faxstate ${SBIN}/faxwatch ${SBIN}/faxinfo ${SBIN}/tiffcheck
 	${RM} -f ${SBIN}/faxabort ${SBIN}/faxanswer ${SBIN}/faxquit ${SBIN}/faxlock
-	${RM} -f ${SBIN}typetest
+	${RM} -f ${SBIN}/typetest
+	${RM} -f ${SBIN}/dialtest
 	${RM} -f ${SBIN}/xferfaxstats
 	${RM} -f ${SBIN}/recvstats
 	${RM} -f ${SBIN}/faxcron
