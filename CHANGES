@@ -1,7 +1,8 @@
-#	$Id: CHANGES 890 2008-10-27 01:55:46Z faxguy $	
+#	$Id: CHANGES 891 2008-11-09 01:46:10Z faxguy $	
 
 New Changes
 
+* initialize dataTimeout for TCF (8 Nov 2008)
 * properly remove dialtest and typetest in 'make uninstall' (26 Oct 2008)
 * add "-q spool" option for faxcron (12 Oct 2008)
 * add i537ep modem configuration template (12 Oct 2008)

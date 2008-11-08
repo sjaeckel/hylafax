@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 845 2008-06-01 00:21:42Z faxguy $ */
+/*	$Id: Class1Send.c++ 891 2008-11-09 01:46:10Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -768,6 +768,7 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 		    return (send_retry);
 		}
 
+		setDataTimeout(5, params.br);		// TCF data is only 1.5 s
 		if (!sendTCF(params, TCF_DURATION)) {
 		    if (abortRequested())
 			goto done;
