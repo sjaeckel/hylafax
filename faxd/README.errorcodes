@@ -16,6 +16,7 @@ E012      : Ring detected without successful handshake
 E050-E099 : non Class-specific fax protocol failures
 E050      : Missing EOL after 5 seconds
 E051      : Procedure interrupt received, job terminated
+E052      : Write error to TIFF file
 
 E100-E199 : Class 1-specific protocol failure
 E100      : Failure to receive silence (synchronization failure).

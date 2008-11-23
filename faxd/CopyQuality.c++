@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 658 2007-10-09 22:35:50Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 892 2008-11-24 06:17:59Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -294,7 +294,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		recvRow += rowSize;
 		recvEOLCount++;
 		if (recvRow + rowSize > &buf[RCVBUFSIZ]) {
-		    flushEncodedData(tif, recvStrip++, buf, recvRow - buf);
+		    flushEncodedData(tif, recvStrip++, buf, recvRow - buf, emsg);
 		    recvRow = buf;
 		}
 	    }
@@ -338,7 +338,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 	    , recvConsecutiveBadLineCount
 	);
 	if (recvRow > &buf[0])
-	    flushEncodedData(tif, recvStrip, buf, recvRow - buf);
+	    flushEncodedData(tif, recvStrip, buf, recvRow - buf, emsg);
     } else {
 	/*
 	 * Receive a page of data w/o doing copy quality analysis.
@@ -382,7 +382,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		    buf[cc] = c;
 		}
 		parseJBIGBIH(buf);
-		flushRawData(tif, 0, (const u_char*) buf, cc);
+		flushRawData(tif, 0, (const u_char*) buf, cc, emsg);
 	    }
 	    if (!fin) {
 		do {
@@ -405,14 +405,14 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 			buf[cc++] = c;
 		    } while (cc < RCVBUFSIZ && !fin);
 		    if (params.df == DF_JBIG) {
-			flushRawData(tif, 0, (const u_char*) buf, cc);
+			flushRawData(tif, 0, (const u_char*) buf, cc, emsg);
 		    } else {
 			memcpy(recvRow, (const char*) buf, cc);
 			recvRow += cc;
 		    }
 		} while (!fin);
 		if (params.df == DF_JBIG) clearSDNORMCount();
-		else fixupJPEG(tif);
+		else fixupJPEG(tif, emsg);
 	    }
 	    if (imagefd > 0) Sys::close(imagefd);
 	    recvEndPage(tif, params);
@@ -436,11 +436,11 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		    continue;
 		u_int n = raw.getLength();
 		if (recvRow + n >= &buf[RCVBUFSIZ]) {
-		    flushRawData(tif, 0, buf, recvRow - buf);
+		    flushRawData(tif, 0, buf, recvRow - buf, emsg);
 		    recvRow = buf;
 		}
 		if (n >= RCVBUFSIZ)
-		    flushRawData(tif, 0, (const u_char*) raw, n);
+		    flushRawData(tif, 0, (const u_char*) raw, n, emsg);
 		else {
 		    memcpy(recvRow, (const char*) raw, n);
 		    recvRow += n;
@@ -449,7 +449,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 	    }
 	}
 	if (recvRow > &buf[0])
-	    flushRawData(tif, 0, buf, recvRow - buf);
+	    flushRawData(tif, 0, buf, recvRow - buf, emsg);
 	if (seenRTC()) {			// RTC found in data stream
 	    /*
 	     * Adjust the received line count to reflect the
@@ -550,25 +550,31 @@ setupCompression(TIFF* tif, u_int df, u_int jp, uint32 opts)
  * Write a strip of decoded data to the receive file.
  */
 void
-FaxModem::flushEncodedData(TIFF* tif, tstrip_t strip, const u_char* buf, u_int cc)
+FaxModem::flushEncodedData(TIFF* tif, tstrip_t strip, const u_char* buf, u_int cc, fxStr& emsg)
 {
     if (imagefd > 0) Sys::write(imagefd, (const char*) buf, cc);
     // NB: must update ImageLength for each new strip
     TIFFSetField(tif, TIFFTAG_IMAGELENGTH, recvEOLCount);
-    if (TIFFWriteEncodedStrip(tif, strip, (tdata_t)buf, cc) == -1)
+    if (TIFFWriteEncodedStrip(tif, strip, (tdata_t)buf, cc) == -1) {
 	serverTrace("RECV: %s: write error", TIFFFileName(tif));
+        abortPageRecv();
+        emsg = "Write error to TIFF file {E052}";
+    }
 }
 
 /*
  * Write a strip of raw data to the receive file.
  */
 void
-FaxModem::flushRawData(TIFF* tif, tstrip_t strip, const u_char* buf, u_int cc)
+FaxModem::flushRawData(TIFF* tif, tstrip_t strip, const u_char* buf, u_int cc, fxStr& emsg)
 {
     if (imagefd > 0) Sys::write(imagefd, (const char*) buf, cc);
     recvTrace("%u bytes of data, %lu total lines", cc, recvEOLCount);
-    if (TIFFWriteRawStrip(tif, strip, (tdata_t)buf, cc) == -1)
+    if (TIFFWriteRawStrip(tif, strip, (tdata_t)buf, cc) == -1) {
 	serverTrace("RECV: %s: write error", TIFFFileName(tif));
+        abortPageRecv();
+        emsg = "Write error to TIFF file {E052}";
+    }
 }
 
 void
@@ -838,7 +844,7 @@ FaxModem::parseJPEGStream(u_char c)
 }
 
 void
-FaxModem::fixupJPEG(TIFF* tif)
+FaxModem::fixupJPEG(TIFF* tif, fxStr& emsg)
 {
     if (!recvEOLCount) {
 	/*
@@ -882,8 +888,11 @@ FaxModem::fixupJPEG(TIFF* tif)
 	    protoTrace("RECV: fixing zero image frame length in SOF marker at byte %lu to %lu", i, recvEOLCount);
 	}
     }
-    if (TIFFWriteRawStrip(tif, 0, (tdata_t) recvRow, pagesize) == -1)
+    if (TIFFWriteRawStrip(tif, 0, (tdata_t) recvRow, pagesize) == -1) {
 	serverTrace("RECV: %s: write error", TIFFFileName(tif));
+        abortPageRecv();
+        emsg = "Write error to TIFF file {E052}";
+    }
     free(recvRow);
 }
 
@@ -891,7 +900,7 @@ FaxModem::fixupJPEG(TIFF* tif)
  * In ECM mode the ECM module provides the line-counter.
  */
 void
-FaxModem::writeECMData(TIFF* tif, u_char* buf, u_int cc, const Class2Params& params, u_short seq)
+FaxModem::writeECMData(TIFF* tif, u_char* buf, u_int cc, const Class2Params& params, u_short seq, fxStr& emsg)
 {
     /*
      * Start a decoding child process to which the parent pipes the image data 
@@ -1034,13 +1043,13 @@ FaxModem::writeECMData(TIFF* tif, u_char* buf, u_int cc, const Class2Params& par
 	    break;
     }
     if (params.jp != JP_GREY && params.jp != JP_COLOR) {
-	flushRawData(tif, 0, (const u_char*) buf, cc);
+	flushRawData(tif, 0, (const u_char*) buf, cc, emsg);
     } else {
 	memcpy(recvRow, (const char*) buf, cc);
 	recvRow += cc;
     }
     if (seq & 2 && (params.jp == JP_GREY || params.jp == JP_COLOR)) {
-	fixupJPEG(tif);
+	fixupJPEG(tif, emsg);
     }
 }
 

@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: Class1Recv.c++ 892 2008-11-24 06:17:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1114,10 +1114,10 @@ Class1Modem::raiseRecvCarrier(bool& dolongtrain, fxStr& emsg)
 }
 
 void
-Class1Modem::abortPageECMRecv(TIFF* tif, const Class2Params& params, u_char* block, u_int fcount, u_short seq, bool pagedataseen)
+Class1Modem::abortPageECMRecv(TIFF* tif, const Class2Params& params, u_char* block, u_int fcount, u_short seq, bool pagedataseen, fxStr& emsg)
 {
     if (pagedataseen) {
-	writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2));
+	writeECMData(tif, block, (fcount * frameSize), params, (seq |= 2), emsg);
 	if (conf.saveUnconfirmedPages) {
 	    protoTrace("RECV keeping unconfirmed page");
 	    prevPage++;
@@ -1173,7 +1173,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			gotRTNC = true;
 		    } else {
 			if (wasTimeout()) abortReceive();
-			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 			return (false);
 		    }
 		}
@@ -1222,7 +1222,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    case FCF_PRI_MPS:
 					    case FCF_PRI_EOP:
 						if (!useV34 && !switchingPause(emsg)) {
-						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 						    return (false);
 						}
 						if (frameRev[rtncframe[4]] > prevPage || (frameRev[rtncframe[4]] == prevPage && frameRev[rtncframe[5]] >= prevBlock)) {
@@ -1259,7 +1259,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						    sendERR = true;
 						} else {
 						    if (!useV34 && !switchingPause(emsg)) {
-							abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+							abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 							return (false);
 						    }
 						    (void) transmitFrame(FCF_ERR|FCF_RCVR);
@@ -1275,7 +1275,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					if (useV34) {
 					    // T.30 F.3.4.5 Note 1 does not permit CTC in V.34-fax
 					    emsg = "Received invalid CTC signal in V.34-Fax. {E113}";
-					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 					    return (false);
 					}
 					/*
@@ -1288,7 +1288,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					processNewCapabilityUsage();
 					// requisite pause before sending response (CTR)
 					if (!switchingPause(emsg)) {
-					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 					    return (false);
 					}
 					(void) transmitFrame(FCF_CTR|FCF_RCVR);
@@ -1300,7 +1300,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				case FCF_CRP:
 				    // command repeat... just repeat whatever we last sent
 				    if (!useV34 && !switchingPause(emsg)) {
-					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 					return (false);
 				    }
 				    transmitFrame(signalSent);
@@ -1327,7 +1327,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    // the earlier message-handling routines try to cope with the signal.
 				    signalRcvd = rtncframe.getFCF();
 				    messageReceived = true;
-				    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+				    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 				    if (getRecvEOLCount() == 0) {
 					prevPage--;		// counteract the forthcoming increment
 					return (true);
@@ -1352,7 +1352,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    gotRTNC = true;
 					} else {
 					    if (wasTimeout()) abortReceive();
-					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 					    return (false);
 					}
 				    } else gotprimary = true;
@@ -1376,14 +1376,14 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    else emsg = "Failed to properly detect high-speed data carrier. {E112}";
 			}
 			protoTrace(emsg);
-			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 			return (false);
 		    }
 		}
 		if (gotEOT) {		// intentionally not an else of the previous if
 		    if (useV34 && emsg == "") emsg = "Received premature V.34 termination. {E115}";
 		    protoTrace(emsg);
-		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 		    return (false);
 		}
 	    }
@@ -1439,13 +1439,13 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    if (!gotEOT && !gotCTRL && !waitForDCEChannel(true)) {
 			emsg = "Failed to properly open V.34 control channel. {E116}";
 			protoTrace(emsg);
-			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 			return (false);
 		    }
 		    if (gotEOT) {
 			emsg = "Received premature V.34 termination. {E115}";
 			protoTrace(emsg);
-			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 			return (false);
 		    }
 		} else {
@@ -1454,7 +1454,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    abortReceive();
 			    emsg = "Timeout waiting for Phase C carrier drop. {E154}";
 			    protoTrace(emsg);
-			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 			    return (false);
 			}
 		    }
@@ -1564,7 +1564,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 
 				// requisite pause before sending response (PPR/MCF)
 				if (!blockgood && !useV34 && !switchingPause(emsg)) {
-				    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+				    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 				    return (false);
 				}
 			    }
@@ -1614,7 +1614,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					while (rtnframe.getFCF() == FCF_PPS && !gotEOT && recvFrameCount < 5 && gotrtnframe) {
 					    // we sent PPR, but got PPS again...
 					    if (!useV34 && !switchingPause(emsg)) {
-						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 						return (false);
 					    }
 					    transmitFrame(FCF_PPR, fxStr(ppr, 32));
@@ -1630,7 +1630,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						if (useV34) {
 						    // T.30 F.3.4.5 Note 1 does not permit CTC in V.34-fax
 						    emsg = "Received invalid CTC signal in V.34-Fax. {E113}";
-						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 						    return (false);
 						}
 						// use 16-bit FIF to alter speed, curcap
@@ -1639,7 +1639,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						processNewCapabilityUsage();
 						// requisite pause before sending response (CTR)
 						if (!switchingPause(emsg)) {
-						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 						    return (false);
 						}
 						(void) transmitFrame(FCF_CTR|FCF_RCVR);
@@ -1672,7 +1672,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 							break;
 						    default:
 							emsg = "COMREC invalid response to repeated PPR received {E117}";
-							abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+							abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 							return (false);
 						}
 						sendERR = true;		// do it later
@@ -1683,12 +1683,12 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						recvdDCN = true;  
 					    default:
 						if (emsg == "") emsg = "COMREC invalid response to repeated PPR received {E117}";
-						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 						return (false);
 					}
 				    } else {
 					emsg = "T.30 T2 timeout, expected signal not received {E118}";
-					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 					return (false);
 				    }
 				}
@@ -1710,7 +1710,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    default:
 					if (blockgood) {
 					    emsg = "COMREC invalid partial-page signal received {E119}";
-					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 					    return (false);
 					}
 					/*
@@ -1727,14 +1727,14 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    emsg = "COMREC received DCN (sender abort) {E108}";
 			    gotEOT = true;
 			    recvdDCN = true;
-			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 			    return (false);
 			default:
 			    // The message is not ECM-specific: fall out of ECM receive, and let
 			    // the earlier message-handling routines try to cope with the signal.
 			    signalRcvd = ppsframe.getFCF();
 			    messageReceived = true;
-			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 			    if (getRecvEOLCount() == 0) {
 				 prevPage--;		// counteract the forthcoming increment
 				return (true);
@@ -1745,7 +1745,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    }
 		} else {
 		    emsg = "T.30 T2 timeout, expected signal not received {E118}";
-		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen);
+		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 		    return (false);
 		}
 	    } else {
@@ -1761,7 +1761,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		}
 		if (syncattempts++ > 20) {
 		    emsg = "Cannot synchronize ECM frame reception. {E120}";
-		    abortPageECMRecv(tif, params, block, fcount, seq, true);
+		    abortPageECMRecv(tif, params, block, fcount, seq, true, emsg);
 		    return(false);
 		}
 	    }
@@ -1791,7 +1791,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	    switch (fcpid) {
 		case -1:	// error
 		    protoTrace("Protocol flow control unavailable due to fork error.");
-		    writeECMData(tif, block, cc, params, seq);
+		    writeECMData(tif, block, cc, params, seq, emsg);
 		    Sys::close(fcfd[0]);
 		    Sys::close(fcfd[1]);
 		    break;
@@ -1837,7 +1837,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 		    _exit(0);
 		default:	// parent
 		    Sys::close(fcfd[0]);
-		    writeECMData(tif, block, cc, params, seq);
+		    writeECMData(tif, block, cc, params, seq, emsg);
 		    Sys::write(fcfd[1], tbuf, 1);
 		    (void) Sys::waitpid(fcpid);
 		    Sys::close(fcfd[1]);
@@ -1845,7 +1845,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	    }
 	} else {
 	    protoTrace("Protocol flow control unavailable due to pipe error.");
-	    writeECMData(tif, block, cc, params, seq);
+	    writeECMData(tif, block, cc, params, seq, emsg);
 	}
 	seq = 0;					// seq code for in-between blocks
 

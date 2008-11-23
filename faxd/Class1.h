@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 768 2008-01-25 18:47:29Z faxguy $ */
+/*	$Id: Class1.h 892 2008-11-24 06:17:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -198,7 +198,7 @@ protected:
     bool        waitForDCEChannel(bool awaitctrl);
     bool        renegotiatePrimary(bool constrain);
     bool	syncECMFrame();
-    void	abortPageECMRecv(TIFF* tif, const Class2Params& params, u_char* block, u_int fcount, u_short seq, bool pagedataseen);
+    void	abortPageECMRecv(TIFF* tif, const Class2Params& params, u_char* block, u_int fcount, u_short seq, bool pagedataseen, fxStr& emsg);
     bool	recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg);
     void	blockData(u_int byte, bool flag);
     bool	blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxStr& emsg);
