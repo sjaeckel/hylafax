@@ -1,7 +1,8 @@
-#	$Id: CHANGES 891 2008-11-09 01:46:10Z faxguy $	
+#	$Id: CHANGES 892 2008-11-24 06:17:59Z faxguy $	
 
 New Changes
 
+* fail receive if TIFF write error occurs (23 Nov 2008)
 * initialize dataTimeout for TCF (8 Nov 2008)
 * properly remove dialtest and typetest in 'make uninstall' (26 Oct 2008)
 * add "-q spool" option for faxcron (12 Oct 2008)

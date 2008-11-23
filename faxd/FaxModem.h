@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: FaxModem.h 892 2008-11-24 06:17:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -96,8 +96,8 @@ private:
     u_long	parserCount[3];	// counters used in parsing JBIG and JPEG
     int		imagefd;	// file descriptor for image file
 
-    void	flushEncodedData(TIFF*, tstrip_t, const u_char*, u_int);
-    void	flushRawData(TIFF*, tstrip_t, const u_char*, u_int);
+    void	flushEncodedData(TIFF*, tstrip_t, const u_char*, u_int, fxStr& emsg);
+    void	flushRawData(TIFF*, tstrip_t, const u_char*, u_int, fxStr& emsg);
     void	invalidCode(const char* type, int x);
     void	badPixelCount(const char* type, int got, int expected);
     void	badDecodingState(const char* type, int x);
@@ -132,7 +132,7 @@ protected:
     void	traceModemParams();
     void	traceFCF(const char* dir, u_int fcf);
     void	parseJPEGStream(u_char c);
-    void	fixupJPEG(TIFF* tif);
+    void	fixupJPEG(TIFF* tif, fxStr& emsg);
     void	parseJBIGStream(u_char c);
     void	parseJBIGBIH(u_char* buf);
     void	clearSDNORMCount();
@@ -158,7 +158,7 @@ protected:
 		    const Class2Params& params, fxStr& emsg);
     void	setupStartPage(TIFF* tif, const Class2Params& params);
     void	recvEndPage(TIFF* tif, const Class2Params& params);
-    void	writeECMData(TIFF*, u_char*, u_int, const Class2Params&, u_short);
+    void	writeECMData(TIFF*, u_char*, u_int, const Class2Params&, u_short, fxStr& emsg);
     void	resetLineCounts();
     void	initializeDecoder(const Class2Params&);
     virtual void abortPageRecv() = 0;
