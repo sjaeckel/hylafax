@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 894 2008-12-05 06:57:23Z faxguy $ */
+/*	$Id: Class1Recv.c++ 895 2008-12-05 07:25:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1560,7 +1560,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    fbad++;
 					}
 				    }
-				    if (! blockgood) protoTrace("Block incomplete: %d frames (%d%%) corrupt or missing", fbad, (fbad/fc));
+				    if (! blockgood) protoTrace("Block incomplete: %d frames (%d%%) corrupt or missing", fbad, ((fbad*100)/fc));
 				    if (frameRev[ppsframe[4]] < prevPage || (frameRev[ppsframe[4]] == prevPage && frameRev[ppsframe[5]] < prevBlock))
 					blockgood = false;	// we already confirmed this block receipt... (see below)
 				} else {
