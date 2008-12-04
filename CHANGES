@@ -1,7 +1,8 @@
-#	$Id: CHANGES 892 2008-11-24 06:17:59Z faxguy $	
+#	$Id: CHANGES 893 2008-12-05 01:45:10Z faxguy $	
 
 New Changes
 
+* log number and percentage of frames bad after PPS (4 Dec 2008)
 * fail receive if TIFF write error occurs (23 Nov 2008)
 * initialize dataTimeout for TCF (8 Nov 2008)
 * properly remove dialtest and typetest in 'make uninstall' (26 Oct 2008)
