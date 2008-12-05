@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 884 2008-10-12 04:09:45Z faxguy $
+.\"	$Id: hfaxd.1m 896 2008-12-05 18:51:49Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -387,7 +387,7 @@ FaxContact	string	\s-1\fIsee below\fP\s+1	contact address to show in help text
 FileFmt	string	\s-1\fIsee below\fP\s+1	format string for file status results
 IdleTimeout	integer	\s-1900\s+1	client idle timeout in seconds
 JobFmt	string	\s-1\fIsee below\fP\s+1	format string for job status results
-JobProtection	octal	\s-10644\s+1	permissions for job qfiles in sendq/docq
+JobProtection	octal	\s-10644\s+1	permissions for job qfiles in sendq/doneq
 KillTimeMap	string	\s-1\fIsee below\fP\s+1	mapping from service level to job kill time (\s-1SNPP\s+1)
 LDAPServerURI	string		URI of the ldap server including port number
 LDAPBaseDN	string		LDAP context where user objects can be found
@@ -550,7 +550,7 @@ column title strings.
 .TP 10
 .B JobProtection
 The file mode setting for job qfiles in the \*(Fx queues (sendq and doneq).
-The default setting of ``0644'' allows all users to view all job paramaters in
+The default setting of ``0644'' allows all users to view all job parameters in
 the send and done queues.   The mode determines the permissions of the clients to
 see the jobs, following the \*(Fx permission model of the group bits
 controlling uid permissions and the other bits controlling other permissions.
