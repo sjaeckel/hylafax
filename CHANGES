@@ -1,7 +1,9 @@
-#	$Id: CHANGES 893 2008-12-05 01:45:10Z faxguy $	
+#	$Id: CHANGES 898 2008-12-08 21:14:33Z faxguy $	
 
 New Changes
 
+* add support for DSO on SCO (8 Dec 2008)
+* fix handling of CRP receipt after CFR in non-ECM receive (8 Dec 2008)
 * log number and percentage of frames bad after PPS (4 Dec 2008)
 * fail receive if TIFF write error occurs (23 Nov 2008)
 * initialize dataTimeout for TCF (8 Nov 2008)
