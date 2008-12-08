@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 879 2008-09-23 12:48:53Z faxguy $
+#	$Id: faxsetup.sh.in 898 2008-12-08 21:14:33Z faxguy $
 #
 # @WARNING@
 #
@@ -47,6 +47,7 @@ test -d /usr/bsd  && PATH=$PATH:/usr/bsd		# Silicon Graphics
 test -d /usr/5bin && PATH=/usr/5bin:$PATH:/usr/etc	# Sun and others
 test -d /usr/sbin && PATH=/usr/sbin:$PATH		# 4.4BSD-derived
 test -d /usr/local/bin && PATH=$PATH:/usr/local/bin	# for GNU tools
+test -d /usr/gnu/bin && PATH=$PATH:/usr/gnu/bin		# for GNU tools (SCO)
 
 AWK=@AWK@			# awk for use below
 CAT=@CAT@			# cat command for use below
@@ -559,7 +560,7 @@ EOF
     # Functions required by faxaddmodem.
     #
     case $TARGET in
-    *-sunos*|*-linux*|*-ultrix*|*-hpux*|*-freebsd*|*-netbsd*|*-sysv5SCO_SV6*)
+    *-sunos*|*-linux*|*-ultrix*|*-hpux*|*-freebsd*|*-netbsd*|*-sysv5*)
 	dumpTTYFuncs()
 	{
 	    cat<<'EOF'
@@ -588,7 +589,7 @@ EOF
 EOF
 	}
 	;;
-    *-svr4*|*-sysv4*|*-sysv5*|*-solaris*)
+    *-svr4*|*-sysv4*|*-solaris*)
 	dumpTTYFuncs()
 	{
 	    cat<<'EOF'

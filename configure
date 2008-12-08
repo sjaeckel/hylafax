@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 882 2008-09-30 14:39:51Z faxguy $
+#	$Id: configure 898 2008-12-08 21:14:33Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -384,7 +384,7 @@ do
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
 	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 882 $"
+	echo "This is HylaFAX configure $Revision: 898 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3618,6 +3618,47 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	    "t:t.o; \${C++F} ${DSOOPTS} -o t.${DSOSUF} t.o"
 	}
 	;;
+    *-sysv5*)
+	if [ "X${DIR_LIB}" != "X/usr/lib" ]; then
+	    USE_RPATH=' -R${LIBDIR}'
+	else
+	    USE_RPATH=''
+	fi
+	DSOSUF=so
+	FAXD='${DEPTH}/faxd'
+	LIBFAXSERVER='-L${FAXD} -lfaxserver'
+	# options here are passed to CC, not directly to ld
+	DSOOPTS='-G -Wl,-h,$@'
+	if [ ${ISGCC} = "yes" ] ; then
+	    LLDOPTS='-L${UTIL} -L${FAXD} -R${LIBDIR} -lfaxutil -lstdc++'
+	    GCOPTS="${GCOPTS} -fpic"
+	    GCXXOPTS="${GCXXOPTS} -fpic"
+	else
+	    LLDOPTS='-L${UTIL} -L${FAXD} -R${LIBDIR} -lfaxutil'
+	    GCOPTS="${GCOPTS} -Kpic"
+	    GCXXOPTS="${GCXXOPTS} -Kpic"
+	fi
+	#LLDOPTS='-L${UTIL} -L${FAXD} -R${LIBDIR} -lfaxutil'
+	DSO=SYSV5
+	CheckCCDSO()
+	{
+	$RM t.c t.o t.${DSOSUF}
+	echo 'int f() { return 0; }'>t.c
+	capture cat t.c
+	runMake t \
+	    't.o:; ${CCF} -c t.c' \
+	    "t: t.o; \${CCF} ${DSOOPTS} -o t.${DSOSUF} t.o"
+	}
+	CheckCXXDSO()
+	{
+	$RM t.c++ t.o t.${DSOSUF}
+	echo 'int f() { return 0; }'>t.c++
+	capture cat t.c++
+	runMake t \
+	    "t.o:; \${C++F} -c \${C++FILE} t.c++${MAKECXXOVERRIDE}" \
+	    "t:t.o; \${C++F} ${DSOOPTS} -o t.${DSOSUF} t.o"
+	}
+	;;
     *)	Note "There is no support for building HylaFAX as DSOs on your system."
 	DSO=no
 	;;
@@ -3859,6 +3900,7 @@ if [ "$SYSVINIT" = yes ]; then
 	    *sysv4.2uw2*)	DIR_SYSVINITSTOP="../rc0.d ../rc1.d";;
 	    *-sysv5UnixWare*)	DIR_SYSVINITSTOP="../rc0.d ../rc1.d";;
 	    *-sysv5OpenUNIX*)	DIR_SYSVINITSTOP="../rc0.d ../rc1.d";;
+	    *-sysv5SCO_SV*)	DIR_SYSVINITSTOP="../rc0.d ../rc2.d";;
 	    *)		DIR_SYSVINITSTOP="../rc0.d";;
 	esac
     fi
@@ -3867,7 +3909,6 @@ if [ "$SYSVINIT" = yes ]; then
 	    *-hpux*)		NAME_SYSVINITSTART="S905hylafax" ;;
 	    *-linux*)		NAME_SYSVINITSTART="S97hylafax" ;;
 	    *-*-sco3.2v5*)	NAME_SYSVINITSTART="S90hylafax" ;;
-	    *-sysv5SCO_SV*)	NAME_SYSVINITSTART="S90hylafax" ;;
 	    *)			NAME_SYSVINITSTART="S80hylafax" ;;
 	esac
     fi
@@ -4060,8 +4101,7 @@ if [ "$LOCKS" = auto ]; then
     *-sysv2*)	LOCKS=binary;;
     *-hpux*)	LOCKS=binary;;
     *-sysv4*)	LOCKS="+ascii";;
-    *-sysv5SCO_SV6*)	LOCKS="-ascii";;
-    *-sysv5*)	LOCKS="+ascii";;
+    *-sysv5*)	LOCKS="-ascii";;
     *-solaris*)	LOCKS="+ascii";;
     *-freebsd*)	LOCKS=ascii;;
     *-netbsd*)	LOCKS=ascii;;
@@ -4082,7 +4122,8 @@ if [ -z "$DIR_LOCKS" ]; then
     case $TARGET in
     *-aix*)     LOCKDIRS="/etc/locks $LOCKDIRS";;
     *-linux*)   LOCKDIRS="/var/lock/uucp /var/lock $LOCKDIRS";;
-    *-*-sco*)     LOCKDIRS="/usr/spool/uucp $LOCKDIRS";;
+    *-*-sco*)   LOCKDIRS="/usr/spool/uucp $LOCKDIRS";;
+    *-*-sysv5*) LOCKDIRS="/usr/spool/uucp $LOCKDIRS";;
     esac
     DIR_LOCKS=
     for i in $LOCKDIRS; do
@@ -4289,7 +4330,7 @@ if [ -z "$MANSCHEME" ]; then
     *-linux*)			MANSCHEME=bsd-source-cat;;
     *-ultrix*)			MANSCHEME=bsd-source-cat;;
     *-sunos*)			MANSCHEME=bsd-source-cat-strip;;
-    *-sysv[234]*)		MANSCHEME=sysv-source-cat-strip;;
+    *-sysv[2345]*)		MANSCHEME=sysv-source-cat-strip;;
     *-hpux*)			MANSCHEME=sysv-source-cat-strip;;
     *-solaris*)			MANSCHEME=sysv-source-cat-strip;;
     *-aix*)			MANSCHEME=sysv-source-strip;;

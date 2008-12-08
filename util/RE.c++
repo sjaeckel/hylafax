@@ -1,4 +1,4 @@
-/*	$Id: RE.c++ 303 2006-09-15 17:31:08Z faxguy $ */
+/*	$Id: RE.c++ 898 2008-12-08 21:14:33Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -27,7 +27,7 @@
 /*
  * Regular expression support.
  */
-#include <RE.h>
+#include "RE.h"
 
 RE::RE(const char* pat, int len, int flags)
     : _pattern(pat, len == 0 ? strlen(pat) : len)
