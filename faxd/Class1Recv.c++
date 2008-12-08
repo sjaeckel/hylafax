@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 895 2008-12-05 07:25:34Z faxguy $ */
+/*	$Id: Class1Recv.c++ 897 2008-12-08 18:43:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1023,7 +1023,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		if (!useV34 && !switchingPause(emsg)) return (false);
 		transmitFrame(signalSent);
 		traceFCF("RECV send", (u_char) signalSent[2]);
-		break;
+		/* fall through - to clear messageReceived and signalRcvd */
 	    case FCF_MCF:
 	    case FCF_CFR:
 		/* It's probably just our own echo. */
