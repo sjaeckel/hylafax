@@ -1,4 +1,4 @@
-# $Id: usr-xon 527 2007-05-29 22:22:37Z faxguy $
+# $Id: usr-xon 899 2008-12-21 20:18:55Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -50,6 +50,8 @@
 ModemType:		Class1		# use class 1 interface
 ModemRate:		19200		# rate for DCE-DTE communication
 ModemFlowControl:	xonxoff		# software flow control
+#
+# In some cases (i.e. USB versions) the &I and &R commands may be problematic.
 #
 ModemSetupDTRCmd:	ATS13=1&D2	# setup so DTR drop resets modem
 ModemSetupDCDCmd:	AT&C1		# setup so DCD reflects carrier (or not)

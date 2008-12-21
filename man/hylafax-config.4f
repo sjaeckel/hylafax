@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 872 2008-09-14 10:33:17Z faxguy $
+.\"	$Id: hylafax-config.4f 899 2008-12-21 20:18:55Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-09-14 03:33:17 -0700 (Sun, 14 Sep 2008) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-12-21 12:18:55 -0800 (Sun, 21 Dec 2008) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -2708,8 +2708,8 @@ According to T.30, Chapter 5, Note 4, this delay should be 75 +/- 20 ms.
 .TP
 .B Class1ResponseWaitCmd
 The command used to stop and wait after sending TCF, before attempting to 
-receive a training response from the remote.  Set this to ``AT+FRS=1'' if 
-you experience ``DIS/DTC received 3 times'' errors.
+receive a training response from the remote.  Set this to ``AT+FTS=1'' if 
+the modem responds ``OK'' before actually dropping the high-speed TCF carrier.
 .TP
 .B Class1Resolutions
 A bitmapped (bit-or'd) value indicating the resolutions to be supported during facsimile
