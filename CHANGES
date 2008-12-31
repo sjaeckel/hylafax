@@ -1,6 +1,10 @@
-#	$Id: CHANGES 898 2008-12-08 21:14:33Z faxguy $	
+#	$Id: CHANGES 900 2008-12-31 17:48:47Z faxguy $	
 
 New Changes
+
+* avoid a divide-by-zero error in additional logging from 5.2.8 (31 Dec 2008)
+
+(5.2.8)
 
 * add support for DSO on SCO (8 Dec 2008)
 * fix handling of CRP receipt after CFR in non-ECM receive (8 Dec 2008)
