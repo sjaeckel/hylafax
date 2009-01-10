@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 902 2009-01-10 19:34:33Z faxguy $
+#	$Id: configure 903 2009-01-10 21:32:00Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -200,6 +200,7 @@ MANFILES
 MANNUM4_5
 MANNUM1_8
 MANSAPPNAME
+MANSCHEME
 MANSFILENAME
 MANSYS
 MIMENCODE
@@ -388,7 +389,7 @@ do
     -disable-ldap|--disable-ldap) DISABLE_LDAP="yes" ;;
     -disable-jbig|--disable-jbig) DISABLE_JBIG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 902 $"
+	echo "This is HylaFAX configure $Revision: 903 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
