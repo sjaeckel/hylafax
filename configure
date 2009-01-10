@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 898 2008-12-08 21:14:33Z faxguy $
+#	$Id: configure 902 2009-01-10 19:34:33Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -329,6 +329,8 @@ Options: [defaults in brackets after descriptions]
   --target=TARGET         configure for TARGET [TARGET=HOST]
   --srcdir=DIR            find the sources in DIR [configure dir or ..]
   --disable-pam           disable all PAM support
+  --disable-jbig          disable all JBIG support
+  --disable-ldap          disable all LDAP support
   --with-PARAM[=ARG]      set configuration PARAM [ARG=yes]
 EOF
 }
@@ -382,9 +384,11 @@ do
     -srcdir=*|--srcdir=*)	SRCDIR="$ac_optarg";;
     -target|--target)		ac_prev=TARGET;;
     -target=*|--target=*)	TARGET="$ac_optarg" ;;
-	-disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
+    -disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
+    -disable-ldap|--disable-ldap) DISABLE_LDAP="yes" ;;
+    -disable-jbig|--disable-jbig) DISABLE_JBIG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 898 $"
+	echo "This is HylaFAX configure $Revision: 902 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
