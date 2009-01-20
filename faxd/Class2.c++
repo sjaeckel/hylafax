@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 831 2008-04-29 21:12:20Z faxguy $ */
+/*	$Id: Class2.c++ 904 2009-01-20 13:51:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -132,7 +132,7 @@ Class2Modem::setupModem(bool isSend)
 	    break;
 	}
     if (!jbigsupported) {
-	modemParams.df ^= BIT(DF_JBIG);
+	modemParams.df &= ~BIT(DF_JBIG);
     }
     traceModemParams();
     /*
