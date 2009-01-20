@@ -1,7 +1,9 @@
-#	$Id: CHANGES 902 2009-01-10 19:34:33Z faxguy $	
+#	$Id: CHANGES 904 2009-01-20 13:51:15Z faxguy $	
 
 New Changes
 
+* fix problem involving JBIG attempts using non-JBIG Class 2.0 modems
+  (20 Jan 2009)
 * add --disable-ldap and --disable-jbig options for configure (10 Jan 2009)
 * avoid a divide-by-zero error in additional logging from 5.2.8 (31 Dec 2008)
 

@@ -1,4 +1,4 @@
-# $Id: zyxel-2864 2 2005-11-11 21:32:03Z faxguy $
+# $Id: zyxel-2864 904 2009-01-20 13:51:15Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -41,6 +41,7 @@
 # CONFIG: CLASS2.0: ZyXEL*O288S*-*
 # CONFIG: CLASS2.0: ZyXEL-U336S*-*
 # CONFIG: CLASS2.0: ZyXEL-U90E*-*
+# CONFIG: CLASS2.0: ZyXEL-Omni*-*
 #
 # BEGIN-SERVER
 # END-SERVER
