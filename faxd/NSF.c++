@@ -1,4 +1,4 @@
-/* $Id: NSF.c++ 712 2007-11-22 01:41:52Z faxguy $ */
+/* $Id: NSF.c++ 905 2009-01-28 23:50:03Z faxguy $ */
 /* 
  * This file does not exist in the original HylaFAX distribution.
  * Created by Dmitry Bely, April 2000
@@ -294,7 +294,7 @@ static const NSFData KnownNSF[] =
     {"\x86\x00\x66", 3, "unknown - Korea 66", false },
     {"\x86\x00\x6E", 3, "unknown - Korea 6E", false },
     {"\x86\x00\x82", 3, "unknown - Korea 82", false },
-    {"\x86\x00\x88", 3, "unknown - Korea 88", false },
+    {"\x86\x00\x88", 3, "Ricoh", false },
     {"\x86\x00\x8A", 3, "unknown - Korea 8A", false },
     {"\x86\x00\x8C", 3, "Samsung", false, 3, 4, Samsung8C },
     {"\x86\x00\x92", 3, "unknown - Korea 92", false },
