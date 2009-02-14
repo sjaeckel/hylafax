@@ -1,10 +1,10 @@
 #
-# $Id: postinstall.in 903 2009-01-10 21:32:00Z faxguy $
+# $Id: postinstall.in 910 2009-02-15 04:21:25Z faxguy $
 #	Tim Rice
 #
 #	postinstall
 #
-#cd /usr/local/HylaFAX-v4.5
+#cd /opt/HylaFAX
 #sh make.links
 #
 CMP=@CMP@
