@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 530 2007-06-11 23:50:23Z faxguy $ */
+/*	$Id: faxstat.c++ 906 2009-02-15 03:00:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -143,6 +143,9 @@ faxStatApp::run(int argc, char** argv)
 		} else if (dirs[i] == FAX_RECVDIR) {
 		    getRecvStatusHeader(header);
 		    header.append('\n');
+		} else if (dirs[i] == FAX_STATUSDIR) {
+		    fxStr notused;
+		    getModemStatusHeader(notused);
 		}
 		if (!listWithHeader(dirs[i], emsg))
 		    break;
