@@ -1,4 +1,4 @@
-.\"	$Id: faxrcvd.1m 739 2007-12-23 16:16:48Z faxguy $
+.\"	$Id: faxrcvd.1m 907 2009-02-15 03:54:55Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -188,7 +188,9 @@ is the received TSI of the fax sender.
 .TP
 .I SENDTO
 controls the recipient of the received fax notification.  It is
-given as an e-mail address.
+given as an e-mail address.  To indicate multiple recipients 
+.I SENDTO
+should be given a list of addresses separated by whitespace.
 .TP
 .I SUBADDR
 the received subaddress value, communicated by the sender for 
