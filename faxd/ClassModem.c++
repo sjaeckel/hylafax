@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 857 2008-07-16 16:17:39Z faxguy $ */
+/*	$Id: ClassModem.c++ 912 2009-02-17 01:42:42Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -267,7 +267,16 @@ again:
 	     * be glare.  If we see it yet again, then the modem
 	     * apparently did not see or respond to our first 
 	     * answerCmd and we've got to try it again.
+	     *
+	     * In some cases this may happen because our ATA comes
+	     * too soon following the RING for the modem's liking.
+	     * This may have to do with the presence of Caller*ID
+	     * reporting and in such cases is probably best-resolved
+	     * by changing the RingsBeforeAnswer setting.  However,
+	     * as a fail-safe we try to shake up the timing by
+	     * using a small delay in our ATA here.
 	     */
+	    pause(500);
 	    atCmd(answerCmd, AT_NOTHING);
 	    morerings = 0;
 	}
