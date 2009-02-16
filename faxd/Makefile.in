@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 908 2009-02-15 04:01:28Z faxguy $
+#	$Id: Makefile.in 911 2009-02-17 00:38:54Z faxguy $
 #
 # @WARNING@
 #
@@ -185,7 +185,7 @@ faxq:	${FAXQOBJS} libfaxserver.${DSO} ${LIBS}
 faxsend: ${FAXSENDOBJS} libfaxserver.${DSO} ${LIBS}
 	${C++F} -o $@ ${FAXSENDOBJS} ${LIBFAXSERVER} ${LDFLAGS}
 faxgetty: ${FAXGETTYOBJS} libfaxserver.${DSO} ${LIBS}
-	${C++F} -o $@ ${FAXGETTYOBJS} ${LIBUTIL} ${LIBFAXSERVER} ${LDFLAGS}
+	${C++F} -o $@ ${FAXGETTYOBJS} ${LIBFAXSERVER} ${LDFLAGS}
 faxqclean: ${FAXQCLEANOBJS} libfaxserver.${DSO} ${LIBS}
 	${C++F} -o $@ ${FAXQCLEANOBJS} ${LIBFAXSERVER} ${LDFLAGS}
 

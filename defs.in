@@ -1,4 +1,4 @@
-# $Id: defs.in 909 2009-02-15 04:12:09Z faxguy $
+# $Id: defs.in 911 2009-02-17 00:38:54Z faxguy $
 #
 # @WARNING@
 #
@@ -139,7 +139,7 @@ C++FILE		= @CXXFILE@
 # So we make sure that LDAPLIBS comes after MACHDEPLIBS.
 #
 LIBS		= ${LIBUTIL}
-LLDLIBS		= ${LIBS} ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${LIBPORT} ${MACHDEPLIBS} @LIBJBIG@ @LDAPLIBS@
+LLDLIBS		= ${LIBS} ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${LIBPORT} ${MACHDEPLIBS} @PAMLIBS@ @LIBJBIG@ @LDAPLIBS@
 #
 # Override this definition to eliminate shared library use.
 #
@@ -199,8 +199,6 @@ FAXD		= @FAXD@
 LIBFAXSERVER	= @LIBFAXSERVER@
 LIBUTIL		= @LIBUTIL@
 LIBPORT		= @LIBPORT@
-LIBPAM		= @LIBPAM@
-LIBCRYPT	= @LIBCRYPT@
 
 #
 # Definitions used by common rules.
