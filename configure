@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 911 2009-02-17 00:38:54Z faxguy $
+#	$Id: configure 913 2009-02-17 19:37:21Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -389,7 +389,7 @@ do
     -disable-ldap|--disable-ldap) DISABLE_LDAP="yes" ;;
     -disable-jbig|--disable-jbig) DISABLE_JBIG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 911 $"
+	echo "This is HylaFAX configure $Revision: 913 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -1075,10 +1075,10 @@ if [ -z "$GCXXOPTS" ]; then
     *CC-*-irix*)		# cfront-based or cfront-compatible
 	GCXXOPTS='+a1 +w +p'
 	;;
-    xlC-*-aix*)
+    *xlC-*-aix*)
 	GCXXOPTS='-qlanglvl=compat -I/usr/lpp/xlC/include -I/usr/include'
 	;;
-    CC-*-sco3.2v5.*)		# cfront-based or cfront-compatible
+    *CC-*-sco3.2v5.*)		# cfront-based or cfront-compatible
 	GCXXOPTS='+a1 +p'
 	;;
     *)
