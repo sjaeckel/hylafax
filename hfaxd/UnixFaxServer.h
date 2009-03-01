@@ -1,4 +1,4 @@
-/*	$Id: UnixFaxServer.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: UnixFaxServer.h 915 2009-03-02 04:54:14Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -41,7 +41,7 @@ private:
     void passiveCmd(void);
     void netStatus(FILE*);
     bool hostPort();
-    void portCmd(void);
+    void portCmd(Token);
 
     virtual void initServer(void);
 

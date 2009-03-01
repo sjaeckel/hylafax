@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: InetFaxServer.h 915 2009-03-02 04:54:14Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -31,15 +31,17 @@ extern "C" {
 #include <netinet/in.h>
 }
 
+#include "Socket.h"
+
 struct hostent;
 
 class InetFaxServer : public HylaFAXServer {
 protected:
-    sockaddr_in	ctrl_addr;		// local address of control
-    sockaddr_in	peer_addr;		// remote address of control
-    sockaddr_in	data_source;		// source of data connection
-    sockaddr_in	data_dest;		// destination of data connection
-    sockaddr_in	pasv_addr;		// local end of passive connections
+    Socket::Address	ctrl_addr;		// local address of control
+    Socket::Address	peer_addr;		// remote address of control
+    Socket::Address	data_source;		// source of data connection
+    Socket::Address	data_dest;		// destination of data connection
+    Socket::Address	pasv_addr;		// local end of passive connections
     bool	usedefault;		// for data transfers
     /*
      * Timeout intervals for retrying connections
@@ -49,7 +51,7 @@ protected:
     int		swaitint;		// interval between retries
 
     bool isLocalDomain(const fxStr& h);
-    bool checkHostIdentity(hostent*& hp);
+    bool checkHostIdentity(const char* hostname);
     void setupNetwork(int fd);
     void handleUrgentData(void);
     void passiveCmd(void);
@@ -62,7 +64,7 @@ protected:
     void netStatus(FILE*);
     void printaddr(FILE*, const char* leader, const struct sockaddr_in& sin);
     bool hostPort();
-    void portCmd(void);
+    void portCmd(Token);
 
     bool dataConnect(void);
     FILE* getDataSocket(const char* mode);

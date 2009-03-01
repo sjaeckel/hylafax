@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 813 2008-04-05 18:06:33Z faxguy $ */
+/*	$Id: FaxClient.c++ 915 2009-03-02 04:54:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -141,6 +141,7 @@ FaxClient::vtraceServer(const char* fmt, va_list ap)
  *
  * e.g. ttyf2@flake.asd:9999.  Alternate forms
  * are: modem@, modem@host, host, host:port.
+ * IPv6 IP addresses (many :) are supported in [xx:xx::x]:port
  */
 void
 FaxClient::setupHostModem(const fxStr& s)
@@ -151,7 +152,18 @@ FaxClient::setupHostModem(const fxStr& s)
 	host = s.tail(s.length() - (pos+1));
     } else
 	host = s;
-    pos = host.next(0, ':');
+
+    if (host[0] == '[')
+    {
+	host.remove(0,1);
+	pos = host.next(0,']');
+	if (pos == host.length())
+	    printWarning("Couldn't parse IPv6 ip address string: \"%s\"", (const char*)s);
+	else
+	host.remove(pos,1);
+	    pos = host.next(pos, ':');
+    } else
+	pos = host.next(0, ':');
     if (pos != host.length()) {
 	port = atoi(host.tail(host.length() - (pos+1)));
 	host.resize(pos);
