@@ -1,4 +1,4 @@
-/*	$Id: User.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: User.c++ 915 2009-03-02 04:54:14Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -196,7 +196,10 @@ HylaFAXServer::checkuser(FILE* db, const char* name)
 	char* cp;
 	bool userandhost = false;
 	for (cp = line; *cp && *cp != ':'; cp++)
-	    if (*cp == '@') userandhost = true;
+	    if (*cp == '\\' && *(cp+1)) // skip check of next char unless it's end of string
+		cp++;
+	    else if (*cp == '@')
+		userandhost = true;
 
 	const char* base = &line[line[0] == '!'];
 	fxStr pattern(base, cp-base);

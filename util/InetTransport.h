@@ -1,4 +1,4 @@
-/*	$Id: InetTransport.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: InetTransport.h 915 2009-03-02 04:54:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -42,5 +42,8 @@ public:
 
     bool initDataConn(fxStr& emsg);
     bool openDataConn(fxStr& emsg);
+
+    bool initDataConnV4(fxStr& emsg);
+    bool initDataConnV6(fxStr& emsg);
 };
 #endif /* _InetTransport_ */

@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.h 885 2008-10-12 04:15:56Z faxguy $ */
+/*	$Id: HylaFAXServer.h 915 2009-03-02 04:54:14Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -126,7 +126,7 @@ enum Token {
     T_ABOR,	 T_ACCT,	T_ADDMODEM,	T_ADDUSER,	T_ADMIN,
     T_ALLO,	 T_ANSWER,	T_APPE,		T_CHMOD,	T_CHOWN,
     T_CONFIG,	 T_CWD, 	T_CDUP,		T_DELE,		T_DELUSER,
-    T_DELMODEM,	 T_DISABLE,	T_ENABLE,	T_FILEFMT,	T_FORM,
+    T_DELMODEM,	 T_DISABLE,	T_ENABLE,	T_EPSV,		T_EPRT,		T_FILEFMT,	T_FORM,
     T_HELP,	 T_IDLE,	T_LOCKWAIT,	T_JDELE,	T_JGDELE,	T_JGINTR,
     T_JGKILL,	 T_JGNEW,	T_JGPARM,	T_JGREST,	T_JGRP,
     T_JGSUB,	 T_JGSUSP,	T_JGWAIT,	T_JINTR,	T_JKILL,
@@ -351,7 +351,7 @@ protected:
     void chmodCmd(const char*, u_int);	// CHMOD
 
     virtual void passiveCmd(void) = 0;	// PASV: depends on transport
-    virtual void portCmd(void) = 0;	// PORT: depends on transport
+    virtual void portCmd(Token) = 0;	// PORT: depends on transport
 
     void triggerCmd(const char*, ...);	// TRIGGER
 

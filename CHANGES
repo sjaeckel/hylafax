@@ -1,6 +1,10 @@
-#	$Id: CHANGES 912 2009-02-17 01:42:42Z faxguy $	
+#	$Id: CHANGES 915 2009-03-02 04:54:14Z faxguy $	
 
 New Changes
+
+* add IPv6 support (1 Mar 2009)
+
+(5.2.9)
 
 * cope better in cases where the modem may "ignore" our ATA (16 Feb 2009)
 * fix problem involving JBIG attempts using non-JBIG Class 2.0 modems

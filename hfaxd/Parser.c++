@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 872 2008-09-14 10:33:17Z faxguy $ */
+/*	$Id: Parser.c++ 915 2009-03-02 04:54:14Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -55,6 +55,8 @@ static const tab cmdtab[] = {
 { "DELE",         T_DELE,	 true, true, "file-name" },
 { "DISABLE",      T_DISABLE,	 true, true, "modem [reason]" },
 { "ENABLE",       T_ENABLE,	 true, true, "modem" },
+{ "EPRT",         T_EPRT,	 true, true, "|f|addr|port|" },
+{ "EPSV",         T_EPSV,	 true, true, "(set server in passive mode with extended result)" },
 { "HELP",         T_HELP,	false, true, "[<string>]" },
 { "FILEFMT",      T_FILEFMT,	 true, true, "[format-string]" },
 { "FORM",         T_FORM,	 true, true, "format-type" },
@@ -416,12 +418,14 @@ HylaFAXServer::cmd(Token t)
 	    return (true);
 	}
 	break;
+    case T_EPRT:			// extended port for data transfer
     case T_PORT:			// port for data transfer
 	if (SPACE() && hostPort() && CRLF()) {
-	    portCmd();
+	    portCmd(t);
 	    return (true);
 	}
 	break;
+    case T_EPSV:			// extended passive mode
     case T_PASV:			// enable passive mode
 	if (CRLF()) {
 	    logcmd(t);
