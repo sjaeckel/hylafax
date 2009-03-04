@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 899 2008-12-21 20:18:55Z faxguy $
+.\"	$Id: hylafax-config.4f 916 2009-03-05 06:46:35Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2008-12-21 12:18:55 -0800 (Sun, 21 Dec 2008) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2009-03-04 22:46:35 -0800 (Wed, 04 Mar 2009) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -1323,7 +1323,7 @@ of anything other than ``R''.  The differences between ``B'', ``D'', and ``E'' a
 the passing of time (as if the modem were in-use with receiving a fax); ``D'' refers 
 to a condition that will not automatically clear (such as a wedged condition);
 and ``E'' refers to a permanent condition as configured by the administrator (as for a 
-send-only modem).  If a user submits a job to a specific modem that has a
+receive-only modem).  If a user submits a job to a specific modem that has a
 .B ModemReadyState
 of ``B'' or ``D'' then the job will wait in the queue until the modem is made available
 or until the job times out.  In contrast, jobs submitted to a specific modem with a
