@@ -1,7 +1,8 @@
-#	$Id: CHANGES 915 2009-03-02 04:54:14Z faxguy $	
+#	$Id: CHANGES 919 2009-03-22 04:24:36Z faxguy $	
 
 New Changes
 
+* improve detection of disabled Mac OS X (Darwin) realtime scheduling (21 Mar 2009)
 * add IPv6 support (1 Mar 2009)
 
 (5.2.9)
