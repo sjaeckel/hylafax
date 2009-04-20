@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 891 2008-11-09 01:46:10Z faxguy $ */
+/*	$Id: Class1Send.c++ 920 2009-04-20 07:50:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -919,7 +919,7 @@ Class1Modem::dropToNextBR(Class2Params& params)
 		curcap--;
 	    }
 	}
-	if (params.br == minsp)
+	if (params.br <= minsp)
 	    return (false);
 	params.br--;
 	// get ``best capability'' of modem at this baud rate
