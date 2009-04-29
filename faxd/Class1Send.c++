@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 920 2009-04-20 07:50:04Z faxguy $ */
+/*	$Id: Class1Send.c++ 921 2009-04-30 05:40:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1247,7 +1247,9 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 		// a "RESPONSE REC" operation, anyway, this is correct behavior.
 		//
 		// We don't use CRP here, because it isn't well-received.
-		gotppr = recvFrame(pprframe, FCF_SNDR, conf.t4Timer, false, false);
+		do {
+		    gotppr = recvFrame(pprframe, FCF_SNDR, conf.t4Timer, false, false);
+		} while (pprframe.getFCF() == FCF_PPS && crpcnt++ < 3);		// handle echo of our PPS
 		if (gotppr) {
 		    traceFCF("SEND recv", pprframe.getFCF());
 		    if (pprframe.getFCF() == FCF_CRP) {
