@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 919 2009-03-22 04:24:36Z faxguy $
+#	$Id: configure 922 2009-05-25 15:28:12Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -389,7 +389,7 @@ do
     -disable-ldap|--disable-ldap) DISABLE_LDAP="yes" ;;
     -disable-jbig|--disable-jbig) DISABLE_JBIG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 919 $"
+	echo "This is HylaFAX configure $Revision: 922 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -4186,6 +4186,7 @@ PickRIP()
 	    /usr/gnu/bin/gs
 	    /opt/gnu/bin/gs
 	    /usr/bin/gs
+	    /usr/sfw/bin/gs
 	"
 	for i in $GSLOCS; do
 	    # verify Ghostscript was linked with the tiffg3 device driver
