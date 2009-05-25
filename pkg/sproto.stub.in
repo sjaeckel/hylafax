@@ -73,7 +73,7 @@ d man @MANDIR@/@MANFILES@ ? ? ?
 f man @MANDIR@/@MANFILES@/pagesizes.@MANNUM4_5@=../man/cman.files/pagesizes.4f 0444 @SYSUID@ @SYSGID@
 f man @MANDIR@/@MANFILES@/typerules.@MANNUM4_5@=../man/cman.files/typerules.4f 0444 @SYSUID@ @SYSGID@
 f man @MANDIR@/@MANFILES@/hylafax-config.@MANNUM4_5@=../man/sman.files/hylafax-config.4f 0444 @SYSUID@ @SYSGID@
-f man @MANDIR@/@MANFILES@/jobcontrol.@MANNUM1_8@=../man/sman.files/jobcontrol.1m 0444 @SYSUID@ @SYSGID@
+f man @MANDIR@/@MANFILES@/jobcontrol.@MANNUM1_8@=../man/sman.apps/jobcontrol.1m 0444 @SYSUID@ @SYSGID@
 f man @MANDIR@/@MANFILES@/dialrules.@MANNUM4_5@=../man/sman.files/dialrules.4f 0444 @SYSUID@ @SYSGID@
 f man @MANDIR@/@MANFILES@/doneq.@MANNUM4_5@=../man/sman.files/doneq.4f 0444 @SYSUID@ @SYSGID@
 f man @MANDIR@/@MANFILES@/hosts.hfaxd.@MANNUM4_5@=../man/sman.files/hosts.hfaxd.4f 0444 @SYSUID@ @SYSGID@
@@ -240,3 +240,4 @@ d html @CGIDIR@ ? ? ?
 f html @CGIDIR@/man2html=../html/tools/man2html 0555 @SYSUID@ @SYSGID@
 f html @CGIDIR@/unquote=../html/tools/unquote 0555 @SYSUID@ @SYSGID@
 f html @CGIDIR@/manpage=../html/tools/manpage.sh 0555 @SYSUID@ @SYSGID@
+d none /usr/options ? ? ?
