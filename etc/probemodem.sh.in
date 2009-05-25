@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: probemodem.sh.in 683 2007-10-31 17:53:58Z faxguy $
+#	$Id: probemodem.sh.in 924 2009-05-25 15:49:16Z faxguy $
 #
 # @WARNING@
 #
@@ -148,7 +148,7 @@ done
 
 # zap any gettys or other users
 if [ x"$DOFUSER" != x"no" ]; then
-    if ! [ -f $FUSER ]; then
+    if [ ! -f $FUSER ]; then
 	cat<<EOF
 Hmm, there does not appear to be an fuser command on your machine.
 This means that I am unable to ensure that all processes using the

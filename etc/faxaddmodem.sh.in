@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxaddmodem.sh.in 834 2008-05-06 17:32:37Z faxguy $
+#	$Id: faxaddmodem.sh.in 924 2009-05-25 15:49:16Z faxguy $
 #
 # @WARNING@
 #
@@ -351,7 +351,7 @@ done
 
 if [ "$DOFUSER" = "yes" ]; then
     # zap any gettys or other users
-    if ! [ -f $FUSER ]; then
+    if [ ! -f $FUSER ]; then
 	cat<<EOF
 Hmm, there does not appear to be an fuser command on your machine.
 This means that I am unable to ensure that all processes using the
