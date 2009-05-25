@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 915 2009-03-02 04:54:14Z faxguy $ */
+/*	$Id: FaxClient.c++ 928 2009-05-25 20:20:10Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -153,7 +153,7 @@ FaxClient::setupHostModem(const fxStr& s)
     } else
 	host = s;
 
-    if (host[0] == '[')
+    if (host.length() && host[0] == '[')
     {
 	host.remove(0,1);
 	pos = host.next(0,']');
