@@ -1,4 +1,4 @@
-# $Id: defs.in 926 2009-05-25 16:45:00Z faxguy $
+# $Id: defs.in 927 2009-05-25 18:41:23Z faxguy $
 #
 # @WARNING@
 #
@@ -173,16 +173,6 @@ TIFFBIN		= @TIFFBIN@
 ZLIBINC		= @ZLIBINC@
 LIBZ		= @LIBZ@
 #
-# libdb-related definitions.  The source for the libdb library
-# is not required to build this software, but you must have
-# the libdb library installed somewhere on your system to link
-# against.  If the default "-L /usr/local/lib -ldb" is
-# insufficient to locate the library you can setup a config.local
-# file that defines LIBDB and/or DBINC (used to find db.h)
-#
-DBLIBINC	= @DBLIBINC@
-LIBDB		= @LIBDB@
-#
 # regex-related definitions.  The source for the POSIX regular
 # expression package is not required to build this software,
 # but you must have the resulting library installed somewhere
@@ -225,8 +215,8 @@ CINCS		= ${VCINCS} ${LCINCS} ${GCINCS}
 
 GCOPTS		= @GCOPTS@ ${OPTIMIZER} @PROTOTYPES@
 GCDEFS		= @ANSICPP@
-GCINCS		= -I. -I${DEPTH} -I${REGEXINC} -I${SRCDIR} \
-		    -I${DEPTH}/${TOPSRCDIR}/util -I${TIFFINC}
+GCINCS		= -I. -I${DEPTH} -I${SRCDIR} \
+		    -I${DEPTH}/${TOPSRCDIR}/util ${REGEXINC} ${TIFFINC}
 #
 # C++ flags are decomposed using the same hierarchy as C flags.
 #
@@ -241,8 +231,8 @@ C++DEFS		= ${VC++DEFS} ${LC++DEFS} ${GC++DEFS}
 C++INCS		= ${VC++INCS} ${LC++INCS} ${GC++INCS}
 
 GC++OPTS	= @GCXXOPTS@ ${OPTIMIZER}
-GC++INCS	= -I. -I${DEPTH} -I${REGEXINC} -I${SRCDIR} \
-		    -I${DEPTH}/${TOPSRCDIR}/util -I${TIFFINC}
+GC++INCS	= -I. -I${DEPTH} -I${SRCDIR} \
+		    -I${DEPTH}/${TOPSRCDIR}/util ${REGEXINC} ${TIFFINC}
 GC++DEFS	= @ANSICXXPP@
 
 #
