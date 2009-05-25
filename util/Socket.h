@@ -1,4 +1,4 @@
-/*	$Id: Socket.h 915 2009-03-02 04:54:14Z faxguy $ */
+/*	$Id: Socket.h 928 2009-05-25 20:20:10Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -35,6 +35,7 @@ extern "C" {
 #include <net/errno.h>
 #endif
 #include <netdb.h>
+#include <netinet/in.h>
 }
 
 /*
@@ -67,7 +68,7 @@ public:
 
     union Address
     {
-	    sa_family_t family;
+	    struct sockaddr s;
 	    struct sockaddr_in in;
 	    struct sockaddr_in6 in6;
 	    struct sockaddr_un un;
@@ -78,6 +79,8 @@ public:
 
     static socklen_t socklen(const Address& a);
     static size_t addrlen(const Address& a);
+
+    static sa_family_t& family(Address& a);
     static in_port_t& port(Address& a);
     static void* addr (Address& a);
 };
@@ -131,7 +134,7 @@ inline struct hostent* Socket::gethostbyname(const char* name)
 
 inline socklen_t Socket::socklen (const Address& a)
 {
-    switch (a.family)
+    switch (a.s.sa_family)
     {
 	case AF_INET:
 		return sizeof(a.in);
@@ -145,7 +148,7 @@ inline socklen_t Socket::socklen (const Address& a)
 
 inline size_t Socket::addrlen (const Address& a)
 {
-    switch (a.family)
+    switch (a.s.sa_family)
     {
 	case AF_INET:
 		return sizeof(a.in.sin_addr);
@@ -155,9 +158,14 @@ inline size_t Socket::addrlen (const Address& a)
     fxAssert(true, "Socket::addrlen on invalid Address");
     return 0;		// DEAD CODE
 }
+inline sa_family_t& Socket::family (Address& a)
+{
+    return a.s.sa_family;
+}
+
 inline in_port_t& Socket::port (Address& a)
 {
-    switch (a.family)
+    switch (a.s.sa_family)
     {
 	case AF_INET:
 		return a.in.sin_port;
@@ -170,7 +178,7 @@ inline in_port_t& Socket::port (Address& a)
 
 inline void* Socket::addr (Address& a)
 {
-    switch (a.family)
+    switch (a.s.sa_family)
     {
 	case AF_INET:
 	    return (void*) &a.in.sin_addr;

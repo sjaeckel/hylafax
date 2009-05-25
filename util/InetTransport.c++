@@ -1,4 +1,4 @@
-/*	$Id: InetTransport.c++ 915 2009-03-02 04:54:14Z faxguy $ */
+/*	$Id: InetTransport.c++ 928 2009-05-25 20:20:10Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -116,11 +116,11 @@ InetTransport::callServer(fxStr& emsg)
     {
 	Socket::Address *addr = (Socket::Address*)aip->ai_addr;
 	char buf[256];                          // For inet_ntop use
-	fxAssert(aip->ai_family == addr->family, "addrinfo ai_family doesn't match in_addr->ai_info");
+	fxAssert(aip->ai_family == Socket::family(*addr), "addrinfo ai_family doesn't match in_addr->ai_info");
 	if (client.getVerbose())
 	    client.traceServer("Trying %s [%d] (%s) at port %u...",
-		    (const char*)client.getHost(), addr->family,
-		    inet_ntop(addr->family, Socket::addr(*addr), buf, sizeof(buf)),
+		    (const char*)client.getHost(), Socket::family(*addr),
+		    inet_ntop(Socket::family(*addr), Socket::addr(*addr), buf, sizeof(buf)),
 		    ntohs(Socket::port(*addr)));
 	int fd = socket (aip->ai_family, aip->ai_socktype, aip->ai_protocol);
 	if (fd != -1 && ( connect(fd, aip->ai_addr, aip->ai_addrlen) == 0))
@@ -278,7 +278,7 @@ InetTransport::initDataConnV6(fxStr& emsg)
 		client.printWarning("Couldn't parse last response \"%s\"", (const char*)client.getLastResponse());
 		return(false);
 	    }
-	} else if (err == FaxClient::ERROR && data_addr.family == AF_INET) {
+	} else if (err == FaxClient::ERROR && Socket::family(data_addr) == AF_INET) {
 
 	    client.printWarning("EPSV not supported, trying PASV since we're AF_INET\n");
 	    if (client.command("PASV") != FaxClient::COMPLETE)
@@ -307,7 +307,7 @@ InetTransport::initDataConnV6(fxStr& emsg)
 	Socket::port(data_addr) = 0;		// let system allocate port
     }
 
-    int fd = socket(data_addr.family, SOCK_STREAM, IPPROTO_TCP);
+    int fd = socket(Socket::family(data_addr), SOCK_STREAM, IPPROTO_TCP);
     if (fd < 0) {
 	emsg = fxStr::format("socket: %s", strerror(errno));
 	return (false);
@@ -316,10 +316,10 @@ InetTransport::initDataConnV6(fxStr& emsg)
 	if (Socket::connect(fd, &data_addr.in, Socket::socklen(data_addr)) >= 0) {
 	    if (client.getVerbose())
 		client.traceServer("Connected to %s at port %u.",
-		inet_ntop(data_addr.family, Socket::addr(data_addr), buf, sizeof(buf)), ntohs(Socket::port(data_addr)));
+		inet_ntop(Socket::family(data_addr), Socket::addr(data_addr), buf, sizeof(buf)), ntohs(Socket::port(data_addr)));
 	} else {
 	    emsg = fxStr::format("Can not reach server at %s at port %u (%s).",
-		inet_ntop(data_addr.family, Socket::addr(data_addr), buf, sizeof(buf)), ntohs(Socket::port(data_addr)), strerror(errno));
+		inet_ntop(Socket::family(data_addr), Socket::addr(data_addr), buf, sizeof(buf)), ntohs(Socket::port(data_addr)), strerror(errno));
 	    goto bad;
 	}
     } else {
@@ -344,9 +344,9 @@ InetTransport::initDataConnV6(fxStr& emsg)
 			hostbuf, sizeof(hostbuf), portbuf, sizeof(portbuf),
 			NI_NUMERICHOST | NI_NUMERICSERV);
 	int err = client.command("EPRT |%d|%s|%s|",
-			(data_addr.family == AF_INET6 ? 2 : 1),
+			(Socket::family(data_addr) == AF_INET6 ? 2 : 1),
 			hostbuf, portbuf);
-	if (err == FaxClient::ERROR && data_addr.family == AF_INET)
+	if (err == FaxClient::ERROR && Socket::family(data_addr) == AF_INET)
 	{
 	    if (client.getVerbose())
 		    client.printWarning("EPRT not supported, trying PORT");

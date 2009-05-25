@@ -1,1 +1,1 @@
-const char* HYLAFAX_VERSION_STRING =	"HylaFAX (tm) Version 5.2.8";
+const char* HYLAFAX_VERSION_STRING =	"HylaFAX (tm) Version 5.3.0";
