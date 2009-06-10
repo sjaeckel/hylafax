@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 921 2009-04-30 05:40:18Z faxguy $ */
+/*	$Id: Class1Send.c++ 929 2009-06-10 12:48:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1673,13 +1673,13 @@ Class1Modem::sendRTC(Class2Params params, u_int ppmcmd, uint32 rows, fxStr& emsg
     if (params.is2D()) {
 	protoTrace("SEND 2D RTC");
 	if (params.ec != EC_DISABLE)
-	    return sendClass1ECMData(RTC2D, 9, rtcRev, true, ppmcmd, emsg);
+	    return sendClass1ECMData(RTC2D, 10, rtcRev, true, ppmcmd, emsg);
 	else
 	    return sendClass1Data(RTC2D, sizeof (RTC2D), rtcRev, true, getDataTimeout());
     } else {
 	protoTrace("SEND 1D RTC");
 	if (params.ec != EC_DISABLE)
-	    return sendClass1ECMData(RTC1D, 10, rtcRev, true, ppmcmd, emsg);
+	    return sendClass1ECMData(RTC1D, 9, rtcRev, true, ppmcmd, emsg);
 	else
 	    return sendClass1Data(RTC1D, sizeof (RTC1D), rtcRev, true, getDataTimeout());
     }
