@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++ 885 2008-10-12 04:15:56Z faxguy $ */
+/*	$Id: FileSystem.c++ 931 2009-06-22 06:26:07Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -249,10 +249,6 @@ HylaFAXServer::dirLookup(ino_t ino)
 bool
 HylaFAXServer::checkFileRights(int op, const struct stat& sb)
 {
-logDebug("checkFileRights:%s %o [%u:%u] %o",
-		IS(PRIVILEGED) ? " *ADMIN*" : "",
-		op, uid, sb.st_gid, sb.st_mode);
-
     if (IS(PRIVILEGED))
 	return (true);
 
