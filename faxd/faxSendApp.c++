@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 756 2008-01-12 20:00:18Z faxguy $ */
+/*	$Id: faxSendApp.c++ 933 2009-07-13 04:50:41Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -495,11 +495,13 @@ usage(const char* appName)
 static void
 sigCleanup(int s)
 {
+    int old_errno = errno;
     signal(s, fxSIGHANDLER(sigCleanup));
     logError("CAUGHT SIGNAL %d", s);
     faxSendApp::instance().close();
     if (!faxSendApp::instance().isRunning())
 	_exit(send_failed);
+    errno = old_errno;
 }
 
 int

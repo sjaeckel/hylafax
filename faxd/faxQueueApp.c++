@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 880 2008-09-29 05:53:03Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 933 2009-07-13 04:50:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -351,9 +351,11 @@ faxQueueApp::prepareJobNeeded(Job& job, FaxRequest& req, JobStatus& status)
 void
 faxQueueApp::prepareCleanup(int s)
 {
+    int old_errno = errno;
     signal(s, fxSIGHANDLER(faxQueueApp::prepareCleanup));
     logError("CAUGHT SIGNAL %d, ABORT JOB PREPARATION", s);
     faxQueueApp::instance().abortPrepare = true;
+    errno = old_errno;
 }
 
 /*
