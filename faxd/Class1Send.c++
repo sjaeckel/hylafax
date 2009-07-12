@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 929 2009-06-10 12:48:09Z faxguy $ */
+/*	$Id: Class1Send.c++ 934 2009-07-13 05:39:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -199,19 +199,21 @@ Class1Modem::getPrologue(Class2Params& params, bool& hasDoc, fxStr& emsg, u_int&
 		    	if (! hasDoc)	// don't die if we can poll
 			    return (send_failed);
 		    }
+		    emsg = "";
 		    return (send_ok);
 		case FCF_DTC:				// NB: don't handle DTC
 		    emsg = "DTC received when expecting DIS (not supported) {E123}";
-		    break;
+		    protoTrace(emsg);
+		    return (send_retry);
 		case FCF_DCN:
 		    emsg = "COMREC error in transmit Phase B/got DCN {E124}";
-		    break;
+		    protoTrace(emsg);
+		    return (send_retry);
 		default:
 		    emsg = "COMREC invalid command received/no DIS or DTC {E125}";
+		    protoTrace(emsg);
 		    break;
 		}
-		protoTrace(emsg);
-		return (send_retry);
 	    }
 	}
 	/*
@@ -222,8 +224,10 @@ Class1Modem::getPrologue(Class2Params& params, bool& hasDoc, fxStr& emsg, u_int&
 	if (!useV34) (void) switchingPause(emsg);
 	framerecvd = recvFrame(frame, FCF_SNDR, (Sys::now()-start)*1000);	// timer here is T1
     }
-    emsg = "No receiver protocol (T.30 T1 timeout) {E126}";
-    protoTrace(emsg);
+    if (emsg == "") {
+	emsg = "No receiver protocol (T.30 T1 timeout) {E126}";
+	protoTrace(emsg);
+    }
     return (send_retry);
 }
 
