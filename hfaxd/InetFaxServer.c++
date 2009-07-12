@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 928 2009-05-25 20:20:10Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 933 2009-07-13 04:50:41Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -342,7 +342,14 @@ InetFaxServer::handleUrgentData(void)
     } else
 	pushCmdData(line, strlen(line));
 }
-void InetFaxServer::sigURG(int) { InetFaxServer::instance().handleUrgentData();}
+
+void
+InetFaxServer::sigURG(int)
+{
+    int old_errno = errno;
+    InetFaxServer::instance().handleUrgentData();
+    errno = old_errno;
+}
 
 void
 InetFaxServer::lostConnection(void)
@@ -352,7 +359,14 @@ InetFaxServer::lostConnection(void)
 	    (const char*) remotehost, (const char*) remoteaddr);
     dologout(-1);
 }
-void InetFaxServer::sigPIPE(int) { InetFaxServer::instance().lostConnection(); }
+
+void
+InetFaxServer::sigPIPE(int)
+{
+    int old_errno = errno;
+    InetFaxServer::instance().lostConnection();
+    errno = old_errno;
+}
 
 static bool
 setupPassiveDataSocket(int pdata, Socket::Address& pasv_addr)

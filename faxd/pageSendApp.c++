@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.c++ 499 2007-04-18 00:55:49Z faxguy $ */
+/*	$Id: pageSendApp.c++ 933 2009-07-13 04:50:41Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -25,6 +25,7 @@
  */
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/file.h>
@@ -1393,11 +1394,13 @@ usage(const char* appName)
 static void
 sigCleanup(int s)
 {
+    int old_errno = errno;
     signal(s, fxSIGHANDLER(sigCleanup));
     logError("CAUGHT SIGNAL %d", s);
     pageSendApp::instance().close();
     if (!pageSendApp::instance().isRunning())
 	_exit(send_failed);
+    errno = old_errno;
 }
 
 int
