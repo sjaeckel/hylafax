@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: TextFormat.c++ 935 2009-07-29 01:40:06Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -1160,6 +1160,7 @@ TextFont::decodeFontName(const char* name, fxStr& filename, fxStr& emsg)
     struct stat junk;
     fxStr path = fontMap;
     u_int index = path.next(0, ':');
+    fxStr key = name;
     while (index > 0) {
 
         /* Newer versions of Ghostscript use "Fontmap.GS"
@@ -1176,7 +1177,6 @@ TextFont::decodeFontName(const char* name, fxStr& filename, fxStr& emsg)
         if (path.length() > 0) path.remove(0, 1);
         FILE* fd = Sys::fopen(fontMapFile, "r");
         if (fd != NULL && fontMapFile[0] == '/') {
-            fxStr key = name;
             char buf[1024];
 	    int aliascount = maxaliases;
             while (fgets(buf, sizeof(buf), fd) != NULL &&
@@ -1222,6 +1222,7 @@ TextFont::decodeFontName(const char* name, fxStr& filename, fxStr& emsg)
 	        	fseek(fd, 0L, SEEK_SET);
                     } else {
                         //real file
+			key = name;
                         fclose(fd);
 			val.remove(0);
 			int pos = val.next(0, '.');
@@ -1256,7 +1257,7 @@ TextFont::decodeFontName(const char* name, fxStr& filename, fxStr& emsg)
     path = fontPath;
     index = path.next(0, ':');
     while (index > 0) {
-        filename = path.head(index) | "/" | name | ".afm";
+        filename = path.head(index) | "/" | key | ".afm";
         path.remove(0, index);
         if (path.length() > 0) path.remove(0, 1);
         if (stat(filename, &junk) == 0) return true;
