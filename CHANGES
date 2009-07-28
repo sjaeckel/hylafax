@@ -1,7 +1,8 @@
-#	$Id: CHANGES 921 2009-04-30 05:40:18Z faxguy $	
+#	$Id: CHANGES 935 2009-07-29 01:40:06Z faxguy $	
 
 New Changes
 
+* support Ghostscript 8.64 font aliases (28 Jul 2009)
 * handle echo of PPS when sending (29 Apr 2009)
 * improve detection of disabled Mac OS X (Darwin) realtime scheduling (21 Mar 2009)
 * add IPv6 support (1 Mar 2009)
