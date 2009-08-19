@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 933 2009-07-13 04:50:41Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 936 2009-08-19 07:08:01Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -61,9 +61,10 @@ InetSuperServer::startServer(void)
     Socket::Address addr;
     struct addrinfo hints, *ai;
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET6;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_flags = AI_PASSIVE;
 #ifdef AI_ADDRCONFIG
-    hints.ai_flags = AI_ADDRCONFIG;
+    hints.ai_flags |= AI_ADDRCONFIG;
 #endif
     hints.ai_socktype = SOCK_STREAM;
 
@@ -74,12 +75,6 @@ InetSuperServer::startServer(void)
     if (getaddrinfo(bindaddress, port, &hints, &ai) == 0)  {
 	memcpy(&addr, ai->ai_addr, ai->ai_addrlen);
 	freeaddrinfo(ai);
-	/*
-	 * an empty bindaddr returns localhost, but we want to
-	 * listen on everything
-	 */
-	if (! bindaddress)
-	    memset(Socket::addr(addr), 0, Socket::addrlen(addr));
     } else {
 	logDebug("Couldn't get address information for port \"%s\"",
 		(const char*) port);
