@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 871 2008-09-11 04:04:17Z faxguy $
+#    $Id: common-functions.sh.in 939 2009-09-08 03:18:43Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -198,6 +198,10 @@ gs2fax()
     # difference of "resizing" images to fit the page rather than cutting
     # them off.
     #
+    # And yet another alternative is to use FIXEDWIDTH='bin/auto-rotate.ps'
+    # which should rotate all pages to portrait and adjust to fit A4 page
+    # size.  (Mixed page sizes are not supported by it.)
+    #
     case "$paper" in
 	a4)
 	    case "$pagewidth" in
@@ -273,10 +277,10 @@ gs2fax()
 	    -dNOPAUSE \
 	    -dSAFER=true \
 	    -sPAPERSIZE=$paper \
-	    $FIXEDWIDTH \
 	    -dBATCH \
 	    -r$hres\x$vres \
 	    "-sOutputFile=$out" \
+	    $FIXEDWIDTH \
 	    stocht.ps -c "<< /HalftoneMode 1 >> setuserparams" -
 	return
     fi
@@ -284,7 +288,7 @@ gs2fax()
        [ -x $TIFFBIN/tiff2bw ] && [ -x $TIFFBIN/tiffdither ] && [ -x $TIFFBIN/tiff2ps ] && \
        [ -x $TIFFBIN/tiffsplit ] && [ -x $TIFFBIN/tiffcp ]; then
 	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
-	    $FIXEDWIDTH -dBATCH -r$hres\x$vres "-sOutputFile=$out.1" $files
+	    -dBATCH -r$hres\x$vres "-sOutputFile=$out.1" $FIXEDWIDTH $files
 	# Both tiff2bw and tiffdither only operate on single pages, so...
 	mkdir tmpdir.$$
 	cd tmpdir.$$
@@ -313,10 +317,10 @@ gs2fax()
 	-dNOPAUSE \
 	-dSAFER=true \
 	-sPAPERSIZE=$paper \
-	$FIXEDWIDTH \
 	-dBATCH \
 	-r$hres\x$vres \
 	"-sOutputFile=$out" \
+	$FIXEDWIDTH \
 	$files
 
     if [ "$DITHERING" = "libtiff-fs" ]; then

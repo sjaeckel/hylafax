@@ -1,7 +1,8 @@
-#	$Id: CHANGES 938 2009-09-08 01:05:03Z faxguy $	
+#	$Id: CHANGES 939 2009-09-08 03:18:43Z faxguy $	
 
 New Changes
 
+* add auto-rotate.ps utility script (7 Sep 2009)
 * add dialrules-pabx.be sample (7 Sep 2009)
 * add "bindaddressfamily" option to hfaxd and default to IPv4 (7 Sep 2009)
 * support Ghostscript 8.64 font aliases (28 Jul 2009)
