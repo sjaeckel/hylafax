@@ -1,5 +1,5 @@
 #
-# $Id: postinstall.in 925 2009-05-25 15:52:55Z faxguy $
+# $Id: postinstall.in 938 2009-09-08 01:05:03Z faxguy $
 #	Tim Rice
 #
 #	postinstall
@@ -41,7 +41,7 @@ echo "Updating ${spooldir} files"
 for i in bin/ps2fax.gs bin/ps2fax.dps bin/ps2fax.imp bin/pdf2fax.gs \
 bin/pcl2fax bin/tiff2fax bin/notify bin/archive \
 bin/faxrcvd bin/pollrcvd bin/mkcover bin/wedged \
-etc/dpsprinter.ps etc/dialrules etc/dialrules.sf-ba etc/dialrules.europe
+etc/dpsprinter.ps etc/dialrules etc/dialrules.sf-ba etc/dialrules-pabx.be etc/dialrules.europe
 do
     if [ -f ${spooldir}/${i} ]
     then

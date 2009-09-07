@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 854 2008-07-04 21:25:00Z faxguy $
+#	$Id: Makefile.in 938 2009-09-08 01:05:03Z faxguy $
 #
 # @WARNING@
 #
@@ -51,6 +51,7 @@ NAME_SYSVINITSTOP	= @SYSVINITSTOPNAME@
 
 DIALRULES=dialrules \
 	dialrules.sf-ba \
+	dialrules-pabx.be \
 	dialrules.europe \
 	dialrules.ext \
 	dialrules.uk

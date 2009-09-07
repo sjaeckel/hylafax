@@ -220,6 +220,7 @@ f none @SPOOL@/etc/xferfaxlog.dist=../etc/xferfaxlog 0644 @FAXUID@ @FAXGID@
 f none @SPOOL@/etc/hosts.hfaxd.dist=../etc/hosts.hfaxd 0600 @FAXUID@ @FAXGID@
 f none @SPOOL@/etc/dialrules.dist=../@SRCDIR@/etc/dialrules 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/dialrules.sf-ba.dist=../@SRCDIR@/etc/dialrules.sf-ba 0444 @SYSUID@ @SYSGID@
+f none @SPOOL@/etc/dialrules-pabx.be.dist=../@SRCDIR@/etc/dialrules-pabx.be 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/dialrules.europe.dist=../@SRCDIR@/etc/dialrules.europe 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/dialrules.ext.dist=../@SRCDIR@/etc/dialrules.ext 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/dialrules.uk.dist=../@SRCDIR@/etc/dialrules.uk 0444 @SYSUID@ @SYSGID@
