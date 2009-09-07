@@ -1,4 +1,4 @@
-/*	$Id: main.c++ 873 2008-09-16 04:37:15Z faxguy $ */
+/*	$Id: main.c++ 937 2009-09-08 00:24:46Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -174,7 +174,7 @@ detachFromTTY(void)
 static void
 usage(const char* appName)
 {
-    fatal("usage: %s [-d] [-o port] [-O] [-h port] [-H] [-l bindaddress] [-i port] [-I] [-s port] [-S] [-u socket] [-q queue-directory]",
+    fatal("usage: %s [-d] [-o port] [-O] [-f bindaddressfamily] [-h port] [-H] [-l bindaddress] [-i port] [-I] [-s port] [-S] [-u socket] [-q queue-directory]",
 	appName);
 }
 
@@ -194,6 +194,7 @@ int
 main(int argc, char** argv, char** envp)
 {
     const char *bindaddress = NULL;
+    const char *addressfamily = NULL;
 
     HylaFAXServer::setLogFacility(LOG_FAX);
     HylaFAXServer::setupLogging("HylaFAX");
@@ -206,7 +207,7 @@ main(int argc, char** argv, char** envp)
     optind = 1;
     opterr = 0;
     int c;
-    const char* opts = "dD:Hh:Ii:Oo:q:Ss:u:l:";
+    const char* opts = "dD:f:Hh:Ii:Oo:q:Ss:u:l:";
     /*
      * Deduce the spooling directory and whether or not to
      * detach the process from the controlling tty.  The
@@ -224,7 +225,7 @@ main(int argc, char** argv, char** envp)
     int detach = -1;			// unknown state
     while ((c = Sys::getopt(argc, argv, opts)) != -1)
 	switch (c) {
-	case 'h': case 'i': case 'o': case 's': case 'u':
+	case 'f': case 'h': case 'i': case 'o': case 's': case 'u':
 	    if (detach == -1)		// detach unless explicitly specified
 		detach = true;
 	    break;
@@ -270,6 +271,8 @@ main(int argc, char** argv, char** envp)
 	    fatal("No HTTP suport");
 	    /*NOTREACHED*/
 #endif
+	case 'f':
+	    addressfamily = strdup(optarg); break;
 	case 'l':
 	    bindaddress = strdup(optarg); break;
 	case 'i': {
@@ -278,6 +281,7 @@ main(int argc, char** argv, char** envp)
 		handlers.append(iss);
 		if ((iss!=NULL) && (bindaddress!=NULL))
 		    iss->setBindAddress(bindaddress);
+		    iss->setAddressFamily(addressfamily);
 		}
 		break;
 	case 'I': newInetServer(); break;

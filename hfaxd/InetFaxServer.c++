@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 936 2009-08-19 07:08:01Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 937 2009-09-08 00:24:46Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -30,6 +30,7 @@
 #include "Socket.h"
 #include "config.h"
 
+#include <string.h>
 #include <netdb.h>
 #include <ctype.h>
 
@@ -55,13 +56,30 @@ InetSuperServer::setBindAddress(const char *bindaddr)
     bindaddress = bindaddr;
 }
 
+void
+InetSuperServer::setAddressFamily(const char *addrfamily)
+{
+    addressfamily = addrfamily;
+}
+
 bool
 InetSuperServer::startServer(void)
 {
     Socket::Address addr;
     struct addrinfo hints, *ai;
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
+
+    /*
+     * Most BSDs seem to have some complications when using IPv6.  Since
+     * most users will not be using IPv6 the default is then IPv4-only.
+     */
+    hints.ai_family = AF_INET;		// default
+    if (addressfamily) {
+	if (strncmp(addressfamily, "IPv6", 4) == 0) hints.ai_family = AF_INET6;
+	else if (strncmp(addressfamily, "IPv4", 4) == 0) hints.ai_family = AF_INET;
+	else if (strncmp(addressfamily, "all", 3) == 0) hints.ai_family = AF_UNSPEC;
+    }
+
     hints.ai_flags = AI_PASSIVE;
 #ifdef AI_ADDRCONFIG
     hints.ai_flags |= AI_ADDRCONFIG;

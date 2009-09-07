@@ -1,7 +1,8 @@
-#	$Id: CHANGES 935 2009-07-29 01:40:06Z faxguy $	
+#	$Id: CHANGES 937 2009-09-08 00:24:46Z faxguy $	
 
 New Changes
 
+* add "bindaddressfamily" option to hfaxd and default to IPv4 (7 Sep 2009)
 * support Ghostscript 8.64 font aliases (28 Jul 2009)
 * handle echo of PPS when sending (29 Apr 2009)
 * improve detection of disabled Mac OS X (Darwin) realtime scheduling (21 Mar 2009)
