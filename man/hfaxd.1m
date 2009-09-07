@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 896 2008-12-05 18:51:49Z faxguy $
+.\"	$Id: hfaxd.1m 937 2009-09-08 00:24:46Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -46,6 +46,9 @@ hfaxd \- \*(Fx client-server protocol server
 .I port
 ] [
 .B \-O
+] [
+.B \-f
+.I bindaddressfamily
 ] [
 .B \-l
 .I bindaddress
@@ -830,11 +833,18 @@ process.
 Sleep for the specified number of seconds before actually processing the
 client to allow a debugger to attach.
 .TP 10
+.BI \-f " bindaddressfamily"
+Bind to the specified 
+.I bindaddressfamily
+tcp port. Options are ``IPv4'', ``IPv6'', or ``all''.  
+Please note that this argument needs to be specified before 
+.BI \-i
+otherwise it will be ignored.
+.TP 10
 .BI \-l " bindaddress"
 Bind to the specified 
 .I bindaddress
-the tcp port. Please note that this argument need to be specified before
-the 
+tcp port. Please note that this argument needs to be specified before
 .BI \-i
 otherwise it will be ignored. A better approach to improve security would
 be to run hfaxd from xinetd, binding its service to the specific port. This

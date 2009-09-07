@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.h 915 2009-03-02 04:54:14Z faxguy $ */
+/*	$Id: InetFaxServer.h 937 2009-09-08 00:24:46Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -92,6 +92,7 @@ private:
      * The address to bind the port on.
      */
     const char *bindaddress;
+    const char *addressfamily;
 
 protected:
     bool startServer(void);
@@ -100,5 +101,6 @@ public:
     InetSuperServer(const char* port, int backlog = 5);
     ~InetSuperServer();
     void setBindAddress(const char *bindaddress = NULL);
+    void setAddressFamily(const char *bindaddress = NULL);
 };
 #endif /* _InetFaxServer_ */
