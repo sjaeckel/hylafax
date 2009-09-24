@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 933 2009-07-13 04:50:41Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 940 2009-09-24 17:09:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1294,7 +1294,8 @@ faxQueueApp::runConverter1(Job& job, int fd, fxStr& output)
     timer.stopTimeout();
     if (timer.wasTimeout()) {
 	jobError(job, "CONVERT DOCUMENT: job time limit exceeded");
-	output.append("\n[Job time limit exceeded]\n");
+	if (output.length()) output.append("\n");
+	output.append("[Job time limit exceeded]");
 	return (false);
     } else
 	return (true);
