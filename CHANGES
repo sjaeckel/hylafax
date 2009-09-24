@@ -1,7 +1,8 @@
-#	$Id: CHANGES 940 2009-09-24 17:09:04Z faxguy $	
+#	$Id: CHANGES 941 2009-09-24 21:02:30Z faxguy $	
 
 New Changes
 
+* properly unblock jobs when job preparation fails (24 Sep 2009)
 * make PostscriptTimeout format failures visible (24 Sep 2009)
 * add auto-rotate.ps utility script (7 Sep 2009)
 * add dialrules-pabx.be sample (7 Sep 2009)
