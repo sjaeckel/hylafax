@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 940 2009-09-24 17:09:04Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 941 2009-09-24 21:02:30Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -485,9 +485,10 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		 * This destination was marked as called, but all jobs to this
 		 * destination failed preparation, so we must undo the call marking.
 		 */
-		removeDestInfoJob(job);		// release destination block
 		DestInfo& di = destJobs[job.dest];
+		di.hangup();			// do before unblockDestJobs
 		unblockDestJobs(di);		// release any blocked jobs
+		removeDestInfoJob(job);
 		pokeScheduler();
 	    }
 	}
