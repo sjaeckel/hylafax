@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.h 807 2008-03-12 05:43:09Z faxguy $ */
+/*	$Id: FaxClient.h 942 2009-09-29 10:56:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -280,8 +280,8 @@ public:
     /*
      * Retrieve information from the server.
      */
-    bool recvData(bool (*f)(int, const char*, int, fxStr&),
-    int arg, fxStr& emsg, u_long restart, const char* fmt, ...);
+    bool recvData(bool (*f)(void*, const char*, int, fxStr&),
+    void* arg, fxStr& emsg, u_long restart, const char* fmt, ...);
     bool recvZData(bool (*f)(void*, const char*, int, fxStr&),
     void* arg, fxStr& emsg, u_long restart, const char* fmt, ...);
     /*
