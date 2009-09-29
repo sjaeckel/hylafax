@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 946 2009-09-29 11:48:39Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 947 2009-09-29 11:54:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3200,6 +3200,12 @@ faxQueueApp::notifyModemWedged(Modem& modem)
 void
 faxQueueApp::FIFOModemMessage(const fxStr& devid, const char* msg)
 {
+    if (! devid.length() > 0)
+    {
+	traceServer("Invalid modem FIFO message");
+	return;
+    }
+
     Modem& modem = Modem::getModemByID(devid);
     switch (msg[0]) {
     case 'R':			// modem ready, parse capabilities
@@ -3314,6 +3320,12 @@ faxQueueApp::FIFOJobMessage(const fxStr& jobid, const char* msg)
 void
 faxQueueApp::FIFORecvMessage(const fxStr& devid, const char* msg)
 {
+    if (! devid.length() > 0)
+    {
+	traceServer("Invalid modem FIFO message");
+	return;
+    }
+
     Modem& modem = Modem::getModemByID(devid);
     switch (msg[0]) {
     case 'B':			// inbound call started
