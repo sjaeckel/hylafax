@@ -1,7 +1,9 @@
-#	$Id: CHANGES 941 2009-09-24 21:02:30Z faxguy $	
+#	$Id: CHANGES 945 2009-09-29 11:46:02Z faxguy $	
 
 New Changes
 
+* add config option (usually -O) to the clients (29 Sep 2009)
+* add -c option for hfaxd and faxq (29 Sep 2009)
 * properly unblock jobs when job preparation fails (24 Sep 2009)
 * make PostscriptTimeout format failures visible (24 Sep 2009)
 * add auto-rotate.ps utility script (7 Sep 2009)

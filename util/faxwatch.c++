@@ -1,4 +1,4 @@
-/*	$Id: faxwatch.c++ 942 2009-09-29 10:56:43Z faxguy $ */
+/*	$Id: faxwatch.c++ 945 2009-09-29 11:46:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -73,7 +73,7 @@ watchApp::run(int argc, char** argv)
     readConfig(FAX_SYSCONF);
     readConfig(FAX_USERCONF);
 
-    while ((c = Sys::getopt(argc, argv, "gh:lv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "gh:lO:v")) != -1)
 	switch (c) {
 	case 'g':
 	    setTimeZone(TZ_GMT);
@@ -83,6 +83,9 @@ watchApp::run(int argc, char** argv)
 	    break;
 	case 'l':
 	    setTimeZone(TZ_LOCAL);
+	    break;
+	case 'O':
+	    readConfigItem(optarg);
 	    break;
 	case 'v':			// verbose mode
 	    setvbuf(stdout, NULL, _IOLBF, BUFSIZ);

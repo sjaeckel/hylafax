@@ -1,4 +1,4 @@
-.\"	$Id: faxrm.1 915 2009-03-02 04:54:14Z faxguy $
+.\"	$Id: faxrm.1 945 2009-09-29 11:46:02Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -42,6 +42,9 @@ faxrm \- remove a \*(Fx job or document from a server
 ] [
 .B \-u
 .I user
+] [
+.B \-O
+.I config
 ] [
 .B \-v
 ] [
@@ -120,6 +123,16 @@ per-user file and then in the system-wide file).
 If all of the above fails, then
 .I faxrm
 attempts to contact a server on the machine where it is run.
+.TP 10
+.BI \-O " config"
+Treat
+.I config
+as a configuration parameter specification that is interpreted
+after reading the configuration file.
+For example, ``\-O Host:fax.example.com'' would set the
+.B Host
+configuration parameter to ``fax.example.com'', overriding any setting in
+the configuration file.
 .TP 10
 .BI \-p " pass:adminpass"
 The login password and optionally the associated admin password (separated by a colon).
