@@ -1,4 +1,4 @@
-/*	$Id: User.c++ 915 2009-03-02 04:54:14Z faxguy $ */
+/*	$Id: User.c++ 943 2009-09-29 11:00:37Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -47,7 +47,6 @@
  * User Access Control Support.
  */
 gid_t	HylaFAXServer::faxuid = 0;		// reserved fax uid
-#define	FAXUID_RESV	HylaFAXServer::faxuid	// reserved fax uid
 
 #ifdef HAVE_PAM
 extern int
@@ -392,12 +391,13 @@ HylaFAXServer::findUser(FILE* db, const char* user, u_int& newuid)
 {
     rewind(db);
     char line[1024];
-    u_long allocated[howmany(FAXUID_MAX,NBPL)];
+    u_long allocated[howmany(FAXUID_MAX+1,NBPL)];
     memset(allocated, 0, sizeof (allocated));
     if (faxuid < FAXUID_MAX)
-	SetBit(FAXUID_RESV);			// reserved uid
+	SetBit(faxuid);			// reserved uid
     else
 	logError("Internal error, \"fax\" UID (%u) too large.", faxuid);
+    SetBit(0);					// 0 uid is reserved
     SetBit(FAXUID_ANON);			// anonymous uid is reserved
     while (nextRecord(db, line, sizeof (line))) {
 	if (line[0] == '!')
@@ -409,7 +409,10 @@ HylaFAXServer::findUser(FILE* db, const char* user, u_int& newuid)
 	    return (true);
 	if (*cp == ':' && isdigit(cp[1])) {	// mark uid as in-use
 	    u_int uid = (u_int) atoi(cp+1);
-	    SetBit(uid);
+	    if (uid < FAXUID_MAX)
+		SetBit(uid);
+	    else
+		logError("Error in %s:  UID (%u) too large.", (const char*)userAccessFile, uid);
 	}
     }
     // find unallocated uid
