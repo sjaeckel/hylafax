@@ -1,4 +1,4 @@
-/*	$Id: faxwatch.c++ 493 2007-04-06 20:08:39Z faxguy $ */
+/*	$Id: faxwatch.c++ 942 2009-09-29 10:56:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -49,7 +49,7 @@ watchApp::watchApp() {}
 watchApp::~watchApp() {}
 
 static bool
-writeData(int arg, const char* buf, int cc, fxStr& emsg)
+writeData(void* arg, const char* buf, int cc, fxStr& emsg)
 {
     if (Sys::write((intptr_t) arg, buf, cc) != cc) {
 	emsg = fxStr::format("write error: %s", strerror(errno));
@@ -99,7 +99,7 @@ watchApp::run(int argc, char** argv)
 	if (login(NULL, NULL, emsg) && setType(TYPE_A)) {
 	    if (getTimeZone() == TZ_GMT)
 		printWarning("time values reported in GMT");
-	    (void) recvData(writeData, STDOUT_FILENO, emsg, 0,
+	    (void) recvData(writeData, (void*) STDOUT_FILENO, emsg, 0,
 		"SITE TRIGGER %s", argv[optind]);
 	}
 	hangupServer();

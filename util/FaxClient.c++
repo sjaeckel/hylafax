@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 928 2009-05-25 20:20:10Z faxguy $ */
+/*	$Id: FaxClient.c++ 942 2009-09-29 10:56:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1325,8 +1325,8 @@ bad:
  * or other data connection-based transfer.
  */
 bool
-FaxClient::recvData(bool (*f)(int, const char*, int, fxStr&),
-    int arg, fxStr& emsg, u_long restart, const char* fmt, ...)
+FaxClient::recvData(bool (*f)(void*, const char*, int, fxStr&),
+    void* arg, fxStr& emsg, u_long restart, const char* fmt, ...)
 {
     if ((!setMode(MODE_S)) ||
 	(!initDataConn(emsg)) ||

@@ -1,4 +1,4 @@
-/*	$Id: faxfetch.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: faxfetch.c++ 942 2009-09-29 10:56:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -40,16 +40,10 @@ faxFetchApp::faxFetchApp() {}
 faxFetchApp::~faxFetchApp() {}
 
 static bool
-writeStdout(int, const char* buf, int cc, fxStr&)
+writeStdout(void*, const char* buf, int cc, fxStr&)
 {
     (void) Sys::write(STDOUT_FILENO, buf, cc);
     return (true);
-}
-
-static bool
-writeStdout(void*, const char* buf, int cc, fxStr&)
-{
-    return writeStdout(0,buf,cc);
 }
 
 void
@@ -98,7 +92,7 @@ faxFetchApp::run(int argc, char** argv)
 		setType(TYPE_I);	// always image type
 		for (; optind < argc; optind++)
 		    if (mode == MODE_S)
-			recvData(writeStdout, 0, emsg, page, op | argv[optind]);
+			recvData(writeStdout, NULL, emsg, page, op | argv[optind]);
 		    else
 			recvZData(writeStdout, NULL, emsg, page, op | argv[optind]);
 	    }

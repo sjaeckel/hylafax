@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 906 2009-02-15 03:00:30Z faxguy $ */
+/*	$Id: faxstat.c++ 942 2009-09-29 10:56:43Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -45,7 +45,7 @@ faxStatApp::faxStatApp() {}
 faxStatApp::~faxStatApp() {}
 
 static bool
-writeStdout(int, const char* buf, int cc, fxStr&)
+writeStdout(void*, const char* buf, int cc, fxStr&)
 {
     (void) Sys::write(STDOUT_FILENO, buf, cc);
     return (true);
@@ -122,7 +122,7 @@ faxStatApp::run(int argc, char** argv)
     if (callServer(emsg)) {
 	if (login(owner, pass, emsg)) {
 	    if (checkInfo)
-		(void) recvData(writeStdout, 0, emsg, 0,
+		(void) recvData(writeStdout, NULL, emsg, 0,
 		    "RETR " FAX_STATUSDIR "/any." FAX_INFOSUF);
 	    if (showSeqfs) {
 		writeStdout(0, " Receive queue sequence number: ", 32, emsg);
