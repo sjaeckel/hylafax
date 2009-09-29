@@ -1,4 +1,4 @@
-.\"	$Id: faxmail.1 784 2008-02-07 18:26:39Z faxguy $
+.\"	$Id: faxmail.1 945 2009-09-29 11:46:02Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -34,6 +34,9 @@ faxmail \- \*(Fx mail-to-fax gateway application
 .SH SYNOPSIS
 .B faxmail
 [
+.B \-O
+.I config
+] [
 .I options
 ] [
 .I destination
@@ -360,6 +363,16 @@ Suppress auto cover page generation when doing direct delivery.
 .TP 10
 .B \-N
 Suppress the formatting of envelope headers.
+.TP 10
+.BI \-O " config"
+Treat
+.I config
+as a configuration parameter specification that is interpreted
+after reading the configuration file.
+For example, ``\-O Host:fax.example.com'' would set the
+.B Host
+configuration parameter to ``fax.example.com'', overriding any setting in
+the configuration file.
 .TP 10
 .BI \-p " size"
 Set all text using

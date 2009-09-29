@@ -1,4 +1,4 @@
-/*	$Id: faxrm.c++ 524 2007-05-25 23:42:40Z faxguy $ */
+/*	$Id: faxrm.c++ 945 2009-09-29 11:46:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -62,7 +62,7 @@ faxRmApp::run(int argc, char** argv)
     char* user = NULL;
     int errcnt = 0; // count how many jobs couldn't be removed
 
-    while ((c = Sys::getopt(argc, argv, "ah:dp:u:v")) != -1)
+    while ((c = Sys::getopt(argc, argv, "ah:dO:p:u:v")) != -1)
 	switch (c) {
 	case 'a':
 	    useadmin = true;
@@ -86,6 +86,9 @@ faxRmApp::run(int argc, char** argv)
 	    break;
         case 'u':			// user
 	    user = optarg;
+	    break;
+	case 'O':
+	    readConfigItem(optarg);
 	    break;
 	case 'v':
 	    setVerbose(true);

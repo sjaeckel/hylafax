@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: faxmail.c++ 945 2009-09-29 11:46:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -145,7 +145,7 @@ faxMailApp::run(int argc, char** argv)
     readConfig(FAX_USERCONF);
 
     bool deliver = false;
-    while ((c = Sys::getopt(argc, argv, "12b:cC:df:H:i:M:nNp:rRs:S:t:Tu:vW:")) != -1)
+    while ((c = Sys::getopt(argc, argv, "12b:cC:df:H:i:M:nNO:p:rRs:S:t:Tu:vW:")) != -1)
 	switch (c) {
 	case '1': case '2':		// format in 1 or 2 columns
 	    setNumberOfColumns(c - '0');
@@ -179,6 +179,9 @@ faxMailApp::run(int argc, char** argv)
 	    break;
 	case 'N':			// suppress formatting envelope headers
 	    formatEnvHeaders = false;
+	    break;
+	case 'O':
+	    readConfigItem(optarg);
 	    break;
 	case 'p':			// point size
 	    setTextPointSize(TextFormat::inch(optarg));

@@ -1,4 +1,4 @@
-/*	$Id: faxstat.c++ 942 2009-09-29 10:56:43Z faxguy $ */
+/*	$Id: faxstat.c++ 945 2009-09-29 11:46:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -66,7 +66,7 @@ faxStatApp::run(int argc, char** argv)
     bool checkStatus = true;
     bool showSeqfs = false;
     int c;
-    while ((c = Sys::getopt(argc, argv, "h:adgfilno:qrsv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "h:adgfilnO:o:qrsv")) != -1)
 	switch (c) {
 	case 'a':			// display archived jobs
 	    dirs.append(FAX_ARCHDIR);
@@ -104,6 +104,9 @@ faxStatApp::run(int argc, char** argv)
 	    break;
 	case 'q':			// display sequence numbers
 	    showSeqfs = true;
+	    break;
+	case 'O':
+	    readConfigItem(optarg);
 	    break;
 	case 'r':			// display receive queue
 	    dirs.append(FAX_RECVDIR);
