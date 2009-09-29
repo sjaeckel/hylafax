@@ -1,4 +1,4 @@
-/*	$Id: HylaFAXServer.c++ 883 2008-10-12 04:04:28Z faxguy $ */
+/*	$Id: HylaFAXServer.c++ 944 2009-09-29 11:10:13Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -43,6 +43,7 @@
 
 const char* HylaFAXServer::version = HYLAFAX_VERSION;
 int HylaFAXServer::_debugSleep = 0;
+fxStrArray HylaFAXServer::configOptions;
 
 /*
  * NB: The remainder of the instance state is
@@ -192,6 +193,8 @@ HylaFAXServer::initServer(void)
     resetConfig();
     readConfig(FAX_SYSCONF);
     readConfig(FAX_LIBDATA "/hfaxd.conf");
+    for (u_int i = 0; i < configOptions.length(); i++)
+	readConfigItem(configOptions[i]);
 }
 
 static void

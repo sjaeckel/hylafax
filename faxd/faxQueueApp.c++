@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 941 2009-09-24 21:02:30Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 944 2009-09-29 11:10:13Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -142,6 +142,13 @@ faxQueueApp::initialize(int argc, char** argv)
 {
     updateConfig(configFile);		// read config file
     faxApp::initialize(argc, argv);
+
+    for (GetoptIter iter(argc, argv, getOpts()); iter.notDone(); iter++)
+	switch (iter.option()) {
+	case 'c':			// set configuration parameter
+	    readConfigItem(iter.optArg());
+	    break;
+	}
 
     logInfo("%s", HYLAFAX_VERSION);
     logInfo("%s", "Copyright (c) 1990-1996 Sam Leffler");
@@ -3848,7 +3855,7 @@ main(int argc, char** argv)
 
     faxApp::setupPermissions();
 
-    faxApp::setOpts("q:D");
+    faxApp::setOpts("q:Dc:");
 
     bool detach = true;
     fxStr queueDir(FAX_SPOOLDIR);
