@@ -1,4 +1,4 @@
-/*	$Id: Str.c++ 865 2008-08-07 02:17:18Z faxguy $ */
+/*	$Id: Str.c++ 948 2009-10-07 15:36:26Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -185,7 +185,6 @@ fxStr::format(const char* fmt ...)
 fxStr
 fxStr::vformat(const char* fmt, va_list ap)
 {
-    //XXX can truncate but cant do much about it without va_copy
     int size = DEFAULT_FORMAT_BUFFER;
     fxStr s;
     char* tmp = NULL;
@@ -197,7 +196,10 @@ fxStr::vformat(const char* fmt, va_list ap)
 	if (len)
 	    size *= 2;
 	tmp = (char*)realloc(tmp, size);
-	len = vsnprintf(tmp, size, fmt, ap);
+	va_list ac;
+	va_copy(ac, ap);
+	len = vsnprintf(tmp, size, fmt, ac);
+	va_end(ac);
 	fxAssert(len >= 0, "Str::vformat() error in vsnprintf");
     } while (len > size);
 
