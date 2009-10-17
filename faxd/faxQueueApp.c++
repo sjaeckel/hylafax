@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 947 2009-09-29 11:54:37Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 949 2009-10-17 21:20:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1029,8 +1029,7 @@ faxQueueApp::preparePageChop(const FaxRequest& req,
 	if (dec.getLastBlanks() > minRows)
 	{
 	    pagehandling.append(fxStr::format("Z%04x",
-		stripSize - (dec.getEndOfPage() - data)));
-	    fxmin((unsigned)0xFFFF, stripSize - (dec.getEndOfPage() - data))));
+		fxmin((unsigned)0xFFFF, stripSize - (dec.getEndOfPage() - data))));
 	}
     }
     delete [] data;
