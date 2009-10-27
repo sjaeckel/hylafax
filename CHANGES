@@ -1,6 +1,8 @@
-#	$Id: CHANGES 945 2009-09-29 11:46:02Z faxguy $	
+#	$Id: CHANGES 950 2009-10-27 23:29:30Z faxguy $	
 
 New Changes
+
+(5.3.0)
 
 * add config option (usually -O) to the clients (29 Sep 2009)
 * add -c option for hfaxd and faxq (29 Sep 2009)
