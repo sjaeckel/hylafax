@@ -1,6 +1,8 @@
-#	$Id: CHANGES 950 2009-10-27 23:29:30Z faxguy $	
+#	$Id: CHANGES 951 2009-10-28 23:41:42Z faxguy $	
 
 New Changes
+
+* faxmail: handle wrapped headers better (28 Oct 2009)
 
 (5.3.0)
 
