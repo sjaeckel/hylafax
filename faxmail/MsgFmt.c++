@@ -1,4 +1,4 @@
-/*	$Id: MsgFmt.c++ 790 2008-02-11 04:12:22Z faxguy $ */
+/*	$Id: MsgFmt.c++ 951 2009-10-28 23:41:42Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -162,7 +162,7 @@ MsgFmt::parseHeaders(FILE* fd, u_int& lineno)
 	if (len > 0 && !isspace(line[0])) { 
 	    u_int l = 0;
 	    field = line.token(l, ':');
-	    if (field != "" && l < len) {	// record new header
+	    if (field != "" && l <= len) {	// record new header
 		fields.append(field);
 		// skip leading whitespace
 		for (; l < len && isspace(line[l]); l++)
@@ -174,7 +174,7 @@ MsgFmt::parseHeaders(FILE* fd, u_int& lineno)
 			, (const char*) headers[headers.length()-1]
 		    );
 	    }
-	} else if (field != "")  {		// append continuation
+	} else if (field != "" && headers.length())  {		// append continuation
 	    headers[headers.length()-1].append(line);
 	    if (verbose)
 		fprintf(stderr, "+HEADER %s: %s\n"
