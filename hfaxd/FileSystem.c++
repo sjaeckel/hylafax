@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++ 931 2009-06-22 06:26:07Z faxguy $ */
+/*	$Id: FileSystem.c++ 952 2009-11-07 00:23:31Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -751,7 +751,7 @@ HylaFAXServer::nlstUnixFile(FILE* fd, const SpoolDir&,
 }
 
 static bool
-isTIFF(const TIFFHeader& h)
+isTIFF(const TIFFHEADER& h)
 {
     if (h.tiff_magic != TIFF_BIGENDIAN && h.tiff_magic != TIFF_LITTLEENDIAN)
 	return (false);
@@ -764,7 +764,7 @@ isTIFF(const TIFFHeader& h)
     // byte swap version stamp if opposite byte order
     if ((u.c[0] == 0) ^ (h.tiff_magic == TIFF_BIGENDIAN))
 	TIFFSwabShort(&version);
-    return (version == TIFF_VERSION);
+    return (version == TIFFVERSION);
 }
 
 /*
@@ -785,7 +785,7 @@ HylaFAXServer::docType(const char* docname, FaxSendOp& op)
 	if (FileCache::lookup(docname, sb) && S_ISREG(sb.st_mode)) {
 	    union {
 		char buf[512];
-		TIFFHeader h;
+		TIFFHEADER h;
 	    } b;
 	    ssize_t cc = Sys::read(fd, (char*) &b, sizeof (b));
 	    if (cc > 2 && b.buf[0] == '%' && b.buf[1] == '!')

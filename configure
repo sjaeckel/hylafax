@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 927 2009-05-25 18:41:23Z faxguy $
+#	$Id: configure 952 2009-11-07 00:23:31Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -383,7 +383,7 @@ do
     -disable-ldap|--disable-ldap) DISABLE_LDAP="yes" ;;
     -disable-jbig|--disable-jbig) DISABLE_JBIG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 927 $"
+	echo "This is HylaFAX configure $Revision: 952 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -2526,8 +2526,15 @@ EOF
 	Note "  Found libtiff version ${lib_ver}"
 	if [ ${header_ver} -ge 19960307 ]; then
 	    case ${lib_ver} in
-		3.4)		tiff_runlen_t="uint16" ;;
-		3.[56789])	tiff_runlen_t="uint32" ;;
+		3.4)		tiff_runlen_t="uint16"
+				echo '#define TIFFVERSION TIFF_VERSION'
+				echo '#define TIFFHEADER TIFFHeader';;
+		3.[56789])	tiff_runlen_t="uint32"
+				echo '#define TIFFVERSION TIFF_VERSION'
+				echo '#define TIFFHEADER TIFFHeader';;
+		4.0)		tiff_runlen_t="uint32"
+				echo '#define TIFFVERSION TIFF_VERSION_CLASSIC'
+				echo '#define TIFFHEADER TIFFHeaderClassic';;
 	    esac
 	fi
     else
