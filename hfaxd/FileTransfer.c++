@@ -1,4 +1,4 @@
-/*	$Id: FileTransfer.c++ 772 2008-01-26 19:18:28Z faxguy $ */
+/*	$Id: FileTransfer.c++ 952 2009-11-07 00:23:31Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -50,6 +50,19 @@
 static 	const char* typenames[] =  { "ASCII", "EBCDIC", "Image", "Local" };
 static 	const char* strunames[] =  { "File", "Record", "Page", "TIFF" };
 static 	const char* modenames[] =  { "Stream", "Block", "Compressed", "ZIP" };
+
+/*
+ * This is copied right from tiff.h in version 3.8.2.  This was necessary
+ * to localize here because it was removed from tiff.h in version 4.0.
+ * In tiff.h 3.8.2 it was known as "TIFFDirEntry".
+ */
+typedef struct {
+	uint16		tdir_tag;
+	uint16		tdir_type;	/* data type */
+	uint32		tdir_count;	/* number of items; length in spec */
+	uint32		tdir_offset;	/* byte offset to field data */
+} HFClassicTIFFDirEntry;
+
 
 /*
  * Record a file transfer in the log file.
@@ -129,26 +142,26 @@ HylaFAXServer::retrieveCmd(const char* name)
  * a single IFD/image from a TIFF file.
  */
 typedef struct {
-    TIFFDirEntry	SubFileType;
-    TIFFDirEntry	ImageWidth;
-    TIFFDirEntry	ImageLength;
-    TIFFDirEntry	BitsPerSample;
-    TIFFDirEntry	Compression;
-    TIFFDirEntry	Photometric;
-    TIFFDirEntry	FillOrder;
-    TIFFDirEntry	StripOffsets;
-    TIFFDirEntry	Orientation;
-    TIFFDirEntry	SamplesPerPixel;
-    TIFFDirEntry	RowsPerStrip;
-    TIFFDirEntry	StripByteCounts;
-    TIFFDirEntry	XResolution;
-    TIFFDirEntry	YResolution;
-    TIFFDirEntry	Options;		// T4 or T6
-    TIFFDirEntry	ResolutionUnit;
-    TIFFDirEntry	PageNumber;
-    TIFFDirEntry	BadFaxLines;
-    TIFFDirEntry	CleanFaxData;
-    TIFFDirEntry	ConsecutiveBadFaxLines;
+    HFClassicTIFFDirEntry	SubFileType;
+    HFClassicTIFFDirEntry	ImageWidth;
+    HFClassicTIFFDirEntry	ImageLength;
+    HFClassicTIFFDirEntry	BitsPerSample;
+    HFClassicTIFFDirEntry	Compression;
+    HFClassicTIFFDirEntry	Photometric;
+    HFClassicTIFFDirEntry	FillOrder;
+    HFClassicTIFFDirEntry	StripOffsets;
+    HFClassicTIFFDirEntry	Orientation;
+    HFClassicTIFFDirEntry	SamplesPerPixel;
+    HFClassicTIFFDirEntry	RowsPerStrip;
+    HFClassicTIFFDirEntry	StripByteCounts;
+    HFClassicTIFFDirEntry	XResolution;
+    HFClassicTIFFDirEntry	YResolution;
+    HFClassicTIFFDirEntry	Options;		// T4 or T6
+    HFClassicTIFFDirEntry	ResolutionUnit;
+    HFClassicTIFFDirEntry	PageNumber;
+    HFClassicTIFFDirEntry	BadFaxLines;
+    HFClassicTIFFDirEntry	CleanFaxData;
+    HFClassicTIFFDirEntry	ConsecutiveBadFaxLines;
     uint32		link;			// offset to next directory
     uint32		xres[2];		// X resolution indirect value
     uint32		yres[2];		// Y resolution indirect value
@@ -194,7 +207,7 @@ HylaFAXServer::retrievePageCmd(const char* name)
 		uint32* sb;
 		TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &sb);
 		file_size = sizeof (DirTemplate) +
-		    sizeof (TIFFHeader) + sizeof (uint16);
+		    sizeof (TIFFHEADER) + sizeof (uint16);
 		for (tstrip_t s = 0, ns = TIFFNumberOfStrips(tif); s < ns; s++)
 		    file_size += sb[s];
 		reply(code, "%s for %s (%lu bytes).",
@@ -226,10 +239,10 @@ HylaFAXServer::openTIFF(const char* name)
 	if (fd >= 0) {
 	    union {
 		char buf[512];
-		TIFFHeader h;
+		TIFFHEADER h;
 	    } b;
 	    ssize_t cc = Sys::read(fd, (char*) &b, sizeof (b));
-	    if (cc > (ssize_t)sizeof (b.h) && b.h.tiff_version == TIFF_VERSION &&
+	    if (cc > (ssize_t)sizeof (b.h) && b.h.tiff_version == TIFFVERSION &&
 	      (b.h.tiff_magic == TIFF_BIGENDIAN ||
 	       b.h.tiff_magic == TIFF_LITTLEENDIAN)) {
 		(void) lseek(fd, 0L, SEEK_SET);		// rewind
@@ -283,12 +296,12 @@ HylaFAXServer::sendTIFFData(TIFF* tif, FILE* fdout)
 }
 
 static void
-getLong(TIFF* tif, TIFFDirEntry& de)
+getLong(TIFF* tif, HFClassicTIFFDirEntry& de)
 {
     TIFFGetField(tif, de.tdir_tag, &de.tdir_offset);
 }
 static void
-getShort(TIFF* tif, TIFFDirEntry& de)
+getShort(TIFF* tif, HFClassicTIFFDirEntry& de)
 {
     uint16 v;
     TIFFGetField(tif, de.tdir_tag, &v);
@@ -308,7 +321,7 @@ HylaFAXServer::sendTIFFHeader(TIFF* tif, int fdout)
 {
     static DirTemplate templ = {
 #define	TIFFdiroff(v) \
-    (uint32) (sizeof (TIFFHeader) + sizeof (uint16) + \
+    (uint32) (sizeof (TIFFHEADER) + sizeof (uint16) + \
       (intptr_t) &(((DirTemplate*) 0)->v))
 	{ TIFFTAG_SUBFILETYPE,		TIFF_LONG,	1 },
 	{ TIFFTAG_IMAGEWIDTH,		TIFF_LONG,	1 },
@@ -333,7 +346,7 @@ HylaFAXServer::sendTIFFHeader(TIFF* tif, int fdout)
 	0,					// next directory
 	{ 0, 1 }, { 0, 1 },			// x+y resolutions
     };
-#define	NTAGS	((TIFFdiroff(link)-TIFFdiroff(SubFileType)) / sizeof (TIFFDirEntry))
+#define	NTAGS	((TIFFdiroff(link)-TIFFdiroff(SubFileType)) / sizeof (HFClassicTIFFDirEntry))
     /*
      * Construct the TIFF header for this IFD using
      * the preconstructed template above.  We extract
@@ -342,14 +355,14 @@ HylaFAXServer::sendTIFFHeader(TIFF* tif, int fdout)
      * of things about the contents of the TIFF file.
      */
     struct {
-	TIFFHeader h;
+	TIFFHEADER h;
 	uint16	dircount;
 	u_char	dirstuff[sizeof (templ)];
     } buf;
     union { int32 i; char c[4]; } u; u.i = 1;
     buf.h.tiff_magic = (u.c[0] == 0 ? TIFF_BIGENDIAN : TIFF_LITTLEENDIAN);
-    buf.h.tiff_version = TIFF_VERSION;
-    buf.h.tiff_diroff = sizeof (TIFFHeader);
+    buf.h.tiff_version = TIFFVERSION;
+    buf.h.tiff_diroff = sizeof (TIFFHEADER);
     buf.dircount = (uint16) NTAGS;
     getLong(tif, templ.SubFileType);
     getLong(tif, templ.ImageWidth);
@@ -377,7 +390,7 @@ HylaFAXServer::sendTIFFHeader(TIFF* tif, int fdout)
     getShort(tif, templ.CleanFaxData);
     getLong(tif, templ.ConsecutiveBadFaxLines);
     if (buf.h.tiff_magic == TIFF_BIGENDIAN) {
-	TIFFDirEntry* dp = &templ.SubFileType;
+	HFClassicTIFFDirEntry* dp = &templ.SubFileType;
 	for (u_int i = 0; i < NTAGS; i++) {
 	    if (dp->tdir_type == TIFF_SHORT)
 		dp->tdir_offset <<= 16;
