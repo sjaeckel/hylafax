@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 934 2009-07-13 05:39:20Z faxguy $ */
+/*	$Id: Class1Send.c++ 954 2009-11-10 01:14:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2020,8 +2020,14 @@ Class1Modem::sendPPM(u_int ppm, HDLCFrame& mcf, fxStr& emsg)
     for (int t = 0; t < 3; t++) {
 	traceFCF("SEND send", ppm);
 	// don't use CRP here because it isn't well-received
-	if (transmitFrame(ppm|FCF_SNDR) && recvFrame(mcf, FCF_SNDR, conf.t4Timer, false, false))
-	    return (true);
+	if (transmitFrame(ppm|FCF_SNDR)) {
+	    bool ok = recvFrame(mcf, FCF_SNDR, conf.t4Timer, false, false);
+	    if (ok && mcf.getFCF() == ppm) {
+		// We probably heard our own echo.  Listen again...
+		ok = recvFrame(mcf, FCF_SNDR, conf.t4Timer, false, false);
+	    }
+	    if (ok) return (true);
+	}
 	if (abortRequested())
 	    return (false);
 	switchingPause(emsg);

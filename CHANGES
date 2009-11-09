@@ -1,7 +1,8 @@
-#	$Id: CHANGES 952 2009-11-07 00:23:31Z faxguy $	
+#	$Id: CHANGES 954 2009-11-10 01:14:54Z faxguy $	
 
 New Changes
 
+* handle echo of PPM when sending (9 Nov 2009)
 * add support for libtiff v4.0 (6 Nov 2009)
 * faxmail: handle wrapped headers better (28 Oct 2009)
 
