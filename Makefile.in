@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 882 2008-09-30 14:39:51Z faxguy $
+#	$Id: Makefile.in 953 2009-11-10 01:13:57Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -82,11 +82,6 @@ dirs::
 	else \
 	    true; \
 	fi
-	@if [ "@HTML@" = yes ]; then \
-	    ${ECHO} "= "html; cd html; ${MAKE}  ||  exit $?; \
-	else \
-	    true; \
-	fi
 	@if [ "@DPS@" = yes ]; then \
 	    ${ECHO} "= "dps; cd dps; ${MAKE}  ||  exit $?; \
 	else \
@@ -118,11 +113,6 @@ depend::
 	else \
 	    true; \
 	fi
-	@if [ "@HTML@" = yes ]; then \
-	    ${ECHO} "= "html; cd html; ${MAKE} depend; \
-	else \
-	    true; \
-	fi
 clean::
 	${ECHO} "= "port; cd port; ${MAKE} clean;
 	@if [ "@REGEX@" = yes ]; then \
@@ -142,11 +132,6 @@ clean::
 	    for i in ${DSODIRS}; do \
 		(${ECHO} "= "$$i; cd $$i; ${MAKE} cleanDSO); \
 	    done; \
-	else \
-	    true; \
-	fi
-	@if [ "@HTML@" = yes ]; then \
-	    ${ECHO} "= "html; cd html; ${MAKE} clean; \
 	else \
 	    true; \
 	fi
@@ -189,11 +174,6 @@ clobber::
 	done
 	@if [ "@SGI2FAX@" = yes ]; then \
 	    ${ECHO} "= "sgi2fax; cd sgi2fax; ${MAKE} clobber; \
-	else \
-	    true; \
-	fi
-	@if [ "@HTML@" = yes ]; then \
-	    ${ECHO} "= "html; cd html; ${MAKE} clobber; \
 	else \
 	    true; \
 	fi
@@ -270,11 +250,6 @@ install: makeDirs makeDevices
 	    true; \
 	fi
 	@${ECHO} "= "etc; cd etc; ${MAKE} installSysVInit;
-	@if [ "@HTML@" = yes ]; then \
-	    ${ECHO} "= "html; cd html; ${MAKE} install  ||  exit 1; \
-	else \
-	    true; \
-	fi
 	@if [ "@DPS@" = yes ]; then \
 	    ${ECHO} "= "dps; cd dps; ${MAKE} install  ||  exit 1; \
 	else \
