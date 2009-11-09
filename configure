@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 952 2009-11-07 00:23:31Z faxguy $
+#	$Id: configure 955 2009-11-10 05:02:44Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -383,7 +383,7 @@ do
     -disable-ldap|--disable-ldap) DISABLE_LDAP="yes" ;;
     -disable-jbig|--disable-jbig) DISABLE_JBIG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 952 $"
+	echo "This is HylaFAX configure $Revision: 955 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3414,7 +3414,7 @@ if [ "$DISABLE_JBIG" != "yes" ]; then
     exec 2>&3 3>&-		# Restore stderr
     if [ $EV = 0 ]; then
 	$TIFFBIN/tiffcp misc/jbig.tif misc/foo.tif > /dev/null
-	if [ -n "`$TIFFBIN/tiffinfo misc/foo.tif | grep 'Fax DCS'`" ]; then
+	if [ -n "`$TIFFBIN/tiffinfo misc/foo.tif | grep 'Fax *D[Cc][Ss]'`" ]; then
 	    HAVE_JBIGTIFF="#define HAVE_JBIGTIFF 1"
 	    Note "JBIG-in-TIFF conversion support found."
 	else
