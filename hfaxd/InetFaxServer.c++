@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 937 2009-09-08 00:24:46Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 956 2009-11-21 19:36:39Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -111,6 +111,17 @@ InetSuperServer::startServer(void)
 	    if (Socket::bind(s, &addr, Socket::socklen(addr)) >= 0) {
 		(void) listen(s, getBacklog());
 		Dispatcher::instance().link(s, Dispatcher::ReadMask, this);
+		char hostbuf[128];
+		const char* a = inet_ntop(Socket::family(addr), Socket::addr(addr), hostbuf, sizeof(hostbuf));
+		switch (Socket::family(addr))
+		{
+		    case AF_INET:
+			logInfo("Listening to %s:%d", a ? a : "", ntohs(Socket::port(addr)));
+			break;
+		    case AF_INET6:
+			logInfo("Listening to [%s]:%d", a ? a : "", ntohs(Socket::port(addr)));
+			break;
+		}
 		return (true);				// success
 	    }
 	}
