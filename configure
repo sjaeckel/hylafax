@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 955 2009-11-10 05:02:44Z faxguy $
+#	$Id: configure 957 2009-11-22 01:03:21Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -174,6 +174,10 @@ PAMLIBS
 HAVE_JBIG
 HAVE_JBIGTIFF
 LIBJBIG
+HAVE_JPEG
+LIBJPEG
+HAVE_LCMS
+LIBLCMS
 HAVE_LDAP
 LDAPLIBS"
 
@@ -325,6 +329,8 @@ Options: [defaults in brackets after descriptions]
   --srcdir=DIR            find the sources in DIR [configure dir or ..]
   --disable-pam           disable all PAM support
   --disable-jbig          disable all JBIG support
+  --disable-lcms          disable all Little CMS support
+  --disable-jpeg          disable all JPEG library support
   --disable-ldap          disable all LDAP support
   --with-PARAM[=ARG]      set configuration PARAM [ARG=yes]
 EOF
@@ -382,8 +388,10 @@ do
     -disable-pam|--disable-pam) DISABLE_PAM="yes" ;;
     -disable-ldap|--disable-ldap) DISABLE_LDAP="yes" ;;
     -disable-jbig|--disable-jbig) DISABLE_JBIG="yes" ;;
+    -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
+    -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 955 $"
+	echo "This is HylaFAX configure $Revision: 957 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -1647,6 +1655,40 @@ if [ "$DISABLE_JBIG" != "yes" ]; then
 	fi
 else
 	Note "Disabling JBIG support"
+fi
+HAVE_JPEG="/*#define HAVE_JPEG 1*/"
+LIBJPEG=""
+if [ "$DISABLE_JPEG" != "yes" ]; then
+	Note "Checking for JPEG library support"
+	CheckForLibrary jpeg_std_error -ljpeg &&
+		CheckForIncludeFile jpeglib.h && {
+			HAVE_JPEG="#define HAVE_JPEG 1"
+			LIBJPEG="-ljpeg"
+		}
+	if [ "x$LIBJPEG" = "x" ]; then
+		Note "... not found. Disabling JPEG library support"
+	else
+		Note "... found. Enabling JPEG library support"
+	fi
+else
+	Note "Disabling JPEG library support"
+fi
+HAVE_LCMS="/*#define HAVE_LCMS 1*/"
+LIBLCMS=""
+if [ "$DISABLE_LCMS" != "yes" ]; then
+	Note "Checking for Little CMS library support"
+	CheckForLibrary cmsOpenProfileFromMem -llcms &&
+		CheckForIncludeFile lcms.h && {
+			HAVE_LCMS="#define HAVE_LCMS 1"
+			LIBLCMS="-llcms"
+		}
+	if [ "x$LIBLCMS" = "x" ]; then
+		Note "... not found. Disabling Little CMS support"
+	else
+		Note "... found. Enabling Little CMS support"
+	fi
+else
+	Note "Disabling Little CMS support"
 fi
 HAVE_LDAP="/*#define HAVE_LDAP 1*/"
 LDAPLIBS=""

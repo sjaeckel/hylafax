@@ -1,4 +1,4 @@
-# $Id: defs.in 927 2009-05-25 18:41:23Z faxguy $
+# $Id: defs.in 957 2009-11-22 01:03:21Z faxguy $
 #
 # @WARNING@
 #
@@ -139,7 +139,7 @@ C++FILE		= @CXXFILE@
 # So we make sure that LDAPLIBS comes after MACHDEPLIBS.
 #
 LIBS		= ${LIBUTIL}
-LLDLIBS		= ${LIBS} ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${LIBPORT} ${MACHDEPLIBS} @PAMLIBS@ @LIBJBIG@ @LDAPLIBS@
+LLDLIBS		= ${LIBS} ${LIBTIFF} ${LIBZ} ${LIBREGEX} ${LIBPORT} ${MACHDEPLIBS} @PAMLIBS@ @LIBJBIG@ @LIBJPEG@ @LIBLCMS@ @LDAPLIBS@
 #
 # Override this definition to eliminate shared library use.
 #
