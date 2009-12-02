@@ -1,4 +1,4 @@
-#	$Id: distrules 939 2009-09-08 03:18:43Z faxguy $
+#	$Id: distrules 958 2009-12-03 04:56:02Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -379,6 +379,7 @@ HYLAFAXSRC=\
 	util/dict-es.in				\
 	util/dict-fr.in				\
 	util/dict-it.in				\
+	util/dict-nl_BE.in			\
 	util/dict-pl.in				\
 	util/dict-pt.in				\
 	util/dict-pt_BR.in			\
