@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: faxSendApp.h 960 2009-12-04 05:10:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -60,6 +60,7 @@ private:
     u_int	desiredST;		// desired min-scanline-time
     u_int	desiredEC;		// enable use of ECM if available
     bool	useJobTSI;		// User the Job submitted TSI
+    bool	logSend;		// Log sent faxes to xferfaxlog
 
     static faxSendApp* _instance;
 

@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 960 2009-12-04 05:10:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -909,7 +909,7 @@ faxGettyApp::notifyDocumentRecvd(FaxRecvInfo& ri)
     ai.owner = "";
     ai.jobinfo = "";
     ri.params.asciiEncode(ai.faxdcs);
-    if (!ai.record("RECV"))
+    if (logRecv && !ai.record("RECV"))
 	logError("Error writing RECV accounting record, dest=%s",
 	    (const char*) ai.dest);
 }
@@ -1086,6 +1086,7 @@ faxGettyApp::booltag faxGettyApp::booleans[] = {
 { "lockvoicecalls",	&faxGettyApp::lockVoiceCalls,	true },
 { "lockexterncalls",	&faxGettyApp::lockExternCalls,	true },
 { "logcalls",		&faxGettyApp::logCalls,		true },
+{ "logrecv",		&faxGettyApp::logRecv,		true },
 { "rejectcall",		&faxGettyApp::rejectCall,	false },
 };
 
