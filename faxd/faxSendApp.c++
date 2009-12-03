@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 933 2009-07-13 04:50:41Z faxguy $ */
+/*	$Id: faxSendApp.c++ 960 2009-12-04 05:10:46Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -204,7 +204,7 @@ faxSendApp::send(const char** filenames, int num)
 			}
 			ai.jobinfo = fxStr::format("%u/%u/%u/%u/%u/%u/%u", 
 			    req->totpages, req->ntries, req->ndials, req->totdials, req->maxdials, req->tottries, req->maxtries);
-			if (!ai.record("SEND"))
+			if (logSend && !ai.record("SEND"))
 			    logError("Error writing SEND accounting record, dest=%s",
 				(const char*) ai.dest);
 
@@ -452,6 +452,7 @@ faxSendApp::numbertag faxSendApp::numbers[] = {
 };
 faxSendApp::booltag faxSendApp::booleans[] = {
 { "usejobtsi",		&faxSendApp::useJobTSI,		false },
+{ "logsend",            &faxSendApp::logSend,           true },
 };
 
 void

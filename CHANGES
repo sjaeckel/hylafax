@@ -1,7 +1,8 @@
-#	$Id: CHANGES 959 2009-12-04 04:55:53Z faxguy $	
+#	$Id: CHANGES 960 2009-12-04 05:10:46Z faxguy $	
 
 New Changes
 
+* add LogSend and LogRecv modem configuration options (3 Dec 2009)
 * use LittleCMS to convert received color faxes from ITULAB (3 Dec 2009)
 * add Flemish dictionary translation (2 Dec 2009)
 * handle echo of PPM when sending (9 Nov 2009)

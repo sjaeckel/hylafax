@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.h 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: faxGettyApp.h 960 2009-12-04 05:10:46Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -84,6 +84,7 @@ private:
     fxStr	tsiRecvdCmd;		// command to check TSI
     u_int	modemPriority;		// modem priority passed to faxq
     bool	logCalls;		// Log all calls for FaxAcctInfo
+    bool	logRecv;		// Log received faxes to xferfaxlog
     bool	rejectCall;
 
     static faxGettyApp* _instance;
