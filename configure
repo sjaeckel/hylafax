@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 958 2009-12-03 04:56:02Z faxguy $
+#	$Id: configure 959 2009-12-04 04:55:53Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 958 $"
+	echo "This is HylaFAX configure $Revision: 959 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -2613,7 +2613,7 @@ EOF
 Incompatible TIFF Library.
 
 HylaFAX ${VERSION} requires TIFF software distribution versions 3.4 through
-3.9.  If you do not have up to date TIFF software on your system
+4.0.  If you do not have up to date TIFF software on your system
 then you can retrieve it from the location where you obtained this software.
 The Home Page for version 3.5 and later is http://www.libtiff.org
 EOF

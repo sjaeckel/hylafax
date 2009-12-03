@@ -1,7 +1,9 @@
-#	$Id: CHANGES 955 2009-11-10 05:02:44Z faxguy $	
+#	$Id: CHANGES 959 2009-12-04 04:55:53Z faxguy $	
 
 New Changes
 
+* use LittleCMS to convert received color faxes from ITULAB (3 Dec 2009)
+* add Flemish dictionary translation (2 Dec 2009)
 * handle echo of PPM when sending (9 Nov 2009)
 * add support for libtiff v4.0 (6, 9 Nov 2009)
 * faxmail: handle wrapped headers better (28 Oct 2009)
