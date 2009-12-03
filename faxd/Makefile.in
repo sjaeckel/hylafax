@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 911 2009-02-17 00:38:54Z faxguy $
+#	$Id: Makefile.in 959 2009-12-04 04:55:53Z faxguy $
 #
 # @WARNING@
 #
@@ -72,6 +72,7 @@ C++FILES=ClassModem.c++ \
 	FaxRequest.c++ \
 	FaxSend.c++ \
 	HylaClient.c++ \
+	itufaxicc.c++ \
 	ModemServer.c++ \
 	FaxServer.c++ \
 	G3Decoder.c++ \
@@ -119,6 +120,7 @@ MODEM_OBJS=ClassModem.o \
 	G3Encoder.o \
 	MemoryDecoder.o \
 	HDLCFrame.o \
+	itufaxicc.o \
 	ModemConfig.o \
     NSF.o \
 	FaxFont.o \

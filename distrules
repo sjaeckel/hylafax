@@ -1,4 +1,4 @@
-#	$Id: distrules 958 2009-12-03 04:56:02Z faxguy $
+#	$Id: distrules 959 2009-12-04 04:55:53Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -466,6 +466,7 @@ HYLAFAXSRC=\
 	faxd/GettySysV.h			\
 	faxd/HDLCFrame.h			\
 	faxd/HylaClient.h			\
+	faxd/itufaxicc.h			\
 	faxd/Job.h				\
 	faxd/JobControl.h			\
 	faxd/MemoryDecoder.h			\
@@ -521,6 +522,7 @@ HYLAFAXSRC=\
 	faxd/GettySysV.c++			\
 	faxd/HDLCFrame.c++			\
 	faxd/HylaClient.c++			\
+	faxd/itufaxicc.c++			\
 	faxd/Job.c++				\
 	faxd/JobControl.c++			\
 	faxd/MemoryDecoder.c++			\

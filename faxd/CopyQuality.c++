@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 892 2008-11-24 06:17:59Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 959 2009-12-04 04:55:53Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -33,6 +33,7 @@
 #include "ModemConfig.h"
 #include "StackBuffer.h"
 #include "FaxServer.h"
+#include "itufaxicc.h"
 
 #include <ctype.h>
 
@@ -478,10 +479,17 @@ FaxModem::recvSetupTIFF(TIFF* tif, long, int fillOrder, const fxStr& id)
     TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,	(uint32) params.pageWidth());
     if (params.jp == JP_COLOR || params.jp == JP_GREY) {
 	TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,	8);
+#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
+	/* Most image processors won't know what to do with the ITULAB colorspace.
+	   So we'll be converting it to RGB for portability. */
+	TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,		PHOTOMETRIC_YCBCR);
+	TIFFSetField(tif, TIFFTAG_YCBCRSUBSAMPLING,	2,2);
+#else
 #ifdef PHOTOMETRIC_ITULAB
 	/* If PHOTOMETRIC_ITULAB is not available the admin cannot enable color fax anyway.
 	   This is done so that older libtiffs without it can build fine. */
 	TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,		PHOTOMETRIC_ITULAB);
+#endif
 #endif
 	TIFFSetField(tif, TIFFTAG_PLANARCONFIG,		PLANARCONFIG_CONTIG);
 	// libtiff requires IMAGELENGTH to be set before SAMPLESPERPIXEL, 
@@ -888,6 +896,34 @@ FaxModem::fixupJPEG(TIFF* tif, fxStr& emsg)
 	    protoTrace("RECV: fixing zero image frame length in SOF marker at byte %lu to %lu", i, recvEOLCount);
 	}
     }
+#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
+    /*
+     * We convert the colorspace from ITULAB to sRGB because most
+     * image processors will not know how to handle ITULAB correctly.
+     */
+    size_t outsize;
+    char *outptr;
+    FILE* out = open_memstream(&outptr, &outsize);
+    if (out) {
+	FILE* in = fmemopen(recvRow, pagesize, "r");
+	if (in) {
+	    char kk[256];
+	    bool ok = convertJPEGfromITULAB(in, out, kk, 256);
+	    fclose(in); fclose(out);
+	    if (ok && kk[0] == 0) {
+		// conversion from ITULAB to sRGB was successful
+		recvRow = (u_char*) outptr;
+		pagesize = outsize;
+	    } else {
+		serverTrace("JPEG conversion error: \"%s\". JPEG colorspace will be incorrect in TIFF tags.", kk);
+	    }
+	} else {
+	    serverTrace("Could not open JPEG input conversion stream. JPEG colorspace will be incorrect in TIFF tags.");
+	}
+    } else {
+	serverTrace("Could not open JPEG output conversion stream. JPEG colorspace will be incorrect in TIFF tags.");
+    }
+#endif
     if (TIFFWriteRawStrip(tif, 0, (tdata_t) recvRow, pagesize) == -1) {
 	serverTrace("RECV: %s: write error", TIFFFileName(tif));
         abortPageRecv();

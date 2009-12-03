@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 957 2009-11-22 01:03:21Z faxguy $
+#	$Id: Makefile.in 959 2009-12-04 04:55:53Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -229,8 +229,6 @@ rmDevices::
 install: makeDirs makeDevices
 	${INSTALL} -m 444 -root ${INSTALLROOT} -F ${SPOOL} -idb hylafax.sw.server \
 	    -src ${SRCDIR}/COPYRIGHT -O COPYRIGHT
-	${INSTALL} -m 444 -root ${INSTALLROOT} -F ${SPOOL}/etc -idb hylafax.sw.server \
-	    -src ${SRCDIR}/misc/ITUFAX.ICM -O ITUFAX.ICM
 	@if [ "@REGEX@" = yes ]; then \
 	    ${ECHO} "= "regex; cd regex; ${MAKE} install  ||  exit 1; \
 	else \
@@ -270,7 +268,6 @@ install: makeDirs makeDevices
 
 uninstall: rmDirs rmDevices
 	${RM} -f ${SPOOL}/COPYRIGHT
-	${RM} -f ${SPOOL}/etc/ITUFAX.ICM
 	@for i in ${DIRS}; do \
 	    (${ECHO} "= "$$i; cd $$i; ${MAKE} uninstall)  ||  exit 1; \
 	done
