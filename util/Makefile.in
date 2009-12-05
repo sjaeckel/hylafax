@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 958 2009-12-03 04:56:02Z faxguy $
+#	$Id: Makefile.in 961 2009-12-05 21:06:39Z faxguy $
 #
 # @WARNING@
 #
@@ -188,6 +188,7 @@ install: installClient
 	${PUTSUPD} -m 755 -src archive.sh -O archive
 	${PUTSUPD} -m 755 -src common-functions.sh -O common-functions
 	${PUTSUPD} -m 755 -src faxrcvd.sh -O faxrcvd
+	${PUTSUPD} -m 755 -src genfontmap.ps -O genfontmap.ps
 	${PUTSUPD} -m 755 -src pollrcvd.sh -O pollrcvd
 	${PUTSUPD} -m 755 -src mkcover.sh -O mkcover
 	${PUTSUPD} -m 755 -src wedged.sh -O wedged
@@ -236,6 +237,7 @@ uninstall::
 	${RM} -f ${SPOOL}/bin/archive
 	${RM} -f ${SPOOL}/bin/common-functions
 	${RM} -f ${SPOOL}/bin/faxrcvd
+	${RM} -f ${SPOOL}/bin/genfontmap.ps
 	${RM} -f ${SPOOL}/bin/pollrcvd
 	${RM} -f ${SPOOL}/bin/mkcover
 	${RM} -f ${SPOOL}/bin/wedged

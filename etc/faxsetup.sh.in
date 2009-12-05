@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 898 2008-12-08 21:14:33Z faxguy $
+#	$Id: faxsetup.sh.in 961 2009-12-05 21:06:39Z faxguy $
 #
 # @WARNING@
 #
@@ -1235,6 +1235,17 @@ if onClient; then
 	RUNTIME_PATH_AFM=$PATH_AFM:`getGSFonts`
 	if [ -n "$RUNTIME_PATH_AFM" \
 				-a "$RUNTIME_PATH_AFM" != "$PATH_AFM" ]; then 
+	    FONTPATHS=`echo $RUNTIME_PATH_AFM | sed 's/:/ /g'`
+	    $PATH_GSRIP -q -sDEVICE=tiffg3 -sFONTPATH="$FONTPATHS" $DIR_SPOOL/bin/genfontmap.ps > $DIR_SPOOL/etc/Fontmap.HylaFAX 2>/dev/null
+	    if [ $? = 0 ]; then
+		FONTMAP="$DIR_SPOOL/etc"
+		Note ""
+		Note "Created our own Fontmap file in $DIR_SPOOL/etc."
+		Note ""
+	    else
+		FONTMAP="$RUNTIME_PATH_AFM"
+		$RM -f $DIR_SPOOL/etc/Fontmap.HylaFAX
+	    fi
 	    Note ""
 	    Note "Setting Ghostscript font path in $DIR_LIBDATA/hyla.conf."
 	    Note ""
@@ -1244,7 +1255,7 @@ if onClient; then
 	    fi
 	    echo "# FontMap/FontPath added by faxsetup (`date 2>/dev/null`)" \
 	                                        >> $DIR_LIBDATA/hyla.conf.tmp
-	    echo "FontMap:   $RUNTIME_PATH_AFM" >> $DIR_LIBDATA/hyla.conf.tmp
+	    echo "FontMap:   $FONTMAP"          >> $DIR_LIBDATA/hyla.conf.tmp
 	    echo "FontPath:  $RUNTIME_PATH_AFM" >> $DIR_LIBDATA/hyla.conf.tmp
 	    $MV $DIR_LIBDATA/hyla.conf.tmp $DIR_LIBDATA/hyla.conf
 	    PATH_AFM=$RUNTIME_PATH_AFM

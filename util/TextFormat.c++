@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.c++ 935 2009-07-29 01:40:06Z faxguy $ */
+/*	$Id: TextFormat.c++ 961 2009-12-05 21:06:39Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -1166,9 +1166,12 @@ TextFont::decodeFontName(const char* name, fxStr& filename, fxStr& emsg)
         /* Newer versions of Ghostscript use "Fontmap.GS"
          * whereas older ones omit the ".GS" extension.
          * If the Fontmap.GS file isn't available default
-         * to the older convention.
+         * to the older convention.  We also can create our
+	 * own Fontmap.HylaFAX file.
          */
-        filename = path.head(index) | "/" | "Fontmap.GS";
+        filename = path.head(index) | "/" | "Fontmap.HylaFAX";
+        if (stat(filename, &junk) != 0)
+            filename = path.head(index) | "/" | "Fontmap.GS";
         if (stat(filename, &junk) != 0)
             filename = path.head(index) | "/" | "Fontmap";
         fxStr fontMapFile = filename;
