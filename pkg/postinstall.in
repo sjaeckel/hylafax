@@ -1,5 +1,5 @@
 #
-# $Id: postinstall.in 938 2009-09-08 01:05:03Z faxguy $
+# $Id: postinstall.in 961 2009-12-05 21:06:39Z faxguy $
 #	Tim Rice
 #
 #	postinstall
@@ -40,7 +40,7 @@ removef HylaFAX ${sbindir}/faxcron.dist
 echo "Updating ${spooldir} files"
 for i in bin/ps2fax.gs bin/ps2fax.dps bin/ps2fax.imp bin/pdf2fax.gs \
 bin/pcl2fax bin/tiff2fax bin/notify bin/archive \
-bin/faxrcvd bin/pollrcvd bin/mkcover bin/wedged \
+bin/faxrcvd bin/pollrcvd bin/mkcover bin/wedged bin/genfontmap.ps \
 etc/dpsprinter.ps etc/dialrules etc/dialrules.sf-ba etc/dialrules-pabx.be etc/dialrules.europe
 do
     if [ -f ${spooldir}/${i} ]
