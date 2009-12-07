@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 915 2009-03-02 04:54:14Z faxguy $ */
+/*	$Id: Parser.c++ 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -127,7 +127,7 @@ static const tab parmtab[] = {
 { "COMMENTS",     T_COMMENTS,	  false, true, "[<string>]" },
 { "COMMID",       T_COMMID,	  false, true, "(communication identifier)" },
 { "COVER",        T_COVER,	  false, true, "path-name" },
-{ "DATAFORMAT",   T_DATAFORMAT,	  false, true, "[ANY|G31D|G32D|G4]" },
+{ "DATAFORMAT",   T_DATAFORMAT,	  false, true, "[G31D|G32D|G4|JPEG]" },
 { "DIALSTRING",   T_DIALSTRING,	  false, true, "[<string>]" },
 { "DOCUMENT",     T_DOCUMENT,	  false, true, "path-name" },
 { "DONEOP",       T_DONEOP,	  false, true, "[<string>]" },
@@ -185,6 +185,7 @@ static const tab parmtab[] = {
 { "TSI",          T_TSI,	  false, true, "[<string>]" },
 { "USECONTCOVER", T_USE_CONTCOVER,false, true, "[YES|NO]" },
 { "USEXVRES",     T_USE_XVRES,	  false, true, "[YES|NO]" },
+{ "USECOLOR",     T_USE_COLOR,	  false, true, "[YES|NO]" },
 { "USEECM",       T_USE_ECM,	  false, true, "[YES|NO]" },
 { "ECMTYPE",      T_ECMTYPE,	  false, true, "[64BIT|256BIT|HALFDUPLEX|FULLDUPLEX]" },
 { "USETAGLINE",   T_USE_TAGLINE,  false, true, "[YES|NO]" },
@@ -1173,6 +1174,16 @@ HylaFAXServer::param_cmd(Token t)
     case T_SERVERDOCOVER:
     case T_IGNOREMODEMBUSY:
     case T_USE_XVRES:
+	if (opt_CRLF()) {
+	    replyJobParamValue(*curJob, 213, t);
+	    return (true);
+	} else if (boolean_param(b) &&
+	  setJobParameter(*curJob, t, b)) {
+	    reply(213, "%s set to %s.", parmToken(t), b ? "YES" : "NO");
+	    return (true);
+	}
+	break;
+    case T_USE_COLOR:
 	if (opt_CRLF()) {
 	    replyJobParamValue(*curJob, 213, t);
 	    return (true);

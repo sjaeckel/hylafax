@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 945 2009-09-29 11:46:02Z faxguy $ */
+/*	$Id: sendfax.c++ 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -196,6 +196,12 @@ sendFaxApp::run(int argc, char** argv)
 			proto.setNoCountCover(atoi(++op));
 		    } else if (strncmp(optarg, "serverdocover", 13) == 0) {
 			proto.setServerDoCover(FaxConfig::getBoolean(++op));
+		    } else if (strncmp(optarg, "usecolor", 8) == 0) {
+			if (strncmp(++op, "only", 4) == 0) {
+			    proto.setUseColor(true);
+			    proto.setDesiredDF(6);
+			} else
+			    proto.setUseColor(FaxConfig::getBoolean(op));
 		    } else if (strncmp(optarg, "ignoremodembusy", 15) == 0) {
 			proto.setIgnoreModemBusy(FaxConfig::getBoolean(++op));
 		    } else if (strncmp(optarg, "config", 6) == 0) {

@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 874 2008-09-16 05:39:07Z faxguy $ */
+/*	$Id: FaxRequest.c++ 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -69,6 +69,7 @@ FaxRequest::reset(void)
     tottries = 0, maxtries = (u_short) FAX_RETRIES;
     useccover = true;
     usexvres = false;
+    usecolor = false;
     serverdocover = false;
     ignoremodembusy = false;
     pagechop = chop_default;
@@ -155,6 +156,7 @@ FaxRequest::shortval FaxRequest::shortvals[] = {
     { "desiredtl",	&FaxRequest::desiredtl },
     { "useccover",	&FaxRequest::useccover },
     { "usexvres",	&FaxRequest::usexvres },
+    { "usecolor",	&FaxRequest::usecolor },
 };
 FaxRequest::intval FaxRequest::intvals[] = {
     { "skippedpages",	&FaxRequest::skippedpages },
@@ -332,6 +334,7 @@ FaxRequest::readQFile(bool& rejectJob)
 	case H_DESIREDTL:	desiredtl = tag[0] - '0'; break;
 	case H_USECCOVER:	useccover = tag[0] - '0'; break;
 	case H_USEXVRES:	usexvres = tag[0] - '0'; break;
+	case H_USECOLOR:	usecolor = tag[0] - '0'; break;
 	case H_IGNOREMODEMBUSY:	ignoremodembusy = tag[0] - '0'; break;
 	case H_TTS:
 	    tts = atoi(tag);
@@ -441,7 +444,7 @@ FaxRequest::readQFile(bool& rejectJob)
     if (desiredbr > BR_33600)	desiredbr = BR_33600;
     if (desiredst > ST_40MS)	desiredst = ST_40MS;
     if (desiredec > EC_ECLFULL)	desiredec = EC_ECLFULL;
-    if (desireddf > DF_2DMMR)	desireddf = DF_2DMMR;
+    if (desireddf > DF_JBIG + JP_COLOR)	desireddf = DF_2DMMR;
     if (buf != stackbuf)			// dynamically allocated buffer
 	delete [] buf;
     return (true);

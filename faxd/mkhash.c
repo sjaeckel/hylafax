@@ -1,4 +1,4 @@
-/*	$Id: mkhash.c 874 2008-09-16 05:39:07Z faxguy $ */
+/*	$Id: mkhash.c 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -129,6 +129,7 @@ main()
     hash("desireddf");
     hash("desiredtl");
     hash("useccover");
+    hash("usecolor");
     hash("usexvres");
     hash("tts");
     hash("killtime");

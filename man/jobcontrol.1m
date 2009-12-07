@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 861 2008-07-26 16:50:35Z faxguy $
+.\"	$Id: jobcontrol.1m 964 2009-12-08 06:15:06Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -85,6 +85,7 @@ RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
 UseXVRes	integer	\-	Usage of extended resolutions
+UseColor	integer	\-	Usage of color
 .fi
 .PP
 The
@@ -143,6 +144,15 @@ parameter controls the vertical resolution. Possible values are 98 (normal resol
 -l option) and 196 (fine resolution, equivalent to
 .I sendfax
 -m option).
+.PP
+The
+.B UseColor
+parameter is used to enable or disable the usage of color as supported by the receiver. Possible values are 1 (enable color usage, equivalent to
+.I sendfax
+-O usecolor:yes option) and 0 (disable color usage).
+This parameter may be used in conjunction with 
+.I DesiredDF: 6
+in order to abort fax transmission if the receiver does not support color facsimile.
 .PP
 The
 .B UseXVRes

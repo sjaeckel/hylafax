@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 728 2007-12-05 02:13:53Z faxguy $ */
+/*	$Id: JobControl.c++ 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -42,6 +42,7 @@
 #define	DCI_PRIORITY		0x0080
 #define	DCI_DESIREDDF		0x0100
 #define	DCI_NOTIFY		0x0200
+#define	DCI_USECOLOR		0x0400
 
 #define	isDefined(b)		(defined & b)
 #define	setDefined(b)		(defined |= b)
@@ -59,6 +60,7 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     maxDials = other.maxDials;
     maxTries = other.maxTries;
     usexvres = other.usexvres;
+    usecolor = other.usecolor;
     vres = other.vres;
     priority = other.priority;
     desireddf = other.desireddf;
@@ -129,6 +131,9 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
     } else if (streq(tag, "usexvres")) {
 	usexvres = getNumber(value);
 	setDefined(DCI_USEXVRES);
+    } else if (streq(tag, "usecolor")) {
+	usecolor = getNumber(value);
+	setDefined(DCI_USECOLOR);
     } else if (streq(tag, "vres")) {
 	vres = getNumber(value);
 	setDefined(DCI_VRES);
@@ -217,6 +222,15 @@ JobControlInfo::getUseXVRes() const
 {
     if (isDefined(DCI_USEXVRES))
 	return usexvres;
+    else
+	return -1;
+}
+
+int
+JobControlInfo::getUseColor() const
+{
+    if (isDefined(DCI_USECOLOR))
+	return usecolor;
     else
 	return -1;
 }
