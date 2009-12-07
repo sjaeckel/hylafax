@@ -1,4 +1,4 @@
-/*	$Id: JobControl.h 728 2007-12-05 02:13:53Z faxguy $ */
+/*	$Id: JobControl.h 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -52,7 +52,8 @@ private:
     fxStr	modem;			// if set, try with it
     TimeOfDay	tod;			// time of day restrictions
     int		usexvres;		// use extended resolution
-    u_int	vres;			// use extended resolution
+    int		usecolor;		// use color
+    u_int	vres;			// use specified resolution
     fxStr	args;			// arguments for subprocesses
     int		priority;		// override submission priority with this
     int		desireddf;		// if set, desireddf value
@@ -76,6 +77,7 @@ public:
     const fxStr& getModem() const;
     time_t nextTimeToSend(time_t) const;
     int getUseXVRes() const;
+    int getUseColor() const;
     u_int getVRes() const;
     int getPriority() const;
     int getDesiredDF() const;

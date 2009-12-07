@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 872 2008-09-14 10:33:17Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -74,6 +74,7 @@ SendFaxJob::SendFaxJob(const SendFaxJob& other)
     coverIsTemp = other.coverIsTemp;
     sendTagLine = other.sendTagLine;
     useXVRes = other.useXVRes;
+    useColor = other.useColor;
     retryTime = other.retryTime;
     hres = other.hres;
     vres = other.vres;
@@ -155,6 +156,7 @@ SendFaxJob::setupConfig()
     autoCover = true;
     sendTagLine = false;		// default is to use server config
     useXVRes = false;			// default is to use normal or fine
+    useColor = false;			// default is to only send monochrome
     serverdocover = false;		// default to do it client-side
     ignoremodembusy = false;		// default to acknowledge busy status
     notify = FAX_DEFNOTIFY;		// default notification
@@ -200,6 +202,8 @@ SendFaxJob::setConfigItem(const char* tag, const char* value)
 	setDesiredEC(value);
     else if (streq(tag, "usexvres"))
 	setUseXVRes(FaxConfig::getBoolean(value));
+    else if (streq(tag, "usecolor"))
+	setUseColor(FaxConfig::getBoolean(value));
     else if (streq(tag, "serverdocover"))
 	setServerDoCover(FaxConfig::getBoolean(value));
     else if (streq(tag, "ignoremodembusy"))
@@ -408,6 +412,7 @@ SendFaxJob::setDesiredEC(const char* e)
 }
 void SendFaxJob::setDesiredEC(int e)			{ desiredec = e; }
 void SendFaxJob::setUseXVRes(bool b)			{ useXVRes = b; }
+void SendFaxJob::setUseColor(bool b)			{ useColor = b; }
 void SendFaxJob::setServerDoCover(bool b)		{ serverdocover = b; }
 void SendFaxJob::setIgnoreModemBusy(bool b)		{ ignoremodembusy = b; }
 void
@@ -421,6 +426,12 @@ SendFaxJob::setDesiredDF(const char* v)
 	desireddf = 1;				// NB: force 2D w/o uncompressed
     else if (strcasecmp(v, "2dmmr") == 0)
 	desireddf = 3;
+    else if (strcasecmp(v, "jbig") == 0)
+	desireddf = 4;
+    else if (strcasecmp(v, "jpeg-grey") == 0)
+	desireddf = 5;
+    else if (strcasecmp(v, "jpeg-color") == 0)
+	desireddf = 5;
     else
 	desireddf = atoi(v);
 }
@@ -556,6 +567,9 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
 	    desireddf == 1	? "g32d" :
 	    desireddf == 2	? "g32dunc" :
 	    desireddf == 3	? "g4"   :
+	    desireddf == 4	? "jbig" :
+	    desireddf == 5	? "jpeg-grey" :
+	    desireddf == 6	? "jpeg-color" :
 				  "g31d")
     }
     if (sendTagLine) {
@@ -564,6 +578,9 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     }
     if (useXVRes) {
 	CHECKPARM("USEXVRES", true)
+    }
+    if (useColor) {
+	CHECKPARM("USECOLOR", true)
     }
     if (serverdocover) {
 	CHECKPARM("SERVERDOCOVER", true)

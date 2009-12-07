@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 883 2008-10-12 04:04:28Z faxguy $ */
+/*	$Id: Jobs.c++ 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -171,6 +171,7 @@ static const struct {
     { T_ECMTYPE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USE_TAGLINE,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USE_XVRES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_USE_COLOR,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_USRKEY,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_VRES,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_NIL,		0 },
@@ -286,7 +287,10 @@ static const char* dataVals[] = {
     "G31D",		// Group 3, 1-D
     "G32D",		// Group 3, 2-D
     "G32DUNC",		// Group 3, 2-D (w/ uncompressed)
-    "G4"		// Group 4
+    "G4",		// Group 4
+    "JBIG",		// JBIG
+    "JPEG-GREY",	// JPEG greyscale
+    "JPEG-COLOR"	// JPEG color
 };
 static const char* ecmVals[] = {
     "NONE",		// 0 = no ECM
@@ -454,6 +458,9 @@ HylaFAXServer::replyJobParamValue(Job& job, int code, Token t)
     case T_USE_XVRES:
 	replyBoolean(code, job.usexvres);
 	return;
+    case T_USE_COLOR:
+	replyBoolean(code, job.usecolor);
+	return;
     case T_USE_CONTCOVER:
 	replyBoolean(code, job.useccover);
 	return;
@@ -596,6 +603,8 @@ HylaFAXServer::jstatCmd(const Job& job)
 	jstatLine(T_USE_TAGLINE,"%s", boolString(job.desiredtl));
     if (checkAccess(job, T_USE_XVRES, A_READ))
 	jstatLine(T_USE_XVRES,"%s", boolString(job.usexvres));
+    if (checkAccess(job, T_USE_COLOR, A_READ))
+	jstatLine(T_USE_COLOR,"%s", boolString(job.usecolor));
     if (checkAccess(job, T_USE_CONTCOVER, A_READ))
 	jstatLine(T_USE_CONTCOVER,"%s", boolString(job.useccover));
     if (checkAccess(job, T_SERVERDOCOVER, A_READ))
@@ -867,6 +876,9 @@ HylaFAXServer::setJobParameter(Job& job, Token t, bool b)
 	case T_USE_XVRES:
 	    job.usexvres = b;
 	    return (true);
+	case T_USE_COLOR:
+	    job.usecolor = b;
+	    return (true);
 	case T_USE_CONTCOVER:
 	    job.useccover = b;
 	    return (true);
@@ -931,6 +943,7 @@ HylaFAXServer::initDefaultJob(void)
     defJob.desireddf	= DF_2DMMR;
     defJob.desiredtl	= false;
     defJob.usexvres	= false;
+    defJob.usecolor	= false;
     defJob.useccover	= true;
     defJob.serverdocover= false;
     defJob.ignoremodembusy= false;
@@ -1031,6 +1044,7 @@ HylaFAXServer::newJob(fxStr& emsg)
     job->desireddf = curJob->desireddf;
     job->desiredtl = curJob->desiredtl;
     job->usexvres = curJob->usexvres;
+    job->usecolor = curJob->usecolor;
     job->useccover = curJob->useccover;
     job->serverdocover = curJob->serverdocover;
     job->ignoremodembusy = curJob->ignoremodembusy;
@@ -1842,6 +1856,7 @@ static const char jformat[] = {
     'u',		// y (total pages)
     's',		// z (tts)
     'c',		// 0 (usexvres as symbol)
+    'c',		// 1 (usecolor as symbol)
 };
 
 /*
@@ -2056,6 +2071,9 @@ HylaFAXServer::Jprintf(FILE* fd, const char* fmt, const Job& job)
 		break;
 	    case '0':
 		fprintf(fd, fspec, "N "[job.usexvres]);
+		break;
+	    case '1':
+		fprintf(fd, fspec, "N "[job.usecolor]);
 		break;
 	    }
 	} else

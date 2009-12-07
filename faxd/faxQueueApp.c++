@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 950 2009-10-27 23:29:30Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -703,7 +703,11 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
      */
     int jcdf = job.getJCI().getDesiredDF();
     if (jcdf != -1) req.desireddf = jcdf;
-    if (req.desireddf == DF_2DMMR && (req.desiredec != EC_DISABLE) && 
+    if (req.usecolor) params.jp = JP_COLOR;
+    if (req.usecolor && req.desireddf > DF_JBIG && req.desireddf <= DF_JBIG + JP_COLOR) {
+	// code for JPEG-only fax...
+	params.df = req.desireddf;
+    } else if (req.desireddf == DF_2DMMR && (req.desiredec != EC_DISABLE) && 
 	use2D && job.modem->supportsMMR() &&
 	 (! info.getCalledBefore() || info.getSupportsMMR()) )
 	    params.df = DF_2DMMR;
@@ -1150,10 +1154,15 @@ faxQueueApp::convertDocument(Job& job,
 	argv[ac++] = "-l"; argv[ac++] = (const char*)lbuf;
 	argv[ac++] = "-m"; argv[ac++] = (const char*)mbuf;
 	if (useUnlimitedLN) argv[ac++] = "-U";
-	if (params.df == DF_2DMMR)
-	    argv[ac++] = "-3";
-	else
-	    argv[ac++] = params.df == DF_1DMH ? "-1" : "-2";
+	if (params.jp == JP_COLOR)
+	    argv[ac++] = "-color";
+	// When df includes JP_COLOR, then it's a color-only job.
+	if (params.df != DF_JBIG + JP_COLOR) {
+	    if (params.df == DF_2DMMR)
+		argv[ac++] = "-3";
+	    else
+		argv[ac++] = params.df == DF_1DMH ? "-1" : "-2";
+	}
 	argv[ac++] = req.item;
 	argv[ac] = NULL;
 	// XXX the (char* const*) is a hack to force type compatibility

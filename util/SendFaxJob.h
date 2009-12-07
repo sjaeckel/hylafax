@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.h 872 2008-09-14 10:33:17Z faxguy $ */
+/*	$Id: SendFaxJob.h 964 2009-12-08 06:15:06Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -97,6 +97,7 @@ private:
 
     bool	sendTagLine;		// if true, use custom tagline format
     bool	useXVRes;		// if true, use extended resolutions
+    bool	useColor;		// if true, use color
     fxStr	killTime;		// job's time to be killed
     fxStr	sendTime;		// job's time to be sent
     u_int	retryTime;		// retry time for failures (secs)
@@ -267,6 +268,8 @@ public:
     int getDesiredEC() const;
     void setUseXVRes(bool b);		// desired use of extended resolutions
     bool getUseXVRes() const;
+    void setUseColor(bool b);		// desired use of color
+    bool getUseColor() const;
     void setDesiredDF(int);		// desired data format
     void setDesiredDF(const char*);
     int getDesiredDF() const;
@@ -332,6 +335,7 @@ inline int SendFaxJob::getDesiredSpeed() const		{ return desiredbr; }
 inline int SendFaxJob::getDesiredMST() const		{ return desiredst; }
 inline int SendFaxJob::getDesiredEC() const		{ return desiredec; }
 inline bool SendFaxJob::getUseXVRes() const		{ return useXVRes; }
+inline bool SendFaxJob::getUseColor() const		{ return useColor; }
 inline int SendFaxJob::getDesiredDF() const		{ return desireddf; }
 inline const fxStr& SendFaxJob::getTagLineFormat() const{ return tagline; }
 inline u_int SendFaxJob::getChopHandling() const	{ return pagechop; }
