@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pdf2fax.gs.sh.in 750 2008-01-09 06:40:36Z faxguy $
+#	$Id: pdf2fax.gs.sh.in 965 2009-12-22 06:07:31Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -67,8 +67,10 @@ out=pdf.fax		# default output filename
 pagewidth=1728		# standard fax width
 pagelength=297		# default to A4 
 vres=98			# default to low res
-device=tiffg3		# default to 1D
+device=			# to know if it was never specified
 unlimitedlength=no	# default to fixed length-pages
+color=no		# default to monochrome-only
+
 while test $# != 0
 do
     case "$1" in
@@ -88,11 +90,22 @@ do
 	    && { device=tiffg4; } \
 	    || { device=tiffg3; }
 	;;
+    -color) ($PS -h | grep tiff24nc >/dev/null 2>&1) \
+	    && { color=yes; }
+	;;
     -*)	;;
     *)	files="$files $1" ;;
     esac
     shift
 done
+
+if [ -z "$device" ]; then
+    if [ "$color" = "yes" ]; then
+	device=tiff24nc
+    else
+	device=tiffg3;
+    fi
+fi
 
 gs2fax pdf
 

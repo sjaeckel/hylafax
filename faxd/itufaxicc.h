@@ -1,4 +1,4 @@
-/* $Id: itufaxicc.h 962 2009-12-05 21:08:35Z faxguy $ */
+/* $Id: itufaxicc.h 965 2009-12-22 06:07:31Z faxguy $ */
 //  Copyright (C) 2009 Marti Maria
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
@@ -22,6 +22,7 @@
 #ifndef __itufaxicc_H
 
 #include <stdio.h>
+#include <tiffio.h>
 
 /*
 This function accepts a single JPEG image oat src and converts it from ITULAB colorspace sRGB.  
@@ -47,6 +48,19 @@ error occurred.  If an error occurred, then the error message should be found in
 */
 
 bool convertJPEGtoITULAB( FILE* src, FILE* dst, char* emsg, size_t max_emsg_bytes );
+
+
+/*
+This function accepts a single raw RGB image at src and converts it to ITULAB colorspace.
+In the destination image the CIE Standard Illuminant D50 is used in the colour image data
+as specified in ITU-T Rec. T.42. In the destination image the colour image data are
+represented using the default gamut range as specified in ITU-T Rec. T.42.
+The G3FAX0 app header is added from the JPEG data as instructed by ITU T.4 Annex E.
+The function operation fills dst stream and returns true if it succeeded or false if an
+error occurred.  If an error occurred, then the error message should be found in emsg.
+*/
+
+bool convertRawRGBtoITULAB( tdata_t src, tsize_t srclen, uint32 width, uint32 height, FILE* dst, char* emsg, size_t max_emsg_bytes );
 
 
 #define __itufaxicc_H

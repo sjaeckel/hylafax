@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 756 2008-01-12 20:00:18Z faxguy $ */
+/*	$Id: FaxSend.c++ 965 2009-12-22 06:07:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -166,9 +166,20 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
      */
     clientParams.decodePage(fax.pagehandling);
     /*
-     * So we want to restrict DF selection to those masked in fax.desireddf
+     * In cases where color use is dependent on receiver support, both
+     * color and monochrome documents were prepared, but pagehandling
+     * will decode with JP_NONE.  So if this is the case, set jp.
      */
-    clientParams.df = fxmin(modem->getBestDataFormat(), (u_int)fax.desireddf);
+    if (fax.usecolor) clientParams.jp = JP_COLOR;
+
+    /*
+     * So we want to restrict DF selection to those masked in fax.desireddf
+     *
+     * clientParams.jp != 0 with clientParams.df == 7 indicates 
+     * color-only - don't manipulate df in that case.
+     */
+    if (!(clientParams.jp && clientParams.df == 7))
+	clientParams.df = fxmin(modem->getBestDataFormat(), (u_int)fax.desireddf);
     clientParams.br = fxmin(modem->getBestSignallingRate(), (u_int) fax.desiredbr);
     clientParams.ec = (modem->supportsECM() ? fax.desiredec : EC_DISABLE);
     clientParams.st = fxmax(modem->getBestScanlineTime(), (u_int) fax.desiredst);
@@ -511,7 +522,14 @@ FaxServer::sendPoll(FaxRequest& fax, bool remoteHasDoc)
 bool
 FaxServer::sendFaxPhaseB(FaxRequest& fax, FaxItem& freq, FaxMachineInfo& clientInfo, u_int batched, bool dosetup)
 {
-    TIFF* tif = TIFFOpen(freq.item, "r");
+    TIFF* tif = NULL;
+    /*
+     * If this was not a JPEG-only document, then we must use the ".color" document.
+     */
+    if (clientParams.jp) {
+	tif = TIFFOpen(freq.item|".color", "r");
+    }
+    if (!tif) tif = TIFFOpen(freq.item, "r");
     if (tif && (freq.dirnum == 0 || TIFFSetDirectory(tif, freq.dirnum))) {
 	if (dosetup) {
 	    // set up DCS according to file characteristics
@@ -620,6 +638,58 @@ FaxServer::sendClientCapabilitiesOK(FaxRequest& fax, FaxMachineInfo& clientInfo,
 	    clientParams.ec = EC_ENABLE256;
     } else
 	clientParams.ec = EC_DISABLE;
+
+    if (clientParams.jp) {
+	if (!(clientCapabilities.jp & BIT(clientParams.jp))) {
+	    if (clientParams.df == 7) {		// JPEG-only
+		emsg = fxStr::format("Remote does not support JPEG fax request. Remote capabilities: %d, Requested parameters: %d {E423}", clientCapabilities.jp, clientParams.jp);
+		return (false);
+	    }
+	    clientParams.jp = JP_NONE;
+	}
+	if (!modem->supportsJPEG(clientParams.jp)) {
+	    if (clientParams.df == 7) {		// JPEG-only
+		emsg = "Modem does not support JPEG fax request. {E424}";
+		return (false);
+	    }
+	    clientParams.jp = JP_NONE;
+	}
+	if (clientParams.ec == EC_DISABLE) {
+	    if (clientParams.df == 7) {		// JPEG-only
+		emsg = "JPEG fax request requires ECM support. {E425}";
+		return (false);
+	    }
+	    clientParams.jp = JP_NONE;
+	}
+	/*
+	 * Color-fax only supports square resolutions.  So a DIS bit
+	 * 98 (100 dpi), 15 (200 dpi), 42 (300 dpi), or 43 (400 dpi) must
+	 * be set.  For now we've kept things easy by limiting all color
+	 * fax to 200 dpi within the job preparation state.
+	 */
+	if (!(modem->getVRes() & VR_FINE)) {
+	    if (clientParams.df == 7) {		// JPEG-only
+		emsg = "Modem does not support JPEG fax resolution. {E426}";
+		return (false);
+	    }
+	    clientParams.jp = JP_NONE;
+	}
+	if (!(clientCapabilities.vr & VR_FINE)) {
+	    if (clientParams.df == 7) {		// JPEG-only
+		emsg = "Remote does not support JPEG fax resolution. {E427}";
+		return (false);
+	    }
+	    clientParams.jp = JP_NONE;
+	}
+	if (clientParams.jp) {
+	    /*
+	     * The user requested a color fax, and there are no obstacles.
+	     * At this point if (jp != 0) then it's color, and df must be 0.
+	     */
+	    clientParams.df = 0;
+	}
+    }
+
     clientParams.bf = BF_DISABLE;
     /*
      * Record the remote machine's capabilities for use below in
@@ -670,107 +740,120 @@ FaxServer::sendSetupParams1(TIFF* tif,
 {
     uint16 compression;
     (void) TIFFGetField(tif, TIFFTAG_COMPRESSION, &compression);
-    if (compression != COMPRESSION_CCITTFAX3 && compression != COMPRESSION_CCITTFAX4) {
-	emsg = fxStr::format("Document is not in a Group 3 or Group 4 compatible"
-	    " format (compression %u) {E402}", compression);
-	return (send_failed);
-    }
-
-    // XXX perhaps should verify samples and bits/sample???
-    uint32 g3opts;
-    if (!TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts))
-	g3opts = 0;
-    /*
-     * JPEG sending disabled for now
-     */
-    params.jp = 0;
-    /*
-     * RTFCC lets us ignore our file data format, but our data
-     * format may be based upon a requested data format, and without
-     * re-reading the q file, we won't know if the data format was
-     * requested.  So, RTFCC defeats requested data formatting. :-(
-     */
-    if (class2RTFCC || softRTFCC) {
-	/*
-	 * Determine the "maximum" compression.
-	 *
-	 * params.df prior to here represents how faxq formatted the image.
-	 * clientCapabilities.df represents what formats the remote supports.
-	 *
-	 * Ignore what faxq did and send with the "highest" (monochrome) 
-	 * compression that both the modem and the remote supports.
-	 */
-	if (useDF) {
-	    /*
-	     * The job has been restricted to a specific data format per
-	     * JobControls or something similar - that value is now 
-	     * found in clientParams.df.
-	     */
-	    params.df = fxmin(clientParams.df, params.df);
-	} else {
-	    params.df = 0;
-	    u_int bits = clientCapabilities.df;
-	    bits &= BIT(DF_JBIG+1)-1;		// cap at JBIG, only deal with monochrome
-	    while (bits) {			// puts params.df to the "best" support by the remote
-		bits >>= 1;
-		if (bits) params.df++;
-	    }
+    if (params.jp == JP_NONE) {
+	if (compression != COMPRESSION_CCITTFAX3 && compression != COMPRESSION_CCITTFAX4) {
+	    emsg = fxStr::format("Document is not in a Group 3 or Group 4 compatible"
+		" format (compression %u) {E402}", compression);
+	    return (send_failed);
 	}
-	// Class 2 RTFCC doesn't support JBIG
-	if (params.df == DF_JBIG && (!modem->supportsJBIG() || (params.ec == EC_DISABLE) || class2RTFCC))
+	// XXX perhaps should verify samples and bits/sample???
+	uint32 g3opts;
+	if (!TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts))
+	    g3opts = 0;
+	/*
+	 * RTFCC lets us ignore our file data format, but our data
+	 * format may be based upon a requested data format, and without
+	 * re-reading the q file, we won't know if the data format was
+	 * requested.  So, RTFCC defeats requested data formatting. :-(
+	 */
+	if (class2RTFCC || softRTFCC) {
+	    /*
+	     * Determine the "maximum" compression.
+	     *
+	     * params.df prior to here represents how faxq formatted the image.
+	     * clientCapabilities.df represents what formats the remote supports.
+	     *
+	     * Ignore what faxq did and send with the "highest" (monochrome) 
+	     * compression that both the modem and the remote supports.
+	     */
+	    if (useDF) {
+		/*
+		 * The job has been restricted to a specific data format per
+		 * JobControls or something similar - that value is now 
+		 * found in clientParams.df.
+		 */
+		params.df = fxmin(clientParams.df, params.df);
+	    } else {
+		params.df = 0;
+		u_int bits = clientCapabilities.df;
+		bits &= BIT(DF_JBIG+1)-1;		// cap at JBIG, only deal with monochrome
+		while (bits) {			// puts params.df to the "best" support by the remote
+		    bits >>= 1;
+		    if (bits) params.df++;
+		}
+	    }
+	    // Class 2 RTFCC doesn't support JBIG
+	    if (params.df == DF_JBIG && (!modem->supportsJBIG() || (params.ec == EC_DISABLE) || class2RTFCC))
 		params.df = DF_2DMMR;
-	// even if RTFCC supported uncompressed mode (and it doesn't)
-	// it's likely that the remote was incorrect in telling us it does
-	if (params.df == DF_2DMRUNCOMP) params.df = DF_2DMR;
-	// don't let RTFCC cause problems with restricted modems...
-	if (params.df == DF_2DMMR && (!modem->supportsMMR() || (params.ec == EC_DISABLE) || !(clientCapabilities.df & BIT(DF_2DMMR))))
+	    // even if RTFCC supported uncompressed mode (and it doesn't)
+	    // it's likely that the remote was incorrect in telling us it does
+	    if (params.df == DF_2DMRUNCOMP) params.df = DF_2DMR;
+	    // don't let RTFCC cause problems with restricted modems...
+	    if (params.df == DF_2DMMR && (!modem->supportsMMR() || (params.ec == EC_DISABLE) || !(clientCapabilities.df & BIT(DF_2DMMR))))
 		params.df = DF_2DMR;
-	if (params.df == DF_2DMR && (!modem->supports2D() || !(clientCapabilities.df & BIT(DF_2DMR))))
+	    if (params.df == DF_2DMR && (!modem->supports2D() || !(clientCapabilities.df & BIT(DF_2DMR))))
 		params.df = DF_1DMH;
 
-	if (tiff2faxCmd.length() && formatSize[0] != 0 && formatSize[0] != 0 && formatSize[0] != 0) {
-	    /*
-	     * T.4 and T.6 compress poorly when there are frequent alternations between
-	     * black and white (i.e. a dithered photograph).  Thus, in some cases the
-	     * "highest" compression may actually be MH.  Since MH support is requisite 
-	     * we can switch "down" to it freely.
-	     *
-	     * If MH is tighter than MMR then it would be extremely unlikely that MH would
-	     * not also be tighter than MR.  So we don't consider dropping from MMR to MR.
-	     *
-	     * JBIG will virtually always outcompress any other format, so we don't consider
-	     * another format when we can use JBIG.
-	     */
-	    if ((params.df == DF_2DMMR || params.df == DF_2DMR) && formatSize[0] < formatSize[1]) 
+	    if (tiff2faxCmd.length() && formatSize[0] != 0 && formatSize[0] != 0 && formatSize[0] != 0) {
+		/*
+		 * T.4 and T.6 compress poorly when there are frequent alternations between
+		 * black and white (i.e. a dithered photograph).  Thus, in some cases the
+		 * "highest" compression may actually be MH.  Since MH support is requisite 
+		 * we can switch "down" to it freely.
+		 *
+		 * If MH is tighter than MMR then it would be extremely unlikely that MH would
+		 * not also be tighter than MR.  So we don't consider dropping from MMR to MR.
+		 *
+		 * JBIG will virtually always outcompress any other format, so we don't consider
+		 * another format when we can use JBIG.
+		 */
+		if ((params.df == DF_2DMMR || params.df == DF_2DMR) && formatSize[0] < formatSize[1]) 
+		    params.df = DF_1DMH;
+	    }
+	} else {
+	    if (compression == COMPRESSION_CCITTFAX4) {
+		if (!clientInfo.getSupportsMMR()) {
+		    emsg = "Document was encoded with 2DMMR, but client does not support this data format {E403}";
+		    return (send_reformat);
+		}
+		if (!modem->supportsMMR()) {
+		    emsg = "Document was encoded with 2DMMR, but modem does not support this data format {E404}";
+		    return (send_reformat);
+		}
+		if (params.ec == EC_DISABLE) {
+		    emsg = "Document was encoded with 2DMMR, but ECM is not being used. {E405}";
+		    return (send_reformat);
+		}
+		params.df = DF_2DMMR;
+	    } else if (g3opts & GROUP3OPT_2DENCODING) {
+		if (!clientInfo.getSupports2DEncoding()) {
+		    emsg = "Document was encoded with 2DMR, but client does not support this data format {E406}";
+		    return (send_reformat);
+		}
+		if (!modem->supports2D()) {
+		    emsg = "Document was encoded with 2DMR, but modem does not support this data format {E407}";
+		    return (send_reformat);
+		}
+		params.df = DF_2DMR;
+	    } else
 		params.df = DF_1DMH;
 	}
     } else {
-	if (compression == COMPRESSION_CCITTFAX4) {
-	    if (!clientInfo.getSupportsMMR()) {
-		emsg = "Document was encoded with 2DMMR, but client does not support this data format {E403}";
-		return (send_reformat);
+	// send JPEG
+	if (params.jp == JP_COLOR) {
+	    if (compression != COMPRESSION_NONE) {
+		emsg = "Invalid compression for color JPEG fax request. {E421}";
+		return (send_failed);
 	    }
-	    if (!modem->supportsMMR()) {
-		emsg = "Document was encoded with 2DMMR, but modem does not support this data format {E404}";
-		return (send_reformat);
+	    uint16 w;
+	    if (!TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &w) || (w != PHOTOMETRIC_RGB)) {
+		emsg = "Invalid photometric for color JPEG fax request. {E422}";
+		return (send_failed);
 	    }
-	    if (params.ec == EC_DISABLE) {
-		emsg = "Document was encoded with 2DMMR, but ECM is not being used. {E405}";
-		return (send_reformat);
-	    }
-	    params.df = DF_2DMMR;
-	} else if (g3opts & GROUP3OPT_2DENCODING) {
-	    if (!clientInfo.getSupports2DEncoding()) {
-		emsg = "Document was encoded with 2DMR, but client does not support this data format {E406}";
-		return (send_reformat);
-	    }
-	    if (!modem->supports2D()) {
-		emsg = "Document was encoded with 2DMR, but modem does not support this data format {E407}";
-		return (send_reformat);
-	    }
-	    params.df = DF_2DMR;
-	} else
-	    params.df = DF_1DMH;
+	} else {
+	    emsg = "Requested JPEG parameters are unsupported. {E420}";
+	    return (send_failed);
+	}
     }
 
     /*
@@ -814,60 +897,76 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &l);
 	xres = (l < 1729 ? 8 : 16);		// R8 = 8 l/mm, R16 = 16 l/mm
     }
-    if (yres >= 15.) {
-	if (xres > 10) {
-	    if (!(clientInfo.getSupportsVRes() & VR_R16)) {
-		emsg = fxStr::format("Hyperfine resolution document is not supported"
-		    " by client, image resolution %g x %g lines/mm {E408}", xres, yres);
-		return (send_reformat);
+    /*
+     * JPEG fax requires square resolutions.  The job preparation state should have
+     * got this right, but we double-check it here.
+     */
+    if (params.jp == JP_COLOR) {
+	if (xres != yres) {
+	    emsg = "JPEG fax requires square resolutions. {E428}";
+	    return (send_reformat);
+	}
+	if (xres < 7.6 || xres > 8.1) {
+	    emsg = fxStr::format("Unsupported JPEG fax resolution %g l/mm. {E429}", xres);
+	    return (send_reformat);
+	}
+	params.vr = VR_FINE;
+    } else {
+	if (yres >= 15.) {
+	    if (xres > 10) {
+		if (!(clientInfo.getSupportsVRes() & VR_R16)) {
+		    emsg = fxStr::format("Hyperfine resolution document is not supported"
+			" by client, image resolution %g x %g lines/mm {E408}", xres, yres);
+		    return (send_reformat);
+		}
+		if (!modem->supportsVRes(20)) {	// "20" is coded for R16
+		    emsg = fxStr::format("Hyperfine resolution document is not supported"
+			" by modem, image resolution %g x %g lines/mm {E409}", xres, yres);
+		    return (send_reformat);
+		}
+		params.vr = VR_R16;
+	    } else {
+		if (!((clientInfo.getSupportsVRes() & VR_R8) || (clientInfo.getSupportsVRes() & VR_200X400))) {
+		    emsg = fxStr::format("Superfine resolution document is not supported"
+			" by client, image resolution %g lines/mm {E410}", yres);
+		    return (send_reformat);
+		}
+		if (!modem->supportsVRes(yres)) {
+		    emsg = fxStr::format("Superfine resolution document is not supported"
+			" by modem, image resolution %g lines/mm {E411}", yres);
+		    return (send_reformat);
+		}
+		if (clientInfo.getSupportsVRes() & VR_R8) params.vr = VR_R8;
+		else params.vr = VR_200X400;
 	    }
-	    if (!modem->supportsVRes(20)) {	// "20" is coded for R16
-		emsg = fxStr::format("Hyperfine resolution document is not supported"
-		    " by modem, image resolution %g x %g lines/mm {E409}", xres, yres);
-		return (send_reformat);
-	    }
-	params.vr = VR_R16;
-	} else {
-	    if (!((clientInfo.getSupportsVRes() & VR_R8) || (clientInfo.getSupportsVRes() & VR_200X400))) {
-		emsg = fxStr::format("Superfine resolution document is not supported"
-		    " by client, image resolution %g lines/mm {E410}", yres);
+	} else if (yres >= 10.) {
+	    if (!(clientInfo.getSupportsVRes() & VR_300X300)) {
+		emsg = fxStr::format("300x300 resolution document is not supported"
+		    " by client, image resolution %g lines/mm {E412}", yres);
 		return (send_reformat);
 	    }
 	    if (!modem->supportsVRes(yres)) {
-		emsg = fxStr::format("Superfine resolution document is not supported"
-		    " by modem, image resolution %g lines/mm {E411}", yres);
+		emsg = fxStr::format("300x300 resolution document is not supported"
+		    " by modem, image resolution %g lines/mm {E413}", yres);
 		return (send_reformat);
 	    }
-	if (clientInfo.getSupportsVRes() & VR_R8) params.vr = VR_R8;
-	else params.vr = VR_200X400;
-	}
-    } else if (yres >= 10.) {
-	if (!(clientInfo.getSupportsVRes() & VR_300X300)) {
-	    emsg = fxStr::format("300x300 resolution document is not supported"
-		" by client, image resolution %g lines/mm {E412}", yres);
-	    return (send_reformat);
-	}
-	if (!modem->supportsVRes(yres)) {
-	    emsg = fxStr::format("300x300 resolution document is not supported"
-		" by modem, image resolution %g lines/mm {E413}", yres);
-	    return (send_reformat);
-	}
-	params.vr = VR_300X300;
-    } else if (yres >= 7.) {
-	if (!((clientInfo.getSupportsVRes() & VR_FINE) || (clientInfo.getSupportsVRes() & VR_200X200))) {
-	    emsg = fxStr::format("High resolution document is not supported"
-		" by client, image resolution %g lines/mm {E414}", yres);
-	    return (send_reformat);
-	}
-	if (!modem->supportsVRes(yres)) {
-	    emsg = fxStr::format("High resolution document is not supported"
-		" by modem, image resolution %g lines/mm {E415}", yres);
-	    return (send_reformat);
-	}
-	if (clientInfo.getSupportsVRes() & VR_FINE) params.vr = VR_FINE;
-	else params.vr = VR_200X200;
-    } else
-	params.vr = VR_NORMAL;		// support required
+	    params.vr = VR_300X300;
+	} else if (yres >= 7.) {
+	    if (!((clientInfo.getSupportsVRes() & VR_FINE) || (clientInfo.getSupportsVRes() & VR_200X200))) {
+		emsg = fxStr::format("High resolution document is not supported"
+		    " by client, image resolution %g lines/mm {E414}", yres);
+		return (send_reformat);
+	    }
+	    if (!modem->supportsVRes(yres)) {
+		emsg = fxStr::format("High resolution document is not supported"
+		    " by modem, image resolution %g lines/mm {E415}", yres);
+		return (send_reformat);
+	    }
+	    if (clientInfo.getSupportsVRes() & VR_FINE) params.vr = VR_FINE;
+	    else params.vr = VR_200X200;
+	} else
+	    params.vr = VR_NORMAL;		// support required
+    }
 
     /*
      * Max page width depends on the resolution, so this must come after VR.

@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: FaxModem.c++ 965 2009-12-22 06:07:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -261,12 +261,12 @@ const Class2Params& FaxModem::getRecvParams() const	{ return params; }
  * chopping information for the current page.  The
  * page chop information is optional and always
  * precedes the page-handling information, so at least
- * 2+5+1 characters must be present.  The format of the
+ * 4+5+1 characters must be present.  The format of the
  * information is:
  *
- *   xxZcccxM
+ *   xxxxZccccM
  *
- * xx is the hex-encoded session parameters (see below),
+ * xxxx is the hex-encoded session parameters (see below),
  * M is a post-page message, and cccc is an optional 4-digit
  * hex encoding of the number of bytes to chop from the
  * encoded page data.  Note also that we only return the
@@ -276,12 +276,12 @@ const Class2Params& FaxModem::getRecvParams() const	{ return params; }
 u_int
 FaxModem::decodePageChop(const fxStr& pph, const Class2Params& params)
 {
-    if (params.ln == LN_INF && pph.length() >= 2+5+1 && pph[2] == 'Z') {
+    if (params.ln == LN_INF && pph.length() >= 4+5+1 && pph[2] == 'Z') {
 	char buf[5];
-	buf[0] = pph[2+1];
-	buf[1] = pph[2+2];
-	buf[2] = pph[2+3];
-	buf[3] = pph[2+4];
+	buf[0] = pph[4+1];
+	buf[1] = pph[4+2];
+	buf[2] = pph[4+3];
+	buf[3] = pph[4+4];
 	buf[4] = '\0';
 	return ((u_int) strtoul(buf, NULL, 16));
     } else
@@ -293,9 +293,9 @@ FaxModem::decodePageChop(const fxStr& pph, const Class2Params& params)
  * post-page message.  The string is assumed to have 3
  * characters per page of the form:
  *
- *   xxM
+ *   xxxxM
  *
- * where xx is a 2-digit hex encoding of the session
+ * where xxxx is a 4-digit hex encoding of the session
  * parameters required to send the page data and the M
  * the post-page message to use between this page and
  * the next page.  See FaxServer::sendPrepareFax for the
@@ -305,8 +305,8 @@ bool
 FaxModem::decodePPM(const fxStr& pph, u_int& ppm, fxStr& emsg)
 {
     const char* what;
-    if (pph.length() >= 3 && (pph[2] != 'Z' || pph.length() >= 2+5+1)) {
-	switch (pph[pph[2] == 'Z' ? 2+5 : 2+0]) {
+    if (pph.length() >= 5 && (pph[4] != 'Z' || pph.length() >= 4+5+1)) {
+	switch (pph[pph[4] == 'Z' ? 4+5 : 4+0]) {
 	case 'P': ppm = PPM_EOP; return (true);
 	case 'M': ppm = PPM_EOM; return (true);
 	case 'S': ppm = PPM_MPS; return (true);
@@ -493,6 +493,16 @@ FaxModem::supportsECM(u_int ec) const
 	return (modemParams.ec & BIT(ec)) != 0;
     else	// supports "any ecm"
 	return (modemParams.ec &~ BIT(EC_DISABLE)) != 0;
+}
+
+/*
+ * Return whether or not the modem supports
+ * the optional specified JPEG compression.
+ */
+bool
+FaxModem::supportsJPEG(u_int jp) const
+{
+    return (modemParams.jp & BIT(jp)) != 0;
 }
 
 /*

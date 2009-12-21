@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 892 2008-11-24 06:17:59Z faxguy $ */
+/*	$Id: FaxModem.h 965 2009-12-22 06:07:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -219,6 +219,7 @@ public:
     virtual bool supportsPageLength(u_int l) const;
     virtual bool supportsPolling() const;
     virtual bool supportsECM(u_int ec = 0) const;
+    virtual bool supportsJPEG(u_int jp = 0) const;
 
     virtual int selectSignallingRate(int br) const;
     u_int getBestSignallingRate() const;
