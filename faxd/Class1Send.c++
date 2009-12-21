@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 954 2009-11-10 01:14:54Z faxguy $ */
+/*	$Id: Class1Send.c++ 965 2009-12-22 06:07:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -34,6 +34,7 @@
 #include "ModemConfig.h"
 #include "HDLCFrame.h"
 #include "t.30.h"
+#include "itufaxicc.h"
 
 /*
  * Force the tty into a known flow control state.
@@ -429,10 +430,10 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 	    case FCF_PIP:		// ack, w/ operator intervention
 		countPage();		// bump page count
 		notifyPageSent(tif);	// update server
-		if (pph[2] == 'Z')
-		    pph.remove(0,2+5+1);// discard page-chop+handling info
+		if (pph[4] == 'Z')
+		    pph.remove(0,4+5+1);// discard page-chop+handling info
 		else
-		    pph.remove(0,3);	// discard page-handling info
+		    pph.remove(0,5);	// discard page-handling info
 		if (params.ec == EC_DISABLE) (void) switchingPause(emsg);
 		ntrys = 0;
 		if (morePages) {	// meaning, more pages in this file, but there may be other files
@@ -476,10 +477,10 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		    params.br = (u_int) -1;	// force retraining above
 		    countPage();		// bump page count
 		    notifyPageSent(tif);	// update server
-		    if (pph[2] == 'Z')
-			pph.remove(0,2+5+1);// discard page-chop+handling info
+		    if (pph[4] == 'Z')
+			pph.remove(0,4+5+1);// discard page-chop+handling info
 		    else
-			pph.remove(0,3);	// discard page-handling info
+			pph.remove(0,5);	// discard page-handling info
 		    ntrys = 0;
 		    if (ppr == FCF_PIP) {
 			emsg = "Procedure interrupt (operator intervention) {E129}";
@@ -1756,6 +1757,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
     protoTrace("SEND begin page");
 
     tstrip_t nstrips = TIFFNumberOfStrips(tif);
+    tsize_t stripsize = TIFFStripSize(tif);
     uint32 rowsperstrip = 0;
     if (nstrips > 0) {
 
@@ -1766,15 +1768,17 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	Class2Params newparams = params;
 	uint16 compression;
 	TIFFGetField(tif, TIFFTAG_COMPRESSION, &compression);
-	if (compression != COMPRESSION_CCITTFAX4) {  
-	    uint32 g3opts = 0;
-	    TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts);
-	    if ((g3opts & GROUP3OPT_2DENCODING) == DF_2DMR)
-		params.df = DF_2DMR;
-	    else
-		params.df = DF_1DMH;
-	} else
-	    params.df = DF_2DMMR;
+	if (!params.jp) {
+	    if (compression != COMPRESSION_CCITTFAX4) {  
+		uint32 g3opts = 0;
+		TIFFGetField(tif, TIFFTAG_GROUP3OPTIONS, &g3opts);
+		if ((g3opts & GROUP3OPT_2DENCODING) == DF_2DMR)
+		    params.df = DF_2DMR;
+		else
+		    params.df = DF_1DMH;
+	    } else
+		params.df = DF_2DMMR;
+	}
 
 	/*
 	 * Correct bit order of data if not what modem expects.
@@ -1792,21 +1796,14 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	 * Calculate total amount of space needed to read
 	 * the image into memory (in its encoded format).
 	 */
-	uint32* stripbytecount;
-	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
-	tstrip_t strip;
-	u_long totdata = 0;
-	for (strip = 0; strip < nstrips; strip++)
-	    totdata += stripbytecount[strip];
+        u_long totdata = nstrips * stripsize;
 	/*
 	 * Read the image into memory.
 	 */
 	u_char* data = new u_char[totdata+ts];
-	u_int off = ts;			// skip tag line slop area
-	for (strip = 0; strip < nstrips; strip++) {
-	    uint32 sbc = stripbytecount[strip];
-	    if (sbc > 0 && TIFFReadRawStrip(tif, strip, data+off, sbc) >= 0)
-		off += (u_int) sbc;
+	u_long off = ts;		// skip tag line slop area
+	for (tstrip_t strip = 0; strip < nstrips; strip++) {
+	    off += TIFFReadRawStrip(tif, strip, data+off, stripsize);
 	}
 	totdata -= pageChop;		// deduct trailing white space not sent
 	TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
@@ -1852,11 +1849,41 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	    params = newparams;		// revert back
 	}
 
-        /*
-         * correct broken Phase C (T.4) data if neccessary 
-         */
-	if (params.df < DF_2DMMR)
-	    correctPhaseCData(dp, totdata, fillorder, params, rowsperstrip);
+	if (params.jp) {
+	    /*
+	     * The image is in raw RGB data.  We now need to compress
+	     * with JPEG and put into the right colorspace (ITULAB).
+	     */
+	    uint32 w, h;
+	    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
+	    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+	    size_t outsize;
+	    char *outptr;
+	    FILE* out = open_memstream(&outptr, &outsize);
+	    if (out) {
+		char kk[256];
+		bool ok = convertRawRGBtoITULAB(dp, off, w, h, out, kk, 256);
+		fclose(out);
+		if (!ok || kk[0] != 0) {
+		    emsg = fxStr::format("Error converting image to JPEG data: %s", kk);
+		    protoTrace(emsg);
+		    return (false);
+		}
+		// JPEG compression succeeded, redirect pointers
+		dp = (u_char*) outptr;
+		totdata = outsize;
+	    } else {
+		emsg = "Could not open JPEG conversion output stream.";
+		protoTrace(emsg);
+		return (false);
+	    }
+	} else {
+	    /*
+	     * correct broken Phase C (T.4) data if neccessary 
+	     */
+	    if (params.df < DF_2DMMR)
+		correctPhaseCData(dp, totdata, fillorder, params, rowsperstrip);
+	}
 
 	/*
 	 * Send the page of data.  This is slightly complicated
@@ -1870,7 +1897,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	 * modem wants the data in MSB2LSB order, but for now we'll
 	 * avoid the temptation to optimize.
 	 */
-	if (params.df <= DF_2DMMR && fillorder != FILLORDER_LSB2MSB) {
+	if (!params.jp && params.df <= DF_2DMMR && fillorder != FILLORDER_LSB2MSB) {
 	    TIFFReverseBits(dp, totdata);
 	}
 

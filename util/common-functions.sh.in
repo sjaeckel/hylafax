@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 939 2009-09-08 03:18:43Z faxguy $
+#    $Id: common-functions.sh.in 965 2009-12-22 06:07:31Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -271,6 +271,24 @@ gs2fax()
 	. etc/FaxModify
     fi
 
+    if [ "$color" = "yes" ]; then
+	# We should prepare a color image - possibly in addition to monochrome.
+	# Square resolutions are mandatory per ITU T.30 Table 2 Notes 25 and 34.
+	# For now we only deal with 200x200 to keep things easy.
+	outfile=$out
+	if [ "$device" != "tiff24nc" ]; then
+	    # Indicates color-only
+	    outfile="$out.color"
+	fi
+	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
+	    -dBATCH -r203.29x203.29 "-sOutputFile=$outfile" $FIXEDWIDTH $files
+	if [ "$device" = "tiff24nc" ]; then
+	    $RM -f "$out.color"
+	    return
+	fi
+    else
+	$RM -f "$out.color"
+    fi
     if [ "$DITHERING" = "gs-stocht" ]; then
 	$CAT $files | $PS -q \
 	    -sDEVICE=$device \

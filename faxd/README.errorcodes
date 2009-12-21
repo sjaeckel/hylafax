@@ -223,6 +223,16 @@ E416      : Client does not support document page width, max remote page width %
 E417      : Modem does not support document page width, max page width %g pixels, image width %lu pixels
 E418      : Client does not support document page length, max remote page length %d mm, image length %lu rows (%.2f mm)
 E419      : Modem does not support document page length, max page length %s mm, image length %lu rows (%.2f mm)
+E420      : Requested JPEG parameters are unsupported.
+E421      : Invalid compression for color JPEG fax request.
+E422      : Invalid photometric for color JPEG fax request.
+E423      : Remote does not support JPEG fax request.
+E424      : Modem does not support JPEG fax request.
+E425      : JPEG fax request requires ECM support.
+E426      : Modem does not support JPEG fax resolution.
+E427      : Remote does not support JPEG fax resolution.
+E428      : JPEG fax requires square resolutions.
+E429      : Unsupported JPEG fax resolution %g l/mm.
 
 E500-E599 : paging failures
 E500      : No initial ID response from paging central

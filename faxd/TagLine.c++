@@ -1,4 +1,4 @@
-/*	$Id: TagLine.c++ 743 2008-01-01 01:21:42Z faxguy $ */
+/*	$Id: TagLine.c++ 965 2009-12-22 06:07:31Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -144,8 +144,14 @@ bool
 FaxModem::setupTagLineSlop(const Class2Params& params)
 {
     if (tagLineFont->isReady() && tagLineFields > 0) {
-	tagLineSlop = (tagLineFont->fontHeight()+MARGIN_TOP+MARGIN_BOT+SLOP_LINES) * 
-	    howmany(params.pageWidth(),8);
+	if (params.jp) {
+	    // color fax come to us decoded already, no slop needed 
+	    // as we write the tagline directly onto the bitmap.
+	    tagLineSlop = 0;
+	} else {
+	    tagLineSlop = (tagLineFont->fontHeight()+MARGIN_TOP+MARGIN_BOT+SLOP_LINES) * 
+		howmany(params.pageWidth(),8);
+	}
 	return (true);
     } else {
 	tagLineSlop = 0;
@@ -234,7 +240,8 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params,
      *     because the number of consecutive 2D-encoded rows is bounded
      *     by the K parameter in the CCITT spec.
      */
-    u_int lpr = howmany(w, sizeof(u_long)*8);		// longs/raster row
+    u_int bpl = sizeof(u_long) * 8;			// bits per u_long
+    u_int lpr = howmany(w, bpl);			// longs/raster row
     u_long* raster = new u_long[(h+SLOP_LINES)*lpr];	// decoded raster
     memset(raster,0,(h+SLOP_LINES)*lpr*sizeof (u_long));// clear raster to white
     /*
@@ -349,7 +356,6 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params,
 		 * ...
 		 * 11223344556677889900
 		 */
-		u_int bpl = sizeof(u_long) * 8;		// bits per u_long
 		for (u_int nl = lpr/2 - 1; nl ; nl--) {
 		    // make 2 longs out of 1 (ABCD -> AABB CCDD)
 		    int pos = 0;
@@ -398,6 +404,30 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params,
 	    }
 	}
 	memset(l2, 0, MARGIN_BOT*lpr*sizeof (u_long));
+    }
+    if (params.jp) {
+	/*
+	 * The image buffer is already a decoded bitmap.  
+	 * So we need to put the raster onto the bitmap now.
+	 *
+	 * First white-out the image behind the text.
+	 * Then make a pass and put the text on in black.
+	 */
+	memset(buf, 0xFF, th*w*3);
+
+	u_char* braster = (u_char*) raster;	// raster is byte-aligned not long-aligned
+	u_int p;
+	for (l = 0; l < (th*w)/8; l++) {
+	    if (braster[l]) {
+		for (p = 0; p < 8; p++) {
+		    if (braster[l] & (1 << (7-p))) {
+			// (l * 8 + p) gives the pixel number
+			memset((buf+(l*8+p)*3), 0x00, 3);	// set it black
+		    }
+		}
+	    }
+	}
+	return (buf);
     }
     MemoryDecoder dec(buf, w, totdata, fillorder, params.is2D(), (params.df == DF_2DMMR));
     u_char* encbuf = dec.encodeTagLine(raster, th, tagLineSlop);   

@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: Class2Params.c++ 965 2009-12-22 06:07:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -698,20 +698,21 @@ Class2Params::setRes(u_int xres, u_int yres)
 fxStr
 Class2Params::encodePage() const
 {
-    int v = (vr&3) | ((wd&7)<<1) | ((ln&3)<<4) | ((df&3)<<6);
-    return fxStr(v, "%02x");
+    int v = (vr&3) | ((wd&7)<<2) | ((ln&3)<<5) | ((df&7)<<7) | ((jp&7)<<10);
+    return fxStr(v, "%04x");
 }
 
 void
 Class2Params::decodePage(const char* s)
 {
-    u_int v = (u_int) strtoul(s, NULL, 16);
-    vr = (v>>0) & 1;
-    wd = (v>>1) & 7;
-    ln = (v>>4) & 3;
+    int v = (int) strtoul(s, NULL, 16);
+    vr = (v>>0) & 3;
+    wd = (v>>2) & 7;
+    ln = (v>>5) & 3;
     if (ln == LN_LET)			// force protocol value
 	ln = LN_A4;
-    df = (v>>6) & 3;
+    df = (v>>7) & 7;
+    jp = (v>>10) & 7;
 }
 
 u_int

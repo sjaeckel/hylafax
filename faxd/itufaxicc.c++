@@ -1,4 +1,4 @@
-/* $Id: itufaxicc.c++ 962 2009-12-05 21:08:35Z faxguy $ */
+/* $Id: itufaxicc.c++ 965 2009-12-22 06:07:31Z faxguy $ */
 //  Copyright (C) 2009 Marti Maria
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
@@ -22,6 +22,7 @@
 
 // uncomment this symbol to generate a minimal test application *****************
 //#define MAKE_DEMO 1
+//#define MAKE_DEMO2 1
 // ******************************************************************************
 
 #include "lcms.h"
@@ -318,9 +319,43 @@ bool DoTransform(cmsHTRANSFORM hXForm, j_decompress_ptr Decompressor, j_compress
 	return TRUE;
 }
 
+// Apply a color transform to convert from sRGB to ITULab
+static
+bool DoCompression(cmsHTRANSFORM hXForm, JSAMPLE* src, tsize_t srclen, uint32 width, j_compress_ptr Compressor)
+{       
+	JSAMPROW ScanLineOut;
+	jpeg_start_compress(Compressor, TRUE);
+
+	SetITUFax(Compressor);
+
+	JSAMPROW ScanLineIn;
+	ScanLineOut = (JSAMPROW) malloc(Compressor ->image_width * Compressor ->num_components);
+	if (ScanLineOut == NULL) {
+		return false;
+	}
+
+	tsize_t pos = 0;
+	while (pos < srclen) {
+
+		ScanLineIn = src + pos; 
+
+		cmsDoTransform(hXForm, ScanLineIn, ScanLineOut, width);
+
+		jpeg_write_scanlines(Compressor, &ScanLineOut, 1);
+
+		pos += width*3;
+	}
+
+	free(ScanLineOut);
+
+	jpeg_finish_compress(Compressor);
+
+	return TRUE;
+}
+
 
 /*
-This function accepts a single JPEG image oat src and converts it from ITULAB colorspace sRGB.  
+This function accepts a single JPEG image at src and converts it from ITULAB colorspace sRGB.  
 In the source image the CIE Standard Illuminant D50 is used in the colour image data as 
 specified in ITU-T Rec. T.42.
 In the source image the colour image data are represented using the default gamut range
@@ -391,7 +426,7 @@ bool convertJPEGfromITULAB(FILE* src, FILE* dst, char* emsg, size_t max_emsg_byt
 
 
 /*
-This function accepts a single sRGB JPEG image at src and converts it to ITULAB colorspace.  
+This function accepts a single sRGB JPEG image at src and converts it to ITULAB colorspace 
 In the destination image the CIE Standard Illuminant D50 is used in the colour image data 
 as specified in ITU-T Rec. T.42. In the destination image the colour image data are 
 represented using the default gamut range as specified in ITU-T Rec. T.42.  
@@ -438,8 +473,53 @@ bool convertJPEGtoITULAB( FILE* src, FILE* dst, char* emsg, size_t max_emsg_byte
 	return true;
 }
 
+/*
+This function accepts a single raw RGB image at src and converts it to ITULAB colorspace.  
+In the destination image the CIE Standard Illuminant D50 is used in the colour image data 
+as specified in ITU-T Rec. T.42. In the destination image the colour image data are 
+represented using the default gamut range as specified in ITU-T Rec. T.42.  
+The G3FAX0 app header is added from the JPEG data as instructed by ITU T.4 Annex E.  
+The function operation fills dst stream and returns true if it succeeded or false if an 
+error occurred.  If an error occurred, then the error message should be found in emsg.
+*/
 
+bool convertRawRGBtoITULAB( tdata_t src, tsize_t srclen, uint32 width, uint32 height, FILE* dst, char* emsg, size_t max_emsg_bytes )
+{
+	jpeg_compress_struct   Compressor;
 
+	cmsSetErrorHandler(lcms_error_exit);
+	ErrorMessage[0] = 0;
+	*emsg = 0;
+
+	if (setjmp(State)) {
+		strncpy(emsg, ErrorMessage, max_emsg_bytes-1);
+		emsg[max_emsg_bytes-1] = 0;
+		return false;
+	}
+
+	if (!OpenOutput(dst, &Compressor, JCS_YCbCr)) return false;
+
+	// size, resolution, etc
+	Compressor.image_width = width;
+	Compressor.image_height = height;
+	Compressor.input_components = 3;
+	Compressor.in_color_space = JCS_YCbCr;		// lcms takes it from RGB to ITULAB (YCbCr)
+
+	cmsHPROFILE hITUFax = CreatePCS2ITU_ICC();
+	cmsHPROFILE hsRGB   = cmsCreate_sRGBProfile();
+
+	cmsHTRANSFORM hXform = cmsCreateTransform(hsRGB, TYPE_RGB_8, hITUFax, TYPE_Lab_8,  INTENT_PERCEPTUAL, cmsFLAGS_NOWHITEONWHITEFIXUP);
+
+	if (!DoCompression(hXform, (JSAMPLE*) src, srclen, width, &Compressor)) return false;
+
+	cmsDeleteTransform(hXform);
+	cmsCloseProfile(hITUFax);
+	cmsCloseProfile(hsRGB);
+
+	jpeg_destroy_compress(&Compressor);
+
+	return true;
+}
 
 #ifdef MAKE_DEMO
 int main()
@@ -466,6 +546,94 @@ int main()
 
 
 	printf("ramps.jpg ==> itu2.jpg Status='%s'\n", kk);
+
+	// Back to sRGB
+	in = fopen("itu2.jpg", "rb");
+	out = fopen("srgb.jpg", "wb");   
+	convertJPEGfromITULAB(in, out, kk, 256 );
+	fclose(in); fclose(out);
+
+	printf("itu2.jpg ==> srgb.jpg Status='%s'\n", kk);
+
+	printf("Done!\n");
+	return 0;
+}
+#endif
+
+#ifdef MAKE_DEMO2
+int main()
+{
+	FILE *in, *out;
+	char kk[256];
+
+	printf("Demo of IT/Lab library.\n");
+	printf("It will convert a single-strip uncompressed RGB TIFF\n");
+	printf("called 'ramps.tif' to ITU/Lab itu2.jpeg.'\n");
+	printf("Any error will be printed on screen\n");
+
+	// sRGB to ITU  
+	TIFF* tif = TIFFOpen("ramps.tif", "r");
+	if (!tif) {
+	   printf("Unable to open 'ramps.tif'!\n");
+	   return 1;
+	}
+	tstrip_t nstrips = TIFFNumberOfStrips(tif);
+	tsize_t stripsize = TIFFStripSize(tif);
+	uint32 w, h;
+	TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
+	TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+
+        u_long totdata = nstrips * stripsize;
+        /*
+         * Read the image into memory.
+         */
+        tstrip_t strip;
+        u_char* data = new u_char[totdata];
+        u_long off = 0;
+        for (strip = 0; strip < nstrips; strip++) {
+            off += TIFFReadRawStrip(tif, strip, data+off, stripsize);
+        }
+	printf("nstrips: %d, totdata: %d, off: %d\n", nstrips, totdata, off);
+
+
+	/*
+	 * Here's just a simple sample on how to write the data to JPEG without lcms.
+	 */ 
+	FILE* outfile = fopen("test.jpeg", "wb");
+	if (outfile) {
+		struct jpeg_compress_struct cinfo;
+		struct jpeg_error_mgr       jerr;
+ 
+		cinfo.err = jpeg_std_error(&jerr);
+		jpeg_create_compress(&cinfo);
+		jpeg_stdio_dest(&cinfo, outfile);
+ 
+		cinfo.image_width      = w;
+		cinfo.image_height     = h;
+		cinfo.input_components = 3;
+		cinfo.in_color_space   = JCS_RGB;
+
+		jpeg_set_defaults(&cinfo);
+		/*set the quality [0..100]  */
+		jpeg_set_quality (&cinfo, 75, true);
+		jpeg_start_compress(&cinfo, true);
+
+		JSAMPROW row_pointer;          /* pointer to a single row */
+ 
+		while (cinfo.next_scanline < cinfo.image_height) {
+			row_pointer = (JSAMPROW) &data[cinfo.next_scanline*3*w];
+			jpeg_write_scanlines(&cinfo, &row_pointer, 1);
+		}
+		jpeg_finish_compress(&cinfo);
+
+		fclose(outfile);
+	}
+
+	out = fopen("itu2.jpg", "wb");
+	convertRawRGBtoITULAB(data, off, w, h, out, kk, 256);
+	TIFFClose(tif); fclose(out);
+
+	printf("ramps.tif ==> itu2.jpg Status='%s'\n", kk);
 
 	// Back to sRGB
 	in = fopen("itu2.jpg", "rb");

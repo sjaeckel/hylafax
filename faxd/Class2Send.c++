@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 686 2007-11-04 01:45:30Z faxguy $ */
+/*	$Id: Class2Send.c++ 965 2009-12-22 06:07:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -294,10 +294,10 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
                 ignore:
 		    countPage();	// bump page count
 		    notifyPageSent(tif);// update server
-		    if (pph[2] == 'Z')
-			pph.remove(0,2+5+1);	// discard page-chop+handling
+		    if (pph[4] == 'Z')
+			pph.remove(0,4+5+1);	// discard page-chop+handling
 		    else
-			pph.remove(0,3);	// discard page-handling info
+			pph.remove(0,5);	// discard page-handling info
 		    ntrys = 0;
 		    if (morePages) {
 			if (ppr == PPR_PIP) {

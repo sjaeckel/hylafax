@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 965 2009-12-22 06:07:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -614,7 +614,9 @@ faxQueueApp::unrefDoc(const fxStr& file)
 	 */
 	l = 0;
 	do {
-	    (void) Sys::unlink(files.token(l, ' '));
+	    fxStr filename = files.token(l, ' ');
+	    (void) Sys::unlink(filename);
+	    (void) Sys::unlink(filename|".color");
 	} while (l < files.length());
 	pendingDocs.remove(doc);
     }
@@ -704,9 +706,9 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
     int jcdf = job.getJCI().getDesiredDF();
     if (jcdf != -1) req.desireddf = jcdf;
     if (req.usecolor) params.jp = JP_COLOR;
-    if (req.usecolor && req.desireddf > DF_JBIG && req.desireddf <= DF_JBIG + JP_COLOR) {
+    if (req.usecolor && req.desireddf > DF_JBIG) {
 	// code for JPEG-only fax...
-	params.df = req.desireddf;
+	params.df = (u_int) -1;
     } else if (req.desireddf == DF_2DMMR && (req.desiredec != EC_DISABLE) && 
 	use2D && job.modem->supportsMMR() &&
 	 (! info.getCalledBefore() || info.getSupportsMMR()) )
@@ -744,8 +746,10 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
 		 */
 		fitem.op++;			// NB: assumes order of enum
 		req.insertFax(i+1, tmp);
-	    } else
+	    } else {
 		Sys::unlink(tmp);		// bail out
+		Sys::unlink(tmp|".color");
+	    }
 	    updateQFile = true;
 	    break;
 	}
@@ -896,7 +900,7 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 	}
 	next = params;
 	setupParams(tif, next, info);
-	if (params.df != (u_int) -1) {
+	if (params.df != (u_int) -1 || params.jp != (u_int) -1) {
 	    /*
 	     * The pagehandling string has:
 	     * 'M' = EOM, for when parameters must be renegotiated
@@ -937,9 +941,13 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 void
 faxQueueApp::setupParams(TIFF* tif, Class2Params& params, const FaxMachineInfo& info)
 {
+    params.jp = 0;
     uint16 compression = 0;
     (void) TIFFGetField(tif, TIFFTAG_COMPRESSION, &compression);
-    if (compression == COMPRESSION_CCITTFAX4) {
+    if (compression == COMPRESSION_NONE) {
+	params.jp = JP_COLOR;
+	params.df = (u_int) -1;
+    } else if (compression == COMPRESSION_CCITTFAX4) {
 	params.df = DF_2DMMR;
     } else {
 	uint32 g3opts = 0;
@@ -1084,9 +1092,13 @@ faxQueueApp::convertDocument(Job& job,
 	     */
 	     jobError(job, "Removing old image file: %s (run faxqclean more often)", (const char*) outFile);
 	     (void) Sys::unlink(outFile);
+	     (void) Sys::unlink(outFile|".color");
 	}
     }
     int fd = Sys::open(outFile, O_RDWR|O_CREAT|O_EXCL, 0600);
+    int colorfd = -1;
+    if (params.jp)
+	colorfd = Sys::open(outFile|".color", O_RDWR|O_CREAT|O_EXCL, 0600);
     if (fd == -1) {
 	if (errno == EEXIST) {
 	    /*
@@ -1124,6 +1136,7 @@ faxQueueApp::convertDocument(Job& job,
 	    jobError(job, "CONVERT DOCUMENT: %s: %m", (const char*) emsg);
     } else {
 	(void) flock(fd, LOCK_EX);		// XXX check for errors?
+	if (params.jp) (void) flock(colorfd, LOCK_EX);
 	/*
 	 * Imaged document does not exist, run the document converter
 	 * to generate it.  The converter is invoked according to:
@@ -1156,8 +1169,8 @@ faxQueueApp::convertDocument(Job& job,
 	if (useUnlimitedLN) argv[ac++] = "-U";
 	if (params.jp == JP_COLOR)
 	    argv[ac++] = "-color";
-	// When df includes JP_COLOR, then it's a color-only job.
-	if (params.df != DF_JBIG + JP_COLOR) {
+	// When df is -1, then it's a color-only job.
+	if (params.df != (u_int) -1) {
 	    if (params.df == DF_2DMMR)
 		argv[ac++] = "-3";
 	    else
@@ -1202,6 +1215,7 @@ faxQueueApp::convertDocument(Job& job,
 	} else if (status == Job::rejected)
 	    jobError(job, "SEND REJECT: %s", (const char*) emsg);
 	(void) Sys::close(fd);		// NB: implicit unlock
+	if (params.jp) (void) Sys::close(colorfd);	// NB: implicit unlock
     }
     return (status);
 }
@@ -3034,6 +3048,7 @@ faxQueueApp::deleteRequest(Job& job, FaxRequest& req, JobStatus why,
 	    case FaxRequest::send_pcl:
 	    case FaxRequest::send_pcl_saved:
 		Sys::unlink(fitem.item);
+		Sys::unlink(fitem.item|".color");
 		break;
 	    }
 	}

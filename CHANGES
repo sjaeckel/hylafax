@@ -1,7 +1,8 @@
-#	$Id: CHANGES 961 2009-12-05 21:06:39Z faxguy $	
+#	$Id: CHANGES 965 2009-12-22 06:07:31Z faxguy $	
 
 New Changes
 
+* add support for sending color faxes (8, 21 Dec 2009)
 * use genfontmap.ps to create Fontmap.HylaFAX from faxsetup (5 Dec 2009)
 * add LogSend and LogRecv modem configuration options (3 Dec 2009)
 * use LittleCMS to convert received color faxes from ITULAB (3 Dec 2009)

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: tiff2fax.sh.in 755 2008-01-11 20:12:59Z faxguy $
+#	$Id: tiff2fax.sh.in 965 2009-12-22 06:07:31Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -58,6 +58,7 @@ EOF
 
 CHECK=$SBIN/tiffcheck			# program to check acceptability
 PS2FAX=bin/ps2fax			# for hard conversions
+PDF2FAX=bin/pdf2fax			# for color conversions
 TIFFCP=$TIFFBIN/tiffcp			# part of the TIFF distribution
 TIFF2PS=$TIFFBIN/tiff2ps		# ditto
 TIFFINFO=$TIFFBIN/tiffinfo		# ditto
@@ -65,9 +66,11 @@ TIFFINFO=$TIFFBIN/tiffinfo		# ditto
 jobid=
 simple=no
 out=foo.tif				# default output filename
-df=1d					# default output is 1D-encoded
+df=					# to know if it was never specified
 fil=
 opt=
+color=no				# default to monochrome-only
+
 while test $# != 0
 do case "$1" in
     -i)	shift; jobid=$1;;
@@ -78,6 +81,7 @@ do case "$1" in
     -1) opt="$opt $1"; df="g3:1d" ;;
     -2) opt="$opt $1"; df="g3:2d" ;;
     -3) opt="$opt $1"; df=g4 ;;
+    -color) color=yes;;
     -m) shift;;				# NB: not implemented
     -U) opt="$opt $1" ;;
     -S) simple=yes;;
@@ -85,6 +89,7 @@ do case "$1" in
     esac
     shift
 done
+
 test -z "$fil" && {
     echo "$0: No input file specified."
     exit 255
@@ -101,6 +106,19 @@ fi
 #
 if [ -f etc/FaxModify ]; then
     . etc/FaxModify
+fi
+
+if [ "$color" = "yes" ]; then
+    # Hand it all off to pdf2fax.  We use PDF instead of Postscript
+    # because using PDF requires no decompression at this step in 
+    # the conversion.
+    $TIFF2PDF -o $fil.pdf $fil
+    $PDF2FAX -o $out -i "$jobid" $opt -color $fil.pdf
+    ok=$?
+    $RM -f $fil.pdf
+    exit $?
+else
+    $RM -f "$out.color"
 fi
 
 #
