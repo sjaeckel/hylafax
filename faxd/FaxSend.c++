@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 965 2009-12-22 06:07:31Z faxguy $ */
+/*	$Id: FaxSend.c++ 967 2009-12-23 01:08:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -906,7 +906,7 @@ FaxServer::sendSetupParams1(TIFF* tif,
 	    emsg = "JPEG fax requires square resolutions. {E428}";
 	    return (send_reformat);
 	}
-	if (xres < 7.6 || xres > 8.1) {
+	if (xres < 7.6 || xres > 8.3) {
 	    emsg = fxStr::format("Unsupported JPEG fax resolution %g l/mm. {E429}", xres);
 	    return (send_reformat);
 	}
