@@ -1,4 +1,4 @@
-/* $Id: itufaxicc.c++ 965 2009-12-22 06:07:31Z faxguy $ */
+/* $Id: itufaxicc.c++ 966 2009-12-23 01:07:59Z faxguy $ */
 //  Copyright (C) 2009 Marti Maria
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
@@ -24,6 +24,9 @@
 //#define MAKE_DEMO 1
 //#define MAKE_DEMO2 1
 // ******************************************************************************
+
+#include "config.h"
+#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
 
 #include "lcms.h"
 #include "itufaxicc.h"
@@ -646,4 +649,6 @@ int main()
 	printf("Done!\n");
 	return 0;
 }
+#endif
+
 #endif
