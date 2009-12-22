@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 965 2009-12-22 06:07:31Z faxguy $ */
+/*	$Id: Class1Send.c++ 966 2009-12-23 01:07:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -29,6 +29,7 @@
  *
  * Send protocol.
  */
+#include "config.h"
 #include "Sys.h"
 #include "Class1.h"
 #include "ModemConfig.h"
@@ -1850,6 +1851,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	}
 
 	if (params.jp) {
+#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
 	    /*
 	     * The image is in raw RGB data.  We now need to compress
 	     * with JPEG and put into the right colorspace (ITULAB).
@@ -1873,10 +1875,13 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 		dp = (u_char*) outptr;
 		totdata = outsize;
 	    } else {
+#endif
 		emsg = "Could not open JPEG conversion output stream.";
 		protoTrace(emsg);
 		return (false);
+#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
 	    }
+#endif
 	} else {
 	    /*
 	     * correct broken Phase C (T.4) data if neccessary 
