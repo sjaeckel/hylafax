@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 857 2008-07-16 16:17:39Z faxguy $ */
+/*	$Id: Class1.c++ 968 2009-12-31 03:26:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1675,6 +1675,7 @@ Class1Modem::waitFor(ATResponse wanted, long ms)
 	case AT_FCERROR:
 	case AT_FRH3:
 	case AT_OK:
+	case AT_CONNECT:
 	    return (false);
 	}
     }
