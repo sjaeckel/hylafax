@@ -1,6 +1,10 @@
-#	$Id: CHANGES 965 2009-12-22 06:07:31Z faxguy $	
+#	$Id: CHANGES 968 2009-12-31 03:26:14Z faxguy $	
 
 New Changes
+
+* in Class 1 if CONNECT is unexpectely received, it's an error (30 Dec 2009)
+
+(5.4.0)
 
 * add support for sending color faxes (8, 21 Dec 2009)
 * use genfontmap.ps to create Fontmap.HylaFAX from faxsetup (5 Dec 2009)
