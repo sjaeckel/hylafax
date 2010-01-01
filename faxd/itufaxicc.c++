@@ -1,4 +1,4 @@
-/* $Id: itufaxicc.c++ 966 2009-12-23 01:07:59Z faxguy $ */
+/* $Id: itufaxicc.c++ 969 2010-01-01 20:44:49Z faxguy $ */
 //  Copyright (C) 2009 Marti Maria
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
@@ -380,26 +380,26 @@ bool convertJPEGfromITULAB(FILE* src, FILE* dst, char* emsg, size_t max_emsg_byt
 
 		strncpy(emsg, ErrorMessage, max_emsg_bytes-1);
 		emsg[max_emsg_bytes-1] = 0;
-		if (emsg[0] == 0) emsg = "Unspecified libjpeg error.";
+		if (emsg[0] == 0) emsg = (char*) "Unspecified libjpeg error.";
 		return false;
 	}
 
 
 	// Create input decompressor. 
 	if (!OpenInput(src, &Decompressor, JCS_YCbCr)) {
-		if (emsg[0] == 0) emsg = "Could not create input decompressor.";
+		if (emsg[0] == 0) emsg = (char*) "Could not create input decompressor.";
 		return false;
 	}
 
 	// Sanity check
 	if (!IsITUFax(Decompressor.marker_list)) {
-		if (emsg[0] == 0) emsg = "Is not ITUFAX.";
+		if (emsg[0] == 0) emsg = (char*) "Is not ITUFAX.";
 		return false;
 	}
 
 	// Create dest compressor
 	if (!OpenOutput(dst, &Compressor, JCS_RGB)) {
-		if (emsg[0] == 0) emsg = "Could not create output compressor.";
+		if (emsg[0] == 0) emsg = (char*) "Could not create output compressor.";
 		return false;
 	}
 
@@ -413,7 +413,7 @@ bool convertJPEGfromITULAB(FILE* src, FILE* dst, char* emsg, size_t max_emsg_byt
 	cmsHTRANSFORM hXform = cmsCreateTransform( hITUFax, TYPE_Lab_8, hsRGB, TYPE_RGB_8, INTENT_PERCEPTUAL, cmsFLAGS_NOWHITEONWHITEFIXUP);
 
 	if (!DoTransform(hXform, &Decompressor, &Compressor, false)) {
-		if (emsg[0] == 0) emsg = "Could not perform transform.";
+		if (emsg[0] == 0) emsg = (char*) "Could not perform transform.";
 		return false;
 	}
 
