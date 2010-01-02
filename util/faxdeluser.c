@@ -1,4 +1,4 @@
-/*	$Id: faxdeluser.c 216 2006-06-22 15:06:36Z faxguy $ */
+/*	$Id: faxdeluser.c 970 2010-01-03 04:54:57Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *
@@ -105,7 +105,7 @@ main(int argc, char** argv)
         return -1;
     }
     pw = getpwnam(FAX_USER);
-    if (pw == NULL || chown(hostfile, pw->pw_uid, pw->pw_uid)) {
+    if (pw == NULL || chown(hostfile, pw->pw_uid, pw->pw_gid)) {
         perror("Error writing hosts file");
         return -1;
     }
