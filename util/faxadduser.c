@@ -1,4 +1,4 @@
-/*	$Id: faxadduser.c 274 2006-08-12 00:26:53Z faxguy $ */
+/*	$Id: faxadduser.c 970 2010-01-03 04:54:57Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *
@@ -31,6 +31,9 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <time.h>
+#include <pwd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "config.h"
 #include "port.h"
@@ -56,7 +59,9 @@ main(int argc, char** argv)
 {
     char buff[256];
     char salt_buff[2];
+    char newhostfile[256];
     FILE* hf = NULL;
+    FILE* nhf = NULL;
     int c;
     int salt;
     char* hostfile = FAX_SPOOLDIR "/" FAX_PERMFILE;
@@ -64,6 +69,7 @@ main(int argc, char** argv)
     char* adminword = NULL;
     char* hostname = NULL;
     int uid = FAX_DEFAULT_UID;
+    struct passwd* pw;
     
     while ((c = getopt(argc, argv, "a:f:h:p:u:")) != -1) {
         switch (c) {
@@ -88,37 +94,61 @@ main(int argc, char** argv)
             break;
         }
     }
-    hf = fopen(hostfile, "a+");
-    if (hf == NULL) {
-        snprintf(buff, sizeof(buff), "Error - cannot open hosts file: %s", hostfile);
+    snprintf(newhostfile, sizeof(newhostfile), "%s.%i", hostfile, (int)getpid());
+    umask(077);
+    nhf = fopen(newhostfile, "w");
+    if (nhf == NULL) {
+        snprintf(buff, sizeof(buff), "Error - cannot open hosts file: %s", newhostfile);
         perror(buff);
         return 0;
     }
     srand(time(NULL));
     while (optind < argc) {
-        fprintf(hf, "^%s@", argv[optind++]);
-	if (hostname != NULL) fprintf(hf, "%s$", hostname);
+        fprintf(nhf, "^%s@", argv[optind++]);
+	if (hostname != NULL) fprintf(nhf, "%s$", hostname);
         if (uid != FAX_DEFAULT_UID) {
-            fprintf(hf, ":%i", uid);
+            fprintf(nhf, ":%i", uid);
         } else if (password != NULL || adminword != NULL) {
-            fprintf(hf, ":");
+            fprintf(nhf, ":");
         }
         if (password != NULL) {
             salt = (int)(4096.0 * rand() / (RAND_MAX + 1.0));
             salt_buff[0] = passwd_salts[salt / 64];
             salt_buff[1] = passwd_salts[salt % 64];
-            fprintf(hf, ":%s", crypt(password, salt_buff));
+            fprintf(nhf, ":%s", crypt(password, salt_buff));
         } else if (adminword != NULL) {
-            fprintf(hf, ":");
+            fprintf(nhf, ":");
         }
         if (adminword != NULL) {
             salt = (int)(4096.0 * rand() / (RAND_MAX + 1.0));
             salt_buff[0] = passwd_salts[salt / 64];
             salt_buff[1] = passwd_salts[salt % 64];
-            fprintf(hf, ":%s", crypt(adminword, salt_buff));
+            fprintf(nhf, ":%s", crypt(adminword, salt_buff));
         }
-        fprintf(hf, "\n");
+        fprintf(nhf, "\n");
+    }
+    if ((hf = fopen(hostfile, "r+")) == NULL) {
+        snprintf(buff, sizeof(buff), "Error - cannot open file: %s", hostfile);
+        perror(buff);
+        return -1;
+    }
+    while (fgets(buff, sizeof(buff), hf)) {
+        if (fprintf(nhf, "%s", buff) < 1) {
+            snprintf(buff, sizeof(buff), "Error writing to file %s", newhostfile);
+            perror(buff);
+            return -1;
+        }
     }
     fclose(hf);
+    fclose(nhf);
+    if (rename(newhostfile, hostfile)) {
+        perror("Error writing hosts file");
+        return -1;
+    }
+    pw = getpwnam(FAX_USER);
+    if (pw == NULL || chown(hostfile, pw->pw_uid, pw->pw_gid)) {
+        perror("Error writing hosts file");
+        return -1;
+    }
     return 0;
 }
