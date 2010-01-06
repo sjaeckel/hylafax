@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 912 2009-02-17 01:42:42Z faxguy $ */
+/*	$Id: ClassModem.c++ 971 2010-01-07 05:01:04Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -1148,6 +1148,7 @@ ClassModem::waitFor(ATResponse wanted, long ms)
 	case AT_RING:
 	case AT_FHNG:
 	    modemTrace("MODEM %s", ATresponses[response]);
+	case AT_CONNECT:
 	case AT_OK:
 	    /*
 	     * If we get OK and aren't expecting it then we're back in command-mode
