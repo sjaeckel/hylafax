@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 959 2009-12-04 04:55:53Z faxguy $
+#	$Id: configure 972 2010-01-16 23:07:38Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 959 $"
+	echo "This is HylaFAX configure $Revision: 972 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -5079,6 +5079,7 @@ if [ "$MAKEDEPINCLUDE" != "sinclude" ]; then
 	man
 	etc
 	config
+	port
 	"
     test $GS = yes	&& DEPEND="$DEPEND gs"
     test $SGI2FAX = yes	&& DEPEND="$DEPEND sgi2fax"
