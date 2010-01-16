@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 968 2009-12-31 03:26:14Z faxguy $ */
+/*	$Id: Class1.c++ 973 2010-01-17 05:23:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -532,7 +532,7 @@ Class1Modem::sendClass1Data(const u_char* data, u_int cc,
     const u_char* bitrev, bool eod, long ms)
 {
     bool ok = putModemDLEData(data, cc, bitrev, ms, conf.doPhaseCDebug);
-    if (eod || abortRequested()) {
+    if (!wasTimeout() && (eod || abortRequested())) {
 	u_char buf[2];
 	buf[0] = DLE;
 	buf[1] = ETX;

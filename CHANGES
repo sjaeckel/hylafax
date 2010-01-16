@@ -1,7 +1,8 @@
-#	$Id: CHANGES 970 2010-01-03 04:54:57Z faxguy $	
+#	$Id: CHANGES 973 2010-01-17 05:23:15Z faxguy $	
 
 New Changes
 
+* fix a potential hang in sending Class 1 data if the modem is hung (16 Jan 2010)
 * fix faxdeluser from changing the gid of hosts.hfaxd (2 Jan 2010)
 * change faxadduser to add new entries to the top of hosts.hfaxd (2 Jan 2010)
 * in Class 1 if CONNECT is unexpectely received, it's an error (30 Dec 2009)
