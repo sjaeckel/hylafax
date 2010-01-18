@@ -1,7 +1,8 @@
-#	$Id: CHANGES 974 2010-01-18 09:50:46Z faxguy $	
+#	$Id: CHANGES 975 2010-01-18 10:21:35Z faxguy $	
 
 New Changes
 
+* wait longer for Phase C carrier drop in Class 1 (18 Jan 2010)
 * stop decoding non-ECM page image data as soon as RTC is seen (18 Jan 2010)
 * fix a potential hang in sending Class 1 data if the modem is hung (16 Jan 2010)
 * fix faxdeluser from changing the gid of hosts.hfaxd (2 Jan 2010)
