@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 930 2009-06-22 06:21:48Z faxguy $ */
+/*	$Id: Class1Recv.c++ 975 2010-01-18 10:21:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -652,13 +652,14 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		    protoTrace("RECV: end page");
 		    if (!wasTimeout()) {
 			/*
-			 * The data was received correctly, wait
-			 * for the modem to signal carrier drop.
+			 * The data was received correctly, wait patiently
+			 * for the modem to signal carrier drop.  Some senders
+			 * may send a lot of garbage after RTC, so be patient.
 			 */
 			time_t nocarrierstart = Sys::now();
 			do {
-			    messageReceived = waitFor(AT_NOCARRIER, 5*1000);
-			} while (!messageReceived && Sys::now() < (nocarrierstart + 5));
+			    messageReceived = waitFor(AT_NOCARRIER, 60*1000);
+			} while (!messageReceived && Sys::now() < (nocarrierstart + 60));
 			if (messageReceived)
 			    prevPage++;
 		        timer = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;	// wait longer for PPM (estimate 80KB)
