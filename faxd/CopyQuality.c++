@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 959 2009-12-04 04:55:53Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 974 2010-01-18 09:50:46Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -213,7 +213,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		decodedPixels = rowpixels;	// assume no error
 		bool decodeOK = decodeRow(recvRow, rowpixels);
 		if (seenRTC())			// seen RTC, flush everything
-		    continue;
+		    break;
 		if (decodeOK) {
 		    if (lastRowBad) {		// reset run statistics
 			lastRowBad = false;

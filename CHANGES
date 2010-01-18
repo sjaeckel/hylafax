@@ -1,7 +1,8 @@
-#	$Id: CHANGES 973 2010-01-17 05:23:15Z faxguy $	
+#	$Id: CHANGES 974 2010-01-18 09:50:46Z faxguy $	
 
 New Changes
 
+* stop decoding non-ECM page image data as soon as RTC is seen (18 Jan 2010)
 * fix a potential hang in sending Class 1 data if the modem is hung (16 Jan 2010)
 * fix faxdeluser from changing the gid of hosts.hfaxd (2 Jan 2010)
 * change faxadduser to add new entries to the top of hosts.hfaxd (2 Jan 2010)
