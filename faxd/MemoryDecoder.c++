@@ -1,4 +1,4 @@
-/*	$Id: MemoryDecoder.c++ 686 2007-11-04 01:45:30Z faxguy $ */
+/*	$Id: MemoryDecoder.c++ 976 2010-01-18 10:47:39Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -222,15 +222,14 @@ void MemoryDecoder::fixFirstEOL()
  *
  * Nethertheless Ghostscript and possibly other TIFF Class F writers
  * append RTC or single EOL to the last encoded line. Remove them.
+ *
+ * In the past we would only scan the very end of the data for RTC, however,
+ * some versions of Ghostscript pad the end of the file with a lot of
+ * zero-data, and so we have to scan the whole image.
  */
 u_char* MemoryDecoder::cutExtraRTC()
 {
     /*
-     * We expect RTC near the end of data and thus
-     * do not check all image to save processing time.
-     * It's safe because we will resync on the first 
-     * encountered EOL.
-     *
      * NB: We expect G3Decoder::data==0 and
      * G3Decoder::bit==0 (no data in the accumulator).
      * As we cannot explicitly clear the accumulator
@@ -238,11 +237,6 @@ u_char* MemoryDecoder::cutExtraRTC()
      * should be called immediately after
      * MemoryDecoder() constructing.
      */
-    const u_long CheckArea = 20;
-    if( cc > CheckArea ){
-        bp += (cc-CheckArea);
-        cc = CheckArea;
-    }
         
     endOfData = NULL;
     rows = 0;
