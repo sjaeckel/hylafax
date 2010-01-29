@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 959 2009-12-04 04:55:53Z faxguy $ */
+/*	$Id: ModemConfig.c++ 977 2010-01-29 18:41:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -303,6 +303,7 @@ ModemConfig::setupConfig()
     recvDataFormat	= DF_ALL;		// default to no transcoding
     rtnHandling         = FaxModem::RTN_RETRANSMITIGNORE; // retransmit until MCF/MPS
     badPageHandling	= FaxModem::BADPAGE_RTNSAVE; // send RTN but save the page
+    answerAgainCmd	= parseATCmd("<delay:50>ATA");
 
     idConfig.resize(0);
     callidIndex		= (u_int) -1;
@@ -763,6 +764,8 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 	recvDataFormat = getDataFormat(value);
     else if (streq(tag, "rtnhandlingmethod"))
         rtnHandling = getRTNHandling(value);
+    else if (streq(tag, "modemansweragaincmd"))
+        answerAgainCmd = parseATCmd(value);
     else if (streq(tag, "badpagehandlingmethod"))
         badPageHandling = getBadPageHandling(value);
     else if (streq(tag, "class2ecmtype"))

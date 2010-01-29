@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 960 2009-12-04 05:10:46Z faxguy $
+.\"	$Id: hylafax-config.4f 977 2010-01-29 18:41:02Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2009-12-03 21:10:46 -0800 (Thu, 03 Dec 2009) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-01-29 10:41:02 -0800 (Fri, 29 Jan 2010) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -239,6 +239,7 @@ VGettyArgs	string	\-	arguments passed to voice getty program
 WedgedCmd¹	string	\s-1bin/wedged\s+1	command to run when modem is wedged
 .sp .5
 ModemAnswerCmd	string	\s-1ATA\s+1	command for answering phone
+ModemAnswerAgainCmd	string	\s-1<delay:50>ATA\s+1	command for answer recovery
 ModemAnswerDataBeginCmd	string	\-	command for start of answered data call
 ModemAnswerDataCmd	string	\s-1ATA\s+1	command for answering data call
 ModemAnswerDialCmd	string	\s-1ATA\s+1	command for answering data call
@@ -2076,6 +2077,13 @@ special handling for modems operating in class 2.0.
 entries imply that interpretation is based on the way in which the
 call was answered; if answering is done for an explicit call type,
 that type is assumed, otherwise a Fax call is presumed.
+.TP
+.B ModemAnswerAgainCmd
+The command to answer the phone if
+.B ModemAnswerCmd
+appears to have been ignored.  Typically this should include a delay escape
+in order to set the timing of the answer away from the ring in case the
+modem is incapable of answering so closely following the ring.
 .TP
 .B ModemAnswerDataBeginCmd
 The command to send to the modem once a data
