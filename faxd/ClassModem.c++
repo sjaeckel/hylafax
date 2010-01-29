@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 971 2010-01-07 05:01:04Z faxguy $ */
+/*	$Id: ClassModem.c++ 977 2010-01-29 18:41:02Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -273,11 +273,10 @@ again:
 	     * This may have to do with the presence of Caller*ID
 	     * reporting and in such cases is probably best-resolved
 	     * by changing the RingsBeforeAnswer setting.  However,
-	     * as a fail-safe we try to shake up the timing by
-	     * using a small delay in our ATA here.
+	     * as a fail-safe we can try to shake up the timing by
+	     * adding a small delay before our ATA here.
 	     */
-	    pause(500);
-	    atCmd(answerCmd, AT_NOTHING);
+	    atCmd(conf.answerAgainCmd, AT_NOTHING);
 	    morerings = 0;
 	}
 	const AnswerMsg* am = findAnswer(rbuf);

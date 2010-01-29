@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 831 2008-04-29 21:12:20Z faxguy $ */
+/*	$Id: ModemConfig.h 977 2010-01-29 18:41:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -88,6 +88,7 @@ public:
     fxStr	readyCmds;		// extra modem reset commands for end of initialization
     fxStr	dialCmd;		// cmd for dialing (%s for number)
     fxStr	setOriginCmd;		// cmd for setting the origination id (%s for name, %d for number)
+    fxStr	answerAgainCmd;		// cmd for answering after a missed answer command
     fxStr	answerAnyCmd;		// cmd for answering unknown call type
     fxStr	answerDataCmd;		// cmd for answering data call
     fxStr	answerFaxCmd;		// cmd for answering fax call
