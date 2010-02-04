@@ -1,7 +1,8 @@
-#	$Id: CHANGES 977 2010-01-29 18:41:02Z faxguy $	
+#	$Id: CHANGES 978 2010-02-05 06:05:33Z faxguy $	
 
 New Changes
 
+* fix a problem with the ANSWER "any" hfaxd command (4 Feb 2010)
 * add ModemAnswerAgainCmd modem configuration option (20 Jan 2010)
 * scan the entire page of image data for RTC when scanning for it (18 Jan 2010)
 * wait longer for Phase C carrier drop in Class 1 (18 Jan 2010)
