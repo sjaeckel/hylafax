@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 960 2009-12-04 05:10:46Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 978 2010-02-05 06:05:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -994,7 +994,7 @@ faxGettyApp::FIFOMessage(const char* cp)
     switch (cp[0]) {
     case 'A':				// answer the phone
 	traceServer("ANSWER %s", cp[1] != '\0' ? cp+1 : "any");
-	if (cp[1] != '\0') {
+	if (cp[1] != '\0' && !streq(cp+1, "any")) {
 	    if (streq(cp+1, "fax"))
 		answerPhoneCmd(ClassModem::ANSTYPE_FAX);
 	    else if (streq(cp+1, "data"))
