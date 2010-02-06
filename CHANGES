@@ -1,7 +1,8 @@
-#	$Id: CHANGES 978 2010-02-05 06:05:33Z faxguy $	
+#	$Id: CHANGES 979 2010-02-07 01:59:39Z faxguy $	
 
 New Changes
 
+* add MaxConcurrentPreps faxq config feature and default to 1 (6 Feb 2010)
 * fix a problem with the ANSWER "any" hfaxd command (4 Feb 2010)
 * add ModemAnswerAgainCmd modem configuration option (20 Jan 2010)
 * scan the entire page of image data for RTC when scanning for it (18 Jan 2010)

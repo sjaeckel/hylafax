@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 965 2009-12-22 06:07:31Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 979 2010-02-07 01:59:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -303,6 +303,7 @@ faxQueueApp::processJob(Job& job, FaxRequest* req, DestInfo& di)
 		setDead(*cjob);
 	    }
 	} else {
+	    numPrepares++;
 	    if (prepareJobStart(*cjob, creq, info))
 		return;
 	    else if (cjob->bprev == NULL)
@@ -483,9 +484,9 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		    setDead(job);
 		}
 	    }
-	    if (processnext)
+	    if (processnext) {
 		processJob(*targetjob, targetjob->breq, destJobs[targetjob->dest]);
-	    else if (startsendjob)
+	    } else if (startsendjob)
 		sendJobStart(*targetjob->bfirst(), targetjob->bfirst()->breq);
 	    else {
 		/*
@@ -499,6 +500,14 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		pokeScheduler();
 	    }
 	}
+    }
+    if (numPrepares) numPrepares--;
+    if (numPrepares < maxConcurrentPreps) {
+	/*
+	 * The number of simultaneous job preparations is
+	 * low enough to allow another job preparation.
+	 */
+	pokeScheduler();
     }
 }
 
@@ -2554,6 +2563,19 @@ faxQueueApp::runScheduler()
     if (! quit) {
 	for (u_int i = 0; i < NQHASH; i++) {
 	    for (JobIter iter(runqs[i]); iter.notDone(); iter++) {
+
+		if (numPrepares >= maxConcurrentPreps) {
+		    /*
+		     * Large numbers of simultaneous job preparations can cause problems.
+		     * So if we're already preparing too many, we wait for them to finish
+		     * before running the scheduler more.  This may prevent some jobs which
+		     * are already prepared (i.e. jobs that failed to complete on a previous 
+		     * attempt) from going out as soon as they could, but the delay should
+		     * be minimal, and this approach prevents us from needing to run 
+		     * prepareJobNeeded below, outside of prepareJob.
+		     */
+		    break;
+		}
 		Job& job = iter;
 		if (job.bprev != NULL) {
 		    /*
@@ -3426,6 +3448,7 @@ faxQueueApp::numbertag faxQueueApp::numbers[] = {
 { "jobreqother",	&faxQueueApp::requeueInterval,	FAX_REQUEUE },
 { "polllockwait",	&faxQueueApp::pollLockWait,	30 },
 { "staggercalls",	&faxQueueApp::staggerCalls,	0 },
+{ "maxconcurrentpreps",	&faxQueueApp::maxConcurrentPreps,	1 },
 };
 
 void
@@ -3448,6 +3471,7 @@ faxQueueApp::setupConfig()
     pageChop = FaxRequest::chop_last;
     pageChopThreshold = 3.0;		// minimum of 3" of white space
     lastCall = Sys::now() - 3600;
+    numPrepares = 0;
 }
 
 void

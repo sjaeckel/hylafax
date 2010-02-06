@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 977 2010-01-29 18:41:02Z faxguy $
+.\"	$Id: hylafax-config.4f 979 2010-02-07 01:59:39Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-01-29 10:41:02 -0800 (Fri, 29 Jan 2010) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-02-06 17:59:39 -0800 (Sat, 06 Feb 2010) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -175,6 +175,7 @@ LocalIdentifier	string	\-	local station identification string
 LongDistancePrefix	string	\-	dialing prefix for long distance calls
 MaxBatchJobs¹	integer	64	max jobs in a batch
 MaxConcurrentCalls¹	integer	\s-11\s+1	max concurrent jobs to process for a destination
+MaxConcurrentPreps¹	integer	\s-11\s+1	maximum number of simultaneous job preparations
 MaxConsecutiveBadLines	integer	\s-15\s+1	max consecutive bad rows for \s-1OK\s+1 page quality
 MaxDials¹	integer	\s-112\s+1	max phone calls to make to transmit a job
 MaxRecvPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a receive
@@ -1207,6 +1208,11 @@ is probably best left as the default of 1 and exceptions should
 be accommodated by the
 .B JobControl 
 mechanism.
+.TP
+.B MaxConcurrentPreps¹
+The maximum number of jobs preparations that may be run simultaneously.
+This is designed to prevent the scheduler from initiating so many job
+preparations that the system resources become constrained in the operations.
 .TP
 .B MaxBatchJobs¹
 The maximum number of jobs to batch together in a single call.
