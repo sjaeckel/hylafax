@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 966 2009-12-23 01:07:59Z faxguy $ */
+/*	$Id: Class1Send.c++ 980 2010-02-08 05:16:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1758,7 +1758,6 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
     protoTrace("SEND begin page");
 
     tstrip_t nstrips = TIFFNumberOfStrips(tif);
-    tsize_t stripsize = TIFFStripSize(tif);
     uint32 rowsperstrip = 0;
     if (nstrips > 0) {
 
@@ -1796,15 +1795,25 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	/*
 	 * Calculate total amount of space needed to read
 	 * the image into memory (in its encoded format).
+	 *
+	 * It is tempting to want to use TIFFStripSize() instead
+	 * of summing stripbytecounts, but the two are not equal.
 	 */
-        u_long totdata = nstrips * stripsize;
+	uint32* stripbytecount;
+	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
+	tstrip_t strip;
+	u_long totdata = 0;
+	for (strip = 0; strip < nstrips; strip++)
+	    totdata += stripbytecount[strip];
 	/*
 	 * Read the image into memory.
 	 */
 	u_char* data = new u_char[totdata+ts];
-	u_long off = ts;		// skip tag line slop area
-	for (tstrip_t strip = 0; strip < nstrips; strip++) {
-	    off += TIFFReadRawStrip(tif, strip, data+off, stripsize);
+	u_int off = ts;			// skip tag line slop area
+	for (strip = 0; strip < nstrips; strip++) {
+	    uint32 sbc = stripbytecount[strip];
+	    if (sbc > 0 && TIFFReadRawStrip(tif, strip, data+off, sbc) >= 0)
+		off += (u_int) sbc;
 	}
 	totdata -= pageChop;		// deduct trailing white space not sent
 	TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);

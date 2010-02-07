@@ -1,7 +1,9 @@
-#	$Id: CHANGES 979 2010-02-07 01:59:39Z faxguy $	
+#	$Id: CHANGES 980 2010-02-08 05:16:35Z faxguy $	
 
 New Changes
 
+* fix a problem with the calculation of the page data size which was 
+  introduced in 5.4.0 (7 Feb 2010)
 * add MaxConcurrentPreps faxq config feature and default to 1 (6 Feb 2010)
 * fix a problem with the ANSWER "any" hfaxd command (4 Feb 2010)
 * add ModemAnswerAgainCmd modem configuration option (20 Jan 2010)
