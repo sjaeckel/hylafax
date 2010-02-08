@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 974 2010-01-18 09:50:46Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 982 2010-02-09 02:35:01Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -901,22 +901,33 @@ FaxModem::fixupJPEG(TIFF* tif, fxStr& emsg)
      * We convert the colorspace from ITULAB to sRGB because most
      * image processors will not know how to handle ITULAB correctly.
      */
+#if HAS_NO_OPEN_MEMSTREAM
+    FILE* out = Sys::tmpfile();
+#else
     size_t outsize;
     char *outptr;
     FILE* out = open_memstream(&outptr, &outsize);
+#endif
     if (out) {
 	FILE* in = fmemopen(recvRow, pagesize, "r");
 	if (in) {
 	    char kk[256];
 	    bool ok = convertJPEGfromITULAB(in, out, kk, 256);
-	    fclose(in); fclose(out);
 	    if (ok && kk[0] == 0) {
 		// conversion from ITULAB to sRGB was successful
+#if HAS_NO_OPEN_MEMSTREAM
+		pagesize = ftell(out);
+                recvRow = (u_char*) malloc(pagesize);
+                rewind(out);
+                fread(recvRow, 1, pagesize, out);
+#else
 		recvRow = (u_char*) outptr;
 		pagesize = outsize;
+#endif
 	    } else {
 		serverTrace("JPEG conversion error: \"%s\". JPEG colorspace will be incorrect in TIFF tags.", kk);
 	    }
+	    fclose(in); fclose(out);
 	} else {
 	    serverTrace("Could not open JPEG input conversion stream. JPEG colorspace will be incorrect in TIFF tags.");
 	}
