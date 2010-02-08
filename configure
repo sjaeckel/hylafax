@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 972 2010-01-16 23:07:38Z faxguy $
+#	$Id: configure 982 2010-02-09 02:35:01Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 972 $"
+	echo "This is HylaFAX configure $Revision: 982 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3223,6 +3223,11 @@ BuildPortDotH()
 		*-*-sysv5*)	AddDefine s6_addr32 's6_addr32	S6_un.S6_l' ;;
 		sparc-sun-*)	AddDefine s6_addr32 's6_addr32	S6_un.S6_l' ;;
 	esac
+    }
+
+    CheckForStdioFunc open_memstream "(void*)0, (void*)0" || {
+	Note "... use tmpfile instead of open_memstream"
+	echo '#define HAS_NO_OPEN_MEMSTREAM 1'
     }
 
     # Emit the version variable that port will always give us.

@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 980 2010-02-08 05:16:35Z faxguy $ */
+/*	$Id: Class1Send.c++ 982 2010-02-09 02:35:01Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1868,21 +1868,32 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	    uint32 w, h;
 	    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
 	    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+#if HAS_NO_OPEN_MEMSTREAM
+	    FILE* out = Sys::tmpfile();
+#else
 	    size_t outsize;
 	    char *outptr;
 	    FILE* out = open_memstream(&outptr, &outsize);
+#endif
 	    if (out) {
 		char kk[256];
 		bool ok = convertRawRGBtoITULAB(dp, off, w, h, out, kk, 256);
-		fclose(out);
 		if (!ok || kk[0] != 0) {
 		    emsg = fxStr::format("Error converting image to JPEG data: %s", kk);
 		    protoTrace(emsg);
 		    return (false);
 		}
 		// JPEG compression succeeded, redirect pointers
+#if HAS_NO_OPEN_MEMSTREAM
+		totdata = ftell(out);
+		dp = (u_char*) malloc(totdata);
+		rewind(out);
+		fread(dp, 1, totdata, out);
+#else
 		dp = (u_char*) outptr;
 		totdata = outsize;
+#endif
+		fclose(out);
 	    } else {
 #endif
 		emsg = "Could not open JPEG conversion output stream.";
