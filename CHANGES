@@ -1,8 +1,9 @@
-#	$Id: CHANGES 982 2010-02-09 02:35:01Z faxguy $	
+#	$Id: CHANGES 983 2010-02-10 15:39:21Z faxguy $	
 
 New Changes
 
-* add an alternative to open_memstream for systems without (8 Feb 2010)
+* add an alternative to open_memstream and fmemopen for systems 
+  without these functions (8 Feb 2010)
 * fix a problem with the calculation of the page data size which was 
   introduced in 5.4.0 (7 Feb 2010)
 * add MaxConcurrentPreps faxq config feature and default to 1 (6 Feb 2010)
