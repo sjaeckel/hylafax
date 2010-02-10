@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 982 2010-02-09 02:35:01Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 983 2010-02-10 15:39:21Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -909,7 +909,13 @@ FaxModem::fixupJPEG(TIFF* tif, fxStr& emsg)
     FILE* out = open_memstream(&outptr, &outsize);
 #endif
     if (out) {
+#if HAS_NO_OPEN_MEMSTREAM
+	FILE* in = Sys::tmpfile();
+	fwrite(recvRow, 1, pagesize, in);
+	rewind(in);
+#else
 	FILE* in = fmemopen(recvRow, pagesize, "r");
+#endif
 	if (in) {
 	    char kk[256];
 	    bool ok = convertJPEGfromITULAB(in, out, kk, 256);
@@ -917,9 +923,9 @@ FaxModem::fixupJPEG(TIFF* tif, fxStr& emsg)
 		// conversion from ITULAB to sRGB was successful
 #if HAS_NO_OPEN_MEMSTREAM
 		pagesize = ftell(out);
-                recvRow = (u_char*) malloc(pagesize);
-                rewind(out);
-                fread(recvRow, 1, pagesize, out);
+		recvRow = (u_char*) malloc(pagesize);
+		rewind(out);
+		fread(recvRow, 1, pagesize, out);
 #else
 		recvRow = (u_char*) outptr;
 		pagesize = outsize;
