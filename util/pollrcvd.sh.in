@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: pollrcvd.sh.in 859 2008-07-21 19:30:52Z faxguy $
+#	$Id: pollrcvd.sh.in 984 2010-02-12 04:45:15Z faxguy $
 #
 # ============================================
 #
@@ -190,7 +190,7 @@ INFO=$SBIN/faxinfo
 FAX2PS=$TIFFBIN/fax2ps
 TIFF2PS=$TIFFBIN/tiff2ps
 TOADDR=FaxMaster
-TIFFINFO=tiffinfo
+TIFFINFO=$TIFFBIN/tiffinfo
 FROMADDR=fax
 MIMEBOUNDARY="NextPart$$"
 

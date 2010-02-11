@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: notify.sh.in 859 2008-07-21 19:30:52Z faxguy $
+#    $Id: notify.sh.in 984 2010-02-12 04:45:15Z faxguy $
 #
 # ============================================
 #
@@ -391,9 +391,9 @@ local_seq() {
 }
 
 INFO=$SBIN/faxinfo
-TIFFINFO=tiffinfo
+TIFFINFO=$TIFFBIN/tiffinfo
 FAX2PS=$TIFFBIN/fax2ps
-TIFF2PS=tiff2ps
+TIFF2PS=$TIFFBIN/tiff2ps
 PS2PDF=ps2pdf
 PDF2PS=pdf2ps
 PS2FAX=bin/ps2fax
