@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 859 2008-07-21 19:30:52Z faxguy $
+#	$Id: faxrcvd.sh.in 984 2010-02-12 04:45:15Z faxguy $
 #
 # ============================================
 #
@@ -153,36 +153,10 @@ faxrcvd_mail()
 		    # This is useful because the majority of TIFF viewers won't
 		    # be able to read JBIG compressed TIFF files, while
 		    # G4 (MMR) is a much older and supported format.
-		    if (tiffinfo $FILE | grep "JBIG" > /dev/null) then
-			tiffcp -c g4 $FILE $FILE.g4.tif
+		    if ($TIFFINFO $FILE | grep "JBIG" > /dev/null) then
+			$TIFFCP -c g4 $FILE $FILE.g4.tif
 			encode $FILE.g4.tif
 			$RM -f $FILE.g4.tif 2>$ERRORSTO
-		    else
-			encode $FILE
-		    fi
-		elif [ "$type" = "tif-r" ]; then
-		    echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
-		    echo "Content-Description: FAX document"
-		    echo "Content-Transfer-Encoding: $ENCODING"
-		    echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
-		    echo ""
-		    if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
-			tiffcp -c jpeg:R $FILE $FILE.r.tif
-			encode $FILE.r.tif
-			$RM -f $FILE.r.tif 2>$ERRORSTO
-		    else 
-			encode $FILE
-		    fi
-		elif [ "$type" = "tif-y" ]; then
-		    echo "Content-Type: image/tiff; name=\"$FILENAME.tif\""
-		    echo "Content-Description: FAX document"
-		    echo "Content-Transfer-Encoding: $ENCODING"
-		    echo "Content-Disposition: attachment; filename=\"$FILENAME.tif\""
-		    echo ""
-		    if (tiffinfo $FILE | grep "JPEG" > /dev/null) then
-			tiffcp -c jpeg:Y $FILE $FILE.y.tif
-			encode $FILE.y.tif
-			$RM -f $FILE.y.tif 2>$ERRORSTO
 		    else
 			encode $FILE
 		    fi
@@ -242,7 +216,8 @@ FAX2PS=$TIFFBIN/fax2ps
 TIFF2PS=$TIFFBIN/tiff2ps
 TOADDR=FaxMaster
 FROMADDR=fax
-TIFFINFO=tiffinfo
+TIFFINFO=$TIFFBIN/tiffinfo
+TIFFCP=$TIFFBIN/tiffcp
 NOTIFY_FAXMASTER=always
 MIMEBOUNDARY="NextPart$$"
 
@@ -336,9 +311,9 @@ setInfoSize $FILE
 # requested for it in FaxDispatch.
 # The TIFF JBIG file as saved by HylaFAX is REPLACED with a MMR (G4) version.
 if [ "$RECV_DATA_CONVERSION" = "JBIG:MMR" ]; then
-    if (tiffinfo $FILE | grep "JBIG" > /dev/null) then
+    if ($TIFFINFO $FILE | grep "JBIG" > /dev/null) then
 	$RM -f $FILE.g4
-	tiffcp -c g4 $FILE $FILE.g4
+	$TIFFCP -c g4 $FILE $FILE.g4
 	if [ $? = 0 -a -s $FILE.g4 ]; then
 	    # Using 'cp' and then 'rm' (instead of 'mv') preserves
 	    # owner/mode of the original file (at least on Linux)

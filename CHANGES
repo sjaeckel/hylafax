@@ -1,7 +1,8 @@
-#	$Id: CHANGES 983 2010-02-10 15:39:21Z faxguy $	
+#	$Id: CHANGES 984 2010-02-12 04:45:15Z faxguy $	
 
 New Changes
 
+* be consistent to use libtiff tools from TIFFBIN in scripts (11 Feb 2010)
 * add an alternative to open_memstream and fmemopen for systems 
   without these functions (8 Feb 2010)
 * fix a problem with the calculation of the page data size which was 
