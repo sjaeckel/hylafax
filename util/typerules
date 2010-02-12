@@ -1,4 +1,4 @@
-#	$Id: typerules 774 2008-01-26 19:31:55Z faxguy $
+#	$Id: typerules 985 2010-02-13 01:42:43Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -157,9 +157,12 @@
 #>3	string		89a		ps	gif2ps -y %i > %o
 >3 	string		89a		error	GIF (version 89a) support not configured
 0	string		\x89PNG		error	PNG support not configured
-0	short		0xffd8		error	filetype conversion support not configured
+#>6	string		Exif		ps	jpeg2ps -a -o %o %i
 #>6	string		JFIF		ps	jpeg2ps -a -o %o %i
+#>47	string		JFIF		ps	jpeg2ps -a -o %o %i
+>6	string		Exif		error	JPEG support not configured
 >6	string		JFIF		error	JPEG support not configured
+>47	string		JFIF		error	JPEG support not configured
 0	short		0xd8ff		error	filetype conversion support not configured
 0	string		#FIG		error	FIG support not configured
 
