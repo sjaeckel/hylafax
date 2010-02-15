@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 982 2010-02-09 02:35:01Z faxguy $
+#	$Id: configure 988 2010-02-15 22:36:17Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 982 $"
+	echo "This is HylaFAX configure $Revision: 988 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -3876,7 +3876,6 @@ if [ "$SYSVINIT" = yes ]; then
 	    *sysv4.2uw2*)	DIR_SYSVINITSTOP="../rc0.d ../rc1.d";;
 	    *-sysv5UnixWare*)	DIR_SYSVINITSTOP="../rc0.d ../rc1.d";;
 	    *-sysv5OpenUNIX*)	DIR_SYSVINITSTOP="../rc0.d ../rc1.d";;
-	    *-sysv5SCO_SV*)	DIR_SYSVINITSTOP="../rc0.d ../rc2.d";;
 	    *)		DIR_SYSVINITSTOP="../rc0.d";;
 	esac
     fi
