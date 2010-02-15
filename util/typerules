@@ -1,4 +1,4 @@
-#	$Id: typerules 986 2010-02-15 22:15:43Z faxguy $
+#	$Id: typerules 987 2010-02-15 22:19:46Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -105,7 +105,6 @@
 0	short		0x0506		ps	showcase -p -f %i
 0	short		0x5343		ps	showcase -p -f %i
 0	short		0xf702		ps	dvips -q -o %o %i
-0	string		GIF		tiff
 0	long		0x59a66a95	tiff	ras2tiff -%f -v %V %i %o
 0	short		0x1b45		pcl
 0	short		0x1b25		pcl
@@ -151,10 +150,11 @@
 # The following image types are not handled natively, but
 # can be used when a converter is installed.  Enable the 
 # conversion match and disable the corresponding error.
+0	string		GIF		error	filetype conversion support not configured
 #>3	string		87a		tiff	gif2tiff -%f -v %V %i %o
 #>3	string		87a		ps	gif2ps -y %i > %o
->3	string		87a		error	GIF (version 87a) support not configured
 #>3	string		89a		ps	gif2ps -y %i > %o
+>3	string		87a		error	GIF (version 87a) support not configured
 >3 	string		89a		error	GIF (version 89a) support not configured
 0	string		\x89PNG		error	PNG support not configured
 0	short		0xffd8		error	filetype conversion support not configured
