@@ -1,6 +1,10 @@
-#	$Id: CHANGES 984 2010-02-12 04:45:15Z faxguy $	
+#	$Id: CHANGES 989 2010-03-22 05:53:32Z faxguy $	
 
 New Changes
+
+* don't add a whitespace before typerules %o or %i (21 Mar 2010)
+
+(5.4.1)
 
 * be consistent to use libtiff tools from TIFFBIN in scripts (11 Feb 2010)
 * add an alternative to open_memstream and fmemopen for systems 
