@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.c++ 748 2008-01-04 23:24:31Z faxguy $ */
+/*	$Id: TypeRules.c++ 989 2010-03-22 05:53:32Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -73,7 +73,7 @@ fxStr
 quoted(const fxStr& s)
 {
     fxStr q;
-    q.append(" \'");
+    q.append("\'");
     for (u_int i = 0; i < s.length(); i++) {
 	if (s[i] == '\'') q.append("\'\\\'");
 	q.append(s[i]);
