@@ -1,7 +1,8 @@
-#	$Id: CHANGES 989 2010-03-22 05:53:32Z faxguy $	
+#	$Id: CHANGES 990 2010-03-24 04:42:12Z faxguy $	
 
 New Changes
 
+* cope with some modems' broken DTMF reporting when possible (23 Mar 2010)
 * don't add a whitespace before typerules %o or %i (21 Mar 2010)
 
 (5.4.1)
