@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 977 2010-01-29 18:41:02Z faxguy $ */
+/*	$Id: ClassModem.c++ 990 2010-03-24 04:42:12Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -1488,25 +1488,26 @@ ClassModem::waitForRings(u_short rings, CallType& type, CallID& callid)
 		for (u_int j = 0 ; j < conf.idConfig.length(); j++) {
 		    if (conf.idConfig[j].pattern == "SHIELDED_DTMF") {	// retrieve DID, e.g. via voice DTMF
 			ringstart = Sys::now();
-			bool marked = false, gotdigit = false;
+			bool marked = false;
+			int gotdigit = 0;
 			do {
 			    int c = server.getModemChar(10000);
 			    if (c == 0x10) c = server.getModemChar(10000);
 			    if (c == 0x23 || c == 0x2A || (c >= 0x30 && c <= 0x39)) {
 				// a DTMF digit was received...
-				if (!marked || (marked && !gotdigit)) {
+				if (!marked || !gotdigit || (c != gotdigit)) {
 				    protoTrace("MODEM HEARD DTMF: %c", c);
 				    callid[j].append(fxStr::format("%c", c));
-				    gotdigit = true;
+				    gotdigit = c;
 				}
 			    } else if (c == 0x2F) {
 				// got IS-101 DTMF lead marker
 				marked = true;
-				gotdigit = false;
+				gotdigit = 0;
 			    } else if (c == 0x7E) {
 				// got IS-101 DTMF end marker
 				marked = false;
-				gotdigit = false;
+				gotdigit = 0;
 			    } else if (c == 0x73) {
 				// got silence, keep waiting
 				protoTrace("MODEM HEARD SILENCE");
