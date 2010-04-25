@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 975 2010-01-18 10:21:35Z faxguy $ */
+/*	$Id: Class1Recv.c++ 992 2010-04-26 04:27:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1019,6 +1019,8 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		    }
 		}
 		break;
+	    case FCF_RR:
+		// The sender did not hear our MCF signal.  Treat it like CRP.
 	    case FCF_CRP:
 		// command repeat... just repeat whatever we last sent
 		if (!useV34 && !switchingPause(emsg)) return (false);
