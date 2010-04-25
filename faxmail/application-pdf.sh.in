@@ -10,10 +10,15 @@
 #
 
 GSRIP=gs
+DEVICE=pswrite
 
 . @SPOOL@/etc/setup.cache
 
+if [ -n "`$GSRIP -h | $GREP ps2write`" ]; then
+    DEVICE=ps2write
+fi
+
 $GSRIP -q -sPAPERSIZE=a4 -dBATCH -dNOPAUSE \
-    -sDEVICE=pswrite -sOutputFile=- "$1"
+    -sDEVICE=$DEVICE -sOutputFile=- "$1"
 
 exit

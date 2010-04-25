@@ -1,7 +1,9 @@
-#	$Id: CHANGES 990 2010-03-24 04:42:12Z faxguy $	
+#	$Id: CHANGES 991 2010-04-26 02:25:45Z faxguy $	
 
 New Changes
 
+* use ps2write device by default if available for faxmail pdf MIMEConverter
+  (25 Apr 2010)
 * cope with some modems' broken DTMF reporting when possible (23 Mar 2010)
 * don't add a whitespace before typerules %o or %i (21 Mar 2010)
 
