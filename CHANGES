@@ -1,7 +1,8 @@
-#	$Id: CHANGES 993 2010-04-27 02:15:27Z faxguy $	
+#	$Id: CHANGES 996 2010-04-27 03:28:45Z faxguy $	
 
 New Changes
 
+* work around a Ghostscript 8.71 segfault on genfontmap.ps (26 Apr 2010)
 * cope with multi-strip MMR images prepared by Ghostscript (26 Apr 2010)
 * handle unexpected receipt of RR when the sender didn't hear our MCF
   (25 Apr 2010)

@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 961 2009-12-05 21:06:39Z faxguy $
+#	$Id: faxsetup.sh.in 996 2010-04-27 03:28:45Z faxguy $
 #
 # @WARNING@
 #
@@ -1237,7 +1237,8 @@ if onClient; then
 				-a "$RUNTIME_PATH_AFM" != "$PATH_AFM" ]; then 
 	    FONTPATHS=`echo $RUNTIME_PATH_AFM | sed 's/:/ /g'`
 	    $PATH_GSRIP -q -sDEVICE=tiffg3 -sFONTPATH="$FONTPATHS" $DIR_SPOOL/bin/genfontmap.ps > $DIR_SPOOL/etc/Fontmap.HylaFAX 2>/dev/null
-	    if [ $? = 0 ]; then
+	    # Ghostscript 8.71 segfaults on that, but produces a valid Fontmap file, so we don't test exit code, but examine the product, instead.
+	    if [ -n "`$GREP Courier-Bold $DIR_SPOOL/etc/Fontmap.HylaFAX`" ]; then
 		FONTMAP="$DIR_SPOOL/etc"
 		Note ""
 		Note "Created our own Fontmap file in $DIR_SPOOL/etc."
