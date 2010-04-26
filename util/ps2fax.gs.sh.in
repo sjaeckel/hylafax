@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: ps2fax.gs.sh.in 965 2009-12-22 06:07:31Z faxguy $
+#	$Id: ps2fax.gs.sh.in 993 2010-04-27 02:15:27Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -70,25 +70,29 @@ vres=98			# default to low res
 device=			# to know if it was never specified
 unlimitedlength=no	# default to fixed length-pages
 color=no		# default to monochrome-only
+opt=
+df=
 
 while test $# != 0
 do
     case "$1" in
     -i)	shift; jobid="$1" ;;
     -o)	shift; out="$1" ;;
-    -w) shift; pagewidth="$1" ;;
-    -l) shift; pagelength="$1" ;;
-    -r) shift; vres="$1" ;;
+    -w) shift; pagewidth="$1"; opt="$opt -w $1" ;;
+    -l) shift; pagelength="$1"; opt="$opt -l $1" ;;
+    -r) shift; vres="$1"; opt="$opt -r $1" ;;
     -m) shift;;				# NB: not implemented
-    -U) unlimitedlength=yes ;;
-    -1) device=tiffg3 ;;
+    -U) unlimitedlength=yes; opt="$opt $1" ;;
+    -1) device=tiffg3; opt="$opt $1"; df="g3:1d" ;;
     -2) ($PS -h | grep tiffg32d >/dev/null 2>&1) \
 	    && { device=tiffg32d; } \
 	    || { device=tiffg3; }
+	opt="$opt $1"; df="g3:2d"
 	;;
     -3) ($PS -h | grep tiffg4 >/dev/null 2>&1) \
 	    && { device=tiffg4; } \
 	    || { device=tiffg3; }
+	opt="$opt $1"; df=g4
 	;;
     -color) ($PS -h | grep tiff24nc >/dev/null 2>&1) \
 	    && { color=yes; }

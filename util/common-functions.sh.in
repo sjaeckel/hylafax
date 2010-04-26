@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 967 2009-12-23 01:08:57Z faxguy $
+#    $Id: common-functions.sh.in 993 2010-04-27 02:15:27Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -344,6 +344,138 @@ gs2fax()
     if [ "$DITHERING" = "libtiff-fs" ]; then
 	$RM -f $out.1 $out.2 $out.3
     fi
+    if [ "$df" = "g4" ]; then
+	#
+	# Ghostscript 8.71 will create multi-strip MMR pages.
+	# To compensate we must run the tiffCheck process.
+	#
+	CHECK=$SBIN/tiffcheck       # program to check acceptability
+	PS2FAX=                     # null to prevent recursion
+	TIFFCP=$TIFFBIN/tiffcp      # part of the TIFF distribution
+	TIFF2PS=$TIFFBIN/tiff2ps    # ditto
+	TIFFINFO=$TIFFBIN/tiffinfo  # ditto
+    
+	fil=$out
+
+	tiffCheck
+    fi
+}
+
+tiffCheck()
+{
+    CLEARTMP=no
+    if [ "$fil" = "$out" ]; then
+	CLEARTMP=yes
+	fil="$fil.$$.tmp"
+	$MV $out $fil
+    fi
+    #
+    # tiffcheck looks over a TIFF document and prints out a string
+    # that describes what's needed (if anything) to make the file
+    # suitable for transmission with the specified parameters (page
+    # width, page length, resolution, encoding).  This string may
+    # be followed by explanatory messages that can be returned to
+    # the user.  The possible actions are:
+    #
+    # OK		document is ok
+    # REJECT	something is very wrong (e.g. not valid TIFF)
+    # REFORMAT	data must be re-encoded
+    # REVRES	reformat to change vertical resolution
+    # RESIZE	scale or truncate the pages
+    # REIMAGE	image is not 1-channel bilevel data
+    #
+    # Note that these actions may be combined with "+";
+    # e.g. REFORMAT+RESIZE.  If we cannnot do the necessary work
+    # to prepare the document then we reject it here.
+    #
+    RESULT=`$CHECK $opt $fil 2>/dev/null`
+
+    ACTIONS=`echo "$RESULT" | $SED 1q`
+    case "$ACTIONS" in
+    OK)				# no conversion needed
+	#
+	# 1) We don't use hard links because it screws up faxqclean
+	#    logic that assumes the only hard links are used 
+	#    temporarily when document files are being created during
+	#    the job submission process.
+	# 2) We don't use symbolic links because the links get broken
+	#    when the source document is shared between jobs and
+	#    faxq removes the source document before all jobs complete.
+	#
+	# If we ever encounter problems where the client submits corrupt
+	# TIFF and we need to clean it up before transmission, then we
+	# can simply merge OK with REFORMAT.  For now we use $CP instead
+	# of $TIFFCP, however, to provide the client some control.
+	#
+	$CP -f $fil $out
+	if [ "$CLEARTMP" = "yes" ]; then $RM -f $fil; fi
+	exit 0			# successful conversion
+	;;
+    *REJECT*)			# document rejected out of hand
+	echo "$RESULT" | $SED 1d
+	if [ "$CLEARTMP" = "yes" ]; then $RM -f $fil; fi
+	exit 254			# reject document
+	;;
+    REFORMAT)			# only need format conversion (e.g. g4->g3)
+	rowsperstrip="-r 9999 "
+	if [ -n "`$TIFFINFO $fil | $GREP 'Compression Scheme: ISO JBIG'`" ]; then
+	    rowsperstrip=""
+	fi
+	$TIFFCP -i -c $df -f lsb2msb $rowsperstrip$fil $out
+
+	# libtiff 3.5.7 gives exit status 9 when there are unknown tags...
+	exitcode=$?
+	if [ "$CLEARTMP" = "yes" ]; then $RM -f $fil; fi
+	if [ $exitcode != 0 ] && [ $exitcode != 9 ]; then {
+	    $CAT<<EOF
+Unexpected failure converting TIFF document; the command
+
+    $TIFFCP -i -c $df -f lsb2msb $rowsperstrip$fil $out
+
+failed with exit status $?.  This conversion was done because:
+
+EOF
+	    echo "$RESULT" | $SED 1d; exit 254
+	}
+	fi
+	exit 0
+	;;
+    #
+    # REVRES|REFORMAT+REVRES	adjust vertical resolution (should optimize)
+    # *RESIZE			page size must be adjusted (should optimize)
+    # *REIMAGE			maybe should reject (XXX)
+    #
+    *REVRES|*RESIZE|*REIMAGE)
+	if [ -z "$PS2FAX" ]; then
+	    echo "Unable to format with converters."
+	    echo "Preventing ps2fax recursion."
+	    if [ "$CLEARTMP" = "yes" ]; then $RM -f $fil; fi
+	    exit 254
+	fi
+	($TIFF2PS -a $fil | $PS2FAX -o $out -i "$jobid" $opt) || {
+	    $CAT<<EOF
+Unexpected failure converting TIFF document; the command
+
+    $TIFF2PS -a $fil | $PS2FAX $opt
+
+failed with exit status $?.  This conversion was done because
+
+EOF
+	    echo "$RESULT" | $SED 1d; exit 254
+	}
+	if [ "$CLEARTMP" = "yes" ]; then $RM -f $fil; fi
+	exit 0
+	;;
+    *)				# something went wrong
+	echo "Unexpected failure in the TIFF format checker;"
+	echo "the output of $CHECK was:"
+	echo ""
+	echo "$RESULT"
+	echo ""
+	if [ "$CLEARTMP" = "yes" ]; then $RM -f $fil; fi
+	exit 254			# no formatter
+	;;
+    esac
 }
 
 SetupPrivateTmp()

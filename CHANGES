@@ -1,7 +1,8 @@
-#	$Id: CHANGES 992 2010-04-26 04:27:03Z faxguy $	
+#	$Id: CHANGES 993 2010-04-27 02:15:27Z faxguy $	
 
 New Changes
 
+* cope with multi-strip MMR images prepared by Ghostscript (26 Apr 2010)
 * handle unexpected receipt of RR when the sender didn't hear our MCF
   (25 Apr 2010)
 * use ps2write device by default if available for faxmail pdf MIMEConverter
