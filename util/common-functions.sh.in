@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 993 2010-04-27 02:15:27Z faxguy $
+#    $Id: common-functions.sh.in 997 2010-04-30 04:11:57Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -406,8 +406,9 @@ tiffCheck()
 	# TIFF and we need to clean it up before transmission, then we
 	# can simply merge OK with REFORMAT.  For now we use $CP instead
 	# of $TIFFCP, however, to provide the client some control.
+	# The -p is needed or ownership and permissions can be lost.
 	#
-	$CP -f $fil $out
+	$CP -p -f $fil $out
 	if [ "$CLEARTMP" = "yes" ]; then $RM -f $fil; fi
 	exit 0			# successful conversion
 	;;
