@@ -1,6 +1,10 @@
-#	$Id: CHANGES 996 2010-04-27 03:28:45Z faxguy $	
+#	$Id: CHANGES 999 2010-05-07 04:45:39Z faxguy $	
 
 New Changes
+
+* Use -dMaxStripSize=0 with Ghostscript calls (6 May 2010)
+
+(5.4.2)
 
 * work around a Ghostscript 8.71 segfault on genfontmap.ps (26 Apr 2010)
 * cope with multi-strip MMR images prepared by Ghostscript (26 Apr 2010)
