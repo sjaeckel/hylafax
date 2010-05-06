@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 997 2010-04-30 04:11:57Z faxguy $
+#    $Id: common-functions.sh.in 999 2010-05-07 04:45:39Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -250,6 +250,12 @@ gs2fax()
     FIXEDWIDTH="-dFIXEDMEDIA"
 
     #
+    # We must ensure that the entire page is written in a single
+    # strip.  This was the default behavior before Ghostscript 8.71.
+    # The default changed in the 8.71 release, so now we specify it.
+    STRIPSIZE="-dMaxStripSize=0"
+
+    #
     # Ghostscript's default dithering with the fax drivers is 
     # usually unsatisfactory.  So we have an option to process
     # the image through libtiff's Floyd-Steinberg dithering.
@@ -281,7 +287,7 @@ gs2fax()
 	    outfile="$out.color"
 	fi
 	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
-	    -dBATCH -r$hres\x$hres "-sOutputFile=$outfile" $FIXEDWIDTH $files
+	    -dBATCH -r$hres\x$hres "-sOutputFile=$outfile" $FIXEDWIDTH $STRIPSIZE $files
 	if [ "$device" = "tiff24nc" ]; then
 	    $RM -f "$out.color"
 	    return
@@ -299,6 +305,7 @@ gs2fax()
 	    -r$hres\x$vres \
 	    "-sOutputFile=$out" \
 	    $FIXEDWIDTH \
+	    $STRIPSIZE \
 	    stocht.ps -c "<< /HalftoneMode 1 >> setuserparams" -
 	return
     fi
@@ -306,7 +313,7 @@ gs2fax()
        [ -x $TIFFBIN/tiff2bw ] && [ -x $TIFFBIN/tiffdither ] && [ -x $TIFFBIN/tiff2ps ] && \
        [ -x $TIFFBIN/tiffsplit ] && [ -x $TIFFBIN/tiffcp ]; then
 	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
-	    -dBATCH -r$hres\x$vres "-sOutputFile=$out.1" $FIXEDWIDTH $files
+	    -dBATCH -r$hres\x$vres "-sOutputFile=$out.1" $FIXEDWIDTH $STRIPSIZE $files
 	# Both tiff2bw and tiffdither only operate on single pages, so...
 	mkdir tmpdir.$$
 	cd tmpdir.$$
@@ -339,6 +346,7 @@ gs2fax()
 	-r$hres\x$vres \
 	"-sOutputFile=$out" \
 	$FIXEDWIDTH \
+	$STRIPSIZE \
 	$files
 
     if [ "$DITHERING" = "libtiff-fs" ]; then
@@ -346,8 +354,7 @@ gs2fax()
     fi
     if [ "$df" = "g4" ]; then
 	#
-	# Ghostscript 8.71 will create multi-strip MMR pages.
-	# To compensate we must run the tiffCheck process.
+	# Double-check the Ghostscript output to make sure it's what we need.
 	#
 	CHECK=$SBIN/tiffcheck       # program to check acceptability
 	PS2FAX=                     # null to prevent recursion
