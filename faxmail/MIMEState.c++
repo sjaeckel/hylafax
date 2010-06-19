@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.c++ 790 2008-02-11 04:12:22Z faxguy $ */
+/*	$Id: MIMEState.c++ 1000 2010-06-19 21:10:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -418,13 +418,8 @@ MIMEState::getQuotedPrintableLine(FILE* fd, fxStackBuffer& buf)
 		c = '\r';
 	    }
 	}
-	if (c == '\n') {			// check for boundary marker
+	if (c == '\n') {			// check for boundary marker first
 	    lineno++;
-	    if (cc > 0 && line[cc-1] == '=') {	// soft line break
-		msg.copyQP (buf, line, cc-1);       // everything up to ``="''
-		cc = 0;
-		continue;
-	    }
 	    if (cc >= blen && line[0] == '-') {
 		if (cc == blen && strneq(line, boundary, blen))
 		    return (false);
@@ -432,6 +427,11 @@ MIMEState::getQuotedPrintableLine(FILE* fd, fxStackBuffer& buf)
 		    lastPart = true;
 		    return (false);
 		}
+	    }
+	    if (cc > 0 && line[cc-1] == '=') {	// soft line break
+		msg.copyQP (buf, line, cc-1);       // everything up to ``="''
+		cc = 0;
+		continue;
 	    }
 	    msg.copyQP(buf, line, cc);
 	    buf.put('\n');
