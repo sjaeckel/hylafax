@@ -1,7 +1,8 @@
-#	$Id: CHANGES 999 2010-05-07 04:45:39Z faxguy $	
+#	$Id: CHANGES 1000 2010-06-19 21:10:22Z faxguy $	
 
 New Changes
 
+* improve the faxmail quoted-printable boundary check (19 Jun 2010)
 * Use -dMaxStripSize=0 with Ghostscript calls (6 May 2010)
 
 (5.4.2)
