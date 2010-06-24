@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 992 2010-04-26 04:27:03Z faxguy $ */
+/*	$Id: Class1Recv.c++ 1002 2010-06-25 06:06:20Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1408,7 +1408,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    rcpcnt = 0;			// reset RCP counter
 			    fnum = frameRev[frame[3]];	// T.4 A.3.6.1 says LSB2MSB
 			    protoTrace("RECV received frame number %u", fnum);
-			    if (frame.checkCRC()) {
+			    // some modems may erroneously recreate valid CRC on short frames, so check length, too
+			    if (frame.checkCRC() && frame.getLength() == frameSize+6) {
 				// store received frame in block at position fnum (A+C+FCF+Frame No.=4 bytes)
 				for (u_int i = 0; i < frameSize; i++) {
 				    if (frame.getLength() - 6 > i)	// (A+C+FCF+Frame No.+FCS=6 bytes)

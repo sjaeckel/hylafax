@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1000 2010-06-19 21:10:22Z faxguy $	
+#	$Id: CHANGES 1002 2010-06-25 06:06:20Z faxguy $	
 
 New Changes
 
+* check Class 1 ECM image data frame lengths as well as CRC (24 Jun 2010)
 * improve the faxmail quoted-printable boundary check (19 Jun 2010)
 * Use -dMaxStripSize=0 with Ghostscript calls (6 May 2010)
 
