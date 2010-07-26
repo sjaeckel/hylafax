@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 982 2010-02-09 02:35:01Z faxguy $ */
+/*	$Id: Class1Send.c++ 1003 2010-07-26 23:59:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1447,6 +1447,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 				    protoTrace(emsg);
 				    return (false);
 				}
+				setDataTimeout(60, params.br);	// adjust dataTimeout to new bitrate
 				dolongtrain = true;	// T.30 states that we must use long-training next
 			    } else {
 				/*
