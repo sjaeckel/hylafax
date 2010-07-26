@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1002 2010-06-25 06:06:20Z faxguy $	
+#	$Id: CHANGES 1003 2010-07-26 23:59:08Z faxguy $	
 
 New Changes
 
+* in Class 1 sending ECM after CTC/CTR adjust dataTimeout to new bitrate
+  (26 Jul 2010)
 * check Class 1 ECM image data frame lengths as well as CRC (24 Jun 2010)
 * improve the faxmail quoted-printable boundary check (19 Jun 2010)
 * Use -dMaxStripSize=0 with Ghostscript calls (6 May 2010)
