@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 977 2010-01-29 18:41:02Z faxguy $ */
+/*	$Id: ModemConfig.c++ 1005 2010-08-30 05:36:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -240,6 +240,7 @@ static struct {
 { "class1colorjpegsupport",	&ModemConfig::class1ColorJPEGSupport,	false },
 { "class2jpegsupport",		&ModemConfig::class2JPEGSupport,	false },
 #endif
+{ "class1ecmcheckframelength",	&ModemConfig::class1ECMCheckFrameLength,false },
 { "class1ecmsupport",		&ModemConfig::class1ECMSupport,		true },
 { "class1mrsupport",		&ModemConfig::class1MRSupport,		true },
 { "class1mmrsupport",		&ModemConfig::class1MMRSupport,		true },

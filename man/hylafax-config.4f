@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 979 2010-02-07 01:59:39Z faxguy $
+.\"	$Id: hylafax-config.4f 1005 2010-08-30 05:36:28Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-02-06 17:59:39 -0800 (Sat, 06 Feb 2010) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-08-29 22:36:28 -0700 (Sun, 29 Aug 2010) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -306,6 +306,7 @@ Class1Cmd	string	\s-1AT+FCLASS=1.0\s+1	Class 1.0: command to enter class 1
 Class1AdaptRecvCmd	string	\-	Class 1/1.0: command for adaptive reception support
 Class1ColorJPEGSupport	boolean	\s-1No\s+1	Class 1/1.0: to enable color JPEG fax support
 Class1EnableV34Cmd	string	\-	Class 1/1.0: command to enable V.34-fax support
+Class1ECMCheckFrameLength	boolean	\s-1No\s+1	Class 1/1.0: require complete ECM frame lengths
 Class1ECMSupport	boolean	\s-1Yes\s+1	Class 1/1.0: enable T.30-A ECM support
 Class1PersistentECM	boolean	\s-1Yes\s+1	Class 1/1.0: to continue to correct while in ECM
 Class1ECMFrameSize	integer	\s-1256\s+1	Class 1/1.0: image frame size in ECM protocol
@@ -2623,6 +2624,12 @@ with JPEG compression.  Enabling this automatically enables
 .B Class1EnableV34Cmd
 The command to enable V.34-fax support with at least the desired
 maximum primary channel rate.
+.TP
+.B Class1ECMCheckFrameLength
+Whether or not to require the frame length for ECM data frames to 
+be complete when checking for frame integrity.  Normally this is not
+beneficial (and can be problematic for some senders), but in some 
+cases the frame CRC is not reliable because of modem behavior.
 .TP
 .B Class1ECMSupport
 Whether or not to support T.30-A error correction protocol.  Use of
