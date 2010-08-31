@@ -1,4 +1,4 @@
-/*	$Id: Transport.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Transport.c++ 1007 2010-08-31 16:24:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -52,7 +52,7 @@ Transport::getTransport(FaxClient& client, const char* address)
 	 * An unqualified destination; look for
 	 * the best available transport facility.
 	 */
-#if CONFIG_UNIXTRANPSORT
+#if CONFIG_UNIXTRANSPORT
 	if (UnixTransport::isA(FAX_DEFUNIX)) {
 	    client.setHost(FAX_DEFUNIX);
 	    return *new UnixTransport(client);
@@ -60,11 +60,11 @@ Transport::getTransport(FaxClient& client, const char* address)
 #endif
 	    client.setHost(FAX_DEFHOST);
 	    return *new InetTransport(client);
-#if CONFIG_UNIXTRANPSORT
+#if CONFIG_UNIXTRANSPORT
 	}
 #endif
     } else {
-#if CONFIG_UNIXTRANPSORT
+#if CONFIG_UNIXTRANSPORT
 	if (UnixTransport::isA(address))
 	    return *new UnixTransport(client);
 	else
