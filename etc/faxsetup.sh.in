@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 1008 2010-08-31 16:30:28Z faxguy $
+#	$Id: faxsetup.sh.in 1009 2010-08-31 16:33:01Z faxguy $
 #
 # @WARNING@
 #
@@ -1309,9 +1309,6 @@ file $DIR_LIBDATA/hyla.conf with a line of the form:
 
 FontPath:	someplace_unexpected
 
-If you do not have the font metric information files loaded on your system
-system you can obtain them by public FTP from the place where you obtained
-the HylaFAX software or from the master FTP site at ftp.sgi.com.
 EOF
      fi
 fi
@@ -1365,9 +1362,7 @@ FATAL ERROR: No DPS-based RIP available for IRIX $RELEASE!
 The DPS-based PostScript RIP is a COFF executable and cannot be used
 under IRIX $RELEASE.  You must use a different RIP such as fw_gs.sw.gs
 which is found on the SGI Freeware CD-ROM and which is based on the
-freely distributed Ghostscript software package.  This package is
-also included in the binary distribution of HylaFAX for SGI systems
-found on ftp.sgi.com.
+freely distributed Ghostscript software package.
 
 Once you have installed the Ghostscript distribution rerun faxsetup
 with the option -with-PS=gs to override the default setting.
@@ -1387,8 +1382,7 @@ This distribution has been configured to use the DPS-based PostScript
 RIP that is only available as a COFF executable.  This program cannot
 be used under IRIX $RELEASE.  You must use a different RIP such as the
 Ghostscript-based RIP in the fw_gs.sw.gs installation image which is
-found on the SGI Freeware CD-ROM.  The fw_gs package is also included
-in the binary distribution of HylaFAX for SGI systems found on ftp.sgi.com.
+found on the SGI Freeware CD-ROM.
 
 Once you have installed the Ghostscript distribution rerun faxsetup
 with the option -with-PS=gs to override the default setting.
