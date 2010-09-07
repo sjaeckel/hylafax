@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1005 2010-08-30 05:36:28Z faxguy $
+.\"	$Id: hylafax-config.4f 1010 2010-09-07 16:47:36Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-08-29 22:36:28 -0700 (Sun, 29 Aug 2010) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-09-07 09:47:36 -0700 (Tue, 07 Sep 2010) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -1234,7 +1234,9 @@ The default value for the maximum number of times the server will
 place a call for an outbound job.
 This value may be overridden by rules in the
 .B JobControl
-mechanism.
+mechanism.  This feature is completely distinct from the identically-named
+feature in the client-server communication, and jobs triggering these
+limits will be handled differently for each.
 See also
 .BR MaxTries .
 .TP
@@ -1265,7 +1267,9 @@ which limits the number of calls that will be placed on behalf
 of a job.
 This value may be overridden by rules in the
 .B JobControl
-mechanism.
+mechanism.  This feature is completely distinct from the identically-named
+feature in the client-server communication, and jobs triggering these
+limits will be handled differently for each.
 See also
 .BR MaxDials .
 .TP
