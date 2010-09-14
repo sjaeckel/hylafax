@@ -18,7 +18,7 @@ if [ -n "`$GSRIP -h | $GREP ps2write`" ]; then
     DEVICE=ps2write
 fi
 
-$GSRIP -q -sPAPERSIZE=a4 -dBATCH -dNOPAUSE \
+$GSRIP -q -dPDFFitPage -dBATCH -dNOPAUSE \
     -sDEVICE=$DEVICE -sOutputFile=- "$1"
 
 exit
