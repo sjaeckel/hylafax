@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 964 2009-12-08 06:15:06Z faxguy $
+.\"	$Id: jobcontrol.1m 1012 2010-09-18 17:29:56Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -239,6 +239,7 @@ in this.  For example:
     . etc/setup.cache
     . bin/common-functions
     QFILE=sendq/q$1
+    SetupPrivateTmp
     parseQfile
     case "$number-$owner-$tottries" in
         5551212-lee-3) echo "Class1ECMSupport: no";;
