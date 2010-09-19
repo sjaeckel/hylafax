@@ -1,5 +1,5 @@
 #!smake
-#	$Id: Makefile.in 938 2009-09-08 01:05:03Z faxguy $
+#	$Id: Makefile.in 1013 2010-09-20 05:39:50Z faxguy $
 #
 # @WARNING@
 #
@@ -54,6 +54,7 @@ DIALRULES=dialrules \
 	dialrules-pabx.be \
 	dialrules.europe \
 	dialrules.ext \
+	dialrules.world \
 	dialrules.uk
 TARGETS	= config.fax hosts.hfaxd xferfaxlog lockname ondelay
 

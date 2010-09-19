@@ -1,4 +1,4 @@
-#	$Id: distrules 961 2009-12-05 21:06:39Z faxguy $
+#	$Id: distrules 1013 2010-09-20 05:39:50Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -265,6 +265,7 @@ HYLAFAXSRC=\
 	etc/dialrules.europe			\
 	etc/dialrules.ext			\
 	etc/dialrules.uk			\
+	etc/dialrules.world			\
 	etc/hylafax.in				\
 	etc/faxaddmodem.sh.in			\
 	etc/faxsetup.bsdi			\
