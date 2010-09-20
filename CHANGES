@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1011 2010-09-15 05:26:04Z faxguy $	
+#	$Id: CHANGES 1014 2010-09-21 03:11:18Z faxguy $	
 
 New Changes
 
+* use system regex library by default instead (20 Sep 2010)
 * in faxmail's PDF MIMEConverter scale non-letter images onto letter 
   pages instead of cutting off parts of them (14 Sep 2010)
 * in Class 1 sending ECM after CTC/CTR adjust dataTimeout to new bitrate

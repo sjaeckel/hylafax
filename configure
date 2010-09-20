@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 1008 2010-08-31 16:30:28Z faxguy $
+#	$Id: configure 1014 2010-09-21 03:11:18Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -74,9 +74,9 @@ TIFFINC=
 TIFFBIN=
 LIBZ=-lz
 ZLIBINC=
-REGEX=yes
-LIBREGEX='-L${DEPTH}/regex -lregex'
-REGEXINC='-I${DEPTH}/${TOPSRCDIR}/regex'
+REGEX=auto
+LIBREGEX=
+REGEXINC=
 FAXD=
 LIBFAXSERVER='libfaxserver.${DSO}'
 LIBUTIL='${UTIL}/libfaxutil.${DSO}'
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 1008 $"
+	echo "This is HylaFAX configure $Revision: 1014 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -1568,6 +1568,23 @@ CheckForIncludeFile()
     runMake t "t:; \${C++F} \${C++FILE} -E t.c++${MAKECXXOVERRIDE}"
 }
 
+if [ "$REGEX" = "auto" ]; then
+	Note "Checking for regular expression library support"
+	CheckForLibrary regexec "" &&
+		CheckForIncludeFile regex.h && {
+		    REGEX=no
+		}
+	if [ "$REGEX" = "no" ]; then
+		LIBREGEX=''
+		REGEXINC=''
+		Note "... found. Using system regular expression support."
+	else
+		REGEX=yes
+		LIBREGEX='-L${DEPTH}/regex -lregex'
+		REGEXINC='-I${DEPTH}/${TOPSRCDIR}/regex'
+		Note "... not found. Using built-in regular expression support."
+	fi
+fi
 if [ "$SGI2FAX" = auto ]; then
     if CheckForLibrary iopen -limage && CheckForIncludeFile gl/image.h; then
 	Note "Looks like there is support for SGI RGB images, configuring sgi2fax."
