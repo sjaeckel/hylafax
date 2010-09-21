@@ -1,4 +1,4 @@
-#	$Id: typerules 987 2010-02-15 22:19:46Z faxguy $
+#	$Id: typerules 1015 2010-09-22 04:28:50Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -111,8 +111,11 @@
 0	short		0x1b26		pcl
 0	short		0x1b2a		pcl
 #
-# To do client-side PCL conversion to PostScript comment-out the above
-# and uncomment this:
+# To do client-side PCL conversion to PostScript comment-out the above 4
+# lines and uncomment the following, which decides a file is a PCL file
+# if its first two characters are <ESC> E (0x1b45), the PCL reset command.
+#
+#0	short		0x1b45		tiff	pcl6 -dNOPAUSE -sDEVICE=tiffg3 -sOutputFile=- %i > %o
 #0	short		0x1b25		ps	pcl6 -dNOPAUSE -sDEVICE=pswrite -sOutputFile=%o %i
 #
 # HylaFAX now has server-side PDF conversion, so no need for pdf2ps.
