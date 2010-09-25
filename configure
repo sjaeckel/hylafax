@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 1014 2010-09-21 03:11:18Z faxguy $
+#	$Id: configure 1016 2010-09-25 23:19:57Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 1014 $"
+	echo "This is HylaFAX configure $Revision: 1016 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -2931,7 +2931,7 @@ BuildPortDotH()
 	echo '#define HAS_FCHMOD 1'
 	Note "... configure use of fchmod"
 	CheckFuncDecl fchmod 'extern int fchmod(int, mode_t);' \
-	    unistd.h libc.h $OSFCNH sys/stat.h
+	    unistd.h $OSFCNH sys/stat.h
     }
     CheckFuncDecl mknod 'extern int mknod(const char*, mode_t, dev_t);' \
 	unistd.h sys/stat.h

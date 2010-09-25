@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1014 2010-09-21 03:11:18Z faxguy $	
+#	$Id: CHANGES 1016 2010-09-25 23:19:57Z faxguy $	
 
 New Changes
 
+* fix build for gcc-4.5 (25 Sep 2010)
 * use system regex library by default instead (20 Sep 2010)
 * in faxmail's PDF MIMEConverter scale non-letter images onto letter 
   pages instead of cutting off parts of them (14 Sep 2010)
