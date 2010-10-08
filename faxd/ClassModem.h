@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 857 2008-07-16 16:17:39Z faxguy $ */
+/*	$Id: ClassModem.h 1017 2010-10-08 19:35:41Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -98,7 +98,8 @@ public:
 	FAILURE	   = 6,		// other problem (e.g. modem turned off)
 	NOFCON	   = 7,		// carrier established, but phase a failure
 	DATACONN   = 8,		// data carrier established
-	RING	   = 9		// glare - ring detected after dial
+	RING	   = 9,		// glare - ring detected after dial
+	V34FAIL	   = 10		// V.34 handshake failure
     };
 
     enum {			// ClassModem::CallType
@@ -204,7 +205,7 @@ protected:
     fxStr	revQueryCmd;	// product revision identification command
 
     static const char* serviceNames[9];	 // class 2 services
-    static const char* callStatus[10];	 // printable call status
+    static const char* callStatus[11];	 // printable call status
     static const char* ATresponses[19];
 
     ClassModem(ModemServer&, const ModemConfig&);

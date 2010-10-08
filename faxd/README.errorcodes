@@ -12,6 +12,7 @@ E009      : Glare - RING detected
 E010      : Blacklisted by modem
 E011      : Ringback detected, no answer without CED
 E012      : Ring detected without successful handshake
+E013      : V.34/V.8 handshake incompatibility
 
 E050-E099 : non Class-specific fax protocol failures
 E050      : Missing EOL after 5 seconds

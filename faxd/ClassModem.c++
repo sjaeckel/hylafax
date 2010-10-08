@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 990 2010-03-24 04:42:12Z faxguy $ */
+/*	$Id: ClassModem.c++ 1017 2010-10-08 19:35:41Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -33,10 +33,10 @@
 /*
  * Call status description strings.
  */
-const char* ClassModem::callStatus[10] = {
+const char* ClassModem::callStatus[11] = {
     "Call successful {E000}",				// OK
     "Busy signal detected {E001}",			// BUSY
-    "No carrier detected {E002}",				// NOCARRIER
+    "No carrier detected {E002}",			// NOCARRIER
     "No answer from remote {E003}",			// NOANSWER
     "No local dialtone {E004}",				// NODIALTONE
     "Invalid dialing command {E005}",			// ERROR
@@ -44,6 +44,7 @@ const char* ClassModem::callStatus[10] = {
     "Carrier established, but Phase A failure {E007}",	// NOFCON
     "Data connection established (wanted fax) {E008}",	// DATACONN
     "Glare - RING detected {E009}",			// RING
+    "V.34/V.8 handshake incompatibility {E013}",	// V34FAIL
 };
 /*
  * Service class descriptions.  The first three

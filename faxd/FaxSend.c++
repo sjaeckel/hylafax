@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 967 2009-12-23 01:08:57Z faxguy $ */
+/*	$Id: FaxSend.c++ 1017 2010-10-08 19:35:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -408,6 +408,9 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	fax.ndials++;			// number of consecutive failed calls
 	fax.totdials++;			// total attempted calls
 	switch (callstat) {
+	case ClassModem::V34FAIL:	// carrier seen, but V.34/V.8 handshake incompatibility
+	    clientInfo.setHasV34Trouble(true);
+	    /* fall thru... */
 	case ClassModem::NOFCON:	// carrier seen, but handshake failed
 	    clientInfo.setCalledBefore(true);
 	    /* fall thru... */
