@@ -1,4 +1,4 @@
-/*	$Id: faxadduser.c 970 2010-01-03 04:54:57Z faxguy $ */
+/*	$Id: faxadduser.c 1019 2010-10-17 00:41:55Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *
@@ -51,7 +51,7 @@ extern char* optarg;
 
 const char passwd_salts[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
 
-const char* usage = "faxadduser [-a admin-password] [-f hosts-file] \
+const char* usage = "faxadduser [-c] [-a admin-password] [-f hosts-file] \
 [-h host-name] [-p password] [-u uid] username";
 
 int
@@ -64,6 +64,7 @@ main(int argc, char** argv)
     FILE* nhf = NULL;
     int c;
     int salt;
+    int compat_flag = 0;
     char* hostfile = FAX_SPOOLDIR "/" FAX_PERMFILE;
     char* password = NULL;
     char* adminword = NULL;
@@ -71,10 +72,13 @@ main(int argc, char** argv)
     int uid = FAX_DEFAULT_UID;
     struct passwd* pw;
     
-    while ((c = getopt(argc, argv, "a:f:h:p:u:")) != -1) {
+    while ((c = getopt(argc, argv, "a:cf:h:p:u:")) != -1) {
         switch (c) {
         case 'a':
             adminword = optarg;
+            break;
+        case 'c':
+            compat_flag = 1;
             break;
         case 'f':
             hostfile = optarg;
@@ -94,9 +98,14 @@ main(int argc, char** argv)
             break;
         }
     }
-    snprintf(newhostfile, sizeof(newhostfile), "%s.%i", hostfile, (int)getpid());
     umask(077);
-    nhf = fopen(newhostfile, "w");
+    if (compat_flag) {
+        nhf = fopen(hostfile, "a+");
+        snprintf(newhostfile, sizeof(newhostfile), "%s", hostfile);
+    } else {
+        snprintf(newhostfile, sizeof(newhostfile), "%s.%i", hostfile, (int)getpid());
+        nhf = fopen(newhostfile, "w");
+    }
     if (nhf == NULL) {
         snprintf(buff, sizeof(buff), "Error - cannot open hosts file: %s", newhostfile);
         perror(buff);
@@ -127,21 +136,23 @@ main(int argc, char** argv)
         }
         fprintf(nhf, "\n");
     }
-    if ((hf = fopen(hostfile, "r+")) == NULL) {
-        snprintf(buff, sizeof(buff), "Error - cannot open file: %s", hostfile);
-        perror(buff);
-        return -1;
-    }
-    while (fgets(buff, sizeof(buff), hf)) {
-        if (fprintf(nhf, "%s", buff) < 1) {
-            snprintf(buff, sizeof(buff), "Error writing to file %s", newhostfile);
+    if (!compat_flag) {
+        if ((hf = fopen(hostfile, "r+")) == NULL) {
+            snprintf(buff, sizeof(buff), "Error - cannot open file: %s", hostfile);
             perror(buff);
             return -1;
         }
+        while (fgets(buff, sizeof(buff), hf)) {
+            if (fprintf(nhf, "%s", buff) < 1) {
+                snprintf(buff, sizeof(buff), "Error writing to file %s", newhostfile);
+                perror(buff);
+                return -1;
+            }
+        }
+        fclose(hf);
     }
-    fclose(hf);
     fclose(nhf);
-    if (rename(newhostfile, hostfile)) {
+    if (!compat_flag && rename(newhostfile, hostfile)) {
         perror("Error writing hosts file");
         return -1;
     }
