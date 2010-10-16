@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1017 2010-10-08 19:35:41Z faxguy $	
+#	$Id: CHANGES 1019 2010-10-17 00:41:55Z faxguy $	
 
 New Changes
 
+* add faxadduser -c option (16 Oct 2010)
 * detect hasV34Trouble for Class 1.0 "OK" dial responses (8 Oct 2010)
 * fix build for gcc-4.5 (25 Sep 2010)
 * use system regex library by default instead (20 Sep 2010)
