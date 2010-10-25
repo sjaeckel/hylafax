@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1021 2010-10-25 21:06:58Z faxguy $	
+#	$Id: CHANGES 1023 2010-10-26 04:24:32Z faxguy $	
 
 New Changes
 
+* expand color page buffer size to 2MB (25 Oct 2010)
 * check for REG_STARTEND define for system regex support (25 Oct 2010)
 * improve auto-rotate.ps to match most page sizes (25 Oct 2010)
 
