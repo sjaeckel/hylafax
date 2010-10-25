@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 983 2010-02-10 15:39:21Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 1023 2010-10-26 04:24:32Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -38,6 +38,7 @@
 #include <ctype.h>
 
 #define	RCVBUFSIZ	(32*1024)		// XXX
+#define COLORBUFSIZ	(2000*1024)		// 1M is not big enough
 
 static	void setupCompression(TIFF*, u_int, u_int, uint32);
 
@@ -356,7 +357,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		 * rather fax-specific.
 		 */
 		recvEOLCount = 0;
-		recvRow = (u_char*) malloc(1024*1000);    // 1M should do it?
+		recvRow = (u_char*) malloc(COLORBUFSIZ);
 		fxAssert(recvRow != NULL, "page buffering error (JPEG page).");
 		recvPageStart = recvRow;
 	    }
@@ -1043,7 +1044,7 @@ FaxModem::writeECMData(TIFF* tif, u_char* buf, u_int cc, const Class2Params& par
 	    case JP_GREY+4:
 	    case JP_COLOR+4:
 		recvEOLCount = 0;
-		recvRow = (u_char*) malloc(1024*1000);    // 1M should do it?
+		recvRow = (u_char*) malloc(COLORBUFSIZ);
 		fxAssert(recvRow != NULL, "page buffering error (JPEG page).");
 		recvPageStart = recvRow;
 		setupStartPage(tif, params);
