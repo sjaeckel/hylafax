@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 999 2010-05-07 04:45:39Z faxguy $
+#    $Id: common-functions.sh.in 1022 2010-10-25 21:45:42Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -287,7 +287,7 @@ gs2fax()
 	    outfile="$out.color"
 	fi
 	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
-	    -dBATCH -r$hres\x$hres "-sOutputFile=$outfile" $FIXEDWIDTH $STRIPSIZE $files
+	    -dBATCH -r$hres\x$hres "-sOutputFile=$outfile" $STRIPSIZE $FIXEDWIDTH $files
 	if [ "$device" = "tiff24nc" ]; then
 	    $RM -f "$out.color"
 	    return
@@ -304,8 +304,8 @@ gs2fax()
 	    -dBATCH \
 	    -r$hres\x$vres \
 	    "-sOutputFile=$out" \
-	    $FIXEDWIDTH \
 	    $STRIPSIZE \
+	    $FIXEDWIDTH \
 	    stocht.ps -c "<< /HalftoneMode 1 >> setuserparams" -
 	return
     fi
@@ -313,7 +313,7 @@ gs2fax()
        [ -x $TIFFBIN/tiff2bw ] && [ -x $TIFFBIN/tiffdither ] && [ -x $TIFFBIN/tiff2ps ] && \
        [ -x $TIFFBIN/tiffsplit ] && [ -x $TIFFBIN/tiffcp ]; then
 	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
-	    -dBATCH -r$hres\x$vres "-sOutputFile=$out.1" $FIXEDWIDTH $STRIPSIZE $files
+	    -dBATCH -r$hres\x$vres "-sOutputFile=$out.1" $STRIPSIZE $FIXEDWIDTH $files
 	# Both tiff2bw and tiffdither only operate on single pages, so...
 	mkdir tmpdir.$$
 	cd tmpdir.$$
@@ -345,8 +345,8 @@ gs2fax()
 	-dBATCH \
 	-r$hres\x$vres \
 	"-sOutputFile=$out" \
-	$FIXEDWIDTH \
 	$STRIPSIZE \
+	$FIXEDWIDTH \
 	$files
 
     if [ "$DITHERING" = "libtiff-fs" ]; then
