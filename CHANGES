@@ -1,6 +1,10 @@
-#	$Id: CHANGES 1019 2010-10-17 00:41:55Z faxguy $	
+#	$Id: CHANGES 1020 2010-10-25 19:07:30Z faxguy $	
 
 New Changes
+
+* improve auto-rotate.ps to match most page sizes (25 Oct 2010)
+
+(5.4.3)
 
 * add faxadduser -c option (16 Oct 2010)
 * detect hasV34Trouble for Class 1.0 "OK" dial responses (8 Oct 2010)
