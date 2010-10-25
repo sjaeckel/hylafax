@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1020 2010-10-25 19:07:30Z faxguy $	
+#	$Id: CHANGES 1021 2010-10-25 21:06:58Z faxguy $	
 
 New Changes
 
+* check for REG_STARTEND define for system regex support (25 Oct 2010)
 * improve auto-rotate.ps to match most page sizes (25 Oct 2010)
 
 (5.4.3)

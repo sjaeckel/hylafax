@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 1016 2010-09-25 23:19:57Z faxguy $
+#	$Id: configure 1021 2010-10-25 21:06:58Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 1016 $"
+	echo "This is HylaFAX configure $Revision: 1021 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -1568,12 +1568,43 @@ CheckForIncludeFile()
     runMake t "t:; \${C++F} \${C++FILE} -E t.c++${MAKECXXOVERRIDE}"
 }
 
+#
+# Look for a #define in system include files.
+#
+AddDefine()
+{
+   echo '#ifndef' $1
+   echo '#define' "$2"
+   echo '#endif'
+   Note '... add #define for' "$1"
+}
+CheckForDefine()
+{
+    def=$1; shift
+    (for i do
+	echo "#include \"$i\""
+     done
+     for i in "#ifdef $def" "FOUND" "#endif"; do
+	echo "$i"
+     done
+    )>t.c
+    capture cat t.c
+    runMakeX t 't:; ${CCF} -E t.c' | grep FOUND >&5
+}
+CheckDefine()
+{
+    def=$1; shift
+    decl=$1; shift
+    CheckForDefine "$def" "$@" || AddDefine "$def" "$decl"
+}
+
 if [ "$REGEX" = "auto" ]; then
 	Note "Checking for regular expression library support"
 	CheckForLibrary regexec "" &&
-		CheckForIncludeFile regex.h && {
-		    REGEX=no
-		}
+		CheckForIncludeFile regex.h &&
+			CheckForDefine REG_STARTEND regex.h && {
+			    REGEX=no
+			}
 	if [ "$REGEX" = "no" ]; then
 		LIBREGEX=''
 		REGEXINC=''
@@ -2263,36 +2294,6 @@ CheckVarDecl()
     decl="$1"; shift
     CheckForVarDecl "$v" "$@" || \
 	(echo "$decl"; Note "... add declaration $decl")
-}
-
-#
-# Look for a #define in system include files.
-#
-AddDefine()
-{
-   echo '#ifndef' $1
-   echo '#define' "$2"
-   echo '#endif'
-   Note '... add #define for' "$1"
-}
-CheckForDefine()
-{
-    def=$1; shift
-    (for i do
-	echo "#include \"$i\""
-     done
-     for i in "#ifdef $def" "FOUND" "#endif"; do
-	echo "$i"
-     done
-    )>t.c
-    capture cat t.c
-    runMakeX t 't:; ${CCF} -E t.c' | grep FOUND >&5
-}
-CheckDefine()
-{
-    def=$1; shift
-    decl=$1; shift
-    CheckForDefine "$def" "$@" || AddDefine "$def" "$decl"
 }
 
 #
