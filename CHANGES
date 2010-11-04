@@ -1,7 +1,10 @@
-#	$Id: CHANGES 1024 2010-11-04 19:44:29Z faxguy $	
+#	$Id: CHANGES 1025 2010-11-04 21:46:43Z faxguy $	
 
 New Changes
 
+* enable auto-rotate.ps by default with AUTOROTATE FaxModify feature
+  (4 Nov 2010)
+* make FIXEDWIDTH=-dPDFFitPage default instead of -dFIXEDMEDIA (4 Nov 2010)
 * wait for OK at the end of a Class 1.0 V.34 disconnection (4 Nov 2010)
 * expand color page buffer size to 2MB (25 Oct 2010)
 * check for REG_STARTEND define for system regex support (25 Oct 2010)
