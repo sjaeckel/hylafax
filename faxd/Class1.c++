@@ -1,4 +1,4 @@
-/*	$Id: Class1.c++ 973 2010-01-17 05:23:15Z faxguy $ */
+/*	$Id: Class1.c++ 1024 2010-11-04 19:44:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -293,8 +293,8 @@ Class1Modem::hangup()
 	u_char buf[2];
 	buf[0] = DLE; buf[1] = EOT;		// <DLE><EOT>
 	putModemData(buf, 2);
-	// T.31-A1 samples indicate an OK response, but anything is acceptable
-	(void) atResponse(rbuf, 60000);
+	// T.31-A1 states that OK is expected.  If we don't wait for it, then ATH0 may get missed later.
+	waitFor(AT_OK);
     }
     atCmd(conf.onHookCmd, AT_OK, 5000);
 }
