@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 1025 2010-11-04 21:46:43Z faxguy $
+#    $Id: common-functions.sh.in 1027 2010-11-06 21:52:24Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -463,15 +463,26 @@ EOF
     *REVRES|*RESIZE|*REIMAGE)
 	if [ -z "$PS2FAX" ]; then
 	    echo "Unable to format with converters."
-	    echo "Preventing ps2fax recursion."
+	    echo "Preventing recursion."
 	    if [ "$CLEARTMP" = "yes" ]; then $RM -f $fil; fi
 	    exit 254
 	fi
-	($TIFF2PS -a $fil | $PS2FAX -o $out -i "$jobid" $opt) || {
+	#
+	# Previously we used tiff2ps here instead of tiff2pdf, however, this was problematic
+	# with conversion of TIFFs which were not the same size as the target page.  To fix 
+	# this it would have required pushing image dimensions to Ghostscript for it to use
+	# the -g option, and that would require a lot of converter-script modifications.  It 
+	# is easier to simply use tiff2pdf because the PDF output includes the image 
+	# dimensions which are then fed to Ghostscript.  (Which would have also been 
+	# accomplished with the tiff2ps -2 or -3 options, however, in those cases tiff2ps 
+	# resizes the image to fit on the page, and other options, -h and -w, which may not 
+	# be available to all tiff2ps versions would have needed to be used.)
+	#
+	($TIFF2PDF -o $out.$$.pdf $fil; $PDF2FAX -o $out -i "$jobid" $opt $out.$$.pdf && $RM -f $out.$$.pdf) || {
 	    $CAT<<EOF
 Unexpected failure converting TIFF document; the command
 
-    $TIFF2PS -a $fil | $PS2FAX $opt
+    $TIFF2PDF -o $out.$$.pdf $fil; $PDF2FAX -o $out -i "$jobid" $opt $out.$$.pdf && $RM -f $out.$$.pdf
 
 failed with exit status $?.  This conversion was done because
 
