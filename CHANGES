@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1025 2010-11-04 21:46:43Z faxguy $	
+#	$Id: CHANGES 1027 2010-11-06 21:52:24Z faxguy $	
 
 New Changes
 
+* use tiff2pdf instead of tiff2ps in tiff2fax conversions (6 Nov 2010)
 * enable auto-rotate.ps by default with AUTOROTATE FaxModify feature
   (4 Nov 2010)
 * make FIXEDWIDTH=-dPDFFitPage default instead of -dFIXEDMEDIA (4 Nov 2010)
