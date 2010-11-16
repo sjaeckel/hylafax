@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 979 2010-02-07 01:59:39Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1028 2010-11-17 05:35:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2728,13 +2728,26 @@ faxQueueApp::runScheduler()
 			 */
 			if (maxBatchJobs > 64) maxBatchJobs = 64;
 
+			/*
+			 * If the queue length becomes very large then scanning the queue
+			 * for batching can become counter-productive as it consumes a 
+			 * large amount of CPU attention spinning through the queue.  In
+			 * all likelihood batching would not even be useful in those 
+			 * scenarios, and the administrator simply has not attended to 
+			 * disabling it.  So we prevent batching from traversing into deep 
+			 * queues in able to prevent a large amount of unnecessary CPU 
+			 * consumption.
+			 */
+			int qlencount = 0;
+
 			Job* bjob = &job;	// Last batched Job
 			Job* cjob = &job;	// current Job
 
 			u_int batchedjobs = 1;
-			for (u_int j = 0; batchedjobs < maxBatchJobs && j < NQHASH; j++) {
+			for (u_int j = 0; batchedjobs < maxBatchJobs && j < NQHASH && qlencount < maxTraversal; j++) {
 			    blockSignals();
-			    for (JobIter joblist(runqs[j]); batchedjobs < maxBatchJobs && joblist.notDone(); joblist++) {
+			    for (JobIter joblist(runqs[j]); batchedjobs < maxBatchJobs && joblist.notDone() && qlencount < maxTraversal; joblist++) {
+				qlencount++;
 				if (joblist.job().dest != cjob->dest)
 				    continue;
 				cjob = joblist;
@@ -2768,7 +2781,8 @@ faxQueueApp::runScheduler()
 			 * of the sleep queue and batch them directly.
 			 */
 			blockSignals();
-			for (JobIter sleepiter(sleepq); batchedjobs < maxBatchJobs && sleepiter.notDone(); sleepiter++) {
+			for (JobIter sleepiter(sleepq); batchedjobs < maxBatchJobs && sleepiter.notDone() && qlencount < maxTraversal; sleepiter++) {
+			    qlencount++;
 			    cjob = sleepiter;
 			    if (cjob->dest != job.dest || cjob->state != FaxRequest::state_sleeping)
 				continue;
@@ -3442,6 +3456,7 @@ faxQueueApp::numbertag faxQueueApp::numbers[] = {
 { "maxconcurrentjobs",	&faxQueueApp::maxConcurrentCalls, 1 },
 { "maxconcurrentcalls",	&faxQueueApp::maxConcurrentCalls, 1 },
 { "maxbatchjobs",	&faxQueueApp::maxBatchJobs,	(u_int) 64 },
+{ "maxtraversal",	&faxQueueApp::maxTraversal,	(u_int) 64 },
 { "maxsendpages",	&faxQueueApp::maxSendPages,	(u_int) -1 },
 { "maxtries",		&faxQueueApp::maxTries,		(u_int) FAX_RETRIES },
 { "maxdials",		&faxQueueApp::maxDials,		(u_int) FAX_REDIALS },

@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1010 2010-09-07 16:47:36Z faxguy $
+.\"	$Id: hylafax-config.4f 1028 2010-11-17 05:35:59Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-09-07 09:47:36 -0700 (Tue, 07 Sep 2010) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-11-16 21:35:59 -0800 (Tue, 16 Nov 2010) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -181,6 +181,7 @@ MaxDials¹	integer	\s-112\s+1	max phone calls to make to transmit a job
 MaxRecvPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a receive
 MaxSendPages¹	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a send
 MaxSetupAttempts	integer	\s-12\s+1	max attempts to initialize a modem
+MaxTraversal¹	integer	64	max traversal into queue for batching
 MaxTries¹	integer	\s-13\s+1	max attempts to transmit a job
 MinAcceptedLineCount	integer	\s-110\s+1	min number of rows for \s-1OK\s+1 page quality
 ModemGroup¹	string	\-	define a name for a set of modems
@@ -1255,6 +1256,13 @@ mechanism.
 .B MaxSetupAttempts
 The maximum number of times a \*(Fx server program will attempt
 to initialize a modem before considering it ``\fIwedged\fP''.
+.TP
+.B MaxTraversal¹
+The maximum depth into the job queues that the scheduler will traverse
+in attempts to batch jobs together in a single call.  This is intended
+to prevent the scheduler from wasting a lot of CPU in batching attempts
+when the job queues get very long (where batching is unlikely to be 
+useful anyway).
 .TP
 .B MaxTries¹
 The default value for the maximum number of times the server will
