@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 979 2010-02-07 01:59:39Z faxguy $ */
+/*	$Id: faxQueueApp.h 1028 2010-11-17 05:35:59Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -86,6 +86,7 @@ private:
     fxStr	contCoverPageTemplate;	// continuation cover page template
     u_int	postscriptTimeout;	// timeout on PostScript imager calls
     u_int	maxBatchJobs;		// max jobs in a batch
+    u_int	maxTraversal;		// max traversal into the queue for batching
     u_int	maxConcurrentCalls;	// max parallel jobs to a destination
     u_int	maxSendPages;		// max pages in a send job
     u_int	maxDials;		// max times to dial the phone for a job
