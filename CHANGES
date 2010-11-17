@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1028 2010-11-17 05:35:59Z faxguy $	
+#	$Id: CHANGES 1029 2010-11-17 22:34:07Z faxguy $	
 
 New Changes
 
+* modify and fix scheduler throttle (17 Nov 2010)
 * add MaxTraversal scheduler config option (16 Nov 2010)
 * use tiff2pdf instead of tiff2ps in tiff2fax conversions (6 Nov 2010)
 * enable auto-rotate.ps by default with AUTOROTATE FaxModify feature
