@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1028 2010-11-17 05:35:59Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1029 2010-11-17 22:34:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -93,7 +93,7 @@ faxQueueApp::SchedTimeout::start(u_short s)
      * So we keep the scheduler from running more than
      * once per second.
      */
-    if (!started && Sys::now() != lastRun) {
+    if (!started && Sys::now() > lastRun) {
 	started = true;
 	pending = false;
 	Dispatcher::instance().startTimer(s, 1, this);
@@ -2424,7 +2424,7 @@ faxQueueApp::runJob(Job& job)
      * running the scheduler.  Thus the scheduler is poked
      * with a delay.
      */
-    pokeScheduler(1);
+    pokeScheduler(3);
 }
 
 /*
