@@ -1,4 +1,4 @@
-# $Id: eicon-2 863 2008-07-28 16:39:16Z faxguy $
+# $Id: eicon-2 1030 2010-11-19 03:33:18Z faxguy $
 #
 # prototype config file for the Eicon Diva ISDN Modem
 #
@@ -40,6 +40,8 @@ ModemResetCmds:         AT#CID=14
 # 2nd controller - ttyds03 (AT#CID=14+iQ=a2), ttyds04 (AT#CID=14+iQ=a2)
 # 3rd controller - ttyds05 (AT#CID=14+iQ=a3), ttyds06 (AT#CID=14+iQ=a3)
 # 4th controller - ttyds07 (AT#CID=14+iQ=a4), ttyds08 (AT#CID=14+iQ=a4)
+#
+# Bind Modem to Controller N Line M:      AT+iQ=aN+iK=aM
 #
 #ModemResetCmds:         AT#CID=14+iQ=a1
 
