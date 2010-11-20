@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 1017 2010-10-08 19:35:41Z faxguy $ */
+/*	$Id: Class1Send.c++ 1031 2010-11-21 03:59:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -92,17 +92,21 @@ Class1Modem::dialResponse(fxStr& emsg)
 	case AT_NOANSWER:   return (NOANSWER);	// no answer or ring back
 	case AT_TIMEOUT:    return (FAILURE);	// timed out w/o response
 	case AT_CONNECT:    return (OK);	// fax connection
+	case AT_DLEEOT:
 	case AT_OK:
 	    /*
 	     * Apparently some modems (like the AT&T DataPort) can respond OK
 	     * to indicate NO CARRIER.  Other modems, like the Lucent/Agere Venus
-	     * and Agere/LSI OCM/OCF and CFAX34 can respond OK to indicate a 
-	     * V.34/V.8 handshake incompatibility.  We need to trigger 
+	     * and Agere/LSI OCM/OCF and CFAX34 can respond OK or DLE+EOT to
+	     * indicate a V.34/V.8 handshake incompatibility.  We need to trigger 
 	     * hasV34Trouble for the latter case.
 	     */
 	    if (conf.class1EnableV34Cmd != "" && serviceType == SERVICE_CLASS10)
 		return (V34FAIL);
-	    return (NOCARRIER);
+	    if (r == AT_OK)
+		return (NOCARRIER);
+	    else
+		return (FAILURE);
 	case AT_FCERROR:
 	    /*
 	     * Some modems that support adaptive-answer assert a data

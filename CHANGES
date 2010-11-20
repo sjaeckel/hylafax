@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1029 2010-11-17 22:34:07Z faxguy $	
+#	$Id: CHANGES 1031 2010-11-21 03:59:09Z faxguy $	
 
 New Changes
 
+* detect hasV34Trouble for Class 1.0 DLE+EOT dial responses (20 Nov 2010)
 * modify and fix scheduler throttle (17 Nov 2010)
 * add MaxTraversal scheduler config option (16 Nov 2010)
 * use tiff2pdf instead of tiff2ps in tiff2fax conversions (6 Nov 2010)
