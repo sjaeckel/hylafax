@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 1032 2010-11-23 03:04:23Z faxguy $ */
+/*	$Id: faxmail.c++ 1033 2010-11-23 04:21:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -84,6 +84,7 @@ private:
     bool	autoCoverPage;		// make cover page for direct delivery
     bool	formatEnvHeaders;	// format envelope headers
     bool	trimText;		// trim text parts
+    bool	firstAlternativeOnly;	// only use the first multipart/alternative part
 
     void formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg);
     void formatText(FILE* fd, MIMEState& mime);
@@ -554,8 +555,13 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 
 	    MIMEState bodyMime(mime);		// state for sub-part
 	    formatMIME(fd, bodyMime, bodyHdrs);
-	    last = bodyMime.isLastPart();
-	    mime.external = bodyMime.external;
+	    if (firstAlternativeOnly && mime.getSubType() == "alternative") {
+		discardPart(fd, bodyMime);
+		last = true;
+	    } else {
+		last = bodyMime.isLastPart();
+		mime.external = bodyMime.external;
+	    }
 	}
     }
 }
@@ -840,6 +846,7 @@ faxMailApp::setupConfig()
     autoCoverPage = true;		// a la sendfax
     formatEnvHeaders = true;		// format envelope headers by default
     trimText = false;			// don't trim leading CRs from text parts by default
+    firstAlternativeOnly = true;	// by default only use the first alternative
 
     setPageHeaders(false);		// disable normal page headers
     setNumberOfColumns(1);		// 1 input page per output page
@@ -871,6 +878,8 @@ faxMailApp::setConfigItem(const char* tag, const char* value)
 	formatEnvHeaders = getBoolean(value);
     else if (streq(tag, "trimtext"))
 	trimText = getBoolean(value);
+    else if (streq(tag, "firstalternativeonly"))
+	firstAlternativeOnly = getBoolean(value);
     else if (streq(tag, "mimeconverters"))
 	mimeConverters = value;
     else if (streq(tag, "prologfile"))

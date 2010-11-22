@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1032 2010-11-23 03:04:23Z faxguy $	
+#	$Id: CHANGES 1033 2010-11-23 04:21:57Z faxguy $	
 
 New Changes
 
+* add faxmail FirstAlternativeOnly configuration option and only
+  use the first alternative part by default (22 Nov 2010)
 * add support for UTF-8 in textfmt and faxmail (22 Nov 2010)
 * detect hasV34Trouble for Class 1.0 DLE+EOT dial responses (20 Nov 2010)
 * modify and fix scheduler throttle (17 Nov 2010)
