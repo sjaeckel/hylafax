@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1029 2010-11-17 22:34:07Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1034 2010-11-23 04:25:56Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3456,7 +3456,7 @@ faxQueueApp::numbertag faxQueueApp::numbers[] = {
 { "maxconcurrentjobs",	&faxQueueApp::maxConcurrentCalls, 1 },
 { "maxconcurrentcalls",	&faxQueueApp::maxConcurrentCalls, 1 },
 { "maxbatchjobs",	&faxQueueApp::maxBatchJobs,	(u_int) 64 },
-{ "maxtraversal",	&faxQueueApp::maxTraversal,	(u_int) 64 },
+{ "maxtraversal",	&faxQueueApp::maxTraversal,	(u_int) 256 },
 { "maxsendpages",	&faxQueueApp::maxSendPages,	(u_int) -1 },
 { "maxtries",		&faxQueueApp::maxTries,		(u_int) FAX_RETRIES },
 { "maxdials",		&faxQueueApp::maxDials,		(u_int) FAX_REDIALS },
