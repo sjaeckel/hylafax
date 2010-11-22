@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.c++ 1000 2010-06-19 21:10:22Z faxguy $ */
+/*	$Id: MIMEState.c++ 1032 2010-11-23 03:04:23Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -91,6 +91,7 @@ MIMEState::trace(FILE* fd)
     };
     static const char* cnames[] = {
 	"us-ascii",
+	"utf-8",
 	"iso-8859-1",
 	"iso-8859-2",
 	"iso-8859-3",
@@ -269,6 +270,8 @@ MIMEState::setCharset(const char* cp)
 {
     if (strcasecmp(cp, "us-ascii") == 0)
 	charset = CS_USASCII;
+    else if (strcasecmp(cp, "utf-8") == 0)
+	charset = CS_UTF8;
     else if (strcasecmp(cp, "iso-8859-1") == 0)
 	charset = CS_ISO8859_1;
     else if (strcasecmp(cp, "iso-8859-2") == 0)

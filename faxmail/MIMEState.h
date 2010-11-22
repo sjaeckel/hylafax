@@ -1,4 +1,4 @@
-/*	$Id: MIMEState.h 784 2008-02-07 18:26:39Z faxguy $ */
+/*	$Id: MIMEState.h 1032 2010-11-23 03:04:23Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -41,6 +41,7 @@ enum Encoding {			// content-transfer-encoding
 
 enum Charset {			// charset
     CS_USASCII,			// us-ascii
+    CS_UTF8,			// utf-8
     CS_ISO8859_1,		// iso-8859-1
     CS_ISO8859_2,		// iso-8859-2
     CS_ISO8859_3,		// iso-8859-3

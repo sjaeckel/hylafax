@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1031 2010-11-21 03:59:09Z faxguy $	
+#	$Id: CHANGES 1032 2010-11-23 03:04:23Z faxguy $	
 
 New Changes
 
+* add support for UTF-8 in textfmt and faxmail (22 Nov 2010)
 * detect hasV34Trouble for Class 1.0 DLE+EOT dial responses (20 Nov 2010)
 * modify and fix scheduler throttle (17 Nov 2010)
 * add MaxTraversal scheduler config option (16 Nov 2010)
