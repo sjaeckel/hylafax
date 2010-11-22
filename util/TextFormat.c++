@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.c++ 961 2009-12-05 21:06:39Z faxguy $ */
+/*	$Id: TextFormat.c++ 1032 2010-11-23 03:04:23Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -148,6 +148,7 @@ void TextFormat::setOutputFile(FILE* f)		{ output = f; }
 void TextFormat::setNumberOfColumns(u_int n)	{ numcol = n; }
 void TextFormat::setPageHeaders(bool b)		{ headers = b; }
 void TextFormat::setISO8859(bool b)		{ useISO8859 = b; }
+void TextFormat::setUTF8(bool b)		{ useUTF8 = b; }
 void TextFormat::setLineWrapping(bool b)		{ wrapLines = b; }
 void TextFormat::setOutlineMargin(TextCoord o)	{ outline = o; }
 void TextFormat::setTextPointSize(TextCoord p)	{ pointSize = p; }
@@ -756,6 +757,31 @@ TextFormat::format(FILE* fp)
 {
     int c;
     while ((c = getc(fp)) != EOF) {
+	if (useUTF8) {
+	    if ((c & 0xC0) == 0xC0) {		// c is a multi-byte character
+		// determine the number of bytes used
+		int b = 2;
+		c = (c << 2) & 0xFF;
+		while (c & 0x80) {
+		    c = (c << 1) & 0xFF;
+		    b++;
+		}
+		c = c >> b;
+		// add-up all the byte values
+		int cnext;
+		while (b > 1) {
+		    /*
+		     * The byte is required to start with 0x80 bits as
+		     * a marker, but if it doesn't, then we can't do 
+		     * anything because the data stream is therefore 
+		     * broken UTF-8, so we just assume it's good.
+		     */
+		    cnext = getc(fp) & 0x3F;
+		    c = (c << 6) | cnext;
+		    b--;
+		}
+	    }
+	}
 	switch (c) {
 	case '\0':			// discard nulls
 	    break;
@@ -849,6 +875,31 @@ TextFormat::format(const char* cp, u_int cc)
     const char* ep = cp+cc;
     while (cp < ep) {
 	int c = *cp++ & 0xff;
+	if (useUTF8) {
+	    if ((c & 0xC0) == 0xC0) {		// c is a multi-byte character
+		// determine the number of bytes used
+		int b = 2;
+		c = (c << 2) & 0xFF;
+		while (c & 0x80) {
+		    c = (c << 1) & 0xFF;
+		    b++;
+		}
+		c = c >> b;
+		// add-up all the byte values
+		int cnext;
+		while (b > 1) {
+		    /*
+		     * The byte is required to start with 0x80 bits as
+		     * a marker, but if it doesn't, then we can't do 
+		     * anything because the data stream is therefore 
+		     * broken UTF-8, so we just assume it's good.
+		     */
+		    cnext = *cp++ & 0x3F;
+		    c = (c << 6) | cnext;
+		    b--;
+		}
+	    }
+	}
 	switch (c) {
 	case '\0':			// discard nulls
 	    break;
@@ -1067,6 +1118,7 @@ TextFormat::setupConfig()
     gaudy	= false;	// emit gaudy headers
     landscape	= false;	// horizontal landscape mode output
     useISO8859	= true;		// use the ISO 8859-1 character encoding
+    useUTF8	= false;	// use the UTF-8 character encoding
     reverse	= false;	// page reversal flag
     wrapLines	= true;		// wrap/truncate lines
     headers	= true;		// emit page headers
@@ -1107,6 +1159,8 @@ TextFormat::setConfigItem(const char* tag, const char* value)
 	setLineWrapping(getBoolean(value));
     else if (streq(tag, "iso8859"))
 	setISO8859(getBoolean(value));
+    else if (streq(tag, "utf8"))
+	setUTF8(getBoolean(value));
     else if (streq(tag, "textfont"))
 	setTextFont(value);
     else if (streq(tag, "gaudyheaders"))

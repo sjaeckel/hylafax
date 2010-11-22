@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 945 2009-09-29 11:46:02Z faxguy $ */
+/*	$Id: faxmail.c++ 1032 2010-11-23 03:04:23Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -461,14 +461,21 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	 * subject lines to show properly, as well as any 
 	 * subsequent non-ASCII mail parts.
 	 *
-	 * Eventually it may be best to have the character set 
-	 * be selected by a command-line argument, however, since
-	 * TextFormat.c++ only supports ISO-8859-1 at the moment
-	 * there is no point.  And since ASCII is completely 
-	 * covered by ISO-8859-1 there is no reason to prefer
-	 * ASCII over ISO-8859-1.
+	 * However, since TextFormat.c++ only supports ISO-8859-1 
+	 * characters at the moment there is no point.  And since 
+	 * ASCII is completely covered by ISO-8859-1 there is no 
+	 * reason to prefer ASCII over ISO-8859-1.
 	 */
 	setISO8859(true);
+
+	/*
+	 * Although, technically a character set, because there
+	 * really are not direct UTF-8 font sets, we therefore 
+	 * view UTF-8 as another.  TextFormat knows how to handle
+	 * UTF-8 text, and so we just tell it to do so here.
+	 */
+	if (mime.getCharset() == CS_UTF8)
+	    setUTF8(true);
 
 	/*
 	 * Check first for any external script/command to

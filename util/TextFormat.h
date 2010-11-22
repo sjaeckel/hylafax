@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.h 408 2007-01-01 18:44:29Z faxguy $ */
+/*	$Id: TextFormat.h 1032 2010-11-23 03:04:23Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -91,6 +91,7 @@ private:
     bool	gaudy;		// emit gaudy headers
     bool	landscape;	// horizontal landscape mode output
     bool	useISO8859;	// use the ISO 8859-1 character encoding
+    bool	useUTF8;	// use the UTF8 character encoding
     bool	reverse;	// page reversal flag
     bool	wrapLines;	// wrap/truncate lines
     bool	headers;	// emit page headers
@@ -162,7 +163,9 @@ public:
     void setLineWrapping(bool);
     bool getLineWrapping(void) const;
     void setISO8859(bool);
+    void setUTF8(bool);
     bool getISO8859(void) const;
+    bool getUTF8(void) const;
     bool setTextFont(const char* fontName);
     void setGaudyHeaders(bool);
     bool setPageMargins(const char*);
@@ -229,6 +232,7 @@ inline TextCoord TextFormat::getXOff(void) const		{ return xoff; }
 inline TextCoord TextFormat::getRHS(void) const		{ return right_x; }
 inline TextCoord TextFormat::getTextLineHeight(void) const	{ return lineHeight; }
 inline bool TextFormat::getISO8859(void) const		{ return useISO8859; }
+inline bool TextFormat::getUTF8(void) const		{ return useUTF8; }
 inline const TextFont* TextFormat::getFont(void) const	{ return curFont; }
 inline FILE* TextFormat::getOutputFile(void)		{ return tf; }
 #endif /* _TextFormat_ */
