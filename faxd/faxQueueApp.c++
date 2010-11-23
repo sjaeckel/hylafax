@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1034 2010-11-23 04:25:56Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1036 2010-11-23 22:55:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2424,7 +2424,7 @@ faxQueueApp::runJob(Job& job)
      * running the scheduler.  Thus the scheduler is poked
      * with a delay.
      */
-    pokeScheduler(3);
+    pokeScheduler(1);
 }
 
 /*
