@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 1027 2010-11-06 21:52:24Z faxguy $
+#    $Id: common-functions.sh.in 1035 2010-11-23 18:37:40Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -35,12 +35,12 @@ encode()
 #
 setInfoSize()
 {
-    INFOSIZE=`$INFO -n $1 | $SED 's/:.*//g' | $SED q | wc -L`
+    INFOSIZE=`$INFO -n $1 | $SED 's/:.*//g' | $SED q | $AWK 'BEGIN {L=0} length>L {L=length} END {print L}'`
     for ITEM in DICTSENDER DICTPAGES DICTQUALITY DICTSIZE DICTRECEIVED \
 		DICTTIMETORECV DICTSIGNALRATE DICTDATAFORMAT DICTERRCORRECT \
 		DICTCALLID1 DICTCALLID2 DICTCALLID3 DICTCALLID4 DICTCALLID \
 		DICTCALLID6 DICTCALLID7 DICTRECEIVEDON DICTCOMMID; do
-	THISLEN="`eval echo \\\""$"$ITEM\\\" | wc -L | $SED 's/ //g'`"
+	THISLEN="`eval echo \\\""$"$ITEM\\\" | $AWK 'BEGIN {L=0} length>L {L=length} END {print L}' | $SED 's/ //g'`"
 	if [ $THISLEN -gt $INFOSIZE ]; then INFOSIZE=$THISLEN; fi
     done
 }
@@ -57,7 +57,7 @@ setItemSize()
 		DICTCALLS DICTPAGES DICTATTEMPTS DICTDIRNUM DICTRECEIVER DICTQUALITY \
 		DICTPAGEWIDTH DICTPAGELENGTH DICTDATAFORMAT DICTREMOTEEQUIPMENT \
 		DICTREMOTESTATION DICTSIGNALRATE; do
-	THISLEN="`eval echo \\\""$"$ITEM\\\" | wc -L | $SED 's/ //g'`"
+	THISLEN="`eval echo \\\""$"$ITEM\\\" | $AWK 'BEGIN {L=0} length>L {L=length} END {print L}' | $SED 's/ //g'`"
 	if [ $THISLEN -gt $ITEMSIZE ]; then ITEMSIZE=$THISLEN; fi
     done
 }
@@ -91,7 +91,7 @@ faxInfo()
 
 printFormatted()
 {
-    $AWK -F\| -v s=$1 'BEGIN { size = s; } { ("echo \""$1"\" | wc -L") | getline ilen; close("echo \""$1"\" | wc -L"); printf "%"size-ilen"s%s:%s\n", "",$1,$2 }'
+    $AWK -F\| -v s=$1 'BEGIN { size = s; } { ilen=length($1); printf "%"size-ilen"s%s:%s\n", "",$1,$2 }'
 }
 
 #
