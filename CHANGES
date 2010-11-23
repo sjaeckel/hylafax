@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1033 2010-11-23 04:21:57Z faxguy $	
+#	$Id: CHANGES 1035 2010-11-23 18:37:40Z faxguy $	
 
 New Changes
 
+* replace 'wc -L' with awk in scripting for portability (23 Nov 2010)
 * add faxmail FirstAlternativeOnly configuration option and only
   use the first alternative part by default (22 Nov 2010)
 * add support for UTF-8 in textfmt and faxmail (22 Nov 2010)
