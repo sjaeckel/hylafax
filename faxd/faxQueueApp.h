@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 1029 2010-11-17 22:34:07Z faxguy $ */
+/*	$Id: faxQueueApp.h 1036 2010-11-23 22:55:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -238,7 +238,7 @@ private:
 
     bool	scheduling();
     void	runScheduler();
-    void	pokeScheduler(u_short s = 2);
+    void	pokeScheduler(u_short s = 0);
 // job control stuff
     void	ctrlJobDone(Job& job, int status);
 // job preparation stuff
