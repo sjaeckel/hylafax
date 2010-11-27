@@ -14,9 +14,14 @@ DEVICE=pswrite
 
 . @SPOOL@/etc/setup.cache
 
-if [ -n "`$GSRIP -h | $GREP ps2write`" ]; then
-    DEVICE=ps2write
-fi
+#
+# Some reports indicate that ps2write output can look better than 
+# pswrite, but in some cases ps2write output will be just wrong.
+# Enable this with care.
+#
+#if [ -n "`$GSRIP -h | $GREP ps2write`" ]; then
+#    DEVICE=ps2write
+#fi
 
 $GSRIP -q -dPDFFitPage -dBATCH -dNOPAUSE \
     -sDEVICE=$DEVICE -sOutputFile=- "$1"
