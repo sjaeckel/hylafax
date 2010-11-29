@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 1035 2010-11-23 18:37:40Z faxguy $
+#    $Id: common-functions.sh.in 1038 2010-11-30 01:30:13Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -187,12 +187,12 @@ gs2fax()
     # when using 196-204 dpi and tiffg3/4, it supposedly does the same for
     # B4 but not for A3, thus the floats are needed (for A3's benefit).
     #
-    # A suggestion from "Alan Sparks" <asparks@nss.harris.com> was to add
-    # the -dFIXEDMEDIA argument to the gs command in ps2fax.  This 
-    # prevents page sizing within the documents from altering the 
-    # command-line page size specification.  However, this prevents TIFFs 
-    # to be made with pages of varied length.
-    #
+    # By default, we use a combination of -dEPSFitPage, -dPDFFitPage, and
+    # -dFIXEDMEDIA so that the image is resized to fit the page media and
+    # to prevent page sizing within the documents from altering the command-
+    # line page-size specification.  However, this prevents TIFFs from 
+    # being made with pages of varied length.
+    # 
     # See ghostscript/doc/Devices.htm under -dAdjustWidth=1 (default).
     # Use -dAdjustWidth=0 to disable.  With the right patch,
     # http://bugs.ghostscript.com/show_bug.cgi?id=688064
@@ -200,24 +200,20 @@ gs2fax()
     # replace -dFIXEDMEDIA to permit TIFFs to be produced with
     # varied lengths.
     #
-    # However, typically the favored fixed-width approach is to use the
-    # -dPDFFitPage alternative which has the difference of "resizing" 
-    # images to fit the page rather than cutting them off.
-    #
-    FIXEDWIDTH="-dPDFFitPage"
+    FIXEDWIDTH="-dEPSFitPage -dPDFFitPage -dFIXEDMEDIA"
 
     case "$paper" in
 	a4)
 	    case "$pagewidth" in
 		2592) hres=313.65;;		# VR_300X300
 		3456) hres=418.20;;		# VR_R16
-		*) hres=209.10;;		# everything else, 1728 pixels
+		*) hres=204;;			# everything else, 1728 pixels (should be 209.10)
 	    esac;;
 	b4)
 	    case "$pagewidth" in
 		3072) hres=311.97;;		# VR_300X300
 		4096) hres=415.95;;		# VR_R16
-		*) hres=207.98;;		# everything else, 2048 pixels
+		*) hres=204;;			# everything else, 2048 pixels (should be 207.98)
 	    esac;;
 	a3)
 	    case "$pagewidth" in
@@ -359,20 +355,20 @@ gs2fax()
     if [ "$DITHERING" = "libtiff-fs" ]; then
 	$RM -f $out.1 $out.2 $out.3
     fi
-    if [ "$df" = "g4" ]; then
-	#
-	# Double-check the Ghostscript output to make sure it's what we need.
-	#
-	CHECK=$SBIN/tiffcheck       # program to check acceptability
-	PS2FAX=                     # null to prevent recursion
-	TIFFCP=$TIFFBIN/tiffcp      # part of the TIFF distribution
-	TIFF2PS=$TIFFBIN/tiff2ps    # ditto
-	TIFFINFO=$TIFFBIN/tiffinfo  # ditto
+    #
+    # Double-check the Ghostscript output to make sure it's what we need.
+    # This is important, because, for example, if we don't have the 
+    # necessary pixel-width then the fax wouldd likely fail.
+    #
+    CHECK=$SBIN/tiffcheck       # program to check acceptability
+    PS2FAX=                     # null to prevent recursion
+    TIFFCP=$TIFFBIN/tiffcp      # part of the TIFF distribution
+    TIFF2PS=$TIFFBIN/tiff2ps    # ditto
+    TIFFINFO=$TIFFBIN/tiffinfo  # ditto
     
-	fil=$out
+    fil=$out
 
-	tiffCheck
-    fi
+    tiffCheck
 }
 
 tiffCheck()
