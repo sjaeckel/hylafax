@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1037 2010-11-27 20:47:41Z faxguy $	
+#	$Id: CHANGES 1038 2010-11-30 01:30:13Z faxguy $	
 
 New Changes
 
+* use -dEPSFitPage -dPDFFitPage -dFIXEDMEDIA by default (29 Nov 2010)
 * revert to pswrite for faxmail pdf MIMEConverter (27 Nov 2010)
 * replace 'wc -L' with awk in scripting for portability (23 Nov 2010)
 * add faxmail FirstAlternativeOnly configuration option and only
