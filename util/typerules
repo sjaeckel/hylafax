@@ -1,4 +1,4 @@
-#	$Id: typerules 1015 2010-09-22 04:28:50Z faxguy $
+#	$Id: typerules 1039 2010-12-03 06:34:37Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -175,6 +175,9 @@
 # renderings, but they're better than nothing, perhaps.
 #0	short		0xd0cf		ps	antiword -p letter -m 8859-1.txt %i > %o
 0	short		0xd0cf		error	Microsoft Word Document support not configured
+# Office 2007 uses a zipped Open-XML file format.  Magic typing
+# cannot distinguish between those files and other zip files.
+0	long		!0x6d696d65	error	Zip v2.0 support not configured
 
 #
 # You can try to use html2ps for HTML documents...
