@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 965 2009-12-22 06:07:31Z faxguy $ */
+/*	$Id: FaxModem.h 1040 2010-12-04 01:22:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -87,7 +87,7 @@ private:
     u_char*	recvRow;	// current receive row raster
     u_char*	recvPageStart;	// pointer to start of page buffer
     u_long*	savedWriteOff;	// file offset at start of page data
-    u_long*	savedStripByteCounts;	// byte counts at start of page data
+    TIFFSTRIPBYTECOUNTS*	savedStripByteCounts;	// byte counts at start of page data
     int		decodedPixels;	// number of pixels decoded with error
     int		decoderFd[2];	// file descriptors for the decoder pipe
     int		counterFd[2];	// file descriptors for the counter pipe

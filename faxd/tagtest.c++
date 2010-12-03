@@ -1,4 +1,4 @@
-/*	$Id: tagtest.c++ 743 2008-01-01 01:21:42Z faxguy $ */
+/*	$Id: tagtest.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -553,7 +553,7 @@ main(int argc, char* argv[])
 
 	uint16 fillorder;
 	TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
-	uint32* stripbytecount;
+	TIFFSTRIPBYTECOUNTS* stripbytecount;
 	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
 
 	bool firstStrip = setupTagLineSlop(params);

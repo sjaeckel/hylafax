@@ -1,4 +1,4 @@
-/*	$Id: FileTransfer.c++ 952 2009-11-07 00:23:31Z faxguy $ */
+/*	$Id: FileTransfer.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -204,7 +204,7 @@ HylaFAXServer::retrievePageCmd(const char* name)
 		 * amount of image data and then adding in
 		 * the expected data for the TIFF headers.
 		 */
-		uint32* sb;
+		TIFFSTRIPBYTECOUNTS* sb;
 		TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &sb);
 		file_size = sizeof (DirTemplate) +
 		    sizeof (TIFFHEADER) + sizeof (uint16);
@@ -419,7 +419,7 @@ HylaFAXServer::sendTIFFHeader(TIFF* tif, int fdout)
 bool
 HylaFAXServer::sendITIFFData(TIFF* tif, int fdout)
 {
-    uint32* sb;
+    TIFFSTRIPBYTECOUNTS* sb;
     (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &sb);
     tdata_t buf = _TIFFmalloc(sb[0]);
     tsize_t bsize = sb[0];
