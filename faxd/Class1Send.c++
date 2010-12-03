@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 1031 2010-11-21 03:59:09Z faxguy $ */
+/*	$Id: Class1Send.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1814,7 +1814,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	 * It is tempting to want to use TIFFStripSize() instead
 	 * of summing stripbytecounts, but the two are not equal.
 	 */
-	uint32* stripbytecount;
+	TIFFSTRIPBYTECOUNTS* stripbytecount;
 	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
 	tstrip_t strip;
 	u_long totdata = 0;

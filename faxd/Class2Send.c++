@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 965 2009-12-22 06:07:31Z faxguy $ */
+/*	$Id: Class2Send.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -454,7 +454,7 @@ Class2Modem::sendPageData(TIFF* tif, u_int pageChop)
 	 * Calculate total amount of space needed to read
 	 * the image into memory (in its encoded format).
 	 */
-	uint32* stripbytecount;
+	TIFFSTRIPBYTECOUNTS* stripbytecount;
 	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
 	tstrip_t strip;
 	u_long totdata = 0;

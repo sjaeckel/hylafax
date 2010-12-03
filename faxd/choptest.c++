@@ -1,4 +1,4 @@
-/*	$Id: choptest.c++ 216 2006-06-22 15:06:36Z faxguy $ */
+/*	$Id: choptest.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -117,7 +117,7 @@ main(int argc, char* argv[])
 
 	    uint16 fillorder;
 	    TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
-	    uint32* stripbytecount;
+	    TIFFSTRIPBYTECOUNTS* stripbytecount;
 	    (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
 
 	    u_int totbytes = (u_int) stripbytecount[0];

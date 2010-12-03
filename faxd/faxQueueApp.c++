@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1036 2010-11-23 22:55:33Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1012,7 +1012,7 @@ faxQueueApp::preparePageChop(const FaxRequest& req,
     TIFF* tif, const Class2Params& params, fxStr& pagehandling)
 {
     tstrip_t s = TIFFNumberOfStrips(tif)-1;
-    uint32* stripbytecount;
+    TIFFSTRIPBYTECOUNTS* stripbytecount;
     (void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
     u_int stripSize = (u_int) stripbytecount[s];
     if (stripSize == 0)

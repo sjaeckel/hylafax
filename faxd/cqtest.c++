@@ -1,4 +1,4 @@
-/*	$Id: cqtest.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: cqtest.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -563,7 +563,7 @@ main(int argc, char* argv[])
 
 	cq.recvSetupTIFF(tifout, 0, cq.recvFillOrder, params);
 
-	uint32* stripbytecount;
+	TIFFSTRIPBYTECOUNTS* stripbytecount;
 	(void) TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &stripbytecount);
 	for (u_int strip = 0; strip < TIFFNumberOfStrips(tif); strip++) {
 	    u_int totbytes = (u_int) stripbytecount[strip];

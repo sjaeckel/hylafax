@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 1021 2010-10-25 21:06:58Z faxguy $
+#	$Id: configure 1040 2010-12-04 01:22:27Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 1021 $"
+	echo "This is HylaFAX configure $Revision: 1040 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -2587,12 +2587,15 @@ EOF
 	if [ ${header_ver} -ge 19960307 ]; then
 	    case ${lib_ver} in
 		3.4)		tiff_runlen_t="uint16"
+				echo '#define TIFFSTRIPBYTECOUNTS uint32'
 				echo '#define TIFFVERSION TIFF_VERSION'
 				echo '#define TIFFHEADER TIFFHeader';;
 		3.[56789])	tiff_runlen_t="uint32"
+				echo '#define TIFFSTRIPBYTECOUNTS uint32'
 				echo '#define TIFFVERSION TIFF_VERSION'
 				echo '#define TIFFHEADER TIFFHeader';;
 		4.0)		tiff_runlen_t="uint32"
+				echo '#define TIFFSTRIPBYTECOUNTS uint64'
 				echo '#define TIFFVERSION TIFF_VERSION_CLASSIC'
 				echo '#define TIFFHEADER TIFFHeaderClassic';;
 	    esac
