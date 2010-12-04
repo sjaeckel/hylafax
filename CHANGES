@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1040 2010-12-04 01:22:27Z faxguy $	
+#	$Id: CHANGES 1041 2010-12-04 19:43:07Z faxguy $	
 
 New Changes
 
+* fix typerules byte type offset handling (4 Dec 2010)
 * fix stripbytecount problem in libtiff 4.0 support (3 Dec 2010)
 * use -dEPSFitPage -dPDFFitPage -dFIXEDMEDIA by default (29 Nov 2010)
 * revert to pswrite for faxmail pdf MIMEConverter (27 Nov 2010)

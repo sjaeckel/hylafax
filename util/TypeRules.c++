@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.c++ 989 2010-03-22 05:53:32Z faxguy $ */
+/*	$Id: TypeRules.c++ 1041 2010-12-04 19:43:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -148,7 +148,7 @@ TypeRule::match(const void* data, size_t size, bool verbose) const
 	v = (u_long) off;
 	break;
     case BYTE:
-	v = *cp;
+	v = *(cp+off);
 	break;
     case SHORT:
 	if (off + 2 < (off_t)size) {
@@ -173,6 +173,8 @@ TypeRule::match(const void* data, size_t size, bool verbose) const
     /*
      * Numeric value, use operation.
      */
+    if (verbose)
+	printf("found %#llx -- ", (long long) v);
     switch (op) {
     case ANY:	ok = true; break;
     case EQ:	ok = (v == value.v); break;
