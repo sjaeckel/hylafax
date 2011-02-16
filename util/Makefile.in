@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 961 2009-12-05 21:06:39Z faxguy $
+#	$Id: Makefile.in 1042 2011-02-16 18:21:47Z faxguy $
 #
 # @WARNING@
 #
@@ -206,8 +206,10 @@ install: installClient
 	${PUTSUPDDICT} -m 644 -src dict-pt -O pt
 	${PUTSUPDDICT} -m 644 -src dict-pt_BR -O pt_BR
 	${PUTSUPDDICT} -m 644 -src dict-ro -O ro
+	${PUTSUPDDICT} -m 644 -src dict-ru -O ru
 	${PUTSUPDDICT} -m 644 -src dict-sr -O sr
 	${PUTSUPDDICT} -m 644 -src dict-tr -O tr
+	${PUTSUPDDICT} -m 644 -src dict-uk -O uk
 	${PUTSUPDDICT} -m 644 -src dict-zh -O zh
 	${PUTSERVER} -root ${INSTALLROOT} -F ${SPOOL}/etc -m 444 -idb "config(update)" \
 	    -src ${SRCDIR}/dpsprinter.ps -O dpsprinter.ps
@@ -259,5 +261,5 @@ clobberconfig:
 		faxrcvd.sh mkcover.sh notify.sh pcl2fax.sh pollrcvd.sh \
 		ps2fax.dps.sh ps2fax.gs.sh ps2fax.imp.sh tiff2fax.sh tiff2pdf.sh \
 		wedged.sh qp-encode.awk rfc2047-encode.awk archive.sh pdf2fax.gs.sh common-functions.sh \
-		dict-de dict-en dict-es dict-fr dict-it dict-nl_BE dict-pl dict-pt dict-pt_BR dict-ro dict-sr dict-tr dict-zh
+		dict-de dict-en dict-es dict-fr dict-it dict-nl_BE dict-pl dict-pt dict-pt_BR dict-ru dict-ro dict-sr dict-tr dict-uk dict-zh
 

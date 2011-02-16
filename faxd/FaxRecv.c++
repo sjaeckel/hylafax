@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: FaxRecv.c++ 1042 2011-02-16 18:21:47Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -199,7 +199,7 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, F
 	    info.sender = "<UNSPECIFIED>";
 	if (qualifyTSI != "") {
 	    okToRecv = isTSIOk(info.sender);
-	    reason = "Permission denied (unnacceptable client TSI)";
+	    reason = "Permission denied (unacceptable client TSI)";
 	    traceServer("%s TSI \"%s\"", okToRecv ? "ACCEPT" : "REJECT",
 		(const char*) info.sender);
 	}
@@ -207,7 +207,7 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, F
 	    info.passwd = "<UNSPECIFIED>";
 	if (qualifyPWD != "") {
 	    okToRecv = isPWDOk(info.passwd);
-	    reason = "Permission denied (unnacceptable client PWD)";
+	    reason = "Permission denied (unacceptable client PWD)";
 	    traceServer("%s PWD \"%s\"", okToRecv ? "ACCEPT" : "REJECT",
 		(const char*) info.passwd);
 	}
