@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$Id: configure 1040 2010-12-04 01:22:27Z faxguy $
+#	$Id: configure 1042 2011-02-16 18:21:47Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -391,7 +391,7 @@ do
     -disable-lcms|--disable-lcms) DISABLE_LCMS="yes" ;;
     -disable-jpeg|--disable-jpeg) DISABLE_JPEG="yes" ;;
     -version|--version)
-	echo "This is HylaFAX configure $Revision: 1040 $"
+	echo "This is HylaFAX configure $Revision: 1042 $"
 	exit 0
 	;;
     -help|--help)		usage; exit 0;;
@@ -5050,17 +5050,19 @@ CONF_FILES="
     util/rfc2047-encode.awk
 
     util/dict-de
+    util/dict-en
     util/dict-es
     util/dict-it
-    util/dict-pt
-    util/dict-ro
-    util/dict-tr
-    util/dict-en
     util/dict-fr
     util/dict-nl_BE
     util/dict-pl
+    util/dict-pt
     util/dict-pt_BR
+    util/dict-ro
+    util/dict-ru
     util/dict-sr
+    util/dict-tr
+    util/dict-uk
     util/dict-zh
 
     pkg/Makefile

@@ -1,6 +1,10 @@
-#	$Id: CHANGES 1041 2010-12-04 19:43:07Z faxguy $	
+#	$Id: CHANGES 1042 2011-02-16 18:21:47Z faxguy $	
 
 New Changes
+
+* add Russian and Ukranian dictionary translations (16 Feb 2011)
+
+(5.5.0)
 
 * fix typerules byte type offset handling (4 Dec 2010)
 * fix stripbytecount problem in libtiff 4.0 support (3 Dec 2010)
