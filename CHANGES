@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1042 2011-02-16 18:21:47Z faxguy $	
+#	$Id: CHANGES 1043 2011-03-06 01:47:51Z faxguy $	
 
 New Changes
 
+* fix job-based TimeOfDay operation (5 Mar 2011)
 * add Russian and Ukranian dictionary translations (16 Feb 2011)
 
 (5.5.0)
