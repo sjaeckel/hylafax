@@ -1,4 +1,4 @@
-/*	$Id: Job.c++ 494 2007-04-06 22:46:40Z faxguy $ */
+/*	$Id: Job.c++ 1043 2011-03-06 01:47:51Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -62,6 +62,8 @@ Job::Job(const FaxRequest& req)
     , file(req.qfile)
     , jobid(req.jobid)
 {
+    tod.reset();
+
     update(req);
 
     start = 0;
@@ -76,7 +78,6 @@ Job::Job(const FaxRequest& req)
     breq = NULL;
     suspendPending = false;
     registry[jobid] = this;
-    tod.reset();
 }
 
 Job::~Job()
