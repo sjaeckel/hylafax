@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 1038 2010-11-30 01:30:13Z faxguy $
+#    $Id: common-functions.sh.in 1045 2011-05-25 04:17:29Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -200,7 +200,7 @@ gs2fax()
     # replace -dFIXEDMEDIA to permit TIFFs to be produced with
     # varied lengths.
     #
-    FIXEDWIDTH="-dEPSFitPage -dPDFFitPage -dFIXEDMEDIA"
+    FIXEDWIDTH="-dEPSFitPage -dPDFFitPage"
 
     case "$paper" in
 	a4)
