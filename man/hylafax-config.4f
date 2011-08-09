@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1034 2010-11-23 04:25:56Z faxguy $
+.\"	$Id: hylafax-config.4f 1046 2011-08-09 22:38:50Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2010-11-22 20:25:56 -0800 (Mon, 22 Nov 2010) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2011-08-09 15:38:50 -0700 (Tue, 09 Aug 2011) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -1767,7 +1767,7 @@ may be used as well as the following server-implemented codes:
 %%i	job identifier
 %%I	group identifier
 %%j	user-specified job tag
-%%l	\fBLocalIdentifier\fP or canonicalized \fBFAXNumber\fP
+%%l	job TSI or \fBLocalIdentifier\fP or canonicalized \fBFAXNumber\fP
 %%m	sender's electronic mail address
 %%n	canonicalized \fBFAXNumber\fP
 %%p	current page number of session
