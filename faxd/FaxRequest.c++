@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: FaxRequest.c++ 1047 2011-08-23 00:03:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -372,40 +372,40 @@ FaxRequest::readQFile(bool& rejectJob)
 
 
 	case H_POLL:		addItem(send_poll, tag); break;
-	case H_FAX:		addItem(send_fax, tag); break;
+	case H_FAX:		addItem(send_fax, tag, rejectJob); break;
 	case H_PDF:
 	    if (cmd[0] == '!')
-		addItem(send_pdf_saved, tag);
+		addItem(send_pdf_saved, tag, rejectJob);
 	    else
 		addItem(send_pdf, tag, rejectJob);
 	    break;
 	case H_TIFF:
 	    if (cmd[0] == '!')
-		addItem(send_tiff_saved, tag);
+		addItem(send_tiff_saved, tag, rejectJob);
 	    else
 		addItem(send_tiff, tag, rejectJob);
 	    break;
 	case H_POSTSCRIPT:
 	    if (cmd[0] == '!')
-		addItem(send_postscript_saved, tag);
+		addItem(send_postscript_saved, tag, rejectJob);
 	    else
 		addItem(send_postscript, tag, rejectJob);
 	    break;
 	case H_PCL:
 	    if (cmd[0] == '!')
-		addItem(send_pcl_saved, tag);
+		addItem(send_pcl_saved, tag, rejectJob);
 	    else
 		addItem(send_pcl, tag, rejectJob);
 	    break;
 	case H_DATA:
 	    if (cmd[0] == '!')
-		addItem(send_data_saved, tag);
+		addItem(send_data_saved, tag, rejectJob);
 	    else
 		addItem(send_data, tag, rejectJob);
 	    break;
 	case H_PAGE:
 	    if (cmd[0] == '!')
-		addItem(send_page_saved, tag);
+		addItem(send_page_saved, tag, rejectJob);
 	    else
 		addItem(send_page, tag);
 	    break;
