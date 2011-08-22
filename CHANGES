@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1045 2011-05-25 04:17:29Z faxguy $	
+#	$Id: CHANGES 1047 2011-08-23 00:03:27Z faxguy $	
 
 New Changes
 
+* prevent a faxq crash due to a corrupt sendq file (22 Aug 2011)
 * remove -dFIXEDMEDIA from FIXEDWIDTH, again (24 May 2011)
 * fix job-based TimeOfDay operation (5 Mar 2011)
 * add Russian and Ukranian dictionary translations (16 Feb 2011)
