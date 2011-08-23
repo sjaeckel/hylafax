@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1047 2011-08-23 00:03:27Z faxguy $	
+#	$Id: CHANGES 1048 2011-08-23 15:22:49Z faxguy $	
 
 New Changes
 
+* fix problem with octet-stream MIME encoder (23 Aug 2011)
 * prevent a faxq crash due to a corrupt sendq file (22 Aug 2011)
 * remove -dFIXEDMEDIA from FIXEDWIDTH, again (24 May 2011)
 * fix job-based TimeOfDay operation (5 Mar 2011)
