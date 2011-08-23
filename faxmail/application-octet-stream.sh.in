@@ -19,7 +19,7 @@ if [ ! -x $FILECMD ]; then
     exit
 fi
 
-MIMETYPE="`$FILECMD -bi "$1" | $SED 's/ .*//g'`"
+MIMETYPE="`$FILECMD -bi "$1" | $SED 's/;.*//g'`"
 if [ -x $LIBDATA/faxmail/$MIMETYPE ]; then
     $LIBDATA/faxmail/$MIMETYPE "$1"
 else
