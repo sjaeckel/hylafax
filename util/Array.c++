@@ -1,4 +1,4 @@
-/*	$Id: Array.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Array.c++ 1051 2011-09-03 18:27:04Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -235,6 +235,8 @@ fxArray::swap(u_int p1, u_int p2)
     memcpy(tmp,(void*)(data+p1),elementsize);
     memcpy((void*)(data+p1),(void*)(data+p2),elementsize);
     memcpy((void*)(data+p2),tmp,elementsize);
+    if (tmp != buffer)
+        free(tmp);
 }
 
 u_int
