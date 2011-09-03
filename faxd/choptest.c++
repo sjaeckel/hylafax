@@ -1,4 +1,4 @@
-/*	$Id: choptest.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
+/*	$Id: choptest.c++ 1053 2011-09-03 18:34:02Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -140,7 +140,7 @@ main(int argc, char* argv[])
 			);
 		    }
 		}
-		delete data;
+		delete[] data;
 	    }
 	}
     } while (TIFFReadDirectory(tif));

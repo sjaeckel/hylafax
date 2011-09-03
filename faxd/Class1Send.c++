@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
+/*	$Id: Class1Send.c++ 1053 2011-09-03 18:34:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -572,7 +572,7 @@ Class1Modem::sendTCF(const Class2Params& params, u_int ms)
     u_char* tcf = new u_char[tcfLen];
     memset(tcf, 0, tcfLen);
     bool ok = transmitData(curcap->value, tcf, tcfLen, frameRev, true);
-    delete tcf;
+    delete[] tcf;
     return ok;
 }
 
@@ -2029,14 +2029,14 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	    if (fp > fill && rc) {
 		rc = sendPageData(fill, fp-fill, bitrev, (params.ec != EC_DISABLE), emsg);
 	    }
-	    delete fill;
+	    delete[] fill;
 	} else {
 	    /*
 	     * No EOL-padding needed, just jam the bytes.
 	     */
 	    rc = sendPageData(dp, (u_int) totdata, bitrev, (params.ec != EC_DISABLE), emsg);
 	}
-	delete data;
+	delete[] data;
 	if (imagefd > 0) {
 	    Sys::close(imagefd);
 	    imagefd = 0;
