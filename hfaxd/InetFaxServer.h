@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.h 937 2009-09-08 00:24:46Z faxguy $ */
+/*	$Id: InetFaxServer.h 1054 2011-09-03 19:10:38Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -43,6 +43,7 @@ protected:
     Socket::Address	data_dest;		// destination of data connection
     Socket::Address	pasv_addr;		// local end of passive connections
     bool	usedefault;		// for data transfers
+    bool	debug;
     /*
      * Timeout intervals for retrying connections
      * to hosts that don't accept PORT cmds.

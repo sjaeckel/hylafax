@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 956 2009-11-21 19:36:39Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1054 2011-09-03 19:10:38Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -139,6 +139,7 @@ InetFaxServer* InetFaxServer::_instance = NULL;
 InetFaxServer::InetFaxServer()
 {
     usedefault = true;
+    debug = false;
     swaitmax = 90;			// wait at most 90 seconds
     swaitint = 5;			// interval between retries
 
@@ -416,7 +417,7 @@ InetFaxServer::passiveCmd(void)
 {
     if (tokenBody[0] == 'E') {
 	pasv_addr = ctrl_addr;
-	logDebug("Extended passive requested for family %d", Socket::family(pasv_addr));
+	if (debug) logDebug("Extended passive requested for family %d", Socket::family(pasv_addr));
 	pdata = socket(Socket::family(pasv_addr), SOCK_STREAM, 0);
 	if (pdata >= 0) {
 	    Socket::port(pasv_addr) = 0;
@@ -577,7 +578,7 @@ InetFaxServer::openDataConn(const char* mode, int& code)
 bool
 InetFaxServer::hostPort()
 {
-    logDebug("Parsing hostPort(): \"%s\"", (const char*)tokenBody);
+    if (debug) logDebug("Parsing hostPort(): \"%s\"", (const char*)tokenBody);
 
     if (tokenBody[0] == 'E')
     {
@@ -588,26 +589,28 @@ InetFaxServer::hostPort()
 	    syntaxError("EPRT |family|address|port|");
 	    return false;
 	}
-	logDebug("Parsing \"%s\"", (const char*)s);
+	if (debug) logDebug("Parsing \"%s\"", (const char*)s);
 	/*
 	 * Minimual length for EPRT is: 9
 	 *       |X|X::|X|
 	 */
 	char c = s[0];
-	logDebug(" `-> s.length() = %d", s.length());
-	logDebug(" `-> s[0] = '%c'", s[0]);
-	logDebug(" `-> s[2] = '%c'", s[2]);
-	logDebug(" `-> s[%d] = '%c'", s.length()-1, s[s.length()-1]);
+	if (debug) {
+	    logDebug(" `-> s.length() = %d", s.length());
+	    logDebug(" `-> s[0] = '%c'", s[0]);
+	    logDebug(" `-> s[2] = '%c'", s[2]);
+	    logDebug(" `-> s[%d] = '%c'", s.length()-1, s[s.length()-1]);
+	}
 	if (s.length() > 9
 		&& c == s[0] && (s[1] == '1' || s[1] == '2') && c == s[2]
 		&& c == s[s.length()-1]) {
-	    logDebug("Looks like extended syntax: \"%s\" [%X: %c]", (const char*)s, c&0xFF, c);
+	    if (debug) logDebug("Looks like extended syntax: \"%s\" [%X: %c]", (const char*)s, c&0xFF, c);
 
 	    u_int pos = 3;
 	    fxStr a = s.token(pos, c);
-	    logDebug("`-> Got a: %s[%u]", (const char*)a, pos);
+	    if (debug) logDebug("`-> Got a: %s[%u]", (const char*)a, pos);
 	    fxStr p = s.token(pos, c);
-	    logDebug("`-> Got a: %s[%u]", (const char*)p, pos);
+	    if (debug) logDebug("`-> Got a: %s[%u]", (const char*)p, pos);
 	    if (pos != s.length() )
 	    {
 		logDebug("Parsing EPRT style failed");
@@ -615,7 +618,7 @@ InetFaxServer::hostPort()
 		return false;
 	    }
 
-	    logDebug("Parsed: Family %c Address %s Port %s", s[1], (const char*)a, (const char*)p);
+	    if (debug) logDebug("Parsed: Family %c Address %s Port %s", s[1], (const char*)a, (const char*)p);
 	    struct addrinfo hints, *ai;
 
 	    memset(&hints, 0, sizeof(hints));
