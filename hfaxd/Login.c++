@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 814 2008-04-05 19:09:56Z faxguy $ */
+/*	$Id: Login.c++ 1052 2011-09-03 18:29:21Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -181,6 +181,8 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 */
 	if (strlen(ldapServerUri) == 0) {
 		retval = false;
+		delete[] filter;
+		delete[] sLDAPUserDN;
 		return retval;
 	}
 
@@ -210,6 +212,8 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	if (p_LDAPConn == NULL)
 	{
 		reply(530, "Unable to connect to LDAP");
+		delete[] filter;
+		delete[] sLDAPUserDN;
 		return false;
 	}
 	err = ldap_set_option(p_LDAPConn, LDAP_OPT_PROTOCOL_VERSION, (void *) &ldapVersion);
@@ -217,6 +221,8 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	{
 		reply(530, "Set Option LDAP error %d: %s", err, ldap_err2string(err));
 		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		delete[] filter;
+		delete[] sLDAPUserDN;
 		return false;
 	}
 
@@ -233,6 +239,8 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	{
 		reply(530, "Bind LDAP error %d: %s", err, ldap_err2string(err));
 		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		delete[] filter;
+		delete[] sLDAPUserDN;
 		return false;
 	} 
 
@@ -247,6 +255,8 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	{
 		reply(530, "Search LDAP error %d: %s", err, ldap_err2string(err));
 		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		delete[] filter;
+		delete[] sLDAPUserDN;
 		return false;
 	}
 
@@ -259,6 +269,8 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	{
 		reply(530, "LDAP user not found");
 		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		delete[] filter;
+		delete[] sLDAPUserDN;
 		return false;
 	}
 
@@ -271,6 +283,8 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 		reply(530, "LDAP attribute groupMembership not found");
 		ldap_value_free_len(p_arr_values);
 		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		delete[] filter;
+		delete[] sLDAPUserDN;
 		return false;
 	} 
 
@@ -294,12 +308,17 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 		reply(530, "Access Denied");
 		ldap_value_free_len(p_arr_values);
 		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+		delete[] filter;
+		delete[] sLDAPUserDN;
 		return false;
 	}
 
 
 	ldap_value_free_len(p_arr_values);
 	ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
+
+	delete[] filter;
+	delete[] sLDAPUserDN;
 
 #endif // HAVE_LDAP
 	return retval;
