@@ -1,4 +1,4 @@
-/*	$Id: tagtest.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
+/*	$Id: tagtest.c++ 1053 2011-09-03 18:34:02Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -584,7 +584,7 @@ main(int argc, char* argv[])
 			fatal("%s: Write error at strip %u, writing %lu bytes", 
 			    output, strip, (u_long) totbytes);
 		}
-		delete data;
+		delete[] data;
 	    }
 	}
 	pageNumber++;

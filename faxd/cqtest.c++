@@ -1,4 +1,4 @@
-/*	$Id: cqtest.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
+/*	$Id: cqtest.c++ 1053 2011-09-03 18:34:02Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -577,7 +577,7 @@ main(int argc, char* argv[])
 			cq.checkQuality(), params, emsg);
 		} else
 		    printf("Read error on strip %u\n", strip);
-		delete data;
+		delete[] data;
 	    }
 	}
 	TIFFSetField(tifout, TIFFTAG_IMAGELENGTH, cq.recvEOLCount);
