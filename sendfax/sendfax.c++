@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: sendfax.c++ 1050 2011-09-03 18:24:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -388,6 +388,8 @@ sendFaxApp::addDestinationsFromFile(const char* filename)
     } else {
 	fatal("%s: no such file", filename);
     }
+
+    fclose(destfile);
 }
 
 /*
