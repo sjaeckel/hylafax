@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1054 2011-09-03 19:10:38Z faxguy $	
+#	$Id: CHANGES 1055 2011-09-05 16:41:16Z faxguy $	
 
 New Changes
 
+* disable AUTOROTATE by default for old Ghostscript (5 Sep 2011)
 * disable unnecessary debugging in hfaxd pasv mode (3 Sep 2011)
 * fix various problems revealed by cppcheck (3 Sep 2011)
 * fix problem with octet-stream MIME encoder (23 Aug 2011)

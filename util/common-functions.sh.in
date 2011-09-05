@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 1045 2011-05-25 04:17:29Z faxguy $
+#    $Id: common-functions.sh.in 1055 2011-09-05 16:41:16Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -252,9 +252,14 @@ gs2fax()
     # page onto the faxed page instead of cutting the image off or
     # unnecessarily shrinking the image we use a Ghostscript script
     # in order to automatically rotate the pages to portrait orientation.
-    # This feature can be disabled with AUTOROTATE="" in etc/FaxModify.
+    # This feature can be disabled with AUTOROTATE="" in etc/FaxModify and
+    # only works for Ghostscript 8 and later.
     #
-    AUTOROTATE="bin/auto-rotate.ps"
+    if [ "`$PS -v | $SED q | $SED -e 's/.*Ghostscript //' -e 's/\..*//g'`" -gt 7 ]; then
+	AUTOROTATE="bin/auto-rotate.ps"
+    else
+	AUTOROTATE=""
+    fi
 
     #
     # Ghostscript's default dithering with the fax drivers is 
