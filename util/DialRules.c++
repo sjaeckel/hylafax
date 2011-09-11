@@ -1,4 +1,4 @@
-/*	$Id: DialRules.c++ 1056 2011-09-12 02:53:50Z faxguy $ */
+/*	$Id: DialRules.c++ 1057 2011-09-12 02:56:40Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -367,7 +367,8 @@ DialStringRules::applyRules(const fxStr& name, const fxStr& s)
 			int ms = rule.pat->StartOfMatch(mn);
 			int mlen = rule.pat->EndOfMatch(mn) - ms;
 			replace.remove(ri);	// delete & or \n
-			replace.insert(result.extract(ms, mlen), ri);
+			if (mlen > 0)
+			    replace.insert(result.extract(ms, mlen), ri);
 			rlen = replace.length();// adjust string length ...
 			ri += mlen - 1;		// ... and scan index
 		    }
