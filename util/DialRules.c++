@@ -1,4 +1,4 @@
-/*	$Id: DialRules.c++ 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: DialRules.c++ 1056 2011-09-12 02:53:50Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -271,9 +271,11 @@ DialStringRules::subRHS(fxStr& v)
      */
     for (u_int i = 0, n = v.length(); i < n; i++) {
 	if (v[i] == '\\') {		// process \<char> escapes
-	    v.remove(i), n--;
-	    if (isdigit(v[i]))
+	    if (isdigit(v[i+1])) {
+		v.remove(i), n--;
 		v[i] = META | (v[i] - '0');
+	    } else
+		parseError("Bad '\\' escape sequence");
 	} else if (v[i] == '&')
 	    v[i] = META | 0;
     }
