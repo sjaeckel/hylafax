@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1055 2011-09-05 16:41:16Z faxguy $	
+#	$Id: CHANGES 1058 2011-09-12 03:40:29Z faxguy $	
 
 New Changes
 
+* add recursive dialrules matching (11 Sep 2011)
+* fix zero-length dialrules matching (11 Sep 2011)
 * disable AUTOROTATE by default for old Ghostscript (5 Sep 2011)
 * disable unnecessary debugging in hfaxd pasv mode (3 Sep 2011)
 * fix various problems revealed by cppcheck (3 Sep 2011)

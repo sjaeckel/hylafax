@@ -1,4 +1,4 @@
-/*	$Id: DialRules.c++ 1057 2011-09-12 02:56:40Z faxguy $ */
+/*	$Id: DialRules.c++ 1058 2011-09-12 03:40:29Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -44,6 +44,7 @@ const u_int META = 0200;		// interpolation marker
 struct DialRule {
     REPtr	pat;			// pattern to match
     fxStr	replace;		// replacement string
+    fxStr	recurse;		// string is a recursive function
 
     DialRule();
     ~DialRule();
@@ -310,9 +311,34 @@ DialStringRules::parseRuleSet(RuleArray& rules)
 	DialRule r;
 	if (parseToken(cp+1, r.replace) == NULL)
 	    return (false);
-	if (verbose)
-	    traceParse("  \"%s\" = \"%s\"",
-		(const char*) pat, (const char*) r.replace);
+
+	if (r.replace.length()> 2 && r.replace[0] == '\\' && r.replace[1] != '\\')
+	{
+	    u_int pos = 1;
+	    fxStr name = r.replace.token(pos, "()");
+	    if (pos < r.replace.length() && r.replace[pos-1] == '(' )
+	    {
+		pos += 1;
+		fxStr data = r.replace.token(pos, "()");
+
+		if (pos == r.replace.length() && r.replace[pos-1] == ')')
+		{
+		    r.recurse = name;
+		    r.replace.resize(pos-1);
+		    r.replace.remove(0,name.length()+2);
+		}
+	    }
+	}
+
+	if (verbose) {
+	    if (r.recurse.length() == 0)
+		traceParse("  \"%s\" = \"%s\"",
+		    (const char*) pat, (const char*) r.replace);
+	    else
+		traceParse("  \"%s\" = Apply %s rules to (\"%s\")", (const char*)pat,
+		    (const char*)r.recurse, (const char*)r.replace);
+	}
+
 	subRHS(r.replace);
 	u_int i = 0;
 	u_int n = regex->length();
@@ -337,10 +363,17 @@ DialStringRules::parseRuleSet(RuleArray& rules)
 }
 
 fxStr
-DialStringRules::applyRules(const fxStr& name, const fxStr& s)
+DialStringRules::applyRules(const fxStr& name, const fxStr& s, u_int level)
 {
+    if (level >= 10) {
+	traceRules("DialRules recursion depth reached: %u", level);
+	return s;
+    }
+    fxStr prefix;
+    for (int i = 0; i < level; i++)
+	prefix.insert("    ");
     if (verbose)
-	traceRules("Apply %s rules to \"%s\"",
+	traceRules(prefix | "Apply %s rules to \"%s\"",
 	    (const char*) name, (const char*) s);
     fxStr result(s);
     RuleArray* ra = (*rules)[name];
@@ -372,20 +405,31 @@ DialStringRules::applyRules(const fxStr& name, const fxStr& s)
 			rlen = replace.length();// adjust string length ...
 			ri += mlen - 1;		// ... and scan index
 		    }
+ 		/*
+		 * Run recursion on the replace part
+		 */
+		if (rule.recurse.length()) {
+		    if (verbose)
+			traceRules(prefix | "--> match rule \"%s\", Apply %s(\"%s\")",
+			    rule.pat->pattern(), (const char*) rule.recurse, (const char*)replace);
+		    fxStr recres = applyRules(rule.recurse, replace, level+1);
+		    replace = recres;
+		}
 		/*
 		 * Paste interpolated replacement string over match.
 		 */
 		result.remove(ix, len);
 		result.insert(replace, ix);
 		off = ix + replace.length();	// skip replace when searching
-		if (verbose)
-		    traceRules("--> match rule \"%s\", result now \"%s\"",
+		if (verbose) {
+		    traceRules(prefix | "--> match rule \"%s\", result now \"%s\"",
 			rule.pat->pattern(), (const char*) result);
+		}
 	    }
 	}
     }
     if (verbose)
-	traceRules("--> return result \"%s\"", (const char*) result);
+	traceRules(prefix | "--> return result \"%s\"", (const char*) result);
     return result;
 }
 

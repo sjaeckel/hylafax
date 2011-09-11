@@ -1,4 +1,4 @@
-/*	$Id: DialRules.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: DialRules.h 1058 2011-09-12 03:40:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -77,7 +77,7 @@ public:
 
     bool parse(bool shouldExist = true);
 
-    fxStr applyRules(const fxStr& name, const fxStr& s);
+    fxStr applyRules(const fxStr& name, const fxStr& s, u_int level = 0);
     fxStr canonicalNumber(const fxStr&);
     fxStr dialString(const fxStr&);
     fxStr displayNumber(const fxStr&);
