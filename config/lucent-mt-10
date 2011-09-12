@@ -1,4 +1,4 @@
-# $Id: lucent-mt-10 650 2007-10-03 23:52:46Z faxguy $
+# $Id: lucent-mt-10 1059 2011-09-12 18:13:58Z faxguy $
 
 #
 # prototype config for MultiTech 5634-series modems using
@@ -12,6 +12,7 @@
 # CONFIG:CLASS1.0:LT V.90 1.0 ISI5634PCI*:.*:.*: Manufacturer=MultiTech Model=ISI5634PCI
 # CONFIG:CLASS1.0:LT V.92 1.0 ISI5634PCI*:.*:.*: Manufacturer=MultiTech Model=ISI5634PCI
 # CONFIG:CLASS1.0:LT V.92 1.0 MT5634SMI*:.*:.*: Manufacturer=MultiTech Model=MT5634SMI
+# CONFIG:CLASS1.0:Agere OCM V.92*:.*:.*: Manufacturer=Agere Model=OCM
 #
 # BEGIN-SERVER
 # END-SERVER
