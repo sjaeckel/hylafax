@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1058 2011-09-12 03:40:29Z faxguy $	
+#	$Id: CHANGES 1059 2011-09-12 18:13:58Z faxguy $	
 
 New Changes
 
+* add support for the MT9234ZBA (12 Sep 2011)
 * add recursive dialrules matching (11 Sep 2011)
 * fix zero-length dialrules matching (11 Sep 2011)
 * disable AUTOROTATE by default for old Ghostscript (5 Sep 2011)
