@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1059 2011-09-12 18:13:58Z faxguy $	
+#	$Id: CHANGES 1063 2011-11-02 17:26:27Z faxguy $	
 
 New Changes
 
+* fix color sending support for A4, B4, and A3 (2 Nov 2011)
 * add support for the MT9234ZBA (12 Sep 2011)
 * add recursive dialrules matching (11 Sep 2011)
 * fix zero-length dialrules matching (11 Sep 2011)
