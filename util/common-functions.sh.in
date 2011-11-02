@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 1055 2011-09-05 16:41:16Z faxguy $
+#    $Id: common-functions.sh.in 1063 2011-11-02 17:26:27Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -287,13 +287,19 @@ gs2fax()
 	# We should prepare a color image - possibly in addition to monochrome.
 	# Square resolutions are mandatory per ITU T.30 Table 2 Notes 25 and 34,
 	# so we use hres for vertical resolution as well.
+	case "$paper" in
+	    a4) chres=209.10;;		# 1728 pixels
+	    b4) chres=207.98;;		# 2048 pixels
+	    a3) chres=207.96;;		# 2432 pixels
+	    *)  chres=203.29;;		# 1728 pixels
+	esac
 	outfile=$out
 	if [ "$device" != "tiff24nc" ]; then
 	    # Indicates color-only
 	    outfile="$out.color"
 	fi
 	$PS -q -sDEVICE=tiff24nc -dNOPAUSE -dSAFER=true -sPAPERSIZE=$paper \
-	    -dBATCH -r$hres\x$hres "-sOutputFile=$outfile" $STRIPSIZE $FIXEDWIDTH $AUTOROTATE $files
+	    -dBATCH -r$chres\x$chres "-sOutputFile=$outfile" $STRIPSIZE $FIXEDWIDTH $AUTOROTATE $files
 	if [ "$device" = "tiff24nc" ]; then
 	    $RM -f "$out.color"
 	    return
