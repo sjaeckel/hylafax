@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1063 2011-11-02 17:26:27Z faxguy $	
+#	$Id: CHANGES 1064 2011-11-04 03:20:03Z faxguy $	
 
 New Changes
 
+* make hfaxd more firewall-friendly (3 Nov 2011)
 * fix color sending support for A4, B4, and A3 (2 Nov 2011)
 * add support for the MT9234ZBA (12 Sep 2011)
 * add recursive dialrules matching (11 Sep 2011)
