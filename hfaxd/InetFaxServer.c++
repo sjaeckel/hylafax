@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1054 2011-09-03 19:10:38Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1064 2011-11-04 03:20:03Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -287,7 +287,7 @@ InetFaxServer::setupNetwork(int fd)
 #endif
     /* anchor socket to avoid multi-homing problems */
     data_source = ctrl_addr;
-    Socket::port(data_source) = htons(ntohs(Socket::port(ctrl_addr)-1));
+    Socket::port(data_source) = htons(ntohs(Socket::port(ctrl_addr))-1);
 #ifdef  F_SETOWN
     if (fcntl(fd, F_SETOWN, getpid()) == -1)
         logError("fcntl (F_SETOWN): %m");
