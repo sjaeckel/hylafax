@@ -1,4 +1,4 @@
-/*	$Id: SuperServer.c++ 928 2009-05-25 20:20:10Z faxguy $ */
+/*	$Id: SuperServer.c++ 1065 2011-11-04 03:22:24Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -90,7 +90,6 @@ SuperServer::inputReady(int fd)
 	 * with servers started via inetd).
 	 */
 	HylaFAXServer* app; app = newChild();	// XXX for __GNUC__
-	Dispatcher::instance().unlink(fd);
 	HylaFAXServer::closeLogging();		// close any open syslog fd
 	HylaFAXServer::closeAllDispatched();
 	Sys::close(STDERR_FILENO);
