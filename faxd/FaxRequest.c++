@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 1047 2011-08-23 00:03:27Z faxguy $ */
+/*	$Id: FaxRequest.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -58,6 +58,7 @@ FaxRequest::reset(void)
     usrpri = FAX_DEFPRIORITY;
     pagewidth = pagelength = resolution = 0;
     npages = totpages = skippages = skippedpages = nocountcover = 0;
+    conntime = duration = 0;
     ntries = ndials = 0;
     minbr = BR_2400;
     desiredbr = BR_33600;
@@ -134,6 +135,8 @@ FaxRequest::shortval FaxRequest::shortvals[] = {
     { "npages",		&FaxRequest::npages },
     { "skippages",	&FaxRequest::skippages },
     { "nocountcover",	&FaxRequest::nocountcover },
+    { "conntime",	&FaxRequest::conntime },
+    { "duration",	&FaxRequest::duration },
     { "serverdocover",	&FaxRequest::serverdocover },
     { "ignoremodembusy",&FaxRequest::ignoremodembusy },
     { "totpages",	&FaxRequest::totpages },
@@ -342,6 +345,8 @@ FaxRequest::readQFile(bool& rejectJob)
 		tts = Sys::now();
 	    break;
 	case H_NOCOUNTCOVER:	nocountcover = atoi(tag); break;
+	case H_CONNTIME:	conntime = atoi(tag); break;
+	case H_DURATION:	duration = atoi(tag); break;
 	case H_KILLTIME:	killtime = atoi(tag); break;
 	case H_RETRYTIME:	retrytime = atoi(tag); break;
 	case H_NOTIFY:		checkNotifyValue(tag); break;

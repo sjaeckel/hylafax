@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: JobControl.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -51,6 +51,7 @@ JobControlInfo::JobControlInfo()		 	{ defined = 0; }
 JobControlInfo::JobControlInfo(const JobControlInfo& other)
     : rejectNotice(other.rejectNotice)
     , modem(other.modem)
+    , proxy(other.proxy)
     , tod(other.tod)
     , args(other.args)
 {
@@ -110,6 +111,8 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
 	rejectNotice = value;
     } else if (streq(tag, "modem")) {
 	modem = value;
+    } else if (streq(tag, "proxy")) {
+	proxy = value;
     } else if (streq(tag, "maxconcurrentjobs")) {	// backwards compatibility
 	maxConcurrentCalls = getNumber(value);
 	setDefined(DCI_MAXCONCURRENTCALLS);
@@ -206,6 +209,12 @@ const fxStr&
 JobControlInfo::getModem() const
 {
     return modem;
+}
+
+const fxStr&
+JobControlInfo::getProxy() const
+{
+    return proxy;
 }
 
 time_t

@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1046 2011-08-09 22:38:50Z faxguy $
+.\"	$Id: hylafax-config.4f 1066 2011-11-28 20:00:34Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2011-08-09 15:38:50 -0700 (Tue, 09 Aug 2011) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2011-11-28 12:00:34 -0800 (Mon, 28 Nov 2011) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -178,6 +178,7 @@ MaxConcurrentCalls¹	integer	\s-11\s+1	max concurrent jobs to process for a dest
 MaxConcurrentPreps¹	integer	\s-11\s+1	maximum number of simultaneous job preparations
 MaxConsecutiveBadLines	integer	\s-15\s+1	max consecutive bad rows for \s-1OK\s+1 page quality
 MaxDials¹	integer	\s-112\s+1	max phone calls to make to transmit a job
+MaxProxyJobs¹	integer	64	max number of concurrent proxy jobs
 MaxRecvPages	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a receive
 MaxSendPages¹	integer	\s-1\fIunlimited\fP\s+1	max pages to permit in a send
 MaxSetupAttempts	integer	\s-12\s+1	max attempts to initialize a modem
@@ -1240,6 +1241,11 @@ feature in the client-server communication, and jobs triggering these
 limits will be handled differently for each.
 See also
 .BR MaxTries .
+.TP
+.B MaxProxyJobs¹
+The maximum number of jobs which can be concurrently delivered to a proxy
+for transmission.  This limit is to prevent proxy use from overwhelming 
+available system processes.
 .TP
 .B MaxRecvPages
 The maximum number of pages the server will accept in a received

@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.h 942 2009-09-29 10:56:43Z faxguy $ */
+/*	$Id: FaxClient.h 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -241,6 +241,7 @@ public:
     bool jobParm(const char* name, bool b);
     bool jobParm(const char* name, u_int v);
     bool jobParm(const char* name, float v);
+    bool jobParm(const char* name);
     bool jobSendTime(const struct tm tm);
     bool jobLastTime(u_long);
     bool jobRetryTime(u_long);

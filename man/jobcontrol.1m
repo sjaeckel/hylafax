@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 1012 2010-09-18 17:29:56Z faxguy $
+.\"	$Id: jobcontrol.1m 1066 2011-11-28 20:00:34Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -81,6 +81,7 @@ MaxTries	integer	\s-13\s+1	max attempts to transmit a job
 Modem	string	\s-1Any\s+1	ModemGroup to use for destination
 Notify	string	\-	notification override for job
 Priority	integer	\-	priority to use for job
+Proxy	string	\-	proxy server to which the job should be delivered
 RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
@@ -119,6 +120,20 @@ The
 .B Priority
 parameter controls the priority to assign to the job.  This
 overrides any priority requested by the submitter.
+.PP
+The
+.B Proxy
+parameter controls to which host the job should be delivered for 
+transmission.  This should be a hostname or IP address, and the proxy
+server should have login access permitted for the originating server
+without a password.  Caution: actions such as job removal and job
+modification (such as those done by
+.IR faxrm (1)
+or
+.IR faxalter (1)
+) will not currently
+propagate to the proxy and is a matter for future development.  Therefore,
+such actions should be made on the proxy server directly.
 .PP
 The
 .B RejectNotice

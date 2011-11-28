@@ -1,4 +1,4 @@
-/*	$Id: JobControl.h 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: JobControl.h 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -50,6 +50,7 @@ private:
     u_int	maxTries;		// max transmit attempts
     fxStr	rejectNotice;		// if set, reject w/ this notice
     fxStr	modem;			// if set, try with it
+    fxStr	proxy;			// if set, proxy-send job there
     TimeOfDay	tod;			// time of day restrictions
     int		usexvres;		// use extended resolution
     int		usecolor;		// use color
@@ -75,6 +76,7 @@ public:
     u_int getMaxTries() const;
     const fxStr& getRejectNotice() const;
     const fxStr& getModem() const;
+    const fxStr& getProxy() const;
     time_t nextTimeToSend(time_t) const;
     int getUseXVRes() const;
     int getUseColor() const;

@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -49,6 +49,8 @@
 #include "HylaClient.h"
 #include "MemoryDecoder.h"
 #include "FaxSendInfo.h"
+#include "PageSize.h"
+#include "SendFaxClient.h"
 #include "config.h"
 
 /*
@@ -843,13 +845,7 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
     Class2Params next;			// parameters for ``next'' page
     TIFF* tif = NULL;			// current open TIFF image
     req.totpages = req.npages;		// count pages previously transmitted
-    if (req.skippages) {		// job instructs us to skip pages...
-	u_int i = req.findItem(FaxRequest::send_fax, 0);
-	if (i) req.items[0].dirnum = req.skippages;	// mark original
-	req.items[i].dirnum = req.skippages;		// mark prepared image
-	req.skippedpages += req.skippages;		// update tagline indicators
-	req.skippages = 0;
-    }
+    u_int docpages;
     for (u_int i = 0;;) {
 	if (!tif || TIFFLastDirectory(tif)) {
 	    /*
@@ -859,11 +855,13 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 		TIFFClose(tif), tif = NULL;
 	    if (i >= req.items.length()) {
 		req.pagehandling.append('P');		// EOP
+		req.skippages = 0;
 		return (true);
 	    }
 	    i = req.findItem(FaxRequest::send_fax, i);
 	    if (i == fx_invalidArrayIndex) {
 		req.pagehandling.append('P');		// EOP
+		req.skippages = 0;
 		return (true);
 	    }
 	    const FaxItem& fitem = req.items[i];
@@ -884,6 +882,7 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 		    TIFFClose(tif);
 		return (false);
 	    }
+	    docpages = fitem.dirnum;
 	    i++;			// advance for next find
 	} else {
 	    /*
@@ -899,6 +898,7 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 		    TIFFClose(tif);
 		return (false);
 	    }
+	    docpages++;
 	}
 	if (++req.totpages > maxPages) {
 	    emsg = fxStr::format("Too many pages in submission; max %u {E317}",
@@ -907,37 +907,50 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 		TIFFClose(tif);
 	    return (false);
 	}
-	next = params;
-	setupParams(tif, next, info);
-	if (params.df != (u_int) -1 || params.jp != (u_int) -1) {
+	if (req.skippages) {
+	    req.totpages--;
+	    req.skippages--;
+	    req.skippedpages++;
+	    if (req.skippages == 0) {
+		req.items[i-1].dirnum = docpages + 1;		// mark it
+	    }
+	    if (TIFFLastDirectory(tif)) {
+		req.renameSaved(i-1);
+		req.items.remove(i-1);
+	    }
+	} else {
+	    next = params;
+	    setupParams(tif, next, info);
+	    if (params.df != (u_int) -1 || params.jp != (u_int) -1) {
+		/*
+		 * The pagehandling string has:
+		 * 'M' = EOM, for when parameters must be renegotiated
+		 * 'S' = MPS, for when next page uses the same parameters
+		 * 'P' = EOP, for the last page to be transmitted
+		 */
+		req.pagehandling.append(next == params ? 'S' : 'M');
+	    }
 	    /*
-	     * The pagehandling string has:
-	     * 'M' = EOM, for when parameters must be renegotiated
-	     * 'S' = MPS, for when next page uses the same parameters
-	     * 'P' = EOP, for the last page to be transmitted
+	     * Record the session parameters needed by each page
+	     * so that we can set the initial session parameters
+	     * as needed *before* dialing the telephone.  This is
+	     * to cope with Class 2 modems that do not properly
+	     * implement the +FDIS command.
 	     */
-	    req.pagehandling.append(next == params ? 'S' : 'M');
+	    req.pagehandling.append(next.encodePage());
+	    /*
+	     * If page is to be chopped (i.e. sent with trailing white
+	     * space removed so the received page uses minimal paper),
+	     * scan the data and, if possible, record the amount of data
+	     * that should not be sent.  The modem drivers will use this
+	     * information during transmission if it's actually possible
+	     * to do the chop (based on the negotiated session parameters).
+	     */
+	    if (pagechop == FaxRequest::chop_all ||
+	       (pagechop == FaxRequest::chop_last && TIFFLastDirectory(tif)))
+	        preparePageChop(req, tif, next, req.pagehandling);
+	    params = next;
 	}
-	/*
-	 * Record the session parameters needed by each page
-	 * so that we can set the initial session parameters
-	 * as needed *before* dialing the telephone.  This is
-	 * to cope with Class 2 modems that do not properly
-	 * implement the +FDIS command.
-	 */
-	req.pagehandling.append(next.encodePage());
-	/*
-	 * If page is to be chopped (i.e. sent with trailing white
-	 * space removed so the received page uses minimal paper),
-	 * scan the data and, if possible, record the amount of data
-	 * that should not be sent.  The modem drivers will use this
-	 * information during transmission if it's actually possible
-	 * to do the chop (based on the negotiated session parameters).
-	 */
-	if (pagechop == FaxRequest::chop_all ||
-	  (pagechop == FaxRequest::chop_last && TIFFLastDirectory(tif)))
-	    preparePageChop(req, tif, next, req.pagehandling);
-	params = next;
     }
 }
 
@@ -1542,11 +1555,13 @@ faxQueueApp::sendJobDone(Job& job, int status)
     if (status&0xff)
 	logError("Send program terminated abnormally with exit status %#x", status);
 
+    if (job.getJCI().getProxy() != "") numProxyJobs--;
+
     Job* cjob;
     Job* njob;
     DestInfo& di = destJobs[job.dest];
     di.hangup();				// do before unblockDestJobs
-    releaseModem(job);				// done with modem
+    if (job.modem) releaseModem(job);		// done with modem
     FaxRequest* req = readRequest(job);
     if (req && req->status == send_retry) {
 	// prevent turnaround-redialing, delay any blocked jobs
@@ -2232,8 +2247,17 @@ faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
     ai.start = Sys::now();
     ai.duration = 0;
     ai.conntime = 0;
-    ai.commid = "";
-    ai.device = "";
+    if (strstr(type, "PROXY")) {
+	ai.duration = req.duration;
+	ai.conntime = req.conntime;
+	ai.commid = (const char*) req.commid;
+	ai.device = (const char*) req.modemused;
+    } else {
+	ai.duration = 0;
+	ai.conntime = 0;
+	ai.commid = "";
+	ai.device = "";
+    }
     ai.dest = (const char*) req.external;
     ai.csi = "";
     ai.npages = req.npages;
@@ -2271,7 +2295,7 @@ faxQueueApp::queueAccounting(Job& job, FaxRequest& req, const char* type)
 }
 
 /*
- * Process the job who's kill time expires.  The job is
+ * Process the job whose kill time expires.  The job is
  * terminated unless it is currently being tried, in which
  * case it's marked for termination after the attempt is
  * completed.
@@ -2518,6 +2542,158 @@ faxQueueApp::areBatchable(FaxRequest& reqa, FaxRequest& reqb, Job& job, Job& cjo
     return(true);
 }
 
+class MySendFaxClient : public SendFaxClient {
+public:
+    MySendFaxClient();
+    ~MySendFaxClient();
+};
+MySendFaxClient::MySendFaxClient() {}
+MySendFaxClient::~MySendFaxClient() {}
+
+/*
+ * Send a fax job via a proxy HylaFAX server.  We do this by utilizing SendFaxJob jobWait.
+ * Retries must be handled by the proxy server as the programming for retries is handled
+ * by the modem.  This server, therefore, only makes one attempt.
+ *
+ * This does not currently work for pager requests or fax polls.
+ *
+ * Also not currently supported is job suspension or termination of the proxy job on the 
+ * proxy host.  Therefore, actions such as faxrm or faxalter will not currently propagate
+ * to the proxy.
+ */
+void
+faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
+{
+    pid_t pid = fork();
+    switch (pid) {
+	case -1:			// error
+	    logError("Error forking for proxy-send of job %s.", (const char*) job.jobid);
+	    break;
+	case 0:				// child
+	    {
+		Trigger::post(Trigger::SEND_BEGIN, job);
+
+		MySendFaxClient* client = new MySendFaxClient;
+		SendFaxJob& rjob = client->addJob();
+		if (job.getJCI().getDesiredDF() != -1) req.desireddf = job.getJCI().getDesiredDF();
+		rjob.setDesiredDF(req.desireddf);
+		rjob.setMinSpeed(req.minbr);
+		rjob.setDesiredSpeed(req.desiredbr);
+		if (req.faxname != "") rjob.setFaxName(req.faxname);
+		rjob.setDesiredEC(req.desiredec);
+		if (req.tagline != "") rjob.setTagLineFormat(req.tagline);
+		rjob.setUseXVRes(req.usexvres);
+		client->setHost(job.getJCI().getProxy());
+		rjob.setJobTag(job.jobid);
+		rjob.setVResolution(req.resolution);
+		rjob.setDesiredMST(req.desiredst);
+		rjob.setAutoCoverPage(false);
+		rjob.setNotification("none");
+		rjob.setSkippedPages(req.skippedpages);
+		rjob.setSkipPages(req.skippages+req.npages);	// requires that the proxy be capable of skipping entire documents
+		rjob.setNoCountCover(req.nocountcover);
+		rjob.setUseColor(req.usecolor);
+		PageSizeInfo* info = PageSizeInfo::getPageSizeBySize(req.pagewidth, req.pagelength);
+		rjob.setPageSize(info->abbrev());
+		if (req.tsi != "") rjob.setTSI(req.tsi);
+		rjob.setMaxRetries(req.maxtries);
+		rjob.setMaxDials(req.maxdials);
+		if (req.faxnumber != "") rjob.setFaxNumber(req.faxnumber);
+		rjob.setDialString(req.number);
+		for (u_int i = 0; i < req.items.length(); i++) {
+		    switch (req.items[i].op) {
+			case FaxRequest::send_fax:
+			case FaxRequest::send_tiff:
+			case FaxRequest::send_pdf:
+			case FaxRequest::send_postscript:
+			case FaxRequest::send_pcl:
+			    client->addFile(req.items[i].item);
+			    break;
+		    }
+		}
+		bool status = false;
+		fxStr emsg;
+		if (client->callServer(emsg)) {
+		    status = client->login(req.owner, NULL, emsg) 
+				&& client->prepareForJobSubmissions(emsg)
+				&& client->submitJobs(emsg);
+		    if (status) {
+			fxStr r;
+			fxStr rjobid = client->getCurrentJob();
+			traceQueue(job, "submitted to proxy host %s as job %s", 
+			    (const char*) job.getJCI().getProxy(), (const char*) rjobid);
+			req.modemused = rjobid | "@" | job.getJCI().getProxy();
+			req.notice = "delivered to proxy host " | job.getJCI().getProxy() | " as job " | rjobid;
+			updateRequest(req, job);
+			client->jobWait((const char*) rjobid);
+			/*
+			 * There is a long wait here now... possibly VERY long.
+			 * When jobWait is done, then we query the proxy
+			 * for the various job data and update the request here.
+			 */
+			req.ndials++;
+			req.totdials++;
+			req.maxdials = 1;	// the proxy did all delivery attempts
+			req.skippages = 0;
+			client->command((const char*) fxStr::format("JOB %s", (const char*) rjobid));
+			client->jobParm("conntime");
+			r = client->getLastResponse(); r.remove(0, 4);
+			req.conntime = atoi((const char*) r);
+			client->jobParm("duration");
+			r = client->getLastResponse(); r.remove(0, 4);
+			req.duration = atoi((const char*) r);
+			client->jobParm("npages");
+			r = client->getLastResponse(); r.remove(0, 4);
+			req.npages = atoi((const char*) r);
+			client->jobParm("totpages");
+			r = client->getLastResponse(); r.remove(0, 4);
+			req.totpages = atoi((const char*) r);
+			client->jobParm("commid");
+			r = client->getLastResponse(); r.remove(0, 4);
+			req.commid = r;
+			client->jobParm("ntries");
+			r = client->getLastResponse(); r.remove(0, 4);
+			u_int tries = atoi((const char*) r);
+			req.ntries += tries;
+			req.tottries += tries;
+			client->jobParm("status");
+			r = client->getLastResponse(); r.remove(0, 4);
+			req.notice = r;
+			if (req.notice.length()) {
+			    client->jobParm("errorcode");
+			    r = client->getLastResponse(); r.remove(0, 4);
+			    req.errorcode = r;
+			}
+			client->jobParm("state");
+			r = client->getLastResponse(); r.remove(0, 4);
+			// Due to the jobWait we should only ever see "DONE" and "FAILED"...
+			if (r == "DONE") {
+			    job.state = FaxRequest::state_done;
+			    req.status = send_done;
+			} else {
+			    job.state = FaxRequest::state_failed;
+			    if (req.ndials >= req.maxdials || req.ntries >= req.maxtries)
+				req.status = send_failed;
+			    else
+				req.status = send_retry;
+			}
+		    }
+		    client->hangupServer();
+		}
+		if (!status) logError("PROXY SEND: %s", (const char*) emsg);
+		updateRequest(req, job);
+		queueAccounting(job, req, "PROXY");
+		_exit(req.status);
+
+		/*NOTREACHED*/
+	    }
+	default:			// parent
+	    numProxyJobs++;
+	    job.startSend(pid);
+	    break;
+    }
+}
+
 /*
  * Scan the list of jobs and process those that are ready
  * to go.  Note that the scheduler should only ever be
@@ -2692,6 +2868,24 @@ faxQueueApp::runScheduler()
 		    if (job.isOnList()) job.remove();
 		    delayJob(job, *req, "Delayed by outbound call staggering {E339}", lastCall + staggerCalls);
 		    delete req;
+		} else if (job.getJCI().getProxy() != "") {
+		    if (numProxyJobs >= maxProxyJobs) {
+			if (job.isOnList()) job.remove();
+			delayJob(job, *req, "Delayed by limit on proxy connections {E346}", Sys::now() + random() % requeueInterval);
+			delete req;
+		    } else {
+			/*
+			 * Send this job through a proxy HylaFAX server.
+			 */
+			if (job.isOnList()) job.remove();	// remove from run queue
+			job.commid = "";
+			job.start = now;
+			req->notice = "";
+			setActive(job);
+			updateRequest(*req, job);
+			sendViaProxy(job, *req);
+			delete req; 
+		    }
 		} else if (assignModem(job, (allowIgnoreModemBusy && req->ignoremodembusy))) {
 		    lastCall = now;
 		    if (job.isOnList()) job.remove();	// remove from run queue
@@ -3455,6 +3649,7 @@ faxQueueApp::numbertag faxQueueApp::numbers[] = {
 { "postscripttimeout",	&faxQueueApp::postscriptTimeout, 3*60 },
 { "maxconcurrentjobs",	&faxQueueApp::maxConcurrentCalls, 1 },
 { "maxconcurrentcalls",	&faxQueueApp::maxConcurrentCalls, 1 },
+{ "maxproxyjobs",	&faxQueueApp::maxProxyJobs,	(u_int) 64 },
 { "maxbatchjobs",	&faxQueueApp::maxBatchJobs,	(u_int) 64 },
 { "maxtraversal",	&faxQueueApp::maxTraversal,	(u_int) 256 },
 { "maxsendpages",	&faxQueueApp::maxSendPages,	(u_int) -1 },
@@ -3486,7 +3681,7 @@ faxQueueApp::setupConfig()
     pageChop = FaxRequest::chop_last;
     pageChopThreshold = 3.0;		// minimum of 3" of white space
     lastCall = Sys::now() - 3600;
-    numPrepares = 0;
+    numProxyJobs = numPrepares = 0;
 }
 
 void
