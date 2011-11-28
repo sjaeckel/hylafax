@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: Jobs.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -152,6 +152,8 @@ static const struct {
     { T_SKIPPAGES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_SKIPPEDPAGES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_NOCOUNTCOVER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_CONNTIME,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_DURATION,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_STATE,		A_RUSR|A_RADM|A_ROTH },
     { T_STATUS,		A_RUSR|A_RADM|A_WADM|A_ROTH },
     { T_ERRORCODE,	A_RUSR|A_RADM|A_WADM|A_ROTH },
@@ -251,6 +253,8 @@ static struct {
     { T_NPAGES,		&Job::npages },
     { T_SKIPPAGES,	&Job::skippages },
     { T_NOCOUNTCOVER,	&Job::nocountcover },
+    { T_CONNTIME,	&Job::conntime },
+    { T_DURATION,	&Job::duration },
     { T_NTRIES,		&Job::ntries },
     { T_NDIALS,		&Job::ndials },
     { T_TOTDIALS,	&Job::totdials },
@@ -979,6 +983,8 @@ HylaFAXServer::initDefaultJob(void)
     defJob.tagline	= "";
     defJob.doneop	= "default";
     defJob.nocountcover	= 0;
+    defJob.conntime	= 0;
+    defJob.duration	= 0;
     defJob.skippedpages	= 0;
     defJob.skippages	= 0;
 }

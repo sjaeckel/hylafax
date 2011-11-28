@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 1036 2010-11-23 22:55:33Z faxguy $ */
+/*	$Id: faxQueueApp.h 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -68,6 +68,7 @@ public:
 private:
     time_t	lastCall;		// time of last call
     u_int	numPrepares;		// number of concurrent job preparations occurring
+    u_int	numProxyJobs;		// number of concurrent jobs being sent via proxy
 
     class SchedTimeout : public IOHandler {
     private:
@@ -86,6 +87,7 @@ private:
     fxStr	contCoverPageTemplate;	// continuation cover page template
     u_int	postscriptTimeout;	// timeout on PostScript imager calls
     u_int	maxBatchJobs;		// max jobs in a batch
+    u_int	maxProxyJobs;		// max concurrent jobs to proxy
     u_int	maxTraversal;		// max traversal into the queue for batching
     u_int	maxConcurrentCalls;	// max parallel jobs to a destination
     u_int	maxSendPages;		// max pages in a send job
@@ -218,6 +220,7 @@ private:
     bool	suspendJob(const fxStr& jobid, bool abortActive);
     void	rejectSubmission(Job&, FaxRequest&, const fxStr& reason);
     bool	areBatchable(FaxRequest& reqa, FaxRequest& reqb, Job& job, Job& cjob);
+    void	sendViaProxy(Job& job, FaxRequest& req);
 
     void	setReadyToRun(Job& job, bool wait);
     void	setSleep(Job& job, time_t tts);

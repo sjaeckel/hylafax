@@ -1,4 +1,4 @@
-.\"	$Id: faxalter.1 945 2009-09-29 11:46:02Z faxguy $
+.\"	$Id: faxalter.1 1066 2011-11-28 20:00:34Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -124,6 +124,11 @@ Assign/reassign the jobs to the specified
 Specifying ``any'' for
 .I modem
 causes the jobs to be scheduled for any available modem.
+.TP 10
+.BI \-N
+Do not suspend or submit the job.  This may be typically used in conjuction with
+.BI \-C
+to query job details.
 .TP 10
 .BI \-O " config"
 Treat

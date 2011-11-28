@@ -1,4 +1,4 @@
-.\"	$Id: sendq.4f 872 2008-09-14 10:33:17Z faxguy $
+.\"	$Id: sendq.4f 1066 2011-11-28 20:00:34Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -75,6 +75,7 @@ type of the associated value.
 chopthreshold	float	page chopping threshold (inches)
 commid	string	communication identifier for last call
 company	string	receiver's company
+conntime	integer	connection time in last session
 client	string	host that submitted the job
 cover	string	continuation coverpage file
 data	string	unprocessed document of indeterminate type
@@ -86,6 +87,7 @@ desiredec	integer	desired use of Error Correction Mode (\s-1ECM\s+1)
 desiredst	integer	desired minimum scanline time
 desiredtl	integer	whether or not to use \fBtagline\fP parameter
 doneop	string	operation to perform when job is reaped
+duration	integer	duration time in last session
 errorcode	string	job status error code
 external	string	external form of dialstring
 fax	string	document ready for transmission
@@ -183,6 +185,9 @@ option to
 .IR sendfax (1).
 This value is used only when creating continuation cover pages.
 .TP 14
+.B conntime
+The connection time of the last session in seconds.
+.TP 14
 .B cover
 The pathname of a \fIcontinuation cover page\fP to send.
 The file must be 
@@ -259,6 +264,9 @@ server machine).
 Consult 
 .I faxqclean
 more details on other information that may be included in this string.
+.TP 14
+.B duration
+The duration time of the last session in seconds.
 .TP 14
 .B errorcode
 The codified form of the status message intended for use by clients

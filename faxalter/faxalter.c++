@@ -1,4 +1,4 @@
-/*	$Id: faxalter.c++ 945 2009-09-29 11:46:02Z faxguy $ */
+/*	$Id: faxalter.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -95,12 +95,14 @@ faxAlterApp::run(int argc, char** argv)
     struct tm when;
     bool useadmin = false;
     bool resubmit = false;
+    bool suspend = true;
+    bool submit = true;
     char *owner = NULL;
     char *pass = NULL;
     char *adminpass = NULL;
 
     int c, rc = 0;
-    while ((c = Sys::getopt(argc, argv, "a:C:d:h:k:m:n:O:P:t:u:U:ADQRgprv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "a:C:d:h:k:m:n:O:P:t:u:U:ADNQRgprv")) != -1)
 	switch (c) {
 	case 'A':			// connect with administrative privileges
 	    useadmin = true;
@@ -112,6 +114,10 @@ faxAlterApp::run(int argc, char** argv)
 	case 'D':			// set notification to when done
         script.append(groups ? "JGPARM " : "JPARM ");
         script.append("NOTIFY DONE\n");
+	    break;
+	case 'N':
+	    suspend = false;
+	    submit = false;
 	    break;
 	case 'Q':			// no notification (quiet)
         script.append(groups ? "JGPARM " : "JPARM ");
@@ -268,7 +274,7 @@ faxAlterApp::run(int argc, char** argv)
 			const char* old_job = jobid;
 			jobid = getCurrentJob();
 			printf("Job %s: duplicated as job %s.\n", old_job, jobid);
-		    } else if (! jobSuspend(jobid)) {
+		    } else if (suspend && ! jobSuspend(jobid)) {
 			emsg = getLastResponse();
 			printError("%s", (const char*) emsg);
 			rc = 3;
@@ -279,7 +285,7 @@ faxAlterApp::run(int argc, char** argv)
 			rc = 3;
 			continue;
 		    }
-		    if (!jobSubmit(jobid)) {
+		    if (submit && !jobSubmit(jobid)) {
 			emsg = getLastResponse();
 			printError("%s", (const char*) emsg);
 			rc = 3;

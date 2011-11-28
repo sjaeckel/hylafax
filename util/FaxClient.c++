@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 942 2009-09-29 10:56:43Z faxguy $ */
+/*	$Id: FaxClient.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -906,6 +906,12 @@ bool
 FaxClient::jobParm(const char* name, float v)
 {
     return (command("JPARM %s %g", name, v) == COMPLETE);
+}
+
+bool
+FaxClient::jobParm(const char* name)
+{
+    return (command("JPARM %s", name) == COMPLETE);
 }
 
 bool

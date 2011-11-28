@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: Parser.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -126,11 +126,13 @@ static const tab parmtab[] = {
 { "CLIENT",       T_CLIENT,	  false, true, "[<string>]" },
 { "COMMENTS",     T_COMMENTS,	  false, true, "[<string>]" },
 { "COMMID",       T_COMMID,	  false, true, "(communication identifier)" },
+{ "CONNTIME",     T_CONNTIME,     false, true, "[<number>]" },
 { "COVER",        T_COVER,	  false, true, "path-name" },
 { "DATAFORMAT",   T_DATAFORMAT,	  false, true, "[G31D|G32D|G4|JPEG]" },
 { "DIALSTRING",   T_DIALSTRING,	  false, true, "[<string>]" },
 { "DOCUMENT",     T_DOCUMENT,	  false, true, "path-name" },
 { "DONEOP",       T_DONEOP,	  false, true, "[<string>]" },
+{ "DURATION",     T_DURATION,     false, true, "[<number>]" },
 { "ERRORCODE",    T_ERRORCODE,    false, true, "[<string>]" },
 { "EXTERNAL",     T_EXTERNAL,	  false, true, "[<string>]" },
 { "FAXNUMBER",    T_FAXNUMBER,	  false, true, "[<string>]" },
@@ -153,7 +155,6 @@ static const tab parmtab[] = {
 { "MODEM",        T_MODEM,	  false, true, "[device|class]" },
 { "NDIALS",       T_NDIALS,	  false, true, "[<number>]" },
 { "NOCOUNTCOVER", T_NOCOUNTCOVER, false, true, "[<number>]" },
-{ "SERVERDOCOVER", T_SERVERDOCOVER, false, true, "[YES|NO]" },
 { "NOTIFY",       T_NOTIFY,	  false, true, "[NONE|DONE|REQUEUE|DONE+REQUEUE]" },
 { "NOTIFYADDR",   T_NOTIFYADDR,	  false, true, "[email-address]" },
 { "NPAGES",       T_NPAGES,	  false, true, "[<number>]" },
@@ -168,6 +169,7 @@ static const tab parmtab[] = {
 { "RETRYTIME",    T_RETRYTIME,	  false, true, "[HHSS]" },
 { "SCHEDPRI",     T_SCHEDPRI,	  false, true, "[<number>]" },
 { "SENDTIME",     T_SENDTIME,	  false, true, "[NOW|YYYYMMDDHHSS]" },
+{ "SERVERDOCOVER", T_SERVERDOCOVER, false, true, "[YES|NO]" },
 { "SKIPPAGES",    T_SKIPPAGES,    false, true, "[<number>]" },
 { "SKIPPEDPAGES", T_SKIPPEDPAGES, false, true, "[<number>]" },
 { "STATE",        T_STATE,	  false, true, "(job state)" },
@@ -1109,6 +1111,8 @@ HylaFAXServer::param_cmd(Token t)
     case T_SKIPPAGES:
     case T_SKIPPEDPAGES:
     case T_NOCOUNTCOVER:
+    case T_CONNTIME:
+    case T_DURATION:
     case T_TOTPAGES:
     case T_NTRIES:
     case T_TOTTRIES:
