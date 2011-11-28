@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
+/*	$Id: faxSendApp.c++ 1067 2011-11-28 20:18:56Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -183,9 +183,9 @@ faxSendApp::send(const char** filenames, int num)
 			batchcommid = req->commid;		// ... to all batched jobs
 
 			ai.duration = Sys::now() - ai.start;
-			req->duration = ai.duration;
+			req->duration += ai.duration;
 			ai.conntime = getConnectTime();
-			req->conntime = ai.conntime;
+			req->conntime += ai.conntime;
 			ai.commid = req->commid;
 			ai.device = getModemDeviceID();
 			ai.dest = req->external;
