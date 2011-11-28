@@ -1,4 +1,4 @@
-/*	$Id: Status.c++ 725 2007-12-02 18:56:09Z faxguy $ */
+/*	$Id: Status.c++ 1068 2011-11-29 06:22:42Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -267,15 +267,7 @@ HylaFAXServer::Mprintf(FILE* fd, const char* fmt, const ModemConfig& config)
 		fprintf(fd, fspec, (const char*) config.FAXNumber);
 		break;
 	    case 'r':
-        /* 
-        * this is not used for some reason ie -1 represents infinite
-		* if (config.maxRecvPages == (u_int) -1) {
-		*    tmp = "INF";
-		* } else {
-		*    tmp = fxStr::format("%u", config.maxRecvPages);
-        * }
-        */
-		fprintf(fd, fspec, config.maxRecvPages);
+		fprintf(fd, fspec, (const char*) fxStr::format("%u", config.maxRecvPages));
 		break;
 	    case 's':
 		fprintf(fd, fspec, (const char*) config.status);

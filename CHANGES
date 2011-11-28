@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1066 2011-11-28 20:00:34Z faxguy $	
+#	$Id: CHANGES 1068 2011-11-29 06:22:42Z faxguy $	
 
 New Changes
 
+* fix %r for ModemFmt (28 Nov 2011)
 * add faxq Proxy feature through JobControl (28 Nov 2011)
 * add duration and conntime job details to sendq files (28 Nov 2011)
 * add -N option to faxalter (28 Nov 2011)
