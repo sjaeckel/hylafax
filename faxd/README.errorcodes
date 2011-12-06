@@ -145,7 +145,12 @@ E263      : +Format conversion error in +FDT=DF,VR, WD,LN Incompatible and incon
 E264      : Remote cannot receive
 E265      : After +FDR, DCE waited more than 30 seconds for XON from DTE after XOFF from DTE
 E266      : In Polling Phase B, remote cannot be polled
-E267-279 (currently unused)
+E267      : No answer (ANSam detected)
+E268      : No answer (CED detected)
+E269      : No answer (V.8 complete)
+E270      : No answer (Phase 3 complete)
+E271      : No answer (Phase 3 timeout)
+E272-279 (currently unused)
 E280      : Procedure interrupt (operator intervention)
 E281      : Unable to transmit page (giving up after RTN)
 E282      : Unable to transmit page (giving up after 3 attempts)

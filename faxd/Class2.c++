@@ -1,4 +1,4 @@
-/*	$Id: Class2.c++ 904 2009-01-20 13:51:15Z faxguy $ */
+/*	$Id: Class2.c++ 1069 2011-12-06 20:35:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -774,6 +774,12 @@ static struct HangupCode {
 // Transmit Phase A & miscellaneous errors
     {{ "10", "10", "10", "E217" }, "Unspecified Phase A error" },
     {{ "11", "11", "11", "E218" }, "No answer (T.30 T1 timeout)" },
+// LSI proprietary responses
+    {{ "12", "12", "12", "E267" }, "No answer (ANSam detected)" },
+    {{ "13", "13", "13", "E268" }, "No answer (CED detected)" },
+    {{ "14", "14", "14", "E269" }, "No answer (V.8 complete)" },
+    {{ "15", "15", "15", "E270" }, "No answer (Phase 3 complete)" },
+    {{ "16", "16", "16", "E271" }, "No answer (Phase 3 timeout)" },
 // Transmit Phase B
     {{ "20", "20", "20", "E219" }, "Unspecified Transmit Phase B error" },
     {{ "21", "21", "21", "E220" }, "Remote cannot be polled" },

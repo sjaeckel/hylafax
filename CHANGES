@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1068 2011-11-29 06:22:42Z faxguy $	
+#	$Id: CHANGES 1069 2011-12-06 20:35:27Z faxguy $	
 
 New Changes
 
+* add support for proprietary LSI +FHS: codes 12-16
 * fix %r for ModemFmt (28 Nov 2011)
 * add faxq Proxy feature through JobControl (28 Nov 2011)
 * add duration and conntime job details to sendq files (28 Nov 2011)
