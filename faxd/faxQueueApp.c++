@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1072 2011-12-08 20:43:23Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1073 2011-12-13 23:37:07Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2602,11 +2602,14 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		rjob.setDialString(req.number);
 		for (u_int i = 0; i < req.items.length(); i++) {
 		    switch (req.items[i].op) {
-			case FaxRequest::send_fax:
 			case FaxRequest::send_tiff:
+			case FaxRequest::send_tiff_saved:
 			case FaxRequest::send_pdf:
+			case FaxRequest::send_pdf_saved:
 			case FaxRequest::send_postscript:
+			case FaxRequest::send_postscript_saved:
 			case FaxRequest::send_pcl:
+			case FaxRequest::send_pcl_saved:
 			    client->addFile(req.items[i].item);
 			    break;
 		    }
