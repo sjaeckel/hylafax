@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1073 2011-12-13 23:37:07Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1074 2011-12-21 23:26:57Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2576,6 +2576,8 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		MySendFaxClient* client = new MySendFaxClient;
 		SendFaxJob& rjob = client->addJob();
 		if (job.getJCI().getDesiredDF() != -1) req.desireddf = job.getJCI().getDesiredDF();
+		rjob.setSendTime("now");
+		rjob.setKillTime((const char*) fxStr::format("now + %d minutes", (req.killtime - Sys::now())/60));
 		rjob.setDesiredDF(req.desireddf);
 		rjob.setMinSpeed(req.minbr);
 		rjob.setDesiredSpeed(req.desiredbr);
