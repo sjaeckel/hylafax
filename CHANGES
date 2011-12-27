@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1074 2011-12-21 23:26:57Z faxguy $	
+#	$Id: CHANGES 1075 2011-12-27 21:26:27Z faxguy $	
 
 New Changes
 
+* remove useless MAXPAGES hfaxd JPARM option (27 Dec 2011)
 * add support for proprietary LSI +FHS: codes 12-16 (6 Dec 2011)
 * fix %r for ModemFmt (28 Nov 2011)
 * add faxq Proxy feature through JobControl (28 Nov, 13, 21 Dec 2011)

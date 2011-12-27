@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
+/*	$Id: Parser.c++ 1075 2011-12-27 21:26:27Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -149,7 +149,6 @@ static const tab parmtab[] = {
 { "JOBTYPE",      T_JOBTYPE,	  false, true, "(job type)" },
 { "LASTTIME",     T_LASTTIME,	  false, true, "[DDHHSS]" },
 { "MAXDIALS",     T_MAXDIALS,	  false, true, "[<number>]" },
-{ "MAXPAGES",     T_MAXPAGES,	  false, true, "[<number>]" },
 { "MAXTRIES",     T_MAXTRIES,	  false, true, "[<number>]" },
 { "MINBR",        T_MINBR,	  false, true, "[ANY|bit-rate]" },
 { "MODEM",        T_MODEM,	  false, true, "[device|class]" },
@@ -1105,7 +1104,6 @@ HylaFAXServer::param_cmd(Token t)
     case T_MINBR:
     case T_BEGBR:
     case T_BEGST:
-    case T_MAXPAGES:
     case T_SCHEDPRI:
     case T_NPAGES:
     case T_SKIPPAGES:
