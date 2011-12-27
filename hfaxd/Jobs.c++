@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
+/*	$Id: Jobs.c++ 1075 2011-12-27 21:26:27Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -130,7 +130,6 @@ static const struct {
     { T_JOBTYPE,	A_RUSR|A_RADM|A_ROTH },
     { T_LASTTIME,	A_RUSR|A_MUSR|A_RADM|A_WADM|A_ROTH },
     { T_MAXDIALS,	A_RUSR|A_MUSR|A_RADM|A_WADM|A_ROTH },
-    { T_MAXPAGES,	A_RUSR|A_MUSR|A_RADM|A_WADM|A_ROTH },
     { T_MAXTRIES,	A_RUSR|A_MUSR|A_RADM|A_WADM|A_ROTH },
     { T_MINBR,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_MODEM,		A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
