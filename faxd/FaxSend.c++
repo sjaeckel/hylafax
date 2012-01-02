@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 1017 2010-10-08 19:35:41Z faxguy $ */
+/*	$Id: FaxSend.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1086,7 +1086,6 @@ FaxServer::sendSetupParams(TIFF* tif, Class2Params& params, const FaxMachineInfo
 void
 FaxServer::notifyPageSent(FaxRequest& req, const char*)
 {
-    time_t now = Sys::now();
     req.npages++;			// count transmitted page
     if (req.nocountcover) {
 	req.nocountcover--;
@@ -1108,7 +1107,7 @@ FaxServer::notifyPageSent(FaxRequest& req, const char*)
 		, (const char*) req.external
 		, req.npages
 		, req.totpages
-		, fmtTime(now - pageStart)
+		, fmtTime(getPageTransferTime())
 	    );
 	    sleep(1);               // XXX give parent time
 	    exit(0);
@@ -1121,14 +1120,13 @@ FaxServer::notifyPageSent(FaxRequest& req, const char*)
 		, (const char*) req.external
 		, req.npages
 		, req.totpages
-		, fmtTime(now - pageStart)
+		, fmtTime(getPageTransferTime())
 	    );
 	    break;
 	default:
 	    Dispatcher::instance().startChild(req.writeQFilePid, this);
 	    break;
     }
-    pageStart = now;			// for next page
 }
 
 /*

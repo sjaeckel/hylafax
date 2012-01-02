@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 1067 2011-11-28 20:18:56Z faxguy $ */
+/*	$Id: faxSendApp.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -328,7 +328,7 @@ void
 faxSendApp::notifyPageSent(FaxRequest& req, const char* filename)
 {
     FaxSendInfo si(filename, req.commid, req.npages+1,
-	getPageTransferTime(), getClientParams());
+	setPageTransferTime(), getClientParams());
     /*
      * If the system is busy then sendJobStatus may not return
      * quickly.  Thus we run it in a child process and move on.

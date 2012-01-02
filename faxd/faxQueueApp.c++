@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1074 2011-12-21 23:26:57Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1598,10 +1598,11 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 {
     time_t now = Sys::now();
     time_t duration = now - job.start;
-
-    Trigger::post(Trigger::SEND_END, job);
     job.bnext = NULL; job.bprev = NULL;		// clear any batching
     job.commid = req->commid;			// passed from subprocess
+
+    Trigger::post(Trigger::SEND_END, job);
+
     if (req->status == 127) {
 	req->notice = "Send program terminated abnormally; unable to exec " |
 	    pickCmd(*req) | "{E343}";

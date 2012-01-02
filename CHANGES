@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1075 2011-12-27 21:26:27Z faxguy $	
+#	$Id: CHANGES 1076 2012-01-02 22:39:14Z faxguy $	
 
 New Changes
 
+* fix some information presented by faxwatch (2 Jan 2012)
+* fix JPARM JOBTYPE parameter (27 Dec 2011)
 * remove useless MAXPAGES hfaxd JPARM option (27 Dec 2011)
 * add support for proprietary LSI +FHS: codes 12-16 (6 Dec 2011)
 * fix %r for ModemFmt (28 Nov 2011)
