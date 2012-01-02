@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 1042 2011-02-16 18:21:47Z faxguy $ */
+/*	$Id: FaxRecv.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -72,6 +72,9 @@ FaxServer::recvFax(const CallID& callid, FaxMachineInfo clientInfo, fxStr& emsg)
 
 	faxRecognized = modem->recvBegin(&setupinfo, emsg);
 	if (faxRecognized) {
+	    info.params = modem->getRecvParams();
+	    if (!modem->getRecvTSI(info.sender))		// optional TSI
+		info.sender = "<UNSPECIFIED>";
 	    /*
 	     * If the system is busy then notifyRecvBegun may not return
 	     * quickly.  Thus we run it in a child process and move on.
@@ -356,11 +359,12 @@ FaxServer::processTSIRecvdCmd(FaxRecvInfo&, fxStr&)
 void
 FaxServer::notifyPageRecvd(TIFF*, FaxRecvInfo& ri, int)
 {
-    traceServer("RECV FAX (%s): from %s, page %u in %s, %s, %s, %s, %s"
+    traceServer("RECV FAX (%s): from %s, page %u in %s, %s x %s, %s, %s, %s"
 	, (const char*) ri.commid
 	, (const char*) ri.sender
 	, ri.npages
 	, fmtTime((time_t) ri.time)
+	, (ri.params.wd == WD_A4 ? "A4" : ri.params.wd == WD_B4 ? "B4" : "A3")
 	, (ri.params.ln == LN_A4 ? "A4" : ri.params.ln == LN_B4 ? "B4" : "INF")
 	, ri.params.verticalResName()
 	, ri.params.dataFormatName()

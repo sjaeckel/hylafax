@@ -1,4 +1,4 @@
-/*	$Id: Class2Params.c++ 965 2009-12-22 06:07:31Z faxguy $ */
+/*	$Id: Class2Params.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -722,18 +722,31 @@ Class2Params::encode() const
 	  | ((br&15)<<3)
 	  | ((wd&7)<<9)
 	  | ((ln&3)<<12)
-	  | ((df&3)<<14)
-	  | ((ec == EC_DISABLE ? 0 : 1)<<16)		// boolean value
-	  | ((bf&1)<<17)
-	  | ((st&7)<<18)
-	  | (1<<21)		// this is the version identifier
+	  | ((df&7)<<14)
+	  | ((jp&7)<<17)
+	  | ((ec == EC_DISABLE ? 0 : 1)<<20)		// boolean value
+	  | ((bf&1)<<21)
+	  | ((st&7)<<22)
+	  | (1<<25)		// this is the version identifier
 	  ;
 }
 
 void
 Class2Params::decode(u_int v)
 {
-    if (v>>21 == 1) {		// check version
+    if (v>>25 == 1) {		// check version
+	vr = ((v>>0) & 7);	// VR is a bitmap
+	br = (v>>3) & 15;
+	wd = (v>>9) & 7;
+	ln = (v>>12) & 3;
+	if (ln == LN_LET)	// force protocol value
+	    ln = LN_A4;
+	df = (v>>14) & 7;
+	jp = (v>>17) & 7;
+	ec = (v>>20) & 1;
+	bf = (v>>21) & 1;
+	st = (v>>22) & 7;
+    } else if (v>>21 == 1) {	// check version
 	vr = ((v>>0) & 7);	// VR is a bitmap
 	br = (v>>3) & 15;
 	wd = (v>>9) & 7;

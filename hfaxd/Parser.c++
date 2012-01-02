@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 1075 2011-12-27 21:26:27Z faxguy $ */
+/*	$Id: Parser.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1148,6 +1148,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_GROUPID:
     case T_JOBID:
     case T_JOBINFO:
+    case T_JOBTYPE:
     case T_OWNER:
     case T_STATE:
     case T_STATUS:

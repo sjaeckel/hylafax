@@ -66,7 +66,8 @@ printHeader(const TriggerMsgHeader& h)
 static void
 printParams(const Class2Params& params)
 {
-    printf("<%s, %s, %s, %s, %s>"
+    printf("<%s x %s, %s, %s, %s, %s>"
+	, (params.wd == WD_A4 ? "A4" : params.wd == WD_B4 ? "B4" : "A3")
 	, (params.ln == LN_A4 ? "A4" : params.ln == LN_B4 ? "B4" : "INF")
 	, params.verticalResName()
 	, params.dataFormatName()

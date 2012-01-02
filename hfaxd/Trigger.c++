@@ -1,4 +1,4 @@
-/*	$Id: Trigger.c++ 830 2008-04-28 23:59:00Z faxguy $ */
+/*	$Id: Trigger.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -275,7 +275,8 @@ HylaFAXServer::logJobEventMsg(const TriggerMsgHeader& h, const JobExt& job)
 static void
 addParams(fxStr& msg, const Class2Params& params)
 {
-    msg.append(fxStr::format("<%s, %s, %s, %s, %s>"
+    msg.append(fxStr::format("<%s x %s, %s, %s, %s, %s>"
+	, (params.wd == WD_A4 ? "A4" : params.wd == WD_B4 ? "B4" : "A3")
 	, (params.ln == LN_A4 ? "A4" : params.ln == LN_B4 ? "B4" : "INF")
 	, params.verticalResName()
 	, params.dataFormatName()
