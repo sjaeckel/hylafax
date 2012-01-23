@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
+/*	$Id: FaxRequest.c++ 1078 2012-01-23 19:02:31Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -688,7 +688,7 @@ FaxRequest::addItem(FaxSendOp op, char* tag, bool& rejectJob)
 	*cp++ = '\0';
     else
 	cp = tag, tag = '\0';
-    if (!checkDocument(cp)) {
+    if (*cp == NULL || !checkDocument(cp)) {
     	error("Rejected document in corrupt job request");
 	rejectJob = true;
     }
