@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 1066 2011-11-28 20:00:34Z faxguy $ */
+/*	$Id: FaxClient.c++ 1077 2012-01-23 16:43:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -114,7 +114,7 @@ FaxClient::printWarning(const char* fmt ...)
 void
 FaxClient::vprintWarning(const char* fmt, va_list ap)
 {
-    fprintf(stderr, "Warning, ");
+    fprintf(stderr, "%s", "Warning, ");
     vfprintf(stderr, fmt, ap);
     fputs("\n", stderr);
 }

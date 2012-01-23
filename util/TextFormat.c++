@@ -1,4 +1,4 @@
-/*	$Id: TextFormat.c++ 1032 2010-11-23 03:04:23Z faxguy $ */
+/*	$Id: TextFormat.c++ 1077 2012-01-23 16:43:09Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -1427,7 +1427,7 @@ TextFont::openAFMFile(fxStr& fontpath)
 {
     fxStr emsg;
     if (!decodeFontName(family, fontpath, emsg)) {
-	fprintf(stderr,emsg);
+	fprintf(stderr,"%s", (const char*) emsg);
         return NULL;
     } 
     return Sys::fopen(fontpath, "r");
