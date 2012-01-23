@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.c++ 1041 2010-12-04 19:43:07Z faxguy $ */
+/*	$Id: TypeRules.c++ 1077 2012-01-23 16:43:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -97,7 +97,7 @@ TypeRule::match(const void* data, size_t size, bool verbose) const
 	    printf(" \"%s\"", value.s);
 	else if (type != ASCII && type != ASCIIESC) {
 	    if (op == ANY)
-		printf(" <any value>");
+		printf("%s", " <any value>");
 	    else
 		printf(" %#llx", (long long) value.v);
 	}
@@ -105,7 +105,7 @@ TypeRule::match(const void* data, size_t size, bool verbose) const
     }
     if (off > (off_t)size) {
 	if (verbose)
-	    printf("failed (offset past data)\n");
+	    printf("%s", "failed (offset past data)\n");
 	return (false);
     }
     bool ok = false;
@@ -158,7 +158,7 @@ TypeRule::match(const void* data, size_t size, bool verbose) const
 	    break;
 	}
 	if (verbose)
-	    printf("failed (insufficient data)\n");
+	    printf("%s", "failed (insufficient data)\n");
 	return (false);
     case LONG:
 	if (off + 4 < (off_t)size) {
@@ -167,7 +167,7 @@ TypeRule::match(const void* data, size_t size, bool verbose) const
 	    break;
 	}
 	if (verbose)
-	    printf("failed (insufficient data)\n");
+	    printf("%s", "failed (insufficient data)\n");
 	return (false);
     }
     /*
@@ -193,7 +193,7 @@ done:
 	    printf("success (result %s, rule \"%s\")\n",
 		resultNames[result], (const char*) cmd);
 	else
-	    printf("failed (comparison)\n");
+	    printf("%s", "failed (comparison)\n");
     }
     return (ok);
 }
@@ -493,6 +493,6 @@ TypeRules::match(const void* data, u_int size) const
 	    return (&(*rules)[i + match2(i, data, size, verbose)]);
     }
     if (verbose)
-	printf("no match\n");
+	printf("%s", "no match\n");
     return (NULL);
 }

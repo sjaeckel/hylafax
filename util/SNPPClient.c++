@@ -1,4 +1,4 @@
-/*	$Id: SNPPClient.c++ 807 2008-03-12 05:43:09Z faxguy $ */
+/*	$Id: SNPPClient.c++ 1077 2012-01-23 16:43:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -101,7 +101,7 @@ SNPPClient::printWarning(const char* fmt ...)
 void
 SNPPClient::vprintWarning(const char* fmt, va_list ap)
 {
-    fprintf(stderr, "Warning, ");
+    fprintf(stderr, "%s", "Warning, ");
     vfprintf(stderr, fmt, ap);
     fputs("\n", stderr);
 }
