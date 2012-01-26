@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 984 2010-02-12 04:45:15Z faxguy $
+#	$Id: faxrcvd.sh.in 1079 2012-01-27 00:19:29Z faxguy $
 #
 # ============================================
 #
@@ -61,15 +61,15 @@ faxrcvd_mail()
 {
     MAILTYPE="$1"
     MAILTO="$2"
-    CCTO="$3"
-    BCCTO="$4"
+    MAILCCTO="$3"
+    MAILBCCTO="$4"
 
    (echo "Mime-Version: 1.0"
     echo "Content-Type: Multipart/Mixed; Boundary=\"$MIMEBOUNDARY\""
     echo "Content-Transfer-Encoding: 7bit"
     echo "To: $MAILTO"
-    if [ -n "$CCTO" ]; then echo "Cc: $CCTO"; fi
-    if [ -n "$BCCTO" ]; then echo "Bcc: $BCCTO"; fi
+    if [ -n "$MAILCCTO" ]; then echo "Cc: $MAILCCTO"; fi
+    if [ -n "$MAILBCCTO" ]; then echo "Bcc: $MAILBCCTO"; fi
     printf "From: "
     printf "$DICTRECEIVEAGENT" | LANG=C $AWK -f bin/rfc2047-encode.awk -v charset="$CHARSET"
     echo " <$FROMADDR>"
