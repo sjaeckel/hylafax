@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1078 2012-01-23 19:02:31Z faxguy $	
+#	$Id: CHANGES 1079 2012-01-27 00:19:29Z faxguy $	
 
 New Changes
 
+* fix CCTO and BCCTO for faxrcvd (26 Jan 2012)
 * prevent more problems due to corrupt sendq/doneq files (23 Jan 2012)
 
 (5.5.1)
