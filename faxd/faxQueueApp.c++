@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1080 2012-01-27 17:52:13Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2620,7 +2620,8 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		bool status = false;
 		fxStr emsg;
 		if (client->callServer(emsg)) {
-		    status = client->login(req.owner, NULL, emsg) 
+		    status = client->login(job.getJCI().getProxyUser().length() ? job.getJCI().getProxyUser() : req.owner, 
+					job.getJCI().getProxyPass().length() ? (const char*) job.getJCI().getProxyPass() : NULL, emsg) 
 				&& client->prepareForJobSubmissions(emsg)
 				&& client->submitJobs(emsg);
 		    if (status) {

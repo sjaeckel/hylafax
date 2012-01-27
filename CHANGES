@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1079 2012-01-27 00:19:29Z faxguy $	
+#	$Id: CHANGES 1080 2012-01-27 17:52:13Z faxguy $	
 
 New Changes
 
+* add JobControl ProxyUser and ProxyPass options (27 Jan 2012)
 * fix CCTO and BCCTO for faxrcvd (26 Jan 2012)
 * prevent more problems due to corrupt sendq/doneq files (23 Jan 2012)
 

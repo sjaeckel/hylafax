@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 1066 2011-11-28 20:00:34Z faxguy $
+.\"	$Id: jobcontrol.1m 1080 2012-01-27 17:52:13Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -82,6 +82,8 @@ Modem	string	\s-1Any\s+1	ModemGroup to use for destination
 Notify	string	\-	notification override for job
 Priority	integer	\-	priority to use for job
 Proxy	string	\-	proxy server to which the job should be delivered
+ProxyUser	string	\-	authentication username for the proxy server
+ProxyPass	string	\-	authentication password for the proxy server
 RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
@@ -124,14 +126,21 @@ overrides any priority requested by the submitter.
 The
 .B Proxy
 parameter controls to which host the job should be delivered for 
-transmission.  This should be a hostname or IP address, and the proxy
+transmission.  This should be a hostname or IP address and may include
+the modem group name when formatted as the host option for
+.IR sendfax (1).
+The proxy
 server should have login access permitted for the originating server
-without a password.  Caution: actions such as job removal and job
+without a password if
+.B ProxyUser
+and
+.B ProxyPass
+are not also provided.  Caution: actions such as job removal and job
 modification (such as those done by
 .IR faxrm (1)
 or
-.IR faxalter (1)
-) will not currently
+.IR faxalter (1))
+will not currently
 propagate to the proxy and is a matter for future development.  Therefore,
 such actions should be made on the proxy server directly.
 .PP
