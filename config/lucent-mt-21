@@ -1,4 +1,4 @@
-# $Id: lucent-mt-21 1061 2011-09-27 19:08:56Z faxguy $
+# $Id: lucent-mt-21 1081 2012-01-30 17:43:15Z faxguy $
 #
 # prototype config file for MultiTech MT5634ZBA-V.92-NAM
 #
@@ -9,6 +9,7 @@
 # CONFIG: CLASS2.1:*-"ISI5634PCI"-*
 # CONFIG: CLASS2.1:*-"MT5634SMI-V92"-*
 # CONFIG: CLASS2.1:*-"MT9234ZBA"-*
+# CONFIG: CLASS2.1:*-"MT9234ZPX"-*
 #
 # BEGIN-SERVER
 # END-SERVER
