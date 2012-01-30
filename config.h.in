@@ -1,4 +1,4 @@
-/*	$Id: config.h.in 957 2009-11-22 01:03:21Z faxguy $ */
+/*	$Id: config.h.in 1082 2012-01-31 00:58:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -304,6 +304,7 @@
  * Little CMS library support
  */
 @HAVE_LCMS@
+@HAVE_LCMS2@
 
 /*
  * LDAP Authentication

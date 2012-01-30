@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 1023 2010-10-26 04:24:32Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 1082 2012-01-31 00:58:35Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -480,7 +480,7 @@ FaxModem::recvSetupTIFF(TIFF* tif, long, int fillOrder, const fxStr& id)
     TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,	(uint32) params.pageWidth());
     if (params.jp == JP_COLOR || params.jp == JP_GREY) {
 	TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,	8);
-#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
+#if defined(HAVE_JPEG) && ( defined(HAVE_LCMS) || defined(HAVE_LCMS2) )
 	/* Most image processors won't know what to do with the ITULAB colorspace.
 	   So we'll be converting it to RGB for portability. */
 	TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,		PHOTOMETRIC_YCBCR);
@@ -897,7 +897,7 @@ FaxModem::fixupJPEG(TIFF* tif, fxStr& emsg)
 	    protoTrace("RECV: fixing zero image frame length in SOF marker at byte %lu to %lu", i, recvEOLCount);
 	}
     }
-#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
+#if defined(HAVE_JPEG) && ( defined(HAVE_LCMS) || defined(HAVE_LCMS2) )
     /*
      * We convert the colorspace from ITULAB to sRGB because most
      * image processors will not know how to handle ITULAB correctly.
