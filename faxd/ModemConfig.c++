@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.c++ 1005 2010-08-30 05:36:28Z faxguy $ */
+/*	$Id: ModemConfig.c++ 1082 2012-01-31 00:58:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -235,7 +235,7 @@ static struct {
 { "class2usehex",		&ModemConfig::class2UseHex,		false },
 { "class2hexnsf",		&ModemConfig::class2HexNSF,		true },
 { "class2uselinecount",		&ModemConfig::class2UseLineCount,	false },
-#if defined(PHOTOMETRIC_ITULAB) || ( defined(HAVE_JPEG) && defined(HAVE_LCMS) )
+#if defined(PHOTOMETRIC_ITULAB) || ( defined(HAVE_JPEG) && ( defined(HAVE_LCMS) || defined(HAVE_LCMS2) ) )
 { "class1greyjpegsupport",	&ModemConfig::class1GreyJPEGSupport,	false },
 { "class1colorjpegsupport",	&ModemConfig::class1ColorJPEGSupport,	false },
 { "class2jpegsupport",		&ModemConfig::class2JPEGSupport,	false },

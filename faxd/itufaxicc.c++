@@ -1,4 +1,4 @@
-/* $Id: itufaxicc.c++ 969 2010-01-01 20:44:49Z faxguy $ */
+/* $Id: itufaxicc.c++ 1082 2012-01-31 00:58:35Z faxguy $ */
 //  Copyright (C) 2009 Marti Maria
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
@@ -26,10 +26,17 @@
 // ******************************************************************************
 
 #include "config.h"
-#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
+#if defined(HAVE_JPEG) && ( defined(HAVE_LCMS) || defined(HAVE_LCMS2) )
 
+#if defined(HAVE_LCMS)
 #include "lcms.h"
+#else
+#include "lcms2.h"
+#endif
 #include "itufaxicc.h"
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
 #include <setjmp.h>
 
 #define XMD_H
@@ -72,6 +79,7 @@ int lcms_error_exit(int ErrorCode, const char *ErrorText)
 // These functions does convert the encoding of ITUFAX to floating point
 // and vice-versa. No gamut mapping is performed yet.
 
+#if defined(HAVE_LCMS)
 static
 void ITU2Lab(WORD In[3], LPcmsCIELab Lab)
 {
@@ -87,6 +95,23 @@ void Lab2ITU(LPcmsCIELab Lab, WORD Out[3])
 	Out[1] = (WORD) floor((double) (Lab -> a / 170.)* 65535. + 32768. );
 	Out[2] = (WORD) floor((double) (Lab -> b / 200.)* 65535. + 24576. );
 }
+#else
+static
+void ITU2Lab(const cmsUInt16Number In[3], cmsCIELab* Lab)
+{
+	Lab -> L = (double) In[0] / 655.35;
+	Lab -> a = (double) 170.* (In[1] - 32768.) / 65535.;
+	Lab -> b = (double) 200.* (In[2] - 24576.) / 65535.;
+}
+ 
+static
+void Lab2ITU(const cmsCIELab* Lab, cmsUInt16Number Out[3])
+{
+	Out[0] = (cmsUInt16Number) floor((double) (Lab -> L / 100.)* 65535. );
+	Out[1] = (cmsUInt16Number) floor((double) (Lab -> a / 170.)* 65535. + 32768. );
+	Out[2] = (cmsUInt16Number) floor((double) (Lab -> b / 200.)* 65535. + 24576. );
+}
+#endif
 
 // These are the samplers-- They are passed as callbacks to cmsSample3DGrid()
 // then, cmsSample3DGrid() will sweel whole Lab gamut calling these functions
@@ -98,6 +123,7 @@ void Lab2ITU(LPcmsCIELab Lab, WORD Out[3])
 
 #define GRID_POINTS 33
 
+#if defined(HAVE_LCMS)
 static
 int PCS2ITU(register WORD In[], register WORD Out[], register LPVOID Cargo)
 {      
@@ -109,7 +135,6 @@ int PCS2ITU(register WORD In[], register WORD Out[], register LPVOID Cargo)
 	return TRUE;
 }
 
-
 static
 int ITU2PCS(register WORD In[], register WORD Out[], register LPVOID Cargo)
 {   
@@ -120,8 +145,38 @@ int ITU2PCS(register WORD In[], register WORD Out[], register LPVOID Cargo)
 	return TRUE;
 }
 
+#else
+#define UTILS_UNUSED_PARAMETER(x) ((void)x)
+
+static
+int PCS2ITU(register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void*  Cargo)
+{   
+	cmsCIELab Lab;
+
+	cmsLabEncoded2Float(&Lab, In);
+	cmsDesaturateLab(&Lab, 85, -85, 125, -75);	// This function does the necessary gamut remapping
+	Lab2ITU(&Lab, Out);
+	return TRUE;
+
+    UTILS_UNUSED_PARAMETER(Cargo);
+}
+
+static
+int ITU2PCS( register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void*  Cargo)
+{   
+	cmsCIELab Lab;
+
+	ITU2Lab(In, &Lab);
+	cmsFloat2LabEncoded(Out, &Lab);
+	return TRUE;
+
+    UTILS_UNUSED_PARAMETER(Cargo);
+}
+#endif
+
 // This function does create the virtual input profile, which decoded ITU  
 // to the profile connection space
+#if defined(HAVE_LCMS)
 static
 cmsHPROFILE CreateITU2PCS_ICC(void)
 {
@@ -144,10 +199,42 @@ cmsHPROFILE CreateITU2PCS_ICC(void)
 
 	return hProfile;
 }
+#else
+static
+cmsHPROFILE CreateITU2PCS_ICC(void)
+{
+	cmsHPROFILE hProfile;
+	cmsPipeline* AToB0;
+	cmsStage* ColorMap;
 
+	AToB0 = cmsPipelineAlloc(0, 3, 3);
+	if (AToB0 == NULL) return NULL;
+
+	ColorMap = cmsStageAllocCLut16bit(0, GRID_POINTS, 3, 3, NULL);
+	if (ColorMap == NULL) return NULL;
+        
+    cmsPipelineInsertStage(AToB0, cmsAT_BEGIN, ColorMap);
+	cmsStageSampleCLut16bit(ColorMap, ITU2PCS, NULL, 0);
+
+	hProfile = cmsCreateProfilePlaceholder(0);
+	if (hProfile == NULL) {
+		cmsPipelineFree(AToB0);
+		return NULL;
+	}
+
+	cmsWriteTag(hProfile, cmsSigAToB0Tag, AToB0);
+	cmsSetColorSpace(hProfile, cmsSigLabData);
+	cmsSetPCS(hProfile, cmsSigLabData);
+	cmsSetDeviceClass(hProfile, cmsSigColorSpaceClass);
+	cmsPipelineFree(AToB0);
+
+	return hProfile;
+}
+#endif
 
 // This function does create the virtual output profile, with the 
 // necessary gamut mapping 
+#if defined(HAVE_LCMS)
 static
 cmsHPROFILE CreatePCS2ITU_ICC(void)
 {
@@ -170,7 +257,39 @@ cmsHPROFILE CreatePCS2ITU_ICC(void)
 
 	return hProfile;
 }
+#else
+static
+cmsHPROFILE CreatePCS2ITU_ICC(void)
+{
+    cmsHPROFILE hProfile;
+    cmsPipeline* BToA0;
+    cmsStage* ColorMap;
 
+    BToA0 = cmsPipelineAlloc(0, 3, 3);
+    if (BToA0 == NULL) return NULL;
+
+    ColorMap = cmsStageAllocCLut16bit(0, GRID_POINTS, 3, 3, NULL);
+    if (ColorMap == NULL) return NULL;
+
+    cmsPipelineInsertStage(BToA0, cmsAT_BEGIN, ColorMap);
+    cmsStageSampleCLut16bit(ColorMap, PCS2ITU, NULL, 0);
+
+    hProfile = cmsCreateProfilePlaceholder(0);
+    if (hProfile == NULL) {
+        cmsPipelineFree(BToA0);
+        return NULL;
+    }
+
+    cmsWriteTag(hProfile, cmsSigBToA0Tag, BToA0);
+    cmsSetColorSpace(hProfile, cmsSigLabData);
+    cmsSetPCS(hProfile, cmsSigLabData);
+    cmsSetDeviceClass(hProfile, cmsSigColorSpaceClass);
+
+    cmsPipelineFree(BToA0);
+
+    return hProfile;
+}
+#endif
 
 /*
 Definition of the APPn Markers Defined for continuous-tone G3FAX
@@ -372,7 +491,9 @@ bool convertJPEGfromITULAB(FILE* src, FILE* dst, char* emsg, size_t max_emsg_byt
 	jpeg_decompress_struct Decompressor;
 	jpeg_compress_struct   Compressor;
 
+#if defined(HAVE_LCMS)
 	cmsSetErrorHandler(lcms_error_exit);
+#endif
 	ErrorMessage[0] = 0;
 	*emsg = 0;
 
@@ -444,7 +565,9 @@ bool convertJPEGtoITULAB( FILE* src, FILE* dst, char* emsg, size_t max_emsg_byte
 	jpeg_decompress_struct Decompressor;
 	jpeg_compress_struct   Compressor;
 
+#if defined(HAVE_LCMS)
 	cmsSetErrorHandler(lcms_error_exit);
+#endif
 	ErrorMessage[0] = 0;
 	*emsg = 0;
 
@@ -490,7 +613,9 @@ bool convertRawRGBtoITULAB( tdata_t src, tsize_t srclen, uint32 width, uint32 he
 {
 	jpeg_compress_struct   Compressor;
 
+#if defined(HAVE_LCMS)
 	cmsSetErrorHandler(lcms_error_exit);
+#endif
 	ErrorMessage[0] = 0;
 	*emsg = 0;
 

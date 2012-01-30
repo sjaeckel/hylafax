@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 1053 2011-09-03 18:34:02Z faxguy $ */
+/*	$Id: Class1Send.c++ 1082 2012-01-31 00:58:35Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1875,7 +1875,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	}
 
 	if (params.jp) {
-#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
+#if defined(HAVE_JPEG) && ( defined(HAVE_LCMS) || defined(HAVE_LCMS2) )
 	    /*
 	     * The image is in raw RGB data.  We now need to compress
 	     * with JPEG and put into the right colorspace (ITULAB).
@@ -1914,7 +1914,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 		emsg = "Could not open JPEG conversion output stream.";
 		protoTrace(emsg);
 		return (false);
-#if defined(HAVE_JPEG) && defined(HAVE_LCMS)
+#if defined(HAVE_JPEG) && ( defined(HAVE_LCMS) || defined(HAVE_LCMS2) )
 	    }
 #endif
 	} else {
