@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxrcvd.sh.in 1079 2012-01-27 00:19:29Z faxguy $
+#	$Id: faxrcvd.sh.in 1083 2012-02-06 17:34:27Z faxguy $
 #
 # ============================================
 #
@@ -89,17 +89,17 @@ faxrcvd_mail()
     (
     if [ -f $FILE ]; then
 	case "$MAILTYPE" in
-	    textonly)
+	    faxmaster)
 		echo "$FILE (ftp://$HOSTNAME:$PORT/$FILE):";;
 	esac
 	faxInfo $FILE
 	echo "$DICTRECEIVEDON| $DEVICE" | printFormatted $INFOSIZE
 	if [ -z "$MSG" ]; then
 	    case "$MAILTYPE" in
-		withattached)
+		user)
 		    echo "$DICTCOMMID| c$COMMID" | printFormatted $INFOSIZE
 		    ;;
-		textonly)
+		faxmaster)
 		    echo "$DICTCOMMID| c$COMMID (ftp://$HOSTNAME:$PORT/log/c$COMMID)" | printFormatted $INFOSIZE
 		    if [ -f $FILE ] && [ -n "$SENDTO" ]; then
 			echo ""
@@ -140,7 +140,7 @@ faxrcvd_mail()
 	fi
     fi
     if [ -f $FILE ]; then
-	if [ "$MAILTYPE" = "withattached" ]; then
+	if [ "$MAILTYPE" = "user" ] && [ "$FILETYPE" != "none" ]; then
 	    for type in $FILETYPE; do
 		echo ""
 		echo "--$MIMEBOUNDARY"
@@ -335,11 +335,11 @@ case $NOTIFY_FAXMASTER$MSG in
 esac
 if [ "$NOTIFY_FAXMASTER" != "no" ]; then
     if [ ! -f $FILE ] || [ "$TOADDR" != "$SENDTO" ]; then
-	faxrcvd_mail "textonly" "$TOADDR" "" ""
+	faxrcvd_mail "faxmaster" "$TOADDR" "" ""
     fi
 fi
 if [ -n "$SENDTO" ] && [ -f $FILE ]; then
     for toeml in $SENDTO; do
-	faxrcvd_mail "withattached" "$toeml" "$CCTO" "$BCCTO"
+	faxrcvd_mail "user" "$toeml" "$CCTO" "$BCCTO"
     done
 fi
