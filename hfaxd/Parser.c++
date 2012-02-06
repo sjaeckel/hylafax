@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
+/*	$Id: Parser.c++ 1084 2012-02-06 19:48:05Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -100,7 +100,7 @@ static const tab cmdtab[] = {
 { "RETR",         T_RETR,	 true, true, "file-name" },
 { "RNFR",         T_RNFR,	 true,false, "file-name" },
 { "RNTO",         T_RNTO,	 true,false, "file-name" },
-{ "SHUT",         T_SHUT,	 true, true, "NOW|HHSS|YYYYMMDDHHSS [reason]" },
+{ "SHUT",         T_SHUT,	 true, true, "NOW|HHMM|YYYYMMDDHHMM [reason]" },
 { "SITE",         T_SITE,	 true, true, "site-cmd [arguments]" },
 { "SIZE",         T_SIZE,	 true, true, "path-name" },
 { "STAT",         T_STAT,	false, true, "[path-name]" },
@@ -147,7 +147,7 @@ static const tab parmtab[] = {
 { "JOBID",        T_JOBID,	  false, true, "(job identifier)" },
 { "JOBINFO",      T_JOBINFO,	  false, true, "[<string>]" },
 { "JOBTYPE",      T_JOBTYPE,	  false, true, "(job type)" },
-{ "LASTTIME",     T_LASTTIME,	  false, true, "[DDHHSS]" },
+{ "LASTTIME",     T_LASTTIME,	  false, true, "[DDHHMM]" },
 { "MAXDIALS",     T_MAXDIALS,	  false, true, "[<number>]" },
 { "MAXTRIES",     T_MAXTRIES,	  false, true, "[<number>]" },
 { "MINBR",        T_MINBR,	  false, true, "[ANY|bit-rate]" },
@@ -165,9 +165,9 @@ static const tab parmtab[] = {
 { "PASSWD",       T_PASSWD,	  false, true, "[<string>]" },
 { "POLL",         T_POLL,	  false, true, "selector [passwd]" },
 { "REGARDING",    T_REGARDING,	  false, true, "[<string>]" },
-{ "RETRYTIME",    T_RETRYTIME,	  false, true, "[HHSS]" },
+{ "RETRYTIME",    T_RETRYTIME,	  false, true, "[MMSS]" },
 { "SCHEDPRI",     T_SCHEDPRI,	  false, true, "[<number>]" },
-{ "SENDTIME",     T_SENDTIME,	  false, true, "[NOW|YYYYMMDDHHSS]" },
+{ "SENDTIME",     T_SENDTIME,	  false, true, "[NOW|YYYYMMDDHHMMSS]" },
 { "SERVERDOCOVER", T_SERVERDOCOVER, false, true, "[YES|NO]" },
 { "SKIPPAGES",    T_SKIPPAGES,    false, true, "[<number>]" },
 { "SKIPPEDPAGES", T_SKIPPEDPAGES, false, true, "[<number>]" },
