@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1066 2011-11-28 20:00:34Z faxguy $
+.\"	$Id: hylafax-config.4f 1085 2012-02-14 05:55:32Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2011-11-28 12:00:34 -0800 (Mon, 28 Nov 2011) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2012-02-13 21:55:32 -0800 (Mon, 13 Feb 2012) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -1736,20 +1736,21 @@ Fonts must be stored in the Portable Compiled Font (\c
 .SM PCF\c
 ) format used by the X11 Window System.
 Filenames are specified relative to the root of the spooling area;
-e.g. etc/lutRS18.pcf.
+e.g. etc/lutRS18.pcf or etc/LiberationSans-25.pcf.
 If no font is specified, if a null filename is specified, or if
 the specified font file is not readable, then tag lines will not
 be generated.
-Note that the default
+Note that the etc/lutRS18.pcf
 .B TagLineFont
-that traditionally comes with \*(Fx does not have glyphs
+that has historically been the default with \*(Fx does not have glyphs
 available beyond basic ASCII, and to show non-ASCII characters
 a different file must be used that has characters matching those
 characters found in
 .B TagLineFormat
 as decoded by the
 .B TagLineLocale
-setting.
+setting.  For this reason, the etc/LiberationSans-25.pcf is now considered the
+default as it has unicode support for Latin, Greek, and Cyrillic characters.
 .TP
 .B TagLineFormat
 The format string to use when imaging
