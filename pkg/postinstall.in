@@ -1,5 +1,5 @@
 #
-# $Id: postinstall.in 961 2009-12-05 21:06:39Z faxguy $
+# $Id: postinstall.in 1085 2012-02-14 05:55:32Z faxguy $
 #	Tim Rice
 #
 #	postinstall
@@ -100,7 +100,7 @@ test -f ${libdatadir}/hfaxd.conf  ||  {
 }
 removef HylaFAX ${libdatadir}/hfaxd.conf.dist
 
-for i in etc/xferfaxlog etc/hosts.hfaxd etc/lutRS18.pcf
+for i in etc/xferfaxlog etc/hosts.hfaxd etc/lutRS18.pcf etc/LiberationSans-25.pcf
 do
     test -f ${spooldir}/${i}  ||  {
 	mv ${spooldir}/${i}.dist ${spooldir}/${i}

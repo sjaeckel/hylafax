@@ -1,4 +1,4 @@
-# $Id: class2.0 782 2008-02-03 06:12:58Z faxguy $
+# $Id: class2.0 1085 2012-02-14 05:55:32Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -48,7 +48,8 @@
 #QualifyTSI:		etc/tsi		# accept facsimile from anyone
 #SpeakerVolume:		off		# machine's are already too loud
 #RingsBeforeAnswer:	1		# answer on first ring
-#TagLineFont:		etc/lutRS18.pcf	# tag line font
+#TagLineFont:		etc/LiberationSans-25.pcf	# tag line font
+#TagLineLocale:		en_US.UTF-8	# tag line locale
 #TagLineFormat:		"From %%l|%c|Page %%P of %%T"
 #MaxBadCalls:		5		# max 5 consecutive bad calls
 #PostScriptTimeout:	300		# 5 minute timeout on PostScript jobs

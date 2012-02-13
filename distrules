@@ -1,4 +1,4 @@
-#	$Id: distrules 1042 2011-02-16 18:21:47Z faxguy $
+#	$Id: distrules 1085 2012-02-14 05:55:32Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -275,6 +275,7 @@ HYLAFAXSRC=\
 	etc/probemodem.sh.in			\
 	etc/lockname.c				\
 	etc/lutRS18.pcf				\
+	etc/LiberationSans-25.pcf		\
 	etc/ondelay.c				\
     util/Makefile.in				\
     util/Makefile.IRIXdso			\

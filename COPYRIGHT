@@ -45,6 +45,10 @@ package and covered by the GNU Public License (GPL).  Several ideas
 in the configure script are directly "borrowed" from autoconf (and I
 have tried to maintain as much compatibility as possible).
 
+The PCF font etc/LiberationSans-25.pcf included for use with tag lines is
+a compiled version of RedHat's LiberationSans-Regular.ttf font.  It is
+licensed with the GPL plus exceptions.
+
 The PCF font etc/lutRS18.pcf included for use with tag lines is a
 compiled version of a LucidaTypewriter font that was contributed to X11
 by Bigelow & Holmes.  Redistribution of this font requires inclusion of

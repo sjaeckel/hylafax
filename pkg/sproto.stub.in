@@ -228,6 +228,7 @@ f none @SPOOL@/etc/dialrules.ext.dist=../@SRCDIR@/etc/dialrules.ext 0444 @SYSUID
 f none @SPOOL@/etc/dialrules.uk.dist=../@SRCDIR@/etc/dialrules.uk 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/dialrules.world.dist=../@SRCDIR@/etc/dialrules.world 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/etc/lutRS18.pcf.dist=../@SRCDIR@/etc/lutRS18.pcf 0644 @FAXUID@ @FAXGID@
+f none @SPOOL@/etc/LiberationSans-25.pcf.dist=../@SRCDIR@/etc/LiberationSans-25.pcf 0644 @FAXUID@ @FAXGID@
 d none @SPOOL@/info 0755 @FAXUID@ @FAXGID@
 d none @SPOOL@/log 0755 @FAXUID@ @FAXGID@
 d none @SPOOL@/recvq 0755 @FAXUID@ @FAXGID@
