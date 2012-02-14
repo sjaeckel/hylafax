@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 1009 2010-08-31 16:33:01Z faxguy $
+#	$Id: faxsetup.sh.in 1086 2012-02-14 20:52:54Z faxguy $
 #
 # @WARNING@
 #
@@ -844,11 +844,14 @@ RM="$RMCMD -f"				# remove file for use below
 
 #
 # Deduce the effective user id:
-#   1. POSIX-style, the id program
-#   2. the old whoami program
-#   3. last gasp, check if we have write permission on /dev
+#   1. Refer to the $EUID environment variable
+#   2. POSIX-style, the id program
+#   3. the old whoami program
+#   4. last gasp, check if we have write permission on /dev
 #
-euid=`id|$SED -e 's/.*uid=[0-9]*(\([^)]*\)).*/\1/'`
+unset euid
+test -z "$EUID" && EUID=`id |$SED -e 's/.*uid=\([^(]*\).*/\1/'`
+[ "$EUID" = "0" ] && euid=root
 test -z "$euid" && euid=`(whoami) 2>/dev/null`
 test -z "$euid" && test -w /dev && euid=root
 if [ "$euid" != "root" ]; then
