@@ -1,7 +1,10 @@
-#	$Id: CHANGES 1083 2012-02-06 17:34:27Z faxguy $	
+#	$Id: CHANGES 1086 2012-02-14 20:52:54Z faxguy $	
 
 New Changes
 
+* improve euid detection in faxsetup (14 Feb 2012)
+* add LiberationSans-25.pcf fonts, use it by default instead of
+  lutRS18.pcf, and set TagLineLocale appropriately (13 Feb 2012)
 * add FILETYPE "none" option for FaxDispatch (6 Feb 2012)
 * add support for Little CMS v2 (30 Jan 2012)
 * add JobControl ProxyUser and ProxyPass options (27 Jan 2012)
