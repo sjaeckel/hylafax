@@ -1,4 +1,4 @@
-/*	$Id: faxfetch.c++ 945 2009-09-29 11:46:02Z faxguy $ */
+/*	$Id: faxfetch.c++ 1087 2012-02-29 23:07:23Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -91,7 +91,7 @@ faxFetchApp::run(int argc, char** argv)
     if (optind < argc) {
 	fxStr emsg;
 	if (callServer(emsg)) {
-	    if (login(NULL, emsg)) {
+	    if (login(NULL, NULL, emsg)) {
 		setType(TYPE_I);	// always image type
 		for (; optind < argc; optind++)
 		    if (mode == MODE_S)
