@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1086 2012-02-14 20:52:54Z faxguy $	
+#	$Id: CHANGES 1087 2012-02-29 23:07:23Z faxguy $	
 
 New Changes
 
+* build and install faxfetch (29 Feb 2012)
 * improve euid detection in faxsetup (14 Feb 2012)
 * add LiberationSans-25.pcf fonts, use it by default instead of
   lutRS18.pcf, and set TagLineLocale appropriately (13 Feb 2012)

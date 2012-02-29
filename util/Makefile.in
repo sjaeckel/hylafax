@@ -1,5 +1,5 @@
 #! smake
-#	$Id: Makefile.in 1042 2011-02-16 18:21:47Z faxguy $
+#	$Id: Makefile.in 1087 2012-02-29 23:07:23Z faxguy $
 #
 # @WARNING@
 #
@@ -92,7 +92,7 @@ C++FILES=Array.c++ \
 
 CFILES= cvtfacility.c fxassert.c
 TARGETS=libfaxutil.${DSO} faxmsg faxmodem faxadduser faxconfig faxdeluser \
-    faxstate faxinfo faxwatch textfmt dialtest typetest tiffcheck
+    faxstate faxinfo faxfetch faxwatch textfmt dialtest typetest tiffcheck
 
 LC++INCS=${ZLIBINC}			# for FaxClient.c++
 
@@ -170,7 +170,7 @@ installClient: default
 
 install: installClient
 	${PUTSBIN} -m 755 -O faxmsg faxadduser faxconfig faxdeluser faxmodem \
-        faxstate faxwatch faxinfo tiffcheck
+	    faxstate faxfetch faxwatch faxinfo tiffcheck
 	${PUTSBIN} -idb ${PRODUCT}.sw.server \
 	    -ln ${SBIN}/faxmsg -O faxabort faxanswer faxquit faxlock
 	${PUTSBIN} -m 755 -O dialtest typetest
@@ -221,7 +221,7 @@ uninstall::
 	${RM} -f ${LIBDATA}/pagesizes
 	${RM} -f ${LIBDATA}/typerules
 	${RM} -f ${SBIN}/faxmsg ${SBIN}/faxadduser ${SBIN}/faxconfig ${SBIN}/faxdeluser \
-        ${SBIN}/faxmodem ${SBIN}/faxstate ${SBIN}/faxwatch ${SBIN}/faxinfo ${SBIN}/tiffcheck
+        ${SBIN}/faxmodem ${SBIN}/faxstate ${SBIN}/faxwatch ${SBIN}/faxfetch ${SBIN}/faxinfo ${SBIN}/tiffcheck
 	${RM} -f ${SBIN}/faxabort ${SBIN}/faxanswer ${SBIN}/faxquit ${SBIN}/faxlock
 	${RM} -f ${SBIN}/typetest
 	${RM} -f ${SBIN}/dialtest
