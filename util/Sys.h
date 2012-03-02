@@ -1,4 +1,4 @@
-/*	$Id: Sys.h 2 2005-11-11 21:32:03Z faxguy $ */
+/*	$Id: Sys.h 1088 2012-03-02 20:22:15Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -47,7 +47,7 @@
 /*
  * Wrapper functions for C library calls.
  *
- * These exist to isolate system dependencies and to insure that
+ * These exist to isolate system dependencies and to ensure that
  * proper type casts are done at the call sites.  Note that the
  * actual number of functions in this class could be a lot larger;
  * only those functions that potentially cause portability problems
@@ -59,6 +59,7 @@ public:
     static DIR* opendir(const char* dirname)
 	{ return ::opendir(dirname); }
     static int chdir(const char* s)	{ return ::chdir(s); }
+    static int mkdir(const char* s, int mode)	{ return ::mkdir(s, mode); }
 
     static int stat(const char* file, struct stat& sb)
 	{ return ::stat(file, &sb); }
