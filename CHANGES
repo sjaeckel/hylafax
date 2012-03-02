@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1087 2012-02-29 23:07:23Z faxguy $	
+#	$Id: CHANGES 1088 2012-03-02 20:22:15Z faxguy $	
 
 New Changes
 
+* retrieve associated session logs from proxy server (2 Mar 2012)
 * build and install faxfetch (29 Feb 2012)
 * improve euid detection in faxsetup (14 Feb 2012)
 * add LiberationSans-25.pcf fonts, use it by default instead of

@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1080 2012-01-27 17:52:13Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1088 2012-03-02 20:22:15Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2551,6 +2551,14 @@ public:
 MySendFaxClient::MySendFaxClient() {}
 MySendFaxClient::~MySendFaxClient() {}
 
+static bool
+writeFile(void* ptr, const char* buf, int cc, fxStr&)
+{
+    int* fd = (int*) ptr;
+    (void) Sys::write(*fd, buf, cc);
+    return (true);
+}
+
 /*
  * Send a fax job via a proxy HylaFAX server.  We do this by utilizing SendFaxJob jobWait.
  * Retries must be handled by the proxy server as the programming for retries is handled
@@ -2683,6 +2691,35 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 				req.status = send_failed;
 			    else
 				req.status = send_retry;
+			}
+			/*
+			 * Try to get and store the session log from the proxy in a dedicated log subdirectory.
+			 */
+			int isdir = 0;
+			fxStr proxyLogs = fxStr(FAX_LOGDIR) | fxStr("/" | job.getJCI().getProxy());
+			struct stat sb;
+			if (Sys::stat(proxyLogs, sb) != 0) {
+			    mode_t logdirmode = job.getJCI().getProxyLogMode();
+			    if (logdirmode & S_IREAD) logdirmode |= S_IEXEC;
+			    if (logdirmode & S_IRGRP) logdirmode |= S_IXGRP;
+			    if (logdirmode & S_IROTH) logdirmode |= S_IXOTH;
+			    if (Sys::mkdir(proxyLogs, logdirmode) == 0) isdir = 1;
+			} else {
+			   isdir = 1;
+			}
+			if (isdir) {
+			    fxStr proxylog = fxStr(proxyLogs | "/c" | req.commid);
+			    int fd = Sys::open(proxylog, O_RDWR|O_CREAT|O_EXCL, job.getJCI().getProxyLogMode());
+			    if (fd > 0) {
+				client->setType(FaxClient::TYPE_I);
+				if (!client->recvZData(writeFile, (void*) &fd, emsg, 0, fxStr("RETR log/c" | req.commid))) {
+				    logError("PROXY LOG: server response: %s", (const char*) client->getLastResponse());
+				}
+				Sys::close(fd);
+				if (emsg != "") logError("PROXY LOG: server retrieval: %s", (const char*) emsg);
+			    } else {
+				logError("PROXY LOG: %s: %s", (const char*) proxylog, strerror(errno));
+			    }
 			}
 		    }
 		    client->hangupServer();

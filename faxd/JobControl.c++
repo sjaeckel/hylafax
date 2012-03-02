@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 1080 2012-01-27 17:52:13Z faxguy $ */
+/*	$Id: JobControl.c++ 1088 2012-03-02 20:22:15Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -43,6 +43,7 @@
 #define	DCI_DESIREDDF		0x0100
 #define	DCI_NOTIFY		0x0200
 #define	DCI_USECOLOR		0x0400
+#define	DCI_PROXYLOGMODE	0x0800
 
 #define	isDefined(b)		(defined & b)
 #define	setDefined(b)		(defined |= b)
@@ -68,6 +69,7 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     priority = other.priority;
     desireddf = other.desireddf;
     notify = other.notify;
+    proxylogmode = other.proxylogmode;
 }
 
 JobControlInfo::JobControlInfo (const fxStr& buffer)
@@ -119,6 +121,9 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
 	proxyuser = value;
     } else if (streq(tag, "proxypass")) {
 	proxypass = value;
+    } else if (streq(tag, "proxylogmode")) {
+	setDefined(DCI_PROXYLOGMODE);
+	proxylogmode = strtol(value, 0, 8);
     } else if (streq(tag, "maxconcurrentjobs")) {	// backwards compatibility
 	maxConcurrentCalls = getNumber(value);
 	setDefined(DCI_MAXCONCURRENTCALLS);
@@ -233,6 +238,15 @@ const fxStr&
 JobControlInfo::getProxyPass() const
 {
     return proxypass;
+}
+
+const mode_t
+JobControlInfo::getProxyLogMode() const
+{
+    if (isDefined(DCI_PROXYLOGMODE))
+	return proxylogmode;
+    else
+	return(0600);
 }
 
 time_t

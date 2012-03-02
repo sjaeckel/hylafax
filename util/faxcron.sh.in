@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxcron.sh.in 887 2008-10-13 05:09:02Z faxguy $
+#	$Id: faxcron.sh.in 1088 2012-03-02 20:22:15Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -60,7 +60,7 @@ while [ x"$1" != x"" ] ; do
     -rcv)   shift; AGERCV="$1";;
     -tmp)   shift; AGETMP="$1";;
     -mode)  shift; LOGMODE="$1";;
-    -*)	    echo "Usage: $0 [-n] [-l lastrun] [-q spool] [-info days] [-log days] [-rcv days] [-tmp days] [-mode logmode]"; hfExit 1;;
+    -*)	    echo "Usage: $0 [-n] [-l lastrun] [-q spool] [-info days] [-log days] [-rcv days] [-tmp days] [-mode logmode]"; exit 1;;
     esac
     shift
 done

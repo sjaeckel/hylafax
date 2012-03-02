@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 1080 2012-01-27 17:52:13Z faxguy $
+.\"	$Id: jobcontrol.1m 1088 2012-03-02 20:22:15Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -84,6 +84,7 @@ Priority	integer	\-	priority to use for job
 Proxy	string	\-	proxy server to which the job should be delivered
 ProxyUser	string	\-	authentication username for the proxy server
 ProxyPass	string	\-	authentication password for the proxy server
+ProxyLogMode	octal	\s-10600\s+1	protection to use for logs retrieved from proxy server
 RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
@@ -143,6 +144,12 @@ or
 will not currently
 propagate to the proxy and is a matter for future development.  Therefore,
 such actions should be made on the proxy server directly.
+.PP
+The
+.B ProxyLogMode
+parameter specifies the file mode protection that should be used for the
+logs that are able to be retrieved from the proxy server.  (In order to
+retrieve logs the proxy server must permit it.)
 .PP
 The
 .B RejectNotice
