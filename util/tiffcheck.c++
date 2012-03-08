@@ -1,4 +1,4 @@
-/*	$Id: tiffcheck.c++ 747 2008-01-02 20:38:34Z faxguy $ */
+/*	$Id: tiffcheck.c++ 1089 2012-03-09 00:40:33Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -279,7 +279,7 @@ checkPageFormat(TIFF* tif, fxStr& emsg)
      */
     if (!useUnlimitedLength) {
 	float len = h / (yres == 0 ? 1. : yres);		// page length in mm
-	if (pageLength != (uint32) -1 && len > pageLength) {
+	if (pageLength != (uint32) -1 && len > pageLength+2) {
 	    emsg.append(fxStr::format("Document requires resizing to adjust"
 		" page length (convert to %lu, document is %lu).\n",
 		(u_long) pageLength, (u_long) len));
