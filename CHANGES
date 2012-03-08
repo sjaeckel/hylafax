@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1088 2012-03-02 20:22:15Z faxguy $	
+#	$Id: CHANGES 1089 2012-03-09 00:40:33Z faxguy $	
 
 New Changes
 
+* allow tiffcheck to tolerate 2mm extra length (8 Mar 2012)
 * retrieve associated session logs from proxy server (2 Mar 2012)
 * build and install faxfetch (29 Feb 2012)
 * improve euid detection in faxsetup (14 Feb 2012)
