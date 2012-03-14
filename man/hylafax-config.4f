@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1085 2012-02-14 05:55:32Z faxguy $
+.\"	$Id: hylafax-config.4f 1090 2012-03-14 18:48:49Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2012-02-13 21:55:32 -0800 (Mon, 13 Feb 2012) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2012-03-14 11:48:49 -0700 (Wed, 14 Mar 2012) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -163,6 +163,7 @@ JobRetryBusy	integer	\-	number of retries for \s-1BUSY\s+1 dial result
 JobRetryDataConn	integer	\-	number of retries for data connection dial result
 JobRetryNoAnswer	integer	\-	number of retries for \s-1NO ANSWER\s+1 dial result
 JobRetryNoCarrier	integer	1	number of retries for \s-1NO CARRIER\s+1 dial result
+JobRetryNoFCon	integer	\-	number of retries for carrier without \s-1+FCON\s+1 dial result
 JobRetryOther	integer	\-	number of retries for ``other'' problems
 LockDataCalls	boolean	\s-1Yes\s+1	lock modem for the duration of an inbound data call
 LockVoiceCalls	boolean	\s-1Yes\s+1	lock modem for the duration of an inbound voice call

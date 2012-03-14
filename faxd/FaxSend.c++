@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
+/*	$Id: FaxSend.c++ 1090 2012-03-14 18:48:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -408,9 +408,6 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	fax.ndials++;			// number of consecutive failed calls
 	fax.totdials++;			// total attempted calls
 	switch (callstat) {
-	case ClassModem::V34FAIL:	// carrier seen, but V.34/V.8 handshake incompatibility
-	    clientInfo.setHasV34Trouble(true);
-	    /* fall thru... */
 	case ClassModem::NOFCON:	// carrier seen, but handshake failed
 	    clientInfo.setCalledBefore(true);
 	    /* fall thru... */
@@ -425,13 +422,16 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	    else
 		sendFailed(fax, send_retry, notice, requeueTTS[callstat]);
 	    break;
+	case ClassModem::V34FAIL:	// carrier seen, but V.34/V.8 handshake incompatibility
+	    clientInfo.setHasV34Trouble(true);
+	    /* fall thru... */
 	case ClassModem::NODIALTONE:	// no local dialtone, possibly unplugged
 	case ClassModem::ERROR:		// modem might just need to be reset
 	case ClassModem::FAILURE:	// modem returned something unexpected
-	    if (!clientInfo.getCalledBefore() && fax.ndials > retryMAX[callstat])
+	    if (!clientInfo.getCalledBefore() && fax.ndials > retryOther)
 		sendFailed(fax, send_failed, notice);
 	    else
-		sendFailed(fax, send_retry, notice, requeueTTS[callstat]);
+		sendFailed(fax, send_retry, notice, requeueOther);
 	    break;
 	case ClassModem::OK:		// call was aborted by user
 	    break;

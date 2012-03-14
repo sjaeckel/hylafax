@@ -1,4 +1,4 @@
-/*	$Id: ServerConfig.c++ 730 2007-12-06 18:19:28Z faxguy $ */
+/*	$Id: ServerConfig.c++ 1090 2012-03-14 18:48:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -143,6 +143,11 @@ ServerConfig::setupConfig()
     priorityScheduling = false;		// for new mechanisms anyone can do it
 #endif
 
+    /*
+     * OK, NODIALTONE, ERROR, and FAILURE are currently unused as
+     * there are no modem configuration options for them and therefore
+     * fall under JobRequeueOther and JobRetryOther.
+     */
     requeueTTS[ClassModem::OK]		= 0;
     requeueTTS[ClassModem::BUSY]	= FAX_REQBUSY;
     requeueTTS[ClassModem::NOCARRIER]	= FAX_REQUEUE;
