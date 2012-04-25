@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1090 2012-03-14 18:48:49Z faxguy $	
+#	$Id: CHANGES 1093 2012-04-25 22:12:18Z faxguy $	
 
 New Changes
 
+* use -dUseCropBox in FIXEDWIDTH by default (25 Apr 2012)
 * fix JobRetryOther and JobRequeueOther so they work (14 Mar 2012)
 * allow tiffcheck to tolerate 2mm extra length (8 Mar 2012)
 * retrieve associated session logs from proxy server (2 Mar 2012)
