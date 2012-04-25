@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#    $Id: common-functions.sh.in 1063 2011-11-02 17:26:27Z faxguy $
+#    $Id: common-functions.sh.in 1092 2012-04-25 21:07:19Z faxguy $
 
 #
 # This holds various functions that are common to the
@@ -187,20 +187,21 @@ gs2fax()
     # when using 196-204 dpi and tiffg3/4, it supposedly does the same for
     # B4 but not for A3, thus the floats are needed (for A3's benefit).
     #
-    # By default, we use a combination of -dEPSFitPage, -dPDFFitPage, and
-    # -dFIXEDMEDIA so that the image is resized to fit the page media and
+    # By default, we use a combination of -dUseCropBox, -dEPSFitPage, and
+    # -dPDFFitPage so that the image is resized to fit the page media and
     # to prevent page sizing within the documents from altering the command-
-    # line page-size specification.  However, this prevents TIFFs from 
-    # being made with pages of varied length.
+    # line page-size specification.  (In the past -dFIXEDMEDIA was used for
+    # this purpose.)  However, this prevents TIFFs from being made with 
+    # pages of varied length, and -dUseCropBox prevents utilization of the 
+    # full MediaBox if there is desireable content outside the CropBox.
     # 
     # See ghostscript/doc/Devices.htm under -dAdjustWidth=1 (default).
     # Use -dAdjustWidth=0 to disable.  With the right patch,
     # http://bugs.ghostscript.com/show_bug.cgi?id=688064
     # AdjustWidth can be made to specify the pagewidth directly and
-    # replace -dFIXEDMEDIA to permit TIFFs to be produced with
-    # varied lengths.
+    # permit TIFFs to be produced with varied lengths.
     #
-    FIXEDWIDTH="-dEPSFitPage -dPDFFitPage"
+    FIXEDWIDTH="-dUseCropBox -dEPSFitPage -dPDFFitPage"
 
     case "$paper" in
 	a4)
