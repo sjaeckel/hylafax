@@ -1,4 +1,4 @@
-.\"	$Id: typerules.4f 583 2007-08-15 20:14:12Z faxguy $
+.\"	$Id: typerules.4f 1098 2012-06-11 21:00:00Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -98,6 +98,8 @@ comparison purposes; one of:
 (16 bit unsigned number),
 ``long''
 (32 bit unsigned number),
+``filename''
+(the name of the file),
 ``string''
 (an array of bytes), 
 ``istring''
@@ -116,7 +118,7 @@ following operators are supported (where
 .I data
 is the value extracted from the file and
 .I value
-is specified in the match field) except for types ``string'', ``istring'', and ``ascii'':
+is specified in the match field) except for types ``filename'', ``string'', ``istring'', and ``ascii'':
 .nf
 .sp .5
 .RS
@@ -135,7 +137,9 @@ If no operation is specified then ``='' is used.
 For ``string'', ``istring'', and ``ascii'' no operator is allowed; the implicit
 operation is always ``=''.  In these cases, the field is terminated by
 a tab or end of line, not by ``#'' or `` ''.  Characters in the field have
-their literal value; there are no C-style character escapes.
+their literal value; there are no C-style character escapes.  For ``filename'' no
+operator is allowed; the operation expects that the value is a regular expression
+to positively match the supplied data.
 .fi
 .TP 10
 .B result
