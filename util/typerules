@@ -1,4 +1,4 @@
-#	$Id: typerules 1096 2012-06-11 18:40:00Z faxguy $
+#	$Id: typerules 1097 2012-06-11 18:52:12Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -174,7 +174,7 @@
 # (which uses OpenOffice/LibreOffice) and enable this if you want it.  It may produce 
 # imperfect renderings, but they're better than nothing, perhaps.
 #0	short		0xd0cf		ps	antiword -p letter -m 8859-1.txt %i > %o
-#0	short		0xd0cf		ps	unoconv -o %o %i
+#0	short		0xd0cf		ps	unoconv -f pdf -o %o %i
 0	short		0xd0cf		error	Microsoft Word Document support not configured
 # Office 2007 uses a zipped Open-XML file format.  Magic typing
 # cannot distinguish between those files and other zip v2.0 files.
@@ -183,7 +183,7 @@
 
 
 #
-# You can try to use html2ps for HTML documents...
+# You can try to use html2ps for HTML documents.  (unoconv may work also.)
 #
 #0	istring 	<!DOCTYPE HTML	ps	html2ps %i >%o
 #0	istring 	<HTML		ps	html2ps %i >%o
