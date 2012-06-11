@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.h 748 2008-01-04 23:24:31Z faxguy $ */
+/*	$Id: TypeRules.h 1098 2012-06-11 21:00:00Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -106,7 +106,7 @@ public:
 
     void setVerbose(bool);
 
-    const TypeRule* match(const void* data, u_int size) const;
+    const TypeRule* match(const char* filename, const void* data, u_int size) const;
 private:
     TypeRuleArray* rules;
     bool	verbose;			// while matching
@@ -142,6 +142,7 @@ private:
 	STRING,		// byte string
 	ISTRING,	// case-insensitive string
 	ADDR,		// address of match
+	FILENAME,	// filename pattern match
 	BYTE,		// 8 bits
 	SHORT,		// 16 bits
 	LONG		// 32 bits
@@ -171,7 +172,7 @@ public:
     TypeRule(const TypeRule& other);
     virtual ~TypeRule();
 
-    bool	match(const void*, size_t size, bool verbose = false) const;
+    bool	match(const char* filename, const void*, size_t size, bool verbose = false) const;
     bool	isContinuation() const;
 
     TypeResult	getResult() const;

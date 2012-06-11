@@ -1,4 +1,4 @@
-/*	$Id: typetest.c++ 214 2006-06-22 04:11:37Z faxguy $ */
+/*	$Id: typetest.c++ 1098 2012-06-11 21:00:00Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -69,7 +69,7 @@ fileType(const char* filename)
 	fprintf(stderr, "%s: Empty file\n", filename);
 	return (NULL);
     }
-    const TypeRule* tr = typeRules->match(buf, cc);
+    const TypeRule* tr = typeRules->match(filename, buf, cc);
     if (!tr) {
 	fprintf(stderr, "%s: Can not determine file type\n", filename);
 	return (NULL);

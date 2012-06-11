@@ -1,4 +1,4 @@
-#	$Id: typerules 1097 2012-06-11 18:52:12Z faxguy $
+#	$Id: typerules 1098 2012-06-11 21:00:00Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -52,8 +52,9 @@
 #	  continues to the next type rule line that does not begin with
 #	  a '>'. Only a single level of '>' is permitted.
 # datatype: the type of data value to extract the specified offset in the
-#	  for comparison purposes.  This can be byte, short, long, ascii or
-#	  string (a not necessarily null-terminated string of bytes).
+#	  for comparison purposes.  This can be byte, short, long, ascii,
+#	  string (a not necessarily null-terminated string of bytes), or
+#	  filename (the name of the file being typed).
 #	  A byte is 8 bits, short 16 bits, and long 32 bits.
 # match:  the value and operation to use in matching; the value used is
 #	  based on the datatype field.  This value may be "x" to mean
@@ -181,6 +182,8 @@
 0	long		0x504b0304	error	filetype conversion support not configured
 >4	byte		0x14		error	Zip v2.0 support not configured
 
+# faxmail can be used to convert e-mail files to Postscript.
+#0	filename	^.*\.eml$	ps	cat %i | faxmail > %o
 
 #
 # You can try to use html2ps for HTML documents.  (unoconv may work also.)
@@ -191,6 +194,8 @@
 #0	istring 	<HEAD		ps	html2ps %i >%o
 #0	istring 	<BODY		ps	html2ps %i >%o
 #0	istring 	<DIV		ps	html2ps %i >%o
+#0	filename	^.*\.htm$	ps	unoconv -f pdf -o %o %i
+#0	filename	^.*\.html$	ps	unoconv -f pdf -o %o %i
 
 #
 # Japanization (should help other iso-2022 variants too)

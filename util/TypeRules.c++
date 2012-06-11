@@ -1,4 +1,4 @@
-/*	$Id: TypeRules.c++ 1077 2012-01-23 16:43:09Z faxguy $ */
+/*	$Id: TypeRules.c++ 1098 2012-06-11 21:00:00Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -28,6 +28,7 @@
 #include "Array.h"
 #include "TypeRules.h"
 #include "PageSize.h"
+#include "RE.h"
 #include "config.h"
 
 #include <string.h>
@@ -64,7 +65,7 @@ TypeRule::TypeRule(const TypeRule& other)
 }
 
 static const char* typeNames[] =
-    { "ascii", "asciiesc", "string", "istring", "address", "byte", "short", "long" };
+    { "ascii", "asciiesc", "string", "istring", "address", "filename", "byte", "short", "long" };
 static const char* opNames[] =
     { "<any>", "=", "!=", "<", "<=", ">", ">=", "&", "^", "!" };
 static const char* resultNames[] = { "tiff", "postscript", "pdf", "pcl", "error" };
@@ -84,7 +85,7 @@ quoted(const fxStr& s)
 
 
 bool
-TypeRule::match(const void* data, size_t size, bool verbose) const
+TypeRule::match(const char* filename, const void* data, size_t size, bool verbose) const
 {
     if (verbose) {
 	printf("rule: %soffset %#lx %s %s",
@@ -93,7 +94,7 @@ TypeRule::match(const void* data, size_t size, bool verbose) const
 	    typeNames[type],
 	    opNames[op]
 	);
-	if (type == STRING || type == ISTRING)
+	if (type == STRING || type == ISTRING || type == FILENAME)
 	    printf(" \"%s\"", value.s);
 	else if (type != ASCII && type != ASCIIESC) {
 	    if (op == ANY)
@@ -169,6 +170,12 @@ TypeRule::match(const void* data, size_t size, bool verbose) const
 	if (verbose)
 	    printf("%s", "failed (insufficient data)\n");
 	return (false);
+    case FILENAME:
+	{
+	    RE pat(value.s);
+	    ok = pat.Find(filename+off);
+	    goto done;
+	}
     }
     /*
      * Numeric value, use operation.
@@ -364,6 +371,8 @@ TypeRules::read(const fxStr& file)
 	    rule.type = TypeRule::ASCIIESC;
 	else if (strncasecmp(tp, "addr", cp-tp) == 0)
 	    rule.type = TypeRule::ADDR;
+	else if (strncasecmp(tp, "filename", cp-tp) == 0)
+	    rule.type = TypeRule::FILENAME;
 	else {
 	    parseError(file, lineno, "Unknown datatype \"%.*s\"", cp-tp, tp);
 	    continue;			// bad type
@@ -372,7 +381,7 @@ TypeRules::read(const fxStr& file)
 	    cp++;
 	rule.op = TypeRule::EQ;		// default is '='
 	const char* vp = cp;
-	if (rule.type != TypeRule::STRING && rule.type != TypeRule::ISTRING
+	if (rule.type != TypeRule::STRING && rule.type != TypeRule::ISTRING && rule.type != TypeRule::FILENAME
 		&& rule.type != TypeRule::ASCII && rule.type != TypeRule::ASCIIESC) {
 	    // numeric value
 	    switch (*vp) {
@@ -476,20 +485,20 @@ TypeRules::match2(u_int base, const void* data, u_int size, bool verb) const
 	TypeRule& rule = (*rules)[base+i];
 	if (!rule.isContinuation())
 	    break;
-	if (rule.match(data, size, verb))
+	if (rule.match(NULL, data, size, verb))
 	    return (i);
     }
     return 0;
 }
 
 const TypeRule*
-TypeRules::match(const void* data, u_int size) const
+TypeRules::match(const char* filename, const void* data, u_int size) const
 {
     if (verbose)
 	printf("match against (..., %u)\n", size);
     for (u_int i = 0, n = (*rules).length(); i < n; i++) {
 	TypeRule& rule = (*rules)[i];
-	if (!rule.isContinuation() && rule.match(data, size, verbose))
+	if (!rule.isContinuation() && rule.match(filename, data, size, verbose))
 	    return (&(*rules)[i + match2(i, data, size, verbose)]);
     }
     if (verbose)
