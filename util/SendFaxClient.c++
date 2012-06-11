@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++ 836 2008-05-14 00:49:55Z faxguy $ */
+/*	$Id: SendFaxClient.c++ 1101 2012-06-11 21:12:00Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -735,7 +735,7 @@ SendFaxClient::fileType(const char* filename, fxStr& emsg)
 	emsg = fxStr::format("%s: Empty file", filename);
 	return (NULL);
     }
-    const TypeRule* tr = typeRules->match(buf, cc);
+    const TypeRule* tr = typeRules->match(filename, buf, cc);
     if (!tr) {
 	emsg = fxStr::format("%s: Can not determine file type", filename);
 	return (NULL);
