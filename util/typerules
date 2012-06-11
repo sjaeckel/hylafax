@@ -1,4 +1,4 @@
-#	$Id: typerules 1102 2012-06-11 22:04:53Z faxguy $
+#	$Id: typerules 1103 2012-06-11 22:50:17Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -118,6 +118,7 @@
 #
 #0	short		0x1b45		tiff	pcl6 -dNOPAUSE -sDEVICE=tiffg3 -sOutputFile=- %i > %o
 #0	short		0x1b25		ps	pcl6 -dNOPAUSE -sDEVICE=pswrite -sOutputFile=%o %i
+#0	filename	^.*\.xps$	pdf	pcl6 -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=%o %i
 #
 # HylaFAX now has server-side PDF conversion, so no need for pdf2ps.
 # If you have trouble or if you prefer to use pdf2ps, comment this 
