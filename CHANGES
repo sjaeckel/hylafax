@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1094 2012-04-25 22:56:56Z faxguy $	
+#	$Id: CHANGES 1099 2012-06-11 21:00:34Z faxguy $	
 
 New Changes
 
+* add filename typing capability in typerules (11 Jun 2012)
 * use -dUseCropBox in FIXEDWIDTH by default (25 Apr 2012)
 * fix JobRetryOther and JobReqOther so they work (14 Mar 2012)
 * allow tiffcheck to tolerate 2mm extra length (8 Mar 2012)
