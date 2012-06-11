@@ -1,4 +1,4 @@
-#	$Id: typerules 1098 2012-06-11 21:00:00Z faxguy $
+#	$Id: typerules 1102 2012-06-11 22:04:53Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -175,7 +175,7 @@
 # (which uses OpenOffice/LibreOffice) and enable this if you want it.  It may produce 
 # imperfect renderings, but they're better than nothing, perhaps.
 #0	short		0xd0cf		ps	antiword -p letter -m 8859-1.txt %i > %o
-#0	short		0xd0cf		ps	unoconv -f pdf -o %o %i
+#0	short		0xd0cf		pdf	unoconv -f pdf -o %o %i
 0	short		0xd0cf		error	Microsoft Word Document support not configured
 # Office 2007 uses a zipped Open-XML file format.  Magic typing
 # cannot distinguish between those files and other zip v2.0 files.
@@ -194,8 +194,8 @@
 #0	istring 	<HEAD		ps	html2ps %i >%o
 #0	istring 	<BODY		ps	html2ps %i >%o
 #0	istring 	<DIV		ps	html2ps %i >%o
-#0	filename	^.*\.htm$	ps	unoconv -f pdf -o %o %i
-#0	filename	^.*\.html$	ps	unoconv -f pdf -o %o %i
+#0	filename	^.*\.htm$	pdf	unoconv -f pdf -o %o %i
+#0	filename	^.*\.html$	pdf	unoconv -f pdf -o %o %i
 
 #
 # Japanization (should help other iso-2022 variants too)
