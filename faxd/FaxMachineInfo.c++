@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: FaxMachineInfo.c++ 1104 2012-06-13 18:55:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -63,6 +63,12 @@ FaxMachineInfo::FaxMachineInfo(const FaxMachineInfo& other)
     hasV17Trouble = other.hasV17Trouble;
     senderHasV17Trouble = other.senderHasV17Trouble;
     senderSkipsV29 = other.senderSkipsV29;
+    senderDataSent = other.senderDataSent;
+    senderDataSent1 = other.senderDataSent1;
+    senderDataSent2 = other.senderDataSent2;
+    senderDataMissed = other.senderDataMissed;
+    senderDataMissed1 = other.senderDataMissed1;
+    senderDataMissed2 = other.senderDataMissed2;
     supportsPostScript = other.supportsPostScript;
     supportsBatching = other.supportsBatching;
     calledBefore = other.calledBefore;
@@ -113,6 +119,12 @@ FaxMachineInfo::resetConfig()
     hasV17Trouble = false;		// assume no problems
     senderHasV17Trouble = false;	// assume no problems
     senderSkipsV29 = false;		// assume V.29 usage
+    senderDataSent = 0;			// clean slate
+    senderDataSent1 = 0;		// clean slate
+    senderDataSent2 = 0;		// clean slate
+    senderDataMissed = 0;		// clean slate
+    senderDataMissed1 = 0;		// clean slate
+    senderDataMissed2 = 0;		// clean slate
     supportsPostScript = false;		// no support for Adobe protocol
     supportsBatching = true;		// assume batching (EOM) support
     calledBefore = false;		// never called before
@@ -188,6 +200,8 @@ static const char* stnames[] =
 #define PAGING	11
 #define SV17	12
 #define SSV29	13
+#define SDS	14
+#define SDM	15
 
 #define	setLocked(b,ix)	locked |= b<<ix
 
@@ -220,6 +234,24 @@ FaxMachineInfo::setConfigItem(const char* tag, const char* value)
     } else if (streq(tag, "senderskipsv29")) {
 	senderSkipsV29 = getBoolean(value);
 	setLocked(b, SSV29);
+    } else if (streq(tag, "senderdatasent")) {
+	senderDataSent = getNumber(value);
+	setLocked(b, SDS);
+    } else if (streq(tag, "senderdatasent1")) {
+	senderDataSent1 = getNumber(value);
+	setLocked(b, SDS);
+    } else if (streq(tag, "senderdatasent2")) {
+	senderDataSent2 = getNumber(value);
+	setLocked(b, SDS);
+    } else if (streq(tag, "senderdatamissed")) {
+	senderDataMissed = getNumber(value);
+	setLocked(b, SDM);
+    } else if (streq(tag, "senderdatamissed1")) {
+	senderDataMissed1 = getNumber(value);
+	setLocked(b, SDM);
+    } else if (streq(tag, "senderdatamissed2")) {
+	senderDataMissed2 = getNumber(value);
+	setLocked(b, SDM);
     } else if (streq(tag, "supportspostscript")) {
 	supportsPostScript = getBoolean(value);
 	setLocked(b, PS);
@@ -296,6 +328,18 @@ void FaxMachineInfo::setHasV34Trouble(bool b)
     { checkLock(V34, hasV34Trouble, b); }
 void FaxMachineInfo::setHasV17Trouble(bool b)
     { checkLock(V17, hasV17Trouble, b); }
+void FaxMachineInfo::setSenderDataSent(int v)
+    { checkLock(SDS, senderDataSent, v); }
+void FaxMachineInfo::setSenderDataSent1(int v)
+    { checkLock(SDS, senderDataSent1, v); }
+void FaxMachineInfo::setSenderDataSent2(int v)
+    { checkLock(SDS, senderDataSent2, v); }
+void FaxMachineInfo::setSenderDataMissed(int v)
+    { checkLock(SDM, senderDataMissed, v); }
+void FaxMachineInfo::setSenderDataMissed1(int v)
+    { checkLock(SDM, senderDataMissed1, v); }
+void FaxMachineInfo::setSenderDataMissed2(int v)
+    { checkLock(SDM, senderDataMissed2, v); }
 void FaxMachineInfo::setSenderHasV17Trouble(bool b)
     { checkLock(SV17, senderHasV17Trouble, b); }
 void FaxMachineInfo::setSenderSkipsV29(bool b)
@@ -403,6 +447,12 @@ FaxMachineInfo::writeConfig(fxStackBuffer& buf)
     putBoolean(buf, "hasV17Trouble", isLocked(V17),hasV17Trouble);
     putBoolean(buf, "senderHasV17Trouble", isLocked(SV17),senderHasV17Trouble);
     putBoolean(buf, "senderSkipsV29", isLocked(SSV29), senderSkipsV29);
+    putDecimal(buf, "senderDataSent", isLocked(SDS), senderDataSent);
+    putDecimal(buf, "senderDataSent1", isLocked(SDS), senderDataSent1);
+    putDecimal(buf, "senderDataSent2", isLocked(SDS), senderDataSent2);
+    putDecimal(buf, "senderDataMissed", isLocked(SDM), senderDataMissed);
+    putDecimal(buf, "senderDataMissed1", isLocked(SDM), senderDataMissed1);
+    putDecimal(buf, "senderDataMissed2", isLocked(SDM), senderDataMissed2);
     putBoolean(buf, "supportsPostScript", isLocked(PS), supportsPostScript);
     putBoolean(buf, "supportsBatching", isLocked(BATCH), supportsBatching);
     putBoolean(buf, "calledBefore", false, calledBefore);

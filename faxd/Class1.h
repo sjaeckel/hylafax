@@ -1,4 +1,4 @@
-/*	$Id: Class1.h 892 2008-11-24 06:17:59Z faxguy $ */
+/*	$Id: Class1.h 1104 2012-06-13 18:55:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -66,6 +66,8 @@ protected:
     bool	jbigSupported;		// whether or not JBIG is supported in this mode
     bool	senderHasV17Trouble;	// whether or not a sender has trouble with V.17
     bool	senderSkipsV29;		// whether or not a sender skips over V.29 usage
+    int		senderDataSent;		// how much data the sender transmitted
+    int		senderDataMissed;	// how much data from the sender was missed
     const u_char* frameRev;		// HDLC frame bit reversal table
     fxStr	lid;			// encoded local id string
     fxStr	pwd;			// transmit password

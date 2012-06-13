@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.h 584 2007-08-17 14:54:27Z faxguy $ */
+/*	$Id: FaxMachineInfo.h 1104 2012-06-13 18:55:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -56,6 +56,12 @@ private:
     bool	hasV17Trouble;		// has difficulty with V.17
     bool	senderHasV17Trouble;	// sender has difficulty with V.17
     bool	senderSkipsV29;		// sender skips over V.29 usage
+    u_int	senderDataSent;		// amount of session data sent by sender
+    u_int	senderDataSent1;	// amount of previous session data sent by sender
+    u_int	senderDataSent2;	// amount of previous, previous session data sent by sender
+    u_int	senderDataMissed;	// amount of session data missed from sender
+    u_int	senderDataMissed1;	// amount of previous session data missed from sender
+    u_int	senderDataMissed2;	// amount of previous, previous session data missed from sender
     bool	supportsPostScript;	// handles Adobe NSF protocol
     bool	supportsBatching;	// handles batching (EOM) protocol
     bool	calledBefore;		// successfully called before
@@ -102,6 +108,12 @@ public:
     bool getHasV17Trouble() const;
     bool getSenderHasV17Trouble() const;
     bool getSenderSkipsV29() const;
+    int getSenderDataSent() const;
+    int getSenderDataSent1() const;
+    int getSenderDataSent2() const;
+    int getSenderDataMissed() const;
+    int getSenderDataMissed1() const;
+    int getSenderDataMissed2() const;
     bool getSupportsPostScript() const;
     bool getSupportsBatching() const;
     bool getCalledBefore() const;
@@ -126,6 +138,12 @@ public:
     void setHasV17Trouble(bool);
     void setSenderHasV17Trouble(bool);
     void setSenderSkipsV29(bool);
+    void setSenderDataSent(int);
+    void setSenderDataSent1(int);
+    void setSenderDataSent2(int);
+    void setSenderDataMissed(int);
+    void setSenderDataMissed1(int);
+    void setSenderDataMissed2(int);
     void setSupportsPostScript(bool);
     void setSupportsBatching(bool);
     void setCalledBefore(bool);
@@ -164,6 +182,18 @@ inline bool FaxMachineInfo::getSenderHasV17Trouble() const
     { return senderHasV17Trouble; }
 inline bool FaxMachineInfo::getSenderSkipsV29() const
     { return senderSkipsV29; }
+inline int FaxMachineInfo::getSenderDataSent() const
+    { return senderDataSent; }
+inline int FaxMachineInfo::getSenderDataSent1() const
+    { return senderDataSent1; }
+inline int FaxMachineInfo::getSenderDataSent2() const
+    { return senderDataSent2; }
+inline int FaxMachineInfo::getSenderDataMissed() const
+    { return senderDataMissed; }
+inline int FaxMachineInfo::getSenderDataMissed1() const
+    { return senderDataMissed1; }
+inline int FaxMachineInfo::getSenderDataMissed2() const
+    { return senderDataMissed2; }
 inline bool FaxMachineInfo::getSupportsPostScript() const
     { return supportsPostScript; }
 inline bool FaxMachineInfo::getSupportsBatching() const
