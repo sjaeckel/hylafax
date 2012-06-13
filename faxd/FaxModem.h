@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 1040 2010-12-04 01:22:27Z faxguy $ */
+/*	$Id: FaxModem.h 1104 2012-06-13 18:55:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -49,6 +49,8 @@ typedef unsigned int JBIGSupport;	// JBIG support available
 typedef struct {
     bool	senderSkipsV29;		// if sender skips V.29 usage
     bool	senderHasV17Trouble;	// if we have trouble understanding sender's V.17
+    int		senderDataSent;		// how much data the sender transmitted
+    int		senderDataMissed;	// how much data which the sender transmitted was missing or corrupt
 } FaxSetup;
 
 /*

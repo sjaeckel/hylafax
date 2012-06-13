@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-info.4f 584 2007-08-17 14:54:27Z faxguy $
+.\"	$Id: hylafax-info.4f 1104 2012-06-13 18:55:05Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -68,8 +68,6 @@ calledBefore	boolean	device has previously answered at this number
 dialFailures	number	count of consecutive failed dial operations
 hasV34Trouble	boolean	there is difficulty sending to this destination with V.34
 hasV17Trouble	boolean	there is difficulty sending to this destination with V.17
-senderHasV17Trouble	boolean	there is difficulty receiving from this caller with V.17
-senderSkipsV29	boolean	this caller does not use V.29 in the presence of V.17
 lastDialFailure	string	reason for last failed dial operation
 lastSendFailure	string	reason for last failed send attempt
 maxPageWidth	number	maximum page width in pixels in normal resolution
@@ -86,6 +84,14 @@ remoteCSI	string	remote device Called Subscriber Identification
 remoteNSF	string	remote equipment Non-Standard Facilities information
 remoteDIS	string	remote Digital Identification Signal: capabilities
 sendFailures	number	count of consecutive failed send attempts
+senderDataSent	number	units of data sent by the sender in the last session
+senderDataSent1	number	units of data sent by the sender in the session previous to the last
+senderDataSent2	number	units of data sent by the sender in the session previous, previous to the last
+senderDataMissed	number	units of data sent by the sender which were missed or corrupt in the last session
+senderDataMissed1	number	units of data sent by the sender which were missed or corrupt in session previous to the last
+senderDataMissed2	number	units of data sent by the sender which were missed or corrupt in session previous, previous to the last
+senderHasV17Trouble	boolean	there is difficulty receiving from this caller with V.17
+senderSkipsV29	boolean	this caller does not use V.29 in the presence of V.17
 supportsBatching	boolean	accepts batching protocol
 supportsHighRes	boolean	accepts 196 line/inch images (obsolete)
 supportsVRes	number	vertical resolution support bitmask
