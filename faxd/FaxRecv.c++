@@ -1,4 +1,4 @@
-/*	$Id: FaxRecv.c++ 1104 2012-06-13 18:55:05Z faxguy $ */
+/*	$Id: FaxRecv.c++ 1105 2012-06-14 17:57:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -57,6 +57,8 @@ FaxServer::recvFax(const CallID& callid, FaxMachineInfo clientInfo, fxStr& emsg)
     FaxSetup setupinfo;
     setupinfo.senderSkipsV29 = clientInfo.getSenderSkipsV29();
     setupinfo.senderHasV17Trouble = clientInfo.getSenderHasV17Trouble();
+    setupinfo.senderDataSent = clientInfo.getSenderDataSent() + clientInfo.getSenderDataSent1() + clientInfo.getSenderDataSent2();
+    setupinfo.senderDataMissed = clientInfo.getSenderDataMissed() + clientInfo.getSenderDataMissed1() + clientInfo.getSenderDataMissed2();
 
     /*
      * Create the first file ahead of time to avoid timing

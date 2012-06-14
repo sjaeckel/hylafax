@@ -1,4 +1,4 @@
-/*	$Id: ModemConfig.h 1005 2010-08-30 05:36:28Z faxguy $ */
+/*	$Id: ModemConfig.h 1105 2012-06-14 17:57:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -174,6 +174,7 @@ public:
     u_int	class1ECMFrameSize;	// ECM frame size for transmission
     u_int	class1PageLengthSupport;// page length support
     u_int	class1PageWidthSupport;	// page width support
+    u_int	class1RestrictPoorSenders;// restrict senders with poor audio from certain features
     bool	class1ECMCheckFrameLength;// check frame length and not just CRC
     bool	class1GreyJPEGSupport;	// Greyscale JPEG support
     bool	class1ColorJPEGSupport;	// Full-color JPEG support

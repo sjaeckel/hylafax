@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1104 2012-06-13 18:55:05Z faxguy $	
+#	$Id: CHANGES 1105 2012-06-14 17:57:49Z faxguy $	
 
 New Changes
 
+* add Class1RestrictPoorSenders feature (14 Jun 2012)
 * add senderDataSent and senderDataMissed info features
   (13 Jun 2012)
 * add filename typing capability in typerules (11 Jun 2012)
