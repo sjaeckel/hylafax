@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1090 2012-03-14 18:48:49Z faxguy $
+.\"	$Id: hylafax-config.4f 1105 2012-06-14 17:57:49Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2012-03-14 11:48:49 -0700 (Wed, 14 Mar 2012) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2012-06-14 10:57:49 -0700 (Thu, 14 Jun 2012) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -327,6 +327,7 @@ Class1PageLengthSupport	integer	\s-17\s+1	Class 1/1.0: coded value for modem pag
 Class1PageWidthSupport	integer	\s-17\s+1	Class 1/1.0: coded value for modem page width support
 Class1RecvAbortOK	integer	\s-1200\s+1	Class 1/1.0: max wait (ms) for ``\s-1OK\s+1'' after recv abort
 Class1RecvIdentTimer	integer	\s-140000\s+1	Class 1/1.0: max wait (ms) for initial ident frame
+Class1RestrictPoorSenders	integer	\s-10\s+1	Class 1/1.0: restrict features for senders with poor quality
 Class1RMPersistence	integer	\s-12\s+1	Class 1/1.0: times to attempt high-speed carrier recv
 Class1SFLOCmd	string	\-	Class 1/1.0: command to set software flow control
 Class1PPMWaitCmd	string	\s-1AT+FTS=7\s+1	Class 1/1.0: command to stop and wait before PPM
@@ -774,7 +775,9 @@ match.  The special type ``calling-number'' enables the
 .I faxgetty
 process to utilize an associated entry in the info database for
 items such as
-.B senderHasV17Trouble
+.BR senderDataSent ,
+.BR senderDataMissed ,
+.BR senderHasV17Trouble ,
 and
 .BR senderSkipsV29 .
 See
@@ -2836,6 +2839,21 @@ However, adaptive answering schemes such as that described
 above under the
 .B AdaptiveAnswer
 parameter may require that this timer be shortened.
+.TP
+.B Class1RestrictPoorSenders
+The threshold of sender audio quality corruption at which resolution support
+should be restricted to ``normal'' and color support should be disabled.
+This is intended to reduce the amount of image data that a sender with poor
+audio quality will attempt to transmit, thus reducing the call duration, and 
+should improve the likelihood of successful session completion.
+The threshold is the ratio, expressed as an integer percentage, of corrupt data
+received compared to total data received from the current sender in the 
+previous three fax sessions.
+.B Class1RestrictPoorSenders
+requires that a
+.B CallIDType
+of ``calling-number'' be configured in order to match a sender with an entry in
+the info database.
 .TP
 .B Class1RMPersistence
 The number of times that an attempt to receive the high-speed data carrier

@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 1104 2012-06-13 18:55:05Z faxguy $ */
+/*	$Id: Class1Recv.c++ 1105 2012-06-14 17:57:49Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -95,12 +95,12 @@ Class1Modem::recvBegin(FaxSetup* setupinfo, fxStr& emsg)
     sendCFR = false;				// TCF was not received
     lastMCF = 0;				// no MCF heard yet
     capsUsed = 0;				// no DCS or CTC seen yet
+    senderDataSent = 0;				// start with a clean slate...
+    senderDataMissed = 0;			// unfortunately, this will reset after EOM
 
     if (setupinfo) {
 	senderSkipsV29 = setupinfo->senderSkipsV29;
 	senderHasV17Trouble = setupinfo->senderHasV17Trouble;
-	senderDataSent = 0;
-	senderDataMissed = 0;
     }
 
     fxStr nsf;
@@ -113,6 +113,16 @@ Class1Modem::recvBegin(FaxSetup* setupinfo, fxStr& emsg)
     if (senderSkipsV29 && senderHasV17Trouble) {
 	dis.setBit(FaxParams::BITNUM_SIGRATE_14, false);	// disable V.17 support
 	protoTrace("This sender skips V.29 and has trouble with V.17.  Concealing V.17 support.");
+    }
+    if (conf.class1RestrictPoorSenders && setupinfo && setupinfo->senderDataMissed && 
+	setupinfo->senderDataSent * 100 / setupinfo->senderDataMissed > conf.class1RestrictPoorSenders) {
+	dis.setBit(FaxParams::BITNUM_VR_FINE, false);	// disable fine resolution support
+	dis.setBit(FaxParams::BITNUM_VR_R8, false);	// disable superfine resolution support
+	dis.setBit(FaxParams::BITNUM_VR_300X300, false);// disable 300x300 dpi support
+	dis.setBit(FaxParams::BITNUM_VR_R16, false);	// disable hyperfine resolution support
+	dis.setBit(FaxParams::BITNUM_JPEG, false);	// disable JPEG support
+	dis.setBit(FaxParams::BITNUM_FULLCOLOR, false);	// disable color JPEG support
+	protoTrace("This sender exhibits poor call audio quality.  Concealing resolution and color support.");
     }
 
     bool ok = FaxModem::recvBegin(setupinfo, emsg) && recvIdentification(
