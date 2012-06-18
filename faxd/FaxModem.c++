@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.c++ 965 2009-12-22 06:07:31Z faxguy $ */
+/*	$Id: FaxModem.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -118,6 +118,7 @@ FaxModem::sendBegin()
 }
 void FaxModem::sendSetupPhaseB(const fxStr&, const fxStr&){}
 void FaxModem::sendEnd()	{}
+void FaxModem::getDataStats(FaxSetup*) {};
 
 bool
 FaxModem::recvBegin(FaxSetup*, fxStr&)

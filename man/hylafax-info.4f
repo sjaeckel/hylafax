@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-info.4f 1104 2012-06-13 18:55:05Z faxguy $
+.\"	$Id: hylafax-info.4f 1106 2012-06-18 23:50:58Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -84,6 +84,12 @@ remoteCSI	string	remote device Called Subscriber Identification
 remoteNSF	string	remote equipment Non-Standard Facilities information
 remoteDIS	string	remote Digital Identification Signal: capabilities
 sendFailures	number	count of consecutive failed send attempts
+dataSent	number	units of data sent to the destination in the last session
+dataSent1	number	units of data sent to the destination in the session previous to the last
+dataSent2	number	units of data sent to the destination in the session previous, previous to the last
+dataMissed	number	units of data sent to the destination which were missed or corrupt in the last session
+dataMissed1	number	units of data sent to the destination which were missed or corrupt in session previous to the last
+dataMissed2	number	units of data sent to the destination which were missed or corrupt in session previous, previous to the last
 senderDataSent	number	units of data sent by the sender in the last session
 senderDataSent1	number	units of data sent by the sender in the session previous to the last
 senderDataSent2	number	units of data sent by the sender in the session previous, previous to the last

@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1088 2012-03-02 20:22:15Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -730,6 +730,18 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
 		DF_2DMR : DF_1DMH;
     } else
 	params.df = DF_1DMH;
+
+    /*
+     * Restrict parameter selection for destinations with poor audio quality.
+     */
+    u_int dataSent = info.getDataSent() + info.getDataSent1() + info.getDataSent2();
+    u_int dataMissed = info.getDataMissed() + info.getDataMissed1() + info.getDataMissed2();
+    if (class1RestrictPoorDestinations && dataMissed && dataSent * 100 / dataMissed > class1RestrictPoorDestinations) {
+	params.jp = JP_NONE;
+	params.vr = VR_NORMAL;
+	traceJob(job, "This destination exhibits poor call audio quality.  Restricting resolution and color support.");
+    }
+
     /*
      * Check and process the documents to be sent
      * using the parameter selected above.
@@ -3716,6 +3728,7 @@ faxQueueApp::setupConfig()
 	(*this).*numbers[i].p = numbers[i].def;
     tod.reset();			// any day, any time
     use2D = true;			// ok to use 2D data
+    class1RestrictPoorDestinations = 0;	// no restrictions
     useUnlimitedLN = true;		// ok to use LN_INF
     allowIgnoreModemBusy = false;	// to allow jobs to ignore modem busy status
     uucpLockMode = UUCP_LOCKMODE;
@@ -3818,6 +3831,8 @@ faxQueueApp::setConfigItem(const char* tag, const char* value)
 	tod.parse(value);
     else if (streq(tag, "use2d"))
 	use2D = getBoolean(value);
+    else if (streq(tag, "class1restrictpoordestinations"))
+	class1RestrictPoorDestinations = getNumber(value);
     else if (streq(tag, "allowignoremodembusy"))
 	allowIgnoreModemBusy = getBoolean(value);
     else if (streq(tag, "uucplockmode"))

@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1105 2012-06-14 17:57:49Z faxguy $	
+#	$Id: CHANGES 1106 2012-06-18 23:50:58Z faxguy $	
 
 New Changes
 
+* add Class1RestrictPoorDestinations feature (18 Jun 2012)
+* add dataSent and dataMissed info features (18 Jun 2012)
 * add Class1RestrictPoorSenders feature (14 Jun 2012)
 * add senderDataSent and senderDataMissed info features
   (13 Jun 2012)

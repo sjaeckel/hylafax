@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1105 2012-06-14 17:57:49Z faxguy $
+.\"	$Id: hylafax-config.4f 1106 2012-06-18 23:50:58Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2012-06-14 10:57:49 -0700 (Thu, 14 Jun 2012) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2012-06-18 16:50:58 -0700 (Mon, 18 Jun 2012) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -327,6 +327,7 @@ Class1PageLengthSupport	integer	\s-17\s+1	Class 1/1.0: coded value for modem pag
 Class1PageWidthSupport	integer	\s-17\s+1	Class 1/1.0: coded value for modem page width support
 Class1RecvAbortOK	integer	\s-1200\s+1	Class 1/1.0: max wait (ms) for ``\s-1OK\s+1'' after recv abort
 Class1RecvIdentTimer	integer	\s-140000\s+1	Class 1/1.0: max wait (ms) for initial ident frame
+Class1RestrictPoorDestinations¹	integer	\s-10\s+1	Class 1/1.0: restrict features for destinations with poor quality
 Class1RestrictPoorSenders	integer	\s-10\s+1	Class 1/1.0: restrict features for senders with poor quality
 Class1RMPersistence	integer	\s-12\s+1	Class 1/1.0: times to attempt high-speed carrier recv
 Class1SFLOCmd	string	\-	Class 1/1.0: command to set software flow control
@@ -2839,6 +2840,20 @@ However, adaptive answering schemes such as that described
 above under the
 .B AdaptiveAnswer
 parameter may require that this timer be shortened.
+.TP
+.B Class1RestrictPoorDestinations¹
+The threshold of destination audio quality corruption at which resolution support
+should be restricted to ``normal'' and color support should be disabled.
+This is intended to reduce the amount of image data that will be attempted to 
+be sent to a destination with poor audio quality, thus reducing the call duration, and 
+should improve the likelihood of successful session completion.
+The threshold is the ratio, expressed as an integer percentage, of data indicated as
+corrupt by the destination compared to total data sent to the destination in the 
+previous three fax sessions.  Although
+.B Class1RestrictPoorDestinations
+is functional for destinations with a history of both ECM and non-ECM sessions, the
+ECM session history is preferred and weighted considerably higher than non-ECM session
+history.
 .TP
 .B Class1RestrictPoorSenders
 The threshold of sender audio quality corruption at which resolution support
