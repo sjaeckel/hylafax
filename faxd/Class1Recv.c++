@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 1105 2012-06-14 17:57:49Z faxguy $ */
+/*	$Id: Class1Recv.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -95,8 +95,8 @@ Class1Modem::recvBegin(FaxSetup* setupinfo, fxStr& emsg)
     sendCFR = false;				// TCF was not received
     lastMCF = 0;				// no MCF heard yet
     capsUsed = 0;				// no DCS or CTC seen yet
-    senderDataSent = 0;				// start with a clean slate...
-    senderDataMissed = 0;			// unfortunately, this will reset after EOM
+    dataSent = 0;				// start with a clean slate...
+    dataMissed = 0;				// unfortunately, this will reset after EOM
 
     if (setupinfo) {
 	senderSkipsV29 = setupinfo->senderSkipsV29;
@@ -138,8 +138,8 @@ Class1Modem::recvBegin(FaxSetup* setupinfo, fxStr& emsg)
 	 */
 	setupinfo->senderSkipsV29 = senderSkipsV29;
 	setupinfo->senderHasV17Trouble = senderHasV17Trouble;
-	setupinfo->senderDataSent = senderDataSent;
-	setupinfo->senderDataMissed = senderDataMissed;
+	setupinfo->senderDataSent = dataSent;
+	setupinfo->senderDataMissed = dataMissed;
     }
     return (ok);
 }
@@ -1578,8 +1578,8 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					    fbad++;
 					}
 				    }
-				    senderDataSent += fcount;
-				    senderDataMissed += fbad;
+				    dataSent += fcount;
+				    dataMissed += fbad;
 				    if (fcount && ! blockgood) protoTrace("Block incomplete: %d frames (%d%%) corrupt or missing", fbad, ((fbad*100)/fcount));
 				    if (frameRev[ppsframe[4]] < prevPage || (frameRev[ppsframe[4]] == prevPage && frameRev[ppsframe[5]] < prevBlock))
 					blockgood = false;	// we already confirmed this block receipt... (see below)
@@ -1920,8 +1920,8 @@ Class1Modem::recvPageData(TIFF* tif, fxStr& emsg)
 	return (true);		// no RTN with ECM
     } else {
 	(void) recvPageDLEData(tif, checkQuality(), params, emsg);
-	senderDataSent += getRecvEOLCount();
-	senderDataMissed += getRecvBadLineCount();
+	dataSent += getRecvEOLCount();
+	dataMissed += getRecvBadLineCount();
 	TIFFSetField(tif, TIFFTAG_IMAGELENGTH, getRecvEOLCount());
 	TIFFSetField(tif, TIFFTAG_CLEANFAXDATA, getRecvBadLineCount() ?
 	    CLEANFAXDATA_REGENERATED : CLEANFAXDATA_CLEAN);
@@ -1946,8 +1946,8 @@ Class1Modem::recvEnd(FaxSetup* setupinfo, fxStr& emsg)
 	 */
 	setupinfo->senderSkipsV29 = senderSkipsV29;
 	setupinfo->senderHasV17Trouble = senderHasV17Trouble;
-	setupinfo->senderDataSent = senderDataSent;
-	setupinfo->senderDataMissed = senderDataMissed;
+	setupinfo->senderDataSent = dataSent;
+	setupinfo->senderDataMissed = dataMissed;
     }
     if (!recvdDCN && !gotEOT) {
 	u_int t1 = howmany(conf.t1Timer, 1000);	// T1 timer in seconds

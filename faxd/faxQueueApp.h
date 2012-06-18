@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 1066 2011-11-28 20:00:34Z faxguy $ */
+/*	$Id: faxQueueApp.h 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -93,6 +93,7 @@ private:
     u_int	maxSendPages;		// max pages in a send job
     u_int	maxDials;		// max times to dial the phone for a job
     u_int	maxTries;		// max transmits tried for a job
+    u_int	class1RestrictPoorDestinations; // restrict destinations with poor audio from certain features
     TimeOfDay	tod;			// time of day restrictions on sends
     fxStr	longDistancePrefix;	// prefix str for long distance dialing
     fxStr	internationalPrefix;	// prefix str for international dialing

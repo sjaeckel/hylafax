@@ -1,4 +1,4 @@
-/*	$Id: FaxModem.h 1104 2012-06-13 18:55:05Z faxguy $ */
+/*	$Id: FaxModem.h 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -303,6 +303,7 @@ public:
      */
     virtual bool setupReceive() = 0;
     virtual bool recvBegin(FaxSetup* setupinfo, fxStr& emsg);
+    virtual void getDataStats(FaxSetup* setupinfo);
     virtual bool recvEOMBegin(FaxSetup* setupinfo, fxStr& emsg);
     virtual bool recvPage(TIFF*, u_int& ppm, fxStr& em, const fxStr& id) = 0;
     virtual bool recvEnd(FaxSetup* setupinfo, fxStr& emsg) = 0;

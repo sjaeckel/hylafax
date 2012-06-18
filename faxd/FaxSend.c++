@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 1090 2012-03-14 18:48:49Z faxguy $ */
+/*	$Id: FaxSend.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -526,6 +526,9 @@ bool
 FaxServer::sendFaxPhaseB(FaxRequest& fax, FaxItem& freq, FaxMachineInfo& clientInfo, u_int batched, bool dosetup)
 {
     TIFF* tif = NULL;
+    FaxSetup setupinfo;
+    setupinfo.senderDataSent = clientInfo.getDataSent() + clientInfo.getDataSent1() + clientInfo.getDataSent2();
+    setupinfo.senderDataMissed = clientInfo.getDataMissed() + clientInfo.getDataMissed1() + clientInfo.getDataMissed2();
     /*
      * If this was not a JPEG-only document, then we must use the ".color" document.
      */
@@ -550,6 +553,13 @@ FaxServer::sendFaxPhaseB(FaxRequest& fax, FaxItem& freq, FaxMachineInfo& clientI
 	    u_int prevPages = fax.npages;
 	    fax.status = modem->sendPhaseB(tif, clientParams, clientInfo,
 		fax.pagehandling, fax.notice, batched);
+	    modem->getDataStats(&setupinfo);
+	    clientInfo.setDataSent2(clientInfo.getDataSent1());
+	    clientInfo.setDataSent1(clientInfo.getDataSent());
+	    clientInfo.setDataSent(setupinfo.senderDataSent);
+	    clientInfo.setDataMissed2(clientInfo.getDataMissed1());
+	    clientInfo.setDataMissed1(clientInfo.getDataMissed());
+	    clientInfo.setDataMissed(setupinfo.senderDataMissed);
 	    if (fax.status == send_v17fail && fax.notice == "") {
 		// non-fatal V.17 incompatibility
 		clientInfo.setHasV17Trouble(true);

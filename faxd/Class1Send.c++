@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 1082 2012-01-31 00:58:35Z faxguy $ */
+/*	$Id: Class1Send.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -136,6 +136,8 @@ Class1Modem::sendBegin()
     setInputBuffering(false);
     // polling accounting?
     params.br = (u_int) -1;			// force initial training
+    dataSent = 0;
+    dataMissed = 0;
 }
 
 #define BATCH_FIRST 1
@@ -285,6 +287,14 @@ Class1Modem::decodePPM(const fxStr& pph, u_int& ppm, fxStr& emsg)
 	return (false);
 }
 
+void
+Class1Modem::getDataStats(FaxSetup* setupinfo)
+{
+    setupinfo->senderDataSent = dataSent;
+    setupinfo->senderDataMissed = dataMissed;
+    return;
+}
+
 /*
  * Send the specified document using the supplied
  * parameters.  The pph is the post-page-handling
@@ -424,6 +434,7 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		/*
 		 * Send post-page message and get response.
 		 */
+		dataSent++;	// non-ECM pages are whole units instead of per-scanline units giving preference to ECM sessions
 		if (!sendPPM(cmd, frame, emsg)) {
 		    if (cmd == FCF_EOM && (batched & BATCH_FIRST)) {
 			protoTrace("The destination appears to not support batching.");
@@ -483,6 +494,22 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		protoTrace(emsg);
 		return (send_retry);
 	    case FCF_RTN:		// nak, retry after retraining
+		/*
+		 * The receiver rejected the quality of the previous Phase C communication.
+		 * This may mean that the image quality was unacceptable or it may mean that
+		 * the receiver picked up on some other demodulation artifact that it didn't
+		 * like.  However, the RTN signal does not indicate with any degree of
+		 * reliability whether or not the receiver printed the page at all or what it
+		 * expects us to do with the previous page (retransmit or not).  So it's very
+		 * vague.  The default we follow is to retransmit two more times and then to
+		 * move on to the next page if the RTN signals persist.
+		 *
+		 * With respect to the handling of dataMissed here, we really don't know how
+		 * much data was missed or received corrupt by the sender because the RTN
+		 * signal doesn't give us any indication.  So we make a nominal effort here
+		 * only in that regard.
+		 */
+		dataMissed++;	// non-ECM pages are whole units instead of per-scanline units giving preference to ECM sessions
                 switch( conf.rtnHandling ){
 		case RTN_RETRANSMITIGNORE:
 		    if (ntrys < 2) break;
@@ -1247,6 +1274,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 	    pps[1] = frameRev[FaxModem::getPageNumberOfCall() - 1];
 	    pps[2] = frameRev[blockNumber];
 	    pps[3] = frameRev[(fcountuniq == 0 ? 0 : (fcountuniq - 1))];
+	    dataSent += fcountuniq;
 	    u_short ppscnt = 0, crpcnt = 0;
 	    bool gotppr = false;
 	    /* get MCF/PPR/RNR */
@@ -1367,6 +1395,7 @@ Class1Modem::blockFrame(const u_char* bitrev, bool lastframe, u_int ppmcmd, fxSt
 				    badframes++;
 				}
 			    }
+			    dataMissed += badframes;
 			}
 			doctceor = (pprcnt == 4);
 			/*

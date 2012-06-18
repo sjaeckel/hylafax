@@ -1,4 +1,4 @@
-/*	$Id: Class2.h 686 2007-11-04 01:45:30Z faxguy $ */
+/*	$Id: Class2.h 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -145,6 +145,7 @@ public:
     FaxSendStatus sendPhaseB(TIFF* tif, Class2Params&, FaxMachineInfo&,
 		    fxStr& pph, fxStr& emsg, u_int& batched);
     void	sendAbort();
+    void	getDataStats(FaxSetup* setupinfo);
 
 // receive support
     bool	setupReceive();

@@ -1,4 +1,4 @@
-/*	$Id: Class2Send.c++ 1040 2010-12-04 01:22:27Z faxguy $ */
+/*	$Id: Class2Send.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -233,6 +233,12 @@ static bool
 pageInfoChanged(const Class2Params& a, const Class2Params& b)
 {
     return (a.vr != b.vr || a.wd != b.wd || a.ln != b.ln || a.df != b.df || a.br != b.br);
+}
+
+void
+Class2Modem::getDataStats(FaxSetup* setupinfo)
+{
+    return;
 }
 
 /*

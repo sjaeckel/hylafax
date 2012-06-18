@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.h 1104 2012-06-13 18:55:05Z faxguy $ */
+/*	$Id: FaxMachineInfo.h 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -62,6 +62,12 @@ private:
     u_int	senderDataMissed;	// amount of session data missed from sender
     u_int	senderDataMissed1;	// amount of previous session data missed from sender
     u_int	senderDataMissed2;	// amount of previous, previous session data missed from sender
+    u_int	dataSent;		// amount of session data sent to destination
+    u_int	dataSent1;		// amount of previous session data sent to destination
+    u_int	dataSent2;		// amount of previous, previous session data sent to destination
+    u_int	dataMissed;		// amount of session data missed to destination
+    u_int	dataMissed1;		// amount of previous session data missed to destination
+    u_int	dataMissed2;		// amount of previous, previous session data missed to destination
     bool	supportsPostScript;	// handles Adobe NSF protocol
     bool	supportsBatching;	// handles batching (EOM) protocol
     bool	calledBefore;		// successfully called before
@@ -114,6 +120,12 @@ public:
     int getSenderDataMissed() const;
     int getSenderDataMissed1() const;
     int getSenderDataMissed2() const;
+    int getDataSent() const;
+    int getDataSent1() const;
+    int getDataSent2() const;
+    int getDataMissed() const;
+    int getDataMissed1() const;
+    int getDataMissed2() const;
     bool getSupportsPostScript() const;
     bool getSupportsBatching() const;
     bool getCalledBefore() const;
@@ -144,6 +156,12 @@ public:
     void setSenderDataMissed(int);
     void setSenderDataMissed1(int);
     void setSenderDataMissed2(int);
+    void setDataSent(int);
+    void setDataSent1(int);
+    void setDataSent2(int);
+    void setDataMissed(int);
+    void setDataMissed1(int);
+    void setDataMissed2(int);
     void setSupportsPostScript(bool);
     void setSupportsBatching(bool);
     void setCalledBefore(bool);
@@ -194,6 +212,18 @@ inline int FaxMachineInfo::getSenderDataMissed1() const
     { return senderDataMissed1; }
 inline int FaxMachineInfo::getSenderDataMissed2() const
     { return senderDataMissed2; }
+inline int FaxMachineInfo::getDataSent() const
+    { return dataSent; }
+inline int FaxMachineInfo::getDataSent1() const
+    { return dataSent1; }
+inline int FaxMachineInfo::getDataSent2() const
+    { return dataSent2; }
+inline int FaxMachineInfo::getDataMissed() const
+    { return dataMissed; }
+inline int FaxMachineInfo::getDataMissed1() const
+    { return dataMissed1; }
+inline int FaxMachineInfo::getDataMissed2() const
+    { return dataMissed2; }
 inline bool FaxMachineInfo::getSupportsPostScript() const
     { return supportsPostScript; }
 inline bool FaxMachineInfo::getSupportsBatching() const

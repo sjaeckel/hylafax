@@ -1,4 +1,4 @@
-/*	$Id: FaxMachineInfo.c++ 1104 2012-06-13 18:55:05Z faxguy $ */
+/*	$Id: FaxMachineInfo.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -69,6 +69,12 @@ FaxMachineInfo::FaxMachineInfo(const FaxMachineInfo& other)
     senderDataMissed = other.senderDataMissed;
     senderDataMissed1 = other.senderDataMissed1;
     senderDataMissed2 = other.senderDataMissed2;
+    dataSent = other.dataSent;
+    dataSent1 = other.dataSent1;
+    dataSent2 = other.dataSent2;
+    dataMissed = other.dataMissed;
+    dataMissed1 = other.dataMissed1;
+    dataMissed2 = other.dataMissed2;
     supportsPostScript = other.supportsPostScript;
     supportsBatching = other.supportsBatching;
     calledBefore = other.calledBefore;
@@ -125,6 +131,12 @@ FaxMachineInfo::resetConfig()
     senderDataMissed = 0;		// clean slate
     senderDataMissed1 = 0;		// clean slate
     senderDataMissed2 = 0;		// clean slate
+    dataSent = 0;			// clean slate
+    dataSent1 = 0;			// clean slate
+    dataSent2 = 0;			// clean slate
+    dataMissed = 0;			// clean slate
+    dataMissed1 = 0;			// clean slate
+    dataMissed2 = 0;			// clean slate
     supportsPostScript = false;		// no support for Adobe protocol
     supportsBatching = true;		// assume batching (EOM) support
     calledBefore = false;		// never called before
@@ -202,6 +214,8 @@ static const char* stnames[] =
 #define SSV29	13
 #define SDS	14
 #define SDM	15
+#define DS	16
+#define DM	17
 
 #define	setLocked(b,ix)	locked |= b<<ix
 
@@ -252,6 +266,24 @@ FaxMachineInfo::setConfigItem(const char* tag, const char* value)
     } else if (streq(tag, "senderdatamissed2")) {
 	senderDataMissed2 = getNumber(value);
 	setLocked(b, SDM);
+    } else if (streq(tag, "datasent")) {
+	dataSent = getNumber(value);
+	setLocked(b, DS);
+    } else if (streq(tag, "datasent1")) {
+	dataSent1 = getNumber(value);
+	setLocked(b, DS);
+    } else if (streq(tag, "datasent2")) {
+	dataSent2 = getNumber(value);
+	setLocked(b, DS);
+    } else if (streq(tag, "datamissed")) {
+	dataMissed = getNumber(value);
+	setLocked(b, DM);
+    } else if (streq(tag, "datamissed1")) {
+	dataMissed1 = getNumber(value);
+	setLocked(b, DM);
+    } else if (streq(tag, "datamissed2")) {
+	dataMissed2 = getNumber(value);
+	setLocked(b, DM);
     } else if (streq(tag, "supportspostscript")) {
 	supportsPostScript = getBoolean(value);
 	setLocked(b, PS);
@@ -340,6 +372,18 @@ void FaxMachineInfo::setSenderDataMissed1(int v)
     { checkLock(SDM, senderDataMissed1, v); }
 void FaxMachineInfo::setSenderDataMissed2(int v)
     { checkLock(SDM, senderDataMissed2, v); }
+void FaxMachineInfo::setDataSent(int v)
+    { checkLock(DS, dataSent, v); }
+void FaxMachineInfo::setDataSent1(int v)
+    { checkLock(DS, dataSent1, v); }
+void FaxMachineInfo::setDataSent2(int v)
+    { checkLock(DS, dataSent2, v); }
+void FaxMachineInfo::setDataMissed(int v)
+    { checkLock(DM, dataMissed, v); }
+void FaxMachineInfo::setDataMissed1(int v)
+    { checkLock(DM, dataMissed1, v); }
+void FaxMachineInfo::setDataMissed2(int v)
+    { checkLock(DM, dataMissed2, v); }
 void FaxMachineInfo::setSenderHasV17Trouble(bool b)
     { checkLock(SV17, senderHasV17Trouble, b); }
 void FaxMachineInfo::setSenderSkipsV29(bool b)
@@ -453,6 +497,12 @@ FaxMachineInfo::writeConfig(fxStackBuffer& buf)
     putDecimal(buf, "senderDataMissed", isLocked(SDM), senderDataMissed);
     putDecimal(buf, "senderDataMissed1", isLocked(SDM), senderDataMissed1);
     putDecimal(buf, "senderDataMissed2", isLocked(SDM), senderDataMissed2);
+    putDecimal(buf, "dataSent", isLocked(DS), dataSent);
+    putDecimal(buf, "dataSent1", isLocked(DS), dataSent1);
+    putDecimal(buf, "dataSent2", isLocked(DS), dataSent2);
+    putDecimal(buf, "dataMissed", isLocked(DM), dataMissed);
+    putDecimal(buf, "dataMissed1", isLocked(DM), dataMissed1);
+    putDecimal(buf, "dataMissed2", isLocked(DM), dataMissed2);
     putBoolean(buf, "supportsPostScript", isLocked(PS), supportsPostScript);
     putBoolean(buf, "supportsBatching", isLocked(BATCH), supportsBatching);
     putBoolean(buf, "calledBefore", false, calledBefore);
