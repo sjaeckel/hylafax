@@ -20,14 +20,16 @@ if [ ! -x $FILECMD ]; then
 fi
 
 MIMETYPE="`$FILECMD -bi "$1" | $SED 's/;.*//g'`"
-if [ -x $LIBDATA/faxmail/$MIMETYPE ]; then
+if [ "$MIMETYPE" != "application/octet-stream" ] && [ -x $LIBDATA/faxmail/$MIMETYPE ]; then
+    echo "running: $LIBDATA/faxmail/$MIMETYPE \"$1\"" >&2
     $LIBDATA/faxmail/$MIMETYPE "$1"
 else
     case "$MIMETYPE" in
 	"application/postscript") cat "$1";;
 	"message/rfc822")	cat "$1" | $LIBEXEC/textfmt -B;;
 	text/*) 		cat "$1" | $LIBEXEC/textfmt -B;;
-	*) echo "$DISCARDMSG" | $LIBEXEC/textfmt -B;;
+	*)  echo "Discarding: \"$@\"" >&2
+	    echo "$DISCARDMSG" | $LIBEXEC/textfmt -B;;
     esac
 fi
 
