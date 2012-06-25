@@ -1,4 +1,4 @@
-/*	$Id: Parser.c++ 1084 2012-02-06 19:48:05Z faxguy $ */
+/*	$Id: Parser.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -176,6 +176,7 @@ static const tab parmtab[] = {
 { "SUBADDR",      T_SUBADDR,	  false, true, "[<string>]" },
 { "TAGLINE",      T_TAGLINE,	  false, true, "[<string>]" },
 { "TIMEOFDAY",    T_TIMEOFDAY,	  false, true, "[<string>]" },
+{ "TIMEZONE",     T_TIMEZONE,	  false, true, "[<string>]" },
 { "TOCOMPANY",    T_TO_COMPANY,	  false, true, "[<string>]" },
 { "TOLOCATION",   T_TO_LOCATION,  false, true, "[<string>]" },
 { "TOTDIALS",     T_TOTDIALS,	  false, true, "[<number>]" },
@@ -1158,6 +1159,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_REGARDING:
     case T_COMMENTS:
     case T_TIMEOFDAY:
+    case T_TIMEZONE:
     case T_FAXNUMBER:
     case T_FAXNAME:
     case T_TSI:

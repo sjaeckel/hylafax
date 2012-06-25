@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -68,6 +68,7 @@ SendFaxJob::SendFaxJob(const SendFaxJob& other)
     , sendTime(other.sendTime)
     , tagline(other.tagline)
     , pageSize(other.pageSize)
+    , timeZone(other.timeZone)
 {
     notify = other.notify;
     autoCover = other.autoCover;
@@ -161,6 +162,7 @@ SendFaxJob::setupConfig()
     ignoremodembusy = false;		// default to acknowledge busy status
     notify = FAX_DEFNOTIFY;		// default notification
     mailbox = "";
+    timeZone = "";
     priority = FAX_DEFPRIORITY;		// default transmit priority
     minsp = (u_int) -1;
     desiredbr = (u_int) -1;
@@ -315,6 +317,7 @@ void SendFaxJob::setPriority(int p)			{ priority = p; }
 void SendFaxJob::setTSI(const char* s)			{ tsi = s; }
 void SendFaxJob::setFaxNumber(const char* s)		{ faxnumber = s; }
 void SendFaxJob::setFaxName(const char* s)		{ faxname = s; }
+void SendFaxJob::setTimeZone(const char* s)		{ timeZone = s; }
 void SendFaxJob::setDialString(const char* s)		{ number = s; }
 void SendFaxJob::setSubAddress(const char* s)		{ subaddr = s; }
 void SendFaxJob::setPassword(const char* s)		{ passwd = s; }
@@ -522,6 +525,7 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     IFPARM("MAXDIALS", maxDials, (u_int) -1)
     IFPARM("MAXTRIES", maxRetries, (u_int) -1)
     IFPARM("TIMEOFDAY", tod, "")
+    IFPARM("TIMEZONE", timeZone, "")
     CHECKPARM("SCHEDPRI", priority)
     /*
      * If the dialstring is different from the

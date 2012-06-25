@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1107 2012-06-20 21:52:45Z faxguy $	
+#	$Id: CHANGES 1108 2012-06-26 03:56:56Z faxguy $	
 
 New Changes
 
+* add job timezone feature for tagline formatting (25 Jun 2012)
 * avoid infinite loop in faxmail handling of 
   application/octet-stream attachments (20 Jun 2012)
 * add Class1RestrictPoorDestinations feature (18 Jun 2012)

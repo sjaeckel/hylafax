@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 1050 2011-09-03 18:24:02Z faxguy $ */
+/*	$Id: sendfax.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -204,6 +204,8 @@ sendFaxApp::run(int argc, char** argv)
 			    proto.setUseColor(FaxConfig::getBoolean(op));
 		    } else if (strncmp(optarg, "ignoremodembusy", 15) == 0) {
 			proto.setIgnoreModemBusy(FaxConfig::getBoolean(++op));
+		    } else if (strncmp(optarg, "timezone", 8) == 0) {
+			proto.setTimeZone(++op);
 		    } else if (strncmp(optarg, "config", 6) == 0) {
 			readConfigItem(++op);
 		    }

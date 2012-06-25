@@ -1,4 +1,4 @@
-/*	$Id: mkhash.c 1066 2011-11-28 20:00:34Z faxguy $ */
+/*	$Id: mkhash.c 1108 2012-06-26 03:56:56Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -113,6 +113,7 @@ main()
     hash("duration");
     hash("serverdocover");
     hash("ignoremodembusy");
+    hash("timezone");
     hash("ntries");
     hash("ndials");
     hash("totdials");
