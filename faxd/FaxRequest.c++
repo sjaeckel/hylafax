@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 1082 2012-01-31 00:58:35Z faxguy $ */
+/*	$Id: FaxRequest.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -128,6 +128,7 @@ FaxRequest::stringval FaxRequest::strvals[] = {
     { "csi",		&FaxRequest::csi },
     { "nsf",		&FaxRequest::nsf },
     { "timeofday",	&FaxRequest::timeofday },
+    { "timezone",	&FaxRequest::timezone },
     { "errorcode",	&FaxRequest::errorcode },
 };
 FaxRequest::shortval FaxRequest::shortvals[] = {
@@ -354,6 +355,7 @@ FaxRequest::readQFile(bool& rejectJob)
 	case H_CHOPTHRESHOLD:	chopthreshold = atof(tag); break;
 	case H_NSF:		nsf = tag; break;
 	case H_TIMEOFDAY:	timeofday = tag; break;
+	case H_TIMEZONE:	timezone = tag; break;
 	case H_ERRORCODE:	errorcode = tag; break;
 	case H_DONEOP:		doneop = tag; break;
 	case H_RETURNED:	status = (FaxSendStatus) atoi(tag); break;

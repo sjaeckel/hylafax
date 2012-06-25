@@ -1,4 +1,4 @@
-/*	$Id: TagLine.c++ 965 2009-12-22 06:07:31Z faxguy $ */
+/*	$Id: TagLine.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -56,7 +56,7 @@ insert(fxStr& tag, u_int l, const fxStr& s)
  * preformat as much of the tag line as possible.
  */
 void
-FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt, const fxStr& locale)
+FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt, const fxStr& locale, const fxStr& tz)
 {
     if (tagLineFont == NULL)
 	tagLineFont = new PCFFont;
@@ -74,6 +74,8 @@ FaxModem::setupTagLine(const FaxRequest& req, const fxStr& tagLineFmt, const fxS
     isutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0);
     tagLine.setUTF8(isutf8);
 #endif
+
+    if (tz != "") setenv("TZ", tz, 1);
 
     time_t t = Sys::now();
     tm* tm = localtime(&t);

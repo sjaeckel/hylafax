@@ -1,4 +1,4 @@
-.\"	$Id: sendq.4f 1067 2011-11-28 20:18:56Z faxguy $
+.\"	$Id: sendq.4f 1108 2012-06-26 03:56:56Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -141,6 +141,7 @@ tagline	string	tagline format string
 tiff	string	unprocessed \s-1TIFF/F\s0 document
 !tiff	string	processed \s-1TIFF/F\s0 document
 timeofday	string	time of day restrictions
+timezone	string	time zone to use for tagline formatting
 totdials	integer	total number of phone calls
 totpages	integer	total pages to transmit
 tottries	integer	total number of attempts to send job
@@ -582,6 +583,9 @@ identical to the similar
 .B TimeOfDay
 server-configuration option found in
 .IR hylafax-config (${MANNUM4_5}).
+.TP 14
+.B timezone
+The time zone locale setting to use in tagline formatting.
 .TP 14
 .B totdials
 The total number of times the server has placed a call

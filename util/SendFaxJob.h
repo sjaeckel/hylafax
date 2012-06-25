@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.h 964 2009-12-08 06:15:06Z faxguy $ */
+/*	$Id: SendFaxJob.h 1108 2012-06-26 03:56:56Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.
@@ -106,6 +106,7 @@ private:
     float	pageWidth;		// sending page width (mm)
     float	pageLength;		// sending page length (mm)
     fxStr	pageSize;		// arg to pass to subprocesses
+    fxStr	timeZone;		// time zone for tagline formatting
     int		totalPages;		// counted pages (for cover sheet)
     u_int	maxRetries;		// max number times to try send
     u_int	maxDials;		// max number times to dial telephone
@@ -194,6 +195,8 @@ public:
     const fxStr& getExternalNumber() const;
     void setFaxNumber(const char*);	// Caller*ID Number, also tagline
     void setFaxName(const char*);	// Caller*ID Name
+    void setTimeZone(const char*);	// time zone for tagline formatting
+    const fxStr& getTimeZone() const;
 
     /*
      * Cover page support.
@@ -325,6 +328,7 @@ inline const fxStr& SendFaxJob::getCoverFromLocation() const{ return fromlocatio
 inline const fxStr& SendFaxJob::getCoverFromFax() const	{ return fromfax; }
 inline const fxStr& SendFaxJob::getCoverFromVoice() const{ return fromvoice; }
 inline const fxStr& SendFaxJob::getCoverFromCompany() const{ return fromcompany; }
+inline const fxStr& SendFaxJob::getTimeZone() const	{ return timeZone; }
 inline float SendFaxJob::getPageWidth() const		{ return pageWidth; }
 inline float SendFaxJob::getPageLength() const		{ return pageLength; }
 inline const fxStr& SendFaxJob::getPageSize() const	{ return pageSize; }
