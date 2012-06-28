@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1110 2012-06-29 04:44:50Z faxguy $	
+#	$Id: CHANGES 1111 2012-06-29 04:53:34Z faxguy $	
 
 New Changes
 
+* handle config files that may not end with a newline (28 Jun 2012)
 * handle RING detected after dialing (28 Jun 2012)
 * add wchar_t support (28 Jun 2012)
 * add job timezone feature for tagline formatting (25 Jun 2012)
