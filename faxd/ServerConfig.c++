@@ -1,4 +1,4 @@
-/*	$Id: ServerConfig.c++ 1090 2012-03-14 18:48:49Z faxguy $ */
+/*	$Id: ServerConfig.c++ 1113 2012-06-29 05:17:26Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -481,6 +481,8 @@ ServerConfig::setConfigItem(const char* tag, const char* value)
 	requeueTTS[ClassModem::NOFCON] = getNumber(value);
     else if (streq(tag, "jobreqdataconn"))
 	requeueTTS[ClassModem::DATACONN] = getNumber(value);
+    else if (streq(tag, "jobreqerror"))
+	requeueTTS[ClassModem::ERROR] = getNumber(value);
     else if (streq(tag, "nocarrierretrys"))
 	retryMAX[ClassModem::NOCARRIER] = getNumber(value);
     else if (streq(tag, "jobretrybusy"))
@@ -493,6 +495,8 @@ ServerConfig::setConfigItem(const char* tag, const char* value)
 	retryMAX[ClassModem::NOFCON] = getNumber(value);
     else if (streq(tag, "jobretrydataconn"))
 	retryMAX[ClassModem::DATACONN] = getNumber(value);
+    else if (streq(tag, "jobretryerror"))
+	retryMAX[ClassModem::ERROR] = getNumber(value);
     else
 	return ModemConfig::setConfigItem(tag, value);
     return (true);
