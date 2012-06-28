@@ -1,4 +1,4 @@
-/*	$Id: Str.h 713 2007-11-24 00:45:47Z faxguy $ */
+/*	$Id: Str.h 1109 2012-06-29 04:40:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -115,6 +115,7 @@ public:
     void operator=(const fxTempStr& s);
     void operator=(fxStr const& s);
     void operator=(char const *s);
+    void operator=(wchar_t const *s);
 
     /////////////////////////////////////////////////////
     // Comparison
