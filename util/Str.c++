@@ -1,4 +1,4 @@
-/*	$Id: Str.c++ 948 2009-10-07 15:36:26Z faxguy $ */
+/*	$Id: Str.c++ 1109 2012-06-29 04:40:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -445,6 +445,14 @@ void fxStr::operator=(const char *s)
     resizeInternal(nl-1);
     slength = nl;
     memcpy(data,s,slength);
+}
+
+void fxStr::operator=(const wchar_t *s)
+{
+    int nl = wcstombs(NULL, s, 0);
+    resizeInternal(nl);
+    slength = nl+1;
+    wcstombs(data, s, slength);
 }
 
 void fxStr::append(const char * s, u_int l)
