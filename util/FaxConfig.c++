@@ -1,4 +1,4 @@
-/*	$Id: FaxConfig.c++ 704 2007-11-14 17:45:04Z faxguy $ */
+/*	$Id: FaxConfig.c++ 1111 2012-06-29 04:53:34Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -55,7 +55,10 @@ FaxConfig::readConfig(const fxStr& filename)
 	configTrace("Read config file %s", (const char*) filename);
 	char line[1024];
 	while (fgets(line, sizeof (line)-1, fd)) {
-	    line[strlen(line)-1]='\0';		// Nuke \r at end of line
+		size_t len = strlen(line);
+		// The last line of a file may not be terminated by a '\n'.
+		if (line[len-1] == '\n')
+		    line[len-1] = '\0';		// Nuke \n at end of line
 	    (void) readConfigItem(line);
 	}
 	fclose(fd);
