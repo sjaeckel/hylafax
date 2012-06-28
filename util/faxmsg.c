@@ -1,4 +1,4 @@
-/*	$Id: faxmsg.c 216 2006-06-22 15:06:36Z faxguy $ */
+/*	$Id: faxmsg.c 1112 2012-06-29 05:08:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -105,6 +105,11 @@ main(int argc, char** argv)
 	switch (c) {
 	case 'h':
 	    arg = optarg;
+	    if (strlen(arg) > sizeof(cmd)-2) {
+		/* The "how" value won't fit in cmd with the command tag
+		 * and terminating NUL character. */
+		fatal("How value too long: %s", arg);
+	    }
 	    break;
 	case 'q':
 	    spooldir = optarg;
