@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
+/*	$Id: Class1Send.c++ 1114 2012-07-02 18:27:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2152,10 +2152,12 @@ Class1Modem::sendPPM(u_int ppm, HDLCFrame& mcf, fxStr& emsg)
 void
 Class1Modem::sendEnd()
 {
-    fxStr emsg;
-    if (!useV34) (void) switchingPause(emsg);
-    transmitFrame(FCF_DCN|FCF_SNDR);		// disconnect
-    setInputBuffering(true);
+    if (!wasModemError()) {
+	fxStr emsg;
+	if (!useV34) (void) switchingPause(emsg);
+	transmitFrame(FCF_DCN|FCF_SNDR);		// disconnect
+	setInputBuffering(true);
+    }
 }
 
 /*

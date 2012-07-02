@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.h 548 2007-07-11 00:27:25Z faxguy $ */
+/*	$Id: ModemServer.h 1114 2012-07-02 18:27:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -74,6 +74,7 @@ private:
     ClassModem*	modem;			// modem driver
     Timeout	timer;			// timeout support class
     bool	timeout;		// timeout during i/o operations
+    bool	modemerror;		// modem error during i/o operations
     fxStr	configFile;		// pathname to configuration file
     BaudRate	curRate;		// current termio baud rate
     Parity	curParity;		// current termio parity setting

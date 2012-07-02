@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 862 2008-07-26 17:57:09Z faxguy $ */
+/*	$Id: ModemServer.c++ 1114 2012-07-02 18:27:37Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -96,6 +96,7 @@ ModemServer::ModemServer(const fxStr& devName, const fxStr& devID)
     rcvCC = rcvNext = rcvBit = gotByte = 0;
     sawBlockEnd = false;
     timeout = false;
+    modemerror = false;
     log = NULL;
     readyStateMsg = NULL;
 }
@@ -1588,8 +1589,10 @@ ModemServer::putModem1(const void* data, int n, long ms)
 	if (errno != EINTR)
 	    traceStatus(FAXTRACE_MODEMCOM, "MODEM WRITE ERROR: errno %u",
 		errno);
-    } else if (n != 0)
+    } else if (n != 0) {
+	modemerror = true;
 	traceStatus(FAXTRACE_MODEMCOM, "MODEM WRITE SHORT: sent %u, wrote %u",
 	    cc+n, cc);
+    }
     return (!timeout && n == 0);
 }
