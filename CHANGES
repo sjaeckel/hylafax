@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1113 2012-06-29 05:17:26Z faxguy $	
+#	$Id: CHANGES 1114 2012-07-02 18:27:37Z faxguy $	
 
 New Changes
 
+* check for modem write error before attempting DCN (2 Jul 2012)
 * fix JobRequeueError and JobRetryError (28 Jun 2012)
 * handle config files that may not end with a newline (28 Jun 2012)
 * handle RING detected after dialing (28 Jun 2012)

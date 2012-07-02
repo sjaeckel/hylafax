@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.h 1017 2010-10-08 19:35:41Z faxguy $ */
+/*	$Id: ClassModem.h 1114 2012-07-02 18:27:37Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -267,6 +267,7 @@ public:
     void	beginTimedTransfer();
     void	endTimedTransfer();
     bool	wasTimeout();
+    bool	wasModemError();
     void	setTimeout(bool);
     void	flushModemInput();
     bool	putModem(void* data, int n, long ms = 0);

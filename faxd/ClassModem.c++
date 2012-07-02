@@ -1,4 +1,4 @@
-/*	$Id: ClassModem.c++ 1017 2010-10-08 19:35:41Z faxguy $ */
+/*	$Id: ClassModem.c++ 1114 2012-07-02 18:27:37Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -674,6 +674,7 @@ bool ClassModem::abortRequested()
 void ClassModem::beginTimedTransfer()		{ server.timeout = false; }
 void ClassModem::endTimedTransfer()		{}
 bool ClassModem::wasTimeout()			{ return server.timeout; }
+bool ClassModem::wasModemError()		{ return server.modemerror; }
 void ClassModem::setTimeout(bool b)		{ server.timeout = b; }
 
 /*
