@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 1077 2012-01-23 16:43:09Z faxguy $ */
+/*	$Id: FaxClient.c++ 1115 2012-07-09 19:55:27Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -371,6 +371,7 @@ FaxClient::setCtrlFds(int in, int out)
 {
     if (fdIn != NULL)
 	fclose(fdIn);
+    fcntl(in, F_SETFL, fcntl(in, F_GETFL, 0) | O_NONBLOCK);
     fdIn = fdopen(in, "r");
     if (fdOut != NULL)
 	fclose(fdOut);
@@ -691,6 +692,22 @@ getReplyCode(const char* cp)
     return ((cp[3] == ' ' || cp[3] == '-') ? c : 0);
 }
 
+int
+is_ready(int fd)
+{
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(fd, &rfds);
+    struct timeval tv;
+    tv.tv_sec = 60;		// timeout after 60 seconds
+    tv.tv_usec = 0;
+#if CONFIG_BADSELECTPROTO
+    return (select(fd+1, (int*) &rfds, NULL, NULL, &tv));
+#else
+    return (select(fd+1, &rfds, NULL, NULL, &tv));
+#endif
+}
+
 /*
  * Read from the control channel until a valid reply is
  * received or the connection is dropped.  The last line
@@ -710,6 +727,17 @@ FaxClient::getReply(bool expecteof)
         lastResponse.resize(0);
         int c;
         while ((c = getc(fdIn)) != '\n') {
+	    if (c < 0 && errno == EAGAIN) {
+		if (is_ready(fileno(fdIn)) > 0) {
+		    continue;
+		}
+		lastResponse.append("<timeout>");
+		if (getVerbose()) {
+		    traceServer("%s", (const char*) lastResponse);
+		}
+		code = -2;
+		return(code);
+	    }
             if (c == IAC) {     // handle telnet commands
             	switch (c = getc(fdIn)) {
             	case WILL:
@@ -966,7 +994,18 @@ bool FaxClient::jobSubmit(const char* jobid)	{ return jobOp("JSUBM",jobid); }
 bool FaxClient::jobSuspend(const char* jobid)	{ return jobOp("JSUSP",jobid); }
 bool FaxClient::jobKill(const char* jobid)	{ return jobOp("JKILL",jobid); }
 bool FaxClient::jobDelete(const char* jobid)	{ return jobOp("JDELE",jobid); }
-bool FaxClient::jobWait(const char* jobid)	{ return jobOp("JWAIT",jobid); }
+
+bool
+FaxClient::jobWait(const char* jobid)
+{
+    while (!jobOp("JWAIT", jobid)) {
+	if (code == -2 && jobOp("ABOR", jobid)) {
+	    continue;
+	}
+	return (false);
+    }
+    return (true);
+}
 
 bool FaxClient::jgrpSubmit(const char* jgrpid)
     { return (command("JGSUBM %s", jgrpid) == COMPLETE); }

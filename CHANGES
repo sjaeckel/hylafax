@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1114 2012-07-02 18:27:37Z faxguy $	
+#	$Id: CHANGES 1115 2012-07-09 19:55:27Z faxguy $	
 
 New Changes
 
+* create timeout for client commands to non-responsive servers
+  (9 Jul 2012)
 * check for modem write error before attempting DCN (2 Jul 2012)
 * fix JobRequeueError and JobRetryError (28 Jun 2012)
 * handle config files that may not end with a newline (28 Jun 2012)
