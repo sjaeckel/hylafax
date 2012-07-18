@@ -1,9 +1,11 @@
-#	$Id: CHANGES 1115 2012-07-09 19:55:27Z faxguy $	
+#	$Id: CHANGES 1116 2012-07-19 00:33:45Z faxguy $	
 
 New Changes
 
+* cause sendfax -w to produce meaningful return values and display
+  any failure message (18 Jul 2012)
 * create timeout for client commands to non-responsive servers
-  (9 Jul 2012)
+  (9, 18 Jul 2012)
 * check for modem write error before attempting DCN (2 Jul 2012)
 * fix JobRequeueError and JobRetryError (28 Jun 2012)
 * handle config files that may not end with a newline (28 Jun 2012)

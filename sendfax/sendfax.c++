@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
+/*	$Id: sendfax.c++ 1116 2012-07-19 00:33:45Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -54,7 +54,7 @@ public:
     sendFaxApp();
     ~sendFaxApp();
 
-    bool run(int argc, char** argv);
+    int run(int argc, char** argv);
 };
 
 fxStr sendFaxApp::dbName("~/.faxdb");
@@ -70,7 +70,7 @@ sendFaxApp::~sendFaxApp()
     delete db;
 }
 
-bool
+int
 sendFaxApp::run(int argc, char** argv)
 {
     extern int optind;
@@ -298,6 +298,7 @@ sendFaxApp::run(int argc, char** argv)
     }
     bool status = false;
     fxStr emsg;
+    int retval = -1;
     if (callServer(emsg)) {
         status = login(owner, pass, emsg)
             && prepareForJobSubmissions(emsg)
@@ -308,11 +309,40 @@ sendFaxApp::run(int argc, char** argv)
                     " waiting for job %s.", (const char*) getCurrentJob());
             }
             jobWait(getCurrentJob());
+	    /* For the benefit of those watching in verbose... */
+	    fxStr r;
+            command((const char*) fxStr::format("JOB %s", (const char*) getCurrentJob()));
+            jobParm("conntime");
+            jobParm("duration");
+            jobParm("npages");
+            jobParm("totpages");
+            jobParm("commid");
+            jobParm("ntries");
+            jobParm("status");
+            emsg = getLastResponse(); emsg.remove(0, 4);
+            if (emsg.length()) {
+		status = false;
+                jobParm("errorcode");
+                r = getLastResponse(); r.remove(0, 5);
+                retval = atoi((const char*) r);
+            } else {
+		retval = 0;
+		status = true;
+	    }
+            jobParm("state");
+            r = getLastResponse(); r.remove(0, 4);
+            // Due to the jobWait we should only ever see "DONE" and "FAILED"...
+            if (r != "DONE") {
+		status = false;
+            }
         }
         hangupServer();
     }
-    if (!status) printError("%s", (const char*) emsg);
-    return (status);
+    if (!status) {
+	printError("%s", (const char*) emsg);
+	if (!retval) retval = -1;
+    }
+    return (retval);
 }
 
 void
@@ -438,15 +468,16 @@ cleanup()
 }
 
 static void
-sigDone(int)
+sigDone(int n)
 {
     cleanup();
-    exit(-1);
+    exit(n);
 }
 
 int
 main(int argc, char** argv)
 {
+    int r = 0;
 #ifdef LC_CTYPE
     setlocale(LC_CTYPE, "");			// for <ctype.h> calls
 #endif
@@ -458,12 +489,13 @@ main(int argc, char** argv)
     signal(SIGTERM, fxSIGHANDLER(sigDone));
     signal(SIGCHLD, fxSIGHANDLER(SIG_DFL));     // by YC
     app = new sendFaxApp;
-    if (!app->run(argc, argv)) sigDone(0);
+    r = app->run(argc, argv);
+    if (r) sigDone(r);
     signal(SIGHUP, fxSIGHANDLER(SIG_IGN));
     signal(SIGINT, fxSIGHANDLER(SIG_IGN));
     signal(SIGTERM, fxSIGHANDLER(SIG_IGN));
     cleanup();
-    return (0);
+    return (r);
 }
 
 static void
@@ -472,7 +504,7 @@ vfatal(FILE* fd, const char* fmt, va_list ap)
     vfprintf(fd, fmt, ap);
     va_end(ap);
     fputs(".\n", fd);
-    sigDone(0);
+    sigDone(-1);
 }
 
 void

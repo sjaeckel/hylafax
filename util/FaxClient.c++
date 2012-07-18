@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 1115 2012-07-09 19:55:27Z faxguy $ */
+/*	$Id: FaxClient.c++ 1116 2012-07-19 00:33:45Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -998,11 +998,22 @@ bool FaxClient::jobDelete(const char* jobid)	{ return jobOp("JDELE",jobid); }
 bool
 FaxClient::jobWait(const char* jobid)
 {
+    int n = 0;
     while (!jobOp("JWAIT", jobid)) {
+	n++;
 	if (code == -2 && jobOp("ABOR", jobid)) {
 	    continue;
 	}
 	return (false);
+    }
+    /*
+     * The server replies "216 Wait for job XXX completed." 
+     * as many times as JWAIT was issued.  We need to collect
+     * them all.
+     */
+    while (n) {
+	getReply(0);
+	n--;
     }
     return (true);
 }
