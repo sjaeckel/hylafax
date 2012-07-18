@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 1116 2012-07-19 00:33:45Z faxguy $ */
+/*	$Id: sendfax.c++ 1117 2012-07-19 04:12:08Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -335,7 +335,9 @@ sendFaxApp::run(int argc, char** argv)
             if (r != "DONE") {
 		status = false;
             }
-        }
+        } else if (status) {
+	    retval = 0;
+	}
         hangupServer();
     }
     if (!status) {
