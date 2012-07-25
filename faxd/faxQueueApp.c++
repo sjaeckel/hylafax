@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1118 2012-07-25 23:03:06Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2595,6 +2595,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		Trigger::post(Trigger::SEND_BEGIN, job);
 
 		MySendFaxClient* client = new MySendFaxClient;
+		client->readConfig(FAX_SYSCONF);
 		SendFaxJob& rjob = client->addJob();
 		if (job.getJCI().getDesiredDF() != -1) req.desireddf = job.getJCI().getDesiredDF();
 		rjob.setSendTime("now");

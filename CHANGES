@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1116 2012-07-19 00:33:45Z faxguy $	
+#	$Id: CHANGES 1118 2012-07-25 23:03:06Z faxguy $	
 
 New Changes
 
+* make faxq proxy read hyla.conf (25 Jul 2012)
 * cause sendfax -w to produce meaningful return values and display
   any failure message (18 Jul 2012)
 * create timeout for client commands to non-responsive servers
