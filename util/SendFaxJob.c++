@@ -1,4 +1,4 @@
-/*	$Id: SendFaxJob.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
+/*	$Id: SendFaxJob.c++ 1119 2012-08-28 14:30:25Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -110,6 +110,7 @@ SendFaxJob::~SendFaxJob()
 
 SendFaxJob::SFJ_stringtag SendFaxJob::strings[] = {
 { "tagline",		&SendFaxJob::tagline,		NULL },
+{ "tsi",		&SendFaxJob::tsi,		NULL },
 { "sendtime",		&SendFaxJob::sendTime,		NULL },
 { "killtime",		&SendFaxJob::killTime,		FAX_TIMEOUT },
 { "pagesize",		&SendFaxJob::pageSize,		"default" },
