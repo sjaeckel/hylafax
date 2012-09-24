@@ -1,4 +1,4 @@
-/*	$Id: faxstate.c 327 2006-10-12 23:15:11Z faxguy $ */
+/*	$Id: faxstate.c 1120 2012-09-24 17:19:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -140,7 +140,7 @@ main(int argc, char** argv)
         }
     } else {
         snprintf(fifoname, sizeof(fifoname), "%s.%.*s", FAX_FIFO,
-            sizeof (fifoname) - sizeof (FAX_FIFO), devid);
+            (int) (sizeof (fifoname) - sizeof (FAX_FIFO)), devid);
         fifo = open(fifoname, O_WRONLY|O_NDELAY);
         if (fifo < 0) {
             fatal("%s: open: %s", fifoname, strerror(errno));

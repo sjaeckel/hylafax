@@ -1,4 +1,4 @@
-/*	$Id: RecvQueue.c++ 813 2008-04-05 18:06:33Z faxguy $ */
+/*	$Id: RecvQueue.c++ 1120 2012-09-24 17:19:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -419,7 +419,7 @@ HylaFAXServer::Rprintf(FILE* fd, const char* fmt,
 		if (c == '%')		// %% -> %
 		    putc(c, fd);
 		else
-		    fprintf(fd, "%.*s%c", fp-fspec, fspec, c);
+		    fprintf(fd, "%.*s%c", (int) (fp-fspec), fspec, c);
 		continue;
 	    }
 	    fp[0] = rformat[c-'A'];	// printf format string

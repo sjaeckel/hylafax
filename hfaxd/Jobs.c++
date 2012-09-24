@@ -1,4 +1,4 @@
-/*	$Id: Jobs.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
+/*	$Id: Jobs.c++ 1120 2012-09-24 17:19:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -1911,7 +1911,7 @@ HylaFAXServer::Jprintf(FILE* fd, const char* fmt, const Job& job)
 		if (c == '%')		// %% -> %
 		    putc(c, fd);
 		else
-		    fprintf(fd, "%.*s%c", fp-fspec, fspec, c);
+		    fprintf(fd, "%.*s%c", (int) (fp-fspec), fspec, c);
 		continue;
 	    }
 	    fp[0] = jformat[c-'A'];	// printf format string

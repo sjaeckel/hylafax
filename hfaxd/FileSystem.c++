@@ -1,4 +1,4 @@
-/*	$Id: FileSystem.c++ 952 2009-11-07 00:23:31Z faxguy $ */
+/*	$Id: FileSystem.c++ 1120 2012-09-24 17:19:11Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -589,7 +589,7 @@ HylaFAXServer::Fprintf(FILE* fd, const char* fmt,
 		if (c == '%')		// %% -> %
 		    putc(c, fd);
 		else
-		    fprintf(fd, "%.*s%c", fp-fspec, fspec, c);
+		    fprintf(fd, "%.*s%c", (int) (fp-fspec), fspec, c);
 		continue;
 	    }
 	    fp[0] = fformat[c-'a'];	// printf format string

@@ -1,4 +1,4 @@
-/*	$Id: faxQCleanApp.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: faxQCleanApp.c++ 1120 2012-09-24 17:19:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -346,7 +346,7 @@ faxQCleanApp::expungeCruft(void)
 	if (sb.st_nlink > 1) {			// can't be orphaned yet
 	    if (trace)
 		printf("%s: file has %u links, check for associated tmp file\n",
-		    (const char*) file, sb.st_nlink);
+		    (const char*) file, (unsigned int) sb.st_nlink);
 	    if (findTmpInode(sb.st_ino))
 		continue;
 	}
