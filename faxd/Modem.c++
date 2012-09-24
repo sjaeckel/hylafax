@@ -1,4 +1,4 @@
-/*	$Id: Modem.c++ 878 2008-09-20 19:53:24Z faxguy $ */
+/*	$Id: Modem.c++ 1121 2012-09-25 01:15:05Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -149,60 +149,36 @@ Modem::isInGroup(const fxStr& mgroup)
 Modem*
 Modem::findModem(const Job& job, bool ignorebusy)
 {
-    RE* c = ModemGroup::find(job.device);
+    const fxStr& mdci = job.getJCI().getModem();
+    RE* c = ModemGroup::find(mdci != "" ? mdci : job.device);
     if (c) {
-	const fxStr& mdci = job.getJCI().getModem();
-	RE* cdci = mdci != "" ? ModemGroup::find(mdci) : NULL;
-	int loops = 2;
-
 	/*
-	 * At first try to find modem strictly (suitable to job and destination rules)
-	 * Then try to find modem not strictly (suitable to job rules only)
-	 */
-
-	for (int i = 0 ; i < loops ; i++) {
-	    /*
-	     * Job is assigned to a class of modems; search
-	     * the set of modems in the class according to
-	     * the order specified (if any order is specified).
-	     */
-	    for (ModemIter iter(list); iter.notDone(); iter++) {
-		Modem& modem = iter;
-		if (c->Find(modem.devID) && modem.isCapable(job)) {
-		    if (i == 0) {
-			if (cdci) {			// destination assigned to a class of modems
-			    if (!cdci->Find(modem.devID))
-				continue;
-			} else if (mdci != "") {	// destination assigned to an explicit modem
-			    if (mdci != modem.devID)
-				continue;
-			}
-			loops = 1;			// there is a strictly suitable modem
-		    }
-
-		    if (modem.getState() != Modem::READY) {
-			continue;
-		    }
-
-		    /*
-		     * Move modem to the end of the priority group
-		     */
-
-		    modem.remove();
-
-		    if (!list.isEmpty()) {
-			ModemIter iter(list);
-
-			for ( ; iter.notDone(); iter++) {
-			    if (iter.modem().priority > modem.priority)
-				break;
-			}
-			modem.insert(iter.modem());
-		    } else
-			modem.insert(list);
-
-		    return (&modem);
+	 * Job is assigned to a class of modems; search
+	 * the set of modems in the class according to
+	 * the order specified (if any order is specified).
+	*/
+	for (ModemIter iter(list); iter.notDone(); iter++) {
+	    Modem& modem = iter;
+	    if (c->Find(modem.devID) && modem.isCapable(job)) {
+		if (modem.getState() != Modem::READY) {
+		    continue;
 		}
+		/*
+		 * Move modem to the end of the priority group
+		 */
+		modem.remove();
+
+		if (!list.isEmpty()) {
+		    ModemIter iter(list);
+		    for ( ; iter.notDone(); iter++) {
+			if (iter.modem().priority > modem.priority)
+			    break;
+		    }
+		    modem.insert(iter.modem());
+		} else
+		    modem.insert(list);
+
+		return (&modem);
 	    }
 	}
     } else {
@@ -219,7 +195,7 @@ Modem::findModem(const Job& job, bool ignorebusy)
 	    if (modem.getState() != Modem::READY && modem.getState() != Modem::EXEMPT)
 		if (!(ignorebusy && modem.getState() == Modem::BUSY))
 		    continue;
-	    if (job.device != modem.devID)
+	    if ((mdci != "" ? mdci : job.device) != modem.devID)
 		continue;
 	    return (modem.isCapable(job) ? &modem : (Modem*) NULL);
 	}
