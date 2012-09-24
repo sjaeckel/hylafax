@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1120 2012-09-24 17:19:11Z faxguy $	
+#	$Id: CHANGES 1121 2012-09-25 01:15:05Z faxguy $	
 
 New Changes
 
+* fix buggy JobControl assignment of Modem (24 Sep 2012)
 * clean up some compiler warnings due to type formatting (24 Sep 2012)
 * support TSI specification in config files (28 Aug 2012)
 * make faxq proxy read hyla.conf (25 Jul 2012)
