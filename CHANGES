@@ -1,4 +1,4 @@
-#	$Id: CHANGES 1121 2012-09-25 01:15:05Z faxguy $	
+#	$Id: CHANGES 1122 2012-10-03 22:20:09Z faxguy $	
 
 New Changes
 
@@ -15,7 +15,7 @@ New Changes
 * handle config files that may not end with a newline (28 Jun 2012)
 * handle RING detected after dialing (28 Jun 2012)
 * add wchar_t support (28 Jun 2012)
-* add job timezone feature for tagline formatting (25 Jun 2012)
+* add job timezone feature for tagline formatting (25 Jun, 3 Oct 2012)
 * avoid infinite loop in faxmail handling of 
   application/octet-stream attachments (20 Jun 2012)
 * add Class1RestrictPoorDestinations feature (18 Jun 2012)

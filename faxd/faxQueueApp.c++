@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1118 2012-07-25 23:03:06Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1122 2012-10-03 22:20:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2606,6 +2606,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		if (req.faxname != "") rjob.setFaxName(req.faxname);
 		rjob.setDesiredEC(req.desiredec);
 		if (req.tagline != "") rjob.setTagLineFormat(req.tagline);
+		if (req.timezone != "") rjob.setTimeZone(req.timezone);
 		rjob.setUseXVRes(req.usexvres);
 		client->setHost(job.getJCI().getProxy());
 		rjob.setJobTag(job.jobid);
