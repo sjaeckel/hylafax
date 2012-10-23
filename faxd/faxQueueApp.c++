@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1122 2012-10-03 22:20:09Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1123 2012-10-23 23:48:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2604,7 +2604,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		rjob.setMinSpeed(req.minbr);
 		rjob.setDesiredSpeed(req.desiredbr);
 		if (req.faxname != "") rjob.setFaxName(req.faxname);
-		rjob.setDesiredEC(req.desiredec);
+		//rjob.setDesiredEC(req.desiredec);		// disabled for compatibility with HylaFAX 4.1.x servers
 		if (req.tagline != "") rjob.setTagLineFormat(req.tagline);
 		if (req.timezone != "") rjob.setTimeZone(req.timezone);
 		rjob.setUseXVRes(req.usexvres);
