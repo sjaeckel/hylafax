@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1123 2012-10-23 23:48:22Z faxguy $	
+#	$Id: CHANGES 1125 2012-12-04 04:37:14Z faxguy $	
 
 New Changes
 
+* add man pages for various undocumented executables (3 Dec 2012)
 * proxy compatibility with 4.1.x servers (23 Oct 2012)
 
 (5.5.2)

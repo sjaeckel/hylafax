@@ -1,4 +1,4 @@
-#	$Id: distrules 1085 2012-02-14 05:55:32Z faxguy $
+#	$Id: distrules 1125 2012-12-04 04:37:14Z faxguy $
 #
 # HylaFAX Facsimile Software
 #
@@ -646,14 +646,17 @@ MANPAGES=\
 	man/faxaddmodem.1m			\
 	man/faxadduser.1m			\
 	man/faxsetup.1m				\
+	man/faxsetup.linux.1m			\
 	man/faxalter.1				\
 	man/faxanswer.1m			\
 	man/faxconfig.1m			\
 	man/faxcover.1				\
+	man/faxfetch.1m				\
 	man/faxqclean.1m			\
 	man/faxcron.1m				\
 	man/faxdeluser.1m			\
 	man/faxinfo.1m				\
+	man/faxmsg.1m				\
 	man/faxq.1m				\
 	man/faxgetty.1m				\
 	man/faxsend.1m				\
@@ -668,17 +671,21 @@ MANPAGES=\
 	man/faxlock.1m				\
 	man/hfaxd.1m				\
 	man/hosts.hfaxd.4f			\
+	man/hylafax.1m				\
 	man/hylafax-client.1			\
 	man/hylafax-server.4f			\
 	man/hylafax-info.4f			\
 	man/hylafax-log.4f			\
 	man/jobcontrol.1m			\
+	man/lockname.1m				\
 	man/mkcover.1m				\
 	man/notify.1m				\
+	man/ondelay.1m				\
 	man/pagermap.4f				\
 	man/pagesend.1m				\
 	man/pagesizes.4f			\
 	man/pollrcvd.1m				\
+	man/probemodem.1m			\
 	man/ps2fax.1m				\
 	man/pdf2fax.1m				\
 	man/recvq.4f				\
@@ -696,6 +703,7 @@ MANPAGES=\
 	man/tsi.4f				\
 	man/tsitest.1m				\
 	man/typerules.4f			\
+	man/typetest.1m				\
 	man/xferfaxlog.4f			\
 	man/wedged.1m				\
 	man/xferfaxstats.1m			\
