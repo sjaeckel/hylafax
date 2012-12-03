@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1125 2012-12-04 04:37:14Z faxguy $	
+#	$Id: CHANGES 1126 2012-12-04 04:52:46Z faxguy $	
 
 New Changes
 
+* remove shebangs from dict includes (3 Dec 2012)
 * add man pages for various undocumented executables (3 Dec 2012)
 * proxy compatibility with 4.1.x servers (23 Oct 2012)
 

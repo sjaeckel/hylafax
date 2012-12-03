@@ -1,5 +1,4 @@
-#! /bin/bash
-#    $Id: dict-nl_BE.in 958 2009-12-03 04:56:02Z faxguy $
+#    $Id: dict-nl_BE.in 1126 2012-12-04 04:52:46Z faxguy $
 
 	CHARSET=iso-8859-1;
 	DICTRECEIVEAGENT="HylaFAX Faxserver";

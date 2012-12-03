@@ -1,5 +1,4 @@
-#! @SCRIPT_SH@
-#    $Id: dict-ro.in 764 2008-01-18 19:28:19Z faxguy $
+#    $Id: dict-ro.in 1126 2012-12-04 04:52:46Z faxguy $
 
 	CHARSET=UTF-8;
 	DICTRECEIVEAGENT="The HylaFAX Receive Agent";
