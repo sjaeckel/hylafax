@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1123 2012-10-23 23:48:22Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1127 2012-12-13 23:50:53Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2619,7 +2619,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		rjob.setNoCountCover(req.nocountcover);
 		rjob.setUseColor(req.usecolor);
 		PageSizeInfo* info = PageSizeInfo::getPageSizeBySize(req.pagewidth, req.pagelength);
-		rjob.setPageSize(info->abbrev());
+		if (info) rjob.setPageSize(info->abbrev());
 		if (req.tsi != "") rjob.setTSI(req.tsi);
 		rjob.setMaxRetries(req.maxtries - req.tottries);// don't let the proxy repeat tries/dials already made
 		rjob.setMaxDials(req.maxdials - req.totdials);	// ditto
