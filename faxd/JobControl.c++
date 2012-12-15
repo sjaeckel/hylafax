@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 1088 2012-03-02 20:22:15Z faxguy $ */
+/*	$Id: JobControl.c++ 1128 2012-12-16 01:28:40Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -44,6 +44,8 @@
 #define	DCI_NOTIFY		0x0200
 #define	DCI_USECOLOR		0x0400
 #define	DCI_PROXYLOGMODE	0x0800
+#define	DCI_PROXYTRIES		0x1000
+#define	DCI_PROXYDIALS		0x2000
 
 #define	isDefined(b)		(defined & b)
 #define	setDefined(b)		(defined |= b)
@@ -70,6 +72,8 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     desireddf = other.desireddf;
     notify = other.notify;
     proxylogmode = other.proxylogmode;
+    proxytries = other.proxytries;
+    proxydials = other.proxydials;
 }
 
 JobControlInfo::JobControlInfo (const fxStr& buffer)
@@ -124,6 +128,12 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
     } else if (streq(tag, "proxylogmode")) {
 	setDefined(DCI_PROXYLOGMODE);
 	proxylogmode = strtol(value, 0, 8);
+    } else if (streq(tag, "proxytries")) {
+	setDefined(DCI_PROXYTRIES);
+	proxytries = getNumber(value);
+    } else if (streq(tag, "proxydials")) {
+	setDefined(DCI_PROXYDIALS);
+	proxydials = getNumber(value);
     } else if (streq(tag, "maxconcurrentjobs")) {	// backwards compatibility
 	maxConcurrentCalls = getNumber(value);
 	setDefined(DCI_MAXCONCURRENTCALLS);
@@ -247,6 +257,24 @@ JobControlInfo::getProxyLogMode() const
 	return proxylogmode;
     else
 	return(0600);
+}
+
+int
+JobControlInfo::getProxyTries() const
+{
+    if (isDefined(DCI_PROXYTRIES))
+	return proxytries;
+    else
+	return(-1);
+}
+
+int
+JobControlInfo::getProxyDials() const
+{
+    if (isDefined(DCI_PROXYDIALS))
+	return proxydials;
+    else
+	return(-1);
 }
 
 time_t
