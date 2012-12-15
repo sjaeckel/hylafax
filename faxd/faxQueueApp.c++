@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1127 2012-12-13 23:50:53Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1128 2012-12-16 01:28:40Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2621,8 +2621,14 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		PageSizeInfo* info = PageSizeInfo::getPageSizeBySize(req.pagewidth, req.pagelength);
 		if (info) rjob.setPageSize(info->abbrev());
 		if (req.tsi != "") rjob.setTSI(req.tsi);
-		rjob.setMaxRetries(req.maxtries - req.tottries);// don't let the proxy repeat tries/dials already made
-		rjob.setMaxDials(req.maxdials - req.totdials);	// ditto
+		if (job.getJCI().getProxyTries() > 0)
+		    rjob.setMaxRetries(job.getJCI().getProxyTries());
+		else
+		    rjob.setMaxRetries(req.maxtries - req.tottries);	// don't let the proxy repeat tries already made
+		if (job.getJCI().getProxyDials() > 0)
+		    rjob.setMaxDials(job.getJCI().getProxyDials());
+		else
+		    rjob.setMaxDials(req.maxdials - req.totdials);	// don't let the proxy repeat dials already made
 		if (req.faxnumber != "") rjob.setFaxNumber(req.faxnumber);
 		rjob.setDialString(req.number);
 		for (u_int i = 0; i < req.items.length(); i++) {
@@ -2660,9 +2666,6 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			 * When jobWait is done, then we query the proxy
 			 * for the various job data and update the request here.
 			 */
-			req.ndials++;
-			req.totdials++;
-			req.maxdials = 1;	// the proxy did all delivery attempts
 			req.skippages = 0;
 			client->command((const char*) fxStr::format("JOB %s", (const char*) rjobid));
 			client->jobParm("conntime");
@@ -2685,6 +2688,11 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			u_int tries = atoi((const char*) r);
 			req.ntries += tries;
 			req.tottries += tries;
+			client->jobParm("ndials");
+			r = client->getLastResponse(); r.remove(0, 4);
+			u_int dials = atoi((const char*) r);
+			req.ndials += dials;
+			req.totdials += dials;
 			client->jobParm("status");
 			r = client->getLastResponse(); r.remove(0, 4);
 			req.notice = r;
