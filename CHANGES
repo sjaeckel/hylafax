@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1128 2012-12-16 01:28:40Z faxguy $	
+#	$Id: CHANGES 1130 2012-12-18 03:21:29Z faxguy $	
 
 New Changes
 
+* fix problems with launching jobcontrol and faxsend on some 
+  C library versions (17 Dec 2012)
 * add JobControl ProxyTries and ProxyDials features (15 Dec 2012)
 * fix proxy bug in undefined page size segfault (13 Dec 2012)
 * remove shebangs from dict includes (3 Dec 2012)

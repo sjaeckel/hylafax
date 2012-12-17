@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1128 2012-12-16 01:28:40Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1130 2012-12-18 03:21:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1290,6 +1290,15 @@ faxQueueApp::runConverter(Job& job, const char* app, char* const* argv, fxStr& e
 	case 0:				// child, exec command
 	    if (pfd[1] != STDOUT_FILENO)
 		dup2(pfd[1], STDOUT_FILENO);
+	    /*
+	     * We're redirecting application stdout and stderr back through
+	     * the pipe to the faxq parent, but we don't want faxq stdin
+	     * to be available to the application, so we close all except
+	     * for stdout, redirect stderr to stdout, and redirect stdin
+	     * to devnull.  We could, perhaps, just close stdin outright,
+	     * but some applications and libc versions require stdin to not
+	     * be closed.
+	     */
 	    closeAllBut(STDOUT_FILENO);
 	    dup2(STDOUT_FILENO, STDERR_FILENO);
 	    fd = Sys::open(_PATH_DEVNULL, O_RDWR);
@@ -1514,10 +1523,24 @@ faxQueueApp::sendJobStart(Job& job, FaxRequest* req)
     
     const fxStr& cmd = pickCmd(*req);
     fxStr dargs(job.getJCI().getArgs());
+    int fd;
     pid_t pid = fork();
     switch (pid) {
     case 0:				// child, startup command
+	/*
+	 * faxq doesn't pay attention to faxsend through stdout/stderr,
+	 * and we don't want faxq stdin to be available to the application,
+	 * either.  So we close all and redirect stdin to devnull.  We 
+	 * could, perhaps, just close stdin outright, but some applications
+	 * and libc versions require stdin to not be closed.
+	 */
 	closeAllBut(-1);		// NB: close 'em all
+	fd = Sys::open(_PATH_DEVNULL, O_RDWR);
+	if (fd != STDIN_FILENO)
+	{
+	    dup2(fd, STDIN_FILENO);
+	    Sys::close(fd);
+	}
 	doexec(cmd, dargs, job.modem->getDeviceID(), files, nfiles);
 	sleep(10);			// XXX give parent time to catch signal
 	_exit(127);
@@ -1784,7 +1807,7 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 	app[1] = job.jobid;
 	app[2] = NULL;
 	traceJob(job, "CONTROL");
-	int pfd[2];
+	int pfd[2], fd;
 	if (pipe(pfd) >= 0) {
 	    pid_t pid = fork();
 	    switch (pid) {
@@ -1798,7 +1821,22 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 	    case 0:				// child, exec command
 		if (pfd[1] != STDOUT_FILENO)
 		    dup2(pfd[1], STDOUT_FILENO);
+		/*
+		 * We're redirecting application stdout and back through the
+		 * pipe to the faxq parent, but application stderr is not 
+		 * meaningful to faxq, and we don't want faxq stdin to be 
+		 * available to the application, either.  So we close all except
+		 * for stdout, and redirect stdin to devnull.  We could, 
+		 * perhaps, just close stdin outright, but some applications and
+		 * libc versions require stdin to not be closed.
+		 */
 		closeAllBut(STDOUT_FILENO);
+		fd = Sys::open(_PATH_DEVNULL, O_RDWR);
+		if (fd != STDIN_FILENO)
+		{
+		    dup2(fd, STDIN_FILENO);
+		    Sys::close(fd);
+		}
 		traceQueue(job, "JOB CONTROL: %s %s", app[0], app[1]);
 		Sys::execv(app[0], (char * const*)app);
 		sleep(1);			// XXX give parent time to catch signal
