@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1130 2012-12-18 03:21:29Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1131 2012-12-20 18:52:55Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1822,19 +1822,25 @@ faxQueueApp::setReadyToRun(Job& job, bool wait)
 		if (pfd[1] != STDOUT_FILENO)
 		    dup2(pfd[1], STDOUT_FILENO);
 		/*
-		 * We're redirecting application stdout and back through the
-		 * pipe to the faxq parent, but application stderr is not 
-		 * meaningful to faxq, and we don't want faxq stdin to be 
-		 * available to the application, either.  So we close all except
-		 * for stdout, and redirect stdin to devnull.  We could, 
-		 * perhaps, just close stdin outright, but some applications and
-		 * libc versions require stdin to not be closed.
+		 * We're redirecting application stdout back through the pipe
+		 * to the faxq parent, but application stderr is not meaningful
+		 * to faxq, and we don't want faxq stdin to be available to the 
+		 * application, either.  However, some libc versions require 
+		 * stdin to not be close, and some applications depend on stdin
+		 * and stderr to be valid.  So we close all except for stdout, 
+		 * and then redirect stdin and stderr to devnull.
 		 */
 		closeAllBut(STDOUT_FILENO);
 		fd = Sys::open(_PATH_DEVNULL, O_RDWR);
 		if (fd != STDIN_FILENO)
 		{
 		    dup2(fd, STDIN_FILENO);
+		    Sys::close(fd);
+		}
+		fd = Sys::open(_PATH_DEVNULL, O_RDWR);
+		if (fd != STDERR_FILENO)
+		{
+		    dup2(fd, STDERR_FILENO);
 		    Sys::close(fd);
 		}
 		traceQueue(job, "JOB CONTROL: %s %s", app[0], app[1]);
