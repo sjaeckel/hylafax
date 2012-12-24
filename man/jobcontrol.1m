@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 1128 2012-12-16 01:28:40Z faxguy $
+.\"	$Id: jobcontrol.1m 1132 2012-12-24 23:34:24Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -84,6 +84,8 @@ Priority	integer	\-	priority to use for job
 Proxy	string	\-	proxy server to which the job should be delivered
 ProxyUser	string	\-	authentication username for the proxy server
 ProxyPass	string	\-	authentication password for the proxy server
+ProxyMailbox	string	\-	E-Mail address for job notification
+ProxyNotification	string	\s-1none\s+1	notification request
 ProxyLogMode	octal	\s-10600\s+1	protection to use for logs retrieved from proxy server
 ProxyTries	integer	\s-1\-1\s+1	number of tries proxy should attempt
 ProxyDials	integer	\s-1\-1\s+1	number of dials proxy should attempt
@@ -146,6 +148,14 @@ or
 will not currently
 propagate to the proxy and is a matter for future development.  Therefore,
 such actions should be made on the proxy server directly.
+.PP
+The
+.B ProxyMailbox
+and
+.B ProxyNotification
+identify the e-mail address and the notification mechanism for the proxied
+job.  (This does not change the e-mail address or the notification mechanism for
+the originating job.)
 .PP
 The
 .B ProxyLogMode

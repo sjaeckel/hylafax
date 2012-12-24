@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 1128 2012-12-16 01:28:40Z faxguy $ */
+/*	$Id: JobControl.c++ 1132 2012-12-24 23:34:24Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -74,6 +74,8 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     proxylogmode = other.proxylogmode;
     proxytries = other.proxytries;
     proxydials = other.proxydials;
+    proxymailbox = other.proxymailbox;
+    proxynotification = other.proxynotification;
 }
 
 JobControlInfo::JobControlInfo (const fxStr& buffer)
@@ -134,6 +136,10 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
     } else if (streq(tag, "proxydials")) {
 	setDefined(DCI_PROXYDIALS);
 	proxydials = getNumber(value);
+    } else if (streq(tag, "proxymailbox")) {
+	proxymailbox = value;
+    } else if (streq(tag, "proxynotification")) {
+	proxynotification = value;
     } else if (streq(tag, "maxconcurrentjobs")) {	// backwards compatibility
 	maxConcurrentCalls = getNumber(value);
 	setDefined(DCI_MAXCONCURRENTCALLS);
@@ -248,6 +254,18 @@ const fxStr&
 JobControlInfo::getProxyPass() const
 {
     return proxypass;
+}
+
+const fxStr&
+JobControlInfo::getProxyMailbox() const
+{
+    return proxymailbox;
+}
+
+const fxStr&
+JobControlInfo::getProxyNotification() const
+{
+    return proxynotification;
 }
 
 const mode_t
