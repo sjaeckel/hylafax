@@ -1,4 +1,4 @@
-/*	$Id: JobControl.h 1128 2012-12-16 01:28:40Z faxguy $ */
+/*	$Id: JobControl.h 1132 2012-12-24 23:34:24Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -53,6 +53,8 @@ private:
     fxStr	proxy;			// if set, proxy-send job there
     fxStr	proxyuser;		// if set, use this as the login username
     fxStr	proxypass;		// if set, use this as the login password
+    fxStr	proxymailbox;		// if set, use this as the identity
+    fxStr	proxynotification;	// if set, use this as the notification
     mode_t	proxylogmode;		// mode for logs retrieved from proxy
     int		proxytries;		// if set, specify the number of tries
     int		proxydials;		// if set, specify the number of dials
@@ -84,6 +86,8 @@ public:
     const fxStr& getProxy() const;
     const fxStr& getProxyUser() const;
     const fxStr& getProxyPass() const;
+    const fxStr& getProxyMailbox() const;
+    const fxStr& getProxyNotification() const;
     const mode_t getProxyLogMode() const;
     int getProxyTries() const;
     int getProxyDials() const;

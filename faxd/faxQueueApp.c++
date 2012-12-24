@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1131 2012-12-20 18:52:55Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1132 2012-12-24 23:34:24Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2657,7 +2657,12 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		rjob.setVResolution(req.resolution);
 		rjob.setDesiredMST(req.desiredst);
 		rjob.setAutoCoverPage(false);
-		rjob.setNotification("none");
+		if (job.getJCI().getProxyMailbox().length())
+		    rjob.setMailbox(job.getJCI().getProxyMailbox());
+		if (job.getJCI().getProxyNotification().length())
+		    rjob.setNotification((const char*) job.getJCI().getProxyNotification());
+		else
+		    rjob.setNotification("none");
 		rjob.setSkippedPages(req.skippedpages);
 		rjob.setSkipPages(req.skippages+req.npages);	// requires that the proxy be capable of skipping entire documents
 		rjob.setNoCountCover(req.nocountcover);
