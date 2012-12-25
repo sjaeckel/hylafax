@@ -1,4 +1,4 @@
-/*	$Id: Class1Recv.c++ 1106 2012-06-18 23:50:58Z faxguy $ */
+/*	$Id: Class1Recv.c++ 1133 2012-12-26 06:51:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -653,10 +653,12 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		    /*
 		     * We don't want the AT+FRM=n command to get buffered,
 		     * so buffering and flow control must be done after CONNECT.
+		     * Flushing now would be a mistake as data may already be
+		     * in the buffer.
 		     */
 		    setInputBuffering(true);
 		    if (flowControl == FLOW_XONXOFF)
-			(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_FLUSH);
+			(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_NOW);
 		    /*
 		     * The message carrier was recognized;
 		     * receive the Phase C data.
@@ -1406,10 +1408,11 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	    }
 	    /*
 	     * Buffering and flow control must be done after AT+FRM=n.
+	     * We do not flush in order avoid losing data already buffered.
 	     */
 	    setInputBuffering(true);
 	    if (flowControl == FLOW_XONXOFF)
-		(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_FLUSH);
+		(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_NOW);
 	    gotoPhaseD = false;
 	    if (!sendERR && (useV34 || syncECMFrame())) {	// no synchronization needed w/V.34-fax
 		time_t start = Sys::now();
