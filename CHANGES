@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1132 2012-12-24 23:34:24Z faxguy $	
+#	$Id: CHANGES 1133 2012-12-26 06:51:02Z faxguy $	
 
 New Changes
 
+* do not flush the buffer after CONNECT following AT+FRM=n (25 Dec 2012)
 * add JobControl ProxyMailbox and ProxyNotification features (24 Dec 2012)
 * fix problems with launching jobcontrol and faxsend on some 
   C library versions (17, 20 Dec 2012)
