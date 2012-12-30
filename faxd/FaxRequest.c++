@@ -1,4 +1,4 @@
-/*	$Id: FaxRequest.c++ 1108 2012-06-26 03:56:56Z faxguy $ */
+/*	$Id: FaxRequest.c++ 1134 2012-12-31 06:16:13Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -412,7 +412,7 @@ FaxRequest::readQFile(bool& rejectJob)
 	    break;
 	case H_PAGE:
 	    if (cmd[0] == '!')
-		addItem(send_page_saved, tag, rejectJob);
+		addItem(send_page_saved, tag);	// intentionally not w/rejectJob
 	    else
 		addItem(send_page, tag);
 	    break;
