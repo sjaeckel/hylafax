@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1134 2012-12-31 06:16:13Z faxguy $	
+#	$Id: CHANGES 1135 2013-01-02 00:41:19Z faxguy $	
 
 New Changes
 
+* fix coversheet page count for some PDF types (1 Jan 2013)
 * fix page job submission broken in 5.5.1 (30 Dec 2012)
 * do not flush the buffer after CONNECT following AT+FRM=n (25 Dec 2012)
 * add JobControl ProxyMailbox and ProxyNotification features (24 Dec 2012)
