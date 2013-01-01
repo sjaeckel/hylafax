@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++ 1101 2012-06-11 21:12:00Z faxguy $ */
+/*	$Id: SendFaxClient.c++ 1135 2013-01-02 00:41:19Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -798,6 +798,7 @@ SendFaxClient::estimatePostScriptPages(const char* filename)
 		    totalPages += npagecom;
 	    } else if (memcmp(line, "%PDF", 4) == 0) {
 	        int npages = 0;         // # pages according to "/Type /Page"
+		int nxobjs = 0;		// # pages according to "/Type /XObject"
 	        const int slen = 12;    // len of "/Type /Page" + 1 char to check for 's'
 	        char* endbuf = line+sizeof(line);
 	  
@@ -811,6 +812,9 @@ SendFaxClient::estimatePostScriptPages(const char* filename)
 	                if ((memcmp(cp, "/Type /Page", slen-1) == 0 && *(cp+slen-1) != 's') || 
 			    (memcmp(cp, "/Type/Page",  slen-2) == 0 && *(cp+slen-2) != 's'))
 	                    npages++;
+	                if ((memcmp(cp, "/Type /XObject", 14) == 0 && (*(cp+14) == '/' || *(cp+14) == ' ')) || 
+			    (memcmp(cp, "/Type/XObject",  13) == 0 && (*(cp+13) == '/' || *(cp+13) == ' ')))
+	                    nxobjs++;
 			cp++;
 	            }
 	            if ((cp = (char *) memchr((const char*) endbuf-slen, '/', slen))) {
@@ -821,6 +825,8 @@ SendFaxClient::estimatePostScriptPages(const char* filename)
 	        }
 	        if (npages > 0)
 	            totalPages += npages;
+		else if (nxobjs > 0)
+	            totalPages += nxobjs;
 	    }
 	}
 	fclose(fd);
