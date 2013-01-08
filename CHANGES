@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1135 2013-01-02 00:41:19Z faxguy $	
+#	$Id: CHANGES 1136 2013-01-09 06:30:44Z faxguy $	
 
 New Changes
 
+* make sure to unblock blocked jobs if the blocking job is
+  sent to a proxy (8 Jan 2013)
 * fix coversheet page count for some PDF types (1 Jan 2013)
 * fix page job submission broken in 5.5.1 (30 Dec 2012)
 * do not flush the buffer after CONNECT following AT+FRM=n (25 Dec 2012)

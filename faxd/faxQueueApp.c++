@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1132 2012-12-24 23:34:24Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1136 2013-01-09 06:30:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1590,7 +1590,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
     if (status&0xff)
 	logError("Send program terminated abnormally with exit status %#x", status);
 
-    if (job.getJCI().getProxy() != "") numProxyJobs--;
+    if (status&0x8000) numProxyJobs--;		// 0x8000 indicates proxied job
 
     Job* cjob;
     Job* njob;
@@ -2798,7 +2798,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		if (!status) logError("PROXY SEND: %s", (const char*) emsg);
 		updateRequest(req, job);
 		queueAccounting(job, req, "PROXY");
-		_exit(req.status);
+		_exit(req.status|0x80);	// 0x80 indicates proxied job
 
 		/*NOTREACHED*/
 	    }
@@ -2992,6 +2992,7 @@ faxQueueApp::runScheduler()
 			/*
 			 * Send this job through a proxy HylaFAX server.
 			 */
+			unblockDestJobs(di);			// this job may be blocking others
 			if (job.isOnList()) job.remove();	// remove from run queue
 			job.commid = "";
 			job.start = now;
