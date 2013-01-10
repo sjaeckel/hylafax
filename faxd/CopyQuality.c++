@@ -1,4 +1,4 @@
-/* $Id: CopyQuality.c++ 1082 2012-01-31 00:58:35Z faxguy $ */ /*
+/* $Id: CopyQuality.c++ 1137 2013-01-10 19:24:11Z faxguy $ */ /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
  * HylaFAX is a trademark of Silicon Graphics
@@ -132,6 +132,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 
     initializeDecoder(params);
     u_int rowpixels = params.pageWidth();	// NB: assume rowpixels <= 4864
+    time_t start = Sys::now();
     /*
      * Data destined for the TIFF file is buffered in buf.
      * recvRow points to the next place in buf where data
@@ -213,7 +214,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 		 */
 		decodedPixels = rowpixels;	// assume no error
 		bool decodeOK = decodeRow(recvRow, rowpixels);
-		if (seenRTC())			// seen RTC, flush everything
+		if (seenRTC() || Sys::now() - start > 3600)	// seen RTC or timeout, flush everything
 		    break;
 		if (decodeOK) {
 		    if (lastRowBad) {		// reset run statistics
@@ -434,7 +435,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 	    for (;;) {
 		raw.reset();
 		(void) decodeRow(NULL, rowpixels);
-		if (seenRTC())
+		if (seenRTC() || Sys::now() - start > 3600)
 		    continue;
 		u_int n = raw.getLength();
 		if (recvRow + n >= &buf[RCVBUFSIZ]) {

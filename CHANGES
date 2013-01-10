@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1136 2013-01-09 06:30:44Z faxguy $	
+#	$Id: CHANGES 1137 2013-01-10 19:24:11Z faxguy $	
 
 New Changes
 
+* implement a 1-hour timeout on non-ECM pages (10 Jan 2013)
 * make sure to unblock blocked jobs if the blocking job is
   sent to a proxy (8 Jan 2013)
 * fix coversheet page count for some PDF types (1 Jan 2013)
