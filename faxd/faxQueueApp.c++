@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1136 2013-01-09 06:30:44Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1138 2013-01-10 19:26:09Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1590,7 +1590,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
     if (status&0xff)
 	logError("Send program terminated abnormally with exit status %#x", status);
 
-    if (status&0x8000) numProxyJobs--;		// 0x8000 indicates proxied job
+    if (numProxyJobs && status&0x8000) numProxyJobs--;	// 0x8000 indicates proxied job
 
     Job* cjob;
     Job* njob;
