@@ -1,4 +1,4 @@
-/*	$Id: Class1Send.c++ 1114 2012-07-02 18:27:37Z faxguy $ */
+/*	$Id: Class1Send.c++ 1139 2013-01-30 15:52:29Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -913,6 +913,7 @@ Class1Modem::sendTraining(Class2Params& params, int tries, fxStr& emsg)
 		 * silence on the line, and  we do that with Class1SwitchingCmd.
 		 */
 		if (useV34 || !switchingPause(emsg)) {
+		    emsg = "RSPREC error/got DCN (receiver abort) {E103}";
 		    return (false);
 		}
 	    }
