@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1139 2013-01-30 15:52:29Z faxguy $	
+#	$Id: CHANGES 1140 2013-01-31 07:54:07Z faxguy $	
 
 New Changes
 
+* clear-up some linkage for Linux DSO (30 Jan 2013)
 * add error message in case of EOT received for CFR (30 Jan 2013)
 * implement a 1-hour timeout on non-ECM pages (10 Jan 2013)
 * make sure to unblock blocked jobs if the blocking job is

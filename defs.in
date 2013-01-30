@@ -1,4 +1,4 @@
-# $Id: defs.in 957 2009-11-22 01:03:21Z faxguy $
+# $Id: defs.in 1140 2013-01-31 07:54:07Z faxguy $
 #
 # @WARNING@
 #
@@ -189,6 +189,8 @@ FAXD		= @FAXD@
 LIBFAXSERVER	= @LIBFAXSERVER@
 LIBUTIL		= @LIBUTIL@
 LIBPORT		= @LIBPORT@
+LIBJBIG		= @LIBJBIG@
+LIBLCMS		= @LIBLCMS@
 
 #
 # Definitions used by common rules.
