@@ -1,4 +1,4 @@
-/*	$Id: faxQCleanApp.c++ 1120 2012-09-24 17:19:11Z faxguy $ */
+/*	$Id: faxQCleanApp.c++ 1141 2013-02-02 00:09:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -339,7 +339,7 @@ faxQCleanApp::expungeCruft(void)
 	 * files will have multiple hard links to them, and we don't want 
 	 * to remove those links as the job may not even have an associated
 	 * sendq file yet.  So if the file has multiple links then we check
-	 * do see if the original is in the tmp directory, and if not, then
+	 * to see if the original is in the tmp directory, and if not, then
 	 * we ignore the fact that there are multiple hard links - as they
 	 * get used in job grouping.
 	 */

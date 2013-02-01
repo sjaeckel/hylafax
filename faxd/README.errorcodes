@@ -208,6 +208,7 @@ E343      : Send program terminated abnormally; unable to exec %s
 E344      : Job interrupted by user
 E345      : Job aborted by request
 E346      : Delayed by limit on proxy connections
+E347      : REJECT: qfile contains one or more errors
 
 E400-E499 : job/modem incompatibility
 E400      : Modem does not support negotiated signalling rate
