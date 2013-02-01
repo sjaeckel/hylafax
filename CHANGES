@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1141 2013-02-02 00:09:02Z faxguy $	
+#	$Id: CHANGES 1142 2013-02-02 00:30:11Z faxguy $	
 
 New Changes
 
+* don't have faxsend rename delivered docq files (1 Feb 2013)
 * ensure that corrupt job q-files are rejected (1 Feb 2013)
 * clear-up some linkage for Linux DSO (30 Jan 2013)
 * add error message in case of EOT received for CFR (30 Jan 2013)

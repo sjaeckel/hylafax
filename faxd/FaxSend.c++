@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 1110 2012-06-29 04:44:50Z faxguy $ */
+/*	$Id: FaxSend.c++ 1142 2013-02-02 00:30:11Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1175,8 +1175,6 @@ FaxServer::notifyDocumentSent(FaxRequest& req, u_int fi)
     // we must ensure that the previous writeQFiles have completed
     if (req.writeQFilePid > 0) (void) Sys::waitpid(req.writeQFilePid);
 
-    if (freq.op == FaxRequest::send_fax)
-	req.renameSaved(fi);
     req.items.remove(fi);
     req.writeQFile();
 }
