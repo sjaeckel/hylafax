@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1140 2013-01-31 07:54:07Z faxguy $	
+#	$Id: CHANGES 1141 2013-02-02 00:09:02Z faxguy $	
 
 New Changes
 
+* ensure that corrupt job q-files are rejected (1 Feb 2013)
 * clear-up some linkage for Linux DSO (30 Jan 2013)
 * add error message in case of EOT received for CFR (30 Jan 2013)
 * implement a 1-hour timeout on non-ECM pages (10 Jan 2013)

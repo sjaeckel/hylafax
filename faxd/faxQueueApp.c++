@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1138 2013-01-10 19:26:09Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1141 2013-02-02 00:09:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -3267,7 +3267,12 @@ faxQueueApp::readRequest(Job& job)
 	if (flock(fd, LOCK_EX) >= 0) {
 	    FaxRequest* req = new FaxRequest(job.file, fd);
 	    bool reject;
-	    if (req->readQFile(reject) && !reject) {
+	    if (req->readQFile(reject)) {
+		if (reject) {
+		    rejectJob(job, *req, fxStr::format("REJECT: qfile contains one or more errors {E347}"));
+		    deleteRequest(job, req, Job::rejected, true);
+		    return (NULL);
+		}
 		if (req->external == "")
 		    req->external = job.dest;
 		return (req);
