@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1142 2013-02-02 00:30:11Z faxguy $	
+#	$Id: CHANGES 1143 2013-02-13 01:20:22Z faxguy $	
 
 New Changes
 
+* add -s "archive-script" feature to faxqclean (12 Feb 2013)
+* add FaxArchive customization to default archive script (12 Feb 2013)
 * don't have faxsend rename delivered docq files (1 Feb 2013)
 * ensure that corrupt job q-files are rejected (1 Feb 2013)
 * clear-up some linkage for Linux DSO (30 Jan 2013)

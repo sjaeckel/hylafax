@@ -1,4 +1,4 @@
-/*	$Id: faxQCleanApp.c++ 1141 2013-02-02 00:09:02Z faxguy $ */
+/*	$Id: faxQCleanApp.c++ 1143 2013-02-13 01:20:22Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -52,6 +52,7 @@ private:
     time_t	minDocAge;		// threshold for purging unref'd docs
 
     fxStr	qFilePrefix;
+    fxStr	archiveScript;
     RefDict	docrefs;
 
     static const fxStr archDir;
@@ -76,6 +77,7 @@ public:
     void setForceArchiving(bool);
     void setVerbose(bool);
     void setTracing(bool);
+    void setArchiveScript(const char*);
     void setNoWork(bool);
 };
 
@@ -95,6 +97,7 @@ faxQCleanApp::faxQCleanApp()
     trace = false;		// trace work
 
     qFilePrefix = FAX_SENDDIR "/q";
+    archiveScript = "bin/archive";
 }
 
 faxQCleanApp::~faxQCleanApp() {}
@@ -108,6 +111,8 @@ void faxQCleanApp::setForceArchiving(bool b)    { forceArchiving = b; }
 void faxQCleanApp::setVerbose(bool b)		{ verbose = b; }
 void faxQCleanApp::setTracing(bool b)		{ trace = b; }
 void faxQCleanApp::setNoWork(bool b)		{ nowork = b; }
+void faxQCleanApp::setArchiveScript(const char* s)
+    { archiveScript = s; }
 
 void
 faxQCleanApp::run(void)
@@ -249,7 +254,7 @@ void
 faxQCleanApp::archiveJob(const FaxRequest& req)
 {
     // hand the archiving task off to the archiving command
-    fxStr cmd("bin/archive"
+    fxStr cmd(archiveScript
 	| quote |             quoted(req.jobid)	| enquote
     );
     runCmd(cmd, true);
@@ -470,7 +475,7 @@ static void
 usage(const char* appName)
 {
     fprintf(stderr,
-	"usage: %s [-a] [-j time] [-d time] [-q queue-directory]\n",
+	"usage: %s [-a] [-j time] [-d time] [-q queue-directory] [-s script]\n",
 	appName);
 }
 
@@ -485,7 +490,7 @@ main(int argc, char** argv)
 
     faxApp::setupPermissions();
 
-    faxApp::setOpts("j:d:q:aAntv");
+    faxApp::setOpts("j:d:q:s:aAntv");
 
     faxQCleanApp app;
     fxStr queueDir(FAX_SPOOLDIR);
@@ -497,6 +502,7 @@ main(int argc, char** argv)
 	case 'd': app.setDocAge(optarg); break;
 	case 'n': app.setNoWork(true); break;
 	case 'q': queueDir = iter.optArg(); break;
+	case 's': app.setArchiveScript(iter.optArg()); break;
 	case 't': app.setTracing(true); break;
 	case 'v': app.setVerbose(true); break;
 	case '?': usage(appName);

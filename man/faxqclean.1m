@@ -1,4 +1,4 @@
-.\"	$Id: faxqclean.1m 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: faxqclean.1m 1143 2013-02-13 01:20:22Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -107,6 +107,14 @@ The specified directory is treated as the spooling area.
 The default spooling area,
 .IR ${SPOOL} ,
 is defined at the time the software is built.
+.TP 10
+.BI \-s " script"
+Specifies a custom script to be used for archiving.  This
+is given relative to the spooling area, 
+.IR ${SPOOL} .
+The default script is
+.I bin/archive
+found in the spooling area.
 .TP 10
 .B \-t
 Trace in great detail exactly what
