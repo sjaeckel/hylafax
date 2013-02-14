@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1143 2013-02-13 01:20:22Z faxguy $	
+#	$Id: CHANGES 1144 2013-02-15 01:54:44Z faxguy $	
 
 New Changes
 
+* catch proxy server lies about dials and tries (14 Feb 2013)
 * add -s "archive-script" feature to faxqclean (12 Feb 2013)
 * add FaxArchive customization to default archive script (12 Feb 2013)
 * don't have faxsend rename delivered docq files (1 Feb 2013)

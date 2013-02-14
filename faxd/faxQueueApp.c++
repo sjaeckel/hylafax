@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1141 2013-02-02 00:09:02Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1144 2013-02-15 01:54:44Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2670,14 +2670,18 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		PageSizeInfo* info = PageSizeInfo::getPageSizeBySize(req.pagewidth, req.pagelength);
 		if (info) rjob.setPageSize(info->abbrev());
 		if (req.tsi != "") rjob.setTSI(req.tsi);
+		int maxTries = 0;
 		if (job.getJCI().getProxyTries() > 0)
-		    rjob.setMaxRetries(job.getJCI().getProxyTries());
+		    maxTries = job.getJCI().getProxyTries();
 		else
-		    rjob.setMaxRetries(req.maxtries - req.tottries);	// don't let the proxy repeat tries already made
+		    maxTries = req.maxtries - req.tottries;	// don't let the proxy repeat tries already made
+		rjob.setMaxRetries(maxTries);
+		int maxDials = 0;
 		if (job.getJCI().getProxyDials() > 0)
-		    rjob.setMaxDials(job.getJCI().getProxyDials());
+		    maxDials = job.getJCI().getProxyDials();
 		else
-		    rjob.setMaxDials(req.maxdials - req.totdials);	// don't let the proxy repeat dials already made
+		    maxDials = req.maxdials - req.totdials;	// don't let the proxy repeat dials already made
+		rjob.setMaxDials(maxDials);
 		if (req.faxnumber != "") rjob.setFaxNumber(req.faxnumber);
 		rjob.setDialString(req.number);
 		for (u_int i = 0; i < req.items.length(); i++) {
@@ -2732,19 +2736,21 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			client->jobParm("commid");
 			r = client->getLastResponse(); r.remove(0, 4);
 			req.commid = r;
+			client->jobParm("status");
+			r = client->getLastResponse(); r.remove(0, 4);
+			req.notice = r;
 			client->jobParm("ntries");
 			r = client->getLastResponse(); r.remove(0, 4);
 			u_int tries = atoi((const char*) r);
+			if (tries < maxTries && strstr((const char*) req.notice, "too many attempts to send")) tries = maxTries;	// caught in a lie
 			req.ntries += tries;
 			req.tottries += tries;
 			client->jobParm("ndials");
 			r = client->getLastResponse(); r.remove(0, 4);
 			u_int dials = atoi((const char*) r);
+			if (dials < maxDials && strstr((const char*) req.notice, "too many attempts to dial")) dials = maxDials;	// caught in a lie
 			req.ndials += dials;
 			req.totdials += dials;
-			client->jobParm("status");
-			r = client->getLastResponse(); r.remove(0, 4);
-			req.notice = r;
 			if (req.notice.length()) {
 			    client->jobParm("errorcode");
 			    r = client->getLastResponse(); r.remove(0, 4);
