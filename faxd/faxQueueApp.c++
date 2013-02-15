@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1144 2013-02-15 01:54:44Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1145 2013-02-15 16:34:52Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2742,13 +2742,14 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			client->jobParm("ntries");
 			r = client->getLastResponse(); r.remove(0, 4);
 			u_int tries = atoi((const char*) r);
-			if (tries < maxTries && strstr((const char*) req.notice, "too many attempts to send")) tries = maxTries;	// caught in a lie
+			if (tries < maxTries && strstr((const char*) req.notice, "oo many attempts to send")) tries = maxTries;	// caught in a lie
+			if (tries < maxTries && strstr((const char*) req.notice, "oo many attempts to transmit")) tries = maxTries;	// caught in a lie
 			req.ntries += tries;
 			req.tottries += tries;
 			client->jobParm("ndials");
 			r = client->getLastResponse(); r.remove(0, 4);
 			u_int dials = atoi((const char*) r);
-			if (dials < maxDials && strstr((const char*) req.notice, "too many attempts to dial")) dials = maxDials;	// caught in a lie
+			if (dials < maxDials && strstr((const char*) req.notice, "oo many attempts to dial")) dials = maxDials;	// caught in a lie
 			req.ndials += dials;
 			req.totdials += dials;
 			if (req.notice.length()) {
