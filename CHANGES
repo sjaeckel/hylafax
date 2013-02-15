@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1144 2013-02-15 01:54:44Z faxguy $	
+#	$Id: CHANGES 1146 2013-02-15 22:29:39Z faxguy $	
 
 New Changes
 
+* make FaxAccounting not block the process (15 Feb 2013)
 * catch proxy server lies about dials and tries (14 Feb 2013)
 * add -s "archive-script" feature to faxqclean (12 Feb 2013)
 * add FaxArchive customization to default archive script (12 Feb 2013)
