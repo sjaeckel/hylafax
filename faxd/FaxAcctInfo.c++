@@ -1,4 +1,4 @@
-/*	$Id: FaxAcctInfo.c++ 823 2008-04-26 22:34:29Z faxguy $ */
+/*	$Id: FaxAcctInfo.c++ 1146 2013-02-15 22:29:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -127,13 +127,22 @@ FaxAcctInfo::record(const char* cmd)
     pid_t pid = fork();		// signal handling in some apps seems to require a fork here
     switch (pid) {
 	case 0:
+	{
+	    int fd = Sys::open(_PATH_DEVNULL, O_RDWR);
+	    dup2(fd, STDIN_FILENO);
+	    dup2(fd, STDOUT_FILENO);
+	    dup2(fd, STDERR_FILENO);
+	    for (int f = Sys::getOpenMax()-1; f >= 0; f--)
+		if (f != STDIN_FILENO && f != STDOUT_FILENO && f != STDERR_FILENO) Sys::close(f);
+	    setsid();
 	    Sys::execv("etc/FaxAccounting", (char* const*) argv);
 	    sleep(1);		// XXX give parent time
 	    _exit(127);
+	}
 	case -1:
 	    break;
 	default:
-	    Sys::waitpid(pid);
+	    // The child process disassociates itself, so we don't need to: Sys::waitpid(pid);
 	    break;
     }
     return (ok);
