@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1106 2012-06-18 23:50:58Z faxguy $
+.\"	$Id: hylafax-config.4f 1147 2013-02-19 17:55:54Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2012-06-18 16:50:58 -0700 (Mon, 18 Jun 2012) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2013-02-19 09:55:54 -0800 (Tue, 19 Feb 2013) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -1215,7 +1215,12 @@ using the same fax number per destination then
 is probably best left as the default of 1 and exceptions should 
 be accommodated by the
 .B JobControl 
-mechanism.
+mechanism.  However, for high-throughput applications the special value of ``0''
+may be used; this configuration instructs the server to permit limitless concurrent
+calls to the same destination provided that all existing calls to that destination
+have connected.  In this configuration if a busy signal is encountered for a 
+concurrent call then the various ``dials'' counters are not incremented, and further
+concurrent calls are temporarily stalled.
 .TP
 .B MaxConcurrentPreps¹
 The maximum number of jobs preparations that may be run simultaneously.

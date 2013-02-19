@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.h 1114 2012-07-02 18:27:37Z faxguy $ */
+/*	$Id: ModemServer.h 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -64,6 +64,7 @@ private:
     FILE*	statusFile;		// server status file
     bool	deduceComplain;		// if true, complain when can't deduce
     bool	changePriority;		// change process priority by state
+    bool	noFailBusy;		// don't increment dials counters if busy
     bool	delayConfig;		// suppress effects while reading config
     fxStr	dialRulesFile;		// dial string rules filename
     fxStr	commid;			// communication ID
@@ -146,6 +147,7 @@ protected:
     bool	didBlockEnd();
     void	resetBlock();
     bool	isModemInput() const;
+    bool	isBusyNoFail() const;
     void	flushModemInput();
     bool	putModem(const void* data, int n, long ms = 0);
     bool	putModem1(const void* data, int n, long ms = 0);
@@ -232,5 +234,7 @@ inline const fxStr& ModemServer::getModemNumber() const
 inline const fxStr& ModemServer::getCommID() const	{ return commid; }
 inline bool ModemServer::isModemInput() const
     { return rcvNext < rcvCC; }
+inline bool ModemServer::isBusyNoFail() const
+    { return noFailBusy; }
 
 #endif /* _ModemServer_ */

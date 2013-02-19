@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 1076 2012-01-02 22:39:14Z faxguy $ */
+/*	$Id: faxSendApp.c++ 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -516,7 +516,7 @@ main(int argc, char** argv)
     u_int l = appName.length();
     appName = appName.tokenR(l, '/');
 
-    faxApp::setOpts("c:m:lpx");			// p+x are for FaxServer
+    faxApp::setOpts("c:m:Blpx");		// B p x are for FaxServer
 
     fxStr devID;
     for (GetoptIter iter(argc, argv, faxApp::getOpts()); iter.notDone(); iter++)

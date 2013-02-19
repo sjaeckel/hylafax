@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1145 2013-02-15 16:34:52Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1523,6 +1523,16 @@ faxQueueApp::sendJobStart(Job& job, FaxRequest* req)
     
     const fxStr& cmd = pickCmd(*req);
     fxStr dargs(job.getJCI().getArgs());
+
+    DestInfo& di = destJobs[job.dest];
+    if (di.getCalls() > 1 && job.getJCI().getMaxConcurrentCalls() == 0) {
+	/*
+	 * Tell faxsend/pagesend to not increment dials counters if busy signal.
+	 */
+	if(dargs != "") dargs.append('\0');
+	dargs.append("-B");
+    }
+
     int fd;
     pid_t pid = fork();
     switch (pid) {
@@ -2517,7 +2527,7 @@ faxQueueApp::runJob(Job& job)
     (di.getCalls()+n <= dci.getMaxConcurrentCalls())
 
 void
-faxQueueApp::unblockDestJobs(DestInfo& di)
+faxQueueApp::unblockDestJobs(DestInfo& di, u_int force)
 {
     /*
      * Check if there are blocked jobs waiting to run
@@ -2528,7 +2538,7 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
     Job* jb;
     u_int n = 1, b = 1;
     while ((jb = di.nextBlocked())) {
-	if (isOKToCall(di, jb->getJCI(), n)) {
+	if (force || isOKToCall(di, jb->getJCI(), n)) {
 	    FaxRequest* req = readRequest(*jb);
 	    if (!req) {
 		setDead(*jb);
@@ -2543,12 +2553,13 @@ faxQueueApp::unblockDestJobs(DestInfo& di)
 	    req->notice = "";
 	    updateRequest(*req, *jb);
 	    delete req;
+	    if (force) force--;
 	    /*
 	     * We check isOKToCall again here now to avoid di.nextBlocked
 	     * which would pull jb from the blocked list and then possibly
 	     * require us to re-block it.
 	     */
-	    if (di.getBlocked() && !isOKToCall(di, jb->getJCI(), n)) {
+	    if (di.getBlocked() && !force && !isOKToCall(di, jb->getJCI(), n)) {
 		traceQueue("Continue BLOCK on %d job(s) to %s, current calls: %d, max concurrent calls: %d", 
 		    di.getBlocked(), (const char*) jb->dest, di.getCalls()+n-1, jb->getJCI().getMaxConcurrentCalls());
 		break;
@@ -2961,7 +2972,8 @@ faxQueueApp::runScheduler()
 		    deleteRequest(job, req, Job::rejected, true);
 		    continue;
 		}
-		if (!isOKToCall(di, job.getJCI(), 1)) {
+		if ((job.getJCI().getMaxConcurrentCalls() == 0 && di.isPendingConnection()) || 
+			(job.getJCI().getMaxConcurrentCalls() != 0 && !isOKToCall(di, job.getJCI(), 1))) {
 		    /*
 		     * This job would exceed the max number of concurrent
 		     * calls that may be made to this destination.  Put it
@@ -3000,6 +3012,7 @@ faxQueueApp::runScheduler()
 			 * Send this job through a proxy HylaFAX server.
 			 */
 			unblockDestJobs(di);			// this job may be blocking others
+			pokeScheduler();
 			if (job.isOnList()) job.remove();	// remove from run queue
 			job.commid = "";
 			job.start = now;
@@ -3677,6 +3690,14 @@ faxQueueApp::FIFOJobMessage(const fxStr& jobid, const char* msg)
 	break;
     case 'C':			// call connected with fax
 	Trigger::post(Trigger::SEND_CONNECTED, *jp);
+	{
+	    DestInfo& di = destJobs[(*jp).dest];
+	    di.connected();
+	    if ((*jp).getJCI().getMaxConcurrentCalls() == 0) {
+	        unblockDestJobs(di, 1);		// release one blocked job
+		pokeScheduler();
+	    }
+	}
 	break;
     case 'd':			// page sent
 	Trigger::post(Trigger::SEND_PAGE, *jp, msg+1);
@@ -4293,3 +4314,4 @@ main(int argc, char** argv)
     
     return 0;
 }
+
