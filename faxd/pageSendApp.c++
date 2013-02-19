@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.c++ 933 2009-07-13 04:50:41Z faxguy $ */
+/*	$Id: pageSendApp.c++ 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -54,6 +54,7 @@ pageSendApp::pageSendApp(const fxStr& devName, const fxStr& devID)
     : ModemServer(devName, devID)
 {
     ready = false;
+    nofailbusy = false;
     modemLock = NULL;
     setupConfig();
 
@@ -82,6 +83,9 @@ pageSendApp::initialize(int argc, char** argv)
 	    break;
 	case 'c':			// set configuration parameter
 	    readConfigItem(iter.optArg());
+	    break;
+	case 'B':			// busy signal does not increment dials counters
+	    nofailbusy = true;
 	    break;
 	}
 }
@@ -392,8 +396,10 @@ pageSendApp::sendPage(FaxRequest& req, FaxMachineInfo& info, const fxStr& number
 	 * we might be calling the wrong number so that we don't end up
 	 * harrassing someone w/ repeated calls.
 	 */
-	req.ndials++;
-	req.totdials++;			// total attempted calls
+	if (callstat != ClassModem::BUSY || !nofailbusy) {	// "BUSY" + nofailbusy = don't increment
+	    req.ndials++;		// number of consecutive failed calls
+	    req.totdials++;		// total attempted calls
+	}
 	switch (callstat) {
 	case ClassModem::NOCARRIER:	// no carrier detected on remote side
 	    /*
@@ -1412,7 +1418,7 @@ main(int argc, char** argv)
     u_int l = appName.length();
     appName = appName.tokenR(l, '/');
 
-    faxApp::setOpts("c:m:l");
+    faxApp::setOpts("c:m:Bl");
 
     fxStr devID;
     for (GetoptIter iter(argc, argv, faxApp::getOpts()); iter.notDone(); iter++)

@@ -1,4 +1,4 @@
-/*	$Id: DestInfo.c++ 510 2007-05-04 22:34:36Z faxguy $ */
+/*	$Id: DestInfo.c++ 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -33,6 +33,7 @@ DestInfo::DestInfo()
     callCount = 0;
     blockedCount = 0;
     running = NULL;
+    pendingConnection = false;
 }
 
 DestInfo::DestInfo(const DestInfo& other)
@@ -43,6 +44,7 @@ DestInfo::DestInfo(const DestInfo& other)
     callCount = other.callCount;
     blockedCount = other.blockedCount;
     running = other.running;
+    pendingConnection = other.pendingConnection;
 }
 
 DestInfo::~DestInfo() 

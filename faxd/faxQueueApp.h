@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 1106 2012-06-18 23:50:58Z faxguy $ */
+/*	$Id: faxQueueApp.h 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -238,7 +238,7 @@ private:
     void	runJob(Job& job);
 
     void	removeDestInfoJob(Job& job);
-    void        unblockDestJobs(DestInfo& di);
+    void        unblockDestJobs(DestInfo& di, u_int force = 0);
 
     bool	scheduling();
     void	runScheduler();

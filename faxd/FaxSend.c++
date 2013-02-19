@@ -1,4 +1,4 @@
-/*	$Id: FaxSend.c++ 1142 2013-02-02 00:30:11Z faxguy $ */
+/*	$Id: FaxSend.c++ 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -405,8 +405,10 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	 * we might be calling the wrong number so that we don't end up
 	 * harrassing someone w/ repeated calls.
 	 */
-	fax.ndials++;			// number of consecutive failed calls
-	fax.totdials++;			// total attempted calls
+	if (callstat != ClassModem::BUSY || !isBusyNoFail()) {	// "BUSY" + nofailbusy = don't increment
+	    fax.ndials++;		// number of consecutive failed calls
+	    fax.totdials++;		// total attempted calls
+	}
 	switch (callstat) {
 	case ClassModem::NOFCON:	// carrier seen, but handshake failed
 	    clientInfo.setCalledBefore(true);

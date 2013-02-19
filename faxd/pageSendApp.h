@@ -1,4 +1,4 @@
-/*	$Id: pageSendApp.h 121 2006-03-23 20:15:40Z faxguy $ */
+/*	$Id: pageSendApp.h 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -50,6 +50,7 @@ public:
 private:
 // runtime state
     bool	ready;			// modem ready for use
+    bool	nofailbusy;		// don't increment dials counters on busy
     UUCPLock*	modemLock;		// uucp lockfile handle
     time_t	connTime;		// time connected to peer
 

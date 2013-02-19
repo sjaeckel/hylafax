@@ -1,4 +1,4 @@
-.\"	$Id: faxsend.1m 2 2005-11-11 21:32:03Z faxguy $
+.\"	$Id: faxsend.1m 1147 2013-02-19 17:55:54Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -33,6 +33,8 @@ faxsend \- \*(Fx facsimile transmit program
 .SH SYNOPSIS
 .B ${LIBEXEC}/faxsend
 [
+.B \-B
+] [
 .B \-l
 ] [
 .B \-p
@@ -108,6 +110,10 @@ consult
 for detailed information on the contents of configuration files.
 .SH OPTIONS
 The following options are recognized:
+.TP 10
+.B \-B
+Do not increment the various ``dials'' counters if a busy signal
+is encountered.
 .TP 10
 .BI \-c " config"
 Treat

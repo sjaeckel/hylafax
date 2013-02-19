@@ -1,4 +1,4 @@
-/*	$Id: ModemServer.c++ 1114 2012-07-02 18:27:37Z faxguy $ */
+/*	$Id: ModemServer.c++ 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -84,6 +84,7 @@ ModemServer::ModemServer(const fxStr& devName, const fxStr& devID)
     changePriority = true;
     delayConfig = false;
     inputBuffered = true;		// OSes buffer by default
+    noFailBusy = false;
 
     modemFd = -1;
     modem = NULL;
@@ -123,6 +124,9 @@ ModemServer::initialize(int argc, char** argv)
 	    break;
 	case 'x':
 	    tracingMask &= ~(FAXTRACE_MODEMIO|FAXTRACE_TIMEOUTS);
+	    break;
+	case 'B':
+	    noFailBusy = true;
 	    break;
 	}
     TIFFSetErrorHandler(NULL);

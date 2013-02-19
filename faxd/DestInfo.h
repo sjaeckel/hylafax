@@ -1,4 +1,4 @@
-/*	$Id: DestInfo.h 414 2007-01-05 21:57:24Z faxguy $ */
+/*	$Id: DestInfo.h 1147 2013-02-19 17:55:54Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -54,6 +54,7 @@ private:
     u_short		callCount;	// count of active calls to destination
     FaxMachineInfo	info;		// remote machine capabilities and such
     Job*		running;	// jobs to dest being processed
+    bool		pendingConnection;	// dialed connection pending
 public:
     DestInfo();
     DestInfo(const DestInfo& other);
@@ -63,6 +64,8 @@ public:
     u_int getBlocked() const;		// return count of blocked jobs
     u_int getCount() const;		// return count of active+blocked jobs
     bool isEmpty() const;		// true if any jobs referenced
+    bool isPendingConnection();		// return true if a connection is pending
+    void connected();			// connection occurred
     u_int getCalls() const;		// return count of active calls
     void call();			// initiate call to destination
     void hangup();			// terminate call to destination
@@ -79,14 +82,23 @@ public:
     void updateConfig();		// write info file if necessary
 };
 
+/*
+ * pendingConnection is set true by call() and will normally be set to false by faxq 
+ * after a connection is made through connected(), but if a dial happens and doesn't
+ * connect then it will be set to false by hangup().  So it's possible, perhaps 
+ * likely, that pendingConnection will be false already by the time hangup() occurs.
+ */
+
+inline bool DestInfo::isPendingConnection()	{ return pendingConnection; }
+inline void DestInfo::connected() 		{ pendingConnection = false; }
 inline u_int DestInfo::getActive() const	{ return activeCount; }
 inline u_int DestInfo::getBlocked() const	{ return blockedCount; }
 inline u_int DestInfo::getCount() const
     { return activeCount + blockedCount; }
 inline bool DestInfo::isEmpty() const		{ return getCount() == 0; }
 inline u_int DestInfo::getCalls() const		{ return callCount; }
-inline void DestInfo::call()			{ callCount++; }
-inline void DestInfo::hangup()			{ callCount--; }
+inline void DestInfo::call()			{ callCount++; pendingConnection = true; }
+inline void DestInfo::hangup()			{ callCount--; pendingConnection = false; }
 
 fxDECLARE_StrKeyDictionary(DestInfoDict, DestInfo)
 #endif /* _DestInfo_ */
