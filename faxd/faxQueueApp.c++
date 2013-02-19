@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1147 2013-02-19 17:55:54Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1148 2013-02-20 00:45:41Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1608,7 +1608,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
     di.hangup();				// do before unblockDestJobs
     if (job.modem) releaseModem(job);		// done with modem
     FaxRequest* req = readRequest(job);
-    if (req && req->status == send_retry) {
+    if (req && (req->status != send_done && req->status != send_reformat)) {
 	// prevent turnaround-redialing, delay any blocked jobs
 	time_t newtts = req->tts;
 	while ((cjob = di.nextBlocked())) {
@@ -1619,7 +1619,7 @@ faxQueueApp::sendJobDone(Job& job, int status)
 	    }
 	}
     } else {
-	unblockDestJobs(di);
+	unblockDestJobs(di, 1);		// force one to unblock
     }
     removeDestInfoJob(job);
     for (cjob = &job; cjob != NULL; cjob = njob) {
@@ -2538,7 +2538,7 @@ faxQueueApp::unblockDestJobs(DestInfo& di, u_int force)
     Job* jb;
     u_int n = 1, b = 1;
     while ((jb = di.nextBlocked())) {
-	if (force || isOKToCall(di, jb->getJCI(), n)) {
+	if (force || jb->getJCI().getMaxConcurrentCalls() == 0 || isOKToCall(di, jb->getJCI(), n)) {
 	    FaxRequest* req = readRequest(*jb);
 	    if (!req) {
 		setDead(*jb);
@@ -2559,7 +2559,7 @@ faxQueueApp::unblockDestJobs(DestInfo& di, u_int force)
 	     * which would pull jb from the blocked list and then possibly
 	     * require us to re-block it.
 	     */
-	    if (di.getBlocked() && !force && !isOKToCall(di, jb->getJCI(), n)) {
+	    if (di.getBlocked() && !force && jb->getJCI().getMaxConcurrentCalls() != 0 && !isOKToCall(di, jb->getJCI(), n)) {
 		traceQueue("Continue BLOCK on %d job(s) to %s, current calls: %d, max concurrent calls: %d", 
 		    di.getBlocked(), (const char*) jb->dest, di.getCalls()+n-1, jb->getJCI().getMaxConcurrentCalls());
 		break;
