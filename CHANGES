@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1149 2013-02-25 02:47:39Z faxguy $	
+#	$Id: CHANGES 1150 2013-02-25 03:51:47Z faxguy $	
 
 New Changes
 
+* make faxsetup start/stop hfaxd when not using SysV init (24 Feb 2013)
 * fix various job blocking problems (24 Feb 2013)
 * implement "MaxConcurrentCalls: 0" feature (19 Feb 2013)
 * make FaxAccounting not block the process (15 Feb 2013)

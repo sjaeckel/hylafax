@@ -1,5 +1,5 @@
 #! @SCRIPT_SH@
-#	$Id: faxsetup.sh.in 1086 2012-02-14 20:52:54Z faxguy $
+#	$Id: faxsetup.sh.in 1150 2013-02-25 03:51:47Z faxguy $
 #
 # @WARNING@
 #
@@ -2352,13 +2352,10 @@ if onServer; then
     }
 
     HFAXD="`findproc hfaxd`"
-#    if [ "$HFAXD" ]; then
-#    fi
-    FAXD="`findproc faxd`"
-    if [ "$FAXD" ]; then
+    if [ "$HFAXD" ]; then
 	echo ""
-	echo "You seem to be running FlexFAX (there are faxd processes)."
-	prompt "Is it ok to terminate these processes ($FAXD) [yes]?";
+	echo "You seem to be running HylaFAX (there are hfaxd processes)."
+	prompt "Is it ok to terminate these processes ($HFAXD) [yes]?";
 	if [ "$INTERACTIVE" != "no" ]; then
 	    read x
 	else
@@ -2366,27 +2363,27 @@ if onServer; then
 	    echo
 	fi
 	if isOK "$x"; then
-	    if kill $FAXD; then
-		echo "Sent a SIGTERM to processes $FAXD."
+	    if kill $HFAXD; then
+		echo "Sent a SIGTERM to processes $HFAXD."
 	    else
-		echo "Unable to send a SIGTERM to processes $FAXD."
+		echo "Unable to send a SIGTERM to processes $HFAXD."
 	    fi
 	    while true; do
 		for delay in 1 1 2 2 5 5; do
-		    FAXD="`findproc faxd`"
-		    test "$FAXD" || break
+		    FAXD="`findproc hfaxd`"
+		    test "$HFAXD" || break
 		    sleep $delay
 		done
-		test -z "$FAXD" && break
+		test -z "$HFAXD" && break
 		cat<<EOF
 
-Warning: faxd is still running!
+Warning: hfaxd is still running!
 
 Something is hung.  The command
 
-    kill $FAXD
+    kill $HFAXD
     
-did not terminate the faxd processes as expected.
+did not terminate the hfaxd processes as expected.
 EOF
 		prompt "Should we continue to wait [no]?";
 		if [ "$INTERACTIVE" != "no" ]; then
@@ -2413,7 +2410,7 @@ EOF
 	    x=
 	    echo
 	fi
-	if isOK "$x" ]; then
+	if isOK "$x"; then
 	    $DIR_SBIN/faxquit >/dev/null 2>&1
 	    while true; do
 		for delay in 1 1 2 2 5 5; do
@@ -2464,7 +2461,7 @@ EOF
 	fi
     fi
 
-    if [ "$FAXQ" ] || [ "$FAXD" ]; then
+    if [ "$FAXQ" ] || [ "$HFAXD" ]; then
 	cat<<EOF
 
 FATAL ERROR: Old server processes still running!
@@ -2506,6 +2503,10 @@ EOF
 	    ${DIR_SYSVINIT}/hylafax start
 	else
 	    echo $DIR_SBIN/faxq; $DIR_SBIN/faxq
+	    hfaxdopts=
+	    if isOK "$HFAXD_SERVER"; then hfaxdopts="-i hylafax "; fi
+	    if isOK "$HFAXD_SNPP_SERVER"; then hfaxdopts="$hfaxdopts\-s snpp"; fi
+	    echo "$DIR_SBIN/hfaxd $hfaxdopts"; eval "$DIR_SBIN/hfaxd $hfaxdopts"
 	fi
     fi
 
