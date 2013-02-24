@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1148 2013-02-20 00:45:41Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1149 2013-02-25 02:47:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -498,7 +498,6 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		DestInfo& di = destJobs[job.dest];
 		di.hangup();			// do before unblockDestJobs
 		unblockDestJobs(di);		// release any blocked jobs
-		removeDestInfoJob(job);
 		pokeScheduler();
 	    }
 	}
@@ -1605,7 +1604,11 @@ faxQueueApp::sendJobDone(Job& job, int status)
     Job* cjob;
     Job* njob;
     DestInfo& di = destJobs[job.dest];
-    di.hangup();				// do before unblockDestJobs
+    if (status&0x8000) {
+	di.proxyHangup();
+    } else {
+	di.hangup();				// do before unblockDestJobs
+    }
     if (job.modem) releaseModem(job);		// done with modem
     FaxRequest* req = readRequest(job);
     if (req && (req->status != send_done && req->status != send_reformat)) {
@@ -1621,7 +1624,6 @@ faxQueueApp::sendJobDone(Job& job, int status)
     } else {
 	unblockDestJobs(di, 1);		// force one to unblock
     }
-    removeDestInfoJob(job);
     for (cjob = &job; cjob != NULL; cjob = njob) {
 	njob = cjob->bnext;
 	if (cjob != &job) req = readRequest(*cjob);	// the first was already read
@@ -2821,6 +2823,8 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		/*NOTREACHED*/
 	    }
 	default:			// parent
+	    DestInfo& di = destJobs[job.dest];
+	    di.proxyCall();		// mark as called to correctly block other jobs
 	    numProxyJobs++;
 	    job.startSend(pid);
 	    break;
