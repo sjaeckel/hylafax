@@ -1,4 +1,4 @@
-/*	$Id: DestInfo.h 1147 2013-02-19 17:55:54Z faxguy $ */
+/*	$Id: DestInfo.h 1149 2013-02-25 02:47:39Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -67,6 +67,8 @@ public:
     bool isPendingConnection();		// return true if a connection is pending
     void connected();			// connection occurred
     u_int getCalls() const;		// return count of active calls
+    void proxyCall();			// initiate call to destination via proxy
+    void proxyHangup();			// terminate call to destination via proxy
     void call();			// initiate call to destination
     void hangup();			// terminate call to destination
 
@@ -97,6 +99,8 @@ inline u_int DestInfo::getCount() const
     { return activeCount + blockedCount; }
 inline bool DestInfo::isEmpty() const		{ return getCount() == 0; }
 inline u_int DestInfo::getCalls() const		{ return callCount; }
+inline void DestInfo::proxyCall()		{ callCount++; }
+inline void DestInfo::proxyHangup()		{ callCount--; }
 inline void DestInfo::call()			{ callCount++; pendingConnection = true; }
 inline void DestInfo::hangup()			{ callCount--; pendingConnection = false; }
 
