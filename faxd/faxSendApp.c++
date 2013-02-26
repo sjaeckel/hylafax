@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.c++ 1147 2013-02-19 17:55:54Z faxguy $ */
+/*	$Id: faxSendApp.c++ 1151 2013-02-26 23:46:36Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -120,7 +120,7 @@ faxSendApp::send(const char** filenames, int num)
 {
     u_int batched = BATCH_FIRST;
     FaxSendStatus status = send_done;
-    fxStr batchcommid, notice, errorcode;
+    fxStr batchcommid, notice;
     time_t retrybatchtts = 0;
 
     for (int i = 0; i < num; i++)
@@ -199,7 +199,6 @@ faxSendApp::send(const char** filenames, int num)
 			if (req->status == send_done)
 			    ai.status = "";
 			else {
-			    errorcode = req->errorcode;
 			    notice = req->notice;
 			    ai.status = req->notice;
 			    retrybatchtts = req->tts;
@@ -216,9 +215,13 @@ faxSendApp::send(const char** filenames, int num)
 			 * This job cannot get sent right now due to an error in a previous
 			 * job in the batch.
 			 *
-			 * In the event that the previous error was not an in-job error (e.g.
-			 * a busy signal) then we treat that error as if it applies to all jobs.
-			 * We "keep the batch together" by synchronizing their tts.
+			 * If the error was call-related such as the errors "Busy", "No answer",
+			 * or "No carrier" then that error could legitimately be applied to 
+			 * all of the jobs in the batch as there would have been no difference 
+			 * between the jobs in this respect.  So we make use of the 
+			 * "ShareCallFailures" configuration here to control this.  This helps
+			 * large sets of jobs going to the same destination fail sooner than 
+			 * they would individually and consume less modem attention.
 			 *
 			 * In the event that the previous error was an in-job error, then the
 			 * previous job processing is essentially blocking this job from 
@@ -227,10 +230,10 @@ faxSendApp::send(const char** filenames, int num)
 			 * don't set the tts, allowing faxq to reschedule the job, expecting that
 			 * to disassemble and "shuffle" the entire batch.
 			 */
-			if (errorcode == "E001" || 
-			    errorcode == "E002" || 
-			    errorcode == "E003") {
-			    /* busy, no carrier, no answer */
+			if ((notice.find(0, "{E001}") < notice.length() && (shareCallFailures.find(0, "busy") < shareCallFailures.length() || shareCallFailures == "always")) ||
+			    (notice.find(0, "{E002}") < notice.length() && (shareCallFailures.find(0, "nocarrier") < shareCallFailures.length() || shareCallFailures == "always")) ||
+			    (notice.find(0, "{E003}") < notice.length() && (shareCallFailures.find(0, "noanswer") < shareCallFailures.length() || shareCallFailures == "always")) ||
+			    (notice.find(0, "{E004}") < notice.length() && (shareCallFailures.find(0, "nodialtone") < shareCallFailures.length() || shareCallFailures == "always"))) {
 			    req->notice = notice;
 			    req->status = send_retry;
 			    req->tts = retrybatchtts;
@@ -445,6 +448,7 @@ faxSendApp::resetConfig()
 
 faxSendApp::stringtag faxSendApp::strings[] = {
 { "pollrcvdcmd",	&faxSendApp::pollRcvdCmd,	FAX_POLLRCVDCMD },
+{ "sharecallfailures",	&faxSendApp::shareCallFailures,	"none" },
 };
 faxSendApp::numbertag faxSendApp::numbers[] = {
 { "desireddf",		&faxSendApp::desiredDF,		(u_int) -1 },

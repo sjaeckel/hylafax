@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.h 1147 2013-02-19 17:55:54Z faxguy $ */
+/*	$Id: faxQueueApp.h 1151 2013-02-26 23:46:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -127,6 +127,7 @@ private:
     fxStr	sendUUCPCmd;		// external command for UUCP calls
     fxStr	wedgedCmd;		// external command for wedged modems
     fxStr	jobCtrlCmd;		// external command for JobControl
+    fxStr	shareCallFailures;	// which call failures should be shared to blocked jobs
 
     static stringtag strings[];
     static numbertag numbers[];

@@ -1,4 +1,4 @@
-.\"	$Id: hylafax-config.4f 1147 2013-02-19 17:55:54Z faxguy $
+.\"	$Id: hylafax-config.4f 1151 2013-02-26 23:46:36Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2013-02-19 09:55:54 -0800 (Tue, 19 Feb 2013) $"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2013-02-26 15:46:36 -0800 (Tue, 26 Feb 2013) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION
@@ -224,6 +224,7 @@ SendPageCmd¹	string	\s-1bin/pagesend\s+1	pager transmit command script
 SendUUCPCmd¹	string	\s-1bin/uucpsend\s+1	\s-1UUCP\s+1 transmit command script
 ServerTracing²	integer	\s-11\s+1	non-session server tracing
 SessionTracing²	integer	\s-10xFFF\s+1	send and receive session tracing
+ShareCallFailures²	string	\s-1none\s+1	which call failures should be shared
 SpeakerVolume	string	\s-1Quiet\s+1	volume level for modem speaker
 StaggerCalls¹	integer	\s-10\s+1	time to delay between starting outbound calls
 TagLineFont	string	\-	tag line font filename
@@ -1708,6 +1709,39 @@ Note that session tracing is placed in log files in the
 subdirectory; see
 .IR hylafax-log (${MANNUM4_5})
 for more information.
+.TP
+.B ShareCallFailures²
+A string which indicates the types of call failures that should be shared
+to blocked jobs (in the scheduler
+.B config
+file) or to batched jobs (in the per-device configuration files). The 
+purpose of this configuration is to prevent a large set of jobs to the 
+same destination from stalling for long periods of time in the queue
+and repeatedly initiating failed delivery attempts due to call-related 
+errors (such as an incorrectly-entered destination number).  Jobs which
+are batched or blocked (depending on which configuration file is used)
+will receive the same failure indication and ``dials'' increment as the
+job which was active and running at the time (or lead the batch).
+.B ShareCallFailures
+may contain the following key words in any order with any deliniation:
+
+.ne 1i
+.sp .5
+.ta \w'\fBXXXXXXXX\fP    'u
+.nf
+\fBKey Word	Meaning\fP
+busy	Busy signal detected
+nocarrier	No carrier detected
+noanswer	No answer from remote
+nodialtone	No local dialtone
+.sp .5
+.fi
+
+Alternatively, 
+.B ShareCallFailures
+may be set exactly to ``always'' which makes it apply to all of the 
+call failure types listed above and is synonymous with 
+``busy nocarrier noanswer nodialtone''.
 .TP
 .B SpeakerVolume
 The volume level that the in-modem speaker should be
