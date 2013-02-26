@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1149 2013-02-25 02:47:39Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1151 2013-02-26 23:46:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -1617,8 +1617,27 @@ faxQueueApp::sendJobDone(Job& job, int status)
 	while ((cjob = di.nextBlocked())) {
 	    FaxRequest* blockedreq = readRequest(*cjob);
 	    if (blockedreq) {
-		delayJob(*cjob, *blockedreq, "Delayed by prior call {E342}", newtts);
-		delete blockedreq;
+		/*
+		 * If the error was call-related such as the errors "Busy", "No answer",
+		 * or "No carrier" then that error could legitimately be applied to 
+		 * all of the blocked jobs, too, as there would have been no difference 
+		 * between the jobs in this respect.  So we make use of the 
+		 * "ShareCallFailures" configuration here to control this.  This helps
+		 * large sets of jobs going to the same destination fail sooner than 
+		 * they would individually and consume less modem attention.
+		 */
+		if ((req->errorcode == "E001" && (shareCallFailures.find(0, "busy") < shareCallFailures.length() || shareCallFailures == "always")) ||
+		    (req->errorcode == "E002" && (shareCallFailures.find(0, "nocarrier") < shareCallFailures.length() || shareCallFailures == "always")) ||
+		    (req->errorcode == "E003" && (shareCallFailures.find(0, "noanswer") < shareCallFailures.length() || shareCallFailures == "always")) ||
+		    (req->errorcode == "E004" && (shareCallFailures.find(0, "nodialtone") < shareCallFailures.length() || shareCallFailures == "always"))) {
+		    blockedreq->status = send_retry;
+		    blockedreq->totdials++;
+		    delayJob(*cjob, *blockedreq, (const char*) req->notice, newtts);
+		    delete blockedreq;
+		} else {
+		    delayJob(*cjob, *blockedreq, "Delayed by prior call {E342}", newtts);
+		    delete blockedreq;
+		}
 	    }
 	}
     } else {
@@ -3793,6 +3812,7 @@ faxQueueApp::stringtag faxQueueApp::strings[] = {
    FAX_LIBEXEC "/uucpsend" },
 { "wedgedcmd",		&faxQueueApp::wedgedCmd,	FAX_WEDGEDCMD },
 { "jobcontrolcmd",	&faxQueueApp::jobCtrlCmd,	"" },
+{ "sharecallfailures",	&faxQueueApp::shareCallFailures,"none" },
 };
 faxQueueApp::numbertag faxQueueApp::numbers[] = {
 { "tracingmask",	&faxQueueApp::tracingMask,	// NB: must be first

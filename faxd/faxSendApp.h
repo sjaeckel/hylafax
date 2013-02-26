@@ -1,4 +1,4 @@
-/*	$Id: faxSendApp.h 960 2009-12-04 05:10:46Z faxguy $ */
+/*	$Id: faxSendApp.h 1151 2013-02-26 23:46:36Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -55,6 +55,7 @@ private:
     bool	ready;			// modem ready for use
     UUCPLock*	modemLock;		// uucp lockfile handle
     fxStr	pollRcvdCmd;		// command for docs received by polling
+    fxStr	shareCallFailures;	// which call failures should be shared to batched jobs
     u_int	desiredDF;		// desired data format
     u_int	desiredBR;		// desired signalling rate
     u_int	desiredST;		// desired min-scanline-time
