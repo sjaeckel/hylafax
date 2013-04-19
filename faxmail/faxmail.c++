@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 1033 2010-11-23 04:21:57Z faxguy $ */
+/*	$Id: faxmail.c++ 1153 2013-04-19 09:58:19Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -373,9 +373,15 @@ faxMailApp::run(int argc, char** argv)
     } else
 	beginFormatting(stdout);	// NB: sets up page info
 
+    /*
+     * RFC1049 is close-enough to MIME to serve our purpose.  So,
+     * if we have a Content-Type header, treat it as MIME 1.0.
+     */
+    const fxStr* ct = findHeader("Content-Type");
+
     const fxStr* version = findHeader("MIME-Version");
 
-    if (version && stripComments(*version) == "1.0") {
+    if ((version && stripComments(*version) == "1.0") || ct) {
 	if (verbose)
 	    fprintf(stderr, "faxmail: This is a MIME message\n");
 	beginFile();
