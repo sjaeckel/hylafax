@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1151 2013-02-26 23:46:36Z faxguy $	
+#	$Id: CHANGES 1154 2013-04-19 21:57:03Z faxguy $	
 
 New Changes
 
+* add UseAlternativePart feature to faxmail (19 Apr 2013)
+* support RFC1049 in faxmail (19 Apr 2013)
 * add ShareCallFailures features (26 Feb 2013)
 
 (5.5.3)

@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 1153 2013-04-19 09:58:19Z faxguy $ */
+/*	$Id: faxmail.c++ 1154 2013-04-19 21:57:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -84,7 +84,7 @@ private:
     bool	autoCoverPage;		// make cover page for direct delivery
     bool	formatEnvHeaders;	// format envelope headers
     bool	trimText;		// trim text parts
-    bool	firstAlternativeOnly;	// only use the first multipart/alternative part
+    u_int	useAlternativePart;	// indicates which alternative part(s) to format
 
     void formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg);
     void formatText(FILE* fd, MIMEState& mime);
@@ -548,6 +548,7 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
     discardPart(fd, mime);			// prologue
     if (!mime.isLastPart()) {
 	bool last = false;
+	u_int num = 0;
 	while (!last) {
 	    int c = getc(fd);
 	    if (c == EOF) {
@@ -555,19 +556,19 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 		break;
 	    }
 	    ungetc(c, fd);			// push back read ahead
+	    num++;
 
 	    MsgFmt bodyHdrs(msg);		// parse any headers
 	    bodyHdrs.parseHeaders(fd, mime.lineno);
-
 	    MIMEState bodyMime(mime);		// state for sub-part
-	    formatMIME(fd, bodyMime, bodyHdrs);
-	    if (firstAlternativeOnly && mime.getSubType() == "alternative") {
-		discardPart(fd, bodyMime);
-		last = true;
+
+	    if (mime.getSubType() != "alternative" || !useAlternativePart || useAlternativePart == num) {
+		formatMIME(fd, bodyMime, bodyHdrs);
 	    } else {
-		last = bodyMime.isLastPart();
-		mime.external = bodyMime.external;
+		discardPart(fd, bodyMime);
 	    }
+	    last = bodyMime.isLastPart();
+	    mime.external = bodyMime.external;
 	}
     }
 }
@@ -852,7 +853,7 @@ faxMailApp::setupConfig()
     autoCoverPage = true;		// a la sendfax
     formatEnvHeaders = true;		// format envelope headers by default
     trimText = false;			// don't trim leading CRs from text parts by default
-    firstAlternativeOnly = true;	// by default only use the first alternative
+    useAlternativePart = 1;		// by default only use the first alternative
 
     setPageHeaders(false);		// disable normal page headers
     setNumberOfColumns(1);		// 1 input page per output page
@@ -885,7 +886,9 @@ faxMailApp::setConfigItem(const char* tag, const char* value)
     else if (streq(tag, "trimtext"))
 	trimText = getBoolean(value);
     else if (streq(tag, "firstalternativeonly"))
-	firstAlternativeOnly = getBoolean(value);
+	useAlternativePart = getBoolean(value) ? 1 : 0;
+    else if (streq(tag, "usealternativepart"))
+	useAlternativePart = getNumber(value);
     else if (streq(tag, "mimeconverters"))
 	mimeConverters = value;
     else if (streq(tag, "prologfile"))

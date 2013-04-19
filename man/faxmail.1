@@ -1,4 +1,4 @@
-.\"	$Id: faxmail.1 1033 2010-11-23 04:21:57Z faxguy $
+.\"	$Id: faxmail.1 1154 2013-04-19 21:57:03Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -502,6 +502,7 @@ TextFont	string	\s-1Courier\s+1	name of font for setting text
 TextLineHeight	inches	\-	text formatting line height control
 TextPointSize	inches	\s-1\fIsee below\fP\s+1	size to use in setting text
 TrimText	boolean	\s-1No\s+1	trim leading blank lines on text parts
+UseAlternativePart	integer	\s-11\s+1	which part to use in a set of alternatives
 Verbose	boolean	\s-1No\s+1	trace envelope and \s-1MIME\s+1 processing
 .fi
 .PP
@@ -557,17 +558,20 @@ mark of some sort.
 Dividers are expected to use no more vertical space on the
 output page than a line of text.
 .TP 15
-.B FirstAlternativeOnly
+.B FirstAlternativeOnly, UseAlternativePart
 In a multipart/alternative MIME section whether or not to only format
 the first part.  A multipart/alternative MIME section is typically
 used to present the mail client with a selection of alternatives which
 contain the same basic content (such as a text/plain and a text/html
 part).  Thus the mail client has the opportunity to select which part
 is best-suited for its purpose.  Generally the most-portable format 
-(text/plain) is the first alternative.  Since HTML parts are not
-formattable by faxmail by default, this option allows those parts
+(text/plain) is the first alternative.  These options allow parts
 to be stripped when presented in a multipart/alternative section and
-prevents duplicate parts from being formatted.
+prevents duplicate parts from being formatted.  ``FirstAlternativeOnly: 
+true'' is synonymous with ``UseAlternativePart: 1'' while ``FirstAlternativeOnly:
+false'' is synonymous with ``UseAlternativePart: 0'' (which causes
+all alternatives to be formatted).  In order to format only the text/html
+part then ``UseAlternativePart: 2'' should work.
 .TP 15
 .B FontPath
 The path where Adobe Font Metric (\s-1AFM\s+1) files are
