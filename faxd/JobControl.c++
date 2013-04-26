@@ -1,4 +1,4 @@
-/*	$Id: JobControl.c++ 1132 2012-12-24 23:34:24Z faxguy $ */
+/*	$Id: JobControl.c++ 1155 2013-04-26 22:39:33Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -46,6 +46,7 @@
 #define	DCI_PROXYLOGMODE	0x0800
 #define	DCI_PROXYTRIES		0x1000
 #define	DCI_PROXYDIALS		0x2000
+#define	DCI_PROXYRECONNECTS	0x4000
 
 #define	isDefined(b)		(defined & b)
 #define	setDefined(b)		(defined |= b)
@@ -74,6 +75,7 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     proxylogmode = other.proxylogmode;
     proxytries = other.proxytries;
     proxydials = other.proxydials;
+    proxyreconnects = other.proxyreconnects;
     proxymailbox = other.proxymailbox;
     proxynotification = other.proxynotification;
 }
@@ -136,6 +138,9 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
     } else if (streq(tag, "proxydials")) {
 	setDefined(DCI_PROXYDIALS);
 	proxydials = getNumber(value);
+    } else if (streq(tag, "proxyreconnects")) {
+	setDefined(DCI_PROXYRECONNECTS);
+	proxyreconnects = getNumber(value);
     } else if (streq(tag, "proxymailbox")) {
 	proxymailbox = value;
     } else if (streq(tag, "proxynotification")) {
@@ -293,6 +298,15 @@ JobControlInfo::getProxyDials() const
 	return proxydials;
     else
 	return(-1);
+}
+
+int
+JobControlInfo::getProxyReconnects() const
+{
+    if (isDefined(DCI_PROXYRECONNECTS))
+	return proxyreconnects;
+    else
+	return(5);
 }
 
 time_t

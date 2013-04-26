@@ -1,4 +1,4 @@
-/*	$Id: JobControl.h 1132 2012-12-24 23:34:24Z faxguy $ */
+/*	$Id: JobControl.h 1155 2013-04-26 22:39:33Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -58,6 +58,7 @@ private:
     mode_t	proxylogmode;		// mode for logs retrieved from proxy
     int		proxytries;		// if set, specify the number of tries
     int		proxydials;		// if set, specify the number of dials
+    int		proxyreconnects;	// the number of reconnections to make for any job
     TimeOfDay	tod;			// time of day restrictions
     int		usexvres;		// use extended resolution
     int		usecolor;		// use color
@@ -91,6 +92,7 @@ public:
     const mode_t getProxyLogMode() const;
     int getProxyTries() const;
     int getProxyDials() const;
+    int getProxyReconnects() const;
     time_t nextTimeToSend(time_t) const;
     int getUseXVRes() const;
     int getUseColor() const;

@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 1117 2012-07-19 04:12:08Z faxguy $ */
+/*	$Id: sendfax.c++ 1155 2013-04-26 22:39:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -308,10 +308,30 @@ sendFaxApp::run(int argc, char** argv)
                 printWarning("can only wait for one job (right now),"
                     " waiting for job %s.", (const char*) getCurrentJob());
             }
-            jobWait(getCurrentJob());
+	    int waits = 0;
+	    time_t waitstart = Sys::now();
+	    fxStr rjobid = getCurrentJob();
+	    while (!jobWait(rjobid) && waits++ < 5) {
+		/*
+		 * Our wait failed, and excepting a fault on the proxy this
+		 * can only mean that the connection was lost.  Reconnect
+		 * and re-start our wait.
+		 */
+		time_t sleeptime = waitstart + 60 - Sys::now();
+		if (sleeptime < 1) sleeptime = 2;
+		if (verbose) printWarning("lost connection to server, attempt %d.  Attempting reconnection in %d seconds.", waits, sleeptime);
+		hangupServer();
+		sleep(sleeptime);
+		waitstart = Sys::now();
+		status = false;
+		if (callServer(emsg)) {
+		    status = login(owner, pass, emsg) && setCurrentJob(rjobid);
+		    if (status && verbose) printWarning("reconnected to server.  Resuming wait for job %s.", (const char*) rjobid);
+		}
+	    }
 	    /* For the benefit of those watching in verbose... */
 	    fxStr r;
-            command((const char*) fxStr::format("JOB %s", (const char*) getCurrentJob()));
+            command((const char*) fxStr::format("JOB %s", (const char*) rjobid));
             jobParm("conntime");
             jobParm("duration");
             jobParm("npages");
@@ -319,18 +339,18 @@ sendFaxApp::run(int argc, char** argv)
             jobParm("commid");
             jobParm("ntries");
             jobParm("status");
-            emsg = getLastResponse(); emsg.remove(0, 4);
+            emsg = getLastResponse(); emsg.remove(0, emsg.length() > 4 ? 4 : emsg.length());
             if (emsg.length()) {
 		status = false;
                 jobParm("errorcode");
-                r = getLastResponse(); r.remove(0, 5);
+                r = getLastResponse(); r.remove(0, r.length() > 5 ? 5 : r.length());
                 retval = atoi((const char*) r);
             } else {
 		retval = 0;
 		status = true;
 	    }
             jobParm("state");
-            r = getLastResponse(); r.remove(0, 4);
+            r = getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
             // Due to the jobWait we should only ever see "DONE" and "FAILED"...
             if (r != "DONE") {
 		status = false;
