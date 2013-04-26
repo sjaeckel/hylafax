@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1154 2013-04-19 21:57:03Z faxguy $	
+#	$Id: CHANGES 1155 2013-04-26 22:39:33Z faxguy $	
 
 New Changes
 
+* add ProxyReconnects feature (26 Apr 2013)
 * add UseAlternativePart feature to faxmail (19 Apr 2013)
 * support RFC1049 in faxmail (19 Apr 2013)
 * add ShareCallFailures features (26 Feb 2013)

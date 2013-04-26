@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1151 2013-02-26 23:46:36Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1155 2013-04-26 22:39:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2745,7 +2745,28 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			req.modemused = rjobid | "@" | job.getJCI().getProxy();
 			req.notice = "delivered to proxy host " | job.getJCI().getProxy() | " as job " | rjobid;
 			updateRequest(req, job);
-			client->jobWait((const char*) rjobid);
+			int waits = 0;
+			time_t waitstart = Sys::now();
+			while (!client->jobWait((const char*) rjobid) && waits++ < job.getJCI().getProxyReconnects()) {
+			    /*
+			     * Our wait failed, and excepting a fault on the proxy this
+			     * can only mean that the connection was lost.  Reconnect
+			     * and re-start our wait.
+			     */
+			    time_t sleeptime = waitstart + 60 - Sys::now();
+			    if (sleeptime < 1) sleeptime = 2;
+			    logError("PROXY SEND: lost connection to %s, attempt %d.  Attempting reconnection in %d seconds.", (const char*) job.getJCI().getProxy(), waits, sleeptime);
+			    client->hangupServer();
+			    sleep(sleeptime);
+			    waitstart = Sys::now();
+			    status = false;
+			    if (client->callServer(emsg)) {
+				status = client->login(job.getJCI().getProxyUser().length() ? job.getJCI().getProxyUser() : req.owner, 
+					job.getJCI().getProxyPass().length() ? (const char*) job.getJCI().getProxyPass() : NULL, emsg) &&
+					client->setCurrentJob(rjobid);
+				if (status) logError("PROXY SEND: reconnected to %s.  Resuming wait for job %s.", (const char*) job.getJCI().getProxy(), (const char*) rjobid);
+			    }
+			}
 			/*
 			 * There is a long wait here now... possibly VERY long.
 			 * When jobWait is done, then we query the proxy
@@ -2754,43 +2775,43 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			req.skippages = 0;
 			client->command((const char*) fxStr::format("JOB %s", (const char*) rjobid));
 			client->jobParm("conntime");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			req.conntime = atoi((const char*) r);
 			client->jobParm("duration");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			req.duration = atoi((const char*) r);
 			client->jobParm("npages");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			req.npages = atoi((const char*) r);
 			client->jobParm("totpages");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			req.totpages = atoi((const char*) r);
 			client->jobParm("commid");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			req.commid = r;
 			client->jobParm("status");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			req.notice = r;
 			client->jobParm("ntries");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			u_int tries = atoi((const char*) r);
 			if (tries < maxTries && strstr((const char*) req.notice, "oo many attempts to send")) tries = maxTries;	// caught in a lie
 			if (tries < maxTries && strstr((const char*) req.notice, "oo many attempts to transmit")) tries = maxTries;	// caught in a lie
 			req.ntries += tries;
 			req.tottries += tries;
 			client->jobParm("ndials");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			u_int dials = atoi((const char*) r);
 			if (dials < maxDials && strstr((const char*) req.notice, "oo many attempts to dial")) dials = maxDials;	// caught in a lie
 			req.ndials += dials;
 			req.totdials += dials;
 			if (req.notice.length()) {
 			    client->jobParm("errorcode");
-			    r = client->getLastResponse(); r.remove(0, 4);
+			    r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			    req.errorcode = r;
 			}
 			client->jobParm("state");
-			r = client->getLastResponse(); r.remove(0, 4);
+			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			// Due to the jobWait we should only ever see "DONE" and "FAILED"...
 			if (r == "DONE") {
 			    job.state = FaxRequest::state_done;

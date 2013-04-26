@@ -1,4 +1,4 @@
-/*	$Id: FaxClient.c++ 1116 2012-07-19 00:33:45Z faxguy $ */
+/*	$Id: FaxClient.c++ 1155 2013-04-26 22:39:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -726,9 +726,25 @@ FaxClient::getReply(bool expecteof)
     do {
         lastResponse.resize(0);
         int c;
+	int ready = 0;
         while ((c = getc(fdIn)) != '\n') {
 	    if (c < 0 && errno == EAGAIN) {
-		if (is_ready(fileno(fdIn)) > 0) {
+		if (ready) {
+		    // select told us previously that fdIn had changed, but
+		    // apparently the change wasn't due to buffered bytes
+	            if (c == EOF) {
+	            	if (expecteof) {
+	                    code = 221;
+	                    return (0);
+	                } else {
+	                    lostServer();
+	                    code = 421;
+	                    return (4);
+	                }
+	            }
+		}
+		ready = is_ready(fileno(fdIn));
+		if (ready > 0) {
 		    continue;
 		}
 		lastResponse.append("<timeout>");
@@ -1001,7 +1017,7 @@ FaxClient::jobWait(const char* jobid)
     int n = 0;
     while (!jobOp("JWAIT", jobid)) {
 	n++;
-	if (code == -2 && jobOp("ABOR", jobid)) {
+	if (code == -2 && command("ABOR") == COMPLETE) {
 	    continue;
 	}
 	return (false);

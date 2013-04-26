@@ -1,4 +1,4 @@
-.\"	$Id: jobcontrol.1m 1132 2012-12-24 23:34:24Z faxguy $
+.\"	$Id: jobcontrol.1m 1155 2013-04-26 22:39:33Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -89,6 +89,7 @@ ProxyNotification	string	\s-1none\s+1	notification request
 ProxyLogMode	octal	\s-10600\s+1	protection to use for logs retrieved from proxy server
 ProxyTries	integer	\s-1\-1\s+1	number of tries proxy should attempt
 ProxyDials	integer	\s-1\-1\s+1	number of dials proxy should attempt
+ProxyReconnects	integer	\s-1\5\s+1	number of reconnections to proxy for any job submisison
 RejectNotice	string	\-	rejection notice for transmit job
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
@@ -170,6 +171,15 @@ and
 parameters specify the number of respective attempts that the proxy server 
 should make.  The default is -1, and any value less than 1 indicates
 that the proxy server should be delegated all remaining attempts.
+.PP
+The
+.B ProxyReconnects
+parameter specifies the number of reconnections that should be made to the
+proxy server in the event that the network connection is lost.  Attempts are
+made no sooner than 60 seconds apart, so to tolerate a network outage of
+30 minutes
+.B ProxyReconnects
+should be set to ``30'' or higher.
 .PP
 The
 .B RejectNotice
