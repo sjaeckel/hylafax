@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 1154 2013-04-19 21:57:03Z faxguy $ */
+/*	$Id: faxmail.c++ 1156 2013-05-04 18:46:33Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -400,7 +400,7 @@ faxMailApp::run(int argc, char** argv)
         if (withinFile) endFile();
 	withinFile = false;
     }
-    endFormatting(mime.external);
+    endFormatting(true);
 
     if (client) {			// complete direct delivery
 	bool status = false;
@@ -502,14 +502,11 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	 * implement our own Postscript interpreter to filter 
 	 * the external formatter output to suit.)
 	 */
-	mime.external = false;
 	const fxStr& type = mime.getType();
 	fxStr app = mimeConverters | "/" | type | "/" | mime.getSubType();
-	if (Sys::access(app, X_OK) >= 0) {
-	    mime.external = true;
-	    if (mime.lineno > 1) endPage();	// new page
+	if (Sys::access(app, X_OK) >= 0)
 	    formatWithExternal(fd, app, mime);
-	} else if (type == "text")
+	else if (type == "text")
 	    formatText(fd, mime);
 	else if (type == "application")
 	    formatApplication(fd, mime);
@@ -533,10 +530,13 @@ faxMailApp::formatText(FILE* fd, MIMEState& mime)
 {
     fxStackBuffer buf;
     bool trim = trimText;
+    if (!withinFile) beginFile();
     while (mime.getLine(fd, buf)) {
 	if (trim) trim = ((buf.getLength() == 0) || (buf[0] == 0xA));
 	if (!trim) format(buf, buf.getLength());	// NB: treat as text/plain
     }
+    endFile();
+    withinFile = false;
 }
 
 /*
@@ -568,7 +568,6 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 		discardPart(fd, bodyMime);
 	    }
 	    last = bodyMime.isLastPart();
-	    mime.external = bodyMime.external;
 	}
     }
 }
@@ -629,15 +628,13 @@ void
 faxMailApp::formatApplication(FILE* fd, MIMEState& mime)
 {
     if (mime.getSubType() == "postscript") {	// copy PS straight thru
-	if (withinFile) endFile();
+	if (withinFile) endFile();		// part must be complete PS pages/file
 	withinFile = false;
 	FILE* fout = getOutputFile();
 	fxStackBuffer buf;
 	int ignore;
 	while (mime.getLine(fd, buf))
 	    ignore = fwrite((const char*) buf, buf.getLength(), 1, fout);
-	if (!withinFile) beginFile();
-	withinFile = true;
     } else if (mime.getSubType() == "x-faxmail-prolog") {
 	copyPart(fd, mime, clientProlog);	// save client PS prologue
     } else {
@@ -656,6 +653,8 @@ faxMailApp::formatWithExternal(FILE* fd, const fxStr& app, MIMEState& mime)
     bool ok = false;
     if (verbose)
 	fprintf(stderr, "CONVERT: run %s\n", (const char*) app);
+    if (withinFile) endFile();
+    withinFile = false;
     fxStr tmp;
     if (copyPart(fd, mime, tmp)) {
 	flush();				// flush pending stuff
@@ -673,7 +672,7 @@ faxMailApp::formatDiscarded(MIMEState& mime)
 {
     if (markDiscarded) {
 	fxStackBuffer buf;
-	buf.put("-----------------------------\n");
+	buf.put("\n-----------------------------\n");
 	if (mime.getDescription() != "")
 	    buf.fput("DISCARDED %s (%s/%s) GOES HERE\n"
 		, (const char*) mime.getDescription()
@@ -685,6 +684,9 @@ faxMailApp::formatDiscarded(MIMEState& mime)
 		, (const char*) mime.getType()
 		, (const char*) mime.getSubType()
 	    );
+	buf.put("-----------------------------\n");
+	if (!withinFile) beginFile();
+	withinFile = true;
 	format((const char*)buf, buf.getLength());
     }
     if (mime.getDescription() != "")
