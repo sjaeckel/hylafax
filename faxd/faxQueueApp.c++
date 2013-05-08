@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1155 2013-04-26 22:39:33Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1157 2013-05-08 17:25:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -2765,6 +2765,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 					job.getJCI().getProxyPass().length() ? (const char*) job.getJCI().getProxyPass() : NULL, emsg) &&
 					client->setCurrentJob(rjobid);
 				if (status) logError("PROXY SEND: reconnected to %s.  Resuming wait for job %s.", (const char*) job.getJCI().getProxy(), (const char*) rjobid);
+				waits = 0;
 			    }
 			}
 			/*
