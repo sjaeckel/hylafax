@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1157 2013-05-08 17:25:03Z faxguy $	
+#	$Id: CHANGES 1159 2013-05-11 21:05:30Z faxguy $	
 
 New Changes
 
+* use -dAdjustWidth by default for FIXEDWIDTH for suitable
+  Ghostscript versions (11 May 2013)
 * fix text part formatting problems in faxmail (4 May 2013)
 * add ProxyReconnects feature (26 Apr, 8 May 2013)
 * add UseAlternativePart feature to faxmail (19 Apr 2013)
