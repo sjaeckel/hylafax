@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1159 2013-05-11 21:05:30Z faxguy $	
+#	$Id: CHANGES 1160 2013-07-12 19:44:18Z faxguy $	
 
 New Changes
 
+* make the modem hangup be part of the receive-fax session (12 Jul 2013)
 * use -dAdjustWidth by default for FIXEDWIDTH for suitable
   Ghostscript versions (11 May 2013)
 * fix text part formatting problems in faxmail (4 May 2013)
