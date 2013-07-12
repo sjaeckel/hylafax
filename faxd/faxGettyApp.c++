@@ -1,4 +1,4 @@
-/*	$Id: faxGettyApp.c++ 978 2010-02-05 06:05:33Z faxguy $ */
+/*	$Id: faxGettyApp.c++ 1160 2013-07-12 19:44:18Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -485,6 +485,10 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 	    else
 		answerRotor = (answerRotor+1) % answerRotorSize;
 	}
+    }
+    if (modemReady()) {
+	modemHangup();
+	discardModem(true);
     }
     sendModemStatus("I");
     endSession();
