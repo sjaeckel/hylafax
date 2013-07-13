@@ -1,4 +1,4 @@
-/*	$Id: main.c++ 944 2009-09-29 11:10:13Z faxguy $ */
+/*	$Id: main.c++ 1161 2013-07-13 22:36:50Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -279,15 +279,17 @@ main(int argc, char** argv, char** envp)
 	    addressfamily = strdup(optarg); break;
 	case 'l':
 	    bindaddress = strdup(optarg); break;
-	case 'i': {
+	case 'i':
+	    {
 		InetSuperServer* iss;
 		iss = new InetSuperServer(optarg);
 		handlers.append(iss);
-		if ((iss!=NULL) && (bindaddress!=NULL))
-		    iss->setBindAddress(bindaddress);
-		    iss->setAddressFamily(addressfamily);
+		if (iss != NULL) {
+		    if (bindaddress != NULL) iss->setBindAddress(bindaddress);
+		    if (addressfamily != NULL) iss->setAddressFamily(addressfamily);
 		}
-		break;
+	    }
+	    break;
 	case 'I': newInetServer(); break;
 #ifdef SNPP_SUPPORT
 	case 's': handlers.append(new SNPPSuperServer(optarg)); break;
