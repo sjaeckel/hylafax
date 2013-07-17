@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1162 2013-07-18 05:10:00Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1163 2013-07-18 05:15:49Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -394,8 +394,8 @@ InetFaxServer::sigPIPE(int)
     errno = old_errno;
 }
 
-static bool
-setupPassiveDataSocket(int pdata, Socket::Address& pasv_addr)
+bool
+InetFaxServer::setupPassiveDataSocket(int pdata, Socket::Address& pasv_addr)
 {
     socklen_t len = Socket::socklen(pasv_addr);
     return (
