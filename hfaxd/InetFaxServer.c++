@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1165 2013-07-18 05:35:15Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1166 2013-07-18 05:38:20Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -424,6 +424,12 @@ InetFaxServer::setupPassiveDataSocket(int pdata)
 void
 InetFaxServer::passiveCmd(void)
 {
+    if (pdata != -1) {
+       reply(500, "PASV/EPSV connection already exists");
+       return;
+       // Maybe we should close the socket instead, and open a new one?
+    }
+
     if (tokenBody[0] == 'E') {
 	pasv_addr = ctrl_addr;
 	if (debug) logDebug("Extended passive requested for family %d", Socket::family(pasv_addr));
