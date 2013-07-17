@@ -1,9 +1,9 @@
-#	$Id: CHANGES 1161 2013-07-13 22:36:50Z faxguy $	
+#	$Id: CHANGES 1162 2013-07-18 05:10:00Z faxguy $	
 
 New Changes
 
 * fix an error in processing hfaxd "i" parameters, especially 
-  following "f" or "l" options (13 Jul 2013)
+  following "f" or "l" options (13, 17 Jul 2013)
 * make the modem hangup be part of the receive-fax session (12 Jul 2013)
 * use -dAdjustWidth by default for FIXEDWIDTH for suitable
   Ghostscript versions (11 May 2013)

@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1064 2011-11-04 03:20:03Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1162 2013-07-18 05:10:00Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -46,6 +46,7 @@ InetSuperServer::InetSuperServer(const char* p, int bl)
     , port(p)
 {
     bindaddress = NULL;
+    addressfamily = NULL;
 }
 
 InetSuperServer::~InetSuperServer() {}
