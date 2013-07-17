@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1164 2013-07-18 05:22:49Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1165 2013-07-18 05:35:15Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -413,6 +413,14 @@ InetFaxServer::setupPassiveDataSocket(int pdata)
  * response by Jon Postel in a telephone conversation with Rick Adams on 25
  * Jan 89.
  */
+
+/*
+ * InetFaxServer::passiveCmd() is called when the fax client send the 'PASV'
+ * or 'EPSV' command to the hfaxd server over the existing control channel.
+ * This function implements RFC 2428 (http://tools.ietf.org/html/rfc2428).
+ * BUG: This function will leak a socket if the fax client sends 'PASV' or
+ * 'EPSV' multiple times.  A properly behaving client will not do this.
+ */
 void
 InetFaxServer::passiveCmd(void)
 {
@@ -422,8 +430,10 @@ InetFaxServer::passiveCmd(void)
 	pdata = socket(Socket::family(pasv_addr), SOCK_STREAM, 0);
 	if (pdata >= 0) {
 	    Socket::port(pasv_addr) = 0;
-	    if (!setupPassiveDataSocket(pdata))
-		(void) Sys::close(pdata), pdata = -1;
+	    if (!setupPassiveDataSocket(pdata)) {
+		(void) Sys::close(pdata);
+		pdata = -1;
+	    }
 	}
 	if (pdata >= 0) {
 	    reply(229, "Entering Extended Passive Mode (|||%u|)",
@@ -441,8 +451,10 @@ InetFaxServer::passiveCmd(void)
 	if (pdata >= 0) {
 	    pasv_addr = ctrl_addr;
 	    pasv_addr.in.sin_port = 0;
-	    if (!setupPassiveDataSocket(pdata))
-		(void) Sys::close(pdata), pdata = -1;
+	    if (!setupPassiveDataSocket(pdata)) {
+		(void) Sys::close(pdata);
+		pdata = -1;
+	    }
 	}
     }
     if (pdata >= 0) {
