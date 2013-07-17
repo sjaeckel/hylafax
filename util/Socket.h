@@ -1,4 +1,4 @@
-/*	$Id: Socket.h 928 2009-05-25 20:20:10Z faxguy $ */
+/*	$Id: Socket.h 1167 2013-07-18 05:41:56Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -60,6 +60,7 @@ class Socket {
 public:
     static int accept(int s, void* addr, socklen_t* addrlen);
     static int bind(int s, const void* addr, socklen_t addrlen);
+    static int listen(int s, int backlog);
     static int connect(int s, const void* addr, socklen_t addrlen);
     static int getpeername(int s, void* name, socklen_t* namelen);
     static int getsockname(int s, void* name, socklen_t* namelen);
@@ -97,6 +98,11 @@ inline int Socket::accept(int s, void* addr, socklen_t* addrlen)
 inline int Socket::bind(int s, const void* addr, socklen_t addrlen)
 {
     return ::bind(s, (const struct sockaddr*) addr, addrlen);
+}
+
+inline int Socket::listen(int s, int backlog)
+{
+    return ::listen(s, backlog);
 }
 
 inline int Socket::connect(int s, const void* addr, socklen_t addrlen)
