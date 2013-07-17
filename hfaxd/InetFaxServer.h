@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.h 1163 2013-07-18 05:15:49Z faxguy $ */
+/*	$Id: InetFaxServer.h 1164 2013-07-18 05:22:49Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -56,7 +56,7 @@ protected:
     void setupNetwork(int fd);
     void handleUrgentData(void);
     void passiveCmd(void);
-    bool setupPassiveDataSocket(int pdata, Socket::Address& pasv_addr);
+    bool setupPassiveDataSocket(int pdata);
 
     static void sigURG(int);
     static void sigPIPE(int);

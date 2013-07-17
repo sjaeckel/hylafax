@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1163 2013-07-18 05:15:49Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1164 2013-07-18 05:22:49Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -395,7 +395,7 @@ InetFaxServer::sigPIPE(int)
 }
 
 bool
-InetFaxServer::setupPassiveDataSocket(int pdata, Socket::Address& pasv_addr)
+InetFaxServer::setupPassiveDataSocket(int pdata)
 {
     socklen_t len = Socket::socklen(pasv_addr);
     return (
@@ -422,7 +422,7 @@ InetFaxServer::passiveCmd(void)
 	pdata = socket(Socket::family(pasv_addr), SOCK_STREAM, 0);
 	if (pdata >= 0) {
 	    Socket::port(pasv_addr) = 0;
-	    if (!setupPassiveDataSocket(pdata, pasv_addr))
+	    if (!setupPassiveDataSocket(pdata))
 		(void) Sys::close(pdata), pdata = -1;
 	}
 	if (pdata >= 0) {
@@ -441,7 +441,7 @@ InetFaxServer::passiveCmd(void)
 	if (pdata >= 0) {
 	    pasv_addr = ctrl_addr;
 	    pasv_addr.in.sin_port = 0;
-	    if (!setupPassiveDataSocket(pdata, pasv_addr))
+	    if (!setupPassiveDataSocket(pdata))
 		(void) Sys::close(pdata), pdata = -1;
 	}
     }
