@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1166 2013-07-18 05:38:20Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1168 2013-07-18 16:52:32Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -394,15 +394,46 @@ InetFaxServer::sigPIPE(int)
     errno = old_errno;
 }
 
-bool
-InetFaxServer::setupPassiveDataSocket(int pdata)
+/*
+ * InetFaxServer::setupPassiveDataSocket() will:
+ * 1) Allocate a socket (of the correct address family),
+ * 2) bind the 'this->pasv_addr' socket,
+ * 3) refresh its sockname,
+ * 4) enter the listen mode.
+ * On input, 'addr' should have a family, address and port pre-configured.
+ * On success, the function returns the socket's file descriptor.
+ * On error, returns '-1'.
+ */
+int
+InetFaxServer::setupPassiveDataSocket(Socket::Address &addr)
 {
-    socklen_t len = Socket::socklen(pasv_addr);
-    return (
-	Socket::bind(pdata, (struct sockaddr*)&pasv_addr, len) >= 0 &&
-        Socket::getsockname(pdata, (struct sockaddr*)&pasv_addr, &len) >= 0 &&
-	listen(pdata, 1) >= 0
-    );
+    socklen_t len = Socket::socklen(addr);
+    int fd = -1;
+
+    if (0 > (fd = socket(Socket::family(addr), SOCK_STREAM, 0))) {
+	if (debug) logDebug("setupPassiveDataSocket: 'socket()' failed with error %d", errno);
+	return -1;
+    }
+
+    if (0 > Socket::bind(fd, (struct sockaddr*)&addr, len)) {
+	if (debug) logDebug("setupPassiveDataSocket: 'bind()' failed with error %d", errno);
+	(void)Sys::close(fd);
+	return -1;
+    }
+
+    if (0 > Socket::getsockname(fd, (struct sockaddr*)&addr, &len)) {
+	if (debug) logDebug("setupPassiveDataSocket: 'getsockname' failed with error %d", errno);
+	(void)Sys::close(fd);
+	return -1;
+    }
+
+    if (0 > Socket::listen(fd, 1)) {
+	if (debug) logDebug("setupPassiveDataSocket: 'listen' failed with error %d", errno);
+	(void)Sys::close(fd);
+	return -1;
+    }
+
+    return fd;
 }
 
 #define UC(b) (((int) b) & 0xff)
@@ -432,20 +463,17 @@ InetFaxServer::passiveCmd(void)
 
     if (tokenBody[0] == 'E') {
 	pasv_addr = ctrl_addr;
+	Socket::port(pasv_addr) = 0;
+
 	if (debug) logDebug("Extended passive requested for family %d", Socket::family(pasv_addr));
-	pdata = socket(Socket::family(pasv_addr), SOCK_STREAM, 0);
-	if (pdata >= 0) {
-	    Socket::port(pasv_addr) = 0;
-	    if (!setupPassiveDataSocket(pdata)) {
-		(void) Sys::close(pdata);
-		pdata = -1;
-	    }
-	}
+
+	pdata = setupPassiveDataSocket(pasv_addr);
 	if (pdata >= 0) {
 	    reply(229, "Entering Extended Passive Mode (|||%u|)",
 		    ntohs(Socket::port(pasv_addr)));
-	} else
+	} else {
 	    perror_reply(425, "Cannot setup extended passive connection", errno);
+	}
 	return;
     }
     if (Socket::family(ctrl_addr) != AF_INET) {
@@ -453,23 +481,18 @@ InetFaxServer::passiveCmd(void)
 	return;
     }
     if (pdata < 0) {
-	pdata = socket(AF_INET, SOCK_STREAM, 0);
-	if (pdata >= 0) {
-	    pasv_addr = ctrl_addr;
-	    pasv_addr.in.sin_port = 0;
-	    if (!setupPassiveDataSocket(pdata)) {
-		(void) Sys::close(pdata);
-		pdata = -1;
-	    }
-	}
+	pasv_addr = ctrl_addr;
+	pasv_addr.in.sin_port = 0;
+	pdata = setupPassiveDataSocket(pasv_addr);
     }
     if (pdata >= 0) {
 	const u_char* a = (const u_char*) &pasv_addr.in.sin_addr;
 	const u_char* p = (const u_char*) &pasv_addr.in.sin_port;
 	reply(227, "Entering passive mode (%d,%d,%d,%d,%d,%d)", UC(a[0]),
 	      UC(a[1]), UC(a[2]), UC(a[3]), UC(p[0]), UC(p[1]));
-    } else
+    } else {
 	perror_reply(425, "Cannot setup passive connection", errno);
+    }
 }
 
 void
