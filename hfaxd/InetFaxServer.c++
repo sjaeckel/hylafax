@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1173 2013-07-20 22:25:09Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1174 2013-07-20 22:27:39Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -465,6 +465,8 @@ InetFaxServer::setupPassiveDataSocket(Socket::Address &addr)
 	return -1;
     }
 
+// If "pasv_min_port" is zero, then use the original logic (though hylafaxplus v5.5.3),
+// and allow the kernel to allocate an ephemeral port.
     if (pasv_min_port == 0) {
 	if (0 > Socket::bind(fd, (struct sockaddr*)&addr, len)) {
 	    if (debug) logDebug("setupPassiveDataSocket: 'bind()' failed with error %d", errno);
@@ -472,9 +474,29 @@ InetFaxServer::setupPassiveDataSocket(Socket::Address &addr)
 	    return -1;
 	}
     } else {
+
+// New logic, we want to select a local port ($PORT) in range:
+//  pasv_min_port <= $PORT <= pasv_max_port.
+
+// Optimization:
+// Consider if "hfaxd" is communicating with lots of clients.  It is likely that
+// many of them will use a passive data socket concurrently.  If "hfaxd" simply
+// starts binding ports at 'pasv_min_port', then we will have an O(n^2) failed binds
+// for the 'n' active client.  So, we'll treat our port range as a ring, add a "bias"
+// to it, and hope that, statisically, we hit an open port.
+//
+// NOTE: At first I considered storing the "last used port" in a global, but that won't work
+// because "hfaxd" will fork upon client connection.
+//
+// If we assume that the only software binding ports in hfaxd's range on the local system is "hfaxd",
+// Then we can simply use hfaxd's PID as a reasonable value for "bias".
+// However, doing this will leak some info about hfaxd's PID to the remote client.
+// Is this a security problem?  I have no idea right now.
+
 	int count = (pasv_max_port - pasv_min_port) + 1;
+	int bias = getpid();
 	for (int offset = 0; offset < count; offset++) {
-	    int port = pasv_min_port + offset;
+	    int port = pasv_min_port + (offset + bias) % count;
 	    if (debug) logDebug("setupPassiveDataSocket: attempting to bind port %d", port);
 
 	    Socket::port(addr) = htons(port);
