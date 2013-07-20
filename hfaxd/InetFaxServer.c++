@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1170 2013-07-20 22:17:43Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1171 2013-07-20 22:19:30Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -505,13 +505,20 @@ InetFaxServer::setupPassiveDataSocket(Socket::Address &addr)
 void
 InetFaxServer::passiveCmd(void)
 {
+    bool extended_mode = (tokenBody[0] == 'E');		// For brevity.
+
     if (pdata != -1) {
        reply(500, "PASV/EPSV connection already exists");
        return;
        // Maybe we should close the socket instead, and open a new one?
     }
 
-    if (tokenBody[0] == 'E') {
+    if (!extended_mode && (Socket::family(ctrl_addr) != AF_INET)) {
+	reply(500, "Cannot use PASV with IPv6 connections");
+	return;
+    }
+
+    if (extended_mode) {
 	pasv_addr = ctrl_addr;
 	Socket::port(pasv_addr) = 0;
 
@@ -524,10 +531,6 @@ InetFaxServer::passiveCmd(void)
 	} else {
 	    perror_reply(425, "Cannot setup extended passive connection", errno);
 	}
-	return;
-    }
-    if (Socket::family(ctrl_addr) != AF_INET) {
-	reply(500, "Cannot use PASV with IPv6 connections");
 	return;
     }
     if (pdata < 0) {
