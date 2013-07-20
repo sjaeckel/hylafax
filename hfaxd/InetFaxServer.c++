@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1172 2013-07-20 22:22:43Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1173 2013-07-20 22:25:09Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -448,7 +448,7 @@ InetFaxServer::sigPIPE(int)
  * InetFaxServer::setupPassiveDataSocket() will:
  * 1) Allocate a socket (of the correct address family),
  * 2) bind the 'this->pasv_addr' socket,
- * 3) refresh its sockname,
+ * 3) refresh its sockname (to learn bound port number)
  * 4) enter the listen mode.
  * On input, 'addr' should have a family, address and port pre-configured.
  * On success, the function returns the socket's file descriptor.
@@ -465,12 +465,37 @@ InetFaxServer::setupPassiveDataSocket(Socket::Address &addr)
 	return -1;
     }
 
-    if (0 > Socket::bind(fd, (struct sockaddr*)&addr, len)) {
-	if (debug) logDebug("setupPassiveDataSocket: 'bind()' failed with error %d", errno);
+    if (pasv_min_port == 0) {
+	if (0 > Socket::bind(fd, (struct sockaddr*)&addr, len)) {
+	    if (debug) logDebug("setupPassiveDataSocket: 'bind()' failed with error %d", errno);
+	    (void)Sys::close(fd);
+	    return -1;
+	}
+    } else {
+	int count = (pasv_max_port - pasv_min_port) + 1;
+	for (int offset = 0; offset < count; offset++) {
+	    int port = pasv_min_port + offset;
+	    if (debug) logDebug("setupPassiveDataSocket: attempting to bind port %d", port);
+
+	    Socket::port(addr) = htons(port);
+	    if (0 <= Socket::bind(fd, (struct sockaddr*)&addr, len)) {
+		goto i_haz_a_port_bound;
+	    }
+
+	    if (errno != EADDRINUSE) {
+		if (debug) logDebug("setupPassiveDataSocket: 'bind()' failed with error %d", errno);
+		(void)Sys::close(fd);
+		return -1;
+	    }
+	}
+
+	if (debug) logDebug("setupPassiveDataSocket: 'bind()' all ports between %d and %d are in use",
+		pasv_min_port, pasv_max_port);
 	(void)Sys::close(fd);
 	return -1;
     }
 
+i_haz_a_port_bound:
     if (0 > Socket::getsockname(fd, (struct sockaddr*)&addr, &len)) {
 	if (debug) logDebug("setupPassiveDataSocket: 'getsockname' failed with error %d", errno);
 	(void)Sys::close(fd);
