@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1168 2013-07-18 16:52:32Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1169 2013-07-20 22:16:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -47,6 +47,8 @@ InetSuperServer::InetSuperServer(const char* p, int bl)
 {
     bindaddress = NULL;
     addressfamily = NULL;
+    pasv_min_port = 0;
+    pasv_max_port = 0;
 }
 
 InetSuperServer::~InetSuperServer() {}
@@ -61,6 +63,46 @@ void
 InetSuperServer::setAddressFamily(const char *addrfamily)
 {
     addressfamily = addrfamily;
+}
+
+void
+InetSuperServer::setPasvPortRange(const char *optarg)
+{
+    int a = 0, b = 0;
+
+    if (!optarg || !optarg[0]) {
+	pasv_min_port = pasv_max_port = 0;
+	return;
+    }
+
+    if (2 != sscanf(optarg, "%u:%u", &a, &b)) {
+	logError("Failed to parse PASV port range from '%s'.", optarg);
+	exit(-1);
+    }
+
+// PORT 0 has special meaning to us (ie, do NOT restrict range).
+// Unix kernels will not allow a user-mode process to bind TCP port 0 anyway.
+    if ((a < 1) || (a > 65535) || (b < 1) || (b > 65535)) {
+	logError("Invalid PASV port range '%s', ports must be between 1 and 65535, inclusive.", optarg);
+	exit(-1);
+    }
+
+    if ((a > b) || (b - a < PASV_PORT_RANGE_MIN_COUNT)) {
+	logError("Invalid PASV port range size (%d) (not enough ports in range, sanity check).", b - a);
+	exit(-1);
+    }
+
+    pasv_min_port = a;
+    pasv_max_port = b;
+
+    assert (pasv_min_port < pasv_max_port);
+    assert (pasv_min_port > 0);
+    assert (pasv_min_port < 65535);
+    assert (pasv_max_port > 0);
+    assert (pasv_max_port < 65535);
+    assert (pasv_max_port - pasv_min_port >= PASV_PORT_RANGE_MIN_COUNT);
+
+    logInfo("Set PASV mode TCP port range to %d:%d", pasv_min_port, pasv_max_port);
 }
 
 bool
@@ -133,7 +175,13 @@ InetSuperServer::startServer(void)
 	logError("HylaFAX %s: socket: %m", getKind());
     return (false);
 }
-HylaFAXServer* InetSuperServer::newChild(void)	{ return new InetFaxServer; }
+
+HylaFAXServer* InetSuperServer::newChild(void)
+{
+    InetFaxServer *pServer = new InetFaxServer;
+    pServer->setPasvPortRange (pasv_min_port, pasv_max_port);
+    return pServer;
+}
 
 InetFaxServer* InetFaxServer::_instance = NULL;
 
@@ -143,6 +191,8 @@ InetFaxServer::InetFaxServer()
     debug = false;
     swaitmax = 90;			// wait at most 90 seconds
     swaitint = 5;			// interval between retries
+    pasv_min_port = 0;
+    pasv_max_port = 0;
 
     memset(&data_dest, 0, sizeof (data_dest));
     Socket::family(data_dest) = AF_INET6;	// We'll allow AF_INET6 by default.

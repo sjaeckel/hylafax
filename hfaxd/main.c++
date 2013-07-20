@@ -1,4 +1,4 @@
-/*	$Id: main.c++ 1161 2013-07-13 22:36:50Z faxguy $ */
+/*	$Id: main.c++ 1169 2013-07-20 22:16:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -174,7 +174,7 @@ detachFromTTY(void)
 static void
 usage(const char* appName)
 {
-    fatal("usage: %s [-d] [-o port] [-O] [-f bindaddressfamily] [-h port] [-H] [-l bindaddress] [-i port] [-I] [-s port] [-S] [-u socket] [-q queue-directory]",
+    fatal("usage: %s [-d] [-o port] [-O] [-f bindaddressfamily] [-h port] [-H] [-l bindaddress] [-i port] [-I] [-s port] [-S] [-u socket] [-q queue-directory] [-p port:port]",
 	appName);
 }
 
@@ -196,6 +196,7 @@ main(int argc, char** argv, char** envp)
 {
     const char *bindaddress = NULL;
     const char *addressfamily = NULL;
+    const char *pasvportrange = NULL;
 
     HylaFAXServer::setLogFacility(LOG_FAX);
     HylaFAXServer::setupLogging("HylaFAX");
@@ -208,7 +209,7 @@ main(int argc, char** argv, char** envp)
     optind = 1;
     opterr = 0;
     int c;
-    const char* opts = "c:dD:f:Hh:Ii:Oo:q:Ss:u:l:";
+    const char* opts = "c:dD:f:Hh:Ii:Oo:q:Ss:u:l:p:";
     /*
      * Deduce the spooling directory and whether or not to
      * detach the process from the controlling tty.  The
@@ -279,6 +280,8 @@ main(int argc, char** argv, char** envp)
 	    addressfamily = strdup(optarg); break;
 	case 'l':
 	    bindaddress = strdup(optarg); break;
+	case 'p':
+	    pasvportrange = strdup(optarg); break;
 	case 'i':
 	    {
 		InetSuperServer* iss;
@@ -287,6 +290,7 @@ main(int argc, char** argv, char** envp)
 		if (iss != NULL) {
 		    if (bindaddress != NULL) iss->setBindAddress(bindaddress);
 		    if (addressfamily != NULL) iss->setAddressFamily(addressfamily);
+		    if (pasvportrange != NULL) iss->setPasvPortRange(pasvportrange);
 		}
 	    }
 	    break;

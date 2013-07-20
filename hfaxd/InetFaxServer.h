@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.h 1168 2013-07-18 16:52:32Z faxguy $ */
+/*	$Id: InetFaxServer.h 1169 2013-07-20 22:16:28Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -33,6 +33,8 @@ extern "C" {
 
 #include "Socket.h"
 
+static const int PASV_PORT_RANGE_MIN_COUNT = 128;	// FIXME: Is this reasonable?
+
 struct hostent;
 
 class InetFaxServer : public HylaFAXServer {
@@ -50,6 +52,13 @@ protected:
      */
     int		swaitmax;		// wait at most 90 seconds
     int		swaitint;		// interval between retries
+
+    // 'pasv_min_port' / 'pasv_max_port': Used to restrict port range for
+    // data channel socket in FTP protocol.
+    // If either has the value of "0", then don't assign any port number
+    // when "bind"ing, allow the kernel to choose.
+    int		pasv_min_port;
+    int		pasv_max_port;
 
     bool isLocalDomain(const fxStr& h);
     bool checkHostIdentity(const char* hostname);
@@ -82,6 +91,13 @@ public:
     static InetFaxServer& instance();
 
     virtual void open(void);
+
+    // Assumes that validation was done when parsing 'min,max' from
+    // command line and/or config file.
+    virtual inline void setPasvPortRange (int min, int max) {
+	pasv_min_port = min;
+	pasv_max_port = max;
+    }
 };
 
 #include "SuperServer.h"
@@ -96,6 +112,17 @@ private:
     const char *bindaddress;
     const char *addressfamily;
 
+    // MIN and MAX range for PASV mode TCP port numbers (server-side).
+    // Populated when 'main()' calls method 'setPasvPortRange()'.
+    // Passed into InetFAXServer in method 'newChild()'.
+    // If either has the value of "0", then don't assign any port number
+    // when "bind"ing, allow the kernel to choose.
+    // These variables really belong in InetFaxServer, but there is no easy way
+    // to initialize them if placed there, due to how/when InetSuperServer spawns
+    // an InetFaxServer (eg, 'newChild()')
+    int		pasv_min_port;
+    int		pasv_max_port;
+
 protected:
     bool startServer(void);
     HylaFAXServer* newChild(void);
@@ -104,5 +131,6 @@ public:
     ~InetSuperServer();
     void setBindAddress(const char *bindaddress = NULL);
     void setAddressFamily(const char *bindaddress = NULL);
+    void setPasvPortRange(const char *optarg = NULL);
 };
 #endif /* _InetFaxServer_ */
