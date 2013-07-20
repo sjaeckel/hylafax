@@ -1,8 +1,9 @@
-#	$Id: CHANGES 1173 2013-07-20 22:25:09Z faxguy $	
+#	$Id: CHANGES 1175 2013-07-20 22:30:25Z faxguy $	
 
 New Changes
 
-* implement PASV/EPSV port range restrictions (20 Jul 2013)
+* implement PASV/EPSV port range restrictions via command-line
+  parameter '-p min:max' (djenkins, 18 Jul 2013)
 * fix an error in processing hfaxd "i" parameters, especially 
   following "f" or "l" options (13, 17 Jul 2013)
 * make the modem hangup be part of the receive-fax session (12 Jul 2013)

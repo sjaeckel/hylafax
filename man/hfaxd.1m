@@ -1,4 +1,4 @@
-.\"	$Id: hfaxd.1m 944 2009-09-29 11:10:13Z faxguy $
+.\"	$Id: hfaxd.1m 1175 2013-07-20 22:30:25Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -55,6 +55,9 @@ hfaxd \- \*(Fx client-server protocol server
 ] [
 .B \-l
 .I bindaddress
+] [
+.B \-p
+.I pasv_min_port:pasv_max_port
 ] [
 .B \-i
 .I port
@@ -853,6 +856,17 @@ otherwise it will be ignored. A better approach to improve security would
 be to run hfaxd from xinetd, binding its service to the specific port. This
 will also make hylafax benefits from tcp wrappers and other options
 provided by xinetd.
+.TP 10
+.BI \-p " port:port"
+Restrict the range of TCP ports used when binding the socket for
+PASV/EPSV mode data transfers.  Without this option, 
+.I bind
+will be called with a port of 0, allowing the kernel to allocate an ephemeral port.
+To be useful,
+.BI \-p
+MUST be specified BEFORE
+.BI \-i
+due to the way command line arguments are parsed.
 .TP 10
 .BI \-i " port"
 Listen on the specified 
