@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1171 2013-07-20 22:19:30Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1172 2013-07-20 22:22:43Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -507,44 +507,43 @@ InetFaxServer::passiveCmd(void)
 {
     bool extended_mode = (tokenBody[0] == 'E');		// For brevity.
 
+// Sanity checking
     if (pdata != -1) {
        reply(500, "PASV/EPSV connection already exists");
        return;
        // Maybe we should close the socket instead, and open a new one?
     }
 
+// Sanity checking (MUST use 'EPSV' for IPV6)
     if (!extended_mode && (Socket::family(ctrl_addr) != AF_INET)) {
 	reply(500, "Cannot use PASV with IPv6 connections");
 	return;
     }
 
-    if (extended_mode) {
-	pasv_addr = ctrl_addr;
-	Socket::port(pasv_addr) = 0;
+    if (debug) logDebug("Opening socket for '%s' mode for address family %d",
+	extended_mode ? "EPSV" : "PASV",
+	Socket::family(pasv_addr));
 
-	if (debug) logDebug("Extended passive requested for family %d", Socket::family(pasv_addr));
-
-	pdata = setupPassiveDataSocket(pasv_addr);
-	if (pdata >= 0) {
-	    reply(229, "Entering Extended Passive Mode (|||%u|)",
-		    ntohs(Socket::port(pasv_addr)));
-	} else {
-	    perror_reply(425, "Cannot setup extended passive connection", errno);
-	}
+// Create socket (common to both modes).
+// NOTE: setupPassiveDataSocket() will choose the proper address family.
+    pasv_addr = ctrl_addr;
+    Socket::port(pasv_addr) = 0;
+    pdata = setupPassiveDataSocket(pasv_addr);
+    if (pdata < 0) {
+	perror_reply(425, "Cannot setup extended passive connection", errno);
 	return;
     }
-    if (pdata < 0) {
-	pasv_addr = ctrl_addr;
-	pasv_addr.in.sin_port = 0;
-	pdata = setupPassiveDataSocket(pasv_addr);
-    }
-    if (pdata >= 0) {
+
+// Send response via control channel, per RFC 2428.
+// NOTE: The affirmative response codes are DIFFERENT between EPSV and PASV.
+    if (extended_mode) {
+	    reply(229, "Entering Extended Passive Mode (|||%u|)",
+		    ntohs(Socket::port(pasv_addr)));
+    } else {
 	const u_char* a = (const u_char*) &pasv_addr.in.sin_addr;
 	const u_char* p = (const u_char*) &pasv_addr.in.sin_port;
 	reply(227, "Entering passive mode (%d,%d,%d,%d,%d,%d)", UC(a[0]),
 	      UC(a[1]), UC(a[2]), UC(a[3]), UC(p[0]), UC(p[1]));
-    } else {
-	perror_reply(425, "Cannot setup passive connection", errno);
     }
 }
 
