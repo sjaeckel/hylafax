@@ -90,7 +90,7 @@ following for their contributions:
   Damiam Ivereigh
   Thomas Jarosch			cppcheck fixes
   Bernard Jech
-  Dennis Jenkins			PASV/EPSV port range restrictions
+  Dennis Jenkins			PASV/EPSV port range restrictions, code cleanup
   Nico Kadel-Garcia			original fax-to-mail scripts, dialrules.ext/uk
   Tadeusz Andrzej Kadlubowski
   Sean Kamath
