@@ -1,4 +1,4 @@
-/*	$Id: sendfax.c++ 1155 2013-04-26 22:39:33Z faxguy $ */
+/*	$Id: sendfax.c++ 1176 2013-07-24 05:20:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -452,7 +452,7 @@ sendFaxApp::addDestinationsFromFile(const char* filename)
 void
 sendFaxApp::copyToTemporary(int fin, fxStr& tmpl)
 {
-    const char* templ = _PATH_TMP "/sndfaxXXXXXX";
+    const char* templ = _PATH_TMP "sndfaxXXXXXX";
     char* buff = strcpy(new char[strlen(templ) + 1], templ);
     int fd = Sys::mkstemp(buff);
     tmpl = buff;

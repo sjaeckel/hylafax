@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1175 2013-07-20 22:30:25Z faxguy $	
+#	$Id: CHANGES 1176 2013-07-24 05:20:02Z faxguy $	
 
 New Changes
 
+* remove double-slash in tmp files for faxmail/sendfax/sendpage (23 Jul 2013)
 * implement PASV/EPSV port range restrictions via command-line
   parameter '-p min:max' (djenkins, 18 Jul 2013)
 * fix an error in processing hfaxd "i" parameters, especially 

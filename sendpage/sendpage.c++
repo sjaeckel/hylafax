@@ -1,4 +1,4 @@
-/*	$Id: sendpage.c++ 945 2009-09-29 11:46:02Z faxguy $ */
+/*	$Id: sendpage.c++ 1176 2013-07-24 05:20:02Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.
@@ -199,7 +199,7 @@ sendPageApp::usage()
 void
 sendPageApp::copyToTemporary(int fin, fxStr& tmpl)
 {
-    const char* templ = _PATH_TMP "/sndpageXXXXXX";
+    const char* templ = _PATH_TMP "sndpageXXXXXX";
     char* buff = strcpy(new char[strlen(templ) + 1], templ);
     int fd = Sys::mkstemp(buff);
     tmpl = buff;
