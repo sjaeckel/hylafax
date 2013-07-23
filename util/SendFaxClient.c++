@@ -1,4 +1,4 @@
-/*	$Id: SendFaxClient.c++ 1135 2013-01-02 00:41:19Z faxguy $ */
+/*	$Id: SendFaxClient.c++ 1176 2013-07-24 05:20:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -190,7 +190,7 @@ addarg(const char* av[], int& ac, const char* flag, const fxStr& opt)
 bool
 SendFaxClient::makeCoverPage(const SendFaxJob& job, fxStr& file, fxStr& emsg)
 {
-    const char* templ = _PATH_TMP "/sndfaxXXXXXX";
+    const char* templ = _PATH_TMP "sndfaxXXXXXX";
     char* buff = strcpy(new char[strlen(templ) + 1], templ);
     int fd = Sys::mkstemp(buff);
     tmpFile = buff;
@@ -662,7 +662,7 @@ SendFaxClient::prepareFile(FileInfo& info, fxStr& emsg)
     if (info.temp != "" && info.temp != info.name)
 	Sys::unlink(info.temp);
     if (info.rule->getCmd() != "") {	// conversion required
-        const char* templ = _PATH_TMP "/sndfaxXXXXXX";
+        const char* templ = _PATH_TMP "sndfaxXXXXXX";
         char* buff = strcpy(new char[strlen(templ) + 1], templ);
         Sys::mktemp(buff);
         tmpFile = buff;

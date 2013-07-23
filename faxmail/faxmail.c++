@@ -1,4 +1,4 @@
-/*	$Id: faxmail.c++ 1156 2013-05-04 18:46:33Z faxguy $ */
+/*	$Id: faxmail.c++ 1176 2013-07-24 05:20:02Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -359,7 +359,7 @@ faxMailApp::run(int argc, char** argv)
 	 * Redirect formatted output to a temp
 	 * file and setup delivery of the file.
 	 */
-    const char* templ = _PATH_TMP "/faxmail.XXXXXX";
+    const char* templ = _PATH_TMP "faxmail.XXXXXX";
     char* buff = new char[strlen(templ) + 1];
     strcpy(buff, templ);
     int fd = Sys::mkstemp(buff);
@@ -723,7 +723,7 @@ faxMailApp::copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile)
 {
     int ftmp;
     if (tmpFile == "") {
-        const char* templ = _PATH_TMP "/faxmail.XXXXXX";
+        const char* templ = _PATH_TMP "faxmail.XXXXXX";
         char* buff = new char[strlen(templ) + 1];
         strcpy(buff, templ);
         ftmp = Sys::mkstemp(buff);
