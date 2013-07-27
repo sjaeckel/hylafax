@@ -1,4 +1,4 @@
-/*	$Id: faxQueueApp.c++ 1158 2013-05-08 17:26:09Z faxguy $ */
+/*	$Id: faxQueueApp.c++ 1177 2013-07-28 01:07:28Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -492,11 +492,9 @@ faxQueueApp::prepareJobDone(Job& job, int status)
 		sendJobStart(*targetjob->bfirst(), targetjob->bfirst()->breq);
 	    else {
 		/*
-		 * This destination was marked as called, but all jobs to this
-		 * destination failed preparation, so we must undo the call marking.
+		 * This job may be blocking others.
 		 */
 		DestInfo& di = destJobs[job.dest];
-		di.hangup();			// do before unblockDestJobs
 		unblockDestJobs(di);		// release any blocked jobs
 		pokeScheduler();
 	    }

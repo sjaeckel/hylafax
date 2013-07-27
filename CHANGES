@@ -1,7 +1,9 @@
-#	$Id: CHANGES 1176 2013-07-24 05:20:02Z faxguy $	
+#	$Id: CHANGES 1177 2013-07-28 01:07:28Z faxguy $	
 
 New Changes
 
+* prevent a job blocking problem following job preparation 
+  failures (27 Jul 2013)
 * remove double-slash in tmp files for faxmail/sendfax/sendpage (23 Jul 2013)
 * implement PASV/EPSV port range restrictions via command-line
   parameter '-p min:max' (djenkins, 18 Jul 2013)
