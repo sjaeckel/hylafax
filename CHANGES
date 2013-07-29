@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1177 2013-07-28 01:07:28Z faxguy $	
+#	$Id: CHANGES 1178 2013-07-29 22:14:23Z faxguy $	
 
 New Changes
 
+* fix V.34 faxsend crash when DCN received instead of CFR (29 Jul 2013)
 * prevent a job blocking problem following job preparation 
   failures (27 Jul 2013)
 * remove double-slash in tmp files for faxmail/sendfax/sendpage (23 Jul 2013)
