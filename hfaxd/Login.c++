@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 1185 2013-07-31 17:04:37Z faxguy $ */
+/*	$Id: Login.c++ 1186 2013-07-31 17:05:45Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -170,7 +170,6 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	struct berval s_UserPasswd = {0};
 	LDAP* p_LDAPConn = NULL;
 	bool bValidUser = false;
-
 	char filter[255] = "";
 	char sLDAPUserDN[255] = "";
 
@@ -222,14 +221,13 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 * Connect to the LDAP server and set the version
 	 */
 	ldap_initialize(&p_LDAPConn, ldapServerUri);
-	if (p_LDAPConn == NULL)
-	{
+	if (p_LDAPConn == NULL) {
 		reply(530, "Unable to connect to LDAP");
 		goto cleanup;
 	}
+
 	err = ldap_set_option(p_LDAPConn, LDAP_OPT_PROTOCOL_VERSION, (void *) &ldapVersion);
-	if (err != LDAP_SUCCESS)
-	{
+	if (err != LDAP_SUCCESS) {
 		reply(530, "Set Option LDAP error %d: %s", err, ldap_err2string(err));
 		goto cleanup;
 	}
@@ -243,8 +241,7 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 * are incorrect
 	 */
 	err = ldap_sasl_bind_s(p_LDAPConn, sLDAPUserDN, LDAP_SASL_SIMPLE, &s_UserPasswd, NULL, NULL, NULL);
-	if (err != LDAP_SUCCESS)
-	{
+	if (err != LDAP_SUCCESS) {
 		reply(530, "Bind LDAP error %d: %s", err, ldap_err2string(err));
 		goto cleanup;
 	}
@@ -256,8 +253,7 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 * access.
 	 */
 	err = ldap_search_ext_s(p_LDAPConn, sLDAPUserDN, LDAP_SCOPE_SUBTREE, filter, NULL, 0, NULL, NULL, NULL, 0, &pEntries);
-	if (err != LDAP_SUCCESS)
-	{
+	if (err != LDAP_SUCCESS) {
 		reply(530, "Search LDAP error %d: %s", err, ldap_err2string(err));
 		goto cleanup;
 	}
@@ -267,8 +263,7 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 * our desired user
 	 */
 	pEntry = ldap_first_entry(p_LDAPConn, pEntries);
-	if (pEntry == NULL)
-	{
+	if (pEntry == NULL) {
 		reply(530, "LDAP user not found");
 		goto cleanup;
 	}
@@ -277,8 +272,7 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 * Fetch all of the groupMembership values
 	 */
 	p_arr_values = ldap_get_values_len(p_LDAPConn, pEntry, "groupMembership");
-	if (p_arr_values == NULL)
-	{
+	if (p_arr_values == NULL) {
 		reply(530, "LDAP attribute groupMembership not found");
 		goto cleanup;
 	}
@@ -287,21 +281,17 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 * Check each value to see if it matches
 	 * our desired value specifed in the config
 	 */
-	while (p_arr_values[i] != NULL)
-	{
-		if (strcmp(ldapReqGroup, p_arr_values[i]->bv_val) == 0)
-		{
+	while (p_arr_values[i] != NULL) {
+		if (strcmp(ldapReqGroup, p_arr_values[i]->bv_val) == 0)	{
 			bValidUser = true;
+			retval = true;
 			break;
 		}
 		i++;
 	}
-	if (bValidUser)
-		retval = true;
-	else
-	{
+
+	if (!bValidUser) {
 		reply(530, "Access Denied");
-		goto cleanup;
 	}
 
 cleanup:
