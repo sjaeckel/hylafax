@@ -1,4 +1,4 @@
-/*	$Id: InetFaxServer.c++ 1174 2013-07-20 22:27:39Z faxguy $ */
+/*	$Id: InetFaxServer.c++ 1179 2013-07-31 16:54:48Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -546,8 +546,7 @@ i_haz_a_port_bound:
  * InetFaxServer::passiveCmd() is called when the fax client sends the 'PASV'
  * or 'EPSV' command to the hfaxd server over the existing control channel.
  * This function implements RFC 2428 (http://tools.ietf.org/html/rfc2428).
- * BUG: This function will leak a socket if the fax client sends 'PASV' or
- * 'EPSV' multiple times.  A properly behaving client will not do this.
+ * A properly behaving client will not send 'PASV' or 'EPSV' mutliple times.
  */
 void
 InetFaxServer::passiveCmd(void)
