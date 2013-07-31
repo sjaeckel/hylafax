@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 1180 2013-07-31 16:55:56Z faxguy $ */
+/*	$Id: Login.c++ 1181 2013-07-31 16:57:24Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -165,15 +165,19 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 #ifdef HAVE_LDAP
 #define LDAP_BUFFER_LEN 255
 	int err = 0, i = 0;
-	char* filter = new char[LDAP_BUFFER_LEN];
-	snprintf(filter, LDAP_BUFFER_LEN, "uid=%s", user);
-	LDAPMessage* pEntries;
-	LDAPMessage* pEntry;
-	struct berval **p_arr_values;
-	struct berval s_UserPasswd;
-	char* sLDAPUserDN = new char[LDAP_BUFFER_LEN];
-	LDAP* p_LDAPConn;
+	char* filter = NULL;
+	LDAPMessage* pEntries = NULL;
+	LDAPMessage* pEntry = NULL;
+	struct berval **p_arr_values = NULL;
+	struct berval s_UserPasswd = {0};
+	char* sLDAPUserDN = NULL;
+	LDAP* p_LDAPConn = NULL;
 	bool bValidUser = false;
+
+	filter = new char[LDAP_BUFFER_LEN];
+	sLDAPUserDN = new char[LDAP_BUFFER_LEN];
+
+	snprintf(filter, LDAP_BUFFER_LEN, "uid=%s", user);
 
 	/*
 	 * See if ldapServerUri has a value.
