@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 1184 2013-07-31 17:03:24Z faxguy $ */
+/*	$Id: Login.c++ 1185 2013-07-31 17:04:37Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -163,19 +163,16 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 {
 	bool retval = false;
 #ifdef HAVE_LDAP
-#define LDAP_BUFFER_LEN 255
 	int err = 0, i = 0;
-	char* filter = NULL;
 	LDAPMessage* pEntries = NULL;
 	LDAPMessage* pEntry = NULL;
 	struct berval **p_arr_values = NULL;
 	struct berval s_UserPasswd = {0};
-	char* sLDAPUserDN = NULL;
 	LDAP* p_LDAPConn = NULL;
 	bool bValidUser = false;
 
-	filter = new char[LDAP_BUFFER_LEN];
-	sLDAPUserDN = new char[LDAP_BUFFER_LEN];
+	char filter[255] = "";
+	char sLDAPUserDN[255] = "";
 
 	/*
 	 * See if ldapServerUri has a value.
@@ -196,10 +193,10 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 		goto cleanup;
 	}
 
-	i = snprintf(filter, LDAP_BUFFER_LEN, "uid=%s", user);
+	i = snprintf(filter, sizeof(filter), "uid=%s", user);
 
 	// Did we overflow?  If so, then just fail the authentication.
-	if (i >= LDAP_BUFFER_LEN) {
+	if (i >= sizeof(filter)) {
 		goto cleanup;
 	}
 
@@ -207,10 +204,10 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 * Build the User DN using the LDAP Base value
 	 * from the config file and the supplied username
 	 */
-	i = snprintf(sLDAPUserDN, LDAP_BUFFER_LEN, "cn=%s,%s", user, (const char*)ldapBaseDN);
+	i = snprintf(sLDAPUserDN, sizeof(sLDAPUserDN), "cn=%s,%s", user, (const char*)ldapBaseDN);
 
 	// Did we overflow?  If so, then just fail the authentication.
-	if (i >= LDAP_BUFFER_LEN) {
+	if (i >= sizeof(sLDAPUserDN)) {
 		goto cleanup;
 	}
 
@@ -317,9 +314,6 @@ cleanup:
 		ldap_unbind_ext_s(p_LDAPConn, NULL, NULL);
 		p_LDAPConn = NULL;
 	}
-
-	delete[] filter;
-	delete[] sLDAPUserDN;
 
 #endif // HAVE_LDAP
 	return retval;
