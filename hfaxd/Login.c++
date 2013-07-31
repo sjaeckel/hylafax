@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 1181 2013-07-31 16:57:24Z faxguy $ */
+/*	$Id: Login.c++ 1182 2013-07-31 17:00:33Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -177,8 +177,6 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	filter = new char[LDAP_BUFFER_LEN];
 	sLDAPUserDN = new char[LDAP_BUFFER_LEN];
 
-	snprintf(filter, LDAP_BUFFER_LEN, "uid=%s", user);
-
 	/*
 	 * See if ldapServerUri has a value.
 	 * If not, disable using LDAP support.
@@ -192,6 +190,16 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 
 	// Avoid NULL pointers, empty strings, incomplete LDAP configs.
 	if (!user || !strlen(user) || !pass || !ldapBaseDN || !ldapBaseDN[0]) {
+		retval = false;
+		delete[] filter;
+		delete[] sLDAPUserDN;
+		return retval;
+	}
+
+	i = snprintf(filter, LDAP_BUFFER_LEN, "uid=%s", user);
+
+	// Did we overflow?  If so, then just fail the authentication.
+	if (i >= LDAP_BUFFER_LEN) {
 		retval = false;
 		delete[] filter;
 		delete[] sLDAPUserDN;
