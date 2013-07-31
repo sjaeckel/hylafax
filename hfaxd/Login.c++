@@ -1,4 +1,4 @@
-/*	$Id: Login.c++ 1183 2013-07-31 17:01:44Z faxguy $ */
+/*	$Id: Login.c++ 1184 2013-07-31 17:03:24Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
@@ -185,8 +185,14 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 		goto cleanup;
 	}
 
+	if (!ldapBaseDN || !ldapBaseDN[0]){
+// FIXME: Should we leak this error message to an unathenticated client?
+		reply(530, "LDAP misconfigured (ldapBaseDN)");
+		goto cleanup;
+	}
+
 	// Avoid NULL pointers, empty strings, incomplete LDAP configs.
-	if (!user || !strlen(user) || !pass || !ldapBaseDN || !ldapBaseDN[0]) {
+	if (!user || !strlen(user) || !pass) {
 		goto cleanup;
 	}
 
