@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1178 2013-07-29 22:14:23Z faxguy $	
+#	$Id: CHANGES 1187 2013-07-31 17:09:23Z faxguy $	
 
 New Changes
 
+* rewrite direct LDAP authentication function by Dennis Jenkins (31 Jul 2013)
 * fix V.34 faxsend crash when DCN received instead of CFR (29 Jul 2013)
 * prevent a job blocking problem following job preparation 
   failures (27 Jul 2013)
