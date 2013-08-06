@@ -1,7 +1,8 @@
-#	$Id: CHANGES 1187 2013-07-31 17:09:23Z faxguy $	
+#	$Id: CHANGES 1188 2013-08-06 23:13:37Z faxguy $	
 
 New Changes
 
+* trigtest: Fix file descriptor leak on error (6 Aug 2013)
 * rewrite direct LDAP authentication function by Dennis Jenkins (31 Jul 2013)
 * fix V.34 faxsend crash when DCN received instead of CFR (29 Jul 2013)
 * prevent a job blocking problem following job preparation 

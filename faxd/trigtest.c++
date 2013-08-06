@@ -30,6 +30,7 @@ openFIFO(const char* name, int mode)
     }
     if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NDELAY) < 0) {
 	perror("fcntl");
+	close(fd);
 	return (-1);
     }
     return (fd);
