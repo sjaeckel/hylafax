@@ -1,4 +1,4 @@
-/*	$Id$
+/*	$Id: snprintf.c 2 2005-11-11 21:32:03Z faxguy $
 /*
  * Copyright (c) 2000 Robert Colquhoun (rjc@trump.net.au)
  *

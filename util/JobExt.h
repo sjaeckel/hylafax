@@ -1,4 +1,4 @@
-/*	$Id: JobExt.h,v 1.7 1996/06/24 03:05:52 sam Rel $ */
+/*	$Id: JobExt.h 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.

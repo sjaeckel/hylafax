@@ -1,4 +1,4 @@
-/*	$Id: srandom.c,v 1.3 1996/06/24 03:04:35 sam Rel $
+/*	$Id: srandom.c 2 2005-11-11 21:32:03Z faxguy $
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.

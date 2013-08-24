@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id$
+#	$Id: notify.awk 2 2005-11-11 21:32:03Z faxguy $
 #
 # HylaFAX Facsimile Software
 #

@@ -1,4 +1,4 @@
-/* $Id: t4.h,v 1.1 1997/02/16 11:18:20 guru Rel $ */
+/* $Id: t4.h 2 2005-11-11 21:32:03Z faxguy $ */
 
 /*
  * Copyright (c) 1988-1996 Sam Leffler

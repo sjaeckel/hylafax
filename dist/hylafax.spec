@@ -1,4 +1,4 @@
-#	$Id: hylafax.spec,v 1.44 1996/12/03 20:01:57 sam Rel $
+#	$Id: hylafax.spec 2 2005-11-11 21:32:03Z faxguy $
 #
 # HylaFAX Facsimile Software
 #

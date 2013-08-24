@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$Id: Class10.c++ 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 2004 Lee Howard
  * Copyright (c) 1994-1996 Sam Leffler

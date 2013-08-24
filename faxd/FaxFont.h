@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$Id: FaxFont.h 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1994-1996 Sam Leffler
  * Copyright (c) 1994-1996 Silicon Graphics, Inc.

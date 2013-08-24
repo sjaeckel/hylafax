@@ -1,4 +1,4 @@
-/*	$Id: StrArray.c++,v 1.10 1996/08/21 22:05:16 sam Rel $ */
+/*	$Id: StrArray.c++ 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.

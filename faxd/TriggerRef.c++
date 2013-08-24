@@ -1,4 +1,4 @@
-/*	$Id: TriggerRef.c++,v 1.2 1996/06/24 03:00:44 sam Rel $ */
+/*	$Id: TriggerRef.c++ 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.

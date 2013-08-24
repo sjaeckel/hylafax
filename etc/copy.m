@@ -1,4 +1,4 @@
-#	$Id: copy.m,v 1.11 1996/06/24 02:59:31 sam Rel $
+#	$Id: copy.m 2 2005-11-11 21:32:03Z faxguy $
 #
 # HylaFAX Facsimile Software
 #

@@ -1,4 +1,4 @@
-/*	$Id: DSmacros.h,v 1.12 1996/06/24 23:23:15 sam Rel $ */
+/*	$Id: DSmacros.h 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
