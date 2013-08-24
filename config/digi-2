@@ -1,4 +1,4 @@
-# $Id$
+# $Id: digi-2 2 2005-11-11 21:32:03Z faxguy $
 #
 # prototype config for Digi AccelePort RAS
 # It uses a K56 chip, but is similar in behavior to Lucents.

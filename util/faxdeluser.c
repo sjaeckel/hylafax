@@ -1,4 +1,4 @@
-/*	$Id$ */
+/*	$Id: faxdeluser.c 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1999 Robert Colquhoun
  *

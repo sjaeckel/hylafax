@@ -1,4 +1,4 @@
-/*	$Id: ondelay.c,v 1.10 1996/06/24 02:59:37 sam Rel $ */
+/*	$Id: ondelay.c 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.

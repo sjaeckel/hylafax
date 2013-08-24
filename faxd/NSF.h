@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: NSF.h 2 2005-11-11 21:32:03Z faxguy $ */
 /* 
  * This file does not exist in the original HylaFAX distribution.
  * Created by Dmitry Bely, April 2000

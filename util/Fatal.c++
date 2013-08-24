@@ -1,4 +1,4 @@
-/*	$Id: Fatal.c++,v 1.11 1996/06/24 03:05:43 sam Rel $ */
+/*	$Id: Fatal.c++ 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1990-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.

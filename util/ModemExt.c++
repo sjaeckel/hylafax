@@ -1,4 +1,4 @@
-/*	$Id: ModemExt.c++,v 1.10 1996/06/24 03:05:53 sam Rel $ */
+/*	$Id: ModemExt.c++ 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.

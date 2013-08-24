@@ -1,4 +1,4 @@
-.\"	$Id$
+.\"	$Id: hylafax-config.4f 2 2005-11-11 21:32:03Z faxguy $
 .\"
 .\" HylaFAX Facsimile Software
 .\"
@@ -28,7 +28,7 @@
 .if n .po 0
 .ds Fx \fIHyla\s-1FAX\s+1\fP
 .ds Ps P\s-2OST\s+2S\s-2CRIPT\s+2
-.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date$"
+.TH HYLAFAX-CONFIG ${MANNUM4_5} "$Date: 2005-11-11 13:32:03 -0800 (Fri, 11 Nov 2005) $"
 .SH NAME
 config \- \*(Fx configuration database
 .SH DESCRIPTION

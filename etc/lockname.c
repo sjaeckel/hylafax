@@ -1,4 +1,4 @@
-/*	$Id: lockname.c,v 1.7 1996/08/21 01:35:32 sam Rel $ */
+/*	$Id: lockname.c 2 2005-11-11 21:32:03Z faxguy $ */
 /*
  * Copyright (c) 1993-1996 Sam Leffler
  * Copyright (c) 1993-1996 Silicon Graphics, Inc.

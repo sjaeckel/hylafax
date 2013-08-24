@@ -1,4 +1,4 @@
-# $Id$
+# $Id: srequest.in 2 2005-11-11 21:32:03Z faxguy $
 trap 'exit 3' 15
 # determine if man & html pages should be installed
 ans=`ckyorn -d y \

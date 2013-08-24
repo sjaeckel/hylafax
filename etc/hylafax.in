@@ -1,5 +1,5 @@
 #! /bin/sh
-#	$Id$
+#	$Id: hylafax.in 2 2005-11-11 21:32:03Z faxguy $
 #
 # chkconfig: 2345 97 05
 #
