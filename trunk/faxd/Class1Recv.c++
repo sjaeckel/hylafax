@@ -1159,6 +1159,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
     bool pagedataseen = false;
     u_short seq = 1;					// sequence code for the first block
     prevBlock = 0;
+    u_int lastSignalRcvd = 0;
 
     do {
 	u_int fnum = 0;
@@ -1173,6 +1174,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	do {
 	    sendERR = false;
 	    resetBlock();
+	    lastSignalRcvd = signalRcvd;
 	    signalRcvd = 0;
 	    rcpcnt = 0;
 	    bool dataseen = false;
@@ -1895,6 +1897,13 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	// data at all we send DCN instead of MCF in hopes of a retransmission.
 	emsg = "ECM page received containing no image data. {E121}";
 	return (false);
+    }
+    if (!signalRcvd) {
+	// It appears that the sender did something bizarre such as first signaling
+	// PPS-MPS and then after a PPR exchange later signaled PPS-NULL.  We've come
+	// to here because lastblock was set true as was blockgood.  So let's restore
+	// signalRcvd to the non-null value so that we can do something useful after.
+	signalRcvd = lastSignalRcvd;
     }
     return (true);   		// signalRcvd is set, full page is received...
 }
