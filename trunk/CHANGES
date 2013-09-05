@@ -2,6 +2,11 @@
 
 New Changes
 
+* cope with senders that signal PPS-NULL after retransmissions following
+  PPS-MPS (5 Sep 2013)
+
+(5.5.4)
+
 * trigtest: Fix file descriptor leak on error (6 Aug 2013)
 * rewrite direct LDAP authentication function by Dennis Jenkins (31 Jul 2013)
 * fix V.34 faxsend crash when DCN received instead of CFR (29 Jul 2013)
