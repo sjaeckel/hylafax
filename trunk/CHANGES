@@ -2,6 +2,7 @@
 
 New Changes
 
+* automatically detect another type of problem for hasV34Trouble (7 Sep 2013)
 * cope with senders that signal PPS-NULL after retransmissions following
   PPS-MPS (5 Sep 2013)
 

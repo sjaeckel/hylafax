@@ -185,7 +185,10 @@ Class1Modem::getPrologue(Class2Params& params, bool& hasDoc, fxStr& emsg, u_int&
     }
 
     for (;;) {
-	if (gotEOT) break;
+	if (gotEOT) {
+	    if (useV34) hadV34Trouble = true;	// it appears that the connection is too poor for the V.34 carrier
+	    break;
+	}
 	if (framerecvd) {
 	    /*
 	     * An HDLC frame was received; process any
