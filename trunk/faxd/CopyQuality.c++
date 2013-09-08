@@ -365,6 +365,7 @@ FaxModem::recvPageDLEData(TIFF* tif, bool checkQuality,
 	    parserCount[0] = 0;
 	    parserCount[1] = 0;
 	    parserCount[2] = 0;
+	    parserCount[3] = 0;
 	    memset(parserBuf, 0, 16);
 	    int cc = 0, c;
 	    bool fin = false;
@@ -604,6 +605,7 @@ FaxModem::parseJBIGStream(u_char c)
      *   n = 0, bytes since last marker
      *   n = 1, SDNORM marker counter
      *   n = 2, framelength bypass countdown
+     *   n = 3, NEWLEN marker counter
      */
     parserCount[0]++;
     if (parserCount[2]) {
@@ -636,15 +638,18 @@ FaxModem::parseJBIGStream(u_char c)
 	return;
     }
     if (parserCount[0] >= 6 && parserBuf[5] == 0xFF && parserBuf[4] == 0x05) {
-	clearSDNORMCount();
-	framelength = 256*256*256*parserBuf[3];
-	framelength += 256*256*parserBuf[2];
-	framelength += 256*parserBuf[1];
-	framelength += parserBuf[0];
-	copyQualityTrace("Found NEWLEN Marker Segment in BID, Yd = %d", framelength);
-	// T.82: "The new Yd shall never be greater than the original"
-	if (framelength < 65535 && (!recvEOLCount || framelength < recvEOLCount)) recvEOLCount = framelength;
-	parserCount[0] = 0;
+	if (!parserCount[3]) {	// T.82: "At most only one new length marker segment shall appear in any BIE."
+	    parserCount[3]++;
+	    clearSDNORMCount();
+	    framelength = 256*256*256*parserBuf[3];
+	    framelength += 256*256*parserBuf[2];
+	    framelength += 256*parserBuf[1];
+	    framelength += parserBuf[0];
+	    copyQualityTrace("Found NEWLEN Marker Segment in BID, Yd = %d", framelength);
+	    // T.82: "The new Yd shall never be greater than the original"
+	    if (framelength < 65535 && (!recvEOLCount || framelength < recvEOLCount)) recvEOLCount = framelength;
+	    parserCount[0] = 0;
+	}
 	return;
     }
     if (parserCount[0] >= 2 && parserBuf[1] == 0xFF && parserBuf[0] == 0x01) {
@@ -1038,6 +1043,7 @@ FaxModem::writeECMData(TIFF* tif, u_char* buf, u_int cc, const Class2Params& par
 		    parserCount[0] = 0;
 		    parserCount[1] = 0;
 		    parserCount[2] = 0;
+		    parserCount[3] = 0;
 		    memset(parserBuf, 0, 16);
 		}
 		break;
@@ -1052,6 +1058,7 @@ FaxModem::writeECMData(TIFF* tif, u_char* buf, u_int cc, const Class2Params& par
 		parserCount[0] = 0;
 		parserCount[1] = 0;
 		parserCount[2] = 0;
+		parserCount[3] = 0;
 		memset(parserBuf, 0, 16);
 		break;
 	}
