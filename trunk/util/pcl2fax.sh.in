@@ -197,7 +197,7 @@ if [ -f etc/FaxModify ]; then
 fi
 
 if [ ! "$PCLFONTSOURCE" -a -n "$FONTPATH" ] ; then 
-    PCLFONTSOURCE=$FONTPATH
+    PCLFONTSOURCE="`echo $FONTPATH | $SED 's/:/;/g'`"
 fi
 if [ -n "$PCLFONTSOURCE" ] ; then
     export PCLFONTSOURCE
