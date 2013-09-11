@@ -2,6 +2,7 @@
 
 New Changes
 
+* fix pcl2fax -2 -3 and -color options (11 Sep 2013)
 * avoid interpreting multiple NEWLEN markers in JBIG images (8 Sep 2013)
 * automatically detect another type of problem for hasV34Trouble (7 Sep 2013)
 * cope with senders that signal PPS-NULL after retransmissions following
