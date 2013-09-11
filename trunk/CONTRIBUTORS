@@ -4,6 +4,7 @@ following for their contributions:
 
   Alvaro Aguilera
   Andre Albsmeier
+  Bram <bram-ulynsnk@mail.wizbit.be>	invocation fixes for pcl2fax
   Bruno Almeida do Lago			"modem echoes dialstring" handling, manpage documentation
   Carol Almquist			"modem dial gives DLE+ETX" handling
   Matthias Apitz

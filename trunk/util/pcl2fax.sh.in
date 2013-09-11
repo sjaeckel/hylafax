@@ -81,15 +81,15 @@ do case "$1" in
     -m) shift;;				# NB: not implemented
     -U) unlimitedlength=yes ;;
     -1) device=tiffg3 ;;
-    -2) ($PCL -h | grep tiffg32d >/dev/null 2>&1) \
+    -2) ($PCL6CMD -h | grep tiffg32d >/dev/null 2>&1) \
             && { device=tiffg32d; } \
             || { device=tiffg3; }
         ;;
-    -3) ($PCL -h | grep tiffg4 >/dev/null 2>&1) \
+    -3) ($PCL6CMD -h | grep tiffg4 >/dev/null 2>&1) \
             && { device=tiffg4; } \
             || { device=tiffg3; }
         ;;
-    -color) ($PCL -h | grep tiff24nc >/dev/null 2>&1) \
+    -color) ($PCL6CMD -h | grep tiff24nc >/dev/null 2>&1) \
 	    && { color=yes; }
 	;;
     -*) ;;
