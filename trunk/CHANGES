@@ -2,6 +2,7 @@
 
 New Changes
 
+* improve faxmail handling of multipart messages (12 Sep 2013)
 * fix PCLFONTSOURCE usage (11 Sep 2013)
 * fix pcl2fax -2 -3 and -color options (11 Sep 2013)
 * avoid interpreting multiple NEWLEN markers in JBIG images (8 Sep 2013)

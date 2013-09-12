@@ -441,6 +441,7 @@ void
 faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 {
     fxStr emsg;
+    fxStr oldboundary = mime.getBoundary();	// preserve the boundary if the upcoming part is a multipart
     if (mime.parse(msg, emsg)) {
 	if (verbose)
 	    mime.trace(stderr);
@@ -504,9 +505,14 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	 */
 	const fxStr& type = mime.getType();
 	fxStr app = mimeConverters | "/" | type | "/" | mime.getSubType();
-	if (Sys::access(app, X_OK) >= 0)
+	if (Sys::access(app, X_OK) >= 0) {
+	    if (type == "multipart" && oldboundary != "") {
+		oldboundary.remove(0, 2);
+		oldboundary.remove(oldboundary.length()-2, 2);
+		mime.setBoundary(oldboundary);	// restore the parent boundary
+	    }
 	    formatWithExternal(fd, app, mime);
-	else if (type == "text")
+	} else if (type == "text")
 	    formatText(fd, mime);
 	else if (type == "application")
 	    formatApplication(fd, mime);
@@ -565,6 +571,7 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	    if (mime.getSubType() != "alternative" || !useAlternativePart || useAlternativePart == num) {
 		formatMIME(fd, bodyMime, bodyHdrs);
 	    } else {
+		fprintf(stderr, "Discarding part per configuration for multipart/alternative\n");
 		discardPart(fd, bodyMime);
 	    }
 	    last = bodyMime.isLastPart();
@@ -707,8 +714,10 @@ void
 faxMailApp::discardPart(FILE* fd, MIMEState& mime)
 {
     fxStackBuffer buf;
-    while (mime.getLine(fd, buf))
-	;					// discard input data
+    while (mime.getLine(fd, buf));	// discard input data
+    int c = getc(fd);
+    while (c == '\n' || c == '\r' || c == ' ') c = getc(fd);
+    ungetc(c, fd);
 }
 
 /*
@@ -743,8 +752,11 @@ faxMailApp::copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile)
         fxStackBuffer buf;
         bool ok = true;
         while (mime.getLine(fd, buf) && ok) {
-	        ok = ((u_int) Sys::write(ftmp, buf, buf.getLength()) == buf.getLength());
+	    ok = ((u_int) Sys::write(ftmp, buf, buf.getLength()) == buf.getLength());
         }
+	int c = getc(fd);
+	while (c == '\n' || c == '\r' || c == ' ') c = getc(fd);
+	ungetc(c, fd);
         if (ok) {
             Sys::close(ftmp);
             return (true);
