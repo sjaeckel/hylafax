@@ -49,6 +49,7 @@
 # CONFIG:CLASS1:Mainpine CFAX34*:.*:.*: Manufacturer=Mainpine Model='IQ Express'
 # CONFIG:CLASS1:.*:Mainpine CFAX34*:.*: Manufacturer=Mainpine Model='IQ Express'
 # CONFIG:CLASS1:Agere OCM V.92*:.*:.*: Manufacturer=Agere Model=OCM
+# CONFIG:CLASS1:AGERE OCM V.92*:.*:.*: Manufacturer=Agere Model=OCM
 #
 # BEGIN-SERVER
 # END-SERVER
