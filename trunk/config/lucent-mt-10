@@ -13,6 +13,7 @@
 # CONFIG:CLASS1.0:LT V.92 1.0 ISI5634PCI*:.*:.*: Manufacturer=MultiTech Model=ISI5634PCI
 # CONFIG:CLASS1.0:LT V.92 1.0 MT5634SMI*:.*:.*: Manufacturer=MultiTech Model=MT5634SMI
 # CONFIG:CLASS1.0:Agere OCM V.92*:.*:.*: Manufacturer=Agere Model=OCM
+# CONFIG:CLASS1.0:AGERE OCM V.92*:.*:.*: Manufacturer=Agere Model=OCM
 #
 # BEGIN-SERVER
 # END-SERVER
