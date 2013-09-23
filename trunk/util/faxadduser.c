@@ -140,12 +140,14 @@ main(int argc, char** argv)
         if ((hf = fopen(hostfile, "r+")) == NULL) {
             snprintf(buff, sizeof(buff), "Error - cannot open file: %s", hostfile);
             perror(buff);
+	    fclose(nhf);
             return -1;
         }
         while (fgets(buff, sizeof(buff), hf)) {
             if (fprintf(nhf, "%s", buff) < 1) {
                 snprintf(buff, sizeof(buff), "Error writing to file %s", newhostfile);
                 perror(buff);
+		fclose(hf);
                 return -1;
             }
         }
