@@ -330,17 +330,19 @@ MIMEState::getLine(FILE* fd, fxStackBuffer& buf)
 		}
 	    }
             if (c == '\n') {			// check for boundary marker
-	            lineno++;
-	            u_int cc = buf.getLength();
-	            if (cc >= blen && buf[0] == '-') {
-	                if (cc == blen && strneq(buf, boundary, blen)) {
-		                return (false);
-                    }
-	                if (cc == blen+2 && strneq(buf, boundary, blen+2)) {
-		                lastPart = true;
-		                return (false);
-	                }
-            	}
+		lineno++;
+	        u_int cc = buf.getLength();
+	        if (cc >= blen && buf[0] == '-') {
+	            if (cc == blen && strneq(buf, boundary, blen)) {
+			buf.put('\n');
+			return (false);
+		    }
+		    if (cc == blen+2 && strneq(buf, boundary, blen+2)) {
+			lastPart = true;
+			buf.put('\n');
+			return (false);
+		    }
+		}
                 buf.put('\n');
                 return (true);
             }

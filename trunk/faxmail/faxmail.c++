@@ -506,11 +506,6 @@ faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 	const fxStr& type = mime.getType();
 	fxStr app = mimeConverters | "/" | type | "/" | mime.getSubType();
 	if (Sys::access(app, X_OK) >= 0) {
-	    if (type == "multipart" && oldboundary != "") {
-		oldboundary.remove(0, 2);
-		oldboundary.remove(oldboundary.length()-2, 2);
-		mime.setBoundary(oldboundary);	// restore the parent boundary
-	    }
 	    formatWithExternal(fd, app, mime);
 	} else if (type == "text")
 	    formatText(fd, mime);
@@ -751,9 +746,15 @@ faxMailApp::copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile)
         */
         fxStackBuffer buf;
         bool ok = true;
-        while (mime.getLine(fd, buf) && ok) {
-	    ok = ((u_int) Sys::write(ftmp, buf, buf.getLength()) == buf.getLength());
-        }
+	do {
+	    while (mime.getLine(fd, buf) && ok) {
+		ok = ((u_int) Sys::write(ftmp, buf, buf.getLength()) == buf.getLength());
+	    }
+	    if (ok && mime.getType() == "multipart") {
+		// copy the boundary marker, too
+		ok = ((u_int) Sys::write(ftmp, buf, buf.getLength()) == buf.getLength());
+	    }
+	} while (ok && mime.getType() == "multipart" && !mime.isLastPart());
 	int c = getc(fd);
 	while (c == '\n' || c == '\r' || c == ' ') c = getc(fd);
 	ungetc(c, fd);
