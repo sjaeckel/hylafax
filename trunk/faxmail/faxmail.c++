@@ -96,6 +96,7 @@ private:
 
     void emitClientPrologue(FILE*);
 
+    void discardPrologue(FILE* fd, MIMEState& mime);
     void discardPart(FILE* fd, MIMEState& mime);
     bool copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile);
     bool runConverter(const fxStr& app, const fxStr& tmp, MIMEState& mime);
@@ -441,7 +442,6 @@ void
 faxMailApp::formatMIME(FILE* fd, MIMEState& mime, MsgFmt& msg)
 {
     fxStr emsg;
-    fxStr oldboundary = mime.getBoundary();	// preserve the boundary if the upcoming part is a multipart
     if (mime.parse(msg, emsg)) {
 	if (verbose)
 	    mime.trace(stderr);
@@ -546,7 +546,7 @@ faxMailApp::formatText(FILE* fd, MIMEState& mime)
 void
 faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 {
-    discardPart(fd, mime);			// prologue
+    discardPrologue(fd, mime);			// prologue
     if (!mime.isLastPart()) {
 	bool last = false;
 	u_int num = 0;
@@ -569,7 +569,13 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 		fprintf(stderr, "Discarding part per configuration for multipart/alternative\n");
 		discardPart(fd, bodyMime);
 	    }
-	    last = bodyMime.isLastPart();
+	    if (bodyMime.getType() == "multipart") {
+		// was a multipart-within-multipart - read to this part's boundary...
+		discardPrologue(fd, mime);
+		last = mime.isLastPart();
+	    } else {
+		last = bodyMime.isLastPart();
+	    }
 	}
     }
 }
@@ -706,10 +712,25 @@ faxMailApp::formatDiscarded(MIMEState& mime)
  * Discard input data up to the next boundary marker.
  */
 void
-faxMailApp::discardPart(FILE* fd, MIMEState& mime)
+faxMailApp::discardPrologue(FILE* fd, MIMEState& mime)
 {
     fxStackBuffer buf;
     while (mime.getLine(fd, buf));	// discard input data
+    int c = getc(fd);
+    while (c == '\n' || c == '\r' || c == ' ') c = getc(fd);
+    ungetc(c, fd);
+}
+
+/*
+ * Discard an entire part.
+ */
+void
+faxMailApp::discardPart(FILE* fd, MIMEState& mime)
+{
+    fxStackBuffer buf;
+    do {
+	while (mime.getLine(fd, buf));	// discard input data
+    } while (mime.getType() == "multipart" && !mime.isLastPart());
     int c = getc(fd);
     while (c == '\n' || c == '\r' || c == ' ') c = getc(fd);
     ungetc(c, fd);
