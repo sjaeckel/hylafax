@@ -369,19 +369,21 @@ MIMEState::getLine(FILE* fd, fxStackBuffer& buf)
 		}
 	    }
             if (c == '\n') {			// check for boundary marker
-	            lineno++;
-                u_int cc = buf.getLength();
-                if (cc >= blen && buf[0] == '-') {
-                    if (cc == blen && strneq(buf, boundary, blen)) {
-                        return (false);
-                    }
-	                if (cc == blen+2 && strneq(buf, boundary, blen+2)) {
-                	    lastPart = true;
-                    	return (false);
-                    }
-	            }
-                buf.put('\n');
-                return (true);
+		lineno++;
+		u_int cc = buf.getLength();
+		if (cc >= blen && buf[0] == '-') {
+		    if (cc == blen && strneq(buf, boundary, blen)) {
+ 			buf.put('\n');
+			return (false);
+		    }
+		    if (cc == blen+2 && strneq(buf, boundary, blen+2)) {
+			lastPart = true;
+ 			buf.put('\n');
+			return (false);
+		    }
+	        }
+		buf.put('\n');
+		return (true);
             }
             buf.put(c);
         }
@@ -426,10 +428,13 @@ MIMEState::getQuotedPrintableLine(FILE* fd, fxStackBuffer& buf)
 	if (c == '\n') {			// check for boundary marker first
 	    lineno++;
 	    if (cc >= blen && line[0] == '-') {
-		if (cc == blen && strneq(line, boundary, blen))
+		if (cc == blen && strneq(line, boundary, blen)) {
+		    buf.put('\n');
 		    return (false);
+		}
 		if (cc == blen+2 && strneq(line, boundary, blen+2)) {
 		    lastPart = true;
+		    buf.put('\n');
 		    return (false);
 		}
 	    }
@@ -479,10 +484,13 @@ MIMEState::getBase64Line(FILE* fd, fxStackBuffer& buf)
 	if (c == '\n') {			// check for boundary marker
 	    lineno++;
 	    if (cc >= blen && line[0] == '-') {
-		if (cc == blen && strneq(line, boundary, blen))
+		if (cc == blen && strneq(line, boundary, blen)) {
+		    buf.put('\n');
 		    return (false);
+		}
 		if (cc == blen+2 && strneq(line, boundary, blen+2)) {
 		    lastPart = true;
+		    buf.put('\n');
 		    return (false);
 		}
 	    }
@@ -526,10 +534,13 @@ MIMEState::getUUDecodeLine(FILE* fd, fxStackBuffer& buf)
 	if (c == '\n') {
 	    lineno++;
 	    if (cc >= blen && line[0] == '-') {	// check for boundary marker
-		if (cc == blen && strneq(line, boundary, blen))
+		if (cc == blen && strneq(line, boundary, blen)) {
+		    buf.put('\n');
 		    return (false);
+		}
 		if (cc == blen+2 && strneq(line, boundary, blen+2)) {
 		    lastPart = true;
+		    buf.put('\n');
 		    return (false);
 		}
 	    } else if (cc >= 6 && strneq(line, "begin ", 6)) {
