@@ -465,16 +465,54 @@ PCFFont::charWidth(u_int c) const
 	return (0);
 }
 
+charInfo* PCFFont::getCharInfo(const char*& cp, bool isutf8) const
+{
+    u_int g = *cp;
+    if (isutf8 && (g >= 0xC0)) {		// first byte in a multibyte character
+	/*
+	 * We probably could use mbstowcs and not perform
+	 * the UTF-8 decoding ourselves; however, this saves
+	 * us from needing to use #ifdef __STDC_ISO_10646__
+	 * and thus able to support UTF-8 on systems where
+	 * it is not.
+	 */
+	u_short morebytes = 0;
+	if ((g & 0x20) == 0) {
+	    morebytes = 1;
+	    g &= 0x1F;
+	} else if ((g & 0x10) == 0) {
+	    morebytes = 2;
+	    g &= 0xF;
+	} else if ((g & 0x8) == 0) {
+	    morebytes = 3;
+	    g &= 0x7;
+	} else if ((g & 0x4) == 0) {
+	    morebytes = 4;
+	    g &= 0x3;
+	} else if ((g & 0x2) == 0) {
+	    morebytes = 5;
+	    g &= 0x1;
+	}
+	for (cp++; morebytes && *cp; morebytes--, cp++) {
+	    g <<= 6;
+	    g += (*cp & 0x3F);
+	}
+	cp--;				// back up one
+    }
+    int l = g >> 8;
+    int c = g & 0xff;
+    return ((firstRow <= l && l <= lastRow && firstCol <= c && c <= lastCol) ?
+	encoding[g - firstCol] : cdef);
+}
+
 void
-PCFFont::strWidth(const char* text, u_int &sw, u_int& sh) const
+PCFFont::strWidth(const char* text, bool isutf8, u_int &sw, u_int& sh) const
 {
     sh = fontHeight();
     sw = 0;
     if (ready) {
 	for (const char* cp = text; *cp; cp++) {
-	    u_int g = *cp;
-	    charInfo* ci = (firstCol <= g && g <= lastCol) ?
-		encoding[g - firstCol] : cdef;
+	    charInfo* ci = getCharInfo(cp, isutf8);
 	    if (ci)
 		sw += ci->cw;
 	}
@@ -510,42 +548,7 @@ PCFFont::imageText(const char* text, bool isutf8,
 	TIFFSwabArrayOfShort((u_short*) raster, h*rowwords);
     const char* cp = text;
     for (; *cp; cp++) {
-	u_int g = (u_int)*cp;
-	if (isutf8 && (g >= 0xC0)) {		// first byte in a multibyte character
-	    /*
-	     * We probably could use mbstowcs and not perform
-	     * the UTF-8 decoding ourselves; however, this saves
-	     * us from needing to use #ifdef __STDC_ISO_10646__
-	     * and thus able to support UTF-8 on systems where
-	     * it is not.
-	     */
-	    u_short morebytes = 0;
-	    if ((g & 0x20) == 0) {
-		morebytes = 1;
-		g &= 0x1F;
-	    } else if ((g & 0x10) == 0) {
-		morebytes = 2;
-		g &= 0xF;
-	    } else if ((g & 0x8) == 0) {
-		morebytes = 3;
-		g &= 0x7;
-	    } else if ((g & 0x4) == 0) {
-		morebytes = 4;
-		g &= 0x3;
-	    } else if ((g & 0x2) == 0) {
-		morebytes = 5;
-		g &= 0x1;
-	    }
-	    for (cp++; morebytes && *cp; morebytes--, cp++) {
-		g <<= 6;
-		g += (*cp & 0x3F);
-	    }
-	    cp--;				// back up one
-	}
-	int l = g >> 8;
-	int c = g & 0xff;
-	charInfo* ci = (firstRow <= l && l <= lastRow && firstCol <= c && c <= lastCol) ?
-	    encoding[g - firstCol] : cdef;
+	charInfo* ci = getCharInfo(cp, isutf8);
 	if (!ci)
 	    continue;
 	if (x + ci->cw > w - rm) {		// no space on line, move down

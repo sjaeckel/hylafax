@@ -83,7 +83,8 @@ public:
     bool	read(const char* filename);
 
     u_int	charWidth(u_int) const;
-    void	strWidth(const char* text, u_int& w, u_int& h) const;
+    charInfo*	getCharInfo(const char*& cp, bool isutf8) const;
+    void	strWidth(const char* text, bool isutf8, u_int& w, u_int& h) const;
     u_int	imageText(const char* text, bool isutf8,
 		    u_short* bitmap, u_int w, u_int h,
 		    u_int lm, u_int rm, u_int tm, u_int bm) const;
