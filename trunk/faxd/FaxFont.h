@@ -45,7 +45,7 @@ public:
     bool	isReady() const;
     u_int	fontHeight() const;
     virtual u_int charWidth(u_int) const = 0;
-    virtual void strWidth(const char* text, u_int& w, u_int& h) const = 0;
+    virtual void strWidth(const char* text, bool isutf8, u_int& w, u_int& h) const = 0;
     virtual u_int imageText(const char* text, bool isutf8, 
 		    u_short* bitmap, u_int w, u_int h,
 		    u_int lm, u_int rm, u_int tm, u_int bm) const = 0;

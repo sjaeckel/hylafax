@@ -240,7 +240,7 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
     for (u_int f = 0; f < tagLineFields; f++) {
 	fxStr tagField = tag.token(l, '|');
 	u_int fw, fh;
-	tagLineFont->strWidth(tagField, fw, fh);
+	tagLineFont->strWidth(tagField, isutf8, fw, fh);
 	u_int xoff = f*fieldWidth;
 	if (fw < fieldWidth)
 	    xoff += (fieldWidth-fw)/2;
