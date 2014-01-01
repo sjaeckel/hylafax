@@ -200,6 +200,7 @@ install: installClient
 	${PUTSUPDDICT} -m 644 -src dict-en -O en
 	${PUTSUPDDICT} -m 644 -src dict-es -O es
 	${PUTSUPDDICT} -m 644 -src dict-fr -O fr
+	${PUTSUPDDICT} -m 644 -src dict-he -O he
 	${PUTSUPDDICT} -m 644 -src dict-it -O it
 	${PUTSUPDDICT} -m 644 -src dict-nl_BE -O nl_BE
 	${PUTSUPDDICT} -m 644 -src dict-pl -O pl
@@ -261,5 +262,5 @@ clobberconfig:
 		faxrcvd.sh mkcover.sh notify.sh pcl2fax.sh pollrcvd.sh \
 		ps2fax.dps.sh ps2fax.gs.sh ps2fax.imp.sh tiff2fax.sh tiff2pdf.sh \
 		wedged.sh qp-encode.awk rfc2047-encode.awk archive.sh pdf2fax.gs.sh common-functions.sh \
-		dict-de dict-en dict-es dict-fr dict-it dict-nl_BE dict-pl dict-pt dict-pt_BR dict-ru dict-ro dict-sr dict-tr dict-uk dict-zh
+		dict-de dict-en dict-es dict-fr dict-he dict-it dict-nl_BE dict-pl dict-pt dict-pt_BR dict-ru dict-ro dict-sr dict-tr dict-uk dict-zh
 

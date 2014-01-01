@@ -5061,6 +5061,7 @@ CONF_FILES="
     util/dict-de
     util/dict-en
     util/dict-es
+    util/dict-he
     util/dict-it
     util/dict-fr
     util/dict-nl_BE

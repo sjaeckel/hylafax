@@ -380,6 +380,7 @@ HYLAFAXSRC=\
 	util/dict-en.in				\
 	util/dict-es.in				\
 	util/dict-fr.in				\
+	util/dict-he.in				\
 	util/dict-it.in				\
 	util/dict-nl_BE.in			\
 	util/dict-pl.in				\
