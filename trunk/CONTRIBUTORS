@@ -57,7 +57,7 @@ following for their contributions:
   Reeby Dobalina
   Charles Duffy				var_prefix in parseQFile
   Paul Eggert
-  Denis Fedotov				Russian and Ukranian dictionary translations
+  Denys Fedotov				Russian and Ukranian dictionary translations
   Greg Ferguson
   Steve Fine
   Alessandro Fiorino
@@ -88,6 +88,7 @@ following for their contributions:
   Ludovic Harlaut			fix to octet-stream MIME encoder
   John Interrante
   Sascha Ittner
+  Eliran Itzhak				Hebrew dictionary translation
   Damiam Ivereigh
   Thomas Jarosch			cppcheck fixes
   Bernard Jech
