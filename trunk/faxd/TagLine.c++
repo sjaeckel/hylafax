@@ -265,12 +265,24 @@ FaxModem::imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params,
     u_int fieldWidth = params.pageWidth() / (params.vr == VR_R16 ? 2 : 1) / tagLineFields;
     for (u_int f = 0; f < tagLineFields; f++) {
 	fxStr tagField = tag.token(l, '|');
+	u_int align = 0;	// centered
+	if (tagField[0] == '{') {
+	    align = 1;		// left-aligned
+	    tagField.remove(0,1);
+	} else if (tagField[0] == '}') {
+	    align = 2;		// right-aligned
+	    tagField.remove(0,1);
+	}
 	u_int fw, fh;
 	tagLineFont->strWidth(tagField, isutf8, fw, fh);
 	u_int xoff = f*fieldWidth;
-	if (fw < fieldWidth)
-	    xoff += (fieldWidth-fw)/2;
-	else
+	if ((fw+MARGIN_LEFT+MARGIN_RIGHT) < fieldWidth) {
+	    switch (align) {
+		case 1 : xoff += MARGIN_LEFT; break;
+		case 2 : xoff += fieldWidth-fw-MARGIN_RIGHT; break;
+		default: xoff += (fieldWidth-fw)/2; break;
+	    }
+	} else
 	    xoff += MARGIN_LEFT;
 	(void) tagLineFont->imageText(tagField, isutf8, (u_short*) raster, w, h,
 	    xoff, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOT);
