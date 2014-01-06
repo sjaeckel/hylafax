@@ -1834,12 +1834,15 @@ may be used as well as the following server-implemented codes:
 .fi
 .sp .5
 In addition, the format string may indicate that 
-text is to be centered in multiple equal-sized
+text is to be broken into multiple equal-sized
 .I fields
-by separating text with ``|'' characters.
-For example, ``a|b|c'' would cause the tag line to be broken up into
-three equal-sized areas with the strings ``a'', ``b'', and ``c''
-centered within each region.
+by separating text with ``|'' characters.  If the first character in
+the field is a ``{'' then the text is left-aligned; if the first character in
+the field is a ``}'' then the text is right-aligned; otherwise, the text is
+centered in the field.
+For example, ``{a|b|}c'' would cause the tag line to be broken up into
+three equal-sized areas with the string ``a'' left-aligned in the first region, 
+``b'' centered in the second region, and ``c'' right-aligned in the third region.
 The default tag line format string is ``From %%n|%c|Page %%P of %%T''.
 The differences between the %%p or %%P and the %%t or %%T options are noticed
 when a fax job is retried after an incomplete attempt and only the previously
