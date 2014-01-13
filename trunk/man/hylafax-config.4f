@@ -655,7 +655,7 @@ and
 .B CallIDAnswerLength.
 After executing
 .B ModemRingResponse,
-HylaFAX will expect
+\*(Fx will expect
 DTMF data (usually DLE-shielded) for
 .B CallIDn
 until
@@ -668,7 +668,7 @@ fax sender CNG is detected while waiting for DTMF or if ten seconds
 elapse without sufficient DTMF then the remaining expected digits
 will be populated by whitespace, triggering fax answering.
 
-For example, the following settings will cause HylaFAX to enter
+For example, the following settings will cause \*(Fx to enter
 voice mode and go off-hook when a RING is detected.  It will then
 expect four DTMF digits (presumably for routing), and then it will
 pause for 100 ms before returning to fax mode and answering the call.
@@ -720,7 +720,7 @@ would be sent to the modem immediately following the "NDID" response, and the "N
 item should be in a modem configuration file.
 
 Call identification data is usually only sent once by the telco or PBX, and the timing of 
-its arrival varies upon the telco or PBX and the type of line.  If HylaFAX is configured 
+its arrival varies upon the telco or PBX and the type of line.  If \*(Fx is configured 
 to answer via 
 .B RingsBeforeAnswer 
 prior to the arrival of the data, then all CallID values will be null.  For example, on US 
@@ -1585,7 +1585,7 @@ one of ``\s-1Retransmit\s+1'', ``\s-1Giveup\s+1'',``\s-1Ignore\s+1'',
 or ``\s-1Retransmit-Ignore\s+1''.
 
 ``\s-1Retransmit\s+1'' assumes that the page is not received successfully.
-HylaFAX will make up to two additional attempts to send the page,
+\*(Fx will make up to two additional attempts to send the page,
 decreasing signalling rate and retraining.  If RTN continues,
 up to 2 additional calls will be placed.  The downside is that if the remote
 always responds with RTN, the page will be sent 9 times and no following
@@ -2604,7 +2604,7 @@ before any further commands are sent to the modem.
 .TP
 .B ModemSoftRTFCC
 Whether or not to enable software-driven Real-Time Fax Compression Conversion.
-RTFCC allows HylaFAX to convert the image compression between MH MR and MMR 
+RTFCC allows \*(Fx to convert the image compression between MH MR and MMR 
 formats regardless of how faxq formatted the image file.
 Note that when using RTFCC, the
 compression format of the file will be ignored, thus the ``-1'', ``-2'',
@@ -2619,11 +2619,14 @@ in favor of the firmware-driven RTFCC.
 .TP
 .B ModemType
 This parameter must be set to one of: ``Class2'', ``Class2.0'',
-or ``Class1'';
+``Class1'', or ``Class1.0'';
 to indicate that the modem is a Class 2-,
-Class 2.0-, or Class 1-style modem, respectively.
-If this parameter is not set, then it is auto-detected and 
-the highest supported fax class is used.
+Class 2.0-, Class 1-, or Class 1.0-style modem, respectively.
+If this parameter is not set, then \*(Fx detects which classes
+are supported by the modem and makes an internal decision on which to use.
+Historically this decision chooses Class 2.1 over Class 2.0 over Class 2 
+over Class 1.0 over Class 1.  However, some exceptions are made, for instance,
+with US Robotics modems where Class 2.0 support is avoided.
 .TP
 .B ModemVerboseResultsCmd
 The command to enable verbose, as opposed to numeric, result codes.
@@ -3274,7 +3277,7 @@ not (necessarily) having byte-aligned codes.
 .B Class2RTFCC
 Whether or not to enable MultiTech's Real-Time Fax Compression Conversion
 which is available in later firmware revisions for the MT5634ZBA-V92, 
-MT5634ZPX-PCI-V92, and other models.  RTFCC allows HylaFAX to convert the 
+MT5634ZPX-PCI-V92, and other models.  RTFCC allows \*(Fx to convert the 
 image compression between MH MR and MMR formats regardless of how faxq 
 formatted the image file.  If RTFCC is available with your firmware, then 
 the response to ``AT+FFC=?'' is non-zero.  Note that when using RTFCC, the 
@@ -3321,7 +3324,7 @@ The value ``none'' may be used if the modem does not support any
 .B Class2TBCCmd.
 .TP
 .B Class2UseLineCount
-Whether or not to use the line count reported to HylaFAX by the
+Whether or not to use the line count reported to \*(Fx by the
 modem firmware decoder.
 .TP
 .B Class2UseHex
