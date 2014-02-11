@@ -2,7 +2,8 @@
 
 New Changes
 
-* add "{" and "}" TaglineFormat text alignement features (5 Jan 2014)
+* cope with Ghostscript release candidate versioning (10 Feb 2014)
+* add "{" and "}" TaglineFormat text alignment features (5 Jan 2014)
 * add Hebrew dictionary translation (1 Jan 2014)
 * correctly space multi-byte UTF-8 characters in the tagline (1 Jan 2014)
 * improve faxmail handling of multipart messages (12, 25-27 Sep 2013)
