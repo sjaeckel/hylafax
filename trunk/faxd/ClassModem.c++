@@ -890,6 +890,8 @@ ClassModem::atResponse(char* buf, long ms)
 	case 'R':
 	    if (streq(buf, "RING"))		// NB: avoid match of RINGING
 		lastResponse = AT_RING;
+	    else if (strneq(buf, "RING/", 5))	// Match RING/CALLEDPARTYNUMBER
+		lastResponse = AT_RING;
 	    break;
 	case 'V':
 	    if (streq(buf, "VCON"))
@@ -1455,6 +1457,12 @@ ClassModem::waitForRings(u_short rings, CallType& type, CallID& callid)
 		if (conf.ringExtended.length() && strneq(rbuf, conf.ringExtended, conf.ringExtended.length()))	// extended RING
 		    gotring = true;
 		conf.parseCallID(rbuf, callid);
+		fxStr callid_formatted;
+		for (u_int i = 0; i < callid.size(); i++) {
+			callid_formatted.append(callid.id(i));
+			callid_formatted.append(",");
+		}
+		modemTrace("MODEM CID %s", (const char *)callid_formatted);
 		/* DID modems may send DID data in lieu of RING */
 		for (u_int i = 0; i < conf.idConfig.length(); i++) {
 		    if (conf.idConfig[i].answerlength && callid.length(i) >= conf.idConfig[i].answerlength)
@@ -1483,6 +1491,12 @@ ClassModem::waitForRings(u_short rings, CallType& type, CallID& callid)
 			 * with AT+VRID if we missed it before.
 			 */
 			conf.parseCallID(rbuf, callid);
+			fxStr callid_formatted;
+			for (u_int i = 0; i < callid.size(); i++) {
+				callid_formatted.append(callid.id(i));
+				callid_formatted.append(",");
+			}
+			modemTrace("MODEM CID %s", (const char *)callid_formatted);
 		    }
 		    if (r == AT_OK) cmddone = true;
 		    else if (r == AT_VCON) cmddone = true;		// VCON for modems that require ATA
