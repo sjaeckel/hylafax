@@ -73,6 +73,7 @@ CONFIGFILES=class1 \
 	i537ep \
 	intel-400e \
 	ip568x \
+	linux-isdn-1 \
 	linux-isdn-2 \
 	lucent \
 	lucent-isa \
