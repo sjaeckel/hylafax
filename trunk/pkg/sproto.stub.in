@@ -180,6 +180,7 @@ f none @SPOOL@/config/i537ep=../@SRCDIR@/config/i537ep 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/config/intel-400e=../@SRCDIR@/config/intel-400e 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/config/ip568x=../@SRCDIR@/config/ip568x 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/config/iaxmodem=../@SRCDIR@/config/iaxmodem 0444 @SYSUID@ @SYSGID@
+f none @SPOOL@/config/linux-isdn-1=../@SRCDIR@/config/linux-isdn-1 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/config/linux-isdn-2=../@SRCDIR@/config/linux-isdn-2 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/config/lucent=../@SRCDIR@/config/lucent 0444 @SYSUID@ @SYSGID@
 f none @SPOOL@/config/lucent-isa=../@SRCDIR@/config/lucent-isa 0444 @SYSUID@ @SYSGID@
