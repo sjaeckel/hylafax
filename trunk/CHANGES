@@ -2,6 +2,7 @@
 
 New Changes
 
+* improve coding in configure (17 Feb 2014)
 * allow auto-rotate to match more page sizes (10 Feb 2014)
 * cope with Ghostscript release candidate versioning (10 Feb 2014)
 * add "{" and "}" TaglineFormat text alignment features (5 Jan 2014)

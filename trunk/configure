@@ -821,7 +821,7 @@ checkGCCVersion()
 #
 cat>dummy.c<<EOF
 #include <stdlib.h>
-main(int argc, char* argv) { exit(0); }
+int main(int argc, char* argv[]) { exit(0); }
 EOF
 
 checkCompiler()
@@ -973,7 +973,7 @@ fi
 #
 cat>dummy.c<<EOF
 #include <stdlib.h>
-main(int argc, char* argv) { exit(0); }
+int main(int argc, char* argv[]) { exit(0); }
 EOF
 capture cat dummy.c
 if capture "$CCOMPILER -c -M $MKDEPCOPTS dummy.c | grep '^dummy.o[ 	]*:[ 	]*dummy.c'"; then
@@ -1532,8 +1532,8 @@ CheckForLibrary()
     libs="$@";
     cat>t.c<<EOF
 extern int $f();
-int t() { $f(); return 0; }
-int main(){ t(); return 0; }
+int t(void) { $f(); return 0; }
+int main(int argc, char *argv[]){ t(); return 0; }
 EOF
     capture cat t.c
     runMake t "t:; \${CCF} t.c $libs"
@@ -1550,8 +1550,8 @@ CheckForLibraryWithArgs()
     libs="$@";
     cat>t.c<<EOF
 #include <$l>
-int t() { $f($a); return 0; }
-int main(){ t(); return 0; }
+int t(void) { $f($a); return 0; }
+int main(int argc, char *argv[]){ t(); return 0; }
 EOF
     capture cat t.c
     runMake t "t:; \${CCF} t.c $libs"
@@ -1656,7 +1656,7 @@ pamconv(int num_msg, const struct pam_message **msg, struct pam_response **resp,
 {
     return(0);
 }
-main()
+int main()
 {
     struct pam_conv conv = { pamconv };
 }
@@ -2226,7 +2226,7 @@ EmitConfigurationDefinitions()
 CheckForFunc()
 {
     echo "#include <stdlib.h>" > t.c
-    echo "extern int $1(); main(){$1($2);exit(0);}" >> t.c
+    echo "extern int $1(); int main(int argc, char *argv[]){$1($2);exit(0);}" >> t.c
     capture cat t.c
     runMake t "t:; \${CC} t.c ${MACHDEPLIBS}"
 }
@@ -2449,8 +2449,7 @@ boom(const char* msg)
     exit(1);
 }
 
-int
-main()
+int main(int argc, char *argv[])
 {
     const char* filename = "conftestmmap";
     char* buf;
@@ -2492,7 +2491,7 @@ CheckForStructExitStatus()
 	echo "$i"
     done
     cat<<EOF
-main()
+int main()
 {
     struct $decl x;
     x.ut_exit.e_exit = 0;
@@ -2509,7 +2508,7 @@ CheckForTimeZoneHandling()
 {
     (echo '#include <time.h>'
     cat<<EOF
-main()
+int main()
 {
     struct tm x;
     const char* cp;
@@ -2528,7 +2527,7 @@ CheckForTXCD()
 {
     cat>t.c<<EOF
 #include <sys/ioctl.h>
-main()
+int main(int argc, char *argv[])
 {
     ioctl(0, TXADDCD, "rts");
     ioctl(0, TXDELCD, "rts");
@@ -2578,7 +2577,7 @@ CheckLibtiff()
 #include <stdlib.h>
 #include <stdio.h>
 #include "tiffio.h"
-main()
+int main(int argc, char *argv[])
 {
     printf( "header_ver=%d lib_ver=%s", TIFFLIB_VERSION, TIFFGetVersion() );
     exit(0);
@@ -3356,7 +3355,7 @@ CheckForSyslog()
     (echo '#include <syslog.h>';
      echo '#include <stdlib.h>';
      echo '#include "port.h"';
-     echo 'main(){syslog(0,"foo");exit(0);}') >t.c
+     echo 'int main(int argc, char *argv[]){syslog(0,"foo");exit(0);}') >t.c
     capture cat t.c
     runMake t "t:; \${CC} t.c ${MACHDEPLIBS}"
 }
@@ -3366,7 +3365,7 @@ CheckForVSyslog()
      echo '#include <stdarg.h>';
      echo '#include <stdlib.h>';
      echo '#include "port.h"';
-     echo 'main(){va_list ap; vsyslog(0,"foo", ap);exit(0);}') >t.c
+     echo 'int main(int argc, char *argv[]){va_list ap; vsyslog(0,"foo", ap);exit(0);}') >t.c
     capture cat t.c
     runMake t "t:; \${CC} t.c ${MACHDEPLIBS}"
 }
@@ -3392,7 +3391,7 @@ cat>t.c<<EOF
 #include <stdlib.h>
 #include <stdio.h>
 #include "zlib.h"
-main()
+int main(int argc, char *argv[])
 {
     if (strcmp(ZLIB_VERSION, "0.95") < 0) {     /* include file version */
         printf("old include files: version %u\n", ZLIB_VERSION);
@@ -3519,7 +3518,7 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	    CheckCCDSO()
 	    {
 		$RM t.c t.o t.${DSOSUF}
-		echo 'int f() { return 0; }'>t.c
+		echo 'int f(void) { return 0; }'>t.c
 		capture cat t.c
 		runMake t \
 		    't.o:; ${CCF} -c t.c' \
@@ -3556,7 +3555,7 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	CheckCCDSO()
 	{
 	$RM t.c t.o t.${DSOSUF}
-	echo 'int f() { return 0; }'>t.c
+	echo 'int f(void) { return 0; }'>t.c
 	capture cat t.c
 	runMake t \
 	    't.o:; ${CCF} -c t.c' \
@@ -3582,7 +3581,7 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	DSO=no
 	;;
     yes-*-solaris*)
-	if [ "X${DIR_LIB}" != "X/usr/lib" ]; then
+	if [ "X${DIR_LIB}" != "X/usr/lib" ] && [ "X${DIR_LIB}" != "X/usr/lib64" ]; then
 	    USE_RPATH=' -R${LIBDIR}'
 	else
 	    USE_RPATH=''
@@ -3608,7 +3607,7 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	CheckCCDSO()
 	{
 	$RM t.c t.o t.${DSOSUF}
-	echo 'int f() { return 0; }'>t.c
+	echo 'int f(void) { return 0; }'>t.c
 	capture cat t.c
 	runMake t \
 	    't.o:; ${CCF} -c t.c' \
@@ -3649,7 +3648,7 @@ if [ "$DSO" = auto ] || [ "$DSO" = yes ]; then
 	CheckCCDSO()
 	{
 	$RM t.c t.o t.${DSOSUF}
-	echo 'int f() { return 0; }'>t.c
+	echo 'int f(void) { return 0; }'>t.c
 	capture cat t.c
 	runMake t \
 	    't.o:; ${CCF} -c t.c' \
