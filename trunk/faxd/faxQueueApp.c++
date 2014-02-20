@@ -3334,8 +3334,8 @@ faxQueueApp::readRequest(Job& job)
 	    bool reject;
 	    if (req->readQFile(reject)) {
 		if (reject) {
-		    rejectJob(job, *req, fxStr::format("REJECT: qfile contains one or more errors {E347}"));
-		    deleteRequest(job, req, Job::rejected, true);
+		    jobError(job, "qfile contains one or more errors {E347}");
+		    delete req;
 		    return (NULL);
 		}
 		if (req->external == "")

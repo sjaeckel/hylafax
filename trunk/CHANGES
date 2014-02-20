@@ -2,6 +2,7 @@
 
 New Changes
 
+* fix problem of vanishing rejected sendq files from 5.5.3 (20 Feb 2014)
 * detect RING/CALLEDPARTYNUMBER presentation (17 Feb 2014)
 * add linux-isdn-1 prototype config file (17 Feb 2014)
 * improve coding in configure (17 Feb 2014)
