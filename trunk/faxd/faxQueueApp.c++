@@ -1690,7 +1690,6 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 	while (i < req->items.length()) {
 	    FaxItem& fitem = req->items[i];
 	    if (fitem.op == FaxRequest::send_fax) {
-		unrefDoc(fitem.item);
 		req->items.remove(i);
 		continue;
 	    }
@@ -3402,7 +3401,6 @@ faxQueueApp::deleteRequest(Job& job, FaxRequest& req, JobStatus why,
 	    FaxItem& fitem = req.items[i];
 	    if (fitem.op == FaxRequest::send_fax) {
 		req.renameSaved(i);
-		unrefDoc(fitem.item);
 		req.items.remove(i);
 	    } else
 		i++;
@@ -3449,25 +3447,6 @@ faxQueueApp::deleteRequest(Job& job, FaxRequest& req, JobStatus why,
 		    notifySender(job, why, duration);
 	}
 	u_int n = req.items.length();
-	for (u_int i = 0; i < n; i++) {
-	    const FaxItem& fitem = req.items[i];
-	    switch (fitem.op) {
-	    case FaxRequest::send_fax:
-		unrefDoc(fitem.item);
-		break;
-	    case FaxRequest::send_tiff:
-	    case FaxRequest::send_tiff_saved:
-	    case FaxRequest::send_pdf:
-	    case FaxRequest::send_pdf_saved:
-	    case FaxRequest::send_postscript:
-	    case FaxRequest::send_postscript_saved:
-	    case FaxRequest::send_pcl:
-	    case FaxRequest::send_pcl_saved:
-		Sys::unlink(fitem.item);
-		Sys::unlink(fitem.item|".color");
-		break;
-	    }
-	}
 	req.items.remove(0, n);
 	Sys::unlink(req.qfile);
     }
@@ -3748,7 +3727,7 @@ faxQueueApp::FIFOJobMessage(const fxStr& jobid, const char* msg)
 	Trigger::post(Trigger::SEND_PAGE, *jp, msg+1);
 	break;
     case 'D':			// document sent
-	{ FaxSendInfo si; si.decode(msg+1); unrefDoc(si.qfile); }
+	{ FaxSendInfo si; si.decode(msg+1); }
 	Trigger::post(Trigger::SEND_DOC, *jp, msg+1);
 	break;
     case 'p':			// polled document received
