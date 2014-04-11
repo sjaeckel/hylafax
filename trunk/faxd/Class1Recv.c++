@@ -1529,12 +1529,24 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			 * meaning PPS-NULL (full block) unless there was no data seen
 			 * (in which case PPS-MPS is assumed) in order to prevent 
 			 * any data loss, and we let the sender cope with it from there.
+			 *
+			 * Because there is no way to express "zero" in the frame count
+			 * byte there exists some confusion in some senders which attempt
+			 * to do just that.  Consequently, the frame count values of 0x00
+			 * and 0xFF need consideration as to whether they represent 0, 1, 
+			 * or 256.  To allow for the bizarre situation where a sender may
+			 * signal PPS-NULL with a frame count less than 256 we trust the
+			 * PPS-NULL frame count except in cases where it is determined to
+			 * be "1" because most-likely that determination only comes from
+			 * some garbage detected during the high-speed carrier.
 			 */
 			case FCF_PPS:
 			case FCF_CRP:
 			    {
 				u_int fc = ppsframe.getFCF() == FCF_CRP ? 256 : frameRev[ppsframe[6]] + 1;
 				if ((fc == 256 || fc == 1) && !dataseen) fc = 0;	// distinguish 0 from 1 and 256
+				// See comment above.  It's extremely unlikely to get PPS-NULL with a frame-count meaning "1"...
+				if (ppsframe.getFCF() == FCF_PPS && ppsframe.getFCF2() == 0x00 && fc == 1) fc = 0;
 				if (fcount < fc) fcount = fc;
 				if (ppsframe.getFCF() == FCF_CRP) {
 				    if (fc) ppsframe[3] = 0x00;		// FCF2 = NULL
@@ -1571,11 +1583,12 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				 * we will send MCF (to accomodate #1), and so this frame will then be 
 				 * lost.  This should be rare and have little impact on actual image data
 				 * loss when it does occur.  This approach cannot be followed with JPEG
-				 * and JBIG data formats or when the signal is PPS-NULL.
+				 * and JBIG data formats or when the signal is PPS-NULL.  This approach
+				 * cannot be followed when we previously saw exactly one frame of data.
 				 */
 				if (fcount) {
 				    u_int fbad = 0;
-				    for (u_int i = 0; i <= (fcount - ((fc || params.df > DF_2DMMR || ppsframe.getFCF() == 0) ? 1 : 2)); i++) {
+				    for (u_int i = 0; i <= (fcount - ((fcount < 2 || fc || params.df > DF_2DMMR || ppsframe.getFCF() == 0) ? 1 : 2)); i++) {
 					u_int pprpos, pprval;
 					for (pprpos = 0, pprval = i; pprval >= 8; pprval -= 8) pprpos++;
 					if (ppr[pprpos] & frameRev[1 << pprval]) {
