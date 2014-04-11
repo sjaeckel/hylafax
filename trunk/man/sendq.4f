@@ -124,6 +124,7 @@ poll	string	polling request
 postscript	string	unprocessed \*(Ps document
 !postscript	string	processed \*(Ps document
 priority	integer	user-specified scheduling priority
+probeonly	integer	if non-zero this identifies the probe type
 receiver	string	receiver's identity
 resolution	integer	vertical resolution of facsimile
 retrytime	integer	time to use between job retries
@@ -483,6 +484,12 @@ document has been processed by
 it is marked as
 .B !postscript
 so that subsequent retries do not reprocess the document. 
+.TP 14
+.B probeonly
+If ``1'' then the call will terminate as complete when a fax connection
+is established.  If ``2'' then the call will terminate as complete after
+fax handshaking signals are properly received from the receiver.  In
+neither case are the documents actually transmitted.
 .TP 14
 .B receiver
 The receiver's name.

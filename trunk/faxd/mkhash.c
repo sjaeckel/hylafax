@@ -109,6 +109,7 @@ main()
     hash("skippages");
     hash("skippedpages");
     hash("nocountcover");
+    hash("probeonly");
     hash("conntime");
     hash("duration");
     hash("serverdocover");

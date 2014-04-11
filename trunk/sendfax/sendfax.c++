@@ -194,6 +194,8 @@ sendFaxApp::run(int argc, char** argv)
 			proto.setSkipPages(atoi(++op));
 		    } else if (strncmp(optarg, "nocountcover", 12) == 0) {
 			proto.setNoCountCover(atoi(++op));
+		    } else if (strncmp(optarg, "probeonly", 9) == 0) {
+			proto.setProbeOnly(atoi(++op));
 		    } else if (strncmp(optarg, "serverdocover", 13) == 0) {
 			proto.setServerDoCover(FaxConfig::getBoolean(++op));
 		    } else if (strncmp(optarg, "usecolor", 8) == 0) {

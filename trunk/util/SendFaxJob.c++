@@ -94,6 +94,7 @@ SendFaxJob::SendFaxJob(const SendFaxJob& other)
     skippages = other.skippages;
     skippedpages = other.skippedpages;
     nocountcover = other.nocountcover;
+    probeonly = other.probeonly;
     serverdocover = other.serverdocover;
     ignoremodembusy = other.ignoremodembusy;
 }
@@ -134,6 +135,7 @@ SendFaxJob::SFJ_numbertag SendFaxJob::numbers[] = {
 { "skippages",		&SendFaxJob::skippages,		0 },
 { "skippedpages",	&SendFaxJob::skippedpages,	0 },
 { "nocountcover",	&SendFaxJob::nocountcover,	0 },
+{ "probeonly",		&SendFaxJob::probeonly,		0 },
 };
 SendFaxJob::SFJ_floattag SendFaxJob::floats[] = {
 { "hres",		&SendFaxJob::hres,		204. },
@@ -465,6 +467,7 @@ void SendFaxJob::setChopThreshold(float v)		{ chopthreshold = v; }
 void SendFaxJob::setSkipPages(u_int v)			{ skippages = v; }
 void SendFaxJob::setSkippedPages(u_int v)		{ skippedpages = v; }
 void SendFaxJob::setNoCountCover(u_int v)		{ nocountcover = v; }
+void SendFaxJob::setProbeOnly(u_int v)			{ probeonly = v; }
 
 extern int
 parseAtSyntax(const char* s, const struct tm& ref, struct tm& at0, fxStr& emsg);
@@ -609,6 +612,7 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     IFPARM("SKIPPAGES", skippages, 0)
     IFPARM("SKIPPEDPAGES", skippedpages, 0)
     IFPARM("NOCOUNTCOVER", nocountcover, 0)
+    IFPARM("PROBEONLY", probeonly, 0)
     if (coverFile != "") {
 	int fd = Sys::open(coverFile, O_RDONLY);
 	if (fd < 0) {
