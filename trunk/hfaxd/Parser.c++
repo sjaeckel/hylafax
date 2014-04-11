@@ -164,6 +164,7 @@ static const tab parmtab[] = {
 { "PAGEWIDTH",    T_PAGEWIDTH,	  false, true, "[millimeters]" },
 { "PASSWD",       T_PASSWD,	  false, true, "[<string>]" },
 { "POLL",         T_POLL,	  false, true, "selector [passwd]" },
+{ "PROBEONLY",    T_PROBEONLY,	  false, true, "[<number>]" },
 { "REGARDING",    T_REGARDING,	  false, true, "[<string>]" },
 { "RETRYTIME",    T_RETRYTIME,	  false, true, "[MMSS]" },
 { "SCHEDPRI",     T_SCHEDPRI,	  false, true, "[<number>]" },
@@ -1110,6 +1111,7 @@ HylaFAXServer::param_cmd(Token t)
     case T_SKIPPAGES:
     case T_SKIPPEDPAGES:
     case T_NOCOUNTCOVER:
+    case T_PROBEONLY:
     case T_CONNTIME:
     case T_DURATION:
     case T_TOTPAGES:

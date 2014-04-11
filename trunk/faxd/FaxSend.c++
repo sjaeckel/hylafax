@@ -286,7 +286,7 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
     if (callstat == ClassModem::OK)
 	connTime = Sys::now();			// connection start time
     (void) abortRequested();			// check for user abort
-    if (callstat == ClassModem::OK && !abortCall) {
+    if (callstat == ClassModem::OK && !abortCall && fax.probeonly != 1) {
 	/*
 	 * Call reached a fax machine.  Check remote's
 	 * capabilities against those required by the
@@ -325,7 +325,9 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	    // modem used
 	    fax.modemused = getModemDeviceID();		// store in queue file also for notify
 
-	    if (!sendClientCapabilitiesOK(fax, clientInfo, notice)) {
+	    if (fax.probeonly == 2) {			// the job requests that we stop here
+		sendFailed(fax, send_retry, "Probe complete.");
+	    } else if (!sendClientCapabilitiesOK(fax, clientInfo, notice)) {
 		// NB: mark job completed 'cuz there's no way recover
 		sendFailed(fax, send_failed, notice);
 	    } else {
@@ -436,7 +438,8 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, const fxStr& num
 	    else
 		sendFailed(fax, send_retry, notice, requeueOther);
 	    break;
-	case ClassModem::OK:		// call was aborted by user
+	case ClassModem::OK:		// user abort? / job request was only a probe
+	    if (fax.probeonly == 1) sendFailed(fax, send_retry, "Probe complete.");
 	    break;
 	}
 	if (callstat != ClassModem::OK) {

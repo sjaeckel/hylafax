@@ -118,6 +118,7 @@ public:
     int		skippedpages;	// start page numbering here + 1
     u_short	serverdocover;	// server should create the coverpage
     u_short	nocountcover;	// don't count these pages
+    u_short	probeonly;	// this job is only to probe the receiver
     u_short	conntime;	// connection time on last session
     u_short	duration;	// duration time on last session
     u_short	ntries;		// # tries to send current page

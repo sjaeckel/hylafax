@@ -121,6 +121,7 @@ private:
     u_int	skippages;		// skip these pages
     u_int	skippedpages;		// begin page count at this page number + 1
     u_int	nocountcover;		// don't include these pages in the page count
+    u_int	probeonly;		// the job is only being used to probe the destination
     bool	serverdocover;		// server should generate the cover page
     bool	ignoremodembusy;	// ignore modem busy status
 
@@ -291,6 +292,8 @@ public:
     u_int getSkippedPages() const;
     void setNoCountCover(u_int);	// don't include these pages in counts
     u_int getNoCountCover() const;
+    void setProbeOnly(u_int);		// job is only for probing the destination
+    u_int getProbeOnly() const;
     void setServerDoCover(bool);	// server should generate cover page
     bool getServerDoCover() const;
     void setIgnoreModemBusy(bool);	// ignore modem busy status
@@ -347,6 +350,7 @@ inline float SendFaxJob::getChopThreshold() const	{ return chopthreshold; }
 inline u_int SendFaxJob::getSkipPages() const		{ return skippages; }
 inline u_int SendFaxJob::getSkippedPages() const	{ return skippedpages; }
 inline u_int SendFaxJob::getNoCountCover() const	{ return nocountcover; }
+inline u_int SendFaxJob::getProbeOnly() const		{ return probeonly; }
 inline bool SendFaxJob::getServerDoCover() const	{ return serverdocover; }
 inline bool SendFaxJob::getIgnoreModemBusy() const	{ return ignoremodembusy; }
 #endif /* _SendFaxJob_ */

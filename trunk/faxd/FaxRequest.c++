@@ -57,7 +57,7 @@ FaxRequest::reset(void)
     pri = (u_short) -1;
     usrpri = FAX_DEFPRIORITY;
     pagewidth = pagelength = resolution = 0;
-    npages = totpages = skippages = skippedpages = nocountcover = 0;
+    npages = totpages = skippages = skippedpages = nocountcover = probeonly = 0;
     conntime = duration = 0;
     ntries = ndials = 0;
     minbr = BR_2400;
@@ -136,6 +136,7 @@ FaxRequest::shortval FaxRequest::shortvals[] = {
     { "npages",		&FaxRequest::npages },
     { "skippages",	&FaxRequest::skippages },
     { "nocountcover",	&FaxRequest::nocountcover },
+    { "probeonly",	&FaxRequest::probeonly },
     { "conntime",	&FaxRequest::conntime },
     { "duration",	&FaxRequest::duration },
     { "serverdocover",	&FaxRequest::serverdocover },
@@ -346,6 +347,7 @@ FaxRequest::readQFile(bool& rejectJob)
 		tts = Sys::now();
 	    break;
 	case H_NOCOUNTCOVER:	nocountcover = atoi(tag); break;
+	case H_PROBEONLY:	probeonly = atoi(tag); break;
 	case H_CONNTIME:	conntime = atoi(tag); break;
 	case H_DURATION:	duration = atoi(tag); break;
 	case H_KILLTIME:	killtime = atoi(tag); break;

@@ -152,6 +152,7 @@ static const struct {
     { T_SKIPPAGES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_SKIPPEDPAGES,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_NOCOUNTCOVER,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
+    { T_PROBEONLY,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_CONNTIME,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_DURATION,	A_RUSR|A_WUSR|A_RADM|A_WADM|A_ROTH },
     { T_STATE,		A_RUSR|A_RADM|A_ROTH },
@@ -254,6 +255,7 @@ static struct {
     { T_NPAGES,		&Job::npages },
     { T_SKIPPAGES,	&Job::skippages },
     { T_NOCOUNTCOVER,	&Job::nocountcover },
+    { T_PROBEONLY,	&Job::probeonly },
     { T_CONNTIME,	&Job::conntime },
     { T_DURATION,	&Job::duration },
     { T_NTRIES,		&Job::ntries },
@@ -985,6 +987,7 @@ HylaFAXServer::initDefaultJob(void)
     defJob.tagline	= "";
     defJob.doneop	= "default";
     defJob.nocountcover	= 0;
+    defJob.probeonly	= 0;
     defJob.conntime	= 0;
     defJob.duration	= 0;
     defJob.skippedpages	= 0;
