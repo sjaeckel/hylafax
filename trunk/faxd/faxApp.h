@@ -40,6 +40,7 @@ private:
 
     bool	running;		// server running
     int		faxqfifo;		// cached descriptor to faxq
+    int		ignore_fd;		// ignored FIFO write descriptor
 protected:
     int		openFIFO(const char* fifoName, int mode,
 		    bool okToExist = false);

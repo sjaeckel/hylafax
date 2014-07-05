@@ -46,7 +46,7 @@ HylaFAXServer::initClientFIFO(fxStr& emsg)
 	    (const char*) clientFIFOName, strerror(errno));
 	return (false);
     }
-    clientFd = Sys::open(clientFIFOName, CONFIG_OPENFIFO|O_NDELAY);
+    clientFd = Sys::open(clientFIFOName, O_RDONLY|O_NDELAY);
     if (clientFd == -1) {
 	emsg = fxStr::format("Could not open FIFO file %s: %s",
 	    (const char*) clientFIFOName, strerror(errno));
@@ -59,6 +59,22 @@ HylaFAXServer::initClientFIFO(fxStr& emsg)
     // open should set O_NDELAY, but just to be sure...
     if (fcntl(clientFd, F_SETFL, fcntl(clientFd, F_GETFL, 0) | O_NDELAY) < 0)
 	logError("initClientFIFO %s: fcntl: %m", (const char*) clientFIFOName);
+
+    /*
+     * Depending on the system type, a condition where all of the FIFO
+     * writers have closed may trigger EOF, and consequently the reader
+     * will begin a very fast loop repeatedly reading EOF from the FIFO.
+     * In the past this was handled with an option to open the FIFO in
+     * read+write mode (CONFIG_OPENFIFO=O_RDWR), but doing so is an
+     * undefined usage and thus produces undefined behaviour.  Also was
+     * tried closing and reopening the FIFO every time a FIFO message
+     * was received was received (CONFIG_FIFOBUG), but that produces a
+     * race condition.  So those configuration options have been
+     * abandoned, and we merely open a writer that subsequently goes
+     * unused.  This prevents the EOF condition.
+     */
+    ignore_fd = Sys::open(clientFIFOName, O_WRONLY|O_NDELAY);
+
     Dispatcher::instance().link(clientFd, Dispatcher::ReadMask, this);
     return (true);
 }
@@ -197,22 +213,7 @@ HylaFAXServer::sendQueuerMsg(fxStr& emsg, const fxStr& msg)
     bool retry = false;
 again:
     if (faxqFd == -1) {
-#ifdef FIFOSELECTBUG
-	/*
-	 * We try multiple times to open the appropriate FIFO
-	 * file because the system has a kernel bug that forces
-	 * the server to close+reopen the FIFO file descriptors
-	 * for each message received on the FIFO (yech!).
-	 */
-	int tries = 0;
-	do {
-	    if (tries > 0)
-		sleep(1);
-	    faxqFd = Sys::open(faxqFIFOName, O_WRONLY|O_NDELAY);
-	} while (faxqFd == -1 && errno == ENXIO && ++tries < 5);
-#else
 	faxqFd = Sys::open(faxqFIFOName, O_WRONLY|O_NDELAY);
-#endif
 	if (faxqFd == -1) {
 	    emsg = fxStr::format("Unable to open scheduler FIFO: %s",
 		strerror(errno));
@@ -311,23 +312,7 @@ HylaFAXServer::sendModem(const char* modem, fxStr& emsg, const char* fmt ...)
     fxStr fifoName(modem);
     canonDevID(fifoName);			// convert pathname -> devid
     fifoName.insert("/" FAX_FIFO ".");		// prepend /FIFO. string
-#ifdef FIFOSELECTBUG
-    /*
-     * We try multiple times to open the appropriate FIFO
-     * file because the system has a kernel bug that forces
-     * the server to close+reopen the FIFO file descriptors
-     * for each message received on the FIFO (yech!).
-     */
-    int fd;
-    int tries = 0;
-    do {
-	if (tries > 0)
-	    sleep(1);
-	fd = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-    } while (fd == -1 && errno == ENXIO && ++tries < 5);
-#else
     int fd = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-#endif
     if (fd == -1) {
 	emsg = fxStr::format("Unable to open %s: %s",
 	    (const char*) fifoName, strerror(errno));

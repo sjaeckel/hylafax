@@ -224,6 +224,7 @@ protected:
     fxStr	clientFIFOName;		// client FIFO name
     int		faxqFd;			// faxq FIFO open descriptor
     int		clientFd;		// client FIFO open descriptor
+    int		ignore_fd;		// ignore FIFO write descriptor to avoid EOF
     fxStr	fifoResponse;		// response received to FIFO msg
     u_int	idleTimeout;		// client inactivity timeout
     u_int	maxIdleTimeout;		// upper bound on idle timeout

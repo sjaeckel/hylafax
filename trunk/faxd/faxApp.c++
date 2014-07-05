@@ -134,7 +134,7 @@ faxApp::openFIFO(const char* fifoName, int mode, bool okToExist)
 	if (errno != EEXIST || !okToExist)
 	    faxApp::fatal("Could not create %s: %m.", fifoName);
     }
-    int fd = Sys::open(fifoName, CONFIG_OPENFIFO|O_NDELAY, 0);
+    int fd = Sys::open(fifoName, O_RDONLY|O_NDELAY, 0);
     if (fd == -1)
 	faxApp::fatal("Could not open FIFO file %s: %m.", fifoName);
     if (!Sys::isFIFOFile(fd))
@@ -142,6 +142,22 @@ faxApp::openFIFO(const char* fifoName, int mode, bool okToExist)
     // open should set O_NDELAY, but just to be sure...
     if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NDELAY) < 0)
 	logError("openFIFO %s: fcntl: %m", fifoName);
+
+    /*
+     * Depending on the system type, a condition where all of the FIFO
+     * writers have closed may trigger EOF, and consequently the reader
+     * will begin a very fast loop repeatedly reading EOF from the FIFO.
+     * In the past this was handled with an option to open the FIFO in
+     * read+write mode (CONFIG_OPENFIFO=O_RDWR), but doing so is an 
+     * undefined usage and thus produces undefined behaviour.  Also was 
+     * tried closing and reopening the FIFO every time a FIFO message 
+     * was received was received (CONFIG_FIFOBUG), but that produces a 
+     * race condition.  So those configuration options have been 
+     * abandoned, and we merely open a writer that subsequently goes 
+     * unused.  This prevents the EOF condition.
+     */
+    ignore_fd = Sys::open(fifoName, O_WRONLY|O_NDELAY);
+
     return (fd);
 }
 
@@ -192,24 +208,6 @@ faxApp::FIFOInput(int fd)
 	    }
 	} while (!done);
     }
-#ifdef FIFOSELECTBUG
-    /*
-     * Solaris 2.x botch (and some versions of IRIX 5.x).
-     *
-     * A client close of an open FIFO causes an M_HANGUP to be
-     * sent and results in the receiver's file descriptor being
-     * marked ``hung up''.  This in turn causes select to
-     * perpetually return true and if we're running as a realtime
-     * process, brings the system to a halt.  The workaround for
-     * Solaris 2.1 was to do a parallel reopen of the appropriate
-     * FIFO so that the original descriptor is recycled.  This
-     * apparently no longer works in Solaris 2.2 or later and we
-     * are forced to close and reopen both FIFO descriptors (noone
-     * appears capable of answering why this this is necessary and
-     * I personally don't care...)
-     */
-    closeFIFOs(); openFIFOs();
-#endif
     return (0);
 }
 
@@ -229,22 +227,7 @@ bool
 faxApp::vsendQueuer(const char* fmt, va_list ap)
 {
     if (faxqfifo == -1) {
-#ifdef FIFOSELECTBUG
-	/*
-	 * We try multiple times to open the appropriate FIFO
-	 * file because the system has a kernel bug that forces
-	 * the server to close+reopen the FIFO file descriptors
-	 * for each message received on the FIFO (yech!).
-	 */
-	int tries = 0;
-	do {
-	    if (tries > 0)
-		sleep(1);
-	    faxqfifo = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-	} while (faxqfifo == -1 && errno == ENXIO && ++tries < 5);
-#else
 	faxqfifo = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-#endif
 	if (faxqfifo == -1)
 	    return (false);
 	/*
