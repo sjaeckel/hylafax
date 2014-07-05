@@ -294,7 +294,7 @@ void
 doProtocol(const char* trigger)
 {
     fd_set rd, wr, ex;
-    int fd, n;
+    int fd, ignore_fd, n;
 
     fxStr fn = fxStr::format("client/%u", getpid());
     fxAssert(fn.length() >= sizeof(fifoName), "trigtest::doProtocol overrun!");
@@ -306,11 +306,26 @@ doProtocol(const char* trigger)
     signal(SIGINT, sigINT);
     signal(SIGTERM, sigINT);
     signal(SIGPIPE, SIG_IGN);
-    fd = openFIFO(fifoName, CONFIG_OPENFIFO);
+    fd = openFIFO(fifoName, O_RDONLY);
     if (fd < 0) {
         unlink(fifoName);
         exit(-1);
     }
+    /*
+     * Depending on the system type, a condition where all of the FIFO
+     * writers have closed may trigger EOF, and consequently the reader
+     * will begin a very fast loop repeatedly reading EOF from the FIFO.
+     * In the past this was handled with an option to open the FIFO in
+     * read+write mode (CONFIG_OPENFIFO=O_RDWR), but doing so is an
+     * undefined usage and thus produces undefined behaviour.  Also was
+     * tried closing and reopening the FIFO every time a FIFO message
+     * was received was received (CONFIG_FIFOBUG), but that produces a
+     * race condition.  So those configuration options have been
+     * abandoned, and we merely open a writer that subsequently goes
+     * unused.  This prevents the EOF condition.
+     */
+    ignore_fd = Sys::open(fifoName, O_WRONLY|O_NDELAY);
+
     fxStr msg = fxStr::format("T%s:N%s", fifoName, trigger);
     send((const char*)msg, msg.length() + 1);
     for (;;) {

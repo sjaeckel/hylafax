@@ -2,6 +2,10 @@
 
 New Changes
 
+* modify FIFO usage and remove CONFIG_FIFOBUG and CONFIG_OPENFIFO (5 Jul 2014)
+
+(5.5.5)
+
 * update config.guess and config.sub (26 May 2014)
 * add sendfax "probeonly" feature (11 Apr 2014)
 * fix rare faxgetty crash caused by frame-count mistake (11 Apr 2014)

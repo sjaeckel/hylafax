@@ -83,22 +83,7 @@ HylaClient::send(const char* msg, u_int msgLen)
      seqnum++;					// count message
 again:
     if (fifo < 0) {
-#ifdef FIFOSELECTBUG
-	/*
-	 * We try multiple times to open the appropriate FIFO
-	 * file because the system has a kernel bug that forces
-	 * the server to close+reopen the FIFO file descriptors
-	 * for each message received on the FIFO (yech!).
-	 */
-	int tries = 0;
-	do {
-	    if (tries > 0)
-		sleep(1);
-	    fifo = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-	} while (fifo == -1 && errno == ENXIO && ++tries < 5);
-#else
 	fifo = Sys::open(fifoName, O_WRONLY|O_NDELAY);
-#endif
 	if (fifo < 0) {
 	    if (errno == EMFILE && reapFIFO())
 		goto again;

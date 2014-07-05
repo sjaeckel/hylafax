@@ -1988,67 +1988,6 @@ EmitConfigurationDefinitions()
     fi
 
     #
-    # Select the mode to use when opening FIFO files
-    # in a server process.  One should be able to open
-    # them read-only, but on some systems, select will
-    # go into a loop when a client does a close.  This
-    # problem can sometimes be avoided by opening the FIFO
-    # read+write on the server side.  Otherwise, the
-    # FIFO must be closed after each incoming message
-    # which can lead to delays and/or lost messages
-    # (though we try to compensate by doing some sleeps).
-    #
-    test "$CONFIG_OPENFIFO" || {
-	case $TARGET in
-	*-irix*)	if releaseAtLeast 5.2; then
-			    CONFIG_OPENFIFO=O_RDWR;
-			else
-			    CONFIG_OPENFIFO=O_RDONLY;
-			fi
-			;;
-	*-ultrix*)	CONFIG_OPENFIFO=O_RDWR;;
-	*-solaris*)	CONFIG_OPENFIFO=O_RDWR;;
-	*-*-sco*|*-isc*)	CONFIG_OPENFIFO=O_RDWR;;
-	*-aix*|*-hpux*)	CONFIG_OPENFIFO=O_RDWR;;
-	alpha-dec*)     CONFIG_OPENFIFO=O_RDWR;;
-	*-linux*)	if releaseAtLeast 1.3.80; then
-			    CONFIG_OPENFIFO=O_RDWR;
-			else
-			    CONFIG_OPENFIFO=O_RDONLY;
-			fi
-			;;
-	*-freebsd*)	if releaseAtLeast 3.0; then
-			    CONFIG_OPENFIFO=O_RDWR;
-			else
-			    CONFIG_OPENFIFO=O_RDONLY;
-			fi
-			;;
-	*sysv4.2uw2.1.3)	CONFIG_OPENFIFO=O_RDWR;;	# UnixWare 2.1.3
-	*-sysv5UnixWare*)	CONFIG_OPENFIFO=O_RDWR;;	# UnixWare 7
-	*-sysv5OpenUNIX*)	CONFIG_OPENFIFO=O_RDWR;;	# OpenUNIX 8
-	*-sysv5SCO_SV*)		CONFIG_OPENFIFO=O_RDWR;;	# OpenServer 6
-	*)		CONFIG_OPENFIFO=O_RDONLY;;
-	esac
-    }
-    if [ "$CONFIG_OPENFIFO" = "O_RDWR" ]; then
-	Note "... open FIFO files read+write to avoid select bug"
-    else
-	Note "... open FIFO files read-only"
-    fi
-    echo "#define CONFIG_OPENFIFO $CONFIG_OPENFIFO"
-    test "$CONFIG_FIFOBUG" || {
-	case $TARGET in
-	*-solaris*)	CONFIG_FIFOBUG=yes;;
-	*-irix5.[01]*)	CONFIG_FIFOBUG=yes;;
-	*)		CONFIG_FIFOBUG=no;;
-	esac
-    }
-    if [ "$CONFIG_FIFOBUG" = yes ]; then
-	Note "... enable workaround for FIFO select bug"
-	echo '#define FIFOSELECTBUG 1'
-    fi
-
-    #
     # On some systems the argument for ioctl(fd, TIOCMBIS, arg)
     # is passed by value and some by reference.
     # This can not be deduced with a dynamic check.
