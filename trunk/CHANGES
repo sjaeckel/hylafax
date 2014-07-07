@@ -2,6 +2,7 @@
 
 New Changes
 
+* use ps2write in faxmail pdf converter if pswrite is missing (6 Jul 2014)
 * modify FIFO usage and remove CONFIG_FIFOBUG and CONFIG_OPENFIFO (5 Jul 2014)
 
 (5.5.5)

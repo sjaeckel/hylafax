@@ -15,13 +15,23 @@ DEVICE=pswrite
 . @SPOOL@/etc/setup.cache
 
 #
-# Some reports indicate that ps2write output can look better than 
-# pswrite, but in some cases ps2write output will be just wrong.
-# Enable this with care.
+# Historically the pswrite device was used.  There were some
+# reports that indicated that ps2write output looked better,
+# and so for a time ps2write was used as a default, instead, 
+# but apparently some Ghostscript releases had buggy ps2write 
+# devices, and so we reverted to pswrite as a default.
+# Ultimately Ghostscript abandoned and removed the pswrite 
+# device entirely.  So we are obliged to use ps2write when
+# the pswrite device is missing.  However, users who have 
+# pswrite available to them may still want to evaluate 
+# whether or not the ps2write device will produce better 
+# output for them.
 #
-#if [ -n "`$GSRIP -h | $GREP ps2write`" ]; then
-#    DEVICE=ps2write
-#fi
+if [ -z "`$GSRIP -h | $GREP "\bpswrite\b"`" ]; then
+    DEVICE=ps2write
+else
+    DEVICE=pswrite
+fi
 
 $GSRIP -q -dPDFFitPage -dBATCH -dNOPAUSE \
     -sDEVICE=$DEVICE -sOutputFile=- "$1"
