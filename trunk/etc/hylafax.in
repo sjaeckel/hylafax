@@ -74,6 +74,9 @@ fi
 if [ -z "$HFAXD_SNPP_SERVER" ]; then
     HFAXD_SNPP_SERVER=@HFAXD_SNPP_SERVER@
 fi
+if [ -z "$HFAXD_ARGS" ]; then
+    HFAXD_ARGS=
+fi
 
 IS_ON=/etc/chkconfig		# NB: chkconfig is IRIX- and Linux-specific
 FAXQ=$SBIN/faxq
@@ -154,7 +157,7 @@ do_start()
 	        $FAXQ; printf " faxq"
             fi
             if test $HFAXD_SERVER = yes ; then
-	        HFAXD="$HFAXD -i $FAXPORT"
+	        HFAXD="$HFAXD $HFAXD_ARGS -i $FAXPORT"
 		HFAXMSG=" hfaxd"
 		if [ $HFAXD_SNPP_SERVER = yes ]; then
 	    	    HFAXD="$HFAXD -s $SNPPPORT"
