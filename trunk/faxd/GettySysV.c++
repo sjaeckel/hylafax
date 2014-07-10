@@ -49,7 +49,11 @@ struct exit_status {
 #define ut_time       ut_tv.tv_sec
 #endif
 #else
+#ifdef __FreeBSD__
+#define ut_time       ut_tv.tv_sec
+#else
 #define ut_time       ut_xtime
+#endif
 #endif
 
 #define getutent      getutxent
