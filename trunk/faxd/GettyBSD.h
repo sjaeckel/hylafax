@@ -25,13 +25,26 @@
  */
 #ifndef _BSDGETTY_
 #define	_BSDGETTY_
+
 /*
  * BSD-style getty support that
  * just invokes the getty program.
  */
 #include "Getty.h"
 
-struct utmp;
+#ifdef HAS_UTMPX
+#define UTMPSTRUCT utmpx
+#define _PATH_UTMP _PATH_VARRUN"/utx.active"
+#define _PATH_WTMP "/var/log/utx.log"
+#define UTIME ut_tv.tv_sec
+#define UNAME ut_user
+#else
+#define UTMPSTRUCT utmp
+#define UTIME ut_time
+#define UNAME ut_name
+#endif
+
+struct UTMPSTRUCT;
 
 class BSDSubProc : public Getty {
 protected:
@@ -45,7 +58,7 @@ class BSDGetty : public BSDSubProc {
 protected:
     void setupSession(int modemFd);
 private:
-    void writeWtmp(utmp* ut);
+    void writeWtmp(UTMPSTRUCT* ut);
     void logout(const char* line);
 public:
     BSDGetty(const char* path, const fxStr& dev, const fxStr& speed);

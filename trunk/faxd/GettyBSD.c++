@@ -32,7 +32,11 @@
 #include <stddef.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#ifdef HAS_UTMPX
+#include <utmpx.h>
+#else
 #include <utmp.h>
+#endif
 
 #include "Sys.h"
 #include "config.h"
@@ -173,7 +177,7 @@ BSDGetty::setupSession(int modemFd)
 }
 
 void
-BSDGetty::writeWtmp(utmp* ut)
+BSDGetty::writeWtmp(UTMPSTRUCT* ut)
 {
 #if HAS_LOGWTMP
     logwtmp(ut->ut_line, "", "");
@@ -182,9 +186,9 @@ BSDGetty::writeWtmp(utmp* ut)
     if (wfd >= 0) {
 	struct stat buf;
 	if (Sys::fstat(wfd, buf) == 0) {
-	    memset(ut->ut_name, 0, sizeof (ut->ut_name));
+	    memset(ut->UNAME, 0, sizeof (ut->UNAME));
 	    memset(ut->ut_host, 0, sizeof (ut->ut_host));
-	    ut->ut_time = Sys::now();
+	    ut->UTIME = Sys::now();
 	    if (Sys::write(wfd, (char *)ut, sizeof (*ut)) != sizeof (*ut))
 		ftruncate(wfd, buf.st_size);
 	}
@@ -201,12 +205,12 @@ BSDGetty::logout(const char* line)
 #else
     int ufd = Sys::open(_PATH_UTMP, O_RDWR);
     if (ufd >= 0) {
-	struct utmp ut;
+	struct UTMPSTRUCT ut;
 	while (Sys::read(ufd, (char *)&ut, sizeof (ut)) == sizeof (ut))
-	    if (ut.ut_name[0] && lineEQ(ut.ut_line, line)) {
-		memset(ut.ut_name, 0, sizeof (ut.ut_name));
+	    if (ut.UNAME[0] && lineEQ(ut.ut_line, line)) {
+		memset(ut.UNAME, 0, sizeof (ut.UNAME));
 		memset(ut.ut_host, 0, sizeof (ut.ut_host));
-		ut.ut_time = time(0);
+		ut.UTIME = time(0);
 		lseek(ufd, -(long) sizeof (ut), SEEK_CUR);
 		Sys::write(ufd, (char *)&ut, sizeof (ut));
 	    }
@@ -221,9 +225,9 @@ BSDGetty::hangup()
     // at this point we're root and we can reset state
     int ufd = Sys::open(_PATH_UTMP, O_RDONLY);
     if (ufd >= 0) {
-	struct utmp ut;
+	struct UTMPSTRUCT ut;
 	while (Sys::read(ufd, (char *)&ut, sizeof (ut)) == sizeof (ut))
-	    if (ut.ut_name[0] && lineEQ(ut.ut_line, getLine())) {
+	    if (ut.UNAME[0] && lineEQ(ut.ut_line, getLine())) {
 		writeWtmp(&ut);
 		break;
 	    }
