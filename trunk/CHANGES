@@ -2,6 +2,7 @@
 
 New Changes
 
+* fix instances where a NULL return of crypt() is ignored (13 Jul 2014)
 * improve support for utmpx on BSD (10 Jul 2014)
 * apply some downstream patches from FreeBSD ports (10 Jul 2014)
 * use ps2write in faxmail pdf converter if pswrite is missing (6 Jul 2014)

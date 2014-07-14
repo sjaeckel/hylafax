@@ -1003,26 +1003,35 @@ SNPPServer::loginCmd(const char* loginID, const char* pass)
 
     if (checkUser(loginID)) {
 	if (passWd != "") {
-	    if (pass[0] == '\0' || !(streq(crypt(pass, passWd), passWd) || pamCheck(the_user, pass))) {
-		if (++loginAttempts >= maxLoginAttempts) {
-		    reply(421, "Login incorrect (closing connection).");
-		    logNotice("Repeated SNPP login failures for user %s from %s [%s]"
-			, (const char*) the_user
-			, (const char*) remotehost
-			, (const char*) remoteaddr
-		    );
-		    dologout(0);
+	    if (pass[0] != '\0') {
+		char* ep = crypt(pass, passWd);
+		if ((ep && streq(ep, passWd)) ||
+		    pamCheck(the_user, pass)) {
+		    // log-in successful
+		    login(250);
+		    return;
 		}
-		reply(550, "Login incorrect.");
-		logInfo("SNPP login failed from %s [%s], %s"
+	    }
+	    if (++loginAttempts >= maxLoginAttempts) {
+		reply(421, "Login incorrect (closing connection).");
+		logNotice("Repeated SNPP login failures for user %s from %s [%s]"
+		    , (const char*) the_user
 		    , (const char*) remotehost
 		    , (const char*) remoteaddr
-		    , (const char*) the_user
 		);
-		return;
+		dologout(0);
 	    }
+	    reply(550, "Login incorrect.");
+	    logInfo("SNPP login failed from %s [%s], %s"
+		, (const char*) remotehost
+		, (const char*) remoteaddr
+		, (const char*) the_user
+	    );
+	    return;
+	} else {
+	    // log-in successful
+	    login(250);
 	}
-	login(250);
     } else {
 	if (++loginAttempts >= maxLoginAttempts) {
 	    reply(421, "Login incorrect (closing connection).");

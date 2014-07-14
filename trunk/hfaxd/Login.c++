@@ -434,28 +434,32 @@ HylaFAXServer::passCmd(const char* pass)
     /*
      * Check hosts.hfaxd first, then PAM, and last, LDAP
      */
-    if (pass[0] == '\0' || !(strcmp(crypt(pass, passWd), passWd) == 0 || 
-			     pamCheck(the_user, pass) || 
-			     ldapCheck(the_user,pass)))
-    {
-	if (++loginAttempts >= maxLoginAttempts) {
-	    reply(530, "Login incorrect (closing connection).");
-	    logNotice("Repeated login failures for user %s from %s [%s]"
-		, (const char*) the_user
-		, (const char*) remotehost
-		, (const char*) remoteaddr
-	    );
-	    dologout(0);
+    if (pass[0] != '\0') {
+	char* ep = crypt(pass, passWd);
+	if ((ep && strcmp(ep, passWd) == 0) ||
+	    pamCheck(the_user, pass) ||
+	    ldapCheck(the_user, pass)) {
+	    // log-in was successful
+	    login(230);
+	    return;
 	}
-	reply(530, "Login incorrect.");
-	logInfo("Login failed from %s [%s], %s"
+    }
+    if (++loginAttempts >= maxLoginAttempts) {
+	reply(530, "Login incorrect (closing connection).");
+	logNotice("Repeated login failures for user %s from %s [%s]"
+	    , (const char*) the_user
 	    , (const char*) remotehost
 	    , (const char*) remoteaddr
-	    , (const char*) the_user
 	);
-	return;
+	dologout(0);
     }
-    login(230);
+    reply(530, "Login incorrect.");
+    logInfo("Login failed from %s [%s], %s"
+	, (const char*) remotehost
+	, (const char*) remoteaddr
+	, (const char*) the_user
+    );
+    return;
 }
 
 /*
@@ -513,7 +517,8 @@ HylaFAXServer::adminCmd(const char* pass)
 {
     fxAssert(IS(LOGGEDIN), "ADMIN command permitted when not logged in");
     // NB: null adminWd is permitted
-    if ((strcmp(crypt(pass, adminWd), adminWd) != 0) && !pamIsAdmin()) {
+    char* ep = crypt(pass, adminWd);
+    if ((!ep || strcmp(ep, adminWd) != 0) && !pamIsAdmin()) {
 	if (++adminAttempts >= maxAdminAttempts) {
 	    reply(530, "Password incorrect (closing connection).");
 	    logNotice("Repeated admin failures from %s [%s]"
