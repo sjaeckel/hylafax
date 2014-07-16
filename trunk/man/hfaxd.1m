@@ -396,6 +396,7 @@ FaxContact	string	\s-1\fIsee below\fP\s+1	contact address to show in help text
 FileFmt	string	\s-1\fIsee below\fP\s+1	format string for file status results
 IdleTimeout	integer	\s-1900\s+1	client idle timeout in seconds
 JobFmt	string	\s-1\fIsee below\fP\s+1	format string for job status results
+JobHostID	string		numeric identification for this host
 JobProtection	octal	\s-10644\s+1	permissions for job qfiles in sendq/doneq
 KillTimeMap	string	\s-1\fIsee below\fP\s+1	mapping from service level to job kill time (\s-1SNPP\s+1)
 LDAPServerURI	string		URI of the ldap server including port number
@@ -556,6 +557,13 @@ applications, such as
 .IR faxstat (1)
 that construct headers from the format string can constrain the width of
 column title strings.
+.TP 10
+.B JobHostID
+A numeric identification for this host to be prepended onto job ids created by
+this host.  This is used in order to distinguish jobs created on this host from
+jobs created on other hosts.  For compatibility with all clients
+.B JobHostID
+must be numeric only.
 .TP 10
 .B JobProtection
 The file mode setting for job qfiles in the \*(Fx queues (sendq and doneq).

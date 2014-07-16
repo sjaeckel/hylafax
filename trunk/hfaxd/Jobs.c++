@@ -568,8 +568,8 @@ HylaFAXServer::jstatLine(Token t, const char* fmt ...)
 void
 HylaFAXServer::jstatCmd(const Job& job)
 {
-    lreply(217, "Job state: jobid %s groupid %s",
-	(const char*) job.jobid, (const char*) job.groupid);
+    lreply(217, "Job state: jobid %s%s groupid %s%s",
+	(const char*) jobHostId, (const char*) job.jobid, (const char*) jobHostId, (const char*) job.groupid);
     if (checkAccess(job, T_SENDTIME, A_READ)) {
 	if (job.tts != 0) {
 	    const struct tm* tm = cvtTime(job.tts);
@@ -677,7 +677,7 @@ HylaFAXServer::jstatCmd(const Job& job)
 	    }
 	}
     }
-    reply(217, "End of job %s state.", (const char*) job.jobid);
+    reply(217, "End of job %s%s state.", (const char*) jobHostId, (const char*) job.jobid);
 }
 
 /* 
@@ -1007,8 +1007,8 @@ HylaFAXServer::newJobCmd(void)
 	setFileOwner(file);			// force ownership
 	FileCache::chmod(file, jobProtection);	// sync cache
 	curJob->lastmod = Sys::now();		// noone else should update
-	reply(200, "New job created: jobid: %s groupid: %s.",
-	    (const char*) curJob->jobid, (const char*) curJob->groupid);
+	reply(200, "New job created: jobid: %s%s groupid: %s%s.",
+	    (const char*) jobHostId, (const char*) curJob->jobid, (const char*) jobHostId, (const char*) curJob->groupid);
 	blankJobs[curJob->jobid] = curJob;
     } else
 	reply(503, "%s.", (const char*) emsg);
@@ -1028,7 +1028,7 @@ bool
 HylaFAXServer::newJob(fxStr& emsg)
 {
     if (!IS(PRIVILEGED) && the_user != curJob->owner) {
-	emsg = "Permission denied; cannot inherit from job " | curJob->jobid;
+	emsg = "Permission denied; cannot inherit from job " | jobHostId | curJob->jobid;
 	return (false);
     }
     u_int id = getJobNumber(emsg);		// allocate unique job ID
@@ -1124,8 +1124,10 @@ HylaFAXServer::updateJobOnDisk(Job& job, fxStr& emsg)
  * Look for a job in the in-memory cache.
  */
 Job*
-HylaFAXServer::findJobInMemmory(const char* jobid)
+HylaFAXServer::findJobInMemory(const char* jobid)
 {
+    /* jobid here does not include jobHostId */
+
     if (curJob->jobid == jobid)				// fast check
 	return (curJob);
     Job** jpp = (Job**) jobs.find(jobid);
@@ -1139,15 +1141,17 @@ HylaFAXServer::findJobInMemmory(const char* jobid)
  * into memory and return it.
  */
 Job*
-HylaFAXServer::findJobOnDisk(const char* jid, fxStr& emsg)
+HylaFAXServer::findJobOnDisk(const char* jobid, fxStr& emsg)
 {
-    fxStr filename(fxStr::format("/" FAX_SENDDIR "/" FAX_QFILEPREF "%s", jid));
+    /* jobid here does not include jobHostId */
+
+    fxStr filename(fxStr::format("/" FAX_SENDDIR "/" FAX_QFILEPREF "%s", jobid));
     struct stat sb;
     if (!FileCache::update(filename, sb)) {
 	/*
 	 * Not in sendq, look in the doneq for the job.
 	 */
-	filename = fxStr::format("/" FAX_DONEDIR "/" FAX_QFILEPREF "%s", jid);
+	filename = fxStr::format("/" FAX_DONEDIR "/" FAX_QFILEPREF "%s", jobid);
 	if (!FileCache::update(filename, sb)) {
 	    emsg = fxStr::format("job does not exist (%s)", strerror(errno));
 	    return (NULL);
@@ -1286,7 +1290,9 @@ HylaFAXServer::unlockJob(Job& job)
 Job*
 HylaFAXServer::findJob(const char* jobid, fxStr& emsg)
 {
-    Job* job = findJobInMemmory(jobid);
+    /* jobid here does not include jobHostId */
+
+    Job* job = findJobInMemory(jobid);
     if (job) {
 	/*
 	 * Verify job is still around (another process has
@@ -1343,8 +1349,8 @@ HylaFAXServer::replyCurrentJob(const char* leader)
     if (curJob->jobid == "default")
 	reply(200, "%s (default).", leader);
     else
-	reply(200, "%s jobid: %s groupid: %s.", leader,
-	    (const char*) curJob->jobid, (const char*) curJob->groupid);
+	reply(200, "%s jobid: %s%s groupid: %s%s.", leader,
+	    (const char*) jobHostId, (const char*) curJob->jobid, (const char*) jobHostId, (const char*) curJob->groupid);
 }
 
 /*
@@ -1354,12 +1360,23 @@ void
 HylaFAXServer::setCurrentJob(const char* jobid)
 {
     fxStr emsg;
-    Job* job = findJob(jobid, emsg);
-    if (job) {
-	curJob = job;
-	replyCurrentJob("Current job:");
-    } else
-	reply(500, "Cannot set job %s; %s.", jobid, (const char*) emsg);
+    if (strlen(jobid) > jobHostId.length()) {
+	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	    // This appears to be a job on this host.
+	    Job* job = findJob(jobid + jobHostId.length(), emsg);
+	    if (job) {
+		curJob = job;
+		replyCurrentJob("Current job:");
+		return;
+	    }
+	} else {
+	    // The client appears to be attempting to work with a job on a different host.
+	    emsg = "unknown host id";
+	}
+    } else {
+	emsg = "missing host id";
+    }
+    reply(500, "Cannot set job %s; %s.", jobid, (const char*) emsg);
 }
 
 /*
@@ -1369,22 +1386,33 @@ void
 HylaFAXServer::resetJob(const char* jobid)
 {
     fxStr emsg;
-    Job* job = findJob(jobid, emsg);
-    if (job) {
-	if (job->jobid == "default") {
-	    initDefaultJob();
-	    reply(200, "Default job reset to initial state.");
-	} else if (job->state != FaxRequest::state_suspended) {
-	    reply(504, "Job %s not reset; must be suspended.", jobid);
+    if (strlen(jobid) > jobHostId.length()) {
+	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	    // This appears to be a job on this host.
+	    Job* job = findJob(jobid + jobHostId.length(), emsg);
+	    if (job) {
+		if (job->jobid == "default") {
+		    initDefaultJob();
+		    reply(200, "Default job reset to initial state.");
+		} else if (job->state != FaxRequest::state_suspended) {
+		    reply(504, "Job %s not reset; must be suspended.", jobid);
+		} else {
+		    updateJobFromDisk(*job);
+		    struct stat sb;
+		    if (FileCache::lookup("/" | job->qfile, sb))
+			job->lastmod = sb.st_mtime;
+		    reply(200, "Job %s reset to last state saved to disk.", jobid);
+		}
+		return;
+	    }
 	} else {
-	    updateJobFromDisk(*job);
-	    struct stat sb;
-	    if (FileCache::lookup("/" | job->qfile, sb))
-		job->lastmod = sb.st_mtime;
-	    reply(200, "Job %s reset to last state saved to disk.", jobid);
+	    // The client appears to be attempting to work with a job on a different host.
+	    emsg = "unknown host id";
 	}
-    } else
-	reply(500, "Cannot reset job %s; %s.", jobid, (const char*) emsg);
+    } else {
+	emsg = "missing host id";
+    }
+    reply(500, "Cannot reset job %s; %s.", jobid, (const char*) emsg);
 }
 
 /*
@@ -1393,6 +1421,8 @@ HylaFAXServer::resetJob(const char* jobid)
 Job*
 HylaFAXServer::preJobCmd(const char* op, const char* jobid, fxStr& emsg)
 {
+    /* jobid here does not include jobHostId */
+
     Job* job = findJob(jobid, emsg);
     if (job) {
 	if (job->jobid == "default") {
@@ -1403,7 +1433,7 @@ HylaFAXServer::preJobCmd(const char* op, const char* jobid, fxStr& emsg)
 	    job = NULL;
 	}
     } else
-	reply(500, "Cannot %s job %s; %s.", op, jobid, (const char*) emsg);
+	reply(500, "Cannot %s job %s%s; %s.", op, (const char*) jobHostId, jobid, (const char*) emsg);
     return (job);
 }
 
@@ -1414,88 +1444,100 @@ void
 HylaFAXServer::deleteJob(const char* jobid)
 {
     fxStr emsg;
-    Job* job = preJobCmd("delete", jobid, emsg);
-    if (job) {
-	const char* startdir = cwd->pathname;
-	if (Sys::chdir("/") < 0) {
-	    reply(504, "Cannot change to base spool directory.");
-	    return;
-	}
-	if (job->state != FaxRequest::state_done &&
-	  job->state != FaxRequest::state_failed &&
-	  job->state != FaxRequest::state_suspended) {
-	    reply(504, "Job %s not deleted; use JSUSP first.", jobid);
-	    return;
-	}
-	if (!lockJob(*job, LOCK_EX, emsg)) {
-	    reply(504, "Cannot delete job: %s.", (const char*) emsg);
-	    return;
-	}
-	/*
-	 * Jobs in the doneq (state_done) have had their
-	 * documents converted to references (w/o links)
-	 * to the base document name; thus there is no
-	 * work to do to cleanup document state (a separate
-	 * scavenger program must deal with this since it
-	 * requires global knowledge of what jobs reference
-	 * what documents).
-	 *
-	 * Jobs that have yet to complete however hold links
-	 * to documents that must be removed.  We do this here
-	 * and also notify the scheduler about our work so that
-	 * it can properly expunge imaged versions of the docs.
-	 */
-	if (job->state == FaxRequest::state_suspended) {
-	    for (u_int i = 0, n = job->items.length(); i < n; i++) {
-		const FaxItem& fitem = job->items[i];
-		switch (fitem.op) {
-		case FaxRequest::send_fax:
-		    if (sendQueuerACK(emsg, "U%s", (const char*) fitem.item) ||
-		      !job->isUnreferenced(i))
-			break;
-		    /* ... fall thru */
-		case FaxRequest::send_tiff_saved:
-		case FaxRequest::send_tiff:
-		case FaxRequest::send_pdf_saved:
-		case FaxRequest::send_pdf:
-		case FaxRequest::send_postscript:
-		case FaxRequest::send_postscript_saved:
-		case FaxRequest::send_pcl:
-		case FaxRequest::send_pcl_saved:
-		case FaxRequest::send_data:
-		    Sys::unlink(fitem.item);
-		    break;
+    if (strlen(jobid) > jobHostId.length()) {
+	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	    // This appears to be a job on this host.
+	    Job* job = preJobCmd("delete", jobid + jobHostId.length(), emsg);
+	    if (job) {
+		const char* startdir = cwd->pathname;
+		if (Sys::chdir("/") < 0) {
+		    reply(504, "Cannot change to base spool directory.");
+		    return;
 		}
+		if (job->state != FaxRequest::state_done &&
+		  job->state != FaxRequest::state_failed &&
+		  job->state != FaxRequest::state_suspended) {
+		    reply(504, "Job %s not deleted; use JSUSP first.", jobid);
+		    return;
+		}
+		if (!lockJob(*job, LOCK_EX, emsg)) {
+		    reply(504, "Cannot delete job: %s.", (const char*) emsg);
+		    return;
+		}
+		/*
+		 * Jobs in the doneq (state_done) have had their
+		 * documents converted to references (w/o links)
+		 * to the base document name; thus there is no
+		 * work to do to cleanup document state (a separate
+		 * scavenger program must deal with this since it
+		 * requires global knowledge of what jobs reference
+		 * what documents).
+		 *
+		 * Jobs that have yet to complete however hold links
+		 * to documents that must be removed.  We do this here
+		 * and also notify the scheduler about our work so that
+		 * it can properly expunge imaged versions of the docs.
+		 */
+		if (job->state == FaxRequest::state_suspended) {
+		    for (u_int i = 0, n = job->items.length(); i < n; i++) {
+			const FaxItem& fitem = job->items[i];
+			switch (fitem.op) {
+			case FaxRequest::send_fax:
+			    if (sendQueuerACK(emsg, "U%s", (const char*) fitem.item) ||
+			      !job->isUnreferenced(i))
+				break;
+			    /* ... fall thru */
+			case FaxRequest::send_tiff_saved:
+			case FaxRequest::send_tiff:
+			case FaxRequest::send_pdf_saved:
+			case FaxRequest::send_pdf:
+			case FaxRequest::send_postscript:
+			case FaxRequest::send_postscript_saved:
+			case FaxRequest::send_pcl:
+			case FaxRequest::send_pcl_saved:
+			case FaxRequest::send_data:
+			    Sys::unlink(fitem.item);
+			    break;
+			}
+		    }
+		} else {
+		    // expunge any cover page documents
+		    for (u_int i = 0, n = job->items.length(); i < n; i++) {
+			const FaxItem& fitem = job->items[i];
+			switch (fitem.op) {
+			case FaxRequest::send_tiff_saved:
+			case FaxRequest::send_tiff:
+			case FaxRequest::send_pdf_saved:
+			case FaxRequest::send_pdf:
+			case FaxRequest::send_postscript:
+			case FaxRequest::send_postscript_saved:
+			case FaxRequest::send_pcl:
+			case FaxRequest::send_pcl_saved:
+			    if (fitem.item.findR(fitem.item.length(), ".cover"))
+				Sys::unlink(fitem.item);
+			    break;
+			}
+		    }
+		}
+		if (Sys::unlink(job->qfile) < 0)
+		    reply(504, "Deletion of queue file %s failed.", (const char*) job->qfile);
+		if (Sys::chdir(startdir) < 0)
+		    reply(504, "Cannot change to %s spool directory.", startdir);
+		jobs.remove(job->jobid);
+		if (job == curJob)			// make default job current
+		    curJob = &defJob;
+		delete job;				// NB: implicit unlock
+		replyCurrentJob(fxStr::format("Job %s deleted; current job:", jobid));
 	    }
+	    return;
 	} else {
-	    // expunge any cover page documents
-	    for (u_int i = 0, n = job->items.length(); i < n; i++) {
-		const FaxItem& fitem = job->items[i];
-		switch (fitem.op) {
-		case FaxRequest::send_tiff_saved:
-		case FaxRequest::send_tiff:
-		case FaxRequest::send_pdf_saved:
-		case FaxRequest::send_pdf:
-		case FaxRequest::send_postscript:
-		case FaxRequest::send_postscript_saved:
-		case FaxRequest::send_pcl:
-		case FaxRequest::send_pcl_saved:
-		    if (fitem.item.findR(fitem.item.length(), ".cover"))
-			Sys::unlink(fitem.item);
-		    break;
-		}
-	    }
+	    // The client appears to be attempting to work with a job on a different host.
+	    emsg = "unknown host id";
 	}
-	if (Sys::unlink(job->qfile) < 0)
-	    reply(504, "Deletion of queue file %s failed.", (const char*) job->qfile);
-	if (Sys::chdir(startdir) < 0)
-	    reply(504, "Cannot change to %s spool directory.", startdir);
-	jobs.remove(job->jobid);
-	if (job == curJob)			// make default job current
-	    curJob = &defJob;
-	delete job;				// NB: implicit unlock
-	replyCurrentJob(fxStr::format("Job %s deleted; current job:", jobid));
+    } else {
+	emsg = "missing host id";
     }
+    reply(504, "Cannot delete job %s; %s.", jobid, (const char*) emsg);
 }
 
 /*
@@ -1505,19 +1547,31 @@ void
 HylaFAXServer::operateOnJob(const char* jobid, const char* what, const char* op)
 {
     fxStr emsg;
-    Job* job = preJobCmd(what, jobid, emsg);
-    if (job) {
-	if (job->state == FaxRequest::state_done ||
-	  job->state == FaxRequest::state_failed) {
-	    reply(504, "Job %s not %sed; already done.", jobid, what);
+    if (strlen(jobid) > jobHostId.length()) {
+	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	    // This appears to be a job on this host.
+	    Job* job = preJobCmd(what, jobid + jobHostId.length(), emsg);
+	    if (job) {
+		if (job->state == FaxRequest::state_done ||
+		  job->state == FaxRequest::state_failed) {
+		    reply(504, "Job %s not %sed; already done.", jobid, what);
+		    return;
+		}
+		if (sendQueuerACK(emsg, "%s%s", op, jobid + jobHostId.length()))
+		    reply(200, "Job %s %sed.", jobid, what);
+		else
+		    reply(460, "Failed to %s job %s: %s.",
+			what, jobid, (const char*) emsg);
+	    }
 	    return;
+	} else {
+	    // The client appears to be attempting to work with a job on a different host.
+	    emsg = "unknown host id";
 	}
-	if (sendQueuerACK(emsg, "%s%s", op, jobid))
-	    reply(200, "Job %s %sed.", jobid, what);
-	else
-	    reply(460, "Failed to %s job %s: %s.",
-		what, jobid, (const char*) emsg);
+    } else {
+	emsg = "missing host id";
     }
+    reply(460, "Cannot %s job %s; %s.", what, jobid, (const char*) emsg);
 }
 
 /*
@@ -1550,8 +1604,8 @@ HylaFAXServer::interruptJob(const char* jobid)
 void
 HylaFAXServer::replyBadJob(const Job& job, Token t)
 {
-    reply(504, "Cannot submit job %s; null or missing %s parameter.",
-	(const char*) job.jobid, parmToken(t));
+    reply(504, "Cannot submit job %s%s; null or missing %s parameter.",
+	(const char*) jobHostId, (const char*) job.jobid, parmToken(t));
 }
 
 /*
@@ -1561,58 +1615,70 @@ void
 HylaFAXServer::submitJob(const char* jobid)
 {
     fxStr emsg;
-    Job* job = preJobCmd("submit", jobid, emsg);
-    if (job) {
-	if (job->state == FaxRequest::state_done ||
-	  job->state == FaxRequest::state_failed) {
-	    reply(504, "Job %s not submitted; already done.", jobid);
-	    return;
-	}
-	if (job->state != FaxRequest::state_suspended) {
-	    reply(504, "Job %s not submitted; use JSUSP first.", jobid);
-	    return;
-	}
-	if (job->number == "")
-	    replyBadJob(*job, T_DIALSTRING);
-	else if (job->mailaddr == "")
-	    replyBadJob(*job, T_NOTIFYADDR);
-	else if (job->sender == "")
-	    replyBadJob(*job, T_FROM_USER);
-	else if (job->modem == "")
-	    replyBadJob(*job, T_MODEM);
-	else if (job->client == "")
-	    replyBadJob(*job, T_CLIENT);
-	else {
-	    /*
-	     * If the client doesn't specify external then use number.  So
-	     * temporarily alter job->external as the job is updated on disk.
-	     */
-	    bool defaultexternal = false;
-	    if (job->external == "") {
-		job->external = job->number;
-		defaultexternal = true;
+    if (strlen(jobid) > jobHostId.length()) {
+	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	    // This appears to be a job on this host.
+	    Job* job = preJobCmd("submit", jobid + jobHostId.length(), emsg);
+	    if (job) {
+		if (job->state == FaxRequest::state_done ||
+		  job->state == FaxRequest::state_failed) {
+		    reply(504, "Job %s not submitted; already done.", jobid);
+		    return;
+		}
+		if (job->state != FaxRequest::state_suspended) {
+		    reply(504, "Job %s not submitted; use JSUSP first.", jobid);
+		    return;
+		}
+		if (job->number == "")
+		    replyBadJob(*job, T_DIALSTRING);
+		else if (job->mailaddr == "")
+		    replyBadJob(*job, T_NOTIFYADDR);
+		else if (job->sender == "")
+		    replyBadJob(*job, T_FROM_USER);
+		else if (job->modem == "")
+		    replyBadJob(*job, T_MODEM);
+		else if (job->client == "")
+		    replyBadJob(*job, T_CLIENT);
+		else {
+		    /*
+		     * If the client doesn't specify external then use number.  So
+		     * temporarily alter job->external as the job is updated on disk.
+		     */
+		    bool defaultexternal = false;
+		    if (job->external == "") {
+			job->external = job->number;
+			defaultexternal = true;
+		    }
+		    if (updateJobOnDisk(*job, emsg)) {
+			/*
+			 * NB: we don't mark the lastmod time for the
+			 * job since the scheduler should re-write the
+			 * queue file to reflect what it did with it
+			 * (e.g. what state it placed the job in).
+			 */
+			if (sendQueuerACK(emsg, "S%s", jobid + jobHostId.length())) {
+			    reply(200, "Job %s submitted.", jobid);
+			    Job** jpp = (Job**) blankJobs.find(job->jobid);
+			    if (jpp)
+				blankJobs.remove(job->jobid);	// it's no longer blank
+			} else
+			    reply(460, "Failed to submit job %s: %s.",
+				jobid, (const char*) emsg);
+		    } else
+			reply(450, "%s.", (const char*) emsg);	// XXX 550?
+		    if (defaultexternal)
+			job->external = "";
+		}
 	    }
-	    if (updateJobOnDisk(*job, emsg)) {
-		/*
-		 * NB: we don't mark the lastmod time for the
-		 * job since the scheduler should re-write the
-		 * queue file to reflect what it did with it
-		 * (e.g. what state it placed the job in).
-		 */
-		if (sendQueuerACK(emsg, "S%s", jobid)) {
-		    reply(200, "Job %s submitted.", jobid);
-		    Job** jpp = (Job**) blankJobs.find(job->jobid);
-		    if (jpp)
-			blankJobs.remove(job->jobid);	// it's no longer blank
-		} else
-		    reply(460, "Failed to submit job %s: %s.",
-			jobid, (const char*) emsg);
-	    } else
-		reply(450, "%s.", (const char*) emsg);	// XXX 550?
-	    if (defaultexternal)
-		job->external = "";
+	    return;
+	} else {
+	    // The client appears to be attempting to work with a job on a different host.
+	    emsg = "unknown host id";
 	}
+    } else {
+	emsg = "missing host id";
     }
+    reply(460, "Cannot submit job %s; %s.", jobid, (const char*) emsg);
 }
 
 /*
@@ -1627,46 +1693,57 @@ void
 HylaFAXServer::waitForJob(const char* jobid)
 {
     fxStr emsg;
-    Job* job = findJob(jobid, emsg);
-    if (job) {
-	if (job->jobid == "default") {
-	    reply(504, "Cannot wait for default job.");
-	    return;
-	}
-	if (job->state == FaxRequest::state_done ||
-	  job->state == FaxRequest::state_failed) {
-	    reply(216, "Job %s done (already).", jobid);
-	    return;
-	}
-	state &= ~S_LOGTRIG;			// just process events
-	if (newTrigger(emsg, "J<%s>%04x", jobid, 1<<Trigger::JOB_DEAD)) {
-	    // XXX is lreply the right thing?
-	    lreply(216, "Waiting for job %s; use ABOR command to interrupt.",
-		jobid);
-	    if (setjmp(urgcatch) == 0) {
-		Dispatcher& disp = Dispatcher::instance();
-		for (state |= S_WAITTRIG; IS(WAITTRIG); disp.dispatch()) {
-		    /*
-		     * The trigger event handlers update our notion
-		     * of the job state asynchronously so we can just
-		     * monitor the job's state variable.  Beware however
-		     * that the job may get removed/moved to the doneq
-		     * while we're monitoring its status; so we cannot
-		     * blindly hold a reference to the in-memory structure.
-		     */
-		    job = findJob(jobid, emsg);
-		    if (!job || job->state == FaxRequest::state_done ||
-		      job->state == FaxRequest::state_failed)
-			break;
+    if (strlen(jobid) > jobHostId.length()) {
+	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	    // This appears to be a job on this host.
+	    Job* job = findJob(jobid + jobHostId.length(), emsg);
+	    if (job) {
+		if (job->jobid == "default") {
+		    reply(504, "Cannot wait for default job.");
+		    return;
 		}
-		reply(216, "Wait for job %s completed.", jobid);
+		if (job->state == FaxRequest::state_done ||
+		  job->state == FaxRequest::state_failed) {
+		    reply(216, "Job %s done (already).", jobid);
+		    return;
+		}
+		state &= ~S_LOGTRIG;			// just process events
+		if (newTrigger(emsg, "J<%s>%04x", jobid + jobHostId.length(), 1<<Trigger::JOB_DEAD)) {
+		    // XXX is lreply the right thing?
+		    lreply(216, "Waiting for job %s; use ABOR command to interrupt.",
+			jobid);
+		    if (setjmp(urgcatch) == 0) {
+			Dispatcher& disp = Dispatcher::instance();
+			for (state |= S_WAITTRIG; IS(WAITTRIG); disp.dispatch()) {
+			    /*
+			     * The trigger event handlers update our notion
+			     * of the job state asynchronously so we can just
+			     * monitor the job's state variable.  Beware however
+			     * that the job may get removed/moved to the doneq
+			     * while we're monitoring its status; so we cannot
+			     * blindly hold a reference to the in-memory structure.
+			     */
+			    job = findJob(jobid + jobHostId.length(), emsg);
+			    if (!job || job->state == FaxRequest::state_done ||
+			      job->state == FaxRequest::state_failed)
+				break;
+			}
+			reply(216, "Wait for job %s completed.", jobid);
+		    }
+		    state &= ~S_WAITTRIG;
+		    (void) cancelTrigger(emsg);
+		} else
+		    reply(504, "Cannot register trigger: %s.", (const char*) emsg);
+		return;
 	    }
-	    state &= ~S_WAITTRIG;
-	    (void) cancelTrigger(emsg);
-	} else
-	    reply(504, "Cannot register trigger: %s.", (const char*) emsg);
-    } else
-	reply(500, "Cannot wait for job %s; %s.", jobid, (const char*) emsg);
+	} else {
+	    // The client appears to be attempting to work with a job on a different host.
+	    emsg = "unknown host id";
+	}
+    } else {
+	emsg = "missing host id";
+    }
+    reply(500, "Cannot wait for job %s; %s.", jobid, (const char*) emsg);
 }
 
 /*
@@ -2030,7 +2107,7 @@ HylaFAXServer::Jprintf(FILE* fd, const char* fmt, const Job& job)
 		fprintf(fd, fspec, job.pri);
 		break;
 	    case 'j':
-		fprintf(fd, fspec, (const char*) job.jobid);
+		fprintf(fd, fspec, (const char*) (jobHostId | job.jobid));
 		break;
 	    case 'k':
 		fprintf(fd, fspec, compactTime(job.killtime));

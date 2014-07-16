@@ -1134,9 +1134,10 @@ SNPPServer::pagerCmd(const char* pagerID, const char* pin)
 	curJob->items.append(FaxItem(FaxRequest::send_page, 0, "", pin));
 	curJob->items.append(
 	    FaxItem(FaxRequest::send_page_saved, 0, "", pin));
-	reply(250, "Pager ID accepted; provider: %s pin: %s jobid: %s."
+	reply(250, "Pager ID accepted; provider: %s pin: %s jobid: %s%s."
 	    , (const char*) provider
 	    , pin
+	    , (const char*) jobHostId
 	    , (const char*) curJob->jobid
 	);
 	msgs.append(curJob->jobid);
@@ -1268,8 +1269,8 @@ SNPPServer::sendCmd(void)
 		 */
 		if (sendQueuerACK(emsg, "S%s", jobid))
 		    continue;
-		reply(554, "Failed to submit message %s: %s.",
-		    jobid, (const char*) emsg);
+		reply(554, "Failed to submit message %s%s: %s.",
+		    (const char*) jobHostId, jobid, (const char*) emsg);
 	    } else
 		reply(554, "%s.", (const char*) emsg);
 	}

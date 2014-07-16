@@ -1321,7 +1321,7 @@ bool
 HylaFAXServer::job_param(fxStr& jid)
 {
     if (opt_CRLF()) {
-	jid = curJob->jobid;
+	jid = jobHostId | curJob->jobid;
 	return (true);
     } else if (SPACE() && STRING(jid, "job identifer") && CRLF()) {
 	jid.lowercase();
@@ -1337,7 +1337,7 @@ bool
 HylaFAXServer::jgrp_param(fxStr& jgid)
 {
     if (opt_CRLF()) {
-	jgid = curJob->groupid;
+	jgid = jobHostId | curJob->groupid;
 	return (true);
     } else if (SPACE() && STRING(jgid, "job group identifier") && CRLF()) {
 	jgid.lowercase();
