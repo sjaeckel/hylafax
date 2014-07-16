@@ -232,6 +232,7 @@ protected:
     u_int	maxLockTimeout;		// upper bound on qfile lock timeout
     int		data;			// current data connection (socket)
     int		pdata;			// passive mode data connect (socket)
+    fxStr	jobHostId;		// id of this host for jobid/groupid
     fxStr	hostname;		// name of machine server is running on
     fxStr	hostaddr;		// primary address for hostname
     fxStr	remotehost;		// name of peer's machine
@@ -575,7 +576,7 @@ protected:
     void newJobCmd(void);
     bool newJob(fxStr& emsg);
     Job* findJob(const char* jobid, fxStr& emsg);
-    Job* findJobInMemmory(const char* jobid);
+    Job* findJobInMemory(const char* jobid);
     Job* findJobOnDisk(const char* jobid, fxStr& emsg);
     bool updateJobFromDisk(Job& job);
     void replyCurrentJob(const char* leader);

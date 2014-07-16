@@ -431,8 +431,8 @@ HylaFAXServer::statusCmd(void)
 	if (curJob->jobid == "default")
 	    printf("(default)\r\n");
 	else
-	    printf("jobid %s groupid %s\r\n",
-		(const char*) curJob->jobid, (const char*) curJob->groupid);
+	    printf("jobid %s%s groupid %s%s\r\n",
+		(const char*) jobHostId, (const char*) curJob->jobid, (const char*) jobHostId, (const char*) curJob->groupid);
     } else if (IS(WAITPASS))
 	printf("    Waiting for password\r\n");
     else
@@ -618,10 +618,11 @@ HylaFAXServer::resetConfig()
 
 /*
  * logFacility *must* be the first entry - see its handling
- * below in setConfigItem()
+ * below in setConfigItem(). Likewise, jobHostId must be second.
  */
 HylaFAXServer::stringtag HylaFAXServer::strings[] = {
 { "logfacility",	&HylaFAXServer::logFacility,	LOG_FAX },
+{ "jobhostid",		&HylaFAXServer::jobHostId,	"" },
 { "faxcontact",		&HylaFAXServer::faxContact,	"FaxMaster" },
 { "useraccessfile",	&HylaFAXServer::userAccessFile,	"/" FAX_PERMFILE },
 { "shutdownfile",	&HylaFAXServer::shutdownFile,	"/etc/shutdown" },
@@ -704,6 +705,7 @@ HylaFAXServer::setConfigItem(const char* tag, const char* value)
 	(*this).*strings[ix].p = value;
 	switch (ix) {
 	case 0:	setLogFacility(logFacility); break;
+	case 1: jobHostId.resize(jobHostId.skip(0, "0123456789")); // jobHostId must be numeric to be compatible with all clients
 	}
     } else if (findTag(tag, (const tags*) numbers, N(numbers), ix)) {
 	(*this).*numbers[ix].p = getNumber(value);
