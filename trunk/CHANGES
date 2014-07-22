@@ -2,6 +2,7 @@
 
 New Changes
 
+* pass job priority to the proxy server (21 Jul 2014)
 * add JobHostID feature (16 Jul 2014)
 * fix instances where a NULL return of crypt() is ignored (13 Jul 2014)
 * improve support for utmpx on BSD (10 Jul 2014)

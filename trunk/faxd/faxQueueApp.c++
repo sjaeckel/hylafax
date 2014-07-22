@@ -2672,6 +2672,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		SendFaxJob& rjob = client->addJob();
 		if (job.getJCI().getDesiredDF() != -1) req.desireddf = job.getJCI().getDesiredDF();
 		rjob.setSendTime("now");
+		rjob.setPriority(job.pri);
 		rjob.setKillTime((const char*) fxStr::format("now + %d minutes", (req.killtime - Sys::now())/60));
 		rjob.setDesiredDF(req.desireddf);
 		rjob.setMinSpeed(req.minbr);
