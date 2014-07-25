@@ -2,6 +2,8 @@
 
 New Changes
 
+* fix faxsend segfault caused by an empty TagLine field introduced in
+  alignment features added in 5.5.5 (25 Jul 2014)
 * pass job priority to the proxy server (21 Jul 2014)
 * add JobHostID feature (16 Jul 2014)
 * fix instances where a NULL return of crypt() is ignored (13 Jul 2014)

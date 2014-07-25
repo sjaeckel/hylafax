@@ -240,12 +240,14 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
     for (u_int f = 0; f < tagLineFields; f++) {
 	fxStr tagField = tag.token(l, '|');
 	u_int align = 0;	// centered
-	if (tagField[0] == '{') {
-	    align = 1;		// left-aligned
-	    tagField.remove(0,1);
-	} else if (tagField[0] == '}') {
-	    align = 2;		// right-aligned
-	    tagField.remove(0,1);
+	if (tagField.length()) {
+	    if (tagField[0] == '{') {
+		align = 1;		// left-aligned
+		tagField.remove(0,1);
+	    } else if (tagField[0] == '}') {
+		align = 2;		// right-aligned
+		tagField.remove(0,1);
+	    }
 	}
 	u_int fw, fh;
 	tagLineFont->strWidth(tagField, isutf8, fw, fh);
