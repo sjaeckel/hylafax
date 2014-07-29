@@ -32,6 +32,7 @@
 #include "Dispatcher.h"
 #include "StackBuffer.h"
 #include "Sequence.h"
+#include "config.h"
 
 #include <ctype.h>
 #include <sys/file.h>
@@ -44,6 +45,9 @@
 const char* HylaFAXServer::version = HYLAFAX_VERSION;
 int HylaFAXServer::_debugSleep = 0;
 fxStrArray HylaFAXServer::configOptions;
+
+MySendFaxClient::MySendFaxClient() {}
+MySendFaxClient::~MySendFaxClient() {}
 
 /*
  * NB: The remainder of the instance state is
@@ -71,6 +75,8 @@ HylaFAXServer::HylaFAXServer()
     pdata = -1;			// passive mode data connect (socket)
     faxqFd = -1;
     clientFd = -1;
+
+    curJobHost = -1;		// currently-connected job host
 
     char buff[64];
     (void) gethostname(buff, sizeof(buff));
@@ -126,6 +132,7 @@ HylaFAXServer::HylaFAXServer()
     setenv("TZ", tz, 0);
 
     cachedTIFF = NULL;
+    jobHostClient = new MySendFaxClient;
 }
 
 HylaFAXServer::~HylaFAXServer()
@@ -172,6 +179,8 @@ HylaFAXServer::initServer(void)
 
     initDefaultJob();		// reset default job state
     curJob = &defJob;
+    curJobId = "default";
+    curJobGroupId = "";
 
     if (data != -1)		// data transfer-related state
 	Sys::close(data), data = -1;
@@ -428,11 +437,11 @@ HylaFAXServer::statusCmd(void)
 	printf("    \"%.*s\" is the current directory\r\n",
 	    len ? len : len+1, cwd->pathname);
 	printf("    Current job: ");
-	if (curJob->jobid == "default")
+	if (curJobId == "default")
 	    printf("(default)\r\n");
 	else
-	    printf("jobid %s%s groupid %s%s\r\n",
-		(const char*) jobHostId, (const char*) curJob->jobid, (const char*) jobHostId, (const char*) curJob->groupid);
+	    printf("jobid %s groupid %s\r\n",
+		(const char*) curJobId, (const char*) curJobGroupId);
     } else if (IS(WAITPASS))
 	printf("    Waiting for password\r\n");
     else
@@ -517,7 +526,10 @@ HylaFAXServer::vreply(int code, const char* fmt, va_list ap)
     }
     fxStackBuffer buf;
     buf.vput(fmt, ap);
-    fprintf(stdout, "%d %.*s\r\n", code, buf.getLength(), (const char*) buf);
+    if (code > 0)
+	fprintf(stdout, "%d %.*s\r\n", code, buf.getLength(), (const char*) buf);
+    else
+	fprintf(stdout, "%.*s\r\n", buf.getLength(), (const char*) buf);
     fflush(stdout);
 
     if (TRACE(PROTOCOL))
@@ -702,10 +714,34 @@ HylaFAXServer::setConfigItem(const char* tag, const char* value)
 {
     u_int ix;
     if (findTag(tag, (const tags*) strings, N(strings), ix)) {
-	(*this).*strings[ix].p = value;
 	switch (ix) {
-	case 0:	setLogFacility(logFacility); break;
-	case 1: jobHostId.resize(jobHostId.skip(0, "0123456789")); // jobHostId must be numeric to be compatible with all clients
+	case 0:
+	    {
+		(*this).*strings[ix].p = value;
+		setLogFacility(logFacility);
+	    }
+	    break;
+	case 1:
+	    {
+		if (strchr(value, ':')) {
+		    // Formatting includes ":" which means it's identifying a remote host.
+		    fxStr id, host, user, pass, adminwd;
+		    fxStr configline = fxStr(value);
+		    u_int pos = 0;
+		    if (pos < configline.length()) id = configline.token(pos, ':');
+		    if (pos < configline.length()) host = configline.token(pos, ':');
+		    if (pos < configline.length()) user = configline.token(pos, ':');
+		    if (pos < configline.length()) pass = configline.token(pos, ':');
+		    if (pos < configline.length()) adminwd = configline.token(pos, ':');
+		    jobHosts.append(FaxHostID(id, host, user, pass, adminwd));
+		} else {
+		    // Formatting identifies this host.
+		    (*this).*strings[ix].p = value;
+		    jobHostId.resize(jobHostId.skip(0, "0123456789")); // jobHostId must be numeric to be compatible with all clients
+		}
+	    }
+	    break;
+	default:	(*this).*strings[ix].p = value; break;
 	}
     } else if (findTag(tag, (const tags*) numbers, N(numbers), ix)) {
 	(*this).*numbers[ix].p = getNumber(value);

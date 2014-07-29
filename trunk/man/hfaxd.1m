@@ -396,7 +396,7 @@ FaxContact	string	\s-1\fIsee below\fP\s+1	contact address to show in help text
 FileFmt	string	\s-1\fIsee below\fP\s+1	format string for file status results
 IdleTimeout	integer	\s-1900\s+1	client idle timeout in seconds
 JobFmt	string	\s-1\fIsee below\fP\s+1	format string for job status results
-JobHostID	string		numeric identification for this host
+JobHostID	string		identification information for job hosts
 JobProtection	octal	\s-10644\s+1	permissions for job qfiles in sendq/doneq
 KillTimeMap	string	\s-1\fIsee below\fP\s+1	mapping from service level to job kill time (\s-1SNPP\s+1)
 LDAPServerURI	string		URI of the ldap server including port number
@@ -559,14 +559,32 @@ that construct headers from the format string can constrain the width of
 column title strings.
 .TP 10
 .B JobHostID
-A numeric identification for this host to be prepended onto job ids created by
-this host.  This is used in order to distinguish jobs created on this host from
-jobs created on other hosts.  For compatibility with all clients
+A formatted string of the format ``<id>[:<host>:<username>:<password>:<adminwd>]''
+that identifies a job host.  Multiple instances of
 .B JobHostID
-must be numeric only.
+are used in the configuration file to identify multiple job hosts.
+``<id>'' is a numeric identification for the host which is prepended onto job ids created
+by that host.  This is used by a client to distinguish between jobs created on different hosts when
+it may not initially know to which server it connected. ``<id>'' must be the same number of digits
+for all configured job hosts.
+For compatibility with all clients ``<id>'' must be numeric only.
+If the instance of
+.B JobHostID
+only includes ``<id>'' then it is understood to refer to the local host and not a remote host.
+It is this configuration entry that causes the prepending of the ``<id>'' number onto the job ids.
+The other values for the formatted string refer to connection details for user-level and 
+admin-level login at the identified remote host.  This configuration will cause hfaxd to connect 
+as a client to the specified remote host for the requested action when the job id provided by its 
+client refers to that remote host (the provided job id matches the ``<id>'' value in the host's 
+.B JobHostID
+configuration).  To do this the hfaxd client connection to the remote host
+requires an admin-level login.  To make this work it will be necessary - because of the chroot under 
+which the client instance of hfaxd operates - to copy (or preferrably hard-link) numerous files to 
+the \*(Fx spool directory structure so that the chained client connection can be made to the remote 
+job host.  To identify which files must be copied or hard-linked one may examine ``strace'' output 
+for ``faxstat'' and look for which files it opens in the operation.
 .TP 10
 .B JobProtection
-The file mode setting for job qfiles in the \*(Fx queues (sendq and doneq).
 The default setting of ``0644'' allows all users to view all job parameters in
 the send and done queues.   The mode determines the permissions of the clients to
 see the jobs, following the \*(Fx permission model of the group bits

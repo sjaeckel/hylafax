@@ -1121,6 +1121,8 @@ SNPPServer::pagerCmd(const char* pagerID, const char* pin)
      * request is made).
      */
     curJob = &defJob;				// inherit from default job
+    curJobId = "default";
+    curJobGroupId = "";
     // XXX merge items to same provider (maybe?)
     if (newJob(emsg) && updateJobOnDisk(*curJob, emsg)) {
 	fxStr file("/" | curJob->qfile);

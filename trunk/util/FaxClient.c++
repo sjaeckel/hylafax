@@ -798,7 +798,7 @@ FaxClient::getReply(bool expecteof)
                 continuation = false;
         }
 	if (continuation) {
-	    lastContinuation.append(&lastResponse[4]);
+	    lastContinuation.append(&lastResponse[0]);
 	    lastContinuation.append("\n");
 	}
 

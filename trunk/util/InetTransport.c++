@@ -64,7 +64,7 @@ InetTransport::callServer(fxStr& emsg)
     fxStr service(FAX_SERVICE);
     fxStr proto(client.getProtoName());
 
-    int protocol = 0;
+    int protocol = 6;	// tcp is protocol number 6, this is a better default than 0
     struct addrinfo hints, *ai;
 
     if (client.getPort() != -1)
@@ -99,7 +99,7 @@ InetTransport::callServer(fxStr& emsg)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = protocol;
 
-    int err = getaddrinfo (client.getHost(), service, &hints, &ai);
+    int err = getaddrinfo ((const char*) client.getHost(), (const char*) service, &hints, &ai);
 
 #ifdef AI_NUMERICHOST
     if (err == EAI_NONAME) {

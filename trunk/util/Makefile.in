@@ -69,6 +69,7 @@ C++FILES=Array.c++ \
 	Sequence.c++ \
 	TimeOfDay.c++ \
 	FaxDB.c++ \
+	FaxHostID.c++ \
 	TextFormat.c++ \
 	\
 	Class2Params.c++ \
