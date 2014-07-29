@@ -798,21 +798,33 @@ HylaFAXServer::cmd(Token t)
 	}
 	break;
     case T_JPARM:			// set/query job parameter
-	if (opt_CRLF()) {
-	    logcmd(T_JPARM);
-	    if (checkJobState(curJob))
-		jstatCmd(*curJob);
-	    return (true);
-	} else if (SPACE() && getToken(T_STRING, "parameter name")) {
-	    tokenBody.raisecase();
-	    const tab* p = lookup(parmtab, N(parmtab), tokenBody);
-	    if (p == NULL) {
-		reply(500, "JPARM %s: Parameter not recognized.",
-		    (const char*) tokenBody);
-	    } else if (!p->implemented)
-		reply(502, "JPARM %s: Parameter not implemented.", p->name);
-	    else
-		return (param_cmd(p->token));
+	if (curJobId == "default" || jobHostId.length() == 0 || strncmp((const char*) curJobId, (const char*) jobHostId, jobHostId.length()) == 0) {
+	    if (opt_CRLF()) {
+		logcmd(T_JPARM);
+		if (checkJobState(curJob))
+		    jstatCmd(*curJob);
+		return (true);
+	    } else if (SPACE() && getToken(T_STRING, "parameter name")) {
+		tokenBody.raisecase();
+		const tab* p = lookup(parmtab, N(parmtab), tokenBody);
+		if (p == NULL) {
+		    reply(500, "JPARM %s: Parameter not recognized.",
+			(const char*) tokenBody);
+		} else if (!p->implemented)
+		    reply(502, "JPARM %s: Parameter not implemented.", p->name);
+		else
+		    return (param_cmd(p->token));
+	    }
+	} else {
+	    // job is on another host
+	    fxStr pcmd;
+	    if (opt_CRLF()) {
+		jobHostClient->command("JPARM");
+		reply(-1, (const char*) (jobHostClient->getLastContinuation() | jobHostClient->getLastResponse()));
+	    } else if (multi_string_param(pcmd)) {
+		jobHostClient->command((const char*) fxStr::format("JPARM %s", (const char*) pcmd));
+		reply(-1, (const char*) (jobHostClient->getLastContinuation() | jobHostClient->getLastResponse()));
+	    }
 	}
 	break;
     case T_JGPARM:			// set/query job group parameter
@@ -1321,7 +1333,7 @@ bool
 HylaFAXServer::job_param(fxStr& jid)
 {
     if (opt_CRLF()) {
-	jid = jobHostId | curJob->jobid;
+	jid = curJobId;
 	return (true);
     } else if (SPACE() && STRING(jid, "job identifer") && CRLF()) {
 	jid.lowercase();

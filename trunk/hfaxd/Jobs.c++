@@ -366,8 +366,11 @@ HylaFAXServer::checkJobState(Job* job)
     struct stat sb;
     if (!FileCache::update("/" | job->qfile, sb)) {
 	jobs.remove(job->jobid);
-	if (job == curJob)			// make default job current
+	if (job == curJob) {			// make default job current
 	    curJob = &defJob;
+	    curJobId = "default";
+	    curJobGroupId = "";
+	}
 	delete job, job = NULL;
 	return (false);
     }
@@ -527,6 +530,14 @@ HylaFAXServer::replyJobParamValue(Job& job, int code, Token t)
 	}
 	reply(code, "End of polling items.");
 	return;
+    case T_JOBID:
+    case T_GROUPID:
+	for (i = 0, n = N(strvals); i < n; i++)
+	    if (strvals[i].t == t) {
+		reply(code, "%s%s", job.jobid == "default" ? "" : (const char*) jobHostId, (const char*) (job.*strvals[i].p));
+		return;
+	    }
+	return;
     default:
 	break;
     }
@@ -569,7 +580,7 @@ void
 HylaFAXServer::jstatCmd(const Job& job)
 {
     lreply(217, "Job state: jobid %s%s groupid %s%s",
-	(const char*) jobHostId, (const char*) job.jobid, (const char*) jobHostId, (const char*) job.groupid);
+	job.jobid == "default" ? "" : (const char*) jobHostId, (const char*) job.jobid, job.jobid == "default" ? "" : (const char*) jobHostId, (const char*) job.groupid);
     if (checkAccess(job, T_SENDTIME, A_READ)) {
 	if (job.tts != 0) {
 	    const struct tm* tm = cvtTime(job.tts);
@@ -620,8 +631,12 @@ HylaFAXServer::jstatCmd(const Job& job)
 	jstatLine(T_IGNOREMODEMBUSY,"%s", boolString(job.ignoremodembusy));
     u_int i, n;
     for (i = 0, n = N(strvals); i < n; i++)
-	if (checkAccess(job, strvals[i].t, A_READ))
-	    jstatLine(strvals[i].t, "%s", (const char*) (job.*strvals[i].p));
+	if (checkAccess(job, strvals[i].t, A_READ)) {
+	    if ((strvals[i].t == T_JOBID || strvals[i].t == T_GROUPID) && job.jobid != "default")
+		jstatLine(strvals[i].t, "%s%s", (const char*) jobHostId, (const char*) (job.*strvals[i].p));
+	    else
+		jstatLine(strvals[i].t, "%s", (const char*) (job.*strvals[i].p));
+	}
     for (i = 0, n = N(shortvals); i < n; i++)
 	if (checkAccess(job, shortvals[i].t, A_READ))
 	    jstatLine(shortvals[i].t, "%u", job.*shortvals[i].p);
@@ -677,7 +692,7 @@ HylaFAXServer::jstatCmd(const Job& job)
 	    }
 	}
     }
-    reply(217, "End of job %s%s state.", (const char*) jobHostId, (const char*) job.jobid);
+    reply(217, "End of job %s%s state.", job.jobid == "default" ? "" : (const char*) jobHostId, (const char*) job.jobid);
 }
 
 /* 
@@ -1092,6 +1107,8 @@ HylaFAXServer::newJob(fxStr& emsg)
     job->queued = curJob->queued;
     jobs[jobid] = job;
     curJob = job;
+    curJobId = jobHostId | job->jobid;
+    curJobGroupId = jobHostId | job->groupid;
     return (true);
 }
 
@@ -1346,11 +1363,48 @@ HylaFAXServer::purgeJobs(void)
 void
 HylaFAXServer::replyCurrentJob(const char* leader)
 {
-    if (curJob->jobid == "default")
+    if (curJobId == "default")
 	reply(200, "%s (default).", leader);
     else
-	reply(200, "%s jobid: %s%s groupid: %s%s.", leader,
-	    (const char*) jobHostId, (const char*) curJob->jobid, (const char*) jobHostId, (const char*) curJob->groupid);
+	reply(200, "%s jobid: %s groupid: %s.", leader,
+	    (const char*) curJobId, (const char*) curJobGroupId);
+}
+
+/*
+ * Establish job-host login.
+ */
+bool
+HylaFAXServer::setupJobHost(const char* jobid, fxStr& emsg)
+{
+    for (int i = 0; i < jobHosts.length(); i++) {
+	if (strncmp(jobid, (const char*) jobHosts[i].id, jobHosts[i].id.length()) == 0) {
+	    if (curJobHost != i) {
+		// We're switching remote host connections.  We need to disconnect 
+		// from the current (if there is) and connect to the new.
+		if (curJobHost != -1) {
+		    // There is a current connection.  Disconnect it first.
+		    jobHostClient->hangupServer();
+		}
+		jobHostClient->readConfig(FAX_SYSCONF);
+		jobHostClient->setHost(jobHosts[i].host);
+		if (jobHostClient->callServer(emsg)) {
+		    if (jobHostClient->login((const char*) jobHosts[i].user, (const char*) jobHosts[i].pass, emsg) &&
+			jobHostClient->admin((const char*) jobHosts[i].adminpw, emsg)) {
+
+			curJobHost = i;
+			return (true);
+		    } else emsg = "could not authenticate with job host";
+		} else emsg = "could not connect to job host";
+		return (false);
+	    } else {
+		// Connection can be re-used.
+		return (true);
+	    }
+	}
+    }
+    // The client appears to be attempting to work with a job on an unknown host.
+    emsg = "unknown host id";
+    return (false);
 }
 
 /*
@@ -1361,17 +1415,32 @@ HylaFAXServer::setCurrentJob(const char* jobid)
 {
     fxStr emsg;
     if (strlen(jobid) > jobHostId.length()) {
-	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	bool isdefault = (strncmp(jobid, "default", 7) == 0);
+	if (jobHostId.length() == 0 || isdefault || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
 	    // This appears to be a job on this host.
-	    Job* job = findJob(jobid + jobHostId.length(), emsg);
+	    Job* job = findJob(jobid + (isdefault ? 0 : jobHostId.length()), emsg);
 	    if (job) {
 		curJob = job;
+		curJobId = (curJob->jobid == "default" ? "" : jobHostId) | curJob->jobid;
+		curJobGroupId = (curJob->jobid == "default" ? "" : jobHostId) | curJob->groupid;
 		replyCurrentJob("Current job:");
 		return;
 	    }
 	} else {
-	    // The client appears to be attempting to work with a job on a different host.
-	    emsg = "unknown host id";
+	    if (setupJobHost(jobid, emsg)) {
+		jobHostClient->command((const char*) fxStr::format("JOB %s", jobid));
+		fxStr r = jobHostClient->getLastResponse();
+		// Extract curJobId and curJobGroupId from response.  Format is:
+		// "200 Current job: jobid: XXXX groupid: XXXX."
+		u_int jp = r.find(0, " jobid: ");
+		u_int gp = r.find(jp < r.length()-8 ? jp+8 : 0, " groupid: ");
+		if (gp-jp > 8 && r.length()-gp > 11) {
+		    curJobId = r.extract(jp+8, gp-jp-8);
+		    curJobGroupId = r.extract(gp+10, r.length()-gp-11);
+		}
+		reply(-1, (const char*) r);
+		return;
+	    }
 	}
     } else {
 	emsg = "missing host id";
@@ -1387,9 +1456,10 @@ HylaFAXServer::resetJob(const char* jobid)
 {
     fxStr emsg;
     if (strlen(jobid) > jobHostId.length()) {
-	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	bool isdefault = (strncmp(jobid, "default", 7) == 0);
+	if (jobHostId.length() == 0 || isdefault || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
 	    // This appears to be a job on this host.
-	    Job* job = findJob(jobid + jobHostId.length(), emsg);
+	    Job* job = findJob(jobid + (isdefault ? 0 : jobHostId.length()), emsg);
 	    if (job) {
 		if (job->jobid == "default") {
 		    initDefaultJob();
@@ -1406,8 +1476,11 @@ HylaFAXServer::resetJob(const char* jobid)
 		return;
 	    }
 	} else {
-	    // The client appears to be attempting to work with a job on a different host.
-	    emsg = "unknown host id";
+	    if (setupJobHost(jobid, emsg)) {
+		jobHostClient->command((const char*) fxStr::format("JREST %s", jobid));
+		reply(-1, (const char*) jobHostClient->getLastResponse());
+		return;
+	    }
 	}
     } else {
 	emsg = "missing host id";
@@ -1445,9 +1518,10 @@ HylaFAXServer::deleteJob(const char* jobid)
 {
     fxStr emsg;
     if (strlen(jobid) > jobHostId.length()) {
-	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	bool isdefault = (strncmp(jobid, "default", 7) == 0);
+	if (jobHostId.length() == 0 || isdefault || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
 	    // This appears to be a job on this host.
-	    Job* job = preJobCmd("delete", jobid + jobHostId.length(), emsg);
+	    Job* job = preJobCmd("delete", jobid + (isdefault ? 0 : jobHostId.length()), emsg);
 	    if (job) {
 		const char* startdir = cwd->pathname;
 		if (Sys::chdir("/") < 0) {
@@ -1524,15 +1598,26 @@ HylaFAXServer::deleteJob(const char* jobid)
 		if (Sys::chdir(startdir) < 0)
 		    reply(504, "Cannot change to %s spool directory.", startdir);
 		jobs.remove(job->jobid);
-		if (job == curJob)			// make default job current
+		if (job == curJob) {			// make default job current
 		    curJob = &defJob;
+		    curJobId = "default";
+		    curJobGroupId = "";
+		}
 		delete job;				// NB: implicit unlock
 		replyCurrentJob(fxStr::format("Job %s deleted; current job:", jobid));
 	    }
 	    return;
 	} else {
-	    // The client appears to be attempting to work with a job on a different host.
-	    emsg = "unknown host id";
+	    if (setupJobHost(jobid, emsg)) {
+		jobHostClient->jobDelete(jobid);
+		reply(-1, (const char*) jobHostClient->getLastResponse());
+		if (strncmp(jobid, (const char*) curJobId, curJobId.length()) == 0) {
+		    curJob = &defJob;
+		    curJobId = "default";
+		    curJobGroupId = "";
+		}
+		return;
+	    }
 	}
     } else {
 	emsg = "missing host id";
@@ -1548,9 +1633,10 @@ HylaFAXServer::operateOnJob(const char* jobid, const char* what, const char* op)
 {
     fxStr emsg;
     if (strlen(jobid) > jobHostId.length()) {
-	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	bool isdefault = (strncmp(jobid, "default", 7) == 0);
+	if (jobHostId.length() == 0 || isdefault || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
 	    // This appears to be a job on this host.
-	    Job* job = preJobCmd(what, jobid + jobHostId.length(), emsg);
+	    Job* job = preJobCmd(what, jobid + (isdefault ? 0 : jobHostId.length()), emsg);
 	    if (job) {
 		if (job->state == FaxRequest::state_done ||
 		  job->state == FaxRequest::state_failed) {
@@ -1565,8 +1651,17 @@ HylaFAXServer::operateOnJob(const char* jobid, const char* what, const char* op)
 	    }
 	    return;
 	} else {
-	    // The client appears to be attempting to work with a job on a different host.
-	    emsg = "unknown host id";
+	    if (setupJobHost(jobid, emsg)) {
+		if (strncmp(what, "kill", 4) == 0) jobHostClient->jobKill(jobid);
+		else if (strncmp(what, "suspend", 7) == 0) jobHostClient->jobSuspend(jobid);
+		else if (strncmp(what, "interrupt", 9) == 0) jobHostClient->command((const char*) fxStr::format("JINTR %s", jobid));
+		else {
+		    reply(460, "Cannot %s job %s; unknown operation.", what, jobid);
+		    return;
+		}
+		reply(-1, (const char*) jobHostClient->getLastResponse());
+		return;
+	    }
 	}
     } else {
 	emsg = "missing host id";
@@ -1616,9 +1711,10 @@ HylaFAXServer::submitJob(const char* jobid)
 {
     fxStr emsg;
     if (strlen(jobid) > jobHostId.length()) {
-	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	bool isdefault = (strncmp(jobid, "default", 7) == 0);
+	if (jobHostId.length() == 0 || isdefault || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
 	    // This appears to be a job on this host.
-	    Job* job = preJobCmd("submit", jobid + jobHostId.length(), emsg);
+	    Job* job = preJobCmd("submit", jobid + (isdefault ? 0 : jobHostId.length()), emsg);
 	    if (job) {
 		if (job->state == FaxRequest::state_done ||
 		  job->state == FaxRequest::state_failed) {
@@ -1672,8 +1768,11 @@ HylaFAXServer::submitJob(const char* jobid)
 	    }
 	    return;
 	} else {
-	    // The client appears to be attempting to work with a job on a different host.
-	    emsg = "unknown host id";
+	    if (setupJobHost(jobid, emsg)) {
+		jobHostClient->jobSubmit(jobid);
+		reply(-1, (const char*) jobHostClient->getLastResponse());
+		return;
+	    }
 	}
     } else {
 	emsg = "missing host id";
@@ -1694,9 +1793,10 @@ HylaFAXServer::waitForJob(const char* jobid)
 {
     fxStr emsg;
     if (strlen(jobid) > jobHostId.length()) {
-	if (jobHostId.length() == 0 || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
+	bool isdefault = (strncmp(jobid, "default", 7) == 0);
+	if (jobHostId.length() == 0 || isdefault || strncmp(jobid, (const char*) jobHostId, jobHostId.length()) == 0) {
 	    // This appears to be a job on this host.
-	    Job* job = findJob(jobid + jobHostId.length(), emsg);
+	    Job* job = findJob(jobid + (isdefault ? 0 : jobHostId.length()), emsg);
 	    if (job) {
 		if (job->jobid == "default") {
 		    reply(504, "Cannot wait for default job.");
@@ -1737,8 +1837,11 @@ HylaFAXServer::waitForJob(const char* jobid)
 		return;
 	    }
 	} else {
-	    // The client appears to be attempting to work with a job on a different host.
-	    emsg = "unknown host id";
+	    if (setupJobHost(jobid, emsg)) {
+		jobHostClient->jobWait(jobid);
+		reply(-1, (const char*) jobHostClient->getLastResponse());
+		return;
+	    }
 	}
     } else {
 	emsg = "missing host id";

@@ -294,6 +294,7 @@ HYLAFAXSRC=\
 	util/FaxClient.c++			\
 	util/FaxConfig.c++			\
 	util/FaxDB.c++				\
+	util/FaxHostID.c++			\
 	util/FaxRecvInfo.c++			\
 	util/FaxSendInfo.c++			\
 	util/FmtTime.c++			\
@@ -334,6 +335,7 @@ HYLAFAXSRC=\
 	util/FaxClient.h			\
 	util/FaxConfig.h			\
 	util/FaxDB.h				\
+	util/FaxHostID.h			\
 	util/FaxRecvInfo.h			\
 	util/FaxSendInfo.h			\
 	util/InetTransport.h			\

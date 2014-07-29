@@ -37,7 +37,7 @@ CallID::~CallID (void)
 }
 
 /*
- * We need to manyally copy the array, becasue fxArray implementation doesn't
+ * We need to manually copy the array, becasue fxArray implementation doesn't
  * do deep copy on the array, and we get double frees/corruption
  */
 void CallID::operator= (const CallID& a)

@@ -32,11 +32,14 @@
 #include "StrArray.h"
 #include "FaxRequest.h"
 #include "FaxRecvInfo.h"
+/* SendFaxClient.h must come before manifest.h due to conflicts */
+#include "SendFaxClient.h"
 #include "manifest.h"
 #include "FileCache.h"
 #include "Trace.h"
 #include "Trigger.h"
 #include "SystemLog.h"
+#include "FaxHostID.h"
 
 #include "config.h"
 
@@ -61,6 +64,12 @@ extern "C" {
 
 #include <setjmp.h>
 #include <errno.h>
+
+class MySendFaxClient : public SendFaxClient {
+public:
+    MySendFaxClient();
+    ~MySendFaxClient();
+};
 
 /*
  * In-memory copy of a job description file.
@@ -233,6 +242,9 @@ protected:
     int		data;			// current data connection (socket)
     int		pdata;			// passive mode data connect (socket)
     fxStr	jobHostId;		// id of this host for jobid/groupid
+    FaxHostIDArray jobHosts;		// array for other known job hosts
+    MySendFaxClient* jobHostClient;	// client connection for job host
+    int		curJobHost;		// currently-connected job host
     fxStr	hostname;		// name of machine server is running on
     fxStr	hostaddr;		// primary address for hostname
     fxStr	remotehost;		// name of peer's machine
@@ -306,6 +318,8 @@ protected:
     Job		defJob;			// default job state information
     JobDict	jobs;			// non-default jobs
     Job*	curJob;			// current job
+    fxStr	curJobId;		// current job id
+    fxStr	curJobGroupId;		// current job group id
     fxStr	jobFormat;		// job status format string
     JobDict	blankJobs;		// jobs created during this session but not submitted
     /*
@@ -580,6 +594,7 @@ protected:
     Job* findJobOnDisk(const char* jobid, fxStr& emsg);
     bool updateJobFromDisk(Job& job);
     void replyCurrentJob(const char* leader);
+    bool setupJobHost(const char* jobid, fxStr& emsg);
     void setCurrentJob(const char* jobid);
     Job* preJobCmd(const char* op, const char* jobid, fxStr& emsg);
     void operateOnJob(const char* jobid, const char* what, const char* op);
