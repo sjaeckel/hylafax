@@ -90,7 +90,7 @@ following for their contributions:
   Sascha Ittner
   Eliran Itzhak				Hebrew dictionary translation
   Damiam Ivereigh
-  Thomas Jarosch			cppcheck fixes
+  Thomas Jarosch			cppcheck fixes, libtiff v4 fix
   Bernard Jech
   Dennis Jenkins			PASV/EPSV port range restrictions, code cleanup
   Nico Kadel-Garcia			original fax-to-mail scripts, dialrules.ext/uk
