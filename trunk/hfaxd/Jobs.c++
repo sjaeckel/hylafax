@@ -1022,8 +1022,8 @@ HylaFAXServer::newJobCmd(void)
 	setFileOwner(file);			// force ownership
 	FileCache::chmod(file, jobProtection);	// sync cache
 	curJob->lastmod = Sys::now();		// noone else should update
-	reply(200, "New job created: jobid: %s%s groupid: %s%s.",
-	    (const char*) jobHostId, (const char*) curJob->jobid, (const char*) jobHostId, (const char*) curJob->groupid);
+	reply(200, "New job created: jobid: %s groupid: %s.",
+	    (const char*) curJobId, (const char*) curJobGroupId);
 	blankJobs[curJob->jobid] = curJob;
     } else
 	reply(503, "%s.", (const char*) emsg);
