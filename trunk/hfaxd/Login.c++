@@ -79,6 +79,14 @@ HylaFAXServer::userCmd(const char* name)
     state &= ~S_PRIVILEGED;
     adminWd = "*";			// make sure no admin privileges
     passWd = "*";			// just in case...
+    usrAdminWd = "*";
+    usrPassWd = "*";
+
+    if (curJobHost != -1) {
+ 	// There is a connection to a job host.  Disconnect it.
+ 	jobHostClient->hangupServer();
+ 	curJobHost = -1;
+    }
 
     if (checkUser(name)) {
 	if (passWd != "") {
@@ -440,6 +448,7 @@ HylaFAXServer::passCmd(const char* pass)
 	    pamCheck(the_user, pass) ||
 	    ldapCheck(the_user, pass)) {
 	    // log-in was successful
+	    usrPassWd = pass;
 	    login(230);
 	    return;
 	}
@@ -536,12 +545,22 @@ HylaFAXServer::adminCmd(const char* pass)
 	}
 	return;
     }
+    if (curJobHost != -1) {
+	// There is a connection to a job host. Escalate privileges there, too.
+	fxStr emsg;
+	if (!jobHosts[curJobHost].user.length() && !jobHostClient->admin(pass, emsg)) {
+	    emsg = "administrative privileges failed with remote job host";
+	    reply(530, (const char*) emsg);
+	    return;
+	}
+    }
     if (TRACE(SERVER))
 	logInfo("FAX ADMIN FROM %s [%s], %s"
 	    , (const char*) remotehost
 	    , (const char*) remoteaddr
 	    , (const char*) the_user
 	);
+    usrAdminWd = pass;
     adminAttempts = 0;
     state |= S_PRIVILEGED;
     reply(230, "Administrative privileges established.");
@@ -563,6 +582,8 @@ HylaFAXServer::end_login(void)
     state &= ~(S_LOGGEDIN|S_PRIVILEGED|S_WAITPASS);
     passWd = "*";
     adminWd = "*";
+    usrPassWd = "*";
+    usrAdminWd = "*";
 }
 
 /*
@@ -575,6 +596,7 @@ HylaFAXServer::dologout(int status)
     if (curJobHost != -1) {
 	// There is a connection to a job host.  Disconnect it.
 	jobHostClient->hangupServer();
+	curJobHost = -1;
     }
     if (IS(LOGGEDIN))
 	end_login();

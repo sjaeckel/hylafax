@@ -1388,9 +1388,18 @@ HylaFAXServer::setupJobHost(const char* jobid, fxStr& emsg)
 		jobHostClient->readConfig(FAX_SYSCONF);
 		jobHostClient->setHost(jobHosts[i].host);
 		if (jobHostClient->callServer(emsg)) {
-		    if (jobHostClient->login((const char*) jobHosts[i].user, (const char*) jobHosts[i].pass, emsg) &&
-			jobHostClient->admin((const char*) jobHosts[i].adminpw, emsg)) {
-
+		    if (jobHostClient->login(jobHosts[i].user.length() ? (const char*) jobHosts[i].user : (const char*) the_user, jobHosts[i].user.length() ? (const char*) jobHosts[i].pass : (const char*) usrPassWd, emsg)) {
+			if (jobHosts[i].user.length()) {
+			    if (jobHosts[i].adminpw != "*" && !jobHostClient->admin((const char*) jobHosts[i].adminpw, emsg)) {
+				emsg = "administrative privileges failed with job host (configured)";
+				return (false);
+			    }
+			} else {
+			    if (usrAdminWd != "*" && !jobHostClient->admin((const char*) usrAdminWd, emsg)) {
+				emsg = "administrative privileges failed with job host (supplied)";
+				return (false);
+			    }
+			}
 			curJobHost = i;
 			return (true);
 		    } else emsg = "could not authenticate with job host";
@@ -1610,12 +1619,26 @@ HylaFAXServer::deleteJob(const char* jobid)
 	} else {
 	    if (setupJobHost(jobid, emsg)) {
 		jobHostClient->jobDelete(jobid);
-		reply(-1, (const char*) jobHostClient->getLastResponse());
-		if (strncmp(jobid, (const char*) curJobId, curJobId.length()) == 0) {
-		    curJob = &defJob;
-		    curJobId = "default";
-		    curJobGroupId = "";
+		fxStr r = jobHostClient->getLastResponse();
+
+		// Extract curJobId and curJobGroupId from response.  Format is:
+		// "200 Job XXXX deleted; current job: jobid: XXXX groupid: XXXX."
+		// "200 Job XXXX deleted; current job: (default)."
+		if (r.find(0, "current job:") < r.length()) {
+		    if (r.find(0, "current job: (default)") < r.length()) {
+			curJob = &defJob;
+			curJobId = "default";
+			curJobGroupId = "";
+		    } else {
+			u_int jp = r.find(0, " jobid: ");
+			u_int gp = r.find(jp < r.length()-8 ? jp+8 : 0, " groupid: ");
+			if (gp-jp > 8 && r.length()-gp > 11) {
+			    curJobId = r.extract(jp+8, gp-jp-8);
+			    curJobGroupId = r.extract(gp+10, r.length()-gp-11);
+			}
+		    }
 		}
+		reply(-1, (const char*) r);
 		return;
 	    }
 	}
