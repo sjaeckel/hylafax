@@ -572,6 +572,10 @@ HylaFAXServer::end_login(void)
 void
 HylaFAXServer::dologout(int status)
 {
+    if (curJobHost != -1) {
+	// There is a connection to a job host.  Disconnect it.
+	jobHostClient->hangupServer();
+    }
     if (IS(LOGGEDIN))
 	end_login();
     if (trigSpec != "") {
