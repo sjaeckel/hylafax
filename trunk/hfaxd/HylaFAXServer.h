@@ -265,8 +265,10 @@ protected:
 	bool	pam_chrooted;	// if already chrooted, PAM gets disabled
 #endif
 
-    fxStr	passWd;			// encrypted user password
-    fxStr	adminWd;		// encrypted passwd for admin privileges
+    fxStr	passWd;			// encrypted user password - read from hosts.hfaxd
+    fxStr	adminWd;		// encrypted passwd for admin privileges - read from hosts.hfaxd
+    fxStr	usrPassWd;		// unencrypted user password - read from user
+    fxStr	usrAdminWd;		// unencrypted passwd for admin privileges - read from user
 #ifdef HAVE_LDAP
     fxStr	ldapServerUri;		// URL for the LDAP Server
     fxStr	ldapBaseDN;		// LDAP base DN where user objects are found

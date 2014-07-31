@@ -559,7 +559,7 @@ that construct headers from the format string can constrain the width of
 column title strings.
 .TP 10
 .B JobHostID
-A formatted string of the format ``<id>[:<host>:<username>:<password>:<adminwd>]''
+A formatted string of the format ``<id>[:<host>[:<username>:<password>:<adminwd>]]''
 that identifies a job host.  Multiple instances of
 .B JobHostID
 are used in the configuration file to identify multiple job hosts.
@@ -573,16 +573,27 @@ If the instance of
 only includes ``<id>'' then it is understood to refer to the local host and not a remote host.
 It is this configuration entry that causes the prepending of the ``<id>'' number onto the job ids.
 The other values for the formatted string refer to connection details for user-level and 
-admin-level login at the identified remote host.  This configuration will cause hfaxd to connect 
+admin-level login at the identified remote host.  If only ``<host>'' is provided then the current
+user's login credentials are used for the chained connection.  This configuration will cause hfaxd to connect 
 as a client to the specified remote host for the requested action when the job id provided by its 
 client refers to that remote host (the provided job id matches the ``<id>'' value in the host's 
 .B JobHostID
 configuration).  To do this the hfaxd client connection to the remote host
-requires an admin-level login.  To make this work it will be necessary - because of the chroot under 
-which the client instance of hfaxd operates - to copy (or preferrably hard-link) numerous files to 
+requires administrative privileges or synchonized user accounts on both hosts.  
+Be aware that when providing ``<username>'', ``<password>'', and especially ``<adminwd>'' in the 
+configuration that this may compromise job security on the remote host since users from this host
+will be connecting to the remote host as a different user (and possibly with administrative privileges).
+As a null value for ``<adminwd>'' is permissible, administrative privileges may be omitted by using 
+``*'' for ``<adminwd>''.
+Because of the chroot under 
+which the client instance of hfaxd operates it will be necessary to copy numerous system files to 
 the \*(Fx spool directory structure so that the chained client connection can be made to the remote 
-job host.  To identify which files must be copied or hard-linked one may examine ``strace'' output 
-for ``faxstat'' and look for which files it opens in the operation.
+job host.  This copy should be repeated after any upgrades or changes to the system files.  To 
+identify which files must be copied one may examine
+.I strace
+output for 
+.I faxstat
+and look for which files it opens in the operation.
 .TP 10
 .B JobProtection
 The default setting of ``0644'' allows all users to view all job parameters in
