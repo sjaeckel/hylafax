@@ -2507,11 +2507,13 @@ getConfigTag()
 #
 # Check if TIFF library is compatible. If successful,
 # set $tiff_runlen_t on exit to "uint16" or "uint32"
+# and $tiff_offset_t to "uint32" or "uint64".
 #
 CheckLibtiff()
 {
     Note "... checking TIFF library version"
     tiff_runlen_t=""
+    tiff_offset_t=""
     cat>t.c<<EOF
 #include <stdlib.h>
 #include <stdio.h>
@@ -2534,14 +2536,17 @@ EOF
 	if [ ${header_ver} -ge 19960307 ]; then
 	    case ${lib_ver} in
 		3.4)		tiff_runlen_t="uint16"
+				tiff_offset_t="uint32"
 				echo '#define TIFFSTRIPBYTECOUNTS uint32'
 				echo '#define TIFFVERSION TIFF_VERSION'
 				echo '#define TIFFHEADER TIFFHeader';;
 		3.[56789])	tiff_runlen_t="uint32"
+				tiff_offset_t="uint32"
 				echo '#define TIFFSTRIPBYTECOUNTS uint32'
 				echo '#define TIFFVERSION TIFF_VERSION'
 				echo '#define TIFFHEADER TIFFHeader';;
 		4.0)		tiff_runlen_t="uint32"
+				tiff_offset_t="uint64"
 				echo '#define TIFFSTRIPBYTECOUNTS uint64'
 				echo '#define TIFFVERSION TIFF_VERSION_CLASSIC'
 				echo '#define TIFFHEADER TIFFHeaderClassic';;
@@ -2572,8 +2577,9 @@ EOF
 	boom
 	return 1
     fi
-    if [ "${tiff_runlen_t}" != "" ]; then
+    if [ "${tiff_runlen_t}" != "" ] && [ "${tiff_offset_t}" != "" ]; then
 	export tiff_runlen_t
+	export tiff_offset_t
 	return 0
     else
 	cat 1>&2 <<EOF
@@ -3179,8 +3185,9 @@ BuildPortDotH()
     fi
     CheckTermioFuncDecls termios.h
     if CheckLibtiff; then
-	Note "... add declaration for tiff_runlen_t"
+	Note "... add declaration for tiff_runlen_t and tiff_offset_t"
 	echo "#define tiff_runlen_t ${tiff_runlen_t}"
+	echo "#define tiff_offset_t ${tiff_offset_t}"
     fi
     if [ "x$PAMLIBS" != "x" ]; then
 	CheckPAMType
