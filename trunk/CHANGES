@@ -2,7 +2,7 @@
 
 New Changes
 
-* fix missed data type for libtiff v4 (31 Jul 2014)
+* fix missed data type for libtiff v4 (31 Jul, 11 Aug 2014)
 * fix faxsend segfault caused by an empty TagLine field introduced in
   alignment features added in 5.5.5 (25 Jul 2014)
 * pass job priority to the proxy server (21 Jul 2014)
