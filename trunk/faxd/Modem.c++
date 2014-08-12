@@ -122,14 +122,23 @@ Modem::getModemByID(const fxStr& id)
 bool
 Modem::isCapable(const Job& job) const
 {
-    if (job.willpoll && !canpoll)
+    if (job.willpoll && !canpoll) {
+	logDebug("Modem on device '%s' is not capable of polling", (const char*) devID);
 	return (false);
-    if (job.pagewidth && !supportsPageWidthInMM(job.pagewidth))
+    }
+    if (job.pagewidth && !supportsPageWidthInMM(job.pagewidth)) {
+	logDebug("Modem on device '%s' is not capable of pagewidth=%d", (const char*) devID, job.pagewidth);
 	return (false);
-    if (job.pagelength && !supportsPageLengthInMM(job.pagelength))
+    }
+    if (job.pagelength && !supportsPageLengthInMM(job.pagelength)) {
+	logDebug("Modem on device '%s' is not capable of pagelength=%d", (const char*) devID, job.pagelength);
 	return (false);
-    if (job.resolution && !supportsVRes(job.resolution))
+    }
+    if (job.resolution && !supportsVRes(job.resolution)) {
+	logDebug("Modem on device '%s' is not capable of vres=%d", (const char*) devID, job.resolution);
 	return (false);
+    }
+    logDebug("Modem on device '%s' is capable of supporting job %s", (const char*) devID, (const char*) job.jobid);
     return (true);
 }
 
