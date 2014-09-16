@@ -2,6 +2,8 @@
 
 New Changes
 
+* fix proxy setting of null taglines (16 Sep 2014)
+* fix ModemWaitForConnect configuration setting (16 Sep 2014)
 * add debug messages for the attempt to locate a suitable modem
   for jobs (12 Aug 2014)
 * fix missed data type for libtiff v4 (31 Jul, 11 Aug 2014)
