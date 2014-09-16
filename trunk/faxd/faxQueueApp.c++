@@ -2679,7 +2679,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		rjob.setDesiredSpeed(req.desiredbr);
 		if (req.faxname != "") rjob.setFaxName(req.faxname);
 		//rjob.setDesiredEC(req.desiredec);		// disabled for compatibility with HylaFAX 4.1.x servers
-		if (req.tagline != "") rjob.setTagLineFormat(req.tagline);
+		if (req.desiredtl) rjob.setTagLineFormat(req.tagline);
 		if (req.timezone != "") rjob.setTimeZone(req.timezone);
 		rjob.setUseXVRes(req.usexvres);
 		client->setHost(job.getJCI().getProxy());
