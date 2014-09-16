@@ -228,7 +228,7 @@ static struct {
     bool		 def;
 } booleans[] = {
 { "usejobtagline",		&ModemConfig::useJobTagLine,		true },
-{ "modemwaitforconnect",	&ModemConfig::useJobTagLine,		false },
+{ "modemwaitforconnect",	&ModemConfig::waitForConnect,		false },
 { "modemraiseatcommands",	&ModemConfig::raiseATCmd,		true },
 { "class2xmitwaitforxon",	&ModemConfig::class2XmitWaitForXON,	true },
 { "class2sendrtc",		&ModemConfig::class2SendRTC,		false },
