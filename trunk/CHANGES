@@ -755,7 +755,7 @@ New Changes
 * fix potential faxgetty loop due to bogus JBIG marker (1 Jun 2006)
 * improve french translation (1 Jun 2006)
 * add continuation support to FaxClient in libfaxutil (1 Jun 2006)
-* add JobUseTagline config option (29 May 2006)
+* add UseJobTagline config option (29 May 2006)
 * move CHARSET declaration to dictionary, encode non-ASCII
   dictionary characters into quoted-printable (26 May 2006)
 * more consolidation into common-functions (26 May 2006)
