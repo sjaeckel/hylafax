@@ -32,6 +32,14 @@
 
 class fxStackBuffer;
 
+struct b64State {
+    u_int	l;			// characters left
+    int		c1;
+    int		c2;
+    int		c3;
+    int		c4;
+};
+
 struct MsgFmt {
     TextCoord	headerStop;		// tab stop for headers
     fxStr	boldFont;		// bold font family name
@@ -53,7 +61,7 @@ struct MsgFmt {
     static bool getLine(FILE* fd, fxStackBuffer& buf);
     static fxStr stripComments(const fxStr& s);
     void copyQP(fxStackBuffer& buf, const char line[], u_int cc);
-    void copyBase64(fxStackBuffer& buf, const char line[], u_int cc);
+    void copyBase64(fxStackBuffer& buf, const char line[], u_int cc, b64State& state);
     void copyUUDecode(fxStackBuffer& buf, const char line[], u_int);
 
     const fxStr* findHeader(const fxStr& name) const;

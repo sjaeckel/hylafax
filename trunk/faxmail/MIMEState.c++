@@ -460,19 +460,29 @@ bool
 MIMEState::getBase64Line(FILE* fd, fxStackBuffer& buf)
 {
     MsgFmt msg;
-    char line[80];				// spec says never more than 76
-    u_int cc = 0;				// chars in current line
+    char line[80];				// spec says never more than 76 chars in
+    memset(line, 0, sizeof(line));		// current line, but some don't comply
+    u_int cc = 0;
+    b64State state;
+    state.c1 = -1;
+    state.c2 = -1;
+    state.c3 = -1;
+    state.c4 = -1;
     for (;;) {
 	int c = getc(fd);
 	if (c == EOF) {
-	    msg.copyBase64(buf, line, cc);
+	    msg.copyBase64(buf, line, cc, state);
+	    if (state.l != cc)
+		fprintf(stderr, "truncated base64 data detected\n");
 	    return (buf.getLength() > 0);
 	}
 	c &= 0x7f;
 	if (c == '\r') {
 	    c = getc(fd);
 	    if (c == EOF) {
-		msg.copyBase64(buf, line, cc);
+		msg.copyBase64(buf, line, cc, state);
+		if (state.l != cc)
+		    fprintf(stderr, "truncated base64 data detected\n");
 		return (buf.getLength() > 0);
 	    }
 	    c &= 0x7f;
@@ -494,11 +504,36 @@ MIMEState::getBase64Line(FILE* fd, fxStackBuffer& buf)
 		    return (false);
 		}
 	    }
-	    msg.copyBase64(buf, line, cc);
-	    return (true);
+	    msg.copyBase64(buf, line, cc, state);
+	    if (state.l != cc) {
+		/*
+		 * copyBase64 did not fully process the line and (cc-l) characters
+		 * were left unhandled.  This probably means that the base64 encoder
+		 * is not following spec and "wrapped" the base64 data across
+		 * multiple lines without consideration to the encoding.  So, we'll
+		 * need to preserve the last (cc-l) characters and proceed with
+		 * the next line without returning.
+		 */
+		cc -= state.l;
+		memmove(line, line+state.l, cc);
+		memset(line+cc, 0, sizeof(line)-cc);
+	    } else {
+		return (true);
+	    }
 	}
-	if (cc < sizeof (line)-1)
-	    line[cc++] = c;
+	line[cc++] = c;
+	if (cc >= sizeof(line)) {
+	    /*
+	     * The line is longer than the spec requires.  This probably means that
+	     * base64 encoder is just running very long out-of-spec lines.  So, we
+	     * need to process what we have got and come back for more.  This is
+	     * similar to (and likely coupled with) the "wrapped" condition above.
+	     */
+	    msg.copyBase64(buf, line, cc, state);
+	    cc -= state.l;
+	    memmove(line, line+state.l, cc);
+	    memset(line+cc, 0, sizeof(line)-cc);
+	}
     }
     /*NOTREACHED*/
 }
