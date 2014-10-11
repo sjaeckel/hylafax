@@ -2,6 +2,7 @@
 
 New Changes
 
+* add support to faxmail to decode long-wrapped base64 (11 Oct 2014)
 * fix proxy setting of null taglines (16 Sep 2014)
 * fix ModemWaitForConnect configuration setting (16 Sep 2014)
 * add debug messages for the attempt to locate a suitable modem

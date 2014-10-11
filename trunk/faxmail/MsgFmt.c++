@@ -404,7 +404,12 @@ MsgFmt::decodeRFC2047(fxStr& s)
 		if (em < s.length()) {
 		    s.remove(em, 2);
 		    s.remove(bm, mm-bm+3);
-		    copyBase64(buf, s, s.length());
+		    b64State state;
+		    state.c1 = -1;
+		    state.c2 = -1;
+		    state.c3 = -1;
+		    state.c4 = -1;
+		    copyBase64(buf, s, s.length(), state);
 		    buf.put('\0');
 		    s = buf;
 		}
@@ -428,7 +433,7 @@ MsgFmt::copyQP(fxStackBuffer& buf, const char line[], u_int cc)
 }
 
 void
-MsgFmt::copyBase64(fxStackBuffer& buf, const char line[], u_int cc)
+MsgFmt::copyBase64(fxStackBuffer& buf, const char line[], u_int cc, b64State& state)
 {
     static const int base64[128] = {
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -440,31 +445,52 @@ MsgFmt::copyBase64(fxStackBuffer& buf, const char line[], u_int cc)
 	-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
 	41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1
     };
+
+    int putted = 0;
+    if (state.c2 != -1) putted = 1;
+    if (state.c3 != -1) putted = 2;
+    if (state.c4 != -1) putted = 3;
+    state.l = 0;
+
     u_int i = 0;
     while (i < cc) {
-	int c1;
-	do {
-	    c1 = base64[(u_int)line[i++]];
-	} while (c1 == -1 && i < cc);
-	if (c1 != -1) {
-	    int c2;
+	if (state.c1 == -1) {
 	    do {
-		c2 = base64[(u_int)line[i++]];
-	    } while (c2 == -1 && i < cc);
-	    if (c2 != -1) {
-		buf.put((c1<<2) | ((c2&0x30)>>4));
-		int c3;
+		if (i < cc) state.c1 = base64[(u_int)line[i++]];
+	    } while (state.c1 == -1 && i < cc);
+	}
+	if (state.c1 != -1) {
+	    state.l = i;
+	    if (state.c2 == -1) {
 		do {
-		    c3 = base64[(u_int)line[i++]];
-		} while (c3 == -1 && i < cc);
-		if (c3 != -1) {
-		    buf.put(((c2&0x0f)<<4) | ((c3&0x3c)>>2));
-		    int c4;
+		    if (i < cc) state.c2 = base64[(u_int)line[i++]];
+		} while (state.c2 == -1 && i < cc);
+	    }
+	    if (state.c2 != -1) {
+		state.l = i;
+		if (putted <  1) buf.put((state.c1<<2) | ((state.c2&0x30)>>4));
+		if (state.c3 == -1) {
 		    do {
-			c4 = base64[(u_int)line[i++]];
-		    } while (c4 == -1 && i < cc);
-		    if (c4 != -1)
-			buf.put((c3&0x3)<<6 | c4);
+			if (i < cc) state.c3 = base64[(u_int)line[i++]];
+		    } while (state.c3 == -1 && i < cc);
+		}
+		if (state.c3 != -1) {
+		    state.l = i;
+		    if (putted < 2) buf.put(((state.c2&0x0f)<<4) | ((state.c3&0x3c)>>2));
+		    if (state.c4 == -1) {
+			do {
+			    if (i < cc) state.c4 = base64[(u_int)line[i++]];
+			} while (state.c4 == -1 && i < cc);
+		    }
+		    if (state.c4 != -1) {
+			state.l = i;
+			if (putted < 3) buf.put((state.c3&0x3)<<6 | state.c4);
+			state.c1 = -1;
+			state.c2 = -1;
+			state.c3 = -1;
+			state.c4 = -1;
+			putted = 0;
+		    }
 		}
 	    }
 	}
