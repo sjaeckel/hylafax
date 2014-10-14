@@ -439,7 +439,7 @@ MsgFmt::copyBase64(fxStackBuffer& buf, const char line[], u_int cc, b64State& st
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,
-	52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,
+	52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-2,-1,-1,
 	-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,
 	15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,
 	-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
@@ -457,32 +457,32 @@ MsgFmt::copyBase64(fxStackBuffer& buf, const char line[], u_int cc, b64State& st
 	if (state.c1 == -1) {
 	    do {
 		if (i < cc) state.c1 = base64[(u_int)line[i++]];
-	    } while (state.c1 == -1 && i < cc);
+	    } while (state.c1 < 0 && i < cc);
 	}
-	if (state.c1 != -1) {
+	if (state.c1 >= 0) {
 	    state.l = i;
 	    if (state.c2 == -1) {
 		do {
 		    if (i < cc) state.c2 = base64[(u_int)line[i++]];
-		} while (state.c2 == -1 && i < cc);
+		} while (state.c2 < 0 && i < cc);
 	    }
-	    if (state.c2 != -1) {
+	    if (state.c2 >= 0) {
 		state.l = i;
 		if (putted <  1) buf.put((state.c1<<2) | ((state.c2&0x30)>>4));
 		if (state.c3 == -1) {
 		    do {
 			if (i < cc) state.c3 = base64[(u_int)line[i++]];
-		    } while (state.c3 == -1 && i < cc);
+		    } while (state.c3 < 0 && i < cc);
 		}
-		if (state.c3 != -1) {
+		if (state.c3 >= 0) {
 		    state.l = i;
 		    if (putted < 2) buf.put(((state.c2&0x0f)<<4) | ((state.c3&0x3c)>>2));
 		    if (state.c4 == -1) {
 			do {
 			    if (i < cc) state.c4 = base64[(u_int)line[i++]];
-			} while (state.c4 == -1 && i < cc);
+			} while (state.c4 < 0 && i < cc);
 		    }
-		    if (state.c4 != -1) {
+		    if (state.c4 >= 0) {
 			state.l = i;
 			if (putted < 3) buf.put((state.c3&0x3)<<6 | state.c4);
 			state.c1 = -1;
@@ -490,10 +490,10 @@ MsgFmt::copyBase64(fxStackBuffer& buf, const char line[], u_int cc, b64State& st
 			state.c3 = -1;
 			state.c4 = -1;
 			putted = 0;
-		    }
-		}
-	    }
-	}
+		    } else if (state.c4 == -2) state.l = i;
+		} else if (state.c3 == -2) state.l = i;
+	    } else if (state.c2 == -2) state.l = i;
+	} else if (state.c1 == -2) state.l = i;
     }
 }
 
