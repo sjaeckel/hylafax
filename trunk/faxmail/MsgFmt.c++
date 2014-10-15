@@ -490,10 +490,10 @@ MsgFmt::copyBase64(fxStackBuffer& buf, const char line[], u_int cc, b64State& st
 			state.c3 = -1;
 			state.c4 = -1;
 			putted = 0;
-		    } else if (state.c4 == -2) state.l = i;
-		} else if (state.c3 == -2) state.l = i;
-	    } else if (state.c2 == -2) state.l = i;
-	} else if (state.c1 == -2) state.l = i;
+		    } else if (state.c4 < 0) state.l = i;
+		} else if (state.c3 < 0) state.l = i;
+	    } else if (state.c2 < 0) state.l = i;
+	} else if (state.c1 < 0) state.l = i;
     }
 }
 
