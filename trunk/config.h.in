@@ -282,7 +282,7 @@
  * numbers to be 16-bit values.
  */
 #define	MAXSEQNUM	999999999
-#define	NEXTSEQNUM(x)	(((x)+1) % MAXSEQNUM)
+#define	NEXTSEQNUM(x,y)	(((x)+y) % MAXSEQNUM)
 
 /*
  * PAM Authentication

@@ -77,7 +77,37 @@ u_long Sequence::getNext(const char* name, fxStr& emsg)
             name, line);
         seqnum = 1;
     }
-    fxStr line2 = fxStr::format("%u", NEXTSEQNUM(seqnum));
+
+    /*
+     * Check for possible seqnum increment setting.
+     */
+    u_int increment = 1;
+    int fdinc = -1;
+    fxStr incname = fxStr::format("%s.increment", name);
+    if (lstat((const char*) incname, &sb) == 0 && S_ISREG(sb.st_mode)) {
+        fdinc = Sys::open(incname, O_RDONLY);
+        struct stat sb2;
+        if (fdinc < 0 || fstat(fdinc, &sb2)) {
+            //XXX some kind of error opening file
+            fdinc = -1;
+        } else if (sb.st_ino != sb2.st_ino || sb.st_dev != sb2.st_dev) {
+            //XXX something wrong with file
+            fdinc = -1;
+        } else {
+	    // seqf.increment file exists and seems usable...
+	    flock(fdinc, LOCK_EX);
+	    int n = read(fdinc, line, sizeof (line));
+	    line[n < 0 ? 0 : n] = '\0';
+	    if (n > 0) {
+		// seqf.increment file data seems likely.  Check it.  Use it.
+	        increment = atol(line);
+		if (increment < 1) increment = 1;
+	    }
+	    Sys::close(fdinc);
+	}
+    }
+
+    fxStr line2 = fxStr::format("%u", NEXTSEQNUM(seqnum,increment));
     lseek(fd, 0, SEEK_SET);
     int len = line2.length();
     if (Sys::write(fd, (const char*)line2, len) != len ||
