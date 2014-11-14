@@ -2,6 +2,8 @@
 
 New Changes
 
+* add support for seqf.increment files to indicate seqf 
+  incrementation (14 Nov 2014)
 * add support to faxmail to decode long-wrapped base64 (11, 14-15 Oct 2014)
 * fix proxy setting of null taglines (16 Sep 2014)
 * fix ModemWaitForConnect configuration setting (16 Sep 2014)
