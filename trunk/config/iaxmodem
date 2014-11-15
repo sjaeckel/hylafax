@@ -32,6 +32,15 @@ ModemType:		Class1		# use this to supply a hint
 #ModemResetCmds:	"ATH1\nAT+VCID=1"	# enables CallID display
 #ModemReadyCmds:	ATH0
 #
+# However, glare is mostly avoided by iaxmodem's 5-second internal
+# busy-out that occurs after hangups and resets.  These two settings
+# will help ensure that our reset and initialization periods don't 
+# go beyond that 5-second period.
+#
+ModemResetDelay: 0				# DTR isn't handled, anyway
+ModemSoftResetCmdDelay: 0			# modem reset is complete at "OK"
+
+#
 # You'll likely want Caller*ID display (also displays DID) enabled.
 #
 ModemResetCmds:		AT+VCID=1	# enables CallID display
