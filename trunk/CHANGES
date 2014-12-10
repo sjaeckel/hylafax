@@ -2,6 +2,7 @@
 
 New Changes
 
+* fix hi-res tagline imaging on 64-bit systems (10 Dec 2014)
 * add support for seqf.increment files to indicate seqf 
   incrementation (14 Nov 2014)
 * add support to faxmail to decode long-wrapped base64 (11, 14-15 Oct 2014)
