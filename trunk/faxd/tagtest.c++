@@ -213,13 +213,15 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
 	    break;
     }
     /*
-     * imageText assumes that raster is word-aligned; we use
-     * longs here to optimize the scaling done below for the
-     * low res case.  This should satisfy the word-alignment.
+     * imageText() works with u_short while encodeTagLine() accepts u_long.
+     * However, encodeTagLine still expects u_short word boundaries.
+     * raster is a buffer of u_short instead of u_long (even though using
+     * u_long would save us some loop iterations) because at some resolutions
+     * on 64-bit systems the longs-per-row are not congruent with the shorts-per-row.
      */
-    u_int lpr = howmany(w,sizeof(u_long)*8);		// longs/raster row
-    u_long* raster = new u_long[(h+SLOP_LINES)*lpr];	// decoded raster
-    memset(raster,0,(h+SLOP_LINES)*lpr*sizeof (u_long));// clear raster to white
+    u_int spr = howmany(w,16);				// shorts/raster row (per imageText)
+    u_short* raster = new u_short[(h+SLOP_LINES)*spr];	// decoded raster
+    memset(raster,0,(h+SLOP_LINES)*spr*sizeof (u_short));// clear raster to white
     /*
      * Break the tag into fields and render each piece of
      * text centered in its field.  Experiments indicate
@@ -228,13 +230,8 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
      */
     l = 0;
     /*  
-     * imageText produces good dimensioned fonts at 1728 pixels/row. At VR_R16
-     * and VR_300X300, both being wider than 1728, text appears shrinked
-     * horizontally; while VR_300 is still ok, VR_R16 is too small. To help
-     * streching the text horizontally we force text imaging to still use
-     * 1728 instead of VR_R16's 3456 (3456 / 2 = 1728); text will be
-     * imaged the 1st (left) half of the line, it will be stretched after
-     * imaging takes place.
+     * imageText produces good-dimensioned fonts at fine resolution.
+     * For other resolutions we'll shrink or stretch the text.
      */
     u_int fieldWidth = params.pageWidth() / (params.vr == VR_R16 ? 2 : 1) / tagLineFields;
     for (u_int f = 0; f < tagLineFields; f++) {
@@ -260,7 +257,7 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
 	    }
 	} else
 	    xoff += MARGIN_LEFT;
-	(void) tagLineFont->imageText(tagField, isutf8, (u_short*) raster, w, h,
+	(void) tagLineFont->imageText(tagField, isutf8, raster, w, h,
 	    xoff, MARGIN_RIGHT, MARGIN_TOP, MARGIN_BOT);
     }
 
@@ -283,16 +280,16 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
 	 * - ...
 	 * - line y is ORed with line y+1 to get new line (y+1)/2
 	 */
-	u_long* l1 = raster+MARGIN_TOP*lpr;
-	u_long* l2 = l1+lpr;
-	u_long* l3 = raster+MARGIN_TOP*lpr;
-	for (u_int nr = th-(MARGIN_TOP+MARGIN_BOT); nr; nr--) {
-	    for (u_int nl = lpr; nl; nl--)
-		*l3++ = *l1++ | *l2++;
-	    l1 += lpr;
-	    l2 += lpr;
+	u_short* s1 = raster + MARGIN_TOP*spr;
+	u_short* s2 = s1+spr;
+	u_short* s3 = raster + MARGIN_TOP*spr;
+	for (u_int nr = tagLineFont->fontHeight(); nr; nr--) {
+	    for (u_int nl = spr; nl; nl--)
+		*s3++ = *s1++ | *s2++;
+	    s1 += spr;
+	    s2 += spr;
 	}
-	memset(l3, 0, MARGIN_BOT*lpr*sizeof (u_long));
+	memset(s3, 0, MARGIN_BOT*spr*sizeof (u_short));
     }
     if (params.vr == VR_R8 || params.vr == VR_R16 || params.vr == VR_200X400 || params.vr == VR_300X300) {
 	/*
@@ -309,22 +306,18 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
 	 * - line y/2-1 copied in line y-2 and y-2-1
 	 * - ...
 	 */
-	// bottom of actual image
-	u_long* l1 = raster - 1 + lpr * (MARGIN_TOP + (th-MARGIN_TOP-MARGIN_BOT)/2 + 2);
-	// bottom of available image
-	u_long* l2 = raster - 1 + lpr * (MARGIN_TOP + (th-MARGIN_TOP-MARGIN_BOT) + 1);
+        // beginning of bottom line of actual image
+        u_short* s1 = raster + (spr * (tagLineFont->fontHeight()+MARGIN_TOP-1));
+        // beginning of bottom line of target image
+        u_short* s2 = s1 + (spr * (tagLineFont->fontHeight()));
 
-	/* stretch vertically (going backwards, R->L, B->T) */
-	for (u_int nr = (th-(MARGIN_TOP+MARGIN_BOT))/2; nr; nr--) {
-	    for (u_int nl = lpr; nl; nl--) { 
-		*(l2 - lpr) = *l1;	/* y/2 copied into y-1 */
-		*l2 = *l1;		/* y/2 copied into y */ 
-		l2--;			/* left 1 long */
-		l1--;			/* left 1 long */
-	    }
-	    /* after previous loop, l1 and l2 are up 1 line; l2 needs 1 more */
-	    l2 -= lpr;			/* 2nd ptr up 1 line */
-	}
+        for (u_int nr = tagLineFont->fontHeight(); nr; nr--) {
+            memcpy(s2, s1, spr*sizeof(u_short));// copy
+            s2 -= spr;                          // move s2 up one line
+            memcpy(s2, s1, spr*sizeof(u_short));// copy again
+       	    s2 -= spr;                          // move s2 up one line
+            s1 -= spr;                          // move s1 up one line
+        }
 	if (params.vr == VR_R16) {
 	    /*
 	     * hr is twice the hr in which data is imaged.
@@ -334,11 +327,11 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
 	     */
 
 	    /* Reset ptr to begin of image */
-	    l1 = raster + MARGIN_TOP*lpr;               // begin of 1st line
-	    l2 = raster + MARGIN_TOP*lpr + lpr - 1;     // end of 1st line
-	    for (u_int nr = th-(MARGIN_TOP+MARGIN_BOT); nr; nr--) {
+	    s1 = raster + MARGIN_TOP*spr;               // begin of 1st line
+	    s2 = s1 + spr - 1;				// end of 1st line
+	    for (u_int nr = tagLineFont->fontHeight()*2; nr; nr--) {
 		/*
-		 * 0      lpr/2      lpr
+		 * 0      spr/2      spr
 		 * |        |         |
 		 * 1234567890__________
 		 * 1234567890________00  x/2   copied into x   and x-1
@@ -346,58 +339,57 @@ imageTagLine(u_char* buf, u_int fillorder, const Class2Params& params, u_long& t
 		 * ...
 		 * 11223344556677889900
 		 */
-		u_int bpl = sizeof(u_long) * 8;		// bits per u_long
-		for (u_int nl = lpr/2 - 1; nl ; nl--) {
-		    // make 2 longs out of 1 (ABCD -> AABB CCDD)
+		u_int bps = sizeof(u_short) * 8;	// bits per u_short
+		for (u_int nl = spr/2 - 1; nl ; nl--) {
+		    // make 2 shorts out of 1 (ABCD -> AABB CCDD)
 		    int pos = 0;
-		    for (u_int i = 0; i < (bpl/8); i++) {
-			if (i == 0 || i == bpl/8/2) {
-			    *l2 = (u_long) 0;
-			    pos = bpl - 2;
+		    for (u_int i = 0; i < (bps/8); i++) {
+			if (i == 0 || i == bps/8/2) {
+			    *s2 = (u_short) 0;
+			    pos = bps - 2;
 			}
-			// put pairs of bits from l1 into the right places within l2
-			*l2 |= (u_long)((*(l1+nl) & (1<<(bpl-8*i-5))) >> (bpl-8*i-5) << pos);
-			*l2 |= ((u_long)((*(l1+nl) & (1<<(bpl-8*i-5))) >> (bpl-8*i-5) << pos)) << 1;
+			// put pairs of bits from s1 into the right places within s2
+			*s2 |= (u_short)((*(s1+nl) & (1<<(bps-8*i-5))) >> (bps-8*i-5) << pos);
+			*s2 |= ((u_short)((*(s1+nl) & (1<<(bps-8*i-5))) >> (bps-8*i-5) << pos)) << 1;
 			pos -= 2;
 
-			*l2 |= (u_long)((*(l1+nl) & (1<<(bpl-8*i-6))) >> (bpl-8*i-6) << pos);
-			*l2 |= ((u_long)((*(l1+nl) & (1<<(bpl-8*i-6))) >> (bpl-8*i-6) << pos)) << 1;
+			*s2 |= (u_short)((*(s1+nl) & (1<<(bps-8*i-6))) >> (bps-8*i-6) << pos);
+			*s2 |= ((u_short)((*(s1+nl) & (1<<(bps-8*i-6))) >> (bps-8*i-6) << pos)) << 1;
 			pos -= 2;
 
-			*l2 |= (u_long)((*(l1+nl) & (1<<(bpl-8*i-7))) >> (bpl-8*i-7) << pos);
-			*l2 |= ((u_long)((*(l1+nl) & (1<<(bpl-8*i-7))) >> (bpl-8*i-7) << pos)) << 1;
+			*s2 |= (u_short)((*(s1+nl) & (1<<(bps-8*i-7))) >> (bps-8*i-7) << pos);
+			*s2 |= ((u_short)((*(s1+nl) & (1<<(bps-8*i-7))) >> (bps-8*i-7) << pos)) << 1;
 			pos -= 2;
 
-			*l2 |= (u_long)((*(l1+nl) & (1<<(bpl-8*i-8))) >> (bpl-8*i-8) << pos);
-			*l2 |= ((u_long)((*(l1+nl) & (1<<(bpl-8*i-8))) >> (bpl-8*i-8) << pos)) << 1;
+			*s2 |= (u_short)((*(s1+nl) & (1<<(bps-8*i-8))) >> (bps-8*i-8) << pos);
+			*s2 |= ((u_short)((*(s1+nl) & (1<<(bps-8*i-8))) >> (bps-8*i-8) << pos)) << 1;
 			pos -= 2;
 
-			*l2 |= (u_long)((*(l1+nl) & (1<<(bpl-8*i-1))) >> (bpl-8*i-1) << pos);
-			*l2 |= ((u_long)((*(l1+nl) & (1<<(bpl-8*i-1))) >> (bpl-8*i-1) << pos)) << 1;
+			*s2 |= (u_short)((*(s1+nl) & (1<<(bps-8*i-1))) >> (bps-8*i-1) << pos);
+			*s2 |= ((u_short)((*(s1+nl) & (1<<(bps-8*i-1))) >> (bps-8*i-1) << pos)) << 1;
 			pos -= 2;
 
-			*l2 |= (u_long)((*(l1+nl) & (1<<(bpl-8*i-2))) >> (bpl-8*i-2) << pos);
-			*l2 |= ((u_long)((*(l1+nl) & (1<<(bpl-8*i-2))) >> (bpl-8*i-2) << pos)) << 1;
+			*s2 |= (u_short)((*(s1+nl) & (1<<(bps-8*i-2))) >> (bps-8*i-2) << pos);
+			*s2 |= ((u_short)((*(s1+nl) & (1<<(bps-8*i-2))) >> (bps-8*i-2) << pos)) << 1;
 			pos -= 2;
 
-			*l2 |= (u_long)((*(l1+nl) & (1<<(bpl-8*i-3))) >> (bpl-8*i-3) << pos);
-			*l2 |= ((u_long)((*(l1+nl) & (1<<(bpl-8*i-3))) >> (bpl-8*i-3) << pos)) << 1;
+			*s2 |= (u_short)((*(s1+nl) & (1<<(bps-8*i-3))) >> (bps-8*i-3) << pos);
+			*s2 |= ((u_short)((*(s1+nl) & (1<<(bps-8*i-3))) >> (bps-8*i-3) << pos)) << 1;
 			pos -= 2;
 
-			*l2 |= (u_long)((*(l1+nl) & (1<<(bpl-8*i-4))) >> (bpl-8*i-4) << pos);
-			*l2 |= ((u_long)((*(l1+nl) & (1<<(bpl-8*i-4))) >> (bpl-8*i-4) << pos)) << 1;
+			*s2 |= (u_short)((*(s1+nl) & (1<<(bps-8*i-4))) >> (bps-8*i-4) << pos);
+			*s2 |= ((u_short)((*(s1+nl) & (1<<(bps-8*i-4))) >> (bps-8*i-4) << pos)) << 1;
 			pos -= 2;
-			if (pos < 0) *l2--;
+			if (pos < 0) *s2--;
 		    }
 		}
-		l1 += lpr;              // begin of next line
-		l2 = l1 + lpr - 1;      // end of next line
+		s1 += spr;              // begin of next line
+		s2 = s1 + spr - 1;      // end of next line
 	    }
 	}
-	memset(l2, 0, MARGIN_BOT*lpr*sizeof (u_long));
     }
     MemoryDecoder dec(buf, w, totdata, fillorder, params.is2D(), (params.df == DF_2DMMR));
-    u_char* encbuf = dec.encodeTagLine(raster, th, tagLineSlop);
+    u_char* encbuf = dec.encodeTagLine((u_long*) raster, th, tagLineSlop);
     totdata = dec.getCC();
     return (encbuf);
 }
