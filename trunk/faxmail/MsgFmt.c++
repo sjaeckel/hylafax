@@ -73,9 +73,9 @@ MsgFmt::getLine(FILE* fd, fxStackBuffer& buf)
     buf.reset();
     for (;;) {
 	int c = getc(fd);
-	c &= 0xff;
 	if (c == EOF)
 	    return (buf.getLength() > 0);
+	c &= 0xff;
 	if (c == '\r') {
 	    c = getc(fd);
 	    if (c == EOF)

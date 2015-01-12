@@ -2,6 +2,7 @@
 
 New Changes
 
+* fix EOF reading fault on badly-formatted MIME in faxmail (12 Jan 2015)
 * fix hi-res tagline imaging on 64-bit systems (10 Dec 2014)
 * add support for seqf.increment files to indicate seqf 
   incrementation (14 Nov 2014)
