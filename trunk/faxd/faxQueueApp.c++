@@ -2728,6 +2728,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			    break;
 		    }
 		}
+		u_short prevPages = req.npages;		// queueAccounting() needs the pages sent only by the proxy, but updateRequest() needs the full count
 		bool status = false;
 		fxStr emsg;
 		if (client->callServer(emsg)) {
@@ -2783,10 +2784,11 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			req.duration = atoi((const char*) r);
 			client->jobParm("npages");
 			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			req.npages = atoi((const char*) r);
+			req.npages += atoi((const char*) r);
 			client->jobParm("totpages");
 			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			req.totpages = atoi((const char*) r);
+			u_short totpages = atoi((const char*) r);
+			if (totpages > req.totpages) req.totpages = totpages;	// if the formatting occurred on the proxy, we'll need to update
 			client->jobParm("commid");
 			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
 			req.commid = r;
@@ -2858,6 +2860,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		}
 		if (!status) logError("PROXY SEND: %s", (const char*) emsg);
 		updateRequest(req, job);
+		req.npages -= prevPages;	// queueAccounting() only wants the pages sent by the proxy
 		queueAccounting(job, req, "PROXY");
 		_exit(req.status|0x80);	// 0x80 indicates proxied job
 
