@@ -406,6 +406,21 @@ MIMEState::getQuotedPrintableLine(FILE* fd, fxStackBuffer& buf)
     MsgFmt msg;
     char line[80];				// spec says never more than 76
     u_int cc = 0;				// chars in current line
+
+    /*
+     * Some encoders, in-particular Microsoft Outlook, can make a poor decision to encode some
+     * binary file types (such as PDF) with quoted-printable.  In such cases we have to decide
+     * whether a line-break ('\n') should be decoded as LF ('\n') or CR+LF ('\r\n').  To be 
+     * thorough we could pattern-match the X-Mailer with known perpetrators, but for now we
+     * simply check to see if the Content-Type is one that really should not be encoded with
+     * quoted-printable.  If it is, then we assume that it was one where line-breaks should
+     * be decoded as CR+LF (because these are the only known perpetrators at this time). If
+     * this assumption later proves to be false, then we'll probably need to also use X-Mailer
+     * as a deciding factor.
+     */
+    bool breakhascr = false;
+    if (strneq(type, "application", 11) && strneq(subtype, "pdf", 3)) breakhascr = true;
+
     for (;;) {
 	int c = getc(fd);
 	if (c == EOF) {
@@ -429,11 +444,13 @@ MIMEState::getQuotedPrintableLine(FILE* fd, fxStackBuffer& buf)
 	    lineno++;
 	    if (cc >= blen && line[0] == '-') {
 		if (cc == blen && strneq(line, boundary, blen)) {
+		    if (breakhascr) buf.put('\r');
 		    buf.put('\n');
 		    return (false);
 		}
 		if (cc == blen+2 && strneq(line, boundary, blen+2)) {
 		    lastPart = true;
+		    if (breakhascr) buf.put('\r');
 		    buf.put('\n');
 		    return (false);
 		}
@@ -444,6 +461,7 @@ MIMEState::getQuotedPrintableLine(FILE* fd, fxStackBuffer& buf)
 		continue;
 	    }
 	    msg.copyQP(buf, line, cc);
+	    if (breakhascr) buf.put('\r');
 	    buf.put('\n');
 	    return (true);
 	}
