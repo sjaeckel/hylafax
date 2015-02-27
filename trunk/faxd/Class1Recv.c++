@@ -1232,8 +1232,9 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					u_int fc = frameRev[rtncframe[6]] + 1;
 					if ((fc == 256 || fc == 1) && !dataseen) fc = 0;	// distinguish 0 from 1 and 256
 					traceFCF("RECV recv", rtncframe.getFCF2());
+					u_int pgcount = u_int(prevPage/256)*256+frameRev[rtncframe[4]];	// cope with greater than 256 pages
 					protoTrace("RECV received %u frames of block %u of page %u", \
-					    fc, frameRev[rtncframe[5]]+1, frameRev[rtncframe[4]]+1);
+					    fc, frameRev[rtncframe[5]]+1, pgcount+1);
 					switch (rtncframe.getFCF2()) {
 					    case 0: 	// PPS-NULL
 					    case FCF_EOM:
@@ -1246,7 +1247,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 						    return (false);
 						}
-						if (frameRev[rtncframe[4]] > prevPage || (frameRev[rtncframe[4]] == prevPage && frameRev[rtncframe[5]] >= prevBlock)) {
+						if (pgcount > prevPage || (pgcount == prevPage && frameRev[rtncframe[5]] >= prevBlock)) {
 						    (void) transmitFrame(FCF_PPR, fxStr(ppr, 32));
 						    traceFCF("RECV send", FCF_PPR);
 						} else {
@@ -1513,6 +1514,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			// sender may violate T.30-A.4.3 and send another signal (i.e. DCN)
 			traceFCF("RECV recv", ppsframe.getFCF2());
 		    }
+		    u_int pgcount = u_int(prevPage/256)*256+frameRev[ppsframe[4]];	// cope with greater than 256 pages
 		    switch (ppsframe.getFCF()) {
 			/*
 			 * PPS is the only valid signal, Figure A.8/T.30; however, some
@@ -1555,7 +1557,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 					fc, prevBlock + 1, prevPage + 1);
 				} else {
 				    protoTrace("RECV received %u frames of block %u of page %u", \
-					fc, frameRev[ppsframe[5]]+1, frameRev[ppsframe[4]]+1);
+					fc, frameRev[ppsframe[5]]+1, pgcount+1);
 				}
 				blockgood = true;
 				/*
@@ -1599,7 +1601,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    dataSent += fcount;
 				    dataMissed += fbad;
 				    if (fcount && ! blockgood) protoTrace("Block incomplete: %d frames (%d%%) corrupt or missing", fbad, ((fbad*100)/fcount));
-				    if (frameRev[ppsframe[4]] < prevPage || (frameRev[ppsframe[4]] == prevPage && frameRev[ppsframe[5]] < prevBlock))
+				    if (pgcount < prevPage || (pgcount == prevPage && frameRev[ppsframe[5]] < prevBlock))
 					blockgood = false;	// we already confirmed this block receipt... (see below)
 				} else {
 				    blockgood = false;	// MCF only if we have data
@@ -1621,7 +1623,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    pprcnt = 4;
 				}
 				if (signalRcvd == 0) {
-				    if (frameRev[ppsframe[4]] > prevPage || (frameRev[ppsframe[4]] == prevPage && frameRev[ppsframe[5]] >= prevBlock)) {
+				    if (pgcount > prevPage || (pgcount == prevPage && frameRev[ppsframe[5]] >= prevBlock)) {
 					// inform the remote that one or more frames were invalid
 					transmitFrame(FCF_PPR, fxStr(ppr, 32));
 					traceFCF("RECV send", FCF_PPR);
