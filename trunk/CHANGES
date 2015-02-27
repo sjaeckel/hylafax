@@ -2,6 +2,7 @@
 
 New Changes
 
+* support more than 256 pages in Class 1 ECM (26 Feb 2015)
 * cope with application/pdf being encoded with quoted-printable
   in faxmail (13 Feb 2015)
 * fix npages and totpages recording in sendq when proxied (31 Jan 2015)
