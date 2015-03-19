@@ -2,6 +2,7 @@
 
 New Changes
 
+* add typerules suggestion for PNG conversion (19 Mar 2015)
 * support more than 256 pages in Class 1 ECM (26 Feb 2015)
 * cope with application/pdf being encoded with quoted-printable
   in faxmail (13 Feb 2015)
