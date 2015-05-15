@@ -2,6 +2,10 @@
 
 New Changes
 
+* fix dataTimeout primarily affecting 7200 bps ECM sending (15 May 2015)
+
+(5.5.6)
+
 * add typerules suggestion for PNG conversion (19 Mar 2015)
 * support more than 256 pages in Class 1 ECM (26 Feb 2015)
 * cope with application/pdf being encoded with quoted-printable
