@@ -379,18 +379,21 @@ ClassModem::answerCallCmd(CallType ctype)
 }
 
 /*
- * Set data transfer timeout and adjust according
- * to the negotiated bit rate.
+ * Set data transfer timeout adjusted proportionately 
+ * according to the negotiated bit rate ("secs" as-given
+ * is for 14400 bps).  This is set to cover the amount 
+ * of time used in transferring a chunk of data.
  */
 void
 ClassModem::setDataTimeout(long secs, u_int br)
 {
-    dataTimeout = secs*1000;	// 9600 baud timeout/data write (ms)
+    dataTimeout = secs*1000;	// 14400 bps timeout/data write (ms)
     switch (br) {
-    case BR_2400:	dataTimeout *= 4; break;
-    case BR_4800:	dataTimeout *= 2; break;
-    case BR_9600:	dataTimeout = (4*dataTimeout)/3; break;
-    // could shrink timeout for br > 9600
+	case BR_2400:	dataTimeout *= 6; break;
+	case BR_4800:	dataTimeout *= 3; break;
+	case BR_7200:	dataTimeout *= 2; break;
+	case BR_9600:	dataTimeout = (3*dataTimeout)/2; break;
+	case BR_12000:	dataTimeout = (5*dataTimeout)/6; break;
     }
 }
 
