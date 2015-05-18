@@ -2069,7 +2069,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	     * We need to set a timeout appropriate to the data size and bitrate.
 	     */
 	    long secs = totdata*9/10000 + 1;	// ~60s per 64KB of data, rounded up
-	    setDataTimeout(secs > 15 : secs ? 15, params.br);	// minimum 15-second dataTimeout here
+	    setDataTimeout(secs > 15 ? secs : 15, params.br);	// minimum 15-second dataTimeout here
 	    rc = sendPageData(dp, (u_int) totdata, bitrev, (params.ec != EC_DISABLE), emsg);
 	}
 	delete[] data;
