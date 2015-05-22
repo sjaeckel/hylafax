@@ -254,6 +254,7 @@ public:
     const fxStr& getCallIDType(int i) const;
 // data transfer timeout controls
     void	setDataTimeout(long secs, u_int br);
+    void	setDataTimeout(long datasize, int discount, u_int br);
     long	getDataTimeout() const;
 // miscellaneous
     void	pause(u_int ms);

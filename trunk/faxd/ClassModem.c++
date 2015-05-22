@@ -397,6 +397,19 @@ ClassModem::setDataTimeout(long secs, u_int br)
     }
 }
 
+/*
+ * Set data transfer timeout by calculating
+ * the timeout period from the data size.
+ */
+void
+ClassModem::setDataTimeout(long datasize, int discount, u_int br)
+{
+    long secs = datasize*9/10000 + 1;   // ~60s per 64KB of data, rounded up
+    secs -= discount;
+    setDataTimeout(secs > 15 ? secs : 15, br);  // minimum 15-second dataTimeout here
+}
+
+
 fxStr
 ClassModem::getCapabilities() const
 {

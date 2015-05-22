@@ -2003,6 +2003,19 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
              */
             *fp++ = *bp++;
             *fp++ = *bp++;
+
+	    /*
+	     * The modem buffers data.  We need to keep track of how much
+	     * data has been sent to the modem and how much time has 
+	     * elapsed in order to know a proper dataTimeout setting
+	     * because the modem may have a lot of data buffered to it
+	     * and we can't always rely on a constrained pipe and limited
+	     * buffer to the modem to keep our needed wait-time to under
+	     * the 60-second setting that dataTimeout presently has.
+	     */
+	    time_t start = Sys::now();
+	    long pagedatasent = 0;
+
 	    do {
 		u_char* bol = bp;
                 bool foundEOL;
@@ -2023,6 +2036,8 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 		     * the current data and reset the pointer into
 		     * the zero fill buffer.
 		     */
+		    pagedatasent += fp-fill;
+		    setDataTimeout(pagedatasent, Sys::now() - start, params.br);
 		    rc = sendPageData(fill, fp-fill, bitrev, (params.ec != EC_DISABLE), emsg);
 		    fp = fill;
 		    if (!rc)			// error writing data
@@ -2034,6 +2049,8 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 		     * scanline alone.  Flush this scanline
 		     * also.  lineLen is greater than minLen.
 		     */
+		    pagedatasent += fp-fill;
+		    setDataTimeout(pagedatasent, Sys::now() - start, params.br);
 		    rc = sendPageData(bol, lineLen, bitrev, (params.ec != EC_DISABLE), emsg);
 		    if (!rc)			// error writing
 			break;
@@ -2060,6 +2077,8 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	     * Flush anything that was not sent above.
 	     */
 	    if (fp > fill && rc) {
+		pagedatasent += fp-fill;
+		setDataTimeout(pagedatasent, Sys::now() - start, params.br);
 		rc = sendPageData(fill, fp-fill, bitrev, (params.ec != EC_DISABLE), emsg);
 	    }
 	    delete[] fill;
@@ -2068,8 +2087,7 @@ Class1Modem::sendPage(TIFF* tif, Class2Params& params, u_int pageChop, u_int ppm
 	     * No EOL-padding needed, just jam the bytes.
 	     * We need to set a timeout appropriate to the data size and bitrate.
 	     */
-	    long secs = totdata*9/10000 + 1;	// ~60s per 64KB of data, rounded up
-	    setDataTimeout(secs > 15 ? secs : 15, params.br);	// minimum 15-second dataTimeout here
+	    setDataTimeout(totdata, 0, params.br);
 	    rc = sendPageData(dp, (u_int) totdata, bitrev, (params.ec != EC_DISABLE), emsg);
 	}
 	delete[] data;
