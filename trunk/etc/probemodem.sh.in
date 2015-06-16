@@ -54,7 +54,9 @@ die()
 
 ATCMD=
 DOFUSER=no
+OS=
 SPEED=
+TTY=
 while [ x"$1" != x"" ] ; do
     case $1 in
     -c)     ATCMD=$2; shift;;

@@ -54,6 +54,7 @@ INTERACTIVE=yes
 SKELFILE=
 SPEED=
 DOFUSER=no
+TTY=
 while [ x"$1" != x"" ] ; do
     case $1 in
     -s)	    SPEED=$2; shift;;
