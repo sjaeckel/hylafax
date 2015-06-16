@@ -219,14 +219,7 @@ rmDirs::
 	-rmdir ${SPOOL}/sendq ${SPOOL}/doneq ${SPOOL}/docq ${SPOOL}/tmp ${SPOOL}/pollq ${SPOOL}/archive
 	-rmdir ${SPOOL}
 
-makeDevices::
-	${INSTALL} -u ${FAXUSER} -g ${FAXGROUP} -m 600 -fifo \
-	    -idb hylafax.sw.server -root ${INSTALLROOT} -F ${SPOOL} FIFO
-
-rmDevices::
-	${RM} -f ${SPOOL}/FIFO
-
-install: makeDirs makeDevices
+install: makeDirs
 	${INSTALL} -m 444 -root ${INSTALLROOT} -F ${SPOOL} -idb hylafax.sw.server \
 	    -src ${SRCDIR}/COPYRIGHT -O COPYRIGHT
 	@if [ "@REGEX@" = yes ]; then \
@@ -266,7 +259,7 @@ install: makeDirs makeDevices
 	    true; \
 	fi
 
-uninstall: rmDirs rmDevices
+uninstall: rmDirs
 	${RM} -f ${SPOOL}/COPYRIGHT
 	@for i in ${DIRS}; do \
 	    (${ECHO} "= "$$i; cd $$i; ${MAKE} uninstall)  ||  exit 1; \

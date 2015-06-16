@@ -2,6 +2,8 @@
 
 New Changes
 
+* stop messing with the FIFO during installs and uninstalls (16 Jun 2016)
+* avoid conflicts with a TTY environment variable (15 Jun 2016)
 * fix dataTimeout esp for modems with large buffers in non-ECM (22 May 2015)
 * fix dataTimeout primarily affecting 7200 bps ECM sending (15 May 2015)
 
