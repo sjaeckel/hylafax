@@ -572,7 +572,7 @@ PCFFont::imageText(const char* text, bool isutf8,
 	    continue;
 	int cx = x + ci->lsb;			// left edge of glyph
 	int ch = ci->ascent + ci->descent;	// glyph height
-	u_short* rp = raster + (y-ci->ascent)*rowwords + (cx>>4);
+	u_short* rp = raster + (y > ci->ascent ? y-ci->ascent : 0)*rowwords + (cx>>4);
 	u_short* gp = (u_short*) ci->bits;
 	u_short dx0 = cx&15;			// raster word offset
 	u_short rowdelta = rowwords - cwords;	// raster row adjust factor
