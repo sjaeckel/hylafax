@@ -4969,6 +4969,7 @@ CONF_FILES="
     faxcover/edit-faxcover.sh
     faxmail/application-pdf.sh
     faxmail/application-octet-stream.sh
+    faxmail/application-binary.sh
     faxmail/image-tiff.sh
 
     port/Makefile
