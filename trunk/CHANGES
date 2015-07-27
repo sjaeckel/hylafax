@@ -2,6 +2,7 @@
 
 New Changes
 
+* add application/binary MIMEConverter (17 Jul 2015)
 * fix DynamicConfig for Class 1 modem data format support (15 Jul 2015)
 * fix crash in tagline imaging due to glyph ascent (23 Jun 2015)
 * stop messing with the FIFO during installs and uninstalls (16 Jun 2015)

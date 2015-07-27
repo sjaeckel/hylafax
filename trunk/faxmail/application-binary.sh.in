@@ -9,7 +9,7 @@
 # hyla.conf to point there, and make changes there instead.
 #
 
-DISCARDMSG="DISCARDED application/octet-stream goes here"
+DISCARDMSG="DISCARDED application/binary goes here"
 FILECMD=file
 
 . @SPOOL@/etc/setup.cache

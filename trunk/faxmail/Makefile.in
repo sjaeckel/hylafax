@@ -66,6 +66,8 @@ install: default
 	    -src ${SRCDIR}/application-pdf.sh -O pdf
 	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/application-octet-stream.sh -O octet-stream
+	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA}/faxmail/application -m 755 -idb ${PRODUCT}.sw.client \
+	    -src ${SRCDIR}/application-binary.sh -O binary
 	${INSTALL} -root ${INSTALLROOT} -F ${LIBDATA}/faxmail/image -m 755 -idb ${PRODUCT}.sw.client \
 	    -src ${SRCDIR}/image-tiff.sh -O tiff
 
@@ -74,6 +76,7 @@ uninstall::
 	${RM} -f ${LIBDATA}/faxmail.ps
 	${RM} -f ${LIBDATA}/faxmail/application/pdf
 	${RM} -f ${LIBDATA}/faxmail/application/octet-stream
+	${RM} -f ${LIBDATA}/faxmail/application/binary
 	${RM} -f ${LIBDATA}/faxmail/image/tiff
 	-rmdir ${LIBDATA}/faxmail/application ${LIBDATA}/faxmail/image ${LIBDATA}/faxmail 
 
@@ -81,5 +84,5 @@ uninstall::
 # These targets are created during the configuration procedure.
 #
 clobberconfig:
-	-${RM} -f application-pdf.sh image-tiff.sh application-octet-stream.sh
+	-${RM} -f application-pdf.sh image-tiff.sh application-octet-stream.sh application-binary.sh
 
