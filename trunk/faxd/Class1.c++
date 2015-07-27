@@ -248,7 +248,10 @@ Class1Modem::pokeConfig(bool isSend)
     modemParams.vr = conf.class1Resolutions;	// bitmapped by configuration
     if (conf.class1ECMSupport) {
 	modemParams.ec = BIT(EC_DISABLE) | BIT(EC_ENABLE64) | BIT(EC_ENABLE256);
- 	modemParams.df |= (conf.class1MMRSupport ? BIT(DF_2DMMR) : 0);
+
+	if (conf.class1MMRSupport) modemParams.df |= BIT(DF_2DMMR);
+	else modemParams.df &= ~BIT(DF_2DMMR);
+
 	switch (conf.class1JBIGSupport) {
 	    case FaxModem::JBIG_FULL:
 		jbigSupported = true; 
@@ -264,12 +267,18 @@ Class1Modem::pokeConfig(bool isSend)
 		break;
 	}
 	if (jbigSupported) modemParams.df |= BIT(DF_JBIG);
+	else modemParams.df &= ~BIT(DF_JBIG);
+
+	modemParams.jp = 0;
 	if (conf.class1GreyJPEGSupport || conf.class1ColorJPEGSupport)
 	    modemParams.jp |= BIT(JP_GREY);
 	if (conf.class1ColorJPEGSupport)
 	    modemParams.jp |= BIT(JP_COLOR);
-    } else
+    } else {
 	modemParams.ec = BIT(EC_DISABLE);
+	modemParams.df &= ~BIT(DF_2DMMR);
+	modemParams.jp = 0;
+    }
 }
 
 /*
