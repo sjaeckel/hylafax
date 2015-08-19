@@ -45,6 +45,20 @@ will deny all requests for service.
 Note also that this file must be readable only by the ``fax'' user; i.e.
 it should have mode 600 and be owned by ``fax''.
 .PP
+Usually 
+.B etc/hosts.hfaxd
+is managed through use of the 
+.IR faxadduser (${MANNUM1_8})
+and
+.IR faxdeluser (${MANNUM1_8})
+tools.  However, some features are not accessible through those tools and
+.B etc/hosts.hfaxd
+will require direct editing to use those features.  In particular, the order of entries in
+.B etc/hosts.hfaxd
+may need manipulation as
+.I hfaxd
+uses the first-matched entry (read top-down).
+.PP
 Each newline-terminated entry is a set of colon (:) separated fields,
 all but the first of which are optional.
 Trailing null fields and their separators may be omitted.
@@ -153,6 +167,8 @@ is taken, so more-specific entries should be placed first.
 .fi
 .RE
 .SH "SEE ALSO"
-.IR sendfax (1),
+.IR faxadduser (${MANNUM1_8}),
+.IR faxdeluser (${MANNUM1_8}),
+.IR sendfax (${MANNUM1_8}),
 .IR hfaxd (${MANNUM1_8}),
 .IR hylafax-server (${MANNUM4_5})
