@@ -733,7 +733,7 @@ faxQueueApp::prepareJob(Job& job, FaxRequest& req,
      */
     u_int dataSent = info.getDataSent() + info.getDataSent1() + info.getDataSent2();
     u_int dataMissed = info.getDataMissed() + info.getDataMissed1() + info.getDataMissed2();
-    if (class1RestrictPoorDestinations && dataMissed && dataSent * 100 / dataMissed > class1RestrictPoorDestinations) {
+    if (class1RestrictPoorDestinations && dataSent && dataMissed * 100 / dataSent > class1RestrictPoorDestinations) {
 	params.jp = JP_NONE;
 	params.vr = VR_NORMAL;
 	traceJob(job, "This destination exhibits poor call audio quality.  Restricting resolution and color support.");
