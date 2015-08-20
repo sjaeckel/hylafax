@@ -2,6 +2,8 @@
 
 New Changes
 
+* fix grevious calculation problem with Class1RestrictPoorSenders and 
+  Class1RestrictPoorDestinations (20 Aug 2015)
 * add application/binary MIMEConverter (17 Jul 2015)
 * fix DynamicConfig for Class 1 modem data format support (15 Jul 2015)
 * fix crash in tagline imaging due to glyph ascent (23 Jun 2015)

@@ -114,8 +114,8 @@ Class1Modem::recvBegin(FaxSetup* setupinfo, fxStr& emsg)
 	dis.setBit(FaxParams::BITNUM_SIGRATE_14, false);	// disable V.17 support
 	protoTrace("This sender skips V.29 and has trouble with V.17.  Concealing V.17 support.");
     }
-    if (conf.class1RestrictPoorSenders && setupinfo && setupinfo->senderDataMissed && 
-	setupinfo->senderDataSent * 100 / setupinfo->senderDataMissed > conf.class1RestrictPoorSenders) {
+    if (conf.class1RestrictPoorSenders && setupinfo && setupinfo->senderDataSent && 
+	setupinfo->senderDataMissed * 100 / setupinfo->senderDataSent > conf.class1RestrictPoorSenders) {
 	dis.setBit(FaxParams::BITNUM_VR_FINE, false);	// disable fine resolution support
 	dis.setBit(FaxParams::BITNUM_VR_R8, false);	// disable superfine resolution support
 	dis.setBit(FaxParams::BITNUM_VR_300X300, false);// disable 300x300 dpi support
