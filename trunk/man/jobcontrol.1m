@@ -86,6 +86,7 @@ ProxyUser	string	\-	authentication username for the proxy server
 ProxyPass	string	\-	authentication password for the proxy server
 ProxyMailbox	string	\-	E-Mail address for job notification
 ProxyNotification	string	\s-1none\s+1	notification request
+ProxyJobTag	string	\s-1\fIsee below\fP\s+1	jobtag for proxy job
 ProxyLogMode	octal	\s-10600\s+1	protection to use for logs retrieved from proxy server
 ProxyTries	integer	\s-1\-1\s+1	number of tries proxy should attempt
 ProxyDials	integer	\s-1\-1\s+1	number of dials proxy should attempt
@@ -157,6 +158,11 @@ and
 identify the e-mail address and the notification mechanism for the proxied
 job.  (This does not change the e-mail address or the notification mechanism for
 the originating job.)
+.PP
+The
+.B ProxyJobTag
+sets the jobtag for the job on the proxy server.  By default this is the jobid
+for the originating job.
 .PP
 The
 .B ProxyLogMode

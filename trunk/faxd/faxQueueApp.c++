@@ -2646,8 +2646,6 @@ writeFile(void* ptr, const char* buf, int cc, fxStr&)
 
 /*
  * Send a fax job via a proxy HylaFAX server.  We do this by utilizing SendFaxJob jobWait.
- * Retries must be handled by the proxy server as the programming for retries is handled
- * by the modem.  This server, therefore, only makes one attempt.
  *
  * This does not currently work for pager requests or fax polls.
  *
@@ -2683,7 +2681,11 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		if (req.timezone != "") rjob.setTimeZone(req.timezone);
 		rjob.setUseXVRes(req.usexvres);
 		client->setHost(job.getJCI().getProxy());
-		rjob.setJobTag(job.jobid);
+		if (job.getJCI().getProxyJobTag().length()) {
+		    rjob.setJobTag(job.getJCI().getProxyJobTag());
+		} else {
+		    rjob.setJobTag(job.jobid);
+		}
 		rjob.setVResolution(req.resolution);
 		rjob.setDesiredMST(req.desiredst);
 		rjob.setAutoCoverPage(false);
