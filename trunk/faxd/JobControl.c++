@@ -78,6 +78,7 @@ JobControlInfo::JobControlInfo(const JobControlInfo& other)
     proxyreconnects = other.proxyreconnects;
     proxymailbox = other.proxymailbox;
     proxynotification = other.proxynotification;
+    proxyjobtag = other.proxyjobtag;
 }
 
 JobControlInfo::JobControlInfo (const fxStr& buffer)
@@ -145,6 +146,8 @@ JobControlInfo::setConfigItem (const char* tag, const char* value)
 	proxymailbox = value;
     } else if (streq(tag, "proxynotification")) {
 	proxynotification = value;
+    } else if (streq(tag, "proxyjobtag")) {
+	proxyjobtag = value;
     } else if (streq(tag, "maxconcurrentjobs")) {	// backwards compatibility
 	maxConcurrentCalls = getNumber(value);
 	setDefined(DCI_MAXCONCURRENTCALLS);
@@ -271,6 +274,12 @@ const fxStr&
 JobControlInfo::getProxyNotification() const
 {
     return proxynotification;
+}
+
+const fxStr&
+JobControlInfo::getProxyJobTag() const
+{
+    return proxyjobtag;
 }
 
 const mode_t
