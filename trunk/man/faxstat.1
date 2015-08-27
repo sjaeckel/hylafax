@@ -93,6 +93,9 @@ the filename of the document in the \fBrecvq\fP
 directory on the server machine.
 .SH OPTIONS
 .TP 10
+.B \-A
+Login with administrative privileges.
+.TP 10
 .B \-a
 Display the contents of the
 .B archive
@@ -160,9 +163,9 @@ Supress the display of server and modem status.
 .TP 10
 .BI \-o " login"
 Specify the fax owner login name.  If unspecified, the user's
-current login name is used.  The login password may also
-be provided by separating it from the owner login name with
-a colon, like ``owner:pass''.
+current login name is used.  The login password and admin password may also
+be provided by separating them from the owner login name with
+colons, like ``owner:pass:adminpass''.
 .TP 10
 .B \-q
 Display the sequence numbers of the \*(Fx queues.

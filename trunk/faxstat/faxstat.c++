@@ -60,14 +60,19 @@ faxStatApp::run(int argc, char** argv)
 
     char *owner = NULL;
     char *pass = NULL;
+    char *adminpass = NULL;
 
     fxStrArray dirs;
     bool checkInfo = false;
     bool checkStatus = true;
     bool showSeqfs = false;
+    bool useadmin = false;
     int c;
-    while ((c = Sys::getopt(argc, argv, "h:adgfilnO:o:qrsv")) != -1)
+    while ((c = Sys::getopt(argc, argv, "h:AadgfilnO:o:qrsv")) != -1)
 	switch (c) {
+	case 'A':
+	    useadmin = true;		// use admin login
+	    break;
 	case 'a':			// display archived jobs
 	    dirs.append(FAX_ARCHDIR);
 	    break;
@@ -92,12 +97,19 @@ faxStatApp::run(int argc, char** argv)
 	case 'n':			// do not display server status
 	    checkStatus = false;
 	    break;
-	case 'o':			// specify owner:pass
+	case 'o':			// specify owner[:pass[:adminpass]]
 	    {
 		char* pp = strchr(optarg, ':');
  		if (pp && *(pp + 1) != '\0') {
 		    *pp = '\0';
 		    pass = pp + 1;
+		    // check for optional adminpass
+		    pp = strchr(pass, ':');
+ 		    if (pp && *(pp + 1) != '\0') {
+			*pp = '\0';
+			adminpass = pp + 1;
+			useadmin = true;
+		    }
 		}
 	    }
 	    owner = optarg;
@@ -123,7 +135,7 @@ faxStatApp::run(int argc, char** argv)
     if (checkStatus) dirs.insert(FAX_STATUSDIR, 0);	// server status
     fxStr emsg;
     if (callServer(emsg)) {
-	if (login(owner, pass, emsg)) {
+	if (login(owner, pass, emsg) && (!useadmin || admin(adminpass, emsg))) {
 	    if (checkInfo)
 		(void) recvData(writeStdout, NULL, emsg, 0,
 		    "RETR " FAX_STATUSDIR "/any." FAX_INFOSUF);
