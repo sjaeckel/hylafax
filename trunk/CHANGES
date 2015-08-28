@@ -2,6 +2,7 @@
 
 New Changes
 
+* create more-secure hosts.hfaxd passwords by default (28 Aug 2015)
 * add admin login feature for faxstat (27 Aug 2015)
 * add ProxyJobTag jobcontrol feature (26 Aug 2015)
 * fix grevious calculation problem with Class1RestrictPoorSenders and 

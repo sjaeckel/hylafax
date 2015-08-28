@@ -344,6 +344,10 @@ to64(char* cp, long v, int len)
     }
 }
 
+/*
+ * cvtPasswd is	a function meant to be operationally                                   
+ * identical to one of the same name in util/faxadduser.c
+ */
 bool
 HylaFAXServer::cvtPasswd(const char* type, const char* pass, fxStr& result)
 {
@@ -360,19 +364,30 @@ HylaFAXServer::cvtPasswd(const char* type, const char* pass, fxStr& result)
 	return (false);
     }
     srandom((int) Sys::now());
-    char salt[9];
+    char salt[12];
     /*
-     * Contemporary systems use an extended salt that
+     * Historically crypt() only utilized the first 8
+     * characters of a password which made password cracking
+     * much easier.  GNU libc2 provides a more-secure salt
+     * feature providing for passwords longer than 8 characters.
+     * Other "contemporary" systems may use an extended salt that
      * is distinguished by a leading character (``_'').
-     * Older systems use a 2-character salt that results
-     * in encrypted strings that are easier to crack.
      */
+#if defined __GLIBC__ && __GLIBC__ >= 2
+    salt[0] = '$';
+    salt[1] = '1';
+    salt[2] = '$';
+    to64(&salt[3], (long)(29 * 25), 4);
+    to64(&salt[7], random(), 4);
+    salt[11] = '$';
+#else
 #ifdef _PASSWORD_EFMT1
     salt[0] = _PASSWORD_EFMT1;
     to64(&salt[1], (long)(29 * 25), 4);
     to64(&salt[5], random(), 4);
 #else
     to64(&salt[0], random(), 2);
+#endif
 #endif
     result = crypt(pass, salt);
     return (true);

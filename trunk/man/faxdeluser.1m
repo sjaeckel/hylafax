@@ -41,6 +41,12 @@ faxdeluser \- delete a fax user from the permissions file
 .I faxdeluser
 deletes all entries with the supplied username from the HylaFAX permissions database (see
 .IR hosts.hfaxd (${MANNUM4_5})).
+Note that users may also be deleted through the ``SITE DELUSER'' feature from
+an administrative client.  However,
+.I faxdeluser
+works with the
+.IR hosts.hfaxd (${MANNUM4_5}))
+file directly and does not operate as an administrative client.
 .PP
 .SH OPTIONS
 The following options are available:
