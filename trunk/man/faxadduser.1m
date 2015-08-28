@@ -52,8 +52,14 @@ faxadduser \- add a fax user to the permissions file
 .SH DESCRIPTION
 .I faxadduser
 creates a new user for HylaFAX services, updating appropriate
-permission files(see
+permission files (see
 .IR hosts.hfaxd (${MANNUM4_5})).
+Note that users may also be added through the ``SITE ADDUSER'' feature from
+an administrative client.  However,
+.I faxadduser
+works with the
+.IR hosts.hfaxd (${MANNUM4_5}))
+file directly and does not operate as an administrative client.
 .PP
 .SH OPTIONS
 The following options are available:

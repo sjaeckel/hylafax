@@ -51,7 +51,8 @@ is managed through use of the
 .IR faxadduser (${MANNUM1_8})
 and
 .IR faxdeluser (${MANNUM1_8})
-tools.  However, some features are not accessible through those tools and
+tools or the ``SITE ADDUSER'' and ``SITE DELUSER'' functions through an administrative client.
+However, some features are not accessible through those tools and
 .B etc/hosts.hfaxd
 will require direct editing to use those features.  In particular, the order of entries in
 .B etc/hosts.hfaxd

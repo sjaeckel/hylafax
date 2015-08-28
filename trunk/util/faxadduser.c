@@ -49,7 +49,50 @@
 extern int optind;
 extern char* optarg;
 
-const char passwd_salts[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
+static void
+to64(char* cp, long v, int len)
+{
+    while (--len >= 0) {
+        *cp++ = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"[v&0x3f];
+        v >>= 6;
+    }
+}
+
+/*
+ * cvtPasswd is a function meant to be operationally
+ * identical to one of the same name in hfaxd/User.c++
+ */
+const char*
+cvtPasswd(const char* pass)
+{
+    srandom(time(NULL));
+    char salt[12];
+    /*
+     * Historically crypt() only utilized the first 8
+     * characters of a password which made password cracking
+     * much easier.  GNU libc2 provides a more-secure salt
+     * feature providing for passwords longer than 8 characters.
+     * Other "contemporary" systems may use an extended salt that
+     * is distinguished by a leading character (``_'').
+     */
+#if defined __GLIBC__ && __GLIBC__ >= 2
+    salt[0] = '$';
+    salt[1] = '1';
+    salt[2] = '$';
+    to64(&salt[3], (long)(29 * 25), 4);
+    to64(&salt[7], random(), 4);
+    salt[11] = '$';
+#else
+#ifdef _PASSWORD_EFMT1
+    salt[0] = _PASSWORD_EFMT1;
+    to64(&salt[1], (long)(29 * 25), 4);
+    to64(&salt[5], random(), 4);
+#else
+    to64(&salt[0], random(), 2);
+#endif
+#endif
+    return(crypt(pass, salt));
+}
 
 const char* usage = "faxadduser [-c] [-a admin-password] [-f hosts-file] \
 [-h host-name] [-p password] [-u uid] username";
@@ -58,12 +101,10 @@ int
 main(int argc, char** argv)
 {
     char buff[256];
-    char salt_buff[2];
     char newhostfile[256];
     FILE* hf = NULL;
     FILE* nhf = NULL;
     int c;
-    int salt;
     int compat_flag = 0;
     char* hostfile = FAX_SPOOLDIR "/" FAX_PERMFILE;
     char* password = NULL;
@@ -111,7 +152,6 @@ main(int argc, char** argv)
         perror(buff);
         return 0;
     }
-    srand(time(NULL));
     while (optind < argc) {
         fprintf(nhf, "^%s@", argv[optind++]);
 	if (hostname != NULL) fprintf(nhf, "%s$", hostname);
@@ -121,18 +161,12 @@ main(int argc, char** argv)
             fprintf(nhf, ":");
         }
         if (password != NULL) {
-            salt = (int)(4096.0 * rand() / (RAND_MAX + 1.0));
-            salt_buff[0] = passwd_salts[salt / 64];
-            salt_buff[1] = passwd_salts[salt % 64];
-            fprintf(nhf, ":%s", crypt(password, salt_buff));
+            fprintf(nhf, ":%s", cvtPasswd(password));
         } else if (adminword != NULL) {
             fprintf(nhf, ":");
         }
         if (adminword != NULL) {
-            salt = (int)(4096.0 * rand() / (RAND_MAX + 1.0));
-            salt_buff[0] = passwd_salts[salt / 64];
-            salt_buff[1] = passwd_salts[salt % 64];
-            fprintf(nhf, ":%s", crypt(adminword, salt_buff));
+            fprintf(nhf, ":%s", cvtPasswd(adminword));
         }
         fprintf(nhf, "\n");
     }
