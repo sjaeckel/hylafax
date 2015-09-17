@@ -978,6 +978,12 @@ FaxClient::jobLastTime(u_long tv)
 }
 
 bool
+FaxClient::jobLastTime(const char* t)
+{
+    return (command("JPARM LASTTIME %s", t) == COMPLETE);
+}
+
+bool
 FaxClient::jobRetryTime(u_long tv)
 {
     return (command("JPARM RETRYTIME %02d%02d", tv/60, tv%60) == COMPLETE);

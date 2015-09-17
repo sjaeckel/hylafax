@@ -2669,9 +2669,16 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		client->readConfig(FAX_SYSCONF);
 		SendFaxJob& rjob = client->addJob();
 		if (job.getJCI().getDesiredDF() != -1) req.desireddf = job.getJCI().getDesiredDF();
-		rjob.setSendTime("now");
+		// Since we want to send "now", and because we can't ensure that the remote clock matches ours
+		// we deliberately do not do the following.  The remote will default to its "now".
+		// rjob.setSendTime("now");
 		rjob.setPriority(job.pri);
-		rjob.setKillTime((const char*) fxStr::format("now + %d minutes", (req.killtime - Sys::now())/60));
+		// We use a special killtime "!" specifier to indicate that we're providing the raw 
+		// LASTTIME in order to provide a killtime that is relative to the remote clock.
+		rjob.setKillTime((const char*) fxStr::format("!%02d%02d%02d", 
+		    (req.killtime - Sys::now())/(24*60*60), 
+		   ((req.killtime - Sys::now())/(60*60))%24, 
+		   ((req.killtime - Sys::now())/60)%60 ));
 		rjob.setDesiredDF(req.desireddf);
 		rjob.setMinSpeed(req.minbr);
 		rjob.setDesiredSpeed(req.desiredbr);

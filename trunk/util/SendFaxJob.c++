@@ -516,12 +516,16 @@ SendFaxJob::createJob(SendFaxClient& client, fxStr& emsg)
     } else
 	tts = *localtime(&now);
     if (killTime != "") {
-	struct tm when;
-	if (!parseAtSyntax(killTime, tts, when, emsg)) {
-	    emsg.insert(killTime | ": ");
-	    return (false);
+	if (killTime[0] == '!') {
+	    CHECK(client.jobLastTime((const char*) killTime.cut(1, killTime.length()-1)))
+	} else {
+	    struct tm when;
+	    if (!parseAtSyntax(killTime, tts, when, emsg)) {
+		emsg.insert(killTime | ": ");
+		return (false);
+	    }
+	    CHECK(client.jobLastTime(mktime(&when) - now))
 	}
-	CHECK(client.jobLastTime(mktime(&when) - now))
     }
     if (retryTime != (u_int) -1)
 	CHECK(client.jobRetryTime(retryTime))
