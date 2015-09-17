@@ -244,6 +244,7 @@ public:
     bool jobParm(const char* name);
     bool jobSendTime(const struct tm tm);
     bool jobLastTime(u_long);
+    bool jobLastTime(const char*);
     bool jobRetryTime(u_long);
     bool jobCover(const char* docname);
     bool jobDocument(const char* docname);
