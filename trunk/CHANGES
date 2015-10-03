@@ -2,6 +2,7 @@
 
 New Changes
 
+* make faxsetup fix blind references in Fontmap.HylaFAX (3 Oct 2015)
 * use the remote time on proxy job submisisons (17 Sep 2015)
 * create more-secure hosts.hfaxd passwords by default (28 Aug 2015)
 * add admin login feature for faxstat (27 Aug 2015)
