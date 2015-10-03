@@ -1238,9 +1238,37 @@ if onClient; then
 	RUNTIME_PATH_AFM=$PATH_AFM:`getGSFonts`
 	if [ -n "$RUNTIME_PATH_AFM" \
 				-a "$RUNTIME_PATH_AFM" != "$PATH_AFM" ]; then 
+	    Note ""
 	    FONTPATHS=`echo $RUNTIME_PATH_AFM | sed 's/:/ /g'`
 	    $PATH_GSRIP -q -sDEVICE=tiffg3 -sFONTPATH="$FONTPATHS" $DIR_SPOOL/bin/genfontmap.ps > $DIR_SPOOL/etc/Fontmap.HylaFAX 2>/dev/null
 	    # Ghostscript 8.71 segfaults on that, but produces a valid Fontmap file, so we don't test exit code, but examine the product, instead.
+	    {
+		#
+		# genfontmap.ps really just gives us a copy of Fontmap.GS, and in later Ghostscript versions there
+		# are many Fontmap.GS references that are left undefined.  This may work for Ghostscript, but 
+		# it does not work for us.  So, we need to do what we can to define them.
+		#
+		fontmap=$DIR_SPOOL/etc/Fontmap.HylaFAX
+		newfontmap=$TMPDIR/Fontmap.HylaFAX.new.$$
+		tmpfile=$TMPDIR/fontmap-fixup.$$
+		$CP $fontmap $newfontmap
+		for fontname in `$CAT $fontmap | $GREP "	/" | $SED -e 's/^[^\/]*\///g' -e 's/ .*//g'`; do 
+		    if [ -z "`$GREP "^($fontname)" $fontmap`" ]; then
+			# There is a blind reference to this font.  Fix that.
+			for fontpath in `$PATH_GSRIP -h | $GREP -A 100 "Search path:" | $GREP " :" | $SED 's/://g'`; do 
+			    $GREP -l -d recurse -a "FontDirectory/$fontname known" $fontpath 2>/dev/null; 
+			done | $SED q > $tmpfile
+			fontfile=`$CAT $tmpfile`
+			if [ -n "$fontfile" ]; then
+			    echo "($fontname)	($fontfile) ;" >> $newfontmap
+		        else
+			    echo "Warning: No font file found for \"$fontname\" but the font map includes it."
+			fi
+		    fi
+		done
+		$RM -f $tmpfile
+		$MV -f $newfontmap $fontmap
+	    }
 	    if [ -n "`$GREP Courier-Bold $DIR_SPOOL/etc/Fontmap.HylaFAX`" ]; then
 		FONTMAP="$DIR_SPOOL/etc"
 		Note ""
