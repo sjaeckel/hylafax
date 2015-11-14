@@ -56,6 +56,8 @@ private:
     UUCPLock*	modemLock;		// uucp lockfile handle
     fxStr	pollRcvdCmd;		// command for docs received by polling
     fxStr	shareCallFailures;	// which call failures should be shared to batched jobs
+    fxStr	rewriteFaxName;		// desired faxname identifier
+    fxStr	rewriteFaxNumber;	// desired faxnumber identifier
     u_int	desiredDF;		// desired data format
     u_int	desiredBR;		// desired signalling rate
     u_int	desiredST;		// desired min-scanline-time

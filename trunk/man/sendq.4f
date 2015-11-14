@@ -91,7 +91,7 @@ duration	integer	total duration time for all sessions
 errorcode	string	job status error code
 external	string	external form of dialstring
 fax	string	document ready for transmission
-faxnumber	string	faxnumber to use sending
+faxnumber	string	origin number to use sending
 faxname	string	origin name to use sending
 groupid	integer	\*(Fx job group identifier
 ignoremodembusy	integer	whether or not to ignore a modem busy state
@@ -292,7 +292,7 @@ the file to transmit (directories are numbered starting
 at zero).
 .TP 14
 .B faxnumber
-The number to use when sending a fax.  Parallel's FAXNumber device config
+The originating number to use when sending a fax.  Parallels FAXNumber device config
 option.
 .TP 14
 .B faxname

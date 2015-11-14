@@ -173,6 +173,12 @@ faxSendApp::send(const char** filenames, int num)
 			if (desiredST != (u_int) -1)
 			    req->desiredst = desiredST;
 
+			/* Allow for faxname and faxnumber to be rewritten by jobcontrol. */
+			if (rewriteFaxName != "")
+			    req->faxname = rewriteFaxName;
+			if (rewriteFaxNumber != "")
+			    req->faxnumber = rewriteFaxNumber;
+
 			req->commid = batchcommid;		// pass commid on...
 
 			if (useJobTSI && req->tsi != "")
@@ -193,8 +199,10 @@ faxSendApp::send(const char** filenames, int num)
 			ai.jobtag = req->jobtag;
 			ai.user = req->mailaddr;
 			ai.csi = info.getCSI();
-			CallID empty_callid;
-			ai.callid = empty_callid;
+			CallID callid(2);
+			callid[0].append(req->faxnumber);
+			callid[1].append(req->faxname);
+			ai.callid = callid;
 			ai.owner = req->owner;
 			if (req->status == send_done)
 			    ai.status = "";
@@ -396,8 +404,10 @@ faxSendApp::notifyPollRecvd(FaxRequest& req, FaxRecvInfo& ri)
     ai.status = ri.reason;
     ai.jobid = req.jobid;
     ai.jobtag = req.jobtag;
-    CallID empty_callid;
-    ai.callid = empty_callid;
+    CallID callid(2);
+    callid[0].append(req.faxnumber);
+    callid[1].append(req.faxname);
+    ai.callid = callid;
     ri.params.asciiEncode(ai.faxdcs);
     ai.jobinfo = fxStr::format("%u/%u/%u/%u/%u/%u/%u", 
 	req.totpages, req.ntries, req.ndials, req.totdials, req.maxdials, req.tottries, req.maxtries);
@@ -449,6 +459,8 @@ faxSendApp::resetConfig()
 faxSendApp::stringtag faxSendApp::strings[] = {
 { "pollrcvdcmd",	&faxSendApp::pollRcvdCmd,	FAX_POLLRCVDCMD },
 { "sharecallfailures",	&faxSendApp::shareCallFailures,	"none" },
+{ "rewritefaxname",	&faxSendApp::rewriteFaxName,	"" },
+{ "rewritefaxnumber",	&faxSendApp::rewriteFaxNumber,	"" },
 };
 faxSendApp::numbertag faxSendApp::numbers[] = {
 { "desireddf",		&faxSendApp::desiredDF,		(u_int) -1 },

@@ -2,6 +2,7 @@
 
 New Changes
 
+* add RewriteFaxName and RewriteFaxNumber jobcontrol features (14 Nov 2015)
 * improve Chinese translation (7 Oct 2015)
 * make faxsetup fix blind references in Fontmap.HylaFAX (3 Oct 2015)
 * use the remote time on proxy job submisisons (17 Sep 2015)
