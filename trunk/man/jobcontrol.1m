@@ -92,6 +92,8 @@ ProxyTries	integer	\s-1\-1\s+1	number of tries proxy should attempt
 ProxyDials	integer	\s-1\-1\s+1	number of dials proxy should attempt
 ProxyReconnects	integer	\s-1\5\s+1	number of reconnections to proxy for any job submisison
 RejectNotice	string	\-	rejection notice for transmit job
+RewriteFaxname	string	\-	replace faxname in job request with this
+RewriteFaxnumber	string	\-	replace faxnumber in job request with this
 TimeOfDay	string	\s-1Any\s+1	default time-of-day restrictions
 VRes	integer	\-	Vertical resolution
 UseXVRes	integer	\-	Usage of extended resolutions
@@ -203,6 +205,13 @@ phone numbers; for example
     RejectNotice: "Calls to emergency numbers are not permitted"
 .ft P
 .fi
+.PP
+The
+.B RewriteFaxname
+and
+.B RewriteFaxnumber
+parameters allow the ``faxname'' and ``faxnumber'' parameters in the job
+request file to be replaced and rewritten with the given values.
 .PP
 The
 .B VRes
