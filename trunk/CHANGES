@@ -2,6 +2,7 @@
 
 New Changes
 
+* reject jobs rejected by the proxy (18 Nov 2015)
 * add RewriteFaxName and RewriteFaxNumber jobcontrol features (14 Nov 2015)
 * improve Chinese translation (7 Oct 2015)
 * make faxsetup fix blind references in Fontmap.HylaFAX (3 Oct 2015)
