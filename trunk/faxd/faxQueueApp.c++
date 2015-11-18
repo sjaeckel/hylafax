@@ -2830,7 +2830,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			    req.status = send_done;
 			} else {
 			    job.state = FaxRequest::state_failed;
-			    if (req.ndials >= req.maxdials || req.ntries >= req.maxtries)
+			    if (req.ndials >= req.maxdials || req.ntries >= req.maxtries || strstr((const char*) req.notice, "REJECT"))
 				req.status = send_failed;
 			    else
 				req.status = send_retry;
