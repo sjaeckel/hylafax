@@ -2830,7 +2830,22 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			    req.status = send_done;
 			} else {
 			    job.state = FaxRequest::state_failed;
-			    if (req.ndials >= req.maxdials || req.ntries >= req.maxtries || strstr((const char*) req.notice, "REJECT"))
+			    /*
+			     * The JobRetry* configurations are modem-specific.  With a proxy involved the
+			     * getProxyTries() and getProxyDials() are the analogous features.  If the configuration
+			     * leaves them unset they are both -1.  Such a configuration delegates all authority for
+			     * total job failure to the proxy.  So, if the proxy fails a job where our configuration
+			     * has delegated all tries and dials to the proxy, then we must also fail the job else we
+			     * will simply resubmit a job to the proxy that the proxy already has deemed as failed 
+			     * as if it were rejected (even if maxdials or maxtries were not exceeded).  However, in 
+			     * a situation where either configuration is not unset it means the opposite: that we are
+			     * not delegating authority for full job failure to the proxy (e.g. it's only entrusted
+			     * to handle one session at-a-time - or we want the proxy to make a minimum set of attempts
+			     * on each submission).
+			     */
+			    if ((job.getJCI().getProxyTries() == -1 && job.getJCI().getProxyDials() == -1) || 
+				req.ndials >= req.maxdials || req.ntries >= req.maxtries || 
+				strstr((const char*) req.notice, "REJECT"))
 				req.status = send_failed;
 			    else
 				req.status = send_retry;
