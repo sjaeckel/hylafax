@@ -266,7 +266,7 @@ public:
 	bool& hasDoc, fxStr& emsg, u_int& batched) = 0;
     virtual void sendSetupPhaseB(const fxStr& pwd, const fxStr& sub);
     virtual FaxSendStatus sendPhaseB(TIFF*, Class2Params&, FaxMachineInfo&,
-	fxStr& pph, fxStr& emsg, u_int& batched) = 0;
+	fxStr& pph, fxStr& emsg, u_int& batched, u_short& npages) = 0;
     virtual void sendEnd();
     virtual void sendAbort() = 0;
     // query interfaces for optional state

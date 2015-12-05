@@ -248,7 +248,7 @@ Class2Modem::getDataStats(FaxSetup* setupinfo)
  */
 FaxSendStatus
 Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
-    fxStr& pph, fxStr& emsg, u_int& batched)
+    fxStr& pph, fxStr& emsg, u_int& batched, u_short& npages)
 {
     int ntrys = 0;			// # retraining/command repeats
     u_int ppm, previousppm = 0;
@@ -298,6 +298,7 @@ Class2Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		case PPR_PIP:		// page good, interrupt requested
 		case PPR_RTP:		// page good, retrain requested
                 ignore:
+		    npages++;
 		    countPage();	// bump page count
 		    notifyPageSent(tif);// update server
 		    if (pph[4] == 'Z')

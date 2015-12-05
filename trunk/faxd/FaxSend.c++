@@ -556,8 +556,9 @@ FaxServer::sendFaxPhaseB(FaxRequest& fax, FaxItem& freq, FaxMachineInfo& clientI
 	     * attempted to send the current page.  We don't try
 	     * more than 3 times--to avoid looping.
 	     */
+	    u_int prevPages = fax.npages;
 	    fax.status = modem->sendPhaseB(tif, clientParams, clientInfo,
-		fax.pagehandling, fax.notice, batched);
+		fax.pagehandling, fax.notice, batched, fax.npages);
 	    modem->getDataStats(&setupinfo);
 	    clientInfo.setDataSent2(clientInfo.getDataSent1());
 	    clientInfo.setDataSent1(clientInfo.getDataSent());
@@ -570,15 +571,20 @@ FaxServer::sendFaxPhaseB(FaxRequest& fax, FaxItem& freq, FaxMachineInfo& clientI
 		clientInfo.setHasV17Trouble(true);
 		fax.status = send_ok;
 	    }
-	    fax.ntries++;
-	    if (fax.ntries > 2) {
-		if (fax.notice != "")
-		    fax.notice.append("; ");
-		fax.notice.append(
-		    "Giving up after 3 attempts to send same page");
-		traceServer("SEND: %s \"%s\", dirnum %d",
-		    (const char*) fax.notice, (const char*) freq.item, freq.dirnum);
-		fax.status = send_failed;
+	    if (fax.npages == prevPages) {
+		fax.ntries++;
+		if (fax.ntries > 2) {
+		    if (fax.notice != "")
+			fax.notice.append("; ");
+		    fax.notice.append(
+			"Giving up after 3 attempts to send same page");
+		    traceServer("SEND: %s \"%s\", dirnum %d",
+			(const char*) fax.notice, (const char*) freq.item, freq.dirnum);
+		    fax.status = send_failed;
+		}
+	    } else {
+		freq.dirnum += fax.npages - prevPages;
+		fax.ntries = 0;
 	    }
 	}
     } else {
