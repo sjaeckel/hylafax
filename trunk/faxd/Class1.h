@@ -223,7 +223,7 @@ public:
     void	getDataStats(FaxSetup* setupinfo);
     void	sendSetupPhaseB(const fxStr& pwd, const fxStr& sub);
     FaxSendStatus sendPhaseB(TIFF* tif, Class2Params&, FaxMachineInfo&,
-		    fxStr& pph, fxStr& emsg, u_int& batched);
+		    fxStr& pph, fxStr& emsg, u_int& batched, u_short& npages);
     void	sendEnd();
     void	sendAbort();
 

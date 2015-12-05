@@ -143,7 +143,7 @@ public:
     CallStatus	dialResponse(fxStr& emsg);
     FaxSendStatus getPrologue(Class2Params&, bool&, fxStr&, u_int&);
     FaxSendStatus sendPhaseB(TIFF* tif, Class2Params&, FaxMachineInfo&,
-		    fxStr& pph, fxStr& emsg, u_int& batched);
+		    fxStr& pph, fxStr& emsg, u_int& batched, u_short& npages);
     void	sendAbort();
     void	getDataStats(FaxSetup* setupinfo);
 
