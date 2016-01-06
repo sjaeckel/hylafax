@@ -46,6 +46,9 @@ case "$LANG" in
     uk_*)
 	. bin/dict/uk
 	;;
+    he_*)
+	. bin/dict/he
+	;;
     *)
 	. bin/dict/en
 	;;
