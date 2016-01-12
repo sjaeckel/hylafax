@@ -2,6 +2,10 @@
 
 New Changes
 
+* fix short blocking problems in reading from the device (12 Jan 2016)
+
+(5.5.7)
+
 * fix ntries counter to apply to pages instead of documents (5 Dec 2015)
 * reject jobs rejected by the proxy (18-19 Nov 2015)
 * add RewriteFaxName and RewriteFaxNumber jobcontrol features (14 Nov 2015)

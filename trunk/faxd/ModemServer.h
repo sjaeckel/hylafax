@@ -89,7 +89,21 @@ private:
     int		gotByte;		// byte held for bit destruction
     bool	sawBlockEnd;		// whether DLE+ETX has been seen
     bool	inputBuffered;		// whether or not modem input is buffered
-    u_char	rcvBuf[1024];		// receive buffering
+
+/*
+ * Since the very first HylaFAX (before it was even named such) rcvBuf
+ * was always 1024 bytes.  However, since we usually read from modemFd without 
+ * O_NONBLOCK, attempting to read 1024 bytes from modemFd would introduce
+ * small (~100ms) delays as the read operation would not return as long
+ * as the device's write operation was occuring and the 1024 byte buffer
+ * was not yet filled.  These delays can really impact fax operations because
+ * they are longer than most fax-spec tolerances.  So, we now only use
+ * rcvBuf of 1 byte - and that resolves the short read blocking issue.  The
+ * downside is that the ModemIO tracing is "wordy" with this (using one 
+ * whole line of logging per-byte).  The other upside, though, is that the
+ * timestamps on the session logging are accurate to the millisecond.
+ */
+    u_char	rcvBuf[1];		// receive buffering
 
     friend class ClassModem;
 
