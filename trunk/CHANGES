@@ -2,6 +2,7 @@
 
 New Changes
 
+* undo faulty/incorrect previous "fix" to ntries/npages (13 Jan 2016)
 * fix short blocking problems in reading from the device (12 Jan 2016)
 
 (5.5.7)

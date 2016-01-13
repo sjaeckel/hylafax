@@ -558,7 +558,7 @@ FaxServer::sendFaxPhaseB(FaxRequest& fax, FaxItem& freq, FaxMachineInfo& clientI
 	     */
 	    u_int prevPages = fax.npages;
 	    fax.status = modem->sendPhaseB(tif, clientParams, clientInfo,
-		fax.pagehandling, fax.notice, batched, fax.npages);
+		fax.pagehandling, fax.notice, batched);
 	    modem->getDataStats(&setupinfo);
 	    clientInfo.setDataSent2(clientInfo.getDataSent1());
 	    clientInfo.setDataSent1(clientInfo.getDataSent());
