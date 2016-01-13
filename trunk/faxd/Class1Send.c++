@@ -305,7 +305,7 @@ Class1Modem::getDataStats(FaxSetup* setupinfo)
  */
 FaxSendStatus
 Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
-    fxStr& pph, fxStr& emsg, u_int& batched, u_short& npages)
+    fxStr& pph, fxStr& emsg, u_int& batched)
 {
     int ntrys = 0;			// # retraining/command repeats
     bool morePages = true;		// more pages still to send
@@ -457,7 +457,6 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 		/* fall thru... */
 	    case FCF_MCF:		// ack confirmation
 	    case FCF_PIP:		// ack, w/ operator intervention
-		npages++;
 		countPage();		// bump page count
 		notifyPageSent(tif);	// update server
 		if (pph[4] == 'Z')
@@ -521,7 +520,6 @@ Class1Modem::sendPhaseB(TIFF* tif, Class2Params& next, FaxMachineInfo& info,
 			// ignore error and try to send next page
 			// after retraining
 		    params.br = (u_int) -1;	// force retraining above
-		    npages++;
 		    countPage();		// bump page count
 		    notifyPageSent(tif);	// update server
 		    if (pph[4] == 'Z')
