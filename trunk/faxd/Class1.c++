@@ -501,7 +501,7 @@ Class1Modem::switchingPause(fxStr& emsg, u_int times)
 	    scmd = scmd.head(7) | fxStr(dur, "%d");
 	}
     }
-    if (!silenceHeard && !atCmd(scmd, AT_OK)) {
+    if (!silenceHeard && !atCmd(scmd, AT_OK, 60*1000)) {
 	emsg = "Failure to receive silence (synchronization failure). {E100}";
 	protoTrace(emsg);
 	if (wasTimeout()) abortReceive();
