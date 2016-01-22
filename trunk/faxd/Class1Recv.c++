@@ -276,7 +276,22 @@ Class1Modem::recvIdentification(
 			    if (lastResponse == AT_FRH3 && waitFor(AT_CONNECT,0)) {
 				// It's unclear if we are in "COMMAND REC" or "RESPONSE REC" mode,
 				// but since we are already detecting the carrier, wait the longer.
-				gotframe = recvFrame(frame, FCF_RCVR, conf.t2Timer, true, true, false);
+				gotframe = recvFrame(frame, FCF_RCVR, conf.t2Timer, true, false, false);
+				if (!gotframe && !frame.getLength() && lastResponse == AT_NOCARRIER) {
+				    /*
+				     * The modem may have incorrectly detected V.21 HDLC.
+				     * The TCF signal is yet to come.  So, try again.
+				     */
+				    if (recvTraining()) {
+					emsg = "";
+					return (true);
+				    }
+				    if (lastResponse == AT_FRH3 && waitFor(AT_CONNECT,0)) {
+					// It's unclear if we are in "COMMAND REC" or "RESPONSE REC" mode,
+					// but since we are already detecting the carrier, wait the longer.
+					gotframe = recvFrame(frame, FCF_RCVR, conf.t2Timer, true, true, false);
+				    }
+				}
 				lastResponse = AT_NOTHING;
 			    }
 			}
@@ -812,9 +827,21 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		    } while (!trainok && traincount++ < 3 && lastResponse != AT_FRH3 && recvFrame(frame, FCF_RCVR, timer));
 		    if (messageReceived && lastResponse == AT_FRH3 && waitFor(AT_CONNECT,0)) {
 			messageReceived = false;
-			if (recvFrame(frame, FCF_RCVR, conf.t2Timer, true)) {
+			if (recvFrame(frame, FCF_RCVR, conf.t2Timer, true, false)) {
 			    messageReceived = true;
 			    signalRcvd = frame.getFCF();
+			}
+			if (!frame.getLength() && lastResponse == AT_NOCARRIER) {
+			    // The modem may have indicated V.21 HDLC incorrectly.  TCF may be coming.  Get ready.
+			    trainok = recvTraining();
+			    messageReceived = (!trainok && lastResponse == AT_FRH3);
+			    if (messageReceived && lastResponse == AT_FRH3 && waitFor(AT_CONNECT,0)) {
+				messageReceived = false;
+				if (recvFrame(frame, FCF_RCVR, conf.t2Timer, true)) {
+				    messageReceived = true;
+				    signalRcvd = frame.getFCF();
+				}
+			    }
 			}
 			lastResponse = AT_NOTHING;
 		    } else messageReceived = false;
