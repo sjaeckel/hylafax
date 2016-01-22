@@ -97,6 +97,8 @@ Class1Modem::recvBegin(FaxSetup* setupinfo, fxStr& emsg)
     capsUsed = 0;				// no DCS or CTC seen yet
     dataSent = 0;				// start with a clean slate...
     dataMissed = 0;				// unfortunately, this will reset after EOM
+    senderSkipsV29 = false;
+    senderHasV17Trouble = false;
 
     if (setupinfo) {
 	senderSkipsV29 = setupinfo->senderSkipsV29;
