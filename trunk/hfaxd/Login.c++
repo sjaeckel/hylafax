@@ -189,9 +189,19 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 		goto cleanup;
 	}
 
-	if (!ldapBaseDN || !ldapBaseDN[0]){
-// FIXME: Should we leak this error message to an unathenticated client?
+// FIXME: Should we leak these error message to an unathenticated client?
+	if (ldapBaseDN.length() == 0){
 		reply(530, "LDAP misconfigured (ldapBaseDN)");
+		goto cleanup;
+	}
+
+	if (ldapReqGroup.length() == 0){
+		reply(530, "LDAP misconfigured (ldapReqGroup)");
+		goto cleanup;
+	}
+
+	if (ldapVersion < 2){
+		reply(530, "LDAP misconfigured (ldapVersion)");
 		goto cleanup;
 	}
 
