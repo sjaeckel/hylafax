@@ -299,6 +299,7 @@ HylaFAXServer::ldapCheck(const char* user, const char* pass)
 	 * Check each value to see if it matches
 	 * our desired value specifed in the config
 	 */
+	i = 0;
 	while (p_arr_values[i] != NULL) {
 		if (strcmp(ldapReqGroup, p_arr_values[i]->bv_val) == 0)	{
 			bValidUser = true;

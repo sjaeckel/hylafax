@@ -2,6 +2,7 @@
 
 New Changes
 
+* fix LDAP authentication broken in 5.5.4 (24-26 Jan 2016)
 * reset senderinfo properly when receiving faxes (22 Jan 2016)
 * cope with modems that signal +FRH:3 incorrectly (22 Jan 2016)
 * increase the time Class1SwitchingCmd will wait for a response (14 Jan 2016)
