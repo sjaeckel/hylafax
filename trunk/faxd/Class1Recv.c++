@@ -635,86 +635,102 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		messageReceived = true;
 		prevPage++;
 	    } else {
-		/*
-		 * Look for message carrier and receive Phase C data.
-		 */
-		/*
-		 * Same reasoning here as before receiving TCF.
-		 */
-		if (!atCmd(conf.class1MsgRecvHackCmd, AT_OK)) {
-		    emsg = "Failure to receive silence (synchronization failure). {E100}";
-		    return (false);
-		}
-		/*
-		 * Set high speed carrier & start receive.  If the
-		 * negotiated modulation technique includes short
-		 * training, then we use it here (it's used for all
-		 * high speed carrier traffic other than the TCF).
-		 *
-		 * Timing here is very critical.  It is more "tricky" than timing
-		 * for AT+FRM for TCF because unlike with TCF, where the direction
-		 * of communication doesn't change, here it does change because 
-		 * we just sent CFR but now have to do AT+FRM.  In practice, if we 
-		 * issue AT+FRM after the sender does AT+FTM then we'll get +FCERROR.
-		 * Using Class1MsgRecvHackCmd often only complicates the problem.
-		 * If the modem doesn't drop its transmission carrier (OK response
-		 * following CFR) quickly enough, then we'll see more +FCERROR.
-		 */
-		fxStr rmCmd(curcap[HasShortTraining(curcap)].value, rmCmdFmt);
-		u_short attempts = 0;
+		bool retryrmcmd;
+		int rmattempted = 0;
 		do {
-		    (void) atCmd(rmCmd, AT_NOTHING);
-		    rmResponse = atResponse(rbuf, conf.class1RMPersistence ? conf.t2Timer + 2900 : conf.t2Timer - 2900);
-		} while ((rmResponse == AT_NOTHING || rmResponse == AT_FCERROR) && ++attempts < conf.class1RMPersistence);
-		if (rmResponse == AT_CONNECT) {
+		    retryrmcmd = false;
 		    /*
-		     * We don't want the AT+FRM=n command to get buffered,
-		     * so buffering and flow control must be done after CONNECT.
-		     * Flushing now would be a mistake as data may already be
-		     * in the buffer.
+		     * Look for message carrier and receive Phase C data.
 		     */
-		    setInputBuffering(true);
-		    if (flowControl == FLOW_XONXOFF)
-			(void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_NOW);
 		    /*
-		     * The message carrier was recognized;
-		     * receive the Phase C data.
+		     * Same reasoning here as before receiving TCF.
 		     */
-		    protoTrace("RECV: begin page");
-		    pageGood = recvPageData(tif, emsg);
-		    protoTrace("RECV: end page");
-		    if (!wasTimeout()) {
+		    if (!atCmd(conf.class1MsgRecvHackCmd, AT_OK)) {
+			emsg = "Failure to receive silence (synchronization failure). {E100}";
+			return (false);
+		    }
+		    /*
+		     * Set high speed carrier & start receive.  If the
+		     * negotiated modulation technique includes short
+		     * training, then we use it here (it's used for all
+		     * high speed carrier traffic other than the TCF).
+		     *
+		     * Timing here is very critical.  It is more "tricky" than timing
+		     * for AT+FRM for TCF because unlike with TCF, where the direction
+		     * of communication doesn't change, here it does change because 
+		     * we just sent CFR but now have to do AT+FRM.  In practice, if we 
+		     * issue AT+FRM after the sender does AT+FTM then we'll get +FCERROR.
+		     * Using Class1MsgRecvHackCmd often only complicates the problem.
+		     * If the modem doesn't drop its transmission carrier (OK response
+		     * following CFR) quickly enough, then we'll see more +FCERROR.
+		     */
+		    fxStr rmCmd(curcap[HasShortTraining(curcap)].value, rmCmdFmt);
+		    u_short attempts = 0;
+		    do {
+			(void) atCmd(rmCmd, AT_NOTHING);
+			rmResponse = atResponse(rbuf, conf.class1RMPersistence ? conf.t2Timer + 2900 : conf.t2Timer - 2900);
+		    } while ((rmResponse == AT_NOTHING || rmResponse == AT_FCERROR) && ++attempts < conf.class1RMPersistence);
+		    if (rmResponse == AT_CONNECT) {
 			/*
-			 * The data was received correctly, wait patiently
-			 * for the modem to signal carrier drop.  Some senders
-			 * may send a lot of garbage after RTC, so be patient.
+			 * We don't want the AT+FRM=n command to get buffered,
+			 * so buffering and flow control must be done after CONNECT.
+			 * Flushing now would be a mistake as data may already be
+			 * in the buffer.
 			 */
-			time_t nocarrierstart = Sys::now();
-			do {
-			    messageReceived = waitFor(AT_NOCARRIER, 60*1000);
-			} while (!messageReceived && Sys::now() < (nocarrierstart + 60));
-			if (messageReceived)
-			    prevPage++;
-		        timer = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;	// wait longer for PPM (estimate 80KB)
-		    }
-		} else {
-		    if (wasTimeout()) {
-			abortReceive();		// return to command mode
-			setTimeout(false);
-		    }
-		    bool getframe = false;
-		    long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
-		    if (rmResponse == AT_FRH3) getframe = waitFor(AT_CONNECT, 0);
-		    else if (rmResponse != AT_NOCARRIER && rmResponse != AT_ERROR) getframe = atCmd(rhCmd, AT_CONNECT, wait);	// wait longer
-		    if (getframe) {
-			HDLCFrame frame(conf.class1FrameOverhead);
-			if (recvFrame(frame, FCF_RCVR, conf.t2Timer, true)) {
-			    traceFCF("RECV recv", frame.getFCF());
-			    signalRcvd = frame.getFCF();
-			    messageReceived = true;
+			setInputBuffering(true);
+			if (flowControl == FLOW_XONXOFF)
+			    (void) setXONXOFF(FLOW_NONE, FLOW_XONXOFF, ACT_NOW);
+			/*
+			 * The message carrier was recognized;
+			 * receive the Phase C data.
+			 */
+			protoTrace("RECV: begin page");
+			pageGood = recvPageData(tif, emsg);
+			protoTrace("RECV: end page");
+			if (!wasTimeout()) {
+			    /*
+			     * The data was received correctly, wait patiently
+			     * for the modem to signal carrier drop.  Some senders
+			     * may send a lot of garbage after RTC, so be patient.
+			     */
+			    time_t nocarrierstart = Sys::now();
+			    do {
+				messageReceived = waitFor(AT_NOCARRIER, 60*1000);
+			    } while (!messageReceived && Sys::now() < (nocarrierstart + 60));
+			    if (messageReceived)
+				prevPage++;
+		            timer = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;	// wait longer for PPM (estimate 80KB)
+			}
+		    } else {
+			if (wasTimeout()) {
+			    abortReceive();		// return to command mode
+			    setTimeout(false);
+			}
+			bool getframe = false;
+			long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
+			if (rmResponse == AT_FRH3) getframe = waitFor(AT_CONNECT, 0);
+			else if (rmResponse != AT_NOCARRIER && rmResponse != AT_ERROR) getframe = atCmd(rhCmd, AT_CONNECT, wait);	// wait longer
+			if (getframe) {
+			    HDLCFrame frame(conf.class1FrameOverhead);
+			    if (recvFrame(frame, FCF_RCVR, conf.t2Timer, true, false)) {
+				traceFCF("RECV recv", frame.getFCF());
+				signalRcvd = frame.getFCF();
+				messageReceived = true;
+			    } else {
+				/*
+				 * V.21 HDLC was detected and then the carrier was lost without
+				 * receiving any data.  It's possible that the modem erred in 
+				 * its detection of the high-speed carrier.  But, it's also 
+				 * possible that echo of our CFR was detected or that there is 
+				 * another receiver on the line (another fax machine sharing the 
+				 * line on the send-side), and we heard them.  Often we can still 
+				 * acquire the high-speed carrier if we just re-issue AT+FRM=n.
+				 */
+				if (lastResponse == AT_NOCARRIER) retryrmcmd = true;
+			    }
 			}
 		    }
-		}
+		} while (retryrmcmd && ++rmattempted < 2);
 	    }
 	    if (signalRcvd != 0) {
 		if (flowControl == FLOW_XONXOFF)
@@ -1207,237 +1223,258 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 	    signalRcvd = 0;
 	    rcpcnt = 0;
 	    bool dataseen = false;
-	    if (!useV34 && !gotoPhaseD) {
-		gotRTNC = false;
-		if (!raiseRecvCarrier(dolongtrain, emsg) && !gotRTNC) {
-		    if (wasTimeout()) {
-			abortReceive();		// return to command mode
-			setTimeout(false);
-		    }
-		    long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
-		    if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, wait)) {	// wait longer
-			// sender is transmitting V.21 instead, we may have
-			// missed the first signal attempt, but should catch
-			// the next attempt.  This "simulates" adaptive receive.
-			emsg = "";	// reset
-			gotRTNC = true;
-		    } else {
-			if (wasTimeout()) abortReceive();
-			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
-			return (false);
+	    bool retryrmcmd;
+	    int rmattempted = 0;
+	    do {
+		retryrmcmd = false;
+		if (!useV34 && !gotoPhaseD) {
+		    gotRTNC = false;
+		    if (!raiseRecvCarrier(dolongtrain, emsg) && !gotRTNC) {
+			if (wasTimeout()) {
+			    abortReceive();		// return to command mode
+			    setTimeout(false);
+			}
+			long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
+			if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, wait)) {	// wait longer
+			    // sender is transmitting V.21 instead, we may have
+			    // missed the first signal attempt, but should catch
+			    // the next attempt.  This "simulates" adaptive receive.
+			    emsg = "";	// reset
+			    gotRTNC = true;
+			} else {
+			    if (wasTimeout()) abortReceive();
+			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
+			    return (false);
+			}
 		    }
 		}
-	    }
-	    if (useV34 || gotRTNC) {		// V.34 mode or if +FRH:3 in adaptive reception
-		if (!gotEOT) {
-		    bool gotprimary = false;
-		    if (useV34) gotprimary = waitForDCEChannel(false);
-		    while (!sendERR && !gotEOT && (gotRTNC || (ctrlFrameRcvd != fxStr::null))) {
-			/*
-			 * Remote requested control channel retrain, the remote didn't
-			 * properly hear our last signal, and/or we got an EOR signal 
-			 * after PPR.  So now we have to use a signal from the remote
-			 * and then respond appropriately to get us back or stay in sync.
-			 * DCS::CFR - PPS::PPR/MCF - EOR::ERR
-			 */
-			HDLCFrame rtncframe(conf.class1FrameOverhead);
-			bool gotrtncframe = false;
-			if (useV34) {
-			    if (ctrlFrameRcvd != fxStr::null) {
-				gotrtncframe = true;
-				for (u_int i = 0; i < ctrlFrameRcvd.length(); i++)
-				    rtncframe.put(frameRev[ctrlFrameRcvd[i] & 0xFF]);
-				traceHDLCFrame("-->", rtncframe);
-			    } else
-				gotrtncframe = recvFrame(rtncframe, FCF_RCVR, conf.t2Timer);
-			} else {
-			    gotrtncframe = recvFrame(rtncframe, FCF_RCVR, conf.t2Timer, true);
-			}
-			if (gotrtncframe) {
-			    traceFCF("RECV recv", rtncframe.getFCF());
-			    switch (rtncframe.getFCF()) {
-				case FCF_PPS:
-				    if (rtncframe.getLength() > 5) {
-					u_int fc = frameRev[rtncframe[6]] + 1;
-					if ((fc == 256 || fc == 1) && !dataseen) fc = 0;	// distinguish 0 from 1 and 256
-					traceFCF("RECV recv", rtncframe.getFCF2());
-					u_int pgcount = u_int(prevPage/256)*256+frameRev[rtncframe[4]];	// cope with greater than 256 pages
-					protoTrace("RECV received %u frames of block %u of page %u", \
-					    fc, frameRev[rtncframe[5]]+1, pgcount+1);
-					switch (rtncframe.getFCF2()) {
-					    case 0: 	// PPS-NULL
-					    case FCF_EOM:
-					    case FCF_MPS:
-					    case FCF_EOP:
-					    case FCF_PRI_EOM:
-					    case FCF_PRI_MPS:
-					    case FCF_PRI_EOP:
-						if (!useV34 && !switchingPause(emsg)) {
-						    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
-						    return (false);
-						}
-						if (pgcount > prevPage || (pgcount == prevPage && frameRev[rtncframe[5]] >= prevBlock)) {
-						    (void) transmitFrame(FCF_PPR, fxStr(ppr, 32));
-						    traceFCF("RECV send", FCF_PPR);
-						} else {
-						    (void) transmitFrame(FCF_MCF|FCF_RCVR);
-						    traceFCF("RECV send", FCF_MCF);
-						}
-						break;
-					}
-				    }
-				    break;
-				case FCF_EOR:
-				    if (rtncframe.getLength() > 5) {
-					traceFCF("RECV recv", rtncframe.getFCF2());
-					switch (rtncframe.getFCF2()) {
-					    case 0: 	// PPS-NULL
-					    case FCF_EOM:
-					    case FCF_MPS:
-					    case FCF_EOP:
-					    case FCF_PRI_EOM:
-					    case FCF_PRI_MPS:
-					    case FCF_PRI_EOP:
-						if (fcount) {
-						    /*
-						     * The block hasn't been written to disk.
-						     * This is expected when the sender sends
-						     * EOR after our PPR (e.g. after the 4th).
-						     */
-						    blockgood = true;
-						    signalRcvd = rtncframe.getFCF2();
-						    if (signalRcvd) lastblock = true;
-						    sendERR = true;
-						} else {
+		if (useV34 || gotRTNC) {		// V.34 mode or if +FRH:3 in adaptive reception
+		    if (!gotEOT) {
+			bool gotprimary = false;
+			if (useV34) gotprimary = waitForDCEChannel(false);
+			while (!sendERR && !gotEOT && (gotRTNC || (ctrlFrameRcvd != fxStr::null))) {
+			    /*
+			     * Remote requested control channel retrain, the remote didn't
+			     * properly hear our last signal, and/or we got an EOR signal 
+			     * after PPR.  So now we have to use a signal from the remote
+			     * and then respond appropriately to get us back or stay in sync.
+			     * DCS::CFR - PPS::PPR/MCF - EOR::ERR
+			     */
+			    HDLCFrame rtncframe(conf.class1FrameOverhead);
+			    bool gotrtncframe = false;
+			    if (useV34) {
+				if (ctrlFrameRcvd != fxStr::null) {
+				    gotrtncframe = true;
+				    for (u_int i = 0; i < ctrlFrameRcvd.length(); i++)
+					rtncframe.put(frameRev[ctrlFrameRcvd[i] & 0xFF]);
+				    traceHDLCFrame("-->", rtncframe);
+				} else
+				    gotrtncframe = recvFrame(rtncframe, FCF_RCVR, conf.t2Timer);
+			    } else {
+				gotrtncframe = recvFrame(rtncframe, FCF_RCVR, conf.t2Timer, true, false);
+			    }
+			    if (gotrtncframe) {
+				traceFCF("RECV recv", rtncframe.getFCF());
+				switch (rtncframe.getFCF()) {
+				    case FCF_PPS:
+					if (rtncframe.getLength() > 5) {
+					    u_int fc = frameRev[rtncframe[6]] + 1;
+					    if ((fc == 256 || fc == 1) && !dataseen) fc = 0;	// distinguish 0 from 1 and 256
+					    traceFCF("RECV recv", rtncframe.getFCF2());
+					    u_int pgcount = u_int(prevPage/256)*256+frameRev[rtncframe[4]];	// cope with greater than 256 pages
+					    protoTrace("RECV received %u frames of block %u of page %u", \
+						fc, frameRev[rtncframe[5]]+1, pgcount+1);
+					    switch (rtncframe.getFCF2()) {
+						case 0: 	// PPS-NULL
+						case FCF_EOM:
+						case FCF_MPS:
+						case FCF_EOP:
+						case FCF_PRI_EOM:
+						case FCF_PRI_MPS:
+						case FCF_PRI_EOP:
 						    if (!useV34 && !switchingPause(emsg)) {
 							abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 							return (false);
 						    }
-						    (void) transmitFrame(FCF_ERR|FCF_RCVR);
-						    traceFCF("RECV send", FCF_ERR);
-						}
-						break;
+						    if (pgcount > prevPage || (pgcount == prevPage && frameRev[rtncframe[5]] >= prevBlock)) {
+							(void) transmitFrame(FCF_PPR, fxStr(ppr, 32));
+							traceFCF("RECV send", FCF_PPR);
+						    } else {
+							(void) transmitFrame(FCF_MCF|FCF_RCVR);
+							traceFCF("RECV send", FCF_MCF);
+						    }
+						    break;
+					    }
 					}
-				    }
-				    break;
-				case FCF_CTC:
-				    {
-					u_int dcs;			// possible bits 1-16 of DCS in FIF
-					if (useV34) {
-					    // T.30 F.3.4.5 Note 1 does not permit CTC in V.34-fax
-					    emsg = "Received invalid CTC signal in V.34-Fax. {E113}";
-					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
-					    return (false);
-					}
-					/*
-					 * See the other comments about T.30 A.1.3.  Some senders
-					 * are habitually wrong in sending CTC at incorrect moments.
-					 */
-					// use 16-bit FIF to alter speed, curcap
-					dcs = rtncframe[3] | (rtncframe[4]<<8);
-					curcap = findSRCapability(dcs&DCS_SIGRATE, recvCaps);
-					processNewCapabilityUsage();
-					// requisite pause before sending response (CTR)
-					if (!switchingPause(emsg)) {
-					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
-					    return (false);
-					}
-					(void) transmitFrame(FCF_CTR|FCF_RCVR);
-					traceFCF("RECV send", FCF_CTR);
-					dolongtrain = true;
-					pprcnt = 0;
 					break;
-				    }
-				case FCF_CRP:
-				    // command repeat... just repeat whatever we last sent
-				    if (!useV34 && !switchingPause(emsg)) {
+				    case FCF_EOR:
+					if (rtncframe.getLength() > 5) {
+					    traceFCF("RECV recv", rtncframe.getFCF2());
+					    switch (rtncframe.getFCF2()) {
+						case 0: 	// PPS-NULL
+						case FCF_EOM:
+						case FCF_MPS:
+						case FCF_EOP:
+						case FCF_PRI_EOM:
+						case FCF_PRI_MPS:
+						case FCF_PRI_EOP:
+						    if (fcount) {
+							/*
+							 * The block hasn't been written to disk.
+							 * This is expected when the sender sends
+							 * EOR after our PPR (e.g. after the 4th).
+							 */
+							blockgood = true;
+							signalRcvd = rtncframe.getFCF2();
+							if (signalRcvd) lastblock = true;
+							sendERR = true;
+						    } else {
+							if (!useV34 && !switchingPause(emsg)) {
+							    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
+							    return (false);
+							}
+							(void) transmitFrame(FCF_ERR|FCF_RCVR);
+							traceFCF("RECV send", FCF_ERR);
+						    }
+						    break;
+					    }
+					}
+					break;
+				    case FCF_CTC:
+					{
+					    u_int dcs;			// possible bits 1-16 of DCS in FIF
+					    if (useV34) {
+						// T.30 F.3.4.5 Note 1 does not permit CTC in V.34-fax
+						emsg = "Received invalid CTC signal in V.34-Fax. {E113}";
+						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
+						return (false);
+					    }
+					    /*
+					     * See the other comments about T.30 A.1.3.  Some senders
+					     * are habitually wrong in sending CTC at incorrect moments.
+					     */
+					    // use 16-bit FIF to alter speed, curcap
+					    dcs = rtncframe[3] | (rtncframe[4]<<8);
+					    curcap = findSRCapability(dcs&DCS_SIGRATE, recvCaps);
+					    processNewCapabilityUsage();
+					    // requisite pause before sending response (CTR)
+					    if (!switchingPause(emsg)) {
+						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
+						return (false);
+					    }
+					    (void) transmitFrame(FCF_CTR|FCF_RCVR);
+					    traceFCF("RECV send", FCF_CTR);
+					    dolongtrain = true;
+					    pprcnt = 0;
+					    break;
+					}
+				    case FCF_CRP:
+					// command repeat... just repeat whatever we last sent
+					if (!useV34 && !switchingPause(emsg)) {
+					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
+					    return (false);
+					}
+					transmitFrame(signalSent);
+					traceFCF("RECV send", (u_char) signalSent[2]);
+					break;
+				    case FCF_DCN:
+					emsg = "COMREC received DCN (sender abort) {E108}";
+					gotEOT = true;
+					recvdDCN = true;
+					continue;
+				    case FCF_MCF:
+				    case FCF_CFR:
+				    case FCF_CTR:
+					if ((rtncframe[2] & 0x80) == FCF_RCVR) {
+					    /*
+					     * Echo on the channel may be so lagged that we're hearing 
+					     * ourselves.  Ignore it.  Try again.
+					     */
+					    break;
+					}
+					/* intentional pass-through */
+				    default:
+					// The message is not ECM-specific: fall out of ECM receive, and let
+					// the earlier message-handling routines try to cope with the signal.
+					signalRcvd = rtncframe.getFCF();
+					messageReceived = true;
 					abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
-					return (false);
-				    }
-				    transmitFrame(signalSent);
-				    traceFCF("RECV send", (u_char) signalSent[2]);
-				    break;
-				case FCF_DCN:
-				    emsg = "COMREC received DCN (sender abort) {E108}";
-				    gotEOT = true;
-				    recvdDCN = true;
-				    continue;
-				case FCF_MCF:
-				case FCF_CFR:
-				case FCF_CTR:
-				    if ((rtncframe[2] & 0x80) == FCF_RCVR) {
-					/*
-					 * Echo on the channel may be so lagged that we're hearing 
-					 * ourselves.  Ignore it.  Try again.
-					 */
-					break;
-				    }
-				    /* intentional pass-through */
-				default:
-				    // The message is not ECM-specific: fall out of ECM receive, and let
-				    // the earlier message-handling routines try to cope with the signal.
-				    signalRcvd = rtncframe.getFCF();
-				    messageReceived = true;
-				    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
-				    if (getRecvEOLCount() == 0) {
-					prevPage--;		// counteract the forthcoming increment
-					return (true);
-				    } else {
-					emsg = "COMREC invalid response received {E110}";	// plain ol' error
-					return (false);
-				    }
-			    }
-			    if (!sendERR) {	// as long as we're not trying to send the ERR signal (set above)
-			        if (useV34) gotprimary = waitForDCEChannel(false);
-				else {
-				    gotRTNC = false;
-				    if (!raiseRecvCarrier(dolongtrain, emsg) && !gotRTNC) {
-					if (wasTimeout()) {
-					    abortReceive();	// return to command mode
-					    setTimeout(false);
-					}
-					long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
-					if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, wait)) {	// wait longer
-					    // simulate adaptive receive
-					    emsg = "";		// clear the failure
-					    gotRTNC = true;
+					if (getRecvEOLCount() == 0) {
+					    prevPage--;		// counteract the forthcoming increment
+					    return (true);
 					} else {
-					    if (wasTimeout()) abortReceive();
-					    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
+					    emsg = "COMREC invalid response received {E110}";	// plain ol' error
 					    return (false);
 					}
-				    } else gotprimary = true;
+				}
+				if (!sendERR) {	// as long as we're not trying to send the ERR signal (set above)
+				    if (useV34) gotprimary = waitForDCEChannel(false);
+				    else {
+					gotRTNC = false;
+					if (!raiseRecvCarrier(dolongtrain, emsg) && !gotRTNC) {
+					    if (wasTimeout()) {
+						abortReceive();	// return to command mode
+						setTimeout(false);
+					    }
+					    long wait = BIT(curcap->br) & BR_ALL ? 273066 / (curcap->br+1) : conf.t2Timer;
+					    if (lastResponse != AT_NOCARRIER && atCmd(rhCmd, AT_CONNECT, wait)) {	// wait longer
+						// simulate adaptive receive
+						emsg = "";		// clear the failure
+						gotRTNC = true;
+					    } else {
+						if (wasTimeout()) abortReceive();
+						abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
+						return (false);
+					    }
+					} else gotprimary = true;
+				    }
+				}
+			    } else {
+				gotprimary = false;
+				if (!useV34) {
+				    if (wasTimeout()) {
+					abortReceive();
+					break;
+				    }
+				    if (lastResponse == AT_NOCARRIER) {
+					/*
+					 * The modem reported V.21 HDLC but then reported that carrier was lost.
+					 * The modem may have erred in its detection of the high-speed carrier.
+					 * But it may also have detected echo from our end or there may be 
+					 * another receiver on the line (the sender is sharing the line with two
+					 * machines).  Try AT+FRM=n again.
+					 */
+					retryrmcmd = true;
+					if (rmattempted+1 < 2) {
+					    gotRTNC = false;
+					} else {
+					    gotRTNC = true;
+					    if (!atCmd(rhCmd, AT_CONNECT, conf.t1Timer)) break;
+					}
+				    } else {
+					if (!atCmd(rhCmd, AT_CONNECT, conf.t1Timer)) break;
+				    }
 				}
 			    }
-			} else {
-			    gotprimary = false;
-			    if (!useV34) {
-				if (wasTimeout()) {
-				    abortReceive();
-				    break;
-				}
-				if (lastResponse == AT_NOCARRIER || lastResponse == AT_ERROR ||
-				    !atCmd(rhCmd, AT_CONNECT, conf.t1Timer)) break;
+			}
+			if (!gotprimary && !sendERR && !(retryrmcmd && rmattempted+1 < 2)) {
+			    if (emsg == "") {
+				if (useV34) emsg = "Failed to properly open V.34 primary channel. {E114}";
+				else emsg = "Failed to properly detect high-speed data carrier. {E112}";
 			    }
+			    protoTrace(emsg);
+			    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
+			    return (false);
 			}
 		    }
-		    if (!gotprimary && !sendERR) {
-			if (emsg == "") {
-			    if (useV34) emsg = "Failed to properly open V.34 primary channel. {E114}";
-			    else emsg = "Failed to properly detect high-speed data carrier. {E112}";
-			}
+		    if (gotEOT) {		// intentionally not an else of the previous if
+			if (useV34 && emsg == "") emsg = "Received premature V.34 termination. {E115}";
 			protoTrace(emsg);
 			abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
 			return (false);
 		    }
 		}
-		if (gotEOT) {		// intentionally not an else of the previous if
-		    if (useV34 && emsg == "") emsg = "Received premature V.34 termination. {E115}";
-		    protoTrace(emsg);
-		    abortPageECMRecv(tif, params, block, fcount, seq, pagedataseen, emsg);
-		    return (false);
-		}
-	    }
+	    } while (retryrmcmd && ++rmattempted < 2);
 	    /*
 	     * Buffering and flow control must be done after AT+FRM=n.
 	     * We do not flush in order avoid losing data already buffered.
