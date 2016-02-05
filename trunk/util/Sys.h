@@ -123,8 +123,6 @@ public:
     static int gethostname(char* name, int namelen)
 	{ return ::gethostname(name, namelen); }
 
-    static char* mktemp(char* templ)	{ return ::mktemp(templ); }
-
     static int mkstemp(char* templ)	{
         int fd = ::mkstemp(templ);
 #if defined __GLIBC__ && __GLIBC__ <= 2 && __GLIBC_MINOR__ <= 0

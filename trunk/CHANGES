@@ -2,6 +2,7 @@
 
 New Changes
 
+* stop using mktemp() (5 Feb 2016)
 * fix LDAP authentication broken in 5.5.4 (24-26 Jan 2016)
 * reset senderinfo properly when receiving faxes (22 Jan 2016)
 * cope with V.21 HDLC carrier loss following +FRH:3 better (22, 26 Jan 2016)

@@ -664,7 +664,7 @@ SendFaxClient::prepareFile(FileInfo& info, fxStr& emsg)
     if (info.rule->getCmd() != "") {	// conversion required
         const char* templ = _PATH_TMP "sndfaxXXXXXX";
         char* buff = strcpy(new char[strlen(templ) + 1], templ);
-        Sys::mktemp(buff);
+        Sys::mkstemp(buff);
         tmpFile = buff;
         delete [] buff;
         /*
