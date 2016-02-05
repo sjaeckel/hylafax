@@ -1513,7 +1513,11 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 			    rcpcnt++;
 			} else {
 			    dataseen = true;
-			    protoTrace("HDLC frame with bad FCF %#x", frame[2]);
+			    if (frame.getLength() > 4 && frame.checkCRC()) {
+				traceFCF("Invalid and confusing placement of", frame.getFCF());
+			    } else {
+				protoTrace("HDLC frame with bad FCF %#x", frame[2]);
+			    }
 			}
 		    } else {
 			dataseen = true;	// assume that garbage was meant to be data
