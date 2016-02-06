@@ -25,6 +25,7 @@
  */
 #include "config.h"
 #include "Sys.h"
+#include "Socket.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -95,7 +96,7 @@ SNPPJob::setMailbox(const char* user)
 	    char hostname[64];
 	    (void) gethostname(hostname, sizeof (hostname));
 #if CONFIG_INETTRANSPORT
-	    struct hostent* hp = gethostbyname(hostname);
+	    struct hostent* hp = Socket::gethostbyname(hostname);
 	    domainName = (hp ? hp->h_name : hostname);
 #else
 	    domainName = hostname;
