@@ -755,6 +755,11 @@ TextFormat::formatFile(FILE* fp)
 void
 TextFormat::format(FILE* fp)
 {
+    int wordBuf[500];		// buffer for a word used in wrapping
+    int wordPos = 0;		// position of the last character in wordBuf
+    TextCoord wordXOff = xoff;	// position of the text when the last word was written
+    bool firstWord = true;	// is this the first word on the line?
+
     int c;
     while ((c = getc(fp)) != EOF) {
 	if (useUTF8) {
@@ -787,16 +792,36 @@ TextFormat::format(FILE* fp)
 	    break;
 	case '\f':			// form feed
 	    if (!bop) {
+		if (wrapLines && wordPos) {
+		    int pos;
+		    for (pos = 0; pos < wordPos; pos++) {
+			if (040 <= wordBuf[pos] && wordBuf[pos] <= 0176) fputc(wordBuf[pos], tf);
+			else fprintf(tf, "\\%03o", wordBuf[pos] & 0xff);
+		    }
+		    wordPos = 0;
+		    firstWord = true;
+		}
 		endTextCol();
 		bol = bot = true;
+		wordXOff = xoff;
 	    }
 	    break;
 	case '\n':			// line break
+	    if (wrapLines && wordPos) {
+		int pos;
+		for (pos = 0; pos < wordPos; pos++) {
+		    if (040 <= wordBuf[pos] && wordBuf[pos] <= 0176) fputc(wordBuf[pos], tf);
+		    else fprintf(tf, "\\%03o", wordBuf[pos] & 0xff);
+		}
+		wordPos = 0;
+		firstWord = true;
+	    }
 	    if (bol)
 		beginLine();
 	    if (bot)
 		beginText();
 	    endTextLine();
+	    wordXOff = xoff;
 	    break;
 	case '\r':			// check for overstriking
 	    if ((c = getc(fp)) == '\n') {
@@ -836,14 +861,35 @@ TextFormat::format(FILE* fp)
 		    c = ' ';
 		else
 		    c = '\t';
+		if (wrapLines && wordPos) {
+		    int pos;
+		    for (pos = 0; pos < wordPos; pos++) fputc(wordBuf[pos], tf);
+		    wordPos = 0;
+		    if (c == ' ') fputc(c, tf);
+		    firstWord = false;
+		}
 	    } else
 		hm = curFont->charwidth(c);
-	    if (xoff + hm > right_x) {
+	    if (wordPos > 495 || xoff + hm > right_x) {
 		if (!wrapLines)		// discard line overflow
 		    break;
 		if (c == '\t')		// adjust white space motion
 		    hm -= right_x - xoff;
+		if (wordPos) {
+		    wordXOff = xoff - wordXOff;
+		    if (firstWord) {
+			int pos;
+			for (pos = 0; pos < wordPos; pos++) {
+			    if (040 <= wordBuf[pos] && wordBuf[pos] <= 0176) fputc(wordBuf[pos], tf);
+			    else fprintf(tf, "\\%03o", wordBuf[pos] & 0xff);
+			}
+			fputc('-', tf);
+			wordPos = 0;
+		    }
+		}
 		endTextLine();
+		if (wordPos) xoff = wordXOff;
+		firstWord = true;
 	    }
 	    if (bol)
 		beginLine(), bol = false;
@@ -856,13 +902,21 @@ TextFormat::format(FILE* fp)
 	    } else {			// append to open PS string
 		if (bot)
 		    beginText(), bot = false;
+		xoff += hm;
 		if (040 <= c && c <= 0176) {
 		    if (c == '(' || c == ')' || c == '\\')
-			fputc('\\',tf);
-		    fputc(c,tf);
-		} else
-		    fprintf(tf, "\\%03o", c & 0xff);
-		xoff += hm;
+			if (wrapLines)
+			    wordBuf[wordPos++] = '\\';
+			else
+			    fputc('\\',tf);
+			if (wrapLines) {
+			    if (c != ' ') wordBuf[wordPos++] = c;
+			    else wordXOff = xoff;
+			} else fputc(c,tf);
+		} else {
+		    if (wrapLines) wordBuf[wordPos++] = c;
+		    else fprintf(tf, "\\%03o", c & 0xff);
+		}
 	    }
 	    break;
 	}
@@ -872,6 +926,11 @@ TextFormat::format(FILE* fp)
 void
 TextFormat::format(const char* cp, u_int cc)
 {
+    int wordBuf[500];          // buffer for a word used in wrapping
+    int wordPos = 0;           // position of the last character in wordBuf
+    TextCoord wordXOff = xoff; // position of the text when the last word was written
+    bool firstWord = true;     // is this the first word on the line?
+
     const char* ep = cp+cc;
     while (cp < ep) {
 	int c = *cp++ & 0xff;
@@ -905,16 +964,36 @@ TextFormat::format(const char* cp, u_int cc)
 	    break;
 	case '\f':			// form feed
 	    if (!bop) {
+		if (wrapLines && wordPos) {
+		    int pos;
+		    for (pos = 0; pos < wordPos; pos++) {
+			if (040 <= wordBuf[pos] && wordBuf[pos] <= 0176) fputc(wordBuf[pos], tf);
+			else fprintf(tf, "\\%03o", wordBuf[pos] & 0xff);
+		    }
+		    wordPos = 0;
+		    firstWord = true;
+		}
 		endTextCol();
 		bol = bot = true;
+		wordXOff = xoff;
 	    }
 	    break;
 	case '\n':			// line break
+	    if (wrapLines && wordPos) {
+		int pos;
+		for (pos = 0; pos < wordPos; pos++) {
+		    if (040 <= wordBuf[pos] && wordBuf[pos] <= 0176) fputc(wordBuf[pos], tf);
+		    else fprintf(tf, "\\%03o", wordBuf[pos] & 0xff);
+		}
+		wordPos = 0;
+		firstWord = true;
+	    }
 	    if (bol)
 		beginLine();
 	    if (bot)
 		beginText();
 	    endTextLine();
+	    wordXOff = xoff;
 	    break;
 	case '\r':			// check for overstriking
 	    if (cp < ep && *cp == '\n')
@@ -953,14 +1032,35 @@ TextFormat::format(const char* cp, u_int cc)
 		    c = ' ';
 		else
 		    c = '\t';
+		if (wrapLines && wordPos) {
+		    int pos;
+		    for (pos = 0; pos < wordPos; pos++) fputc(wordBuf[pos], tf);
+		    wordPos = 0;
+		    if (c == ' ') fputc(c, tf);
+		    firstWord = false;
+		}
 	    } else
 		hm = curFont->charwidth(c);
-	    if (xoff + hm > right_x) {
+	    if (wordPos > 495 || xoff + hm > right_x) {
 		if (!wrapLines)		// discard line overflow
 		    break;
 		if (c == '\t')		// adjust white space motion
 		    hm -= right_x - xoff;
+		if (wordPos) {
+		    wordXOff = xoff - wordXOff;
+		    if (firstWord) {
+			int pos;
+			for (pos = 0; pos < wordPos; pos++) {
+			    if (040 <= wordBuf[pos] && wordBuf[pos] <= 0176) fputc(wordBuf[pos], tf);
+			    else fprintf(tf, "\\%03o", wordBuf[pos] & 0xff);
+			}
+			fputc('-', tf);
+			wordPos = 0;
+		    }
+		}
 		endTextLine();
+		if (wordPos) xoff = wordXOff;
+		firstWord = true;
 	    }
 	    if (bol)
 		beginLine(), bol = false;
@@ -973,14 +1073,22 @@ TextFormat::format(const char* cp, u_int cc)
 	    } else {			// append to open PS string
 		if (bot)
 		    beginText(), bot = false;
+		xoff += hm;
 		if (040 <= c && c <= 0176) {
 		    if (c == '(' || c == ')' || c == '\\')
-			fputc('\\',tf);
-		    fputc(c,tf);
-		} else
-		    fprintf(tf, "\\%03o", c & 0xff);
+			if (wrapLines)
+			    wordBuf[wordPos++] = '\\';
+			else
+			    fputc('\\',tf);
+			if (wrapLines) {
+			    if (c != ' ') wordBuf[wordPos++] = c;
+			    else wordXOff = xoff;
+			} else fputc('\\',tf);
+		} else {
+		    if (wrapLines) wordBuf[wordPos++] = c;
+		    else fprintf(tf, "\\%03o", c & 0xff);
+		}
 	    }
-	    xoff += hm;
 	    break;
 	}
     }
