@@ -535,7 +535,6 @@ main(int argc, char* argv[])
 	TIFFSetField(otif, TIFFTAG_BITSPERSAMPLE, 1);
 	TIFFSetField(otif, TIFFTAG_SAMPLESPERPIXEL, 1);
 	TIFFSetField(otif, TIFFTAG_FILLORDER, FILLORDER_LSB2MSB);
-	TIFFSetField(otif, TIFFTAG_FILLORDER, FILLORDER_LSB2MSB);
 	uint32 r;
 	TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &r);
 	TIFFSetField(otif, TIFFTAG_ROWSPERSTRIP, r);
@@ -583,7 +582,7 @@ main(int argc, char* argv[])
 			totbytes = (params.df == DF_2DMMR) ? totdata : totbytes+ts - (dp-data);
 			firstStrip = false;
 		    } else
-			dp = data;
+			dp = data+ts;
 		    if (fillorder != FILLORDER_LSB2MSB)
 			TIFFReverseBits(dp, totbytes);
 		    if (TIFFWriteRawStrip(otif, strip, dp, totbytes) == -1)
