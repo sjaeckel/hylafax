@@ -162,6 +162,12 @@ HylaFAXServer::getRecvDocStatus(RecvInfo& ri)
 	ri.params.br = brhold;
     }
 #endif
+    if (TIFFGetField(tif, TIFFTAG_DOCUMENTNAME, &cp)) {
+	cp = strchr(cp, ':');
+	if (cp && cp[1] != '\0') {
+	    ri.reason = cp+2;
+	}
+    }
     ri.sender = "";
     CallID empty_callid;
     ri.callid = empty_callid;

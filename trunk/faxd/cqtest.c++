@@ -118,6 +118,7 @@ CQDecoder::recvSetupTIFF(TIFF* tif, long, int fillOrder, const Class2Params& par
     TIFFSetField(tif, TIFFTAG_YRESOLUTION,	(float) params.verticalRes());
     TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT,	RESUNIT_INCH);
     TIFFSetField(tif, TIFFTAG_SOFTWARE,		HYLAFAX_VERSION);
+    TIFFSetField(tif, TIFFTAG_DOCUMENTNAME,	TIFFFileName(tif));
 #ifdef notdef
     TIFFSetField(tif, TIFFTAG_IMAGEDESCRIPTION,	(const char*) tsi);
 #endif
