@@ -243,6 +243,7 @@ FaxServer::recvDocuments(TIFF* tif, FaxRecvInfo& info, FaxRecvInfoArray& docs, F
 	}
 	setServerStatus((const char*) statusmsg);
 	recvOK = recvFaxPhaseD(tif, info, ppm, emsg);
+	if (emsg != "") modem->recvRecordEmsg(tif, emsg);
 	TIFFClose(tif);
 	info.time = (u_int) getFileTransferTime();
 	info.reason = emsg;

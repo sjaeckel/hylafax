@@ -513,6 +513,7 @@ FaxModem::recvSetupTIFF(TIFF* tif, long, int fillOrder, const fxStr& id)
     TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT,	RESUNIT_INCH);
     TIFFSetField(tif, TIFFTAG_SOFTWARE,		HYLAFAX_VERSION);
     TIFFSetField(tif, TIFFTAG_IMAGEDESCRIPTION,	(const char*) id);
+    TIFFSetField(tif, TIFFTAG_DOCUMENTNAME,	TIFFFileName(tif));
     char dateTime[24];
     time_t now = Sys::now();
     strftime(dateTime, sizeof (dateTime), "%Y:%m:%d %H:%M:%S", localtime(&now));
@@ -585,6 +586,24 @@ FaxModem::flushRawData(TIFF* tif, tstrip_t strip, const u_char* buf, u_int cc, f
 	serverTrace("RECV: %s: write error", TIFFFileName(tif));
         abortPageRecv();
         emsg = "Write error to TIFF file {E052}";
+    }
+}
+
+/*
+ * Write an error message into the TIFF tags.
+ */
+void
+FaxModem::recvRecordEmsg(TIFF* tif, fxStr& emsg)
+{
+    fxStr dn = fxStr::format("%s: %s", TIFFFileName(tif), (const char*) emsg);
+    TIFFSetField(tif, TIFFTAG_DOCUMENTNAME, (const char*) dn);
+    uint16 cd = TIFFCurrentDirectory(tif);
+    if (cd > 0) {
+	// mark the previous directory, too, in-case this directory doesn't have any valid image data
+	TIFFCheckpointDirectory(tif);
+	TIFFSetDirectory(tif, cd-1);
+	TIFFSetField(tif, TIFFTAG_DOCUMENTNAME, (const char*) dn);
+	TIFFRewriteDirectory(tif);
     }
 }
 

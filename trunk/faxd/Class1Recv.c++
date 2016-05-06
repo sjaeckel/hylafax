@@ -1999,6 +1999,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 bool
 Class1Modem::recvPageData(TIFF* tif, fxStr& emsg)
 {
+    bool ret = false;
     /*
      * T.30-A ECM mode requires a substantially different protocol than non-ECM faxes.
      */
@@ -2013,13 +2014,11 @@ Class1Modem::recvPageData(TIFF* tif, fxStr& emsg)
 	    if (prevPage)
 		recvEndPage(tif, params);
 	}
-	TIFFSetField(tif, TIFFTAG_IMAGELENGTH, getRecvEOLCount());
-	return (true);		// no RTN with ECM
+	ret = true;		// no RTN with ECM
     } else {
 	(void) recvPageDLEData(tif, checkQuality(), params, emsg);
 	dataSent += getRecvEOLCount();
 	dataMissed += getRecvBadLineCount();
-	TIFFSetField(tif, TIFFTAG_IMAGELENGTH, getRecvEOLCount());
 	TIFFSetField(tif, TIFFTAG_CLEANFAXDATA, getRecvBadLineCount() ?
 	    CLEANFAXDATA_REGENERATED : CLEANFAXDATA_CLEAN);
 	if (getRecvBadLineCount()) {
@@ -2027,8 +2026,10 @@ Class1Modem::recvPageData(TIFF* tif, fxStr& emsg)
 	    TIFFSetField(tif, TIFFTAG_CONSECUTIVEBADFAXLINES,
 		getRecvConsecutiveBadLineCount());
 	}
-	return (isQualityOK(params));
+	ret = isQualityOK(params);
     }
+    TIFFSetField(tif, TIFFTAG_IMAGELENGTH, getRecvEOLCount());
+    return (ret);
 }
 
 /*

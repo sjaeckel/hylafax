@@ -2,6 +2,7 @@
 
 New Changes
 
+* add missing recvq error message indications (6 May 2016)
 * fix tagtest support for multi-strip images (25 Mar 2016)
 * enhance textfmt wrapping to occur on word boundaries (24 Feb 2016)
 

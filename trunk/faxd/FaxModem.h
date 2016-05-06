@@ -186,6 +186,7 @@ protected:
     u_char*	convertPhaseCData(u_char* buf, u_long& totdata, u_int fillorder,
                             const Class2Params& params, const Class2Params& newparams, uint32& rows);
 public:
+    void	recvRecordEmsg(TIFF* tif, fxStr& emsg);
     enum {			// FaxModem::RTNHandling
         RTN_RETRANSMIT = 0,         // retransmit page after RTN until MCF/MPS
         RTN_GIVEUP     = 1,         // immediately abort
