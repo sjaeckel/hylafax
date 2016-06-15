@@ -814,7 +814,10 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	     * longer than 5 seconds, and if we did not see RTC, then we assume that premature
 	     * carrier loss occurred and set pageGood to false.
 	     */
-	    if (Sys::now() - ppmstart > 5 && !getSeenRTC()) pageGood = false;
+	    if (Sys::now() - ppmstart > 5 && !getSeenRTC()) {
+		protoTrace("RECV detected premature Phase C carrier loss.");
+		pageGood = false;
+	    }
 	}
 	/*
 	 * Do command received logic.
