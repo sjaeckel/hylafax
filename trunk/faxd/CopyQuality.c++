@@ -1240,6 +1240,15 @@ FaxModem::recvTrace(const char* fmt ...)
 }
 
 /*
+ * Was RTC seen?
+ */
+bool
+FaxModem::getSeenRTC()
+{
+    return seenRTC();
+}
+
+/*
  * Note an invalid G3 code word.
  */
 void

@@ -98,6 +98,7 @@ private:
     u_long	parserCount[4];	// counters used in parsing JBIG and JPEG
     int		imagefd;	// file descriptor for image file
 
+    bool	getSeenRTC();
     void	flushEncodedData(TIFF*, tstrip_t, const u_char*, u_int, fxStr& emsg);
     void	flushRawData(TIFF*, tstrip_t, const u_char*, u_int, fxStr& emsg);
     void	invalidCode(const char* type, int x);

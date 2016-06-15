@@ -797,6 +797,7 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 	} else {
 	    gotCONNECT = false;
 	    u_short recvFrameCount = 0;
+	    time_t ppmstart = Sys::now();
 	    do {
 		/*
 		 * Some modems will report CONNECT erroniously on high-speed Phase C data.
@@ -807,6 +808,13 @@ Class1Modem::recvPage(TIFF* tif, u_int& ppm, fxStr& emsg, const fxStr& id)
 		ppmrcvd = recvFrame(frame, FCF_RCVR, timer);
 	    } while (!ppmrcvd && gotCONNECT && wasTimeout() && !gotEOT && ++recvFrameCount < 3);
 	    if (ppmrcvd) lastPPM = frame.getFCF();
+	    /*
+	     * To combat premature carrier loss leading to MCF instead of RTN on short/partial pages,
+	     * We started a timer above and measured the time it took to receive PPM.  If longer
+	     * longer than 5 seconds, and if we did not see RTC, then we assume that premature
+	     * carrier loss occurred and set pageGood to false.
+	     */
+	    if (Sys::now() - ppmstart > 5 && !getSeenRTC()) pageGood = false;
 	}
 	/*
 	 * Do command received logic.

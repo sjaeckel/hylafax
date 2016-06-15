@@ -2,6 +2,7 @@
 
 New Changes
 
+* attempt to detect premature non-ECM Phase C carrier loss (15 Jun 2016)
 * add missing recvq error message indications (6 May 2016)
 * fix tagtest support for multi-strip images (25 Mar 2016)
 * enhance textfmt wrapping to occur on word boundaries (24 Feb 2016)
