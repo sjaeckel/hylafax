@@ -1770,14 +1770,10 @@ faxQueueApp::sendJobDone(Job& job, FaxRequest* req)
 	 * any that could not complete on the first attempt.  This 
 	 * aids in timely delivery of bulk faxes as a group rather than
 	 * preoccupation with individual jobs as is the case with 
-	 * non-bulk style jobs.  We bound the priority to keep it
-	 * within a fixed "range" around it's starting priority.  This
-	 * is intended to keep "normal" and "high" priority jobs
-	 * from conflicting.
+	 * non-bulk style jobs.
 	 */
 	if (job.pri != 255 && job.pri > 190) job.pri++;
-	else if (JOBHASH(job.pri-1) == JOBHASH(req->usrpri))
-	    job.pri--; 
+	else job.pri--; 
 	job.state = (req->tts > now) ?
 	    FaxRequest::state_sleeping : FaxRequest::state_ready;
 	updateRequest(*req, job);		// update on-disk status
