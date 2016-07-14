@@ -2453,8 +2453,8 @@ faxQueueApp::submitJob(const fxStr& jobid, bool checkState, bool nascent)
      */
     fxStr filename(FAX_SENDDIR "/" FAX_QFILEPREF | jobid);
     if (!Sys::isRegularFile(filename)) {
-	logError("JOB %s: qfile %s is not a regular file.",
-	    (const char*) jobid, (const char*) filename);
+	logError("JOB %s: qfile %s is not a regular file: %s",
+	    (const char*) jobid, (const char*) filename, strerror(errno));
 	return (false);
     }
     bool status = false;
@@ -2878,7 +2878,12 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		    }
 		    client->hangupServer();
 		}
-		if (!status) logError("PROXY SEND: %s", (const char*) emsg);
+		if (!status) {
+		    // some error occurred in callServer() or login()
+		    logError("PROXY SEND: %s", (const char*) emsg);
+		    job.state = FaxRequest::state_failed;
+		    req.status = send_retry;
+		}
 		updateRequest(req, job);
 		req.npages -= prevPages;	// queueAccounting() only wants the pages sent by the proxy
 		queueAccounting(job, req, "PROXY");
