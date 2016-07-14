@@ -2,6 +2,8 @@
 
 New Changes
 
+* fix job rescheduling if the proxy connection attempt fails (13 Jul 2016)
+* increase the maximum number of triggers from 1024 to 4096 (13 Jul 2016)
 * eliminate faxq job priority "bounding" (13 Jul 2016)
 * attempt to detect premature non-ECM Phase C carrier loss (15 Jun 2016)
 * add missing recvq error message indications (6 May 2016)

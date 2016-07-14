@@ -32,7 +32,7 @@
 #include "Dictionary.h"
 #include "QLink.h"
 
-#define	TRIGGER_MAXTID	1024	// at most 1024 triggers can exist at one time
+#define	TRIGGER_MAXTID	4096	// maximum triggers that can exist at one time
 #define	TRIGGER_BPW	32	// we assume 8*sizeof (u_int) >= 32
 #define	TRIGGER_MAXWDS	((TRIGGER_MAXTID+TRIGGER_BPW-1)/TRIGGER_BPW)
 
