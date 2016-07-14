@@ -108,7 +108,8 @@ InetTransport::callServer(fxStr& emsg)
     }
 #endif
     if (err != 0) {
-	client.printWarning("getaddrinfo failed with %d: %s", err, gai_strerror(err));
+	emsg = fxStr::format("getaddrinfo failed with %d: %s", err, gai_strerror(err));
+	client.printWarning(emsg);
 	return false;
     }
 
