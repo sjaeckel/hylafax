@@ -104,14 +104,21 @@ The
 .B Modem
 parameter controls which
 .B ModemGroup
-is used in sending faxes to the destination.  If the user
-assigns a
-.B ModemGroup
-for a specific job where all modems are outside of this
-.B ModemGroup
-matching a destination, then the value of
-.B Modem
-is overridden by the user's assignment.  Likewise, if the user
+is used in sending faxes to the destination.  If the user assigns a 
+.B ModemGroup 
+for a job where there are no common modems between that 
+.B ModemGroup 
+and the 
+.B ModemGroup 
+assigned here by 
+.B JobControlCmd, 
+then the 
+.B JobControlCmd 
+value of 
+.B Modem 
+is overridden by the user's 
+.B ModemGroup.
+Likewise, if the user
 assigns a
 .B ModemGroup
 for a specific job where some, but not all, of the modems are
