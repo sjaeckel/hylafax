@@ -171,9 +171,9 @@ reception errors.
 .I RECV_DATA_CONVERSION
 Indicates whether TIFF files saved to disk by HylaFAX should be converted
 in place to another compression data format.
-At this time the only available option is ``JBIG:2D-MMR'' which causes
+At this time the only available option is ``JBIG:MMR'' which causes
 TIFF files using JBIG compression to be converted to 2D-MMR (G4)
-compression. Since the majority of TIFF file viewers lacks JBIG support,
+compression. Since the majority of TIFF file viewers lack JBIG support,
 this setting may be useful if JBIG-compressed fax receiving is enabled
 (see ``Class1JBIGSupport'' config option) and the received fax files are
 to be directly accessed by users, either through HylaFAX clients such as
