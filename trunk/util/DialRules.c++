@@ -370,7 +370,7 @@ DialStringRules::applyRules(const fxStr& name, const fxStr& s, u_int level)
 	return s;
     }
     fxStr prefix;
-    for (int i = 0; i < level; i++)
+    for (u_int i = 0; i < level; i++)
 	prefix.insert("    ");
     if (verbose)
 	traceRules(prefix | "Apply %s rules to \"%s\"",
