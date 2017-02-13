@@ -2,6 +2,7 @@
 
 New Changes
 
+* fix a handful of compiler warnings (13 Feb 2017)
 * fix job rescheduling if the proxy connection attempt fails (13 Jul 2016)
 * increase the maximum number of triggers from 1024 to 4096 (13 Jul 2016)
 * eliminate faxq job priority "bounding" (13 Jul 2016)
