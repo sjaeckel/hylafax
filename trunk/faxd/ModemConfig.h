@@ -50,7 +50,7 @@ class id_config
 
 };
 
-fxDECLARE_ObjArray(IDConfArray, id_config);
+fxDECLARE_ObjArray(IDConfArray, id_config)
 
 struct ModemConfig : public FaxConfig {
 private:

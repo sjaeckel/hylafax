@@ -118,7 +118,7 @@ FaxModem::sendBegin()
 }
 void FaxModem::sendSetupPhaseB(const fxStr&, const fxStr&){}
 void FaxModem::sendEnd()	{}
-void FaxModem::getDataStats(FaxSetup*) {};
+void FaxModem::getDataStats(FaxSetup*) {}
 
 bool
 FaxModem::recvBegin(FaxSetup*, fxStr&)
