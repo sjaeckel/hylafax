@@ -852,4 +852,4 @@ ModemConfig::setConfigItem(const char* tag, const char* value)
 }
 #undef N
 
-fxIMPLEMENT_ObjArray(IDConfArray, id_config);
+fxIMPLEMENT_ObjArray(IDConfArray, id_config)

@@ -42,7 +42,7 @@
 #define XMD_H
 extern "C" {
 #include "jpeglib.h"
-};
+}
 
 // This is the error catcher
 static char ErrorMessage[JMSG_LENGTH_MAX];
