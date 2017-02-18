@@ -667,7 +667,7 @@ FaxRequest::addItem(FaxSendOp op, char* tag)
     if (*cp == ':')			// address info
 	*cp++ = '\0';
     else
-	cp = tag, tag = '\0';
+	cp = tag, *tag = '\0';
     items.append(FaxItem(op, dirnum, tag, cp));
 }
 
@@ -691,7 +691,7 @@ FaxRequest::addItem(FaxSendOp op, char* tag, bool& rejectJob)
     if (*cp == ':')			// address info
 	*cp++ = '\0';
     else
-	cp = tag, tag = '\0';
+	cp = tag, *tag = '\0';
     if (*cp == '\0' || !checkDocument(cp)) {
     	error("Rejected document in corrupt job request");
 	rejectJob = true;
