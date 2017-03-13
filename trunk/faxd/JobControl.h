@@ -56,6 +56,8 @@ private:
     fxStr	proxymailbox;		// if set, use this as the identity
     fxStr	proxynotification;	// if set, use this as the notification
     fxStr	proxyjobtag;		// if set, use this as the jobtag
+    fxStr	proxytaglineformat;	// if set, use this as the taglineformat
+    fxStr	proxytsi;		// if set, use this as the tsi
     mode_t	proxylogmode;		// mode for logs retrieved from proxy
     int		proxytries;		// if set, specify the number of tries
     int		proxydials;		// if set, specify the number of dials
@@ -91,6 +93,8 @@ public:
     const fxStr& getProxyMailbox() const;
     const fxStr& getProxyNotification() const;
     const fxStr& getProxyJobTag() const;
+    const fxStr& getProxyTagLineFormat() const;
+    const fxStr& getProxyTSI() const;
     const mode_t getProxyLogMode() const;
     int getProxyTries() const;
     int getProxyDials() const;
