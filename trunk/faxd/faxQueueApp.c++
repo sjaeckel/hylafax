@@ -2680,7 +2680,11 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		rjob.setDesiredSpeed(req.desiredbr);
 		if (req.faxname != "") rjob.setFaxName(req.faxname);
 		//rjob.setDesiredEC(req.desiredec);		// disabled for compatibility with HylaFAX 4.1.x servers
-		if (req.desiredtl) rjob.setTagLineFormat(req.tagline);
+		if (job.getJCI().getProxyTagLineFormat().length()) {
+		    rjob.setTagLineFormat(job.getJCI().getProxyTagLineFormat());
+		} else {
+		    if (req.desiredtl) rjob.setTagLineFormat(req.tagline);
+		}
 		if (req.timezone != "") rjob.setTimeZone(req.timezone);
 		rjob.setUseXVRes(req.usexvres);
 		client->setHost(job.getJCI().getProxy());
@@ -2704,7 +2708,11 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 		rjob.setUseColor(req.usecolor);
 		PageSizeInfo* info = PageSizeInfo::getPageSizeBySize(req.pagewidth, req.pagelength);
 		if (info) rjob.setPageSize(info->abbrev());
-		if (req.tsi != "") rjob.setTSI(req.tsi);
+		if (job.getJCI().getProxyTSI().length()) {
+		    rjob.setTSI(job.getJCI().getProxyTSI());
+		} else {
+		    if (req.tsi != "") rjob.setTSI(req.tsi);
+		}
 		int maxTries = 0;
 		if (job.getJCI().getProxyTries() > 0)
 		    maxTries = job.getJCI().getProxyTries();

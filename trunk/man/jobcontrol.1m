@@ -88,7 +88,9 @@ ProxyMailbox	string	\-	E-Mail address for job notification
 ProxyNotification	string	\s-1none\s+1	notification request
 ProxyJobTag	string	\s-1\fIsee below\fP\s+1	jobtag for proxy job
 ProxyLogMode	octal	\s-10600\s+1	protection to use for logs retrieved from proxy server
+ProxyTaglineFormat	string	\-	impose tagline format for proxy job
 ProxyTries	integer	\s-1\-1\s+1	number of tries proxy should attempt
+ProxyTSI	string	\-	impose TSI for proxy job
 ProxyDials	integer	\s-1\-1\s+1	number of dials proxy should attempt
 ProxyReconnects	integer	\s-1\5\s+1	number of reconnections to proxy for any job submisison
 RejectNotice	string	\-	rejection notice for transmit job
@@ -180,12 +182,22 @@ logs that are able to be retrieved from the proxy server.  (In order to
 retrieve logs the proxy server must permit it.)
 .PP
 The
+.B ProxyTaglineFormat
+sets the tagline format for the job on the proxy server.  By default this is whatever 
+was specified by the client.
+.PP
+The
 .B ProxyTries
 and
 .B ProxyDials
 parameters specify the number of respective attempts that the proxy server 
 should make.  The default is -1, and any value less than 1 indicates
 that the proxy server should be delegated all remaining attempts.
+.PP
+The
+.B ProxyTSI
+sets the TSI for the job on the proxy server.  By default this is whatever was
+specified by the client.
 .PP
 The
 .B ProxyReconnects
