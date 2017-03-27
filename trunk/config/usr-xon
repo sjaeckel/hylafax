@@ -72,11 +72,12 @@ Class1NFLOCmd:		AT&H0		# setup modem for no flow control
 Class1HFLOCmd:		AT&H1		# setup modem for hardware flow control
 Class1SFLOCmd:		""		# modem does this automatically
 #
-# The remainder of this configuration is included so that the
-# modem "idles" in Class 0 while not sending or receiving facsimile.
+# These configurations can be used so that the modem "idles" 
+# in Class 0 while not sending or receiving facsimile.
+# It does not work properly for some modems.
 #
-ModemSetupAACmd:	AT+FCLASS=0	# leave modem idling in class 0
-ModemAnswerCmd:		AT+FCLASS=1A	# answer in Class 1
+#ModemSetupAACmd:	AT+FCLASS=0	# leave modem idling in class 0
+#ModemAnswerCmd:		AT+FCLASS=1A	# answer in Class 1
 #
 # When using AT+FRS=n we see USR modems reset themselves in the middle of sessions
 # this is not good.  So, we seem to work-around that problem by not using the
