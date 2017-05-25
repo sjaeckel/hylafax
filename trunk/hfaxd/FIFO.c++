@@ -85,11 +85,20 @@ HylaFAXServer::initClientFIFO(fxStr& emsg)
 int
 HylaFAXServer::FIFOInput(int fd)
 {
-    char buf[2048];
+    char buf[4096];
     int cc;
     while ((cc = Sys::read(fd, buf, sizeof (buf)-1)) > 0) {
-	if (cc == sizeof(buf)-1)
-	    logWarning("FIFO Read full: %d", cc);
+	if (cc == sizeof(buf)-1) {
+	    int pipesize = -1;
+	    int unread = -1;
+#ifdef F_GETPIPE_SZ
+	    pipesize = fcntl(fd, F_GETPIPE_SZ, 0);
+#endif
+#ifdef FIONREAD
+	    ioctl(fd, FIONREAD, &unread);
+#endif
+	    logWarning("FIFO Read full: %d, unread: %d, FIFO size: %d", cc, unread, pipesize);
+	}
 	buf[cc] = '\0';
 	char* bp = &buf[0];
 	do {
