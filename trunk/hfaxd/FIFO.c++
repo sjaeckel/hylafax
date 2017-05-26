@@ -30,6 +30,8 @@
 #include "HylaFAXServer.h"
 #include "Dispatcher.h"
 
+#include <sys/ioctl.h>
+
 /*
  * Support for communication with the HylaFAX queuer via FIFO's.
  */
