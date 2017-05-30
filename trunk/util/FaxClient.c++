@@ -1020,24 +1020,14 @@ bool FaxClient::jobDelete(const char* jobid)	{ return jobOp("JDELE",jobid); }
 bool
 FaxClient::jobWait(const char* jobid)
 {
-    int n = 0;
-    while (!jobOp("JWAIT", jobid)) {
-	n++;
-	if (code == -2 && command("ABOR") == COMPLETE) {
-	    continue;
+    int ret = COMPLETE;
+    if (!jobOp("JWAIT", jobid)) {
+	ret = ERROR;
+	while (code == -2 && command("ABOR") == COMPLETE) {
+	    ret = getReply(false);
 	}
-	return (false);
     }
-    /*
-     * The server replies "216 Wait for job XXX completed." 
-     * as many times as JWAIT was issued.  We need to collect
-     * them all.
-     */
-    while (n) {
-	getReply(0);
-	n--;
-    }
-    return (true);
+    return (ret == COMPLETE);
 }
 
 bool FaxClient::jgrpSubmit(const char* jgrpid)
