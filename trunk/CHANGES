@@ -2,6 +2,7 @@
 
 New Changes
 
+* pass the user's uid onto the session log file for sent faxes (25 Jul 2017)
 * improve job waits to minimize triggers (30 May 2017)
 * increase FIFO read size and add logging information (25 May 2017)
 * add ProxyTaglineFormat and ProxyTSI features (13 Mar 2017)

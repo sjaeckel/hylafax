@@ -50,15 +50,22 @@ FaxServer::sendFax(FaxRequest& fax, FaxMachineInfo& clientInfo, FaxAcctInfo& ai,
     useDF = usedf;
     u_int prevPages = fax.npages;
     if (!(batched & BATCH_FIRST) || lockModem()) {
-        if (batched & BATCH_FIRST)
-	{
-	    beginSession(fax.number);
+	// we can't set the owner's uid onto batched logs for privacy reasons as they may include other users' jobs, too
+        if (batched & BATCH_FIRST) {
+	    gid_t uid = 0;
+	    if ((batched & BATCH_LAST) || ! batchLogs) {
+		struct stat sb;
+		if (Sys::stat(fax.qfile, sb) >= 0) uid = sb.st_gid;	// get the owner's uid from the gid of the qfile
+	    }
+	    beginSession(fax.number, uid);
 	    batchid = getCommID();
-	} else
-	{
-	    if (! batchLogs)
-	    {
-		beginSession(fax.number);
+	} else {
+	    if (! batchLogs) {
+		gid_t uid = 0;
+		struct stat sb;
+		if (Sys::stat(fax.qfile, sb) >= 0) uid = sb.st_gid;	// get the owner's uid from the gid of the qfile
+
+		beginSession(fax.number, uid);		// uid perpetuates the owner's uid onto logs
 		batchid.append("," | getCommID());
 		traceServer("SESSION BATCH %s", (const char*) batchid);
 	    }

@@ -669,7 +669,7 @@ ModemServer::discardModem(bool dropDTR)
  * carrier is raised and a peer is engaged.
  */
 void
-ModemServer::beginSession(const fxStr& number)
+ModemServer::beginSession(const fxStr& number, gid_t uid)
 {
     /*
      * Obtain the next communication identifier by reading
@@ -691,6 +691,15 @@ ModemServer::beginSession(const fxStr& number)
     mode_t omask = umask(022);
     int ftmp = Sys::open(file, O_RDWR|O_CREAT|O_EXCL, logMode);
     umask(omask);
+
+    if (uid) {
+	uid_t euid = geteuid();
+	(void) seteuid(0);
+	if (chown(file, -1, uid) < 0) {		// create the log file with permission for the client to retrieve it
+	    logError("Failed to grant permission for the user to retrieve the session log: \"%s\"", strerror(errno));
+	}
+	seteuid(euid);
+    }
 
     if (ftmp < 0)
     {

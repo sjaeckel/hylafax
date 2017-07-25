@@ -206,7 +206,7 @@ protected:
     virtual void vdialrulesTrace(const char* fmt, va_list ap);
     const fxStr& getConfigFile() const;
 // call/receive session start+end for controlling logging
-    void	beginSession(const fxStr& number);
+    void	beginSession(const fxStr& number, gid_t uid = 0);
     void	endSession();
 // abort send/receive session
     virtual void abortSession();
