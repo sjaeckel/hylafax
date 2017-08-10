@@ -97,6 +97,7 @@ Class1Modem::recvBegin(FaxSetup* setupinfo, fxStr& emsg)
     capsUsed = 0;				// no DCS or CTC seen yet
     dataSent = 0;				// start with a clean slate...
     dataMissed = 0;				// unfortunately, this will reset after EOM
+    pageDataMissed = 0;
     senderSkipsV29 = false;
     senderHasV17Trouble = false;
 
@@ -1681,6 +1682,7 @@ Class1Modem::recvPageECMData(TIFF* tif, const Class2Params& params, fxStr& emsg)
 				    }
 				    dataSent += fcount;
 				    dataMissed += fbad;
+				    pageDataMissed += fbad;
 				    if (fcount && ! blockgood) protoTrace("Block incomplete: %d frames (%d%%) corrupt or missing", fbad, ((fbad*100)/fcount));
 				    if (pgcount < prevPage || (pgcount == prevPage && frameRev[ppsframe[5]] < prevBlock))
 					blockgood = false;	// we already confirmed this block receipt... (see below)
@@ -2025,13 +2027,20 @@ Class1Modem::recvPageData(TIFF* tif, fxStr& emsg)
 	    if (prevPage)
 		recvEndPage(tif, params);
 	}
+        /* data regeneration always occurs in ECM */
+	TIFFSetField(tif, TIFFTAG_CLEANFAXDATA, pageDataMissed ?
+	    CLEANFAXDATA_REGENERATED : CLEANFAXDATA_CLEAN);
+	if (pageDataMissed) {
+	    TIFFSetField(tif, TIFFTAG_BADFAXLINES, pageDataMissed);
+	}
 	ret = true;		// no RTN with ECM
     } else {
 	(void) recvPageDLEData(tif, checkQuality(), params, emsg);
 	dataSent += getRecvEOLCount();
 	dataMissed += getRecvBadLineCount();
+        /* data regeneration only occurs in copy quality checking */
 	TIFFSetField(tif, TIFFTAG_CLEANFAXDATA, getRecvBadLineCount() ?
-	    CLEANFAXDATA_REGENERATED : CLEANFAXDATA_CLEAN);
+	    (checkQuality() ? CLEANFAXDATA_REGENERATED : CLEANFAXDATA_UNCLEAN) : CLEANFAXDATA_CLEAN);
 	if (getRecvBadLineCount()) {
 	    TIFFSetField(tif, TIFFTAG_BADFAXLINES, getRecvBadLineCount());
 	    TIFFSetField(tif, TIFFTAG_CONSECUTIVEBADFAXLINES,
@@ -2039,6 +2048,7 @@ Class1Modem::recvPageData(TIFF* tif, fxStr& emsg)
 	}
 	ret = isQualityOK(params);
     }
+    pageDataMissed = 0;
     TIFFSetField(tif, TIFFTAG_IMAGELENGTH, getRecvEOLCount());
     return (ret);
 }

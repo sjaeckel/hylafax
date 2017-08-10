@@ -68,6 +68,7 @@ protected:
     bool	senderSkipsV29;		// whether or not a sender skips over V.29 usage
     int		dataSent;		// how much data the sender transmitted
     int		dataMissed;		// how much data from the sender was missed
+    int		pageDataMissed;		// how much data from the sender was missed on this page
     const u_char* frameRev;		// HDLC frame bit reversal table
     fxStr	lid;			// encoded local id string
     fxStr	pwd;			// transmit password
