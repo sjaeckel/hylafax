@@ -1307,16 +1307,31 @@ very short pages.
 Define a logical name for a set of modem devices.
 This parameter can be used to define a name that clients can use
 to refer to a collection of modems.
-The syntax is ``\fI<name>\fP\:\fI<regex>\fP'' where
+The syntax is ``\fI<name>\fP:\fI<definition>\fP'' where
 .I <name>
 is the name for the group and 
+.I <definition>
+is of the syntax ``[\fI<limit>\fP:]\fI<regex>\fP'' where
+.I <limit>
+is an optional formatted expression of the limits for this
+.B ModemGroup
+and
 .I <regex>
 is a regular expression that 
 .IR faxq (${MANNUM1_8})
 matches against known modems.
+Presently
+.I <limit>
+only refers to a number that is the minimum number of modems in
+the group that must be left to stay idle (for receiving) after assigning 
+an active job to the
+.B ModemGroup.
+The default for
+.I <limit>
+is 0.
 Thus for example, the default modem to use for a job,
 .BR any ,
-is defined as ``any:.*''.
+is defined as ``any:0:.*''.
 This parameter may be specified multiple times to define multiple
 modem classes.
 Modem classes may overlap.

@@ -30,11 +30,13 @@
 #include "Modem.h"
 #include "UUCPLock.h"
 #include "REDict.h"
+#include "StrDict.h"
 #include "TriggerRef.h"
 #include "Dispatcher.h"
 #include "config.h"
 
 REDict* ModemGroup::classes =  NULL;	// modem classes
+fxStrDict* ModemGroup::limits = NULL;	// modem limits
 
 RE*
 ModemGroup::find(const char* name)
@@ -45,18 +47,31 @@ ModemGroup::find(const char* name)
     return (re ? (RE*) *(REPtr*) re : (RE*) NULL);
 }
 
+u_int
+ModemGroup::limit(const char* name)
+{
+    if (limits == NULL)
+	return (1);
+    const fxStr* limit = limits->find(name);
+    return (limit ? atoi((const char*) *limit) : 0);
+}
+
 void
 ModemGroup::reset()
 {
     delete classes, classes = NULL;
+    delete limits, limits = NULL;
 }
 
 void
-ModemGroup::set(const fxStr& name, RE* re)
+ModemGroup::set(const fxStr& name, RE* re, const fxStr& limit)
 {
     if (classes == NULL)
 	classes = new REDict;
     (*classes)[name] = re;
+    if (limits == NULL)
+	limits = new fxStrDict;
+    (*limits)[name] = limit;
 }
 
 ModemLockWaitHandler::ModemLockWaitHandler(Modem& m) : modem(m) {}
@@ -149,6 +164,44 @@ Modem::isInGroup(const fxStr& mgroup)
     if (c)
 	return (c->Find(devID));
     return ((devID == mgroup));
+}
+
+/*
+ * Return whether or not there is a modem available to
+ * place a call based on limits set for the group.
+ */
+bool
+Modem::modemAvailable(const Job& job)
+{
+    const fxStr& mdci = job.getJCI().getModem();
+    RE* c = ModemGroup::find(mdci != "" ? mdci : job.device);
+    if (c) {
+	/*
+	 * Job is assigned to a class of modems.
+	 */
+	u_int ready = 0;
+	u_int limit = ModemGroup::limit(mdci != "" ? mdci : job.device);
+	for (ModemIter iter(list); iter.notDone(); iter++) {
+	    Modem& modem = iter;
+	    if (c->Find(modem.devID)) {
+		if (modem.getState() == Modem::READY || modem.getState() == Modem::EXEMPT) ready++;
+	    }
+	}
+	return (ready > limit);
+    } else {
+	/*
+	 * Job is assigned to an explicit modem or to an
+	 * invalid class or modem.  Look for the modem
+	 * in the list of known modems.
+	 */
+	for (ModemIter iter(list); iter.notDone(); iter++) {
+	    Modem& modem = iter;
+	    if (modem.getState() == Modem::READY) {
+		if ((mdci != "" ? mdci : job.device) == modem.devID) return (true);
+	    }
+	}
+	return (false);
+    }
 }
 
 /*
