@@ -3103,7 +3103,7 @@ faxQueueApp::runScheduler()
 			sendViaProxy(job, *req);
 			delete req; 
 		    }
-		} else if (assignModem(job, (allowIgnoreModemBusy && req->ignoremodembusy))) {
+		} else if (Modem::modemAvailable(job) && assignModem(job, (allowIgnoreModemBusy && req->ignoremodembusy))) {
 		    lastCall = now;
 		    if (job.isOnList()) job.remove();	// remove from run queue
 		    job.breq = req;
@@ -3889,7 +3889,7 @@ faxQueueApp::setupConfig()
     uucpLockMode = UUCP_LOCKMODE;
     delete dialRules, dialRules = NULL;
     ModemGroup::reset();		// clear+add ``any modem'' class
-    ModemGroup::set(MODEM_ANY, new RE(".*"));
+    ModemGroup::set(MODEM_ANY, new RE(".*"), fxStr("0"));
     pageChop = FaxRequest::chop_last;
     pageChopThreshold = 3.0;		// minimum of 3" of white space
     lastCall = Sys::now() - 3600;
@@ -3998,8 +3998,14 @@ faxQueueApp::setConfigItem(const char* tag, const char* value)
 	    ;
 	if (*cp == ':') {
 	    fxStr name(value, cp-value);
+	    fxStr limit("1");
 	    for (cp++; *cp && isspace(*cp); cp++)
 		;
+	    const char* cp2 = strchr(cp, ':');
+	    if (cp2) {
+		limit = fxStr(cp, cp2-cp);
+		cp = cp2 + 1;
+	    }
 	    if (*cp != '\0') {
 		RE* re = new RE(cp);
 		if (re->getErrorCode() > REG_NOMATCH) {
@@ -4008,7 +4014,7 @@ faxQueueApp::setConfigItem(const char* tag, const char* value)
 		    configError("Bad pattern for modem group \"%s\": %s: %s", (const char*) emsg,
 			(const char*) name, re->pattern());
 		} else
-		    ModemGroup::set(name, re);
+		    ModemGroup::set(name, re, limit);
 	    } else
 		configError("No regular expression for modem group");
 	} else

@@ -37,16 +37,19 @@ typedef	unsigned int ModemState;
 class UUCPLock;
 class RE;
 class REDict;
+class fxStrDict;
 class fxStackBuffer;
 class Modem;
 
 class ModemGroup {
 private:
     static REDict* classes;	// registered modem classes
+    static fxStrDict* limits;	// registered modem limits
 public:
     static void reset();
-    static void set(const fxStr& name, RE* re);
+    static void set(const fxStr& name, RE* re, const fxStr& limit);
     static RE* find(const char* name);
+    static u_int limit(const char* name);
 };
 
 /*
@@ -111,6 +114,7 @@ public:
     static Modem& getModemByID(const fxStr& id);
     static Modem* modemExists(const fxStr& id, bool notexempt = false);
     static Modem* findModem(const Job& job, bool ignorebusy);
+    static bool modemAvailable(const Job& job);
     bool isInGroup(const fxStr& mgroup);
 
     bool assign(Job&, bool ignorebusy);	// assign modem
