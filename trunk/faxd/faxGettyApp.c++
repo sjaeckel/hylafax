@@ -381,7 +381,7 @@ faxGettyApp::answerPhone(AnswerType atype, CallType ctype, CallID& callid, const
 
     FaxMachineInfo info;
     info.resetConfig();
-    if (callingnumber.length()) {
+    if (callingnumber.length() && callingnumber != "<NONE>") {
 	info.updateConfig(canonicalizePhoneNumber(callingnumber));
 	// if updateConfig returns false it's probably because the info file doesn't exist, no need to raise alarms
     }    

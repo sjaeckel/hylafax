@@ -2,6 +2,7 @@
 
 New Changes
 
+* treat callingnumber <NONE> as null (25 Aug 2017)
 * add initial ModemGroup limits feature (24 Aug 2017)
 * add CLEANFAXDATA and BADFAXLINES TIFF tags for ECM receptions (10 Aug 2017)
 * pass the user's uid onto the session log file for sent faxes (25 Jul 2017)
