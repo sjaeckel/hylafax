@@ -910,14 +910,16 @@ FaxClient::jobParm(const char* name, const fxStr& value)
      * We need to quote any " marks in the string before
      * we pass it on to the raw jobParm(... const char*)
      */
-    if (value.next(0,'"'))
+    if (value.nextR(value.length(),'"'))
     {
 	fxStr tmp(value);
 	int r = tmp.length();
 	while (r > 0)
 	{
-	    if ( (r = tmp.nextR(r-1, '"') ) > 0 )
+	    if ( (r = tmp.nextR(r, '"')) > 0 ) {
 		tmp.insert('\\', r-1);
+		r -= 1;
+	    }
 	}
 	return jobParm(name, (const char*)tmp);
     }
@@ -928,7 +930,7 @@ bool
 FaxClient::jobParm(const char* name, const char* value)
 {
     /*
-     * if they're passing us a wrong char*, we expect
+     * if they're passing us a raw char*, we expect
      * them to have handled any quoting requried.
      */
     return (command("JPARM %s \"%s\"", name, value) == COMPLETE);
