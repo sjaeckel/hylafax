@@ -51,7 +51,7 @@ u_int
 ModemGroup::limit(const char* name)
 {
     if (limits == NULL)
-	return (1);
+	return (0);
     const fxStr* limit = limits->find(name);
     return (limit ? atoi((const char*) *limit) : 0);
 }
