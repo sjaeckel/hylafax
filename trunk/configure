@@ -468,7 +468,7 @@ fi
 $RM ./config.log
 exec 5>./config.log			# compiler messages and the like
 
-DATE=`date`
+DATE=`date -u -r CHANGES`
 
 eval `cat $SRCDIR/VERSION | sed 's/\([0-9][0-9]*\)\.\([0-9][0-9]*\)\(.*\)/DIST_MAJOR=\1; DIST_MINOR=\2; DIST_TYPE=\3/'`
 DIST_ALPHA=`awk '{print $3}' $SRCDIR/dist/hylafax.alpha`
