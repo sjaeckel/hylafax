@@ -2640,6 +2640,8 @@ writeFile(void* ptr, const char* buf, int cc, fxStr&)
     return (true);
 }
 
+#define COMPLETE 2
+
 /*
  * Send a fax job via a proxy HylaFAX server.  We do this by utilizing SendFaxJob jobWait.
  *
@@ -2767,7 +2769,7 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			     */
 			    time_t sleeptime = waitstart + 60 - Sys::now();
 			    if (sleeptime < 1) sleeptime = 2;
-			    logError("PROXY SEND: lost connection to %s, attempt %d.  Attempting reconnection in %d seconds.", (const char*) job.getJCI().getProxy(), waits, sleeptime);
+			    logError("PROXY SEND: (job %s) lost connection to %s, attempt %d.  Attempting reconnection in %d seconds.", (const char*) job.jobid, (const char*) job.getJCI().getProxy(), waits, sleeptime);
 			    client->hangupServer();
 			    sleep(sleeptime);
 			    waitstart = Sys::now();
@@ -2777,10 +2779,12 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 					job.getJCI().getProxyPass().length() ? (const char*) job.getJCI().getProxyPass() : NULL, emsg) &&
 					client->setCurrentJob(rjobid);
 				if (status) {
-				    logError("PROXY SEND: reconnected to %s.  Resuming wait for job %s.", (const char*) job.getJCI().getProxy(), (const char*) rjobid);
+				    logError("PROXY SEND: (job %s) reconnected to %s.  Resuming wait for job %s.", (const char*) job.jobid, (const char*) job.getJCI().getProxy(), (const char*) rjobid);
+				    emsg = "";
 				    waits = 0;
 				}
 			    }
+			    if (emsg != "") logError("PROXY SEND: (job %s) server %s: %s", (const char*) job.jobid, (const char*) job.getJCI().getProxy(), (const char*) emsg);
 			}
 			/*
 			 * There is a long wait here now... possibly VERY long.
@@ -2788,109 +2792,134 @@ faxQueueApp::sendViaProxy(Job& job, FaxRequest& req)
 			 * for the various job data and update the request here.
 			 */
 			req.skippages = 0;
-			client->command((const char*) fxStr::format("JOB %s", (const char*) rjobid));
-			client->jobParm("conntime");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			req.conntime = atoi((const char*) r);
-			client->jobParm("duration");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			req.duration = atoi((const char*) r);
-			client->jobParm("npages");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			req.npages += atoi((const char*) r);
-			client->jobParm("totpages");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			u_short totpages = atoi((const char*) r);
-			if (totpages > req.totpages) req.totpages = totpages;	// if the formatting occurred on the proxy, we'll need to update
-			client->jobParm("commid");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			req.commid = r;
-			client->jobParm("status");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			req.notice = r;
-			client->jobParm("ntries");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			u_int tries = atoi((const char*) r);
-			if (tries < maxTries && strstr((const char*) req.notice, "oo many attempts to send")) tries = maxTries;	// caught in a lie
-			if (tries < maxTries && strstr((const char*) req.notice, "oo many attempts to transmit")) tries = maxTries;	// caught in a lie
-			req.ntries += tries;
-			req.tottries += tries;
-			client->jobParm("ndials");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			u_int dials = atoi((const char*) r);
-			if (dials < maxDials && strstr((const char*) req.notice, "oo many attempts to dial")) dials = maxDials;	// caught in a lie
-			req.ndials += dials;
-			req.totdials += dials;
-			if (req.notice.length()) {
-			    client->jobParm("errorcode");
-			    r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			    req.errorcode = r;
-			}
-			client->jobParm("state");
-			r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
-			// Due to the jobWait we should only ever see "DONE" and "FAILED"...
-			if (r == "DONE") {
-			    job.state = FaxRequest::state_done;
-			    req.status = send_done;
-			} else {
-			    job.state = FaxRequest::state_failed;
-			    /*
-			     * The JobRetry* configurations are modem-specific.  With a proxy involved the
-			     * getProxyTries() and getProxyDials() are the analogous features.  If the configuration
-			     * leaves them unset they are both -1.  Such a configuration delegates all authority for
-			     * total job failure to the proxy.  So, if the proxy fails a job where our configuration
-			     * has delegated all tries and dials to the proxy, then we must also fail the job else we
-			     * will simply resubmit a job to the proxy that the proxy already has deemed as failed 
-			     * as if it were rejected (even if maxdials or maxtries were not exceeded).  However, in 
-			     * a situation where either configuration is not unset it means the opposite: that we are
-			     * not delegating authority for full job failure to the proxy (e.g. it's only entrusted
-			     * to handle one session at-a-time - or we want the proxy to make a minimum set of attempts
-			     * on each submission).
-			     */
-			    if ((job.getJCI().getProxyTries() == -1 && job.getJCI().getProxyDials() == -1) || 
-				req.ndials >= req.maxdials || req.ntries >= req.maxtries || 
-				strstr((const char*) req.notice, "REJECT"))
-				req.status = send_failed;
-			    else
-				req.status = send_retry;
-			}
-			/*
-			 * Try to get and store the session log from the proxy in a dedicated log subdirectory.
-			 */
-			int isdir = 0;
-			fxStr proxyLogs = fxStr(FAX_LOGDIR) | fxStr("/" | job.getJCI().getProxy());
-			struct stat sb;
-			if (Sys::stat(proxyLogs, sb) != 0) {
-			    mode_t logdirmode = job.getJCI().getProxyLogMode();
-			    if (logdirmode & S_IREAD) logdirmode |= S_IEXEC;
-			    if (logdirmode & S_IRGRP) logdirmode |= S_IXGRP;
-			    if (logdirmode & S_IROTH) logdirmode |= S_IXOTH;
-			    if (Sys::mkdir(proxyLogs, logdirmode) == 0) isdir = 1;
-			} else {
-			   isdir = 1;
-			}
-			if (isdir) {
-			    fxStr proxylog = fxStr(proxyLogs | "/c" | req.commid);
-			    int fd = Sys::open(proxylog, O_RDWR|O_CREAT|O_EXCL, job.getJCI().getProxyLogMode());
-			    if (fd > 0) {
-				client->setType(FaxClient::TYPE_I);
-				if (!client->recvZData(writeFile, (void*) &fd, emsg, 0, fxStr("RETR log/c" | req.commid))) {
-				    logError("PROXY LOG: server response: %s", (const char*) client->getLastResponse());
-				}
-				Sys::close(fd);
-				if (emsg != "") logError("PROXY LOG: server retrieval: %s", (const char*) emsg);
-			    } else {
-				logError("PROXY LOG: %s: %s", (const char*) proxylog, strerror(errno));
+			if (status && client->command((const char*) fxStr::format("JOB %s", (const char*) rjobid)) == COMPLETE) {
+			    if (client->jobParm("conntime")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				req.conntime = atoi((const char*) r);
 			    }
+			    if (client->jobParm("duration")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				req.duration = atoi((const char*) r);
+			    }
+			    if (client->jobParm("npages")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				req.npages += atoi((const char*) r);
+			    }
+			    if (client->jobParm("totpages")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				u_short totpages = atoi((const char*) r);
+				if (totpages > req.totpages) req.totpages = totpages;	// if the formatting occurred on the proxy, we'll need to update
+			    }
+			    if (client->jobParm("commid")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				req.commid = r;
+			    }
+			    if (client->jobParm("status")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				req.notice = r;
+			    } else {
+				req.notice = "unknown status on proxy";
+			    }
+			    if (client->jobParm("ntries")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				u_int tries = atoi((const char*) r);
+				if (tries < maxTries && strstr((const char*) req.notice, "oo many attempts to send")) tries = maxTries;	// caught in a lie
+				if (tries < maxTries && strstr((const char*) req.notice, "oo many attempts to transmit")) tries = maxTries;	// caught in a lie
+				req.ntries += tries;
+				req.tottries += tries;
+			    }
+			    if (client->jobParm("ndials")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				u_int dials = atoi((const char*) r);
+				if (dials < maxDials && strstr((const char*) req.notice, "oo many attempts to dial")) dials = maxDials;	// caught in a lie
+				req.ndials += dials;
+				req.totdials += dials;
+			    }
+			    if (req.notice.length() && client->jobParm("errorcode")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				req.errorcode = r;
+			    }
+			    if (client->jobParm("state")) {
+				r = client->getLastResponse(); r.remove(0, r.length() > 4 ? 4 : r.length());
+				// Due to the jobWait we should only ever see "DONE" and "FAILED"...
+				if (r == "DONE") {
+				    job.state = FaxRequest::state_done;
+				    req.status = send_done;
+				} else {
+				    job.state = FaxRequest::state_failed;
+				    /*
+				     * The JobRetry* configurations are modem-specific.  With a proxy involved the
+				     * getProxyTries() and getProxyDials() are the analogous features.  If the configuration
+				     * leaves them unset they are both -1.  Such a configuration delegates all authority for
+				     * total job failure to the proxy.  So, if the proxy fails a job where our configuration
+				     * has delegated all tries and dials to the proxy, then we must also fail the job else we
+				     * will simply resubmit a job to the proxy that the proxy already has deemed as failed 
+				     * as if it were rejected (even if maxdials or maxtries were not exceeded).  However, in 
+				     * a situation where either configuration is not unset it means the opposite: that we are
+				     * not delegating authority for full job failure to the proxy (e.g. it's only entrusted
+				     * to handle one session at-a-time - or we want the proxy to make a minimum set of attempts
+				     * on each submission).
+				     */
+				    if ((job.getJCI().getProxyTries() == -1 && job.getJCI().getProxyDials() == -1) || 
+					req.ndials >= req.maxdials || req.ntries >= req.maxtries || 
+					strstr((const char*) req.notice, "REJECT"))
+					req.status = send_failed;
+				    else
+					req.status = send_retry;
+				}
+			    } else {
+				logError("PROXY SEND: (job %s) unknown state for job %s on %s", (const char*) job.jobid, (const char*) rjobid, (const char*) job.getJCI().getProxy());
+				job.state = FaxRequest::state_failed;
+				req.status = send_retry;
+			    }
+			    if (req.commid.length()) {		// there's no sense in trying to retrieve the log if we don't know the commid number
+				/*
+				 * Try to get and store the session log from the proxy in a dedicated log subdirectory.
+				 */
+				int isdir = 0;
+				fxStr proxyLogs = fxStr(FAX_LOGDIR) | fxStr("/" | job.getJCI().getProxy());
+				struct stat sb;
+				if (Sys::stat(proxyLogs, sb) != 0) {
+				    mode_t logdirmode = job.getJCI().getProxyLogMode();
+				    if (logdirmode & S_IREAD) logdirmode |= S_IEXEC;
+				    if (logdirmode & S_IRGRP) logdirmode |= S_IXGRP;
+				    if (logdirmode & S_IROTH) logdirmode |= S_IXOTH;
+				    if (Sys::mkdir(proxyLogs, logdirmode) == 0) isdir = 1;
+				} else {
+				   isdir = 1;
+				}
+				if (isdir) {
+				    fxStr proxylog = fxStr(proxyLogs | "/c" | req.commid);
+				    int fd = Sys::open(proxylog, O_RDWR|O_CREAT|O_EXCL, job.getJCI().getProxyLogMode());
+				    if (fd > 0) {
+					client->setType(FaxClient::TYPE_I);
+					if (!client->recvZData(writeFile, (void*) &fd, emsg, 0, fxStr("RETR log/c" | req.commid))) {
+					    logError("PROXY LOG: (job %s) server %s response: %s", (const char*) job.jobid, (const char*) job.getJCI().getProxy(), (const char*) client->getLastResponse());
+					}
+					Sys::close(fd);
+					if (emsg != "") logError("PROXY LOG: (job %s) server %s retrieval: %s", (const char*) job.jobid, (const char*) job.getJCI().getProxy(), (const char*) emsg);
+				    } else {
+					logError("PROXY LOG: (job %s) server: %s: %s: %s", (const char*) job.jobid, (const char*) job.getJCI().getProxy(), (const char*) proxylog, strerror(errno));
+				    }
+				}
+			    } else {
+				logError("PROXY LOG: (job %s) unknown commid number for job %s on %s", (const char*) job.jobid, (const char*) rjobid, (const char*) job.getJCI().getProxy());
+			    }
+			} else if (status) {
+			    logError("PROXY SEND: (job %s) %s failed to identify job %s", (const char*) job.jobid, (const char*) job.getJCI().getProxy(), (const char*) rjobid);
+			    job.state = FaxRequest::state_failed;
+			    req.status = send_retry;
+			    req.notice = "proxy lost job";
 			}
 		    }
 		    client->hangupServer();
 		}
 		if (!status) {
 		    // some error occurred in callServer() or login()
-		    logError("PROXY SEND: %s", (const char*) emsg);
+		    logError("PROXY SEND: (job %s) %s", (const char*) job.jobid, (const char*) emsg);
 		    job.state = FaxRequest::state_failed;
 		    req.status = send_retry;
+		    req.notice = "cannot log into proxy";
 		}
 		updateRequest(req, job);
 		req.npages -= prevPages;	// queueAccounting() only wants the pages sent by the proxy

@@ -2,6 +2,7 @@
 
 New Changes
 
+* improve proxy connection error handling and logging (5 Dec 2017)
 * fix for reproducible builds (11 Sep 2017)
 * fix quote excaping in client apps (5 Sep 2017)
 * treat callingnumber <NONE> as null (25, 31 Aug 2017)
