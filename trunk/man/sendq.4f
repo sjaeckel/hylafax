@@ -425,9 +425,9 @@ used during facsimile transmission.
 Most of the information is used in the negotiation
 of session capabilities with optional information used in the
 implementation of page chopping.
-The string has three characters, say \fIxxc\fP,
+The string has five characters, say \fIxxxxc\fP,
 for each page to be transmitted.
-The \fIxx\fP characters are a hex-encoded specification
+The \fIxxxx\fP characters are a hex-encoded specification
 of the session capabilities required to transmit the page.
 The \fIc\fP character is one of ``M'', ``S'', and ``P'';
 where: ``M'' indicates there is another page to follow and
