@@ -937,6 +937,37 @@ faxQueueApp::preparePageHandling(Job& job, FaxRequest& req,
 		 * 'S' = MPS, for when next page uses the same parameters
 		 * 'P' = EOP, for the last page to be transmitted
 		 */
+		if (next != params) {
+		    /*
+		     * There is no reason to switch from VR_NORMAL to VR_200X100 or from VR_FINE
+		     * to VR_200X200 or from VR_R8 to VR_200X400 or vice-versa because they are
+		     * essentially the same thing.
+		     */
+		    Class2Params save;
+		    save = next;
+		    if (((next.vr == VR_NORMAL)  && (params.vr == VR_200X100)) ||
+		        ((next.vr == VR_200X100) && (params.vr == VR_NORMAL))  ||
+		        ((next.vr == VR_FINE)    && (params.vr == VR_200X200)) ||
+		        ((next.vr == VR_200X200) && (params.vr == VR_FINE))    ||
+		        ((next.vr == VR_R8)      && (params.vr == VR_200X400)) ||
+		        ((next.vr == VR_200X400) && (params.vr == VR_R8))) {
+			next.vr = params.vr;
+			if (next != params) next = save;	// only ignore VR difference if there are no other differences
+		    }
+		}
+		if (next != params) {
+		    fxStr thismsg = "Document format change between pages requires EOM";
+		    if (next.vr != params.vr) thismsg = fxStr::format("%s; VR differs - this page: %d, next page: %d", (const char*) thismsg, params.vr, next.vr);
+		    if (next.br != params.br) thismsg = fxStr::format("%s; BR differs - this page: %d, next page: %d", (const char*) thismsg, params.br, next.br);
+		    if (next.wd != params.wd) thismsg = fxStr::format("%s; WD differs - this page: %d, next page: %d", (const char*) thismsg, params.wd, next.wd);
+		    if (next.ln != params.ln) thismsg = fxStr::format("%s; LN differs - this page: %d, next page: %d", (const char*) thismsg, params.ln, next.ln);
+		    if (next.df != params.df) thismsg = fxStr::format("%s; DF differs - this page: %d, next page: %d", (const char*) thismsg, params.df, next.df);
+		    if (next.ec != params.ec) thismsg = fxStr::format("%s; EC differs - this page: %d, next page: %d", (const char*) thismsg, params.ec, next.ec);
+		    if (next.bf != params.bf) thismsg = fxStr::format("%s; BF differs - this page: %d, next page: %d", (const char*) thismsg, params.bf, next.bf);
+		    if (next.st != params.st) thismsg = fxStr::format("%s; ST differs - this page: %d, next page: %d", (const char*) thismsg, params.st, next.st);
+		    if (next.jp != params.jp) thismsg = fxStr::format("%s; JP differs - this page: %d, next page: %d", (const char*) thismsg, params.jp, next.jp);
+		    traceJob(job, (const char*) thismsg);
+		}
 		req.pagehandling.append(next == params ? 'S' : 'M');
 	    }
 	    /*
