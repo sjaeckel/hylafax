@@ -35,6 +35,9 @@
 #include <sys/stat.h>
 #include <sys/mkdev.h>
 #endif
+#if defined __GLIBC__ && __GLIBC__ >= 2
+#include <sys/sysmacros.h>
+#endif
 
 int
 main(int ac, char* av[])

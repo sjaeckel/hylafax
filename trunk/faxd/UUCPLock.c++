@@ -37,6 +37,9 @@ extern "C" {
 }
 #endif
 #include <pwd.h>
+#if defined __GLIBC__ && __GLIBC__ >= 2
+#include <sys/sysmacros.h>
+#endif
 
 /*
  * UUCP Device Locking Support.
