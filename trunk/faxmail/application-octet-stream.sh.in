@@ -20,9 +20,9 @@ if [ ! -x $FILECMD ]; then
 fi
 
 MIMETYPE="`$FILECMD -bi "$1" | $SED 's/;.*//g'`"
-if [ "$MIMETYPE" != "application/octet-stream" ] && [ "$MIMETYPE" != "application/binary" ] && [ -x $LIBDATA/faxmail/$MIMETYPE ]; then
+if [ "$MIMETYPE" != "application/octet-stream" ] && [ "$MIMETYPE" != "application/binary" ] && [ -x "$LIBDATA/faxmail/$MIMETYPE" ]; then
     echo "running: $LIBDATA/faxmail/$MIMETYPE \"$1\"" >&2
-    $LIBDATA/faxmail/$MIMETYPE "$1"
+    "$LIBDATA/faxmail/$MIMETYPE" "$1"
 else
     case "$MIMETYPE" in
 	"application/postscript") cat "$1";;
