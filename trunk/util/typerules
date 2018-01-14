@@ -176,7 +176,11 @@
 
 # MS Office (Word) conversion using antiword or unoconv. Install antiword or unoconv
 # (which uses OpenOffice/LibreOffice) and enable this if you want it.  It may produce 
-# imperfect renderings, but they're better than nothing, perhaps.
+# imperfect renderings, but they're better than nothing, perhaps.  LibreOffice can also
+# be used in a "headless" mode, but you'll need a wrapper to specify an outfile...
+#
+# libreoffice --headless --invisible --convert-to pdf --outdir /path/somewhere %i
+#
 #0	short		0xd0cf		ps	antiword -p letter -m 8859-1.txt %i > %o
 #0	short		0xd0cf		pdf	unoconv -f pdf -o %o %i
 0	short		0xd0cf		error	Microsoft Word Document support not configured
