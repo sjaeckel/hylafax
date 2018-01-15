@@ -57,6 +57,8 @@ MIMEState::MIMEState(MIMEState& other)
     blen = other.blen;
     lineno = other.lineno;
     external = other.external;
+    name = other.name;
+    filename = other.filename;
 }
 MIMEState::MIMEState(MIMEState& other, const char* t, const char* st)
     : parent(&other)
@@ -70,6 +72,8 @@ MIMEState::MIMEState(MIMEState& other, const char* t, const char* st)
     blen = other.blen;
     lineno = other.lineno;
     external = other.external;
+    name = other.name;
+    filename = other.filename;
 }
 MIMEState::~MIMEState()
 {
@@ -161,8 +165,16 @@ MIMEState::parse(const MsgFmt& msg, fxStr& emsg)
     if (s)
 	cid = *s;
     s = msg.findHeader("Content-Disposition");
-    if (s)
-	disp = *s;
+    if (s) {
+	const char* cp = &(*s)[0];
+	if (parseToken(cp, ';', disp)) {
+	    if (*cp == ';')		// parse optional parameters
+		parseParameters(cp+1);
+	} else {
+	    emsg = "Syntax error parsing MIME Content-Disposition: " | *s;
+	    return (false);
+	}
+    }
     return (true);
 }
 
@@ -225,6 +237,10 @@ MIMEState::setParameter(const fxStr& p, const fxStr& value)
 	setCharset(value);			// character set
     } else if (param.length() == 8 && param == "boundary") {
 	setBoundary(value);			// part boundary marker
+    } else if (param.length() == 4 && param == "name") {
+	setName(value);				// content name
+    } else if (param.length() == 8 && param == "filename") {
+	setFilename(value);			// disposition filename
     } else
 	return (false);
     return (true);

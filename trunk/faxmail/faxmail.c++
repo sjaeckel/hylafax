@@ -532,6 +532,7 @@ faxMailApp::formatText(FILE* fd, MIMEState& mime)
     fxStackBuffer buf;
     bool trim = trimText;
     if (!withinFile) beginFile();
+    withinFile = true;
     while (mime.getLine(fd, buf)) {
 	if (trim) trim = ((buf.getLength() == 0) || (buf[0] == 0xA));
 	if (!trim) format(buf, buf.getLength());	// NB: treat as text/plain
@@ -586,6 +587,7 @@ faxMailApp::formatMultipart(FILE* fd, MIMEState& mime, MsgFmt& msg)
 void
 faxMailApp::formatMessage(FILE* fd, MIMEState& mime, MsgFmt& msg)
 {
+    withinFile = true;
     if (mime.getSubType() == "rfc822") {
 	MsgFmt bodyHdrs(msg);            
 	bodyHdrs.parseHeaders(fd, mime.lineno);
@@ -678,34 +680,29 @@ faxMailApp::formatWithExternal(FILE* fd, const fxStr& app, MIMEState& mime)
 void
 faxMailApp::formatDiscarded(MIMEState& mime)
 {
+fxStr msg;
+    if (mime.getName() != "" && mime.getFilename() != "") {
+	msg = fxStr::format("%s \"%s\"", (const char*) mime.getName(), (const char*) mime.getFilename());
+    } else if (mime.getName() != "") {
+	msg = fxStr::format("%s", (const char*) mime.getName());
+    } else if (mime.getFilename() != "") {
+	msg = fxStr::format("\"%s\"", (const char*) mime.getFilename());
+    }
+    if (mime.getDescription() != "") {
+	msg = fxStr::format("%s, %s (%s/%s)", (const char*) msg, (const char*) mime.getDescription(), (const char*) mime.getType(), (const char*) mime.getSubType());
+    } else {
+	msg = fxStr::format("%s, %s/%s", (const char*) msg, (const char*) mime.getType(), (const char*) mime.getSubType());
+    }
     if (markDiscarded) {
 	fxStackBuffer buf;
 	buf.put("\n-----------------------------\n");
-	if (mime.getDescription() != "")
-	    buf.fput("DISCARDED %s (%s/%s) GOES HERE\n"
-		, (const char*) mime.getDescription()
-		, (const char*) mime.getType()
-		, (const char*) mime.getSubType()
-	    );
-	else
-	    buf.fput("DISCARDED %s/%s GOES HERE\n"
-		, (const char*) mime.getType()
-		, (const char*) mime.getSubType()
-	    );
+	buf.fput("DISCARDED %s GOES HERE\n", (const char*) msg);
 	buf.put("-----------------------------\n");
 	if (!withinFile) beginFile();
 	withinFile = true;
 	format((const char*)buf, buf.getLength());
     }
-    if (mime.getDescription() != "")
-	fprintf(stderr, "DISCARDED: %s (%s/%s)\n",
-	    (const char*) mime.getDescription(),
-	    (const char*) mime.getType(),
-	    (const char*) mime.getSubType());
-    else
-	fprintf(stderr, "DISCARDED: %s/%s\n",
-	    (const char*) mime.getType(),
-	    (const char*) mime.getSubType());
+    fprintf(stderr, "DISCARDED: %s\n", (const char*) msg);
 }
 
 /*
@@ -798,28 +795,32 @@ faxMailApp::copyPart(FILE* fd, MIMEState& mime, fxStr& tmpFile)
 bool
 faxMailApp::runConverter(const fxStr& app, const fxStr& tmp, MIMEState& mime)
 {
-    const char* av[6];
+    const char* av[13];
     av[0] = strrchr(app, '/');
     if (av[0] == NULL)
 	av[0] = app;
     // XXX should probably pass in MIME state like charset
     u_int i = 1;
-    av[i++] = tmp;
-    fxStr label;
+    av[i++] = (const char*) tmp;
     if (mime.getDescription() != "") {
-	label = "description:";
-	label.append(mime.getDescription());
-	av[i++] = (const char*) label;
+	av[i++] = "-description";
+	av[i++] = (const char*) mime.getDescription();
     }
     if (mime.getContentID() != "") {
-	label = "id:";
-	label.append(mime.getContentID());
-	av[i++] = (const char*) label;
+	av[i++] = "-id";
+	av[i++] = (const char*) mime.getContentID();
     }
     if (mime.getDisposition() != "") {
-	label = "disposition:";
-	label.append(mime.getDisposition());
-	av[i++] = (const char*) label;
+	av[i++] = "-disposition";
+	av[i++] = (const char*) mime.getDisposition();
+    }
+    if (mime.getName() != "") {
+	av[i++] = "-name";
+	av[i++] = (const char*) mime.getName();
+    }
+    if (mime.getName() != "") {
+	av[i++] = "-filename";
+	av[i++] = (const char*) mime.getFilename();
     }
     av[i++] = NULL;
 

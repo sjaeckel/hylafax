@@ -631,9 +631,11 @@ body parts.
 The default pathname is ${LIBDATA}/faxmail.  \*(Fx comes with default converter
 scripts for TIFF and PDF, and they can be found in that path and used as a 
 reference for constructing other converters.  The script is passed the
-filename of the body part for conversion as the first parameters.  Subsequent
-parameters are the MIME Content-Description, Content-ID, and Content-Disposition
-information prefixed with ``description:'', ``id:'', and ``disposition:'' respectively.
+filename of the body part for conversion as the first argument.  Subsequent
+arguments are the MIME Content-Description, Content-ID, Content-Disposition,
+Content-Type name, and Content-Disposition filename information which are
+each preceded by their respective ``-description'', ``-id'', ``-disposition'', 
+``-name'', or ``-filename'' argument.
 .TP 15
 .B Orientation
 Control whether pages are oriented horizontally (``landscape'')

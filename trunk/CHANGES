@@ -2,6 +2,9 @@
 
 New Changes
 
+* pass Content-Type name and Content-Disposition filename 
+  information to faxmail MIMEHandlers (15 Jan 2017)
+* fix faxmail transition between a message and external types (15 Jan 2017)
 * fix warning for major and minor macros move to sysmacros.h (19 Dec 2017)
 * avoid pagehandling from introducing some unnecessary EOM signals (15 Dec 2017)
 * improve proxy connection error handling and logging (5 Dec 2017)

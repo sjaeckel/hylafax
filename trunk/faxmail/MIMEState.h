@@ -61,9 +61,11 @@ private:
     MIMEState*	parent;
     fxStr	type;			// content type
     fxStr	subtype;		// content subtype
+    fxStr	name;			// content type/subtype name
     fxStr	desc;			// content description
     fxStr	cid;			// content ID
     fxStr	disp;			// content disposition
+    fxStr	filename;		// content disposition filename
     fxStr	boundary;		// multipart boundary marker
     u_int	blen;			// adjusted boundary length
     bool	lastPart;		// true if last multipart boundary seen
@@ -91,17 +93,21 @@ public:
 
     const fxStr& getType(void) const;
     const fxStr& getSubType(void) const;
+    const fxStr& getName(void) const;
     bool isParent(const char* type) const;
     bool isParent(const char* type, const char* subtype) const;
     const fxStr& getDescription(void) const;
     const fxStr& getContentID(void) const;
     const fxStr& getDisposition(void) const;
+    const fxStr& getFilename(void) const;
 
     virtual void setEncoding(const char*);
     Encoding getEncoding(void) const;
     virtual void setCharset(const char*);
     Charset getCharset(void) const;
     void setBoundary(const char*);
+    void setName(const char*);
+    void setFilename(const char*);
     const fxStr& getBoundary(void) const;
 
     virtual bool getLine(FILE*, fxStackBuffer&);
@@ -109,6 +115,9 @@ public:
 
     virtual void trace(FILE*);
 };
+inline void MIMEState::setName(const char* s) { name = s; }
+inline void MIMEState::setFilename(const char* s) { filename = s; }
+
 inline Charset MIMEState::getCharset(void) const	{ return charset; }
 inline Encoding MIMEState::getEncoding(void) const	{ return encode; }
 inline const fxStr& MIMEState::getBoundary(void) const	{ return boundary; }
@@ -119,7 +128,9 @@ inline bool MIMEState::isParent(const char* t, const char* st) const
     { return (parent && parent->type == t && parent->subtype == st); }
 inline const fxStr& MIMEState::getType(void) const	{ return type; }
 inline const fxStr& MIMEState::getSubType(void) const	{ return subtype; }
+inline const fxStr& MIMEState::getName(void) const	{ return name; }
 inline const fxStr& MIMEState::getDescription(void) const { return desc; }
 inline const fxStr& MIMEState::getContentID(void) const	{ return cid; }
 inline const fxStr& MIMEState::getDisposition(void) const { return disp; }
+inline const fxStr& MIMEState::getFilename(void) const { return filename; }
 #endif /* _MIMEState_ */
