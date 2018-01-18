@@ -47,13 +47,15 @@ FaxConfig::FaxConfig(const FaxConfig& other)
 }
 FaxConfig::~FaxConfig() {}
 
+#define MAX_CONFIG_LINE_SIZE 2048
+
 void
 FaxConfig::readConfig(const fxStr& filename)
 {
     FILE* fd = Sys::fopen(tildeExpand(filename), "r");
     if (fd) {
 	configTrace("Read config file %s", (const char*) filename);
-	char line[1024];
+	char line[MAX_CONFIG_LINE_SIZE];
 	while (fgets(line, sizeof (line)-1, fd)) {
 		size_t len = strlen(line);
 		// The last line of a file may not be terminated by a '\n'.
@@ -150,7 +152,7 @@ FaxConfig::getBoolean(const char* cp)
 bool
 FaxConfig::readConfigItem(const char* b)
 {
-    char buf[2048];
+    char buf[MAX_CONFIG_LINE_SIZE];
     char* cp;
 
     lineno++;
